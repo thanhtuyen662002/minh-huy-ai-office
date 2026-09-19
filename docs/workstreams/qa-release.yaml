@@ -3,8 +3,8 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 52
 current_pr: 54
 current_branch: qa/52-deployment-security-gates-main
-head: 3a01ea68443639e709a9440c5fd3b9179a1ec484
-state: waiting_ci
+head: 2df5c27b7fba06b70018b2ddc37aed2beae3ca0d
+state: ready_for_review
 lease_owner: lead
 lease_heartbeat_at: "2026-09-19T22:47:10+07:00"
 last_checkpoint_at: "2026-09-19T22:47:10+07:00"
@@ -18,4 +18,16 @@ scope:
   - deployment-release
   - recovery-drills
   - cross-workstream-pr-quality-review
-next_action: "Verify exact-head Governance and Build after replaying issue #52 on current main. Confirm PowerShell positive/negative preflight tests, rendered Compose hardening checks, application image runtime UID non-root gate, frontend tests, migrations and aggregate quality gates all pass; then mark ready_for_review and merge this same PR."
+verification:
+  governance_run: 35452926119
+  build_run: 35452926124
+  result: success
+  evidence:
+    - production-env positive/negative PowerShell preflight paths
+    - rendered Compose runtime hardening checks
+    - Core.Api and Agent.Worker built-image runtime UID non-root checks
+    - frontend tests/type-check/build
+    - .NET format/build/tests
+    - EF Core migration integrity
+    - aggregate required quality gates
+next_action: "Run exact-head CI on this ready_for_review state-only checkpoint. If Governance and Build remain green and PR head is unchanged/mergeable, Lead may squash-merge PR #54, confirm issue #52 closes, then release the qa-release lease and advance QA/release work."
