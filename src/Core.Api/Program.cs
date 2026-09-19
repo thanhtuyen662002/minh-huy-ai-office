@@ -1,8 +1,11 @@
+using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
+builder.Services.AddPlatformPersistence(
+    builder.Configuration.GetConnectionString("AIOffice"));
 
 var app = builder.Build();
 
