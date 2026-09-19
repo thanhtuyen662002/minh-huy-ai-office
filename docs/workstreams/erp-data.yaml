@@ -5,14 +5,14 @@ state: blocked
 current_issue: 18
 current_pr: 50
 current_branch: erp/18-data-source-registry
-head: d228ef332622ea493eee75c2e191a0aef117f97d
+head: d052e68bf6421f3b432521e83ab44118ff1e6c96
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-19T22:45:19+07:00"
-last_checkpoint_at: "2026-09-19T22:45:19+07:00"
+lease_heartbeat_at: "2026-09-20T00:29:15+07:00"
+last_checkpoint_at: "2026-09-20T00:29:15+07:00"
 stacked_on: "PR #47 / backend/17-identity-foundation"
 preferred_next_issue: 18
 blocked_by:
-  - "PR #47 authorization resolver QA blocker: membership/role TOCTOU must be fixed and reverified"
+  - "PR #47 authorization fix is exact-head green at f769be3, but PR #50 is behind the moved parent and currently not mergeable; restack/reconciliation is required before further shared-schema work"
   - "Issue #18 API/UI acceptance requires an authenticated authorization boundary; caller-controlled tenant/company/user identifiers are forbidden"
 scope:
   - datasource-registry
@@ -20,4 +20,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Keep PR #50 as the sole ERP/Data primary lease. PR #50 implementation HEAD d228ef3 is exact-head green and preserves stored secret references on metadata-only updates. When PR #47 publishes a verified authorization fix, resume this same branch/PR, restack if the parent HEAD changed, rerun exact-head CI, then continue safe API/UI acceptance for issue #18 without creating another primary lease."
+next_action: "Keep PR #50 as the sole ERP/Data primary lease. Parent PR #47 exact HEAD f769be3 has Governance and Build green. Reconcile/restack this same branch onto the authoritative parent without creating a competing implementation, rerun exact-head CI, then continue only safe #18 acceptance behind a trusted authenticated authorization boundary."
