@@ -1,0 +1,15 @@
+{
+  "name": "minh-huy-ai-office",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "web:dev": "npm run dev --workspace @minh-huy-ai-office/web",
+    "web:build": "npm run build --workspace @minh-huy-ai-office/web",
+    "dotnet:build": "dotnet build MinhHuy.AIOffice.sln --configuration Release",
+    "dotnet:test": "dotnet test MinhHuy.AIOffice.sln --configuration Release --no-restore",
+    "build": "npm run web:build && npm run dotnet:build",
+    "test": "npm run dotnet:test"
+  }
+}
