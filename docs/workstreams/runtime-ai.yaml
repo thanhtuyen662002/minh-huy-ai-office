@@ -3,6 +3,12 @@ role: "Runtime / AI Platform"
 status: ready
 current_issue: 19
 current_pr: 51
+current_branch: "runtime/19-durable-task-engine"
+head: "3ae9a9518bbc3d16f83d7da7437736e81a1e1677"
+state: ready_for_review
+lease_owner: "runtime-ai"
+lease_heartbeat_at: "2026-09-19T15:30:42.584Z"
+last_checkpoint_at: "2026-09-19T15:30:42.584Z"
 stacked_on: "PR #47 / backend/17-identity-foundation"
 scope:
   - task-engine
@@ -11,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "PR #51 implementation is verified green. Keep merge sequencing behind PR #47; if #20 remains unleased, continue runtime work as a stacked PR on #51 without merging dependencies out of order."
+next_action: "Keep the single primary lease on PR #51. Wait for Lead sequencing #47 -> #50 -> #51; when prerequisites move, resume this same branch/PR, restack/reconcile the shared EF snapshot, rerun exact-head CI, and do not claim #20 until PR #51 is merged/closed."
