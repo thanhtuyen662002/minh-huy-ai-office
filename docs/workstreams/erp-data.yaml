@@ -1,15 +1,15 @@
 workstream: erp-data
 role: "ERP / Data"
-status: ready_for_review
-state: ready_for_review
+status: waiting_ci
+state: waiting_ci
 current_issue: 18
 current_pr: 50
 current_branch: erp/18-data-source-registry
-head: d8aa5175a223fb43e4a41542ad5b6f1eac1611cb
+head: 3965a051d1a8674f071202f9707784c70f4dd2da
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-20T01:32:32+07:00"
-last_checkpoint_at: "2026-09-20T01:32:32+07:00"
-stacked_on: "PR #47 / backend/17-identity-foundation @ f769be3916c301aad08e1dc720550c3e4b2e3ccb"
+lease_heartbeat_at: "2026-09-20T05:30:47+07:00"
+last_checkpoint_at: "2026-09-20T05:30:47+07:00"
+stacked_on: "merged PR #47 / main"
 preferred_next_issue: 18
 blocked_by:
   - "Issue #18 API/UI acceptance requires an authenticated authorization boundary; caller-controlled tenant/company/user identifiers are forbidden"
@@ -19,4 +19,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Exact-head Governance + Build are green after reconciliation onto verified parent #47. Registry foundation is ready for Lead/QA review and integration sequencing. Keep authenticated API/UI acceptance deferred until a trusted auth boundary exists; do not create another ERP/Data primary lease while PR #50 remains open."
+next_action: "Verify exact-head Governance + Build after removing the stale backend workstream checkpoint from PR #50. If green and the PR is mergeable, restore ready_for_review for Lead/QA integration. Keep authenticated API/UI acceptance deferred until a trusted auth boundary exists; do not create another ERP/Data primary lease while PR #50 remains open."
