@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using MinhHuy.AIOffice.Shared.Contracts;
 
 #nullable disable
 
@@ -86,6 +87,102 @@ public partial class PlatformDbContextModelSnapshot : ModelSnapshot
             entity.HasOne<CompanyMembershipRecord>()
                 .WithMany()
                 .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.UserId })
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TaskRecord>(entity =>
+        {
+            entity.ToTable("Tasks", PlatformDbContext.DefaultSchema);
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.Id });
+            entity.Property(x => x.Status)
+                .HasConversion<string>()
+                .HasMaxLength(40)
+                .HasDefaultValue(TaskExecutionStatus.Pending);
+            entity.Property(x => x.WaitReason).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            entity.Property(x => x.UpdatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+            entity.HasOne<CompanyMembershipRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, UserId = x.CreatedByUserId })
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.Status });
+        });
+
+        modelBuilder.Entity<TaskStepRecord>(entity =>
+        {
+            entity.ToTable("TaskSteps", PlatformDbContext.DefaultSchema);
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.Id });
+            entity.Property(x => x.StepKey).HasMaxLength(200);
+            entity.Property(x => x.Status)
+                .HasConversion<string>()
+                .HasMaxLength(40)
+                .HasDefaultValue(TaskStepStatus.Pending);
+            entity.Property(x => x.Attempt).HasDefaultValue(0);
+            entity.Property(x => x.CreatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            entity.Property(x => x.UpdatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+            entity.HasOne<TaskRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.TaskId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.TaskId, x.StepKey })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<TaskDependencyRecord>(entity =>
+        {
+            entity.ToTable("TaskDependencies", PlatformDbContext.DefaultSchema);
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.StepId, x.DependsOnStepId });
+
+            entity.HasOne<TaskStepRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.StepId })
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne<TaskStepRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.DependsOnStepId })
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.TaskId, x.DependsOnStepId });
+        });
+
+        modelBuilder.Entity<TaskEventRecord>(entity =>
+        {
+            entity.ToTable("TaskEvents", PlatformDbContext.DefaultSchema);
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.Sequence });
+            entity.Property(x => x.EventType).HasMaxLength(100);
+            entity.Property(x => x.OccurredAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+            entity.HasOne<TaskRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.TaskId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<TaskStepRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.StepId })
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<TaskCheckpointRecord>(entity =>
+        {
+            entity.ToTable("TaskCheckpoints", PlatformDbContext.DefaultSchema);
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.StepId, x.Version });
+            entity.Property(x => x.CreatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+            entity.HasOne<TaskStepRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.StepId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
 #pragma warning restore 612, 618
