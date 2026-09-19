@@ -31,3 +31,10 @@ jobs:
         run: npm install
       - name: Build
         run: npm run web:build
+
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose
+        run: docker compose --env-file .env.example config
