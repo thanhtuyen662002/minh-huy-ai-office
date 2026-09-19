@@ -1,8 +1,13 @@
 workstream: qa-release
-role: "QA / Security / Release"
-status: active
-current_issue: null
-current_pr: null
+role: "QA / Security / Release (Lead-owned)"
+current_issue: 52
+current_pr: 54
+current_branch: qa/52-deployment-security-gates-main
+head: 3a01ea68443639e709a9440c5fd3b9179a1ec484
+state: waiting_ci
+lease_owner: lead
+lease_heartbeat_at: "2026-09-19T22:47:10+07:00"
+last_checkpoint_at: "2026-09-19T22:47:10+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -12,4 +17,5 @@ scope:
   - migrations-verification
   - deployment-release
   - recovery-drills
-next_action: "Review active PR #44 and strengthen independent CI/security/release evidence; claim #36 only when its P0 dependencies are satisfied."
+  - cross-workstream-pr-quality-review
+next_action: "Verify exact-head Governance and Build after replaying issue #52 on current main. Confirm PowerShell positive/negative preflight tests, rendered Compose hardening checks, application image runtime UID non-root gate, frontend tests, migrations and aggregate quality gates all pass; then mark ready_for_review and merge this same PR."
