@@ -1,9 +1,9 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: ready
-current_issue: 19
-current_pr: 51
-stacked_on: "PR #47 / backend/17-identity-foundation"
+status: active
+current_issue: 20
+current_pr: null
+stacked_on: "PR #51 / runtime/19-durable-task-engine"
 scope:
   - task-engine
   - rabbitmq-workers
@@ -11,4 +11,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "PR #51 implementation is verified green. Keep merge sequencing behind PR #47; if #20 remains unleased, continue runtime work as a stacked PR on #51 without merging dependencies out of order."
+next_action: "Implement #20 execution contracts and durable lease/retry/idempotency invariants as a stacked follow-up on verified PR #51, then wire RabbitMQ transport with focused tests."
