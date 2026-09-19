@@ -11,12 +11,14 @@ public sealed class DataSourceRegistryServiceTests
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         await using var context = CreateContext();
-        var service = new DataSourceRegistryService(context);
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
+        var service = CreateService(context);
         var authorization = AuthorizationContext.Create(
             tenantId,
             companyId,
-            Guid.NewGuid());
+            userId);
 
         var created = await service.CreateAsync(
             authorization,
@@ -36,16 +38,37 @@ public sealed class DataSourceRegistryServiceTests
     }
 
     [Fact]
-    public async Task Create_RejectsDuplicateLogicalNameInsideCompany()
+    public async Task Create_NonMemberFailsClosed()
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
         await using var context = CreateContext();
-        var service = new DataSourceRegistryService(context);
+        var service = CreateService(context);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+            await service.CreateAsync(
+                AuthorizationContext.Create(
+                    tenantId,
+                    companyId,
+                    Guid.NewGuid()),
+                CreateRequest("company.erp.production")));
+
+        Assert.Empty(context.DataSources);
+    }
+
+    [Fact]
+    public async Task Create_RejectsDuplicateLogicalNameInsideCompany()
+    {
+        var tenantId = Guid.NewGuid();
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
+        var service = CreateService(context);
         var authorization = AuthorizationContext.Create(
             tenantId,
             companyId,
-            Guid.NewGuid());
+            userId);
 
         await service.CreateAsync(
             authorization,
@@ -61,20 +84,34 @@ public sealed class DataSourceRegistryServiceTests
     public async Task SameLogicalName_IsAllowedAcrossDifferentCompanies()
     {
         var tenantId = Guid.NewGuid();
+        var firstCompanyId = Guid.NewGuid();
+        var secondCompanyId = Guid.NewGuid();
+        var firstUserId = Guid.NewGuid();
+        var secondUserId = Guid.NewGuid();
         await using var context = CreateContext();
-        var service = new DataSourceRegistryService(context);
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            firstCompanyId,
+            firstUserId);
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            secondCompanyId,
+            secondUserId);
+        var service = CreateService(context);
 
         var first = await service.CreateAsync(
             AuthorizationContext.Create(
                 tenantId,
-                Guid.NewGuid(),
-                Guid.NewGuid()),
+                firstCompanyId,
+                firstUserId),
             CreateRequest("company.erp.production"));
         var second = await service.CreateAsync(
             AuthorizationContext.Create(
                 tenantId,
-                Guid.NewGuid(),
-                Guid.NewGuid()),
+                secondCompanyId,
+                secondUserId),
             CreateRequest("company.erp.production"));
 
         Assert.NotEqual(first.CompanyId, second.CompanyId);
@@ -86,21 +123,34 @@ public sealed class DataSourceRegistryServiceTests
     {
         var tenantId = Guid.NewGuid();
         var owningCompanyId = Guid.NewGuid();
+        var otherCompanyId = Guid.NewGuid();
+        var owningUserId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
         await using var context = CreateContext();
-        var service = new DataSourceRegistryService(context);
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            owningCompanyId,
+            owningUserId);
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            otherCompanyId,
+            otherUserId);
+        var service = CreateService(context);
 
         var created = await service.CreateAsync(
             AuthorizationContext.Create(
                 tenantId,
                 owningCompanyId,
-                Guid.NewGuid()),
+                owningUserId),
             CreateRequest("company.erp.production"));
 
         var result = await service.UpdateAsync(
             AuthorizationContext.Create(
                 tenantId,
-                Guid.NewGuid(),
-                Guid.NewGuid()),
+                otherCompanyId,
+                otherUserId),
             created.Id,
             CreateRequest("company.erp.changed"));
 
@@ -113,12 +163,16 @@ public sealed class DataSourceRegistryServiceTests
     [Fact]
     public async Task Create_RejectsNonSecretReferenceCredentialInput()
     {
+        var tenantId = Guid.NewGuid();
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         await using var context = CreateContext();
-        var service = new DataSourceRegistryService(context);
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
+        var service = CreateService(context);
         var authorization = AuthorizationContext.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid());
+            tenantId,
+            companyId,
+            userId);
 
         var request = CreateRequest("company.erp.production") with
         {
@@ -136,12 +190,14 @@ public sealed class DataSourceRegistryServiceTests
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         await using var context = CreateContext();
-        var service = new DataSourceRegistryService(context);
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
+        var service = CreateService(context);
         var authorization = AuthorizationContext.Create(
             tenantId,
             companyId,
-            Guid.NewGuid());
+            userId);
 
         var created = await service.CreateAsync(
             authorization,
@@ -162,6 +218,44 @@ public sealed class DataSourceRegistryServiceTests
         Assert.Equal(12, updated.MaxConcurrency);
         Assert.Equal("secretref://env/company-erp-production-v2", stored.ConnectionSecretReference);
         Assert.DoesNotContain("secretref://", updated.ToString());
+    }
+
+    private static DataSourceRegistryService CreateService(
+        PlatformDbContext context) =>
+        new(context, new EfAuthorizationDirectory(context));
+
+    private static async Task SeedAuthorizationAsync(
+        PlatformDbContext context,
+        Guid tenantId,
+        Guid companyId,
+        Guid userId)
+    {
+        context.Users.Add(new PlatformUserRecord
+        {
+            TenantId = tenantId,
+            Id = userId,
+            IdentityProvider = "test",
+            Subject = $"user-{userId:N}",
+            DisplayName = "User",
+            IsActive = true
+        });
+        context.Companies.Add(new CompanyRecord
+        {
+            TenantId = tenantId,
+            Id = companyId,
+            Code = $"C-{companyId:N}",
+            Name = "Company",
+            IsActive = true
+        });
+        context.CompanyMemberships.Add(new CompanyMembershipRecord
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            UserId = userId,
+            IsActive = true
+        });
+
+        await context.SaveChangesAsync();
     }
 
     private static DataSourceRegistryWriteRequest CreateRequest(string logicalName) =>

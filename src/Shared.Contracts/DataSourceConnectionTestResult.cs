@@ -3,6 +3,7 @@ namespace MinhHuy.AIOffice.Shared.Contracts;
 public static class DataSourceConnectionTestCodes
 {
     public const string Success = "success";
+    public const string NotAuthorized = "not_authorized";
     public const string NotFound = "not_found";
     public const string Disabled = "disabled";
     public const string InvalidConfiguration = "invalid_configuration";
@@ -17,6 +18,9 @@ public sealed record DataSourceConnectionTestResult(
 {
     public static DataSourceConnectionTestResult Success() =>
         new(true, DataSourceConnectionTestCodes.Success, "Connection test succeeded.");
+
+    public static DataSourceConnectionTestResult NotAuthorized() =>
+        new(false, DataSourceConnectionTestCodes.NotAuthorized, "Connection test is not authorized for the selected company.");
 
     public static DataSourceConnectionTestResult NotFound() =>
         new(false, DataSourceConnectionTestCodes.NotFound, "Data source was not found in the authorized company scope.");

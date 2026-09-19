@@ -27,6 +27,7 @@ public sealed class SqlDataSourceConnectionProbe(
 
 public sealed class DataSourceConnectionTestService(
     PlatformDbContext dbContext,
+    IAuthorizationDirectory authorizationDirectory,
     CompositeSecretResolver secretResolver,
     IDataSourceConnectionProbe connectionProbe)
 {
@@ -44,12 +45,21 @@ public sealed class DataSourceConnectionTestService(
                 nameof(dataSourceId));
         }
 
+        var authorized = await authorizationDirectory.ResolveAsync(
+            authorizationContext,
+            cancellationToken);
+
+        if (authorized is null)
+        {
+            return DataSourceConnectionTestResult.NotAuthorized();
+        }
+
         var dataSource = await dbContext.DataSources
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 item =>
-                    item.TenantId == authorizationContext.TenantId
-                    && item.CompanyId == authorizationContext.CompanyId
+                    item.TenantId == authorized.Context.TenantId
+                    && item.CompanyId == authorized.Context.CompanyId
                     && item.Id == dataSourceId,
                 cancellationToken);
 

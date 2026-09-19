@@ -8,12 +8,14 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class DataSourceConnectionTestServiceTests
 {
     [Fact]
-    public async Task TestAsync_UsesAuthorizationScopeAndKeepsSecretMaterialOutOfResult()
+    public async Task TestAsync_UsesActiveMembershipAndKeepsSecretMaterialOutOfResult()
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dataSourceId = Guid.NewGuid();
         await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
 
         context.DataSources.Add(CreateDataSource(
             tenantId,
@@ -27,7 +29,7 @@ public sealed class DataSourceConnectionTestServiceTests
         var service = CreateService(context, resolver, probe);
 
         var result = await service.TestAsync(
-            AuthorizationContext.Create(tenantId, companyId, Guid.NewGuid()),
+            AuthorizationContext.Create(tenantId, companyId, userId),
             dataSourceId);
 
         Assert.True(result.Succeeded);
@@ -39,12 +41,18 @@ public sealed class DataSourceConnectionTestServiceTests
     }
 
     [Fact]
-    public async Task TestAsync_DoesNotCrossCompanyBoundary()
+    public async Task TestAsync_NonMemberFailsBeforeSecretResolution()
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var authorizedUserId = Guid.NewGuid();
         var dataSourceId = Guid.NewGuid();
         await using var context = CreateContext();
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            companyId,
+            authorizedUserId);
 
         context.DataSources.Add(CreateDataSource(
             tenantId,
@@ -58,11 +66,94 @@ public sealed class DataSourceConnectionTestServiceTests
         var service = CreateService(context, resolver, probe);
 
         var result = await service.TestAsync(
-            AuthorizationContext.Create(tenantId, Guid.NewGuid(), Guid.NewGuid()),
+            AuthorizationContext.Create(
+                tenantId,
+                companyId,
+                Guid.NewGuid()),
             dataSourceId);
 
         Assert.False(result.Succeeded);
-        Assert.Equal(DataSourceConnectionTestCodes.NotFound, result.Code);
+        Assert.Equal(DataSourceConnectionTestCodes.NotAuthorized, result.Code);
+        Assert.Null(resolver.LastReference);
+        Assert.Null(probe.LastConnectionString);
+    }
+
+    [Fact]
+    public async Task TestAsync_InactiveMembershipFailsBeforeSecretResolution()
+    {
+        var tenantId = Guid.NewGuid();
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var dataSourceId = Guid.NewGuid();
+        await using var context = CreateContext();
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            companyId,
+            userId,
+            membershipActive: false);
+
+        context.DataSources.Add(CreateDataSource(
+            tenantId,
+            companyId,
+            dataSourceId,
+            "secretref://env/company-erp-production"));
+        await context.SaveChangesAsync();
+
+        var resolver = new RecordingSecretResolver("opaque-runtime-connection-material");
+        var probe = new RecordingProbe();
+        var service = CreateService(context, resolver, probe);
+
+        var result = await service.TestAsync(
+            AuthorizationContext.Create(tenantId, companyId, userId),
+            dataSourceId);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(DataSourceConnectionTestCodes.NotAuthorized, result.Code);
+        Assert.Null(resolver.LastReference);
+        Assert.Null(probe.LastConnectionString);
+    }
+
+    [Fact]
+    public async Task TestAsync_DoesNotCrossCompanyBoundary()
+    {
+        var tenantId = Guid.NewGuid();
+        var allowedCompanyId = Guid.NewGuid();
+        var otherCompanyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var dataSourceId = Guid.NewGuid();
+        await using var context = CreateContext();
+        await SeedAuthorizationAsync(
+            context,
+            tenantId,
+            allowedCompanyId,
+            userId);
+
+        context.Companies.Add(new CompanyRecord
+        {
+            TenantId = tenantId,
+            Id = otherCompanyId,
+            Code = "OTHER",
+            Name = "Other",
+            IsActive = true
+        });
+        context.DataSources.Add(CreateDataSource(
+            tenantId,
+            allowedCompanyId,
+            dataSourceId,
+            "secretref://env/company-erp-production"));
+        await context.SaveChangesAsync();
+
+        var resolver = new RecordingSecretResolver("opaque-runtime-connection-material");
+        var probe = new RecordingProbe();
+        var service = CreateService(context, resolver, probe);
+
+        var result = await service.TestAsync(
+            AuthorizationContext.Create(tenantId, otherCompanyId, userId),
+            dataSourceId);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(DataSourceConnectionTestCodes.NotAuthorized, result.Code);
         Assert.Null(resolver.LastReference);
         Assert.Null(probe.LastConnectionString);
     }
@@ -72,8 +163,10 @@ public sealed class DataSourceConnectionTestServiceTests
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dataSourceId = Guid.NewGuid();
         await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
 
         var dataSource = CreateDataSource(
             tenantId,
@@ -89,7 +182,7 @@ public sealed class DataSourceConnectionTestServiceTests
         var service = CreateService(context, resolver, probe);
 
         var result = await service.TestAsync(
-            AuthorizationContext.Create(tenantId, companyId, Guid.NewGuid()),
+            AuthorizationContext.Create(tenantId, companyId, userId),
             dataSourceId);
 
         Assert.False(result.Succeeded);
@@ -103,8 +196,10 @@ public sealed class DataSourceConnectionTestServiceTests
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dataSourceId = Guid.NewGuid();
         await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
 
         context.DataSources.Add(CreateDataSource(
             tenantId,
@@ -118,7 +213,7 @@ public sealed class DataSourceConnectionTestServiceTests
         var service = CreateService(context, resolver, probe);
 
         var result = await service.TestAsync(
-            AuthorizationContext.Create(tenantId, companyId, Guid.NewGuid()),
+            AuthorizationContext.Create(tenantId, companyId, userId),
             dataSourceId);
 
         Assert.False(result.Succeeded);
@@ -132,8 +227,10 @@ public sealed class DataSourceConnectionTestServiceTests
     {
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dataSourceId = Guid.NewGuid();
         await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
 
         context.DataSources.Add(CreateDataSource(
             tenantId,
@@ -147,7 +244,7 @@ public sealed class DataSourceConnectionTestServiceTests
         var service = CreateService(context, resolver, probe);
 
         var result = await service.TestAsync(
-            AuthorizationContext.Create(tenantId, companyId, Guid.NewGuid()),
+            AuthorizationContext.Create(tenantId, companyId, userId),
             dataSourceId);
 
         Assert.False(result.Succeeded);
@@ -162,8 +259,44 @@ public sealed class DataSourceConnectionTestServiceTests
         RecordingProbe probe) =>
         new(
             context,
+            new EfAuthorizationDirectory(context),
             new CompositeSecretResolver(new[] { resolver }),
             probe);
+
+    private static async Task SeedAuthorizationAsync(
+        PlatformDbContext context,
+        Guid tenantId,
+        Guid companyId,
+        Guid userId,
+        bool membershipActive = true)
+    {
+        context.Users.Add(new PlatformUserRecord
+        {
+            TenantId = tenantId,
+            Id = userId,
+            IdentityProvider = "test",
+            Subject = $"user-{userId:N}",
+            DisplayName = "User",
+            IsActive = true
+        });
+        context.Companies.Add(new CompanyRecord
+        {
+            TenantId = tenantId,
+            Id = companyId,
+            Code = $"C-{companyId:N}",
+            Name = "Company",
+            IsActive = true
+        });
+        context.CompanyMemberships.Add(new CompanyMembershipRecord
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            UserId = userId,
+            IsActive = membershipActive
+        });
+
+        await context.SaveChangesAsync();
+    }
 
     private static PlatformDbContext CreateContext()
     {
