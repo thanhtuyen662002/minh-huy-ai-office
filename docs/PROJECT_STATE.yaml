@@ -1,0 +1,20 @@
+project: Minh Huy AI Office
+repository: thanhtuyen662002/minh-huy-ai-office
+phase: P0-foundation
+status: governance-pr-open
+priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
+current_issue: 9
+current_branch: bootstrap/project-governance
+current_pr: 37
+last_verified_commit: null
+next_action: "Inspect PR #37 CI. If green, merge #37, close #9, then start issue #10."
+blocked_by:
+  - "PR #37 governance CI"
+autonomy:
+  routine_engineering: autonomous
+  staging_deploy: autonomous_after_gates
+  production_low_risk: autonomous_after_policy
+  production_high_risk: approval_required
+handoff_contract:
+  required: true
+  checkpoint_frequency: "after each verified unit of work"
