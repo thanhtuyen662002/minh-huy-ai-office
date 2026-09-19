@@ -22,6 +22,7 @@ Ports are bound to loopback by default. They are not intentionally exposed to th
 
 ```bash
 cp .env.example .env
+# Replace RABBITMQ_DEFAULT_PASS in the ignored .env before starting services.
 docker compose up -d
 docker compose ps
 ```
@@ -37,7 +38,7 @@ Use `docker compose down -v` only when intentionally deleting local RabbitMQ/Red
 ## Validate configuration
 
 ```bash
-docker compose --env-file .env.example config
+docker compose --env-file .env.example config --quiet
 ```
 
 ## SQL Server strategy
@@ -51,9 +52,15 @@ SQL Server is deliberately not created by this compose baseline because Minh Huy
 Rules:
 1. Never expose SQL Server port 1433 directly to the public Internet.
 2. Remote SQL connectivity must use a trusted private network/VPN/site-to-site path.
-3. Credentials never live in Git, prompts, or ordinary configuration tables.
-4. The future Data Source Registry stores logical resource metadata and a secret reference, not plaintext credentials.
-5. Agents request a logical source such as `company.erp.production`; Tool Gateway resolves the physical server/database.
-6. Dev/staging/prod use separate databases/credentials.
+3. Credentials never live in Git, prompts, or ordinary configuration/application tables.
+4. Data Source Registry stores logical resource metadata and a `secretref://provider/resource`, not plaintext credentials.
+5. Agents request a logical source such as `company.erp.production`; Tool Gateway resolves the physical server/database and secret at the authorized runtime boundary.
+6. Dev/staging/prod use separate databases, identities and secret namespaces.
 
-When the backend itself runs in Docker on Windows/macOS Docker Desktop and must reach a SQL Server on the host, `host.docker.internal` may be used for development. Production addressing must be explicit and environment-specific.
+For local API development, an example reference is:
+
+```text
+AIOffice__PlatformDatabase__ConnectionSecretRef=secretref://env/AIOFFICE_DB_CONNECTION
+```
+
+Set the actual `AIOFFICE_DB_CONNECTION` only in the ignored local environment/process environment. When the backend itself runs in Docker on Windows/macOS Docker Desktop and must reach SQL Server on the host, `host.docker.internal` may be used for development. Production addressing must be explicit and environment-specific.

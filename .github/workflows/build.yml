@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      AIOFFICE_DB_CONNECTION: "Server=127.0.0.1,1433;Database=AIOfficeCiValidation;User Id=sa;Password=CiValidationOnly_123!;TrustServerCertificate=true;Connect Timeout=1"
+      AIOFFICE_DB_CONNECTION: "Server=127.0.0.1,1433;Database=AIOfficeCiValidation;Integrated Security=true;TrustServerCertificate=true;Connect Timeout=1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
