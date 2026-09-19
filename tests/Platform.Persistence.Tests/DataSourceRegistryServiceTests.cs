@@ -186,6 +186,43 @@ public sealed class DataSourceRegistryServiceTests
     }
 
     [Fact]
+    public async Task Update_MetadataWithoutSecretReference_PreservesStoredSecretReference()
+    {
+        var tenantId = Guid.NewGuid();
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenantId, companyId, userId);
+        var service = CreateService(context);
+        var authorization = AuthorizationContext.Create(
+            tenantId,
+            companyId,
+            userId);
+
+        var created = await service.CreateAsync(
+            authorization,
+            CreateRequest("company.erp.production"));
+
+        var updated = await service.UpdateAsync(
+            authorization,
+            created.Id,
+            CreateRequest("company.erp.reporting") with
+            {
+                ConnectionSecretReference = null,
+                MaxConcurrency = 8
+            });
+
+        var stored = await context.DataSources.SingleAsync();
+
+        Assert.NotNull(updated);
+        Assert.Equal("company.erp.reporting", updated.LogicalName);
+        Assert.Equal(8, updated.MaxConcurrency);
+        Assert.Equal(
+            "secretref://env/company-erp-production",
+            stored.ConnectionSecretReference);
+    }
+
+    [Fact]
     public async Task Update_CanRotateSecretReferenceWithoutReturningIt()
     {
         var tenantId = Guid.NewGuid();
