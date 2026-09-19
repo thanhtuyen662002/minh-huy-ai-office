@@ -1,8 +1,10 @@
 workstream: erp-data
 role: "ERP / Data"
-status: ready
-current_issue: null
-current_pr: null
+status: active
+current_issue: 18
+current_pr: 50
+current_branch: erp/18-data-source-registry
+stacked_on: "PR #47 / backend/17-identity-foundation"
 preferred_next_issue: 18
 scope:
   - datasource-registry
@@ -10,4 +12,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Inspect dependency readiness for #18. Work only against stable company/identity contracts or use an explicit stacked PR."
+next_action: "Run Build/Governance CI on the clean PR #50 stack, fix any ERP/Data model, migration or contract failures, then continue the connection-test workflow only if parent contracts remain stable."
