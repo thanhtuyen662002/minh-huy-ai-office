@@ -1,15 +1,17 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-platform-core
-status: integration
+status: integration-security-hold
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 17
 current_branch: backend/17-identity-foundation
 current_pr: 47
-last_verified_commit: fce6de8ae8d014158fb2cd8168374d1415aefbfb
+last_verified_commit: 0640928493687dd5a99798f9a104be7b94524eb1
 next_issue: 18
-next_action: "Review exact-head readiness for PR #47 and independent security PR #54; merge #47 before dependent PRs #50/#51; do not take over active specialist implementations."
-blocked_by: []
+next_action: "Complete exact-head QA verification and merge PR #54 if issue #52 acceptance is fully satisfied. Keep PR #47 on security HOLD until its authorization TOCTOU race is fixed on the existing backend lease; then re-review exact HEAD and merge #47 before dependent PRs #50/#51. Keep PR #55 stacked behind #51."
+blocked_by:
+  - "PR #47 authorization TOCTOU security finding: membership can be revoked between validation and role lookup."
+  - "PR #54 exact-head CI must pass after adding the built-image non-root runtime gate."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
