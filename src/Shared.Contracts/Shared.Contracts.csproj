@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>MinhHuy.AIOffice.Shared.Contracts</RootNamespace>
+    <AssemblyName>MinhHuy.AIOffice.Shared.Contracts</AssemblyName>
+  </PropertyGroup>
+</Project>
