@@ -1,8 +1,11 @@
 workstream: backend
 role: "Backend Platform"
-status: ready
-current_issue: null
-current_pr: null
+status: active
+current_issue: 17
+current_pr: 47
+current_branch: backend/17-identity-foundation
+implementation_head: dd29e9778a0e9cc84d9c8d4a9303ae4e9f1757c3
+stacked_on: null
 preferred_next_issue: 17
 scope:
   - aspnet-core
@@ -10,4 +13,4 @@ scope:
   - authorization
   - domain-application-api
   - platform-persistence
-next_action: "If issue #17 has no active PR, claim a backend-safe slice of #17 and open a Draft PR."
+next_action: "Run Build/Governance CI on the rebased identity branch, fix failures, then finish the safe backend application/API boundary for issue #17 without treating untrusted request metadata as authentication."
