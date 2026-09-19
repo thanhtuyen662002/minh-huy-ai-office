@@ -91,6 +91,25 @@ jobs:
         run: docker build --file src/Core.Api/Dockerfile --tag aioffice/core-api:ci .
       - name: Build Agent.Worker container
         run: docker build --file src/Agent.Worker/Dockerfile --tag aioffice/agent-worker:ci .
+      - name: Verify application containers run as non-root
+        shell: bash
+        run: |
+          set -euo pipefail
+          for image in aioffice/core-api:ci aioffice/agent-worker:ci; do
+            configured_user="$(docker image inspect --format '{{.Config.User}}' "${image}")"
+            if [ -z "${configured_user}" ] || [ "${configured_user}" = "0" ] || [ "${configured_user}" = "root" ]; then
+              echo "::error::${image} does not declare a non-root runtime user"
+              exit 1
+            fi
+
+            runtime_uid="$(docker run --rm --entrypoint sh "${image}" -c 'id -u')"
+            if [ -z "${runtime_uid}" ] || [ "${runtime_uid}" = "0" ]; then
+              echo "::error::${image} executes as root (uid=${runtime_uid:-unknown})"
+              exit 1
+            fi
+
+            echo "${image} runtime user=${configured_user} uid=${runtime_uid}"
+          done
 
   migrations:
     name: EF Core migration integrity
