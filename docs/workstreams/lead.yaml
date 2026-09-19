@@ -1,11 +1,11 @@
 workstream: lead
 role: "Lead / Integrator"
 status: active
-current_issue: 16
-current_pr: 44
+current_issue: 17
+current_pr: 47
 scope:
   - integration
   - roadmap-priority
   - merge-sequencing
   - project-state
-next_action: "Continue PR #44, verify CI/gates, merge when ready, then coordinate P1 parallelization."
+next_action: "Monitor and integrate #47 on main, keep #19 dependent on the identity contract, and resolve/merge independent #49 when its CI-workflow conflict and gates are clean."

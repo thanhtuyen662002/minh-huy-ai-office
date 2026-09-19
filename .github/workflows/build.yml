@@ -69,6 +69,29 @@ jobs:
       - name: Validate Docker Compose
         run: docker compose --env-file .env.example config --quiet
 
+  deployment:
+    name: Deployment contract and container builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate production deployment contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          rendered="${RUNNER_TEMP}/deployment-compose.json"
+          docker compose \
+            --env-file .env.production.example \
+            -f compose.yaml \
+            -f compose.production.yaml \
+            config --format json > "${rendered}"
+          python3 scripts/validate-deployment.py "${rendered}"
+          python3 -m json.tool apps/web/vercel.json >/dev/null
+      - name: Build Core.Api container
+        run: docker build --file src/Core.Api/Dockerfile --tag aioffice/core-api:ci .
+      - name: Build Agent.Worker container
+        run: docker build --file src/Agent.Worker/Dockerfile --tag aioffice/agent-worker:ci .
+
   migrations:
     name: EF Core migration integrity
     runs-on: ubuntu-latest
@@ -90,7 +113,12 @@ jobs:
         run: |
           set -euo pipefail
           output="${RUNNER_TEMP}/aioffice-migrations.sql"
-          dotnet ef migrations script 0             --project src/Platform.Persistence/Platform.Persistence.csproj             --configuration Release             --no-build             --idempotent             --output "${output}"
+          dotnet ef migrations script 0 \
+            --project src/Platform.Persistence/Platform.Persistence.csproj \
+            --configuration Release \
+            --no-build \
+            --idempotent \
+            --output "${output}"
           test -s "${output}"
           grep -q "__EFMigrationsHistory" "${output}"
           grep -q "20260919114500_InitialPlatformFoundation" "${output}"
@@ -98,7 +126,7 @@ jobs:
   quality-gates:
     name: Required quality gates
     if: ${{ always() }}
-    needs: [dotnet, web, infrastructure, migrations]
+    needs: [dotnet, web, infrastructure, deployment, migrations]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -107,11 +135,12 @@ jobs:
           DOTNET_RESULT: ${{ needs.dotnet.result }}
           WEB_RESULT: ${{ needs.web.result }}
           INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
+          DEPLOYMENT_RESULT: ${{ needs.deployment.result }}
           MIGRATIONS_RESULT: ${{ needs.migrations.result }}
         run: |
           set -euo pipefail
           failed=0
-          for gate in DOTNET_RESULT WEB_RESULT INFRASTRUCTURE_RESULT MIGRATIONS_RESULT; do
+          for gate in DOTNET_RESULT WEB_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
             result="${!gate}"
             echo "${gate}=${result}"
             if [ "${result}" != "success" ]; then

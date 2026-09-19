@@ -1,0 +1,15 @@
+.git
+.github
+**/bin
+**/obj
+**/node_modules
+**/.next
+**/out
+**/dist
+.env
+.env.*
+!.env.example
+!.env.production.example
+secrets
+*.pfx
+*.key

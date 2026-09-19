@@ -1,14 +1,14 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P0-foundation
-status: ready-to-merge
+phase: P1-platform-core
+status: integration
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 15
-current_branch: feature/15-opentelemetry-observability
-current_pr: 43
-last_verified_commit: 35ba26faed244ca8a6b6612d082b6b934f8215f2
-next_issue: 16
-next_action: "Merge PR #43 after the state-only checkpoint CI is green, confirm issue #15 closes, then start issue #16 deployment baseline."
+current_issue: 17
+current_branch: backend/17-identity-foundation
+current_pr: 47
+last_verified_commit: 82d5856c7196731a36dba87fcb283a2e668f6d65
+next_issue: 18
+next_action: "Integrate PR #47 after backend verification on main; keep durable-task work dependent on #17, and resolve independent PR #49 against the deployment CI gate before merge."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
