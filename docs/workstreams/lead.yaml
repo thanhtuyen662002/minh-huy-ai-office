@@ -1,6 +1,6 @@
 workstream: lead
 role: "Lead / Integrator"
-status: active
+status: ready-to-merge
 current_issue: 16
 current_pr: 44
 scope:
@@ -8,4 +8,4 @@ scope:
   - roadmap-priority
   - merge-sequencing
   - project-state
-next_action: "Run PR #44 CI for the container/Vercel/private-network deployment baseline, fix any failure, then checkpoint ready-to-merge and merge when all gates pass."
+next_action: "Merge PR #44 after checkpoint CI is green; then reconcile open P1 leases and set PROJECT_STATE to the highest-priority executable integration action."

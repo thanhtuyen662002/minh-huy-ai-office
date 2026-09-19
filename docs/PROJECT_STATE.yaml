@@ -1,14 +1,14 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P0-foundation
-status: implementation
+status: ready-to-merge
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 16
 current_branch: feature/16-deployment-baseline
 current_pr: 44
-last_verified_commit: b7500f4129b4aad27bc5c19eb4d9dea7e090345b
+last_verified_commit: 17df2ce1fd7614915c0907db45fd7bbbd58a395f
 next_issue: 17
-next_action: "Implement and verify the deployment baseline for Vercel frontend plus private containerized backend exposure; keep SQL private, document rollback/security boundaries, then merge PR #44 when gates pass."
+next_action: "Merge PR #44 after the state-only checkpoint CI is green, confirm issue #16 closes, then coordinate P1 workstream leases starting with issue #17."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
