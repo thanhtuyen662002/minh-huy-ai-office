@@ -44,6 +44,27 @@ for service_name, service in services.items():
                 f"(host_ip={host_ip!r})"
             )
 
+for service_name in ("core-api", "agent-worker"):
+    service = services[service_name]
+
+    if service.get("read_only") is not True:
+        fail(f"{service_name} must use a read-only root filesystem")
+
+    if service.get("init") is not True:
+        fail(f"{service_name} must run with init enabled")
+
+    dropped_capabilities = {
+        str(capability).upper() for capability in (service.get("cap_drop") or [])
+    }
+    if "ALL" not in dropped_capabilities:
+        fail(f"{service_name} must drop all Linux capabilities")
+
+    security_options = {
+        str(option).lower() for option in (service.get("security_opt") or [])
+    }
+    if "no-new-privileges:true" not in security_options:
+        fail(f"{service_name} must enable no-new-privileges")
+
 core_api = services["core-api"]
 api_ports = core_api.get("ports") or []
 if not any(

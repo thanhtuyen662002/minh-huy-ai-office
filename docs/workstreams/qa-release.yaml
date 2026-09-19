@@ -1,8 +1,13 @@
 workstream: qa-release
-role: "QA / Security / Release"
-status: active
-current_issue: null
-current_pr: null
+role: "QA / Security / Release (Lead-owned)"
+current_issue: 52
+current_pr: 54
+current_branch: qa/52-deployment-security-gates-main
+head: 2df5c27b7fba06b70018b2ddc37aed2beae3ca0d
+state: ready_for_review
+lease_owner: lead
+lease_heartbeat_at: "2026-09-19T22:47:10+07:00"
+last_checkpoint_at: "2026-09-19T22:47:10+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -12,4 +17,17 @@ scope:
   - migrations-verification
   - deployment-release
   - recovery-drills
-next_action: "Review active PR #44 and strengthen independent CI/security/release evidence; claim #36 only when its P0 dependencies are satisfied."
+  - cross-workstream-pr-quality-review
+verification:
+  governance_run: 35452926119
+  build_run: 35452926124
+  result: success
+  evidence:
+    - production-env positive/negative PowerShell preflight paths
+    - rendered Compose runtime hardening checks
+    - Core.Api and Agent.Worker built-image runtime UID non-root checks
+    - frontend tests/type-check/build
+    - .NET format/build/tests
+    - EF Core migration integrity
+    - aggregate required quality gates
+next_action: "Run exact-head CI on this ready_for_review state-only checkpoint. If Governance and Build remain green and PR head is unchanged/mergeable, Lead may squash-merge PR #54, confirm issue #52 closes, then release the qa-release lease and advance QA/release work."
