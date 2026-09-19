@@ -4,7 +4,7 @@ status: verification
 current_issue: 17
 current_pr: 47
 current_branch: backend/17-identity-foundation
-implementation_head: 43ca0304185a733522c1de8f9f9c07b1948f4aa0
+implementation_head: e09dab68747a90667d66c520487d3165c96153a2
 stacked_on: null
 preferred_next_issue: 17
 scope:
@@ -19,4 +19,4 @@ verification:
   result: pending
 known_risks:
   - "Authorization resolution must remain a single database consistency boundary so membership revocation cannot race role reads."
-next_action: "Verify exact-head CI for the single-query authorization TOCTOU fix and revocation regression; if green, update PR #47 HANDOFF and mark ready for lead/integrator review."
+next_action: "Verify exact-head CI after fixing the inactive-state regression setup; if green, update PR #47 HANDOFF and mark ready for lead/integrator review."
