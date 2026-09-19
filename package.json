@@ -6,6 +6,7 @@
   ],
   "scripts": {
     "web:dev": "npm run dev --workspace @minh-huy-ai-office/web",
+    "web:test": "npm run test --workspace @minh-huy-ai-office/web",
     "web:typecheck": "npm run typecheck --workspace @minh-huy-ai-office/web",
     "web:build": "npm run build --workspace @minh-huy-ai-office/web",
     "dotnet:format": "dotnet format MinhHuy.AIOffice.sln --verify-no-changes",
@@ -13,6 +14,6 @@
     "dotnet:test": "dotnet test MinhHuy.AIOffice.sln --configuration Release --no-restore",
     "build": "npm run web:build && npm run dotnet:build",
     "test": "npm run dotnet:test",
-    "verify:web": "npm run web:typecheck && npm run web:build"
+    "verify:web": "npm run web:test && npm run web:typecheck && npm run web:build"
   }
 }

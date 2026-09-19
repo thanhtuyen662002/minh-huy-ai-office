@@ -1,8 +1,9 @@
 workstream: frontend
 role: "Frontend Product"
-status: ready
-current_issue: null
-current_pr: null
+status: active
+current_issue: 48
+current_branch: frontend/48-web-test-harness
+current_pr: 49
 preferred_next_issue: 17
 scope:
   - nextjs
@@ -10,4 +11,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Inspect #17 and backend contracts. Start only an independent or explicitly stacked frontend slice."
+next_action: "Verify PR #49 frontend tests, type-check, production build, and repository CI; fix failures, then mark the PR ready for lead/QA review."
