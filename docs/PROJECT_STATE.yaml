@@ -1,14 +1,14 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P0-foundation
-status: ready-to-merge
+status: implementation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 14
-current_branch: feature/14-config-secret-contract
-current_pr: 42
-last_verified_commit: 51f93dbf321e02f864774555b7558acf627e3eb3
-next_issue: 15
-next_action: "Merge PR #42 after the state-only checkpoint CI is green, confirm issue #14 closes, then start issue #15 OpenTelemetry observability baseline."
+current_issue: 15
+current_branch: feature/15-opentelemetry-observability
+current_pr: null
+last_verified_commit: bb27a8058099c3138aeb6971a06f5727eb1a6fb5
+next_issue: 16
+next_action: "Implement OpenTelemetry traces/logs/metrics baseline with TaskId/CompanyId/TraceId correlation and a local collector/dashboard path; open/update Draft PR and run all gates."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
