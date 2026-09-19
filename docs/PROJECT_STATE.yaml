@@ -5,10 +5,10 @@ status: implementation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 16
 current_branch: feature/16-deployment-baseline
-current_pr: null
-last_verified_commit: c36c20f3998fd8653ad78933eac0773c7f918c9f
+current_pr: 44
+last_verified_commit: b7500f4129b4aad27bc5c19eb4d9dea7e090345b
 next_issue: 17
-next_action: "Implement the deployment baseline for Vercel frontend and private containerized backend exposure, document rollback/security boundaries, run CI, and open/update the draft PR."
+next_action: "Implement and verify the deployment baseline for Vercel frontend plus private containerized backend exposure; keep SQL private, document rollback/security boundaries, then merge PR #44 when gates pass."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous

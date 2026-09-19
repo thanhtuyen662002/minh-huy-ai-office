@@ -1,0 +1,13 @@
+workstream: backend
+role: "Backend Platform"
+status: ready
+current_issue: null
+current_pr: null
+preferred_next_issue: 17
+scope:
+  - aspnet-core
+  - identity
+  - authorization
+  - domain-application-api
+  - platform-persistence
+next_action: "If issue #17 has no active PR, claim a backend-safe slice of #17 and open a Draft PR."

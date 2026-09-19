@@ -1,0 +1,13 @@
+workstream: frontend
+role: "Frontend Product"
+status: ready
+current_issue: null
+current_pr: null
+preferred_next_issue: 17
+scope:
+  - nextjs
+  - shadcn-ui
+  - ux
+  - client-contracts
+  - realtime-ui
+next_action: "Inspect #17 and backend contracts. Start only an independent or explicitly stacked frontend slice."
