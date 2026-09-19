@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using MinhHuy.AIOffice.Platform.Observability;
+using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Observability.Tests;
 
