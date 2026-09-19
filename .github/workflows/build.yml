@@ -43,7 +43,7 @@ jobs:
         run: dotnet test MinhHuy.AIOffice.sln --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
 
   web:
-    name: Web type-check and build
+    name: Web tests, type-check and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -53,6 +53,8 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Test
+        run: npm run web:test
       - name: Type-check
         run: npm run web:typecheck
       - name: Build
