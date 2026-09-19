@@ -5,10 +5,10 @@ state: blocked
 current_issue: 18
 current_pr: 50
 current_branch: erp/18-data-source-registry
-head: 914d73b5ce19c1caefa8b7f6d3cc0e7fc054bbea
+head: d228ef332622ea493eee75c2e191a0aef117f97d
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-19T22:34:55+07:00"
-last_checkpoint_at: "2026-09-19T22:34:55+07:00"
+lease_heartbeat_at: "2026-09-19T22:45:19+07:00"
+last_checkpoint_at: "2026-09-19T22:45:19+07:00"
 stacked_on: "PR #47 / backend/17-identity-foundation"
 preferred_next_issue: 18
 blocked_by:
@@ -20,4 +20,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Keep PR #50 as the sole ERP/Data primary lease. When PR #47 publishes a verified authorization fix, resume this same branch/PR, restack if parent HEAD changed, rerun exact-head CI, then complete safe API/UI acceptance for issue #18 without creating another primary lease."
+next_action: "Keep PR #50 as the sole ERP/Data primary lease. PR #50 implementation HEAD d228ef3 is exact-head green and preserves stored secret references on metadata-only updates. When PR #47 publishes a verified authorization fix, resume this same branch/PR, restack if the parent HEAD changed, rerun exact-head CI, then continue safe API/UI acceptance for issue #18 without creating another primary lease."
