@@ -1,0 +1,29 @@
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Node / Next
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pfx
+*.key
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
