@@ -1,11 +1,16 @@
 workstream: lead
 role: "Lead / Integrator"
-status: active
-current_issue: 17
-current_pr: 47
+current_issue: null
+current_pr: null
+current_branch: main
+head: fce6de8ae8d014158fb2cd8168374d1415aefbfb
+state: in_progress
+lease_owner: lead
+lease_heartbeat_at: "2026-09-19T22:21:39+07:00"
+last_checkpoint_at: "2026-09-19T22:21:39+07:00"
 scope:
   - integration
   - roadmap-priority
   - merge-sequencing
   - project-state
-next_action: "Monitor and integrate #47 on main, keep #19 dependent on the identity contract, and resolve/merge independent #49 when its CI-workflow conflict and gates are clean."
+next_action: "Re-read all active leases; merge only exact-head ready/green work. Priority: verify #47 ready checkpoint and #54 QA checkpoint; keep #50/#51 behind #47 and do not modify specialist implementation while their leases are live."

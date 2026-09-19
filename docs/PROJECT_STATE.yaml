@@ -6,9 +6,9 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 17
 current_branch: backend/17-identity-foundation
 current_pr: 47
-last_verified_commit: 82d5856c7196731a36dba87fcb283a2e668f6d65
+last_verified_commit: fce6de8ae8d014158fb2cd8168374d1415aefbfb
 next_issue: 18
-next_action: "Integrate PR #47 after backend verification on main; keep durable-task work dependent on #17, and resolve independent PR #49 against the deployment CI gate before merge."
+next_action: "Review exact-head readiness for PR #47 and independent security PR #54; merge #47 before dependent PRs #50/#51; do not take over active specialist implementations."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
