@@ -1,15 +1,16 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P0-foundation
-status: implementation
+status: ci-validation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 12
 current_branch: feature/12-sqlserver-persistence
-current_pr: null
+current_pr: 40
 last_verified_commit: e4b3ac6c8ca163b0ec01e59bd49b81c8f2caa69b
 next_issue: 13
-next_action: "Add EF Core SQL Server persistence project, initial migration, Dapper connection boundary and migration documentation/tests."
-blocked_by: []
+next_action: "Inspect PR #40 CI. Fix any persistence/migration compile failures, then merge when green."
+blocked_by:
+  - "PR #40 CI result"
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
