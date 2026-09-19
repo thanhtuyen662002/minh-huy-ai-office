@@ -1,24 +1,39 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { CompanyShell } from "../components/company-shell";
 import Home from "./page";
 
 afterEach(() => {
   cleanup();
 });
 
-describe("Home", () => {
-  it("renders the AI Office foundation screen with a main landmark and product heading", () => {
+describe("company-scoped product shell", () => {
+  it("renders an explicit active-company context", () => {
     render(<Home />);
 
     expect(screen.getByRole("main")).toBeTruthy();
-    expect(
-      screen.getByRole("heading", { level: 1, name: "AI Office" }),
-    ).toBeTruthy();
-    expect(
-      screen.getByText(
-        "Nền tảng agent đa công ty cho ERP, kế toán, hỗ trợ khách hàng và vận hành.",
-      ),
-    ).toBeTruthy();
-    expect(screen.getByText("Foundation status")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "AI Office" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" })).toBeTruthy();
+    expect(screen.getByText("Không gian làm việc của Minh Huy")).toBeTruthy();
+    expect(screen.getByText("demo-user")).toBeTruthy();
+  });
+
+  it("fails closed when tenant/company/user scope is incomplete", () => {
+    render(
+      <CompanyShell
+        membership={{
+          tenantId: "minh-huy",
+          companyId: "",
+          companyName: "Minh Huy",
+          userId: "demo-user",
+          userName: "Nhân viên nội bộ",
+          roles: [],
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Chưa có phạm vi làm việc" })).toBeTruthy();
+    expect(screen.getByText(/sẽ không hiển thị dữ liệu công ty/i)).toBeTruthy();
+    expect(screen.queryByText("Không gian làm việc của Minh Huy")).toBeNull();
   });
 });
