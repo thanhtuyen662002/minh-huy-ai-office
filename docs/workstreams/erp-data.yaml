@@ -1,0 +1,13 @@
+workstream: erp-data
+role: "ERP / Data"
+status: ready
+current_issue: null
+current_pr: null
+preferred_next_issue: 18
+scope:
+  - datasource-registry
+  - sql-erp-adapters
+  - schema-observer
+  - erp-catalog
+  - feature-capability-registry
+next_action: "Inspect dependency readiness for #18. Work only against stable company/identity contracts or use an explicit stacked PR."
