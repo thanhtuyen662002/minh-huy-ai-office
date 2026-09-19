@@ -1,9 +1,13 @@
 workstream: erp-data
 role: "ERP / Data"
-status: active
 current_issue: 18
 current_pr: 50
 current_branch: erp/18-data-source-registry
+head: ccbff76cb122511155a76864488b1442c2fe3f30
+state: waiting_ci
+lease_owner: erp-data
+lease_heartbeat_at: "2026-09-19T22:32:39+07:00"
+last_checkpoint_at: "2026-09-19T22:32:39+07:00"
 stacked_on: "PR #47 / backend/17-identity-foundation"
 preferred_next_issue: 18
 scope:
@@ -12,4 +16,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Run Build/Governance CI on the clean PR #50 stack, fix any ERP/Data model, migration or contract failures, then continue the connection-test workflow only if parent contracts remain stable."
+next_action: "Verify exact-head CI for the authorization hardening on PR #50; fix failures or review findings on the same branch, then continue issue #18 acceptance without opening another primary lease."
