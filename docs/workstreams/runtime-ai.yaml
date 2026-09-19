@@ -1,0 +1,14 @@
+workstream: runtime-ai
+role: "Runtime / AI Platform"
+status: ready
+current_issue: null
+current_pr: null
+preferred_next_issue: 19
+scope:
+  - task-engine
+  - rabbitmq-workers
+  - leases-retries-idempotency
+  - ai-gateway
+  - model-router
+  - context-engine
+next_action: "Inspect dependency readiness for #19. If identity contract is not stable, review/prepare tests or a prerequisite rather than bypassing it."
