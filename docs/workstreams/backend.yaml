@@ -1,8 +1,10 @@
 workstream: backend
 role: "Backend Platform"
-status: ready
-current_issue: null
+status: active
+current_issue: 17
 current_pr: null
+current_branch: backend/17-identity-foundation
+stacked_on: "PR #44 / feature/16-deployment-baseline"
 preferred_next_issue: 17
 scope:
   - aspnet-core
@@ -10,4 +12,4 @@ scope:
   - authorization
   - domain-application-api
   - platform-persistence
-next_action: "If issue #17 has no active PR, claim a backend-safe slice of #17 and open a Draft PR."
+next_action: "Implement the tenant-scoped identity persistence model and authorization-context contract, add migration/tests, then open/update the stacked Draft PR and drive CI green."
