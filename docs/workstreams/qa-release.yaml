@@ -1,0 +1,15 @@
+workstream: qa-release
+role: "QA / Security / Release"
+status: active
+current_issue: null
+current_pr: null
+preferred_next_issue: 36
+scope:
+  - ci
+  - tests
+  - security
+  - observability
+  - migrations-verification
+  - deployment-release
+  - recovery-drills
+next_action: "Review active PR #44 and strengthen independent CI/security/release evidence; claim #36 only when its P0 dependencies are satisfied."
