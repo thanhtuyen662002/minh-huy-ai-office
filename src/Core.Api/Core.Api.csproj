@@ -6,5 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
+    <ProjectReference Include="..\Platform.Persistence\Platform.Persistence.csproj" />
   </ItemGroup>
 </Project>
