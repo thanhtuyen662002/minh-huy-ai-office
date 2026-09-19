@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: ready_for_review
-current_issue: 56
-current_pr: 57
-current_branch: frontend/56-company-context-shell
-head: 9508c65e8b820737c77479c63fc65930fa45fe43
-state: ready_for_review
+status: blocked
+current_issue: null
+current_pr: null
+current_branch: null
+head: 90de748e8b91390fa1a8e529ec37bf62c6425957
+state: blocked
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T01:09:00+07:00"
-last_checkpoint_at: "2026-09-20T01:09:00+07:00"
+lease_heartbeat_at: "2026-09-20T02:10:00+07:00"
+last_checkpoint_at: "2026-09-20T02:10:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Lead/QA review and merge PR #57 after verifying exact-head CI. Do not wire live identity/API until the trusted authenticated HTTP authorization contract exists; after #57 integration, inspect #22 dependency readiness for the next frontend slice."
+next_action: "PR #57 is merged and the frontend primary lease is released. Issue #22 remains blocked by #19 and #20: preserve the merged fail-closed company-context shell, do not invent SignalR/task contracts while runtime PR #51 is blocked and stacked PR #55 is blocked, and re-check dependency readiness after Lead integrates the runtime sequence. Live identity/API wiring must still wait for the trusted authenticated HTTP authorization contract."
