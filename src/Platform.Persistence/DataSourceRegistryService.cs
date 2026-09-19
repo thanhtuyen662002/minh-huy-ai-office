@@ -9,7 +9,7 @@ public sealed record DataSourceRegistryWriteRequest(
     string Kind,
     string Environment,
     string Purpose,
-    string ConnectionSecretReference,
+    string? ConnectionSecretReference,
     bool AllowRead,
     bool AllowWrite,
     int MaxConcurrency,
@@ -127,7 +127,9 @@ public sealed class DataSourceRegistryService(
             authorized.Context.CompanyId,
             dataSourceId,
             request);
-        var secretReference = SecretReference.Parse(request.ConnectionSecretReference);
+        var secretReference = request.ConnectionSecretReference is null
+            ? null
+            : SecretReference.Parse(request.ConnectionSecretReference);
 
         if (await LogicalNameExistsAsync(
                 authorized.Context,
@@ -143,7 +145,11 @@ public sealed class DataSourceRegistryService(
         record.Kind = validated.Kind;
         record.Environment = validated.Environment;
         record.Purpose = validated.Purpose;
-        record.ConnectionSecretReference = secretReference.Value;
+        if (secretReference is not null)
+        {
+            record.ConnectionSecretReference = secretReference.Value;
+        }
+
         record.AllowRead = validated.AllowRead;
         record.AllowWrite = validated.AllowWrite;
         record.MaxConcurrency = validated.MaxConcurrency;
