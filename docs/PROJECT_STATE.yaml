@@ -1,14 +1,14 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P0-foundation
-status: ready-to-merge
+status: implementation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 11
-current_branch: feature/11-local-infrastructure
-current_pr: 39
-last_verified_commit: cd49b57a92372ab5cbbdd64e2eb5f4995b217843
-next_issue: 12
-next_action: "Merge PR #39, confirm issue #11 closes, then start issue #12 SQL Server platform persistence and migrations."
+current_issue: 12
+current_branch: feature/12-sqlserver-persistence
+current_pr: null
+last_verified_commit: e4b3ac6c8ca163b0ec01e59bd49b81c8f2caa69b
+next_issue: 13
+next_action: "Add EF Core SQL Server persistence project, initial migration, Dapper connection boundary and migration documentation/tests."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
