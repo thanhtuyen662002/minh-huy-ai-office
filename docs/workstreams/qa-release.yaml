@@ -1,13 +1,13 @@
 workstream: qa-release
 role: "QA / Security / Release (Lead-owned)"
-current_issue: 52
-current_pr: 54
-current_branch: qa/52-deployment-security-gates-main
-head: 2df5c27b7fba06b70018b2ddc37aed2beae3ca0d
-state: ready_for_review
+current_issue: null
+current_pr: null
+current_branch: main
+head: 6595527a720dd1b6afbbcfda615c07ed99c48939
+state: idle
 lease_owner: lead
-lease_heartbeat_at: "2026-09-19T22:47:10+07:00"
-last_checkpoint_at: "2026-09-19T22:47:10+07:00"
+lease_heartbeat_at: "2026-09-19T22:51:55+07:00"
+last_checkpoint_at: "2026-09-19T22:51:55+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -17,17 +17,15 @@ scope:
   - migrations-verification
   - deployment-release
   - recovery-drills
+  - dependency-security-upgrade-review
+  - release-gates
   - cross-workstream-pr-quality-review
 verification:
-  governance_run: 35452926119
-  build_run: 35452926124
+  pr: 54
+  issue: 52
+  exact_head: ac85d5d39950682b114511428d3f98486f6ea5e4
+  governance_run: 35453016641
+  build_run: 35453016534
+  merge_commit: 6595527a720dd1b6afbbcfda615c07ed99c48939
   result: success
-  evidence:
-    - production-env positive/negative PowerShell preflight paths
-    - rendered Compose runtime hardening checks
-    - Core.Api and Agent.Worker built-image runtime UID non-root checks
-    - frontend tests/type-check/build
-    - .NET format/build/tests
-    - EF Core migration integrity
-    - aggregate required quality gates
-next_action: "Run exact-head CI on this ready_for_review state-only checkpoint. If Governance and Build remain green and PR head is unchanged/mergeable, Lead may squash-merge PR #54, confirm issue #52 closes, then release the qa-release lease and advance QA/release work."
+next_action: "Keep QA/release capacity on active P1 security and integration review. PR #47 remains on authorization TOCTOU HOLD; do not claim unrelated QA implementation while a higher-priority security blocker needs exact-head verification after the backend specialist fixes it. Claim #36 only when higher-priority work is clear and its dependencies remain satisfied."
