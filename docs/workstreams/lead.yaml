@@ -3,11 +3,11 @@ role: "Lead / Integrator + QA / Security / Release"
 current_issue: null
 current_pr: null
 current_branch: main
-head: c2bf7cd241ad62d8c82a9e8c1c7cbd510b46e116
+head: f3fc0b1dacd8099fc6a5491f394e52a8fd56a1ae
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-19T22:44:00+07:00"
-last_checkpoint_at: "2026-09-19T22:44:00+07:00"
+lease_heartbeat_at: "2026-09-19T22:52:17+07:00"
+last_checkpoint_at: "2026-09-19T22:52:17+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -23,4 +23,4 @@ scope:
   - dependency-security-upgrades
   - release-gates
   - cross-workstream-pr-quality-review
-next_action: "Finish exact-head verification and merge of QA/security PR #54 if all #52 acceptance criteria pass. Keep PR #47 on security HOLD until the backend specialist fixes the authorization TOCTOU race on the same lease; then re-review exact HEAD and merge #47 before #50/#51, with #55 remaining stacked behind #51."
+next_action: "PR #54/#52 is merged and QA lease is released. Keep PR #47 on authorization TOCTOU security HOLD until the backend specialist fixes it on the existing lease. Then verify exact HEAD + CI + revocation regression evidence and merge #47 before dependent #50/#51; keep #55 stacked behind #51. Do not take over live specialist implementations."
