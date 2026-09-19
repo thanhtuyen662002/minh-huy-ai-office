@@ -1,16 +1,15 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P0-foundation
-status: ci-validation
+status: ready-to-merge
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 12
 current_branch: feature/12-sqlserver-persistence
 current_pr: 40
-last_verified_commit: e4b3ac6c8ca163b0ec01e59bd49b81c8f2caa69b
+last_verified_commit: 6297130c7c6fb10ccda968be2632c26968f77179
 next_issue: 13
-next_action: "Inspect PR #40 CI. Fix any persistence/migration compile failures, then merge when green."
-blocked_by:
-  - "PR #40 CI result"
+next_action: "Merge PR #40, confirm issue #12 closes, then start issue #13 CI, test and quality gates."
+blocked_by: []
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
