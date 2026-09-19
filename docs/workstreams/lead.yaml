@@ -1,0 +1,11 @@
+workstream: lead
+role: "Lead / Integrator"
+status: active
+current_issue: 16
+current_pr: 44
+scope:
+  - integration
+  - roadmap-priority
+  - merge-sequencing
+  - project-state
+next_action: "Continue PR #44, verify CI/gates, merge when ready, then coordinate P1 parallelization."
