@@ -1,10 +1,10 @@
 workstream: backend
 role: "Backend Platform"
-status: active
+status: ready-for-review
 current_issue: 17
 current_pr: 47
 current_branch: backend/17-identity-foundation
-implementation_head: dd29e9778a0e9cc84d9c8d4a9303ae4e9f1757c3
+implementation_head: 2addc15e1e89c4dca17147e4d89e7e624c620133
 stacked_on: null
 preferred_next_issue: 17
 scope:
@@ -13,4 +13,8 @@ scope:
   - authorization
   - domain-application-api
   - platform-persistence
-next_action: "Run Build/Governance CI on the rebased identity branch, fix failures, then finish the safe backend application/API boundary for issue #17 without treating untrusted request metadata as authentication."
+verification:
+  governance_run: 35451472085
+  build_run: 35451472086
+  result: success
+next_action: "Verify CI on this state-only checkpoint, then mark PR #47 ready for lead/integrator review and merge sequencing; do not add unauthenticated HTTP identity endpoints."
