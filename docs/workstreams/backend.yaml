@@ -1,8 +1,11 @@
 workstream: backend
 role: "Backend Platform"
-status: ready
-current_issue: null
-current_pr: null
+status: ready_for_review
+current_issue: 17
+current_pr: 47
+current_branch: backend/17-identity-foundation
+implementation_head: f769be3916c301aad08e1dc720550c3e4b2e3ccb
+stacked_on: null
 preferred_next_issue: 17
 scope:
   - aspnet-core
@@ -10,4 +13,11 @@ scope:
   - authorization
   - domain-application-api
   - platform-persistence
-next_action: "If issue #17 has no active PR, claim a backend-safe slice of #17 and open a Draft PR."
+verification:
+  governance_run: 35456589692
+  build_run: 35456589648
+  result: success
+known_risks:
+  - "HTTP authentication provider is not yet part of #17; caller-controlled headers must not become trusted identity."
+  - "Authorization resolution must remain a single database consistency boundary so membership revocation cannot race role reads."
+next_action: "Lead/Integrator review and merge sequencing for PR #47. Do not start dependent backend implementation until #47 is merged and shared EF migration/snapshot ordering with PR #50/#51 is resolved."

@@ -8,12 +8,7 @@ public sealed class PlatformDbContextTests
     [Fact]
     public void Model_UsesExpectedSchemaAndTable()
     {
-        var options = new DbContextOptionsBuilder<PlatformDbContext>()
-            .UseSqlServer(
-                "Server=localhost;Database=AIOffice_Model_Test;User Id=test;Password=test;TrustServerCertificate=true")
-            .Options;
-
-        using var context = new PlatformDbContext(options);
+        using var context = CreateContext();
 
         var entity = context.Model.FindEntityType(typeof(PlatformMetadataRecord));
 
@@ -21,6 +16,108 @@ public sealed class PlatformDbContextTests
         Assert.Equal(PlatformDbContext.DefaultSchema, entity.GetSchema());
         Assert.Equal("PlatformMetadata", entity.GetTableName());
         Assert.Equal(200, entity.FindProperty(nameof(PlatformMetadataRecord.Key))?.GetMaxLength());
+    }
+
+    [Fact]
+    public void IdentityModel_UsesTenantScopedCompositeBoundaries()
+    {
+        using var context = CreateContext();
+
+        var user = context.Model.FindEntityType(typeof(PlatformUserRecord));
+        var company = context.Model.FindEntityType(typeof(CompanyRecord));
+        var membership = context.Model.FindEntityType(typeof(CompanyMembershipRecord));
+        var roleAssignment = context.Model.FindEntityType(typeof(RoleAssignmentRecord));
+
+        Assert.NotNull(user);
+        Assert.NotNull(company);
+        Assert.NotNull(membership);
+        Assert.NotNull(roleAssignment);
+
+        Assert.Equal(
+            new[] { nameof(PlatformUserRecord.TenantId), nameof(PlatformUserRecord.Id) },
+            user.FindPrimaryKey()!.Properties.Select(property => property.Name));
+        Assert.Equal(
+            new[] { nameof(CompanyRecord.TenantId), nameof(CompanyRecord.Id) },
+            company.FindPrimaryKey()!.Properties.Select(property => property.Name));
+        Assert.Equal(
+            new[]
+            {
+                nameof(CompanyMembershipRecord.TenantId),
+                nameof(CompanyMembershipRecord.CompanyId),
+                nameof(CompanyMembershipRecord.UserId)
+            },
+            membership.FindPrimaryKey()!.Properties.Select(property => property.Name));
+        Assert.Equal(
+            new[]
+            {
+                nameof(RoleAssignmentRecord.TenantId),
+                nameof(RoleAssignmentRecord.CompanyId),
+                nameof(RoleAssignmentRecord.UserId),
+                nameof(RoleAssignmentRecord.RoleKey)
+            },
+            roleAssignment.FindPrimaryKey()!.Properties.Select(property => property.Name));
+
+        Assert.Contains(
+            membership.GetForeignKeys(),
+            foreignKey =>
+                foreignKey.PrincipalEntityType.ClrType == typeof(CompanyRecord)
+                && foreignKey.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(CompanyMembershipRecord.TenantId),
+                            nameof(CompanyMembershipRecord.CompanyId)
+                        }));
+
+        Assert.Contains(
+            membership.GetForeignKeys(),
+            foreignKey =>
+                foreignKey.PrincipalEntityType.ClrType == typeof(PlatformUserRecord)
+                && foreignKey.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(CompanyMembershipRecord.TenantId),
+                            nameof(CompanyMembershipRecord.UserId)
+                        }));
+
+        Assert.Contains(
+            roleAssignment.GetForeignKeys(),
+            foreignKey =>
+                foreignKey.PrincipalEntityType.ClrType == typeof(CompanyMembershipRecord)
+                && foreignKey.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(RoleAssignmentRecord.TenantId),
+                            nameof(RoleAssignmentRecord.CompanyId),
+                            nameof(RoleAssignmentRecord.UserId)
+                        }));
+
+        Assert.Contains(
+            user.GetIndexes(),
+            index =>
+                index.IsUnique
+                && index.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(PlatformUserRecord.TenantId),
+                            nameof(PlatformUserRecord.IdentityProvider),
+                            nameof(PlatformUserRecord.Subject)
+                        }));
+
+        Assert.Contains(
+            company.GetIndexes(),
+            index =>
+                index.IsUnique
+                && index.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(CompanyRecord.TenantId),
+                            nameof(CompanyRecord.Code)
+                        }));
     }
 
     [Fact]
@@ -32,5 +129,15 @@ public sealed class PlatformDbContextTests
             "Server=localhost;Database=AIOffice_Model_Test;User Id=test;Password=test;TrustServerCertificate=true");
 
         Assert.Equal(System.Data.ConnectionState.Closed, connection.State);
+    }
+
+    private static PlatformDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseSqlServer(
+                "Server=localhost;Database=AIOffice_Model_Test;User Id=test;Password=test;TrustServerCertificate=true")
+            .Options;
+
+        return new PlatformDbContext(options);
     }
 }

@@ -18,6 +18,7 @@ public static class DependencyInjection
                     sql.MigrationsHistoryTable(
                         "__EFMigrationsHistory",
                         PlatformDbContext.DefaultSchema)));
+            services.AddScoped<IAuthorizationDirectory, EfAuthorizationDirectory>();
         }
 
         return services;
