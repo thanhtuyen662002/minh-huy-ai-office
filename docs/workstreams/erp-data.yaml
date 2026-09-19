@@ -1,18 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
-status: blocked
-state: blocked
+status: waiting_ci
+state: waiting_ci
 current_issue: 18
 current_pr: 50
 current_branch: erp/18-data-source-registry
-head: d052e68bf6421f3b432521e83ab44118ff1e6c96
+head: 3236de9ac21b5c10bb11d3fca94b5fbb1633a7cd
 lease_owner: erp-data
 lease_heartbeat_at: "2026-09-20T00:29:15+07:00"
 last_checkpoint_at: "2026-09-20T00:29:15+07:00"
-stacked_on: "PR #47 / backend/17-identity-foundation"
+stacked_on: "PR #47 / backend/17-identity-foundation @ f769be3916c301aad08e1dc720550c3e4b2e3ccb"
 preferred_next_issue: 18
 blocked_by:
-  - "PR #47 authorization fix is exact-head green at f769be3, but PR #50 is behind the moved parent and currently not mergeable; restack/reconciliation is required before further shared-schema work"
   - "Issue #18 API/UI acceptance requires an authenticated authorization boundary; caller-controlled tenant/company/user identifiers are forbidden"
 scope:
   - datasource-registry
@@ -20,4 +19,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Keep PR #50 as the sole ERP/Data primary lease. Parent PR #47 exact HEAD f769be3 has Governance and Build green. Reconcile/restack this same branch onto the authoritative parent without creating a competing implementation, rerun exact-head CI, then continue only safe #18 acceptance behind a trusted authenticated authorization boundary."
+next_action: "PR #50 has been reconciled onto verified parent #47 at f769be3 via merge commit 3236de9. Verify exact-head Governance + Build for the durable state checkpoint; if green, move to ready_for_review for the completed registry foundation while leaving authenticated API/UI acceptance explicitly deferred to a trusted auth boundary."
