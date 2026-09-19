@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Contracts", "src\Sha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Persistence", "src\Platform.Persistence\Platform.Persistence.csproj", "{6DA4E06B-2AC1-49AB-89B6-5F09B725DDE2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Configuration", "src\\Platform.Configuration\\Platform.Configuration.csproj", "{9E0C53C8-493F-4F44-A39A-39D056CF58E1}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Contracts.Tests", "tests\Shared.Contracts.Tests\Shared.Contracts.Tests.csproj", "{8BB95C0A-870B-4554-B08B-9DA5D22FC072}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Persistence.Tests", "tests\Platform.Persistence.Tests\Platform.Persistence.Tests.csproj", "{2C11A217-0794-4B90-B048-9800F6910F18}"
@@ -36,6 +38,10 @@ Global
     {6DA4E06B-2AC1-49AB-89B6-5F09B725DDE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {6DA4E06B-2AC1-49AB-89B6-5F09B725DDE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {6DA4E06B-2AC1-49AB-89B6-5F09B725DDE2}.Release|Any CPU.Build.0 = Release|Any CPU
+    {9E0C53C8-493F-4F44-A39A-39D056CF58E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {9E0C53C8-493F-4F44-A39A-39D056CF58E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {9E0C53C8-493F-4F44-A39A-39D056CF58E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {9E0C53C8-493F-4F44-A39A-39D056CF58E1}.Release|Any CPU.Build.0 = Release|Any CPU
     {8BB95C0A-870B-4554-B08B-9DA5D22FC072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {8BB95C0A-870B-4554-B08B-9DA5D22FC072}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {8BB95C0A-870B-4554-B08B-9DA5D22FC072}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -44,5 +50,9 @@ Global
     {2C11A217-0794-4B90-B048-9800F6910F18}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {2C11A217-0794-4B90-B048-9800F6910F18}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {2C11A217-0794-4B90-B048-9800F6910F18}.Release|Any CPU.Build.0 = Release|Any CPU
+    {B4131C29-5768-4C27-B1CE-2F10A59E1BF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {B4131C29-5768-4C27-B1CE-2F10A59E1BF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {B4131C29-5768-4C27-B1CE-2F10A59E1BF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {B4131C29-5768-4C27-B1CE-2F10A59E1BF5}.Release|Any CPU.Build.0 = Release|Any CPU
   EndGlobalSection
 EndGlobal

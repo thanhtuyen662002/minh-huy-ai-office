@@ -5,10 +5,10 @@ status: implementation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 14
 current_branch: feature/14-config-secret-contract
-current_pr: null
+current_pr: 42
 last_verified_commit: 2a804d3f4fe54e54795f808ef4232e371a8677ec
 next_issue: 15
-next_action: "Define and implement environment/configuration hierarchy plus opaque secret-reference validation, tests and CI-safe documentation; open/update Draft PR."
+next_action: "Run PR #42 CI for the configuration/secret-reference implementation; fix format/build/test/compose/migration failures, then checkpoint verified HEAD."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous

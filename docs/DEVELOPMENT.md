@@ -6,6 +6,8 @@
 - npm.
 - Docker Desktop / Docker Engine.
 
+Configuration and secret handling rules are defined in `docs/CONFIGURATION.md`. Never put resolved credentials in tracked appsettings files.
+
 ## Required local quality gates
 
 Run the same deterministic checks used by GitHub Actions before marking implementation ready:
@@ -26,7 +28,7 @@ docker compose --env-file .env.example config --quiet
 Migration integrity is checked without contacting a live SQL Server. The design-time factory only needs a syntactically valid connection string while EF generates the SQL script:
 
 ```bash
-export AIOFFICE_DB_CONNECTION='Server=127.0.0.1,1433;Database=AIOfficeCiValidation;User Id=sa;Password=CiValidationOnly_123!;TrustServerCertificate=true;Connect Timeout=1'
+export AIOFFICE_DB_CONNECTION='Server=127.0.0.1,1433;Database=AIOfficeCiValidation;Integrated Security=true;TrustServerCertificate=true;Connect Timeout=1'
 dotnet tool restore
 dotnet build src/Platform.Persistence/Platform.Persistence.csproj --configuration Release --no-restore
 dotnet ef migrations script 0 --project src/Platform.Persistence/Platform.Persistence.csproj --configuration Release --no-build --idempotent --output /tmp/aioffice-migrations.sql
@@ -36,6 +38,18 @@ grep -q '20260919114500_InitialPlatformFoundation' /tmp/aioffice-migrations.sql
 ```
 
 GitHub exposes the component jobs plus the aggregate **Required quality gates** job as machine-readable check results. Governance remains a separate mandatory workflow and must stay green.
+
+## Optional local platform database
+
+Export the secret value only in your local process environment, then point normal configuration at the opaque reference:
+
+```bash
+export AIOFFICE_DB_CONNECTION='your local development connection string'
+export AIOffice__PlatformDatabase__ConnectionSecretRef='secretref://env/AIOFFICE_DB_CONNECTION'
+dotnet run --project src/Core.Api/Core.Api.csproj
+```
+
+Do not commit the first value. The second value is a non-secret reference.
 
 ## Run web
 ```bash
@@ -52,4 +66,4 @@ dotnet run --project src/Core.Api/Core.Api.csproj
 dotnet run --project src/Agent.Worker/Agent.Worker.csproj
 ```
 
-The repository contains no customer credentials, database connections or AI provider keys. The CI-only connection string above is a non-routable validation value and is not a production secret.
+The repository contains no customer credentials, database passwords or AI provider keys. The CI-only connection string above is a non-routable validation value and is not a production secret.
