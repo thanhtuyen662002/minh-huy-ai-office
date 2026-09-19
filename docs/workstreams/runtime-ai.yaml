@@ -1,8 +1,13 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: active
 current_issue: 20
-current_pr: null
+current_pr: 55
+current_branch: runtime/20-worker-dispatch
+head: 0c8fc391481fedc7e46b682e8a22c45d6532d4a3
+state: waiting_ci
+lease_owner: runtime-ai
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-09-19T16:20:00Z"
 stacked_on: "PR #51 / runtime/19-durable-task-engine"
 scope:
   - task-engine
@@ -11,4 +16,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Implement #20 execution contracts and durable lease/retry/idempotency invariants as a stacked follow-up on verified PR #51, then wire RabbitMQ transport with focused tests."
+next_action: "Verify exact-head CI for the worker execution-control persistence and state-machine checkpoint. If green, refresh lease heartbeat/HANDOFF and continue RabbitMQ publisher/consumer ack/dead-letter/checkpoint-resume wiring on this same stacked PR."
