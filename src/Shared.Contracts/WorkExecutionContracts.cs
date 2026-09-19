@@ -14,6 +14,36 @@ public enum RetryDisposition
     DeadLetter
 }
 
+public enum WorkDispatchState
+{
+    Pending,
+    Published,
+    Acknowledged,
+    DeadLettered
+}
+
+public static class WorkDispatchTransitions
+{
+    public static bool CanTransition(WorkDispatchState current, WorkDispatchState next)
+    {
+        if (current == next)
+        {
+            return true;
+        }
+
+        return current switch
+        {
+            WorkDispatchState.Pending => next is WorkDispatchState.Published
+                or WorkDispatchState.DeadLettered,
+            WorkDispatchState.Published => next is WorkDispatchState.Acknowledged
+                or WorkDispatchState.DeadLettered,
+            WorkDispatchState.Acknowledged => false,
+            WorkDispatchState.DeadLettered => false,
+            _ => false
+        };
+    }
+}
+
 public sealed record WorkDispatchEnvelope(
     Guid MessageId,
     Guid TenantId,
