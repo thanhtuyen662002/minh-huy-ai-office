@@ -5,9 +5,18 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dotnet:
+    name: .NET format, build and tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -15,26 +24,85 @@ jobs:
           dotnet-version: 10.0.x
       - name: Restore
         run: dotnet restore MinhHuy.AIOffice.sln
+      - name: Verify formatting
+        run: dotnet format MinhHuy.AIOffice.sln --no-restore --verify-no-changes --verbosity normal
       - name: Build
         run: dotnet build MinhHuy.AIOffice.sln --configuration Release --no-restore
       - name: Test
-        run: dotnet test MinhHuy.AIOffice.sln --configuration Release --no-build --no-restore
+        run: dotnet test MinhHuy.AIOffice.sln --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
 
   web:
+    name: Web type-check and build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Install
-        run: npm install
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Type-check
+        run: npm run web:typecheck
       - name: Build
         run: npm run web:build
 
   infrastructure:
+    name: Docker Compose validation
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Validate Docker Compose
-        run: docker compose --env-file .env.example config
+        run: docker compose --env-file .env.example config --quiet
+
+  migrations:
+    name: EF Core migration integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AIOFFICE_DB_CONNECTION: "Server=127.0.0.1,1433;Database=AIOfficeCiValidation;User Id=sa;Password=CiValidationOnly_123!;TrustServerCertificate=true;Connect Timeout=1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: dotnet restore MinhHuy.AIOffice.sln
+      - name: Restore local .NET tools
+        run: dotnet tool restore
+      - name: Build persistence project
+        run: dotnet build src/Platform.Persistence/Platform.Persistence.csproj --configuration Release --no-restore
+      - name: Generate idempotent migration script
+        run: |
+          set -euo pipefail
+          output="${RUNNER_TEMP}/aioffice-migrations.sql"
+          dotnet ef migrations script 0             --project src/Platform.Persistence/Platform.Persistence.csproj             --configuration Release             --no-build             --idempotent             --output "${output}"
+          test -s "${output}"
+          grep -q "__EFMigrationsHistory" "${output}"
+          grep -q "20260919114500_InitialPlatformFoundation" "${output}"
+
+  quality-gates:
+    name: Required quality gates
+    if: ${{ always() }}
+    needs: [dotnet, web, infrastructure, migrations]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Enforce required gate results
+        env:
+          DOTNET_RESULT: ${{ needs.dotnet.result }}
+          WEB_RESULT: ${{ needs.web.result }}
+          INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
+          MIGRATIONS_RESULT: ${{ needs.migrations.result }}
+        run: |
+          set -euo pipefail
+          failed=0
+          for gate in DOTNET_RESULT WEB_RESULT INFRASTRUCTURE_RESULT MIGRATIONS_RESULT; do
+            result="${!gate}"
+            echo "${gate}=${result}"
+            if [ "${result}" != "success" ]; then
+              failed=1
+            fi
+          done
+          exit "${failed}"

@@ -5,10 +5,10 @@ status: implementation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 13
 current_branch: feature/13-ci-quality-gates
-current_pr: null
+current_pr: 41
 last_verified_commit: 24cba124107b70d868575f9f01cb4de27b41f9fd
 next_issue: 14
-next_action: "Strengthen CI with format/type/test/migration validation and explicit quality gates, then open/update PR."
+next_action: "Run PR #41 CI against the new deterministic quality gates; fix any failures, then checkpoint green HEAD and merge."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
