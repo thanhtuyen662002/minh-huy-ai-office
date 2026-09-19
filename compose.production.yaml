@@ -1,0 +1,66 @@
+services:
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in ignored .env.production}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in ignored .env.production}
+
+  core-api:
+    build:
+      context: .
+      dockerfile: src/Core.Api/Dockerfile
+    image: minh-huy-ai-office/core-api:${AIOFFICE_RELEASE_TAG:-local}
+    restart: unless-stopped
+    init: true
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
+      AIOFFICE_DB_CONNECTION: ${AIOFFICE_DB_CONNECTION:?set AIOFFICE_DB_CONNECTION from the approved runtime secret source}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    ports:
+      - "127.0.0.1:${CORE_API_PORT:-8080}:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 30s
+    networks:
+      - ai-office
+
+  agent-worker:
+    build:
+      context: .
+      dockerfile: src/Agent.Worker/Dockerfile
+    image: minh-huy-ai-office/agent-worker:${AIOFFICE_RELEASE_TAG:-local}
+    restart: unless-stopped
+    init: true
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 60s
+    networks:
+      - ai-office

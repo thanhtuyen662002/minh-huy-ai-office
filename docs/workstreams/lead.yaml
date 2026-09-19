@@ -8,4 +8,4 @@ scope:
   - roadmap-priority
   - merge-sequencing
   - project-state
-next_action: "Continue PR #44, verify CI/gates, merge when ready, then coordinate P1 parallelization."
+next_action: "Run PR #44 CI for the container/Vercel/private-network deployment baseline, fix any failure, then checkpoint ready-to-merge and merge when all gates pass."
