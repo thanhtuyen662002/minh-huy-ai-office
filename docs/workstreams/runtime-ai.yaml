@@ -1,11 +1,9 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: active
+status: ready
 current_issue: 19
 current_pr: 51
-current_branch: runtime/19-durable-task-engine
 stacked_on: "PR #47 / backend/17-identity-foundation"
-implementation_base: "backend/17-identity-foundation@26ff201524b00779041227af6b424c6aa4ac1f38"
 scope:
   - task-engine
   - rabbitmq-workers
@@ -13,9 +11,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-verification:
-  prior_runtime_head: bb64c90ab9b75b3bfdff18ce49e36e9bca800e84
-  governance_run: 35451475779
-  build_run: 35451475703
-  result: success
-next_action: "Verify CI after clean restack on PR #47 HEAD, then add the task mutation/service layer with atomic event/checkpoint append semantics while keeping queue/lease/retry behavior reserved for #20."
+next_action: "PR #51 implementation is verified green. Keep merge sequencing behind PR #47; if #20 remains unleased, continue runtime work as a stacked PR on #51 without merging dependencies out of order."
