@@ -2,8 +2,9 @@ workstream: backend
 role: "Backend Platform"
 status: active
 current_issue: 17
-current_pr: null
+current_pr: 47
 current_branch: backend/17-identity-foundation
+head: 471db6ec75db22d4e6bb6802c0de48dc922651da
 stacked_on: "PR #44 / feature/16-deployment-baseline"
 preferred_next_issue: 17
 scope:
@@ -12,4 +13,4 @@ scope:
   - authorization
   - domain-application-api
   - platform-persistence
-next_action: "Implement the tenant-scoped identity persistence model and authorization-context contract, add migration/tests, then open/update the stacked Draft PR and drive CI green."
+next_action: "Inspect Build/Governance CI for the identity persistence checkpoint; fix any failure, then add membership-backed authorization resolution without trusting caller-supplied identity as authentication."
