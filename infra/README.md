@@ -10,6 +10,14 @@ This directory documents the infrastructure used by Minh Huy AI Office. The init
 - Durable named volume.
 - Health check via `rabbitmq-diagnostics ping`.
 
+### OpenTelemetry Collector + Jaeger
+- OTLP gRPC: `127.0.0.1:4317`
+- OTLP HTTP: `127.0.0.1:4318`
+- Jaeger UI: `http://127.0.0.1:16686`
+- Collector receives traces, metrics and logs.
+- Traces are forwarded to Jaeger; metrics/logs use the collector debug exporter for the P0 local baseline.
+- Ports are loopback-bound and are not a production exposure pattern.
+
 ### Redis
 - Redis: `127.0.0.1:6379`
 - Append-only persistence enabled for development convenience.
@@ -25,6 +33,7 @@ cp .env.example .env
 # Replace RABBITMQ_DEFAULT_PASS in the ignored .env before starting services.
 docker compose up -d
 docker compose ps
+# Open http://127.0.0.1:16686 to inspect local traces.
 ```
 
 ## Stop

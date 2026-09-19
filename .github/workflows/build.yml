@@ -24,6 +24,17 @@ jobs:
           dotnet-version: 10.0.x
       - name: Restore
         run: dotnet restore MinhHuy.AIOffice.sln
+      - name: Verify all test projects are in the solution
+        shell: bash
+        run: |
+          set -euo pipefail
+          listed_projects="$(dotnet sln MinhHuy.AIOffice.sln list | tr '\\' '/')"
+          while IFS= read -r project; do
+            if ! grep -Fqx "${project}" <<< "${listed_projects}"; then
+              echo "::error file=${project}::Test project is not included in MinhHuy.AIOffice.sln"
+              exit 1
+            fi
+          done < <(find tests -name '*.csproj' -print | sort)
       - name: Verify formatting
         run: dotnet format MinhHuy.AIOffice.sln --no-restore --verify-no-changes --verbosity normal
       - name: Build

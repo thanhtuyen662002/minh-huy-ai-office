@@ -3,12 +3,12 @@ repository: thanhtuyen662002/minh-huy-ai-office
 phase: P0-foundation
 status: ready-to-merge
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 14
-current_branch: feature/14-config-secret-contract
-current_pr: 42
-last_verified_commit: 51f93dbf321e02f864774555b7558acf627e3eb3
-next_issue: 15
-next_action: "Merge PR #42 after the state-only checkpoint CI is green, confirm issue #14 closes, then start issue #15 OpenTelemetry observability baseline."
+current_issue: 15
+current_branch: feature/15-opentelemetry-observability
+current_pr: 43
+last_verified_commit: 35ba26faed244ca8a6b6612d082b6b934f8215f2
+next_issue: 16
+next_action: "Merge PR #43 after the state-only checkpoint CI is green, confirm issue #15 closes, then start issue #16 deployment baseline."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous

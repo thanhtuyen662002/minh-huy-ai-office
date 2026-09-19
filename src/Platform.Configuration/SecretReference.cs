@@ -26,7 +26,7 @@ public sealed record SecretReference
                 "Secret references must use the form secretref://provider/resource and must not contain credentials, query strings, or fragments.");
         }
 
-        return reference;
+        return reference!;
     }
 
     public static bool TryParse(string? value, out SecretReference? reference)
