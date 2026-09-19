@@ -1,14 +1,19 @@
 workstream: frontend
 role: "Frontend Product"
-status: active
-current_issue: 48
-current_branch: frontend/48-web-test-harness
-current_pr: 49
-preferred_next_issue: 17
+status: ready_for_review
+current_issue: 56
+current_pr: 57
+current_branch: frontend/56-company-context-shell
+head: 9508c65e8b820737c77479c63fc65930fa45fe43
+state: ready_for_review
+lease_owner: frontend
+lease_heartbeat_at: "2026-09-20T01:09:00+07:00"
+last_checkpoint_at: "2026-09-20T01:09:00+07:00"
+preferred_next_issue: 22
 scope:
   - nextjs
   - shadcn-ui
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Verify PR #49 frontend tests, type-check, production build, and repository CI; fix failures, then mark the PR ready for lead/QA review."
+next_action: "Lead/QA review and merge PR #57 after verifying exact-head CI. Do not wire live identity/API until the trusted authenticated HTTP authorization contract exists; after #57 integration, inspect #22 dependency readiness for the next frontend slice."
