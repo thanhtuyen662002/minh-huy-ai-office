@@ -5,10 +5,10 @@ status: implementation
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 15
 current_branch: feature/15-opentelemetry-observability
-current_pr: null
+current_pr: 43
 last_verified_commit: bb27a8058099c3138aeb6971a06f5727eb1a6fb5
 next_issue: 16
-next_action: "Implement OpenTelemetry traces/logs/metrics baseline with TaskId/CompanyId/TraceId correlation and a local collector/dashboard path; open/update Draft PR and run all gates."
+next_action: "Run PR #43 CI for OpenTelemetry/correlation/local collector implementation; fix any failure, then checkpoint verified HEAD."
 blocked_by: []
 autonomy:
   routine_engineering: autonomous
