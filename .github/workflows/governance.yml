@@ -1,0 +1,23 @@
+name: Governance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  repository-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required project memory files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f AGENTS.md
+          test -f docs/PROJECT_STATE.yaml
+          test -f docs/architecture/FOUNDATION.md
+          test -f docs/ROADMAP.md
+          test -f docs/RESUME_PROTOCOL.md
+          test -f docs/AUTONOMY_POLICY.md
+          test -f docs/RELEASE_STRATEGY.md
