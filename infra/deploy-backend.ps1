@@ -22,6 +22,8 @@ if (-not (Test-Path $EnvironmentFile)) {
     throw "Missing $EnvironmentFile. Copy .env.production.example and populate it from approved secret sources."
 }
 
+& (Join-Path $PSScriptRoot "validate-production-env.ps1") -EnvironmentFile $EnvironmentFile
+
 $dirty = (& git status --porcelain)
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to inspect Git working tree."
