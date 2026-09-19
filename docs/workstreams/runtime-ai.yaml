@@ -1,14 +1,21 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-current_issue: 20
-current_pr: 55
-current_branch: runtime/20-worker-dispatch
-head: 0c8fc391481fedc7e46b682e8a22c45d6532d4a3
-state: waiting_ci
+current_issue: 19
+current_pr: 51
+current_branch: runtime/19-durable-task-engine
+head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-19T16:20:00Z"
-stacked_on: "PR #51 / runtime/19-durable-task-engine"
+lease_heartbeat_at: "2026-09-19T15:30:42.584Z"
+last_checkpoint_at: "2026-09-19T15:30:42.584Z"
+stacked_on: "PR #47 / backend/17-identity-foundation"
+secondary_stack:
+  issue: 20
+  pr: 55
+  branch: runtime/20-worker-dispatch
+  state: blocked
+  stacked_on: "PR #51 / runtime/19-durable-task-engine"
+  reason: "Preserved as an explicitly stacked non-competing follow-up; do not advance while the primary #51 lease requires prerequisite reconciliation."
 scope:
   - task-engine
   - rabbitmq-workers
@@ -16,4 +23,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Verify exact-head CI for the worker execution-control persistence and state-machine checkpoint. If green, refresh lease heartbeat/HANDOFF and continue RabbitMQ publisher/consumer ack/dead-letter/checkpoint-resume wiring on this same stacked PR."
+next_action: "Preserve PR #51 as the single primary lease. PR #47 moved after #51's last verified base, so Lead must sequence/reconcile #47 -> #50 -> #51; rerun exact-head CI on #51 after reconciliation. Keep #55 Draft and blocked as a preserved secondary stack; do not advance #20 until #51 is merged/closed."
