@@ -22,7 +22,7 @@ public sealed class EfAuthorizationDirectory(PlatformDbContext dbContext) : IAut
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var roleProjection = await dbContext.CompanyMemberships
+        var rows = await dbContext.CompanyMemberships
             .AsNoTracking()
             .Where(membership =>
                 membership.TenantId == context.TenantId
@@ -53,14 +53,23 @@ public sealed class EfAuthorizationDirectory(PlatformDbContext dbContext) : IAut
                     role.CompanyId,
                     role.UserId
                 },
-                (membership, roles) => roles
-                    .OrderBy(role => role.RoleKey)
-                    .Select(role => role.RoleKey)
-                    .ToArray())
-            .SingleOrDefaultAsync(cancellationToken);
+                (membership, roles) => new { membership, roles })
+            .SelectMany(
+                joined => joined.roles.DefaultIfEmpty(),
+                (joined, role) => new { RoleKey = role == null ? null : role.RoleKey })
+            .OrderBy(row => row.RoleKey)
+            .ToArrayAsync(cancellationToken);
 
-        return roleProjection is null
-            ? null
-            : new AuthorizationDirectoryEntry(context, roleProjection);
+        if (rows.Length == 0)
+        {
+            return null;
+        }
+
+        var roles = rows
+            .Where(row => row.RoleKey is not null)
+            .Select(row => row.RoleKey!)
+            .ToArray();
+
+        return new AuthorizationDirectoryEntry(context, roles);
     }
 }
