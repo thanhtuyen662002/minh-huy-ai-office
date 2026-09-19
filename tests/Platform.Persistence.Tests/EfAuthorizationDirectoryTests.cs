@@ -109,9 +109,9 @@ public sealed class EfAuthorizationDirectoryTests
         var userId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
         var membership = SeedActiveIdentity(context, tenantId, companyId, userId);
+        await context.SaveChangesAsync();
         var user = await context.Users.SingleAsync();
         var company = await context.Companies.SingleAsync();
-        await context.SaveChangesAsync();
 
         var directory = new EfAuthorizationDirectory(context);
         var authorizationContext = AuthorizationContext.Create(tenantId, companyId, userId);
