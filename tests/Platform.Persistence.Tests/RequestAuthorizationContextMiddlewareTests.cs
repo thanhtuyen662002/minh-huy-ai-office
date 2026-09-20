@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
+using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
