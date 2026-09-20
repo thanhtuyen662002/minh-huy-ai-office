@@ -1,13 +1,23 @@
 workstream: erp-data
 role: "ERP / Data"
-status: ready
-current_issue: null
+status: blocked
+current_issue: 18
 current_pr: null
+current_branch: null
+head: 2baea2a9fce3103d915649ba36c109b77e549117
+state: blocked
+lease_owner: erp-data
+lease_heartbeat_at: "2026-09-20T09:10:21+07:00"
+last_checkpoint_at: "2026-09-20T09:10:21+07:00"
+last_merged_pr: 50
+last_merge_commit: 2baea2a9fce3103d915649ba36c109b77e549117
 preferred_next_issue: 18
+blocked_by:
+  - "Remaining issue #18 authenticated API/UI acceptance requires a trusted HTTP authentication boundary; caller-controlled tenant/company/user identifiers are forbidden."
 scope:
   - datasource-registry
   - sql-erp-adapters
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Inspect dependency readiness for #18. Work only against stable company/identity contracts or use an explicit stacked PR."
+next_action: "Preserve the merged Data Source foundation. Do not create unauthenticated API/UI configuration endpoints. Recheck issue #18 when a trusted HTTP auth boundary becomes authoritative; meanwhile do not compete with Lead/runtime shared-EF integration on PR #51."

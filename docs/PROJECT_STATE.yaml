@@ -1,15 +1,23 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P0-foundation
-status: ready-to-merge
+phase: P1-platform-core
+status: integration-awaiting-runtime-reconcile
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 16
-current_branch: feature/16-deployment-baseline
-current_pr: 44
-last_verified_commit: 17df2ce1fd7614915c0907db45fd7bbbd58a395f
-next_issue: 17
-next_action: "Merge PR #44 after the state-only checkpoint CI is green, confirm issue #16 closes, then coordinate P1 workstream leases starting with issue #17."
-blocked_by: []
+current_issue: 19
+current_branch: runtime/19-durable-task-engine
+current_pr: 51
+current_target_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+last_verified_commit: 2baea2a9fce3103d915649ba36c109b77e549117
+dependency_chain:
+  - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
+  - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
+  - "PR #51 / issue #19 Durable Task Engine: CURRENT integration target; runtime specialist must reconcile same branch onto main"
+  - "PR #55 / issue #20 worker dispatch: blocked secondary stack until #51 merges"
+next_issue: 20
+next_action: "Runtime-ai has a live lease on PR #51. Reconcile SAME branch runtime/19-durable-task-engine onto authoritative main containing #47 + #50, preserve Data Source and Durable Task mappings/migrations, remove duplicated identity history, rerun exact-head Governance + Build, and return ready_for_review. Lead must not create a competing implementation; once ready, Lead/QA reviews and merges #51, then sequences #55."
+blocked_by:
+  - "PR #51 requires shared EF model/snapshot reconciliation after #50 merge; runtime-ai lease is active."
+  - "Issue #18 remains open for authenticated API/UI acceptance but does not block #19 integration."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates

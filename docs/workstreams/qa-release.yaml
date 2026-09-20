@@ -1,8 +1,13 @@
 workstream: qa-release
-role: "QA / Security / Release"
-status: active
-current_issue: null
-current_pr: null
+role: "QA / Security / Release (Lead-owned)"
+current_issue: 19
+current_pr: 51
+current_branch: main
+head: 2baea2a9fce3103d915649ba36c109b77e549117
+state: idle
+lease_owner: lead
+lease_heartbeat_at: "2026-09-20T09:10:21+07:00"
+last_checkpoint_at: "2026-09-20T09:10:21+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -12,4 +17,17 @@ scope:
   - migrations-verification
   - deployment-release
   - recovery-drills
-next_action: "Review active PR #44 and strengthen independent CI/security/release evidence; claim #36 only when its P0 dependencies are satisfied."
+  - dependency-security-upgrade-review
+  - release-gates
+  - cross-workstream-pr-quality-review
+verification_target:
+  pr: 51
+  prerequisite_main: 2baea2a9fce3103d915649ba36c109b77e549117
+  required_after_reconcile:
+    - exact-head Governance
+    - exact-head Build
+    - EF migration integrity with identity + Data Source + Durable Task migrations
+    - PlatformDbContext/model snapshot contains both DataSource and task entities
+    - tenant/company/task composite isolation
+    - resume planner graph validation
+next_action: "Wait for runtime-ai to reconcile the same PR #51 branch onto authoritative main. Then verify source + exact-head CI independently before Lead merge. Keep #55 blocked until #51 closes."

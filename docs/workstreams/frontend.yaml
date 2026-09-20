@@ -1,13 +1,19 @@
 workstream: frontend
 role: "Frontend Product"
-status: ready
+status: blocked
 current_issue: null
 current_pr: null
-preferred_next_issue: 17
+current_branch: null
+head: 90de748e8b91390fa1a8e529ec37bf62c6425957
+state: blocked
+lease_owner: frontend
+lease_heartbeat_at: "2026-09-20T03:10:00+07:00"
+last_checkpoint_at: "2026-09-20T03:10:00+07:00"
+preferred_next_issue: 22
 scope:
   - nextjs
   - shadcn-ui
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Inspect #17 and backend contracts. Start only an independent or explicitly stacked frontend slice."
+next_action: "PR #47 / issue #17 is now merged, removing the identity prerequisite hold. Issue #22 is still not executable because it depends on #19 and #20: PR #51 remains blocked pending Lead reconciliation through #50, and stacked PR #55 remains blocked behind #51. Preserve the merged fail-closed company-context shell; do not invent SignalR/task contracts before the runtime sequence is authoritative. Re-check #51/#55 after Lead integrates #50 -> #51 -> #55, then claim #22. Live identity/API wiring must still wait for the trusted authenticated HTTP authorization contract."

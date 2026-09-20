@@ -102,3 +102,82 @@ Each worker must leave:
 - CI/test evidence.
 
 A replacement chat/session should be able to continue without conversation history.
+
+
+## Concurrency and long-running execution safety
+
+Treat GitHub workstream state plus the active Draft PR as a distributed lease. A scheduled execution may overlap another workstream or the next schedule of the same workstream.
+
+Before every start/resume:
+1. Read the worker's `docs/workstreams/<id>.yaml`.
+2. Verify `current_issue`, `current_pr`, `current_branch`, and the actual branch HEAD.
+3. Inspect all open PRs to confirm the issue is not claimed elsewhere.
+4. If the workstream already has an active PR, resume that PR; do not claim another issue or create another primary branch/PR.
+5. Running CI does not release the lease. Continue only independent safe work on the same implementation.
+6. A recent state checkpoint plus active PR/CI is evidence that the lease remains live.
+
+Each workstream state should maintain at minimum:
+
+```yaml
+workstream:
+current_issue:
+current_pr:
+current_branch:
+head:
+state:
+lease_owner:
+lease_heartbeat_at:
+last_checkpoint_at:
+next_action:
+```
+
+Valid `state` values are:
+`idle`, `claimed`, `in_progress`, `waiting_ci`, `ready_for_review`, `blocked`, `done`.
+
+### Lease and heartbeat
+
+When a workstream claims an issue, set `state` to `claimed` or `in_progress`, record the issue/PR/branch, set `lease_owner`, and checkpoint the current HEAD.
+
+Refresh `lease_heartbeat_at` only when there is a legitimate checkpoint or verified progress. Do not create empty clock-only commits.
+
+Prefer the cycle:
+
+```text
+code -> test/verify -> commit -> update HANDOFF/state -> continue
+```
+
+Keep checkpoints small enough to understand, revert, cherry-pick, or resume.
+
+### Re-entry protection
+
+A workstream has one primary implementation lease by default. If a later scheduled run sees the existing issue/branch/PR still active, it must resume that same work or perform non-competing review/testing. It must not create a second implementation for the same workstream.
+
+Additional PRs are allowed only when explicitly stacked, review/test-only, and non-competing, or when the dependency graph clearly permits them.
+
+### Stale lease recovery
+
+Do not preserve a lease forever after a dead session. A new execution may take over the **same** issue/branch/PR when there is no new Git/PR/CI progress, the workstream checkpoint is stale, and there is no evidence another execution is still active.
+
+Takeover path:
+
+```text
+existing issue -> existing branch -> existing Draft PR -> latest HEAD -> reproduce state -> continue NEXT ACTION
+```
+
+Create a replacement branch/PR only when the existing branch cannot be recovered, and document why on the issue/PR.
+
+### Cross-workstream overlap
+
+Different workstreams may run concurrently. Before changing a shared contract, schema, migration, shared package, or CI/release contract, inspect active PRs and identify the authoritative owner. Later work must stack/rebase on the prerequisite rather than invent a competing contract.
+
+### Lead behavior with active workers
+
+Lead must distinguish `in_progress`, `waiting_ci`, `ready_for_review`, and `blocked`.
+
+Lead must not treat an actively progressing specialist PR as failed or take over its implementation. Lead should review, merge ready work, resolve dependency/base conflicts, update `PROJECT_STATE`, and unblock the next worker cycle.
+
+Merge only when:
+- the HANDOFF says the PR is ready,
+- acceptance criteria are satisfied,
+- required CI/evals are green on the exact HEAD,
+- dependency merge order is correct.

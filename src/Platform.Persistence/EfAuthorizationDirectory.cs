@@ -22,7 +22,7 @@ public sealed class EfAuthorizationDirectory(PlatformDbContext dbContext) : IAut
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var hasActiveMembership = await dbContext.CompanyMemberships
+        var rows = await dbContext.CompanyMemberships
             .AsNoTracking()
             .Where(membership =>
                 membership.TenantId == context.TenantId
@@ -39,22 +39,36 @@ public sealed class EfAuthorizationDirectory(PlatformDbContext dbContext) : IAut
                 membership => new { membership.TenantId, Id = membership.CompanyId },
                 company => new { company.TenantId, company.Id },
                 (membership, _) => membership)
-            .AnyAsync(cancellationToken);
+            .GroupJoin(
+                dbContext.RoleAssignments.AsNoTracking(),
+                membership => new
+                {
+                    membership.TenantId,
+                    membership.CompanyId,
+                    membership.UserId
+                },
+                role => new
+                {
+                    role.TenantId,
+                    role.CompanyId,
+                    role.UserId
+                },
+                (membership, roles) => new { membership, roles })
+            .SelectMany(
+                joined => joined.roles.DefaultIfEmpty(),
+                (joined, role) => new { RoleKey = role == null ? null : role.RoleKey })
+            .OrderBy(row => row.RoleKey)
+            .ToArrayAsync(cancellationToken);
 
-        if (!hasActiveMembership)
+        if (rows.Length == 0)
         {
             return null;
         }
 
-        var roles = await dbContext.RoleAssignments
-            .AsNoTracking()
-            .Where(role =>
-                role.TenantId == context.TenantId
-                && role.CompanyId == context.CompanyId
-                && role.UserId == context.UserId)
-            .OrderBy(role => role.RoleKey)
-            .Select(role => role.RoleKey)
-            .ToArrayAsync(cancellationToken);
+        var roles = rows
+            .Where(row => row.RoleKey is not null)
+            .Select(row => row.RoleKey!)
+            .ToArray();
 
         return new AuthorizationDirectoryEntry(context, roles);
     }
