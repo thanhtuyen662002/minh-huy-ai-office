@@ -3,19 +3,19 @@ repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-platform-core
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 19
-current_branch: runtime/19-durable-task-engine
-current_pr: 51
-current_target_head: cd067d954d8cf3729ae79548eb25fa29806e4d81
-last_verified_commit: c3e646c1aec28a6496914960d68a781d8917f5c5
+current_issue: 20
+current_branch: runtime/20-worker-dispatch
+current_pr: 55
+current_target_head: 9eb260c4e745dd8ec0a9716bcc05f9c579c37c24
+last_verified_commit: dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817
 critical_paths:
   runtime:
-    issue: 19
-    pr: 51
-    head: cd067d954d8cf3729ae79548eb25fa29806e4d81
-    state: waiting_ci_handoff
-    evidence: "Exact-head Governance 35485567771 SUCCESS and Build 35485567875 SUCCESS; mergeable=true. Runtime specialist must checkpoint ready_for_review, then Lead/QA final-review and merge."
-    next: "Merge #51 after ready_for_review handoff, then immediately reconcile existing stacked PR #55 / issue #20 onto authoritative main."
+    issue: 20
+    pr: 55
+    head: 9eb260c4e745dd8ec0a9716bcc05f9c579c37c24
+    state: reconcile_required
+    evidence: "PR #51 / issue #19 merged at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817 after exact-head Governance 35485567771 + Build 35485567875 passed; issue #19 closed. PR #55 retargeted to main."
+    next: "Runtime resumes SAME PR #55, reconciles onto authoritative main, preserves task-engine/DataSource/identity state, enforces lease/retry/idempotency correctness, completes RabbitMQ transport acceptance, and reruns exact-head CI."
   backend_auth:
     issue: 58
     pr: 60
@@ -37,18 +37,18 @@ critical_paths:
     branch: frontend/59-datasource-registry-shell
     head: 0115af212960159547a5a6d552b65de51cdcb087
     state: in_progress
-    next: "Continue fixture-backed Data Source management shell independently; do not invent live auth/API contract. #22 remains blocked until #19/#20 are authoritative."
+    next: "Continue fixture-backed Data Source management shell independently; do not invent live auth/API contract. #22 remains blocked until #20 is authoritative."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
   - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
-  - "PR #51 / issue #19 Durable Task Engine: reconciled onto main at cd067d954d8cf3729ae79548eb25fa29806e4d81; exact-head Governance + Build green; awaiting specialist ready_for_review checkpoint"
-  - "PR #55 / issue #20 worker dispatch: blocked secondary stack until #51 merges; correctness HOLD remains on retry/idempotency invariants"
+  - "PR #51 / issue #19 Durable Task Engine: MERGED at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817; issue #19 CLOSED"
+  - "PR #55 / issue #20 worker dispatch: CURRENT runtime integration target; retargeted to main and requires same-branch reconciliation plus correctness gates"
   - "PR #60 / issue #58 trusted HTTP authentication: active parallel Backend lease; schema-neutral by contract; unblocks residual #18 and later #21"
   - "PR #61 / issue #59 frontend Data Source shell: active independent fixture-backed lease; live wiring waits for #58 + residual #18"
 next_issue: 20
-next_action: "Lead/QA: merge #51 promptly after Runtime records ready_for_review on exact green HEAD cd067d9, then sequence #55. In parallel review #60 as its auth contract stabilizes and allow ERP/Data residual #18 to stack on it; preserve independent #61 frontend progress. After #18 + #19 close, Backend may open #21; after #19/#20 are authoritative, unblock #22."
+next_action: "Runtime reconcile/complete PR #55 now that #51 is merged. In parallel review #60 as its auth contract stabilizes and allow ERP/Data residual #18 to stack on it; preserve independent #61 frontend progress. After #18 closes, Backend may open #21 because #19 is already closed; after #20 is authoritative, unblock #22."
 blocked_by:
-  - "#51 merge waits only for live Runtime specialist ready_for_review checkpoint; exact-head required CI is already green."
+  - "PR #55 requires Runtime same-branch reconciliation onto merged #51/main before its prior implementation can be trusted or extended."
   - "Residual #18 authenticated API acceptance waits for a stable #60 authentication contract."
 autonomy:
   routine_engineering: autonomous
