@@ -4,11 +4,11 @@ status: active
 current_issue: 59
 current_pr: 61
 current_branch: frontend/59-datasource-registry-shell
-head: d502aa5842b920430ed12a5d375bbb206c10855f
+head: 7213e781980a0695ef878e6379d2887305cd6291
 state: implementation
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T10:06:00+07:00"
-last_checkpoint_at: "2026-09-20T10:06:00+07:00"
+lease_heartbeat_at: "2026-09-20T10:08:00+07:00"
+last_checkpoint_at: "2026-09-20T10:08:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Resume Draft PR #61 for issue #59. Verify exact HEAD with web:test, type-check, production build and repository CI; fix failures and complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
+next_action: "PR #61 CI exposed a stale company-shell assertion after the registry replaced the overview panel. Commit 7213e78 aligns the regression test with the company-scoped Data Source Registry while preserving the fail-closed assertion. Verify the new exact HEAD with web:test, type-check, production build and repository CI, then complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
