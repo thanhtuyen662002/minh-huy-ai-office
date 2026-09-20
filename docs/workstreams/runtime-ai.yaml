@@ -1,9 +1,15 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: ready
-current_issue: null
-current_pr: null
-preferred_next_issue: 19
+current_issue: 19
+current_pr: 51
+current_branch: "runtime/19-durable-task-engine"
+head: "b04f8ff45489f10f1b8a4c6fea710e1899eb915e"
+state: waiting_ci
+lease_owner: "runtime-ai"
+lease_heartbeat_at: "2026-09-20T02:36:58Z"
+last_checkpoint_at: "2026-09-20T03:02:21Z"
+stacked_on: "main @ 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec"
 scope:
   - task-engine
   - rabbitmq-workers
@@ -11,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Inspect dependency readiness for #19. If identity contract is not stable, review/prepare tests or a prerequisite rather than bypassing it."
+next_action: "Verify exact-head Governance + Build after formatting fixes for PR #51. If green, update the verified lease heartbeat, mark #51 ready_for_review, and leave merge sequencing to Lead. Do not advance PR #55/#20 until #51 is merged/closed."
