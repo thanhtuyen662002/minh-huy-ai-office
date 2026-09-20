@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using MinhHuy.AIOffice.Agent.Worker;
 using MinhHuy.AIOffice.Shared.Contracts;
+using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
