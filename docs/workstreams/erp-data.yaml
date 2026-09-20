@@ -1,23 +1,23 @@
 workstream: erp-data
 role: "ERP / Data"
-status: blocked
+status: waiting_ci
 current_issue: 18
-current_pr: null
-current_branch: null
-head: 2baea2a9fce3103d915649ba36c109b77e549117
-state: blocked
+current_pr: 63
+current_branch: erp/18-authenticated-datasource-api
+head: 4c6e2076f000721dc0c0f6ce41c42cba94cc0764
+state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-20T09:10:21+07:00"
-last_checkpoint_at: "2026-09-20T09:10:21+07:00"
+lease_heartbeat_at: "2026-09-20T17:22:19+07:00"
+last_checkpoint_at: "2026-09-20T17:22:19+07:00"
 last_merged_pr: 50
 last_merge_commit: 2baea2a9fce3103d915649ba36c109b77e549117
 preferred_next_issue: 18
 blocked_by:
-  - "Remaining issue #18 authenticated API/UI acceptance requires a trusted HTTP authentication boundary; caller-controlled tenant/company/user identifiers are forbidden."
+  - "STACKED_ON PR #60 trusted HTTP authentication contract until backend merge/reconciliation."
 scope:
   - datasource-registry
   - sql-erp-adapters
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Preserve the merged Data Source foundation. Do not create unauthenticated API/UI configuration endpoints. Recheck issue #18 when a trusted HTTP auth boundary becomes authoritative; meanwhile do not compete with Lead/runtime shared-EF integration on PR #51."
+next_action: "Verify PR #63 exact-head CI and add focused endpoint security regression coverage for cross-company/inactive membership and missing auth configuration. Reconcile this SAME stacked PR if #60 moves."
