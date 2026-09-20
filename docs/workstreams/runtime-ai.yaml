@@ -4,11 +4,11 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "a0d573388e0ac2f3e21472b300fa5413f9060f95"
+head: "5a5ec71d740c3bd7fa77c34a00451ba4e8bdffdb"
 state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-20T15:20:00Z"
-last_checkpoint_at: "2026-09-20T15:20:00Z"
+lease_heartbeat_at: "2026-09-20T16:14:45Z"
+last_checkpoint_at: "2026-09-20T16:14:45Z"
 stacked_on: "main @ d4e87f7fe49b280a0be600b308cc4a539d1ae161"
 scope:
   - task-engine
@@ -17,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Retry publisher-confirm failure recovery is covered. RabbitMQ consumer now creates an async DI scope per delivery so scoped PlatformDbContext/PersistentWorkDeliveryHandler cannot be captured by the singleton hosted service. Verify exact-head compile/tests; then register persistence/handler/consumer only when an authoritative IWorkStepExecutor and SQL Server connection configuration are available, and run full exact-head CI before ready_for_review."
+next_action: "Durable retry/redelivery recovery and per-delivery scoped handler lifetime are covered. A fail-closed AddDurableRabbitMqWorkExecution<TExecutor> registration boundary now wires scoped PlatformDbContext/IWorkDeliveryHandler, explicit authoritative executor, validated RabbitMQ options, publisher, and hosted consumer without inventing an executor or connection string. Verify exact-head compile/tests and fix any real failure; activate the extension in Program only when an authoritative executor and SQL Server configuration exist; exact executable green CI remains required before ready_for_review."
