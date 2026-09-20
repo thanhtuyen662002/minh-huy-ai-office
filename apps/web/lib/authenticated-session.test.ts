@@ -52,6 +52,9 @@ describe("bootstrapAuthenticatedSession", () => {
     ["unknown failure reason", { ok: false, reason: "server-error" }],
     ["success carrying failure reason", { ok: true, membership: serverMembership, reason: "forbidden" }],
     ["failure carrying membership", { ok: false, reason: "forbidden", membership: serverMembership }],
+    ["inherited success discriminator", Object.create({ ok: true, membership: serverMembership })],
+    ["inherited success membership", Object.assign(Object.create({ membership: serverMembership }), { ok: true })],
+    ["inherited failure reason", Object.assign(Object.create({ reason: "forbidden" }), { ok: false })],
   ] as const)("fails closed for %s", async (_case, envelope) => {
     const transport = (async () => envelope) as unknown as SessionBootstrapTransport;
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
