@@ -42,6 +42,19 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByText(/máy chủ vẫn xác thực quyền truy cập/i)).toBeTruthy();
   });
 
+  it("keeps the authoritative company selected when untrusted options omit it", () => {
+    const onSelectCompany = vi.fn();
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[companies[1]]} onSelectCompany={onSelectCompany} />);
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+    expect(onSelectCompany).not.toHaveBeenCalled();
+  });
+
+  it("does not expose a company selector when switching cannot produce an alternative scope", () => {
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[companies[0]]} onSelectCompany={vi.fn()} />);
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+  });
+
   it("clears stale company data while a newly selected company is being validated", () => {
     const onSelectCompany = vi.fn();
     const { rerender } = render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
