@@ -3,11 +3,11 @@ role: "Lead / Integrator + QA / Security / Release"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 058e11eda7630afaf303dc28f6ca1670e52ebbaf
+head: 81ab64d10625d4f31b9d723dc27110150f7a63b8
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T22:52:00+07:00"
-last_checkpoint_at: "2026-09-20T22:52:00+07:00"
+lease_heartbeat_at: "2026-09-20T23:13:00+07:00"
+last_checkpoint_at: "2026-09-20T23:13:00+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -29,24 +29,24 @@ integration:
     current_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
     owner: runtime-ai
     state: in_progress
-    required_action: "Latest Build/Governance are zero-step runner failures, not code evidence. Runtime continues safe host registration after recovery + scoped-per-delivery DI landed; Lead waits for executable exact-head gates."
+    required_action: "Zero-step CI remains infrastructure noise; Runtime must continue safe host registration on SAME live lease and then obtain executable exact-head gates."
   parallel_backend:
     issue: 58
     pr: 60
     head: b5c734d466d3b29c3d255d5f1168a372e3679d18
     owner: backend
     state: waiting_ci
-    required_action: "Acceptance implementation is present and PR mergeable. Latest exact-head Build/Governance failed with runner_id=0 and zero steps; merge immediately after executable exact-head green CI."
+    required_action: "Acceptance implementation is present and PR mergeable. Exact-head rerun again has all Build jobs zero-step/runner_id=0; merge immediately after executable exact-head green CI."
   parallel_erp:
     issue: 18
     pr: 63
     head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
     state: in_progress
-    required_action: "No exact-head workflow visible; continue endpoint security regressions on SAME stacked PR rather than idling."
+    required_action: "No exact-head workflow visible; Lead explicitly instructed ERP/Data to continue endpoint security regressions instead of idling in waiting_ci."
   parallel_frontend:
     issue: 62
     pr: 64
-    head: 76fddd21f53545d76904297237adcd3f71668e94
+    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
     state: in_progress
-    required_action: "No exact-head workflow visible; keep loop active and continue frontend-owned adapter/accessibility/stale-state hardening. Reconcile live transport after #60 merges."
+    required_action: "Frontend is actively advancing fail-closed stale-state/accessibility hardening despite absent workflow emission; reconcile live transport after #60 merges."
 next_action: "Maintain all four lanes. Merge #60 immediately on executable exact-head green; then reconcile/sequence #63. Activate #21 after #18/#19 authoritative and #22 after #20 authoritative."
