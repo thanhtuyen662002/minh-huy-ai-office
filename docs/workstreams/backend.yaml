@@ -2,7 +2,7 @@ workstream: backend
 role: "Backend Platform"
 status: implementation
 current_issue: 58
-current_pr: null
+current_pr: 60
 current_branch: backend/58-trusted-http-auth
 last_completed_issue: 17
 last_merged_pr: 47
@@ -18,10 +18,10 @@ verification:
   issue_17_implementation_head: f769be3916c301aad08e1dc720550c3e4b2e3ccb
   governance_run: 35456589692
   build_run: 35456589648
-  result: success
+  result: implementation_in_progress
 known_risks:
   - "Caller-controlled identity headers must never become trusted TenantId, CompanyId, or UserId identity."
-  - "Authorization resolution must remain a single database consistency boundary so membership revocation cannot race role reads."
+  - "Authenticated provider/subject plus untrusted company selector must resolve user, active membership, active company, and roles inside one database query before AuthorizationContext exists."
   - "Issue #58 must remain schema-neutral while Runtime owns the active shared EF model/snapshot chain."
 blocked_by: []
-next_action: "Implement issue #58 trusted HTTP authentication boundary on backend/58-trusted-http-auth without EF model/snapshot/schema changes; add server-derived request AuthorizationContext, fail-closed membership validation, spoofing/cross-tenant integration tests, docs, and full CI evidence."
+next_action: "Wire ASP.NET Core authentication to configured provider/subject claims, add request-scoped server-derived AuthorizationContext using IAuthenticatedAuthorizationDirectory, then add spoofing/cross-tenant/inactive membership integration tests and run full CI."
