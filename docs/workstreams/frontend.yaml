@@ -4,11 +4,11 @@ status: active
 current_issue: 59
 current_pr: 61
 current_branch: frontend/59-datasource-registry-shell
-head: 678595847f28430293f472623a7a566e5a932979
+head: 82a98b1a355d65a1e4454e273ecb8a30e56335c3
 state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T14:09:00+07:00"
-last_checkpoint_at: "2026-09-20T14:09:00+07:00"
+lease_heartbeat_at: "2026-09-20T15:09:00+07:00"
+last_checkpoint_at: "2026-09-20T15:09:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 implementation HEAD 678595847f28430293f472623a7a566e5a932979 passed exact-head Governance 35493539369 and Build 35493539370. Fixture-backed #59 acceptance is complete: company-scoped list/detail/create/edit, sanitized connection status, accessible interactions, metadata edit separated from explicit transient secret rotation, fail-closed company scope, and component coverage preserving secret redaction. This state-only checkpoint records readiness; verify CI on the resulting checkpoint HEAD, then mark PR #61 ready_for_review for Lead. Live API/auth wiring remains deferred to authoritative #58 + residual #18 contract; do not invent endpoints or caller-controlled auth."
+next_action: "PR #61 exact HEAD 82a98b1a355d65a1e4454e273ecb8a30e56335c3 passed Governance 35496153316 and Build 35496153294 and is now Ready for review. Fixture-backed #59 acceptance is complete: company-scoped list/detail/create/edit, sanitized connection status, accessible interactions, metadata edit separated from explicit transient secret rotation, fail-closed company scope, and component coverage preserving secret redaction. Lead should review/merge exact HEAD; frontend must not start another primary lease while #61 remains open. After merge, release #59 lease and re-evaluate #22 versus authoritative #58 + residual #18 live-wiring readiness; do not invent endpoints or caller-controlled auth."
