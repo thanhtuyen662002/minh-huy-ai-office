@@ -17,6 +17,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<TaskDependencyRecord> TaskDependencies => Set<TaskDependencyRecord>();
     public DbSet<TaskEventRecord> TaskEvents => Set<TaskEventRecord>();
     public DbSet<TaskCheckpointRecord> TaskCheckpoints => Set<TaskCheckpointRecord>();
+    public DbSet<TaskStepExecutionRecord> TaskStepExecutions => Set<TaskStepExecutionRecord>();
+    public DbSet<TaskDispatchRecord> TaskDispatches => Set<TaskDispatchRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,5 +34,6 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.Entity<TaskDependencyRecord>(entity => { entity.ToTable("TaskDependencies"); entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.StepId, x.DependsOnStepId }); entity.HasOne<TaskStepRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.StepId }).OnDelete(DeleteBehavior.NoAction); entity.HasOne<TaskStepRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.DependsOnStepId }).OnDelete(DeleteBehavior.NoAction); entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.TaskId, x.DependsOnStepId }); });
         modelBuilder.Entity<TaskEventRecord>(entity => { entity.ToTable("TaskEvents"); entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.Sequence }); entity.Property(x => x.EventType).HasMaxLength(100); entity.Property(x => x.OccurredAtUtc).HasDefaultValueSql("SYSDATETIMEOFFSET()"); entity.HasOne<TaskRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.TaskId }).OnDelete(DeleteBehavior.Cascade); entity.HasOne<TaskStepRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.StepId }).OnDelete(DeleteBehavior.NoAction); });
         modelBuilder.Entity<TaskCheckpointRecord>(entity => { entity.ToTable("TaskCheckpoints"); entity.HasKey(x => new { x.TenantId, x.CompanyId, x.TaskId, x.StepId, x.Version }); entity.Property(x => x.CreatedAtUtc).HasDefaultValueSql("SYSDATETIMEOFFSET()"); entity.HasOne<TaskStepRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.TaskId, Id = x.StepId }).OnDelete(DeleteBehavior.Cascade); });
+        modelBuilder.ConfigureWorkerExecution();
     }
 }
