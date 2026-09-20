@@ -6,53 +6,48 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 20
 current_branch: runtime/20-worker-dispatch
 current_pr: 55
-current_target_head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
-last_verified_commit: c245eeba93a9cc8a85118610129aa7e50e114417
+current_target_head: b07e9eb1e3bfb470984a022c550153eb10194e39
+last_verified_commit: 27058b3578f6bdedca3ff04fdbfc148cf6a93109
 critical_paths:
   runtime:
     issue: 20
     pr: 55
-    head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+    head: b07e9eb1e3bfb470984a022c550153eb10194e39
     state: in_progress
-    evidence: "PR #55 exact HEAD 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e is mergeable and Governance 35499461068 + Build 35499461089 are green, but HANDOFF still has real transport/persistence work remaining."
-    next: "Runtime continues SAME PR #55: add transport-focused tests and persistence-backed IWorkDeliveryHandler so durable completion/checkpoint/retry/dead-letter state precedes broker settlement."
+    evidence: "Exact HEAD Governance 35502050212 + Build 35502050209 SUCCESS, but acceptance still requires transport tests and persistence-before-settlement handler wiring."
+    next: "Runtime continues SAME PR #55 without pausing on docs/CI-only checkpoints."
   backend_auth:
     issue: 58
     pr: 60
     branch: backend/58-trusted-http-auth
-    head: cbab33860f893a7ca857509daf6b365366d51cab
+    head: a7e6d4b5639bbaf5fcf4675cd89f4a8ebf926f59
     state: in_progress
     owner: backend
-    constraint: "No shared EF model/snapshot/schema changes while Runtime integration is active."
-    evidence: "Exact HEAD Governance 35495823342 SUCCESS; Build 35495823344 FAILURE. Backend lease remains live and owns implementation failure."
-    next: "Backend continues SAME PR #60, completes fail-closed auth/security integration tests and fixes its exact-head Build."
+    evidence: "Stable schema-neutral auth contract; exact-head Governance 35504839934 SUCCESS and Build 35504839928 in progress."
+    next: "Backend completes SAME PR #60 security/integration acceptance and exact-head CI; downstream lanes may stack now."
   erp_data:
     issue: 18
     foundation_pr: 50
     foundation_state: merged
-    residual_state: waiting_auth_contract
-    next: "As soon as PR #60 exposes a stable auth contract, continue residual authenticated API/connection-test acceptance for #18, stacked on #60 if it is not yet merged."
+    residual_state: ready_stacked_on_60
+    next: "ERP/Data immediately claims residual authenticated API/connection-test acceptance as Draft PR STACKED_ON #60."
   frontend:
-    issue: 59
-    pr: 61
-    head: eba452e4ede3c5580cf37d49591c67b25dd65273
-    state: merged
-    merge_commit: c245eeba93a9cc8a85118610129aa7e50e114417
-    evidence: "Lead independently verified fixture-backed scope, secret-safe behavior and exact-head Governance 35498818141 + Build 35498818143; merged under FLOW-LATENCY RULE."
-    next: "Release #59 lease. Do not start #22 until #20 is authoritative; live Data Source wiring still waits for #58 + residual #18."
+    issue: 62
+    state: ready_stacked_on_60
+    next: "Frontend immediately claims authenticated session bootstrap/company-scope wiring as Draft PR STACKED_ON #60; keep adapter isolated and fail closed."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
-  - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
+  - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; residual #18 now allowed to stack on #60"
   - "PR #51 / issue #19 Durable Task Engine: MERGED at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817; issue #19 CLOSED"
-  - "PR #55 / issue #20 worker dispatch: CURRENT runtime integration target; exact-head CI green but persistence-before-settlement transport acceptance remains"
-  - "PR #60 / issue #58 trusted HTTP authentication: active parallel Backend lease; current exact-head Build failing; schema-neutral by contract"
-  - "PR #61 / issue #59 frontend Data Source shell: MERGED at c245eeba93a9cc8a85118610129aa7e50e114417; live wiring remains deferred to #58 + residual #18"
+  - "PR #55 / issue #20 worker dispatch: active; exact-head CI green but real transport/persistence acceptance remains"
+  - "PR #60 / issue #58 trusted HTTP authentication: active stable contract; downstream #18/#62 may stack before merge"
+  - "PR #61 / issue #59 frontend Data Source shell: MERGED at c245eeba93a9cc8a85118610129aa7e50e114417"
 next_issue: 20
-next_action: "Runtime completes SAME PR #55 real transport/persistence acceptance. Backend independently fixes/completes #60; once its auth contract is stable, ERP/Data may stack residual #18. #22 remains blocked until #20 is authoritative."
+next_action: "Keep #55, #60, residual #18 and frontend #62 moving in parallel. Merge acceptance-complete exact-head green lanes promptly; after #18 + #19 authoritative activate Backend #21, and after #20 authoritative unblock Frontend #22."
 blocked_by:
-  - "PR #55 still lacks persistence-backed handler/transport evidence required for safe broker settlement."
-  - "Residual #18 authenticated API acceptance waits for a stable #60 authentication contract."
-  - "Issue #22 waits for #20 to become authoritative."
+  - "PR #55 still requires persistence-backed handler/transport evidence before merge."
+  - "Backend #21 waits for residual #18 to become authoritative."
+  - "Frontend #22 waits for #20 to become authoritative."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
