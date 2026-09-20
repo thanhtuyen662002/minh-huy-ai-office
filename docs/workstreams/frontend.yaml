@@ -2,13 +2,13 @@ workstream: frontend
 role: "Frontend Product"
 status: in_progress
 current_issue: 62
-current_pr: null
+current_pr: 64
 current_branch: frontend/62-auth-session-bootstrap
-head: 495ba6c95919792aaa99be40e1319057cc2aed7c
+head: 846c933c686d6d0625acb67cec324cce3a6175ff
 state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T17:21:00+07:00"
-last_checkpoint_at: "2026-09-20T17:21:00+07:00"
+lease_heartbeat_at: "2026-09-20T17:23:00+07:00"
+last_checkpoint_at: "2026-09-20T17:23:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -18,4 +18,4 @@ scope:
   - realtime-ui
 blocked_by:
   - "Live HTTP endpoint wiring remains deferred until PR #60 / #58 publishes the final protected endpoint shape; the frontend adapter intentionally injects transport."
-next_action: "Continue issue #62 on frontend/62-auth-session-bootstrap: add explicit loading/unauthenticated/forbidden/company-switch UI around the typed authenticated-session adapter, preserve the merged #59 Data Source shell, run Web tests/type-check/build, then open a Draft PR with HANDOFF. Reconcile the adapter to PR #60 after its auth contract becomes authoritative; do not invent an endpoint or browser-controlled TenantId/UserId authority."
+next_action: "Continue PR #64 / issue #62: add explicit loading/unauthenticated/forbidden/company-switch UI around the typed authenticated-session adapter, preserve merged #59 Data Source shell, add component tests and verify Web CI. Reconcile the adapter to PR #60 after its auth contract becomes authoritative; do not invent an endpoint or browser-controlled TenantId/UserId authority."
