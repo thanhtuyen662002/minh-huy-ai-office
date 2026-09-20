@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Platform.Observability;
@@ -29,6 +32,30 @@ if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
 
 builder.Services.AddHealthChecks();
 builder.Services.AddPlatformPersistence(platformConnectionString);
+builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
+
+var authority = builder.Configuration["AIOffice:Authentication:Authority"];
+var audience = builder.Configuration["AIOffice:Authentication:Audience"];
+if (!string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience))
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = authority;
+            options.Audience = audience;
+            options.RequireHttpsMetadata = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                NameClaimType = AuthenticationClaimTypes.Subject
+            };
+        });
+    builder.Services.AddAuthorization();
+}
 
 var app = builder.Build();
 
@@ -70,6 +97,13 @@ app.Use(async (httpContext, next) =>
             System.Diagnostics.Stopwatch.GetElapsedTime(started));
     }
 });
+
+if (!string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience))
+{
+    app.UseAuthentication();
+    app.UseMiddleware<RequestAuthorizationContextMiddleware>();
+    app.UseAuthorization();
+}
 
 app.MapGet("/", () => Results.Ok(new
 {
