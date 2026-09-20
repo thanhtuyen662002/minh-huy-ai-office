@@ -23,9 +23,12 @@ if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
 builder.Services.AddHealthChecks();
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
-builder.Services.AddScoped<DataSourceRegistryService>();
-builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
-builder.Services.AddScoped<DataSourceConnectionTestService>();
+if (!string.IsNullOrWhiteSpace(platformConnectionString))
+{
+    builder.Services.AddScoped<DataSourceRegistryService>();
+    builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
+    builder.Services.AddScoped<DataSourceConnectionTestService>();
+}
 builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
 
 var authority = builder.Configuration["AIOffice:Authentication:Authority"];
