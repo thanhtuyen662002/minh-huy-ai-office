@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
-current_pr: null
-current_branch: null
-head: 90de748e8b91390fa1a8e529ec37bf62c6425957
-state: blocked
+status: active
+current_issue: 59
+current_pr: 61
+current_branch: frontend/59-datasource-registry-shell
+head: 82a98b1a355d65a1e4454e273ecb8a30e56335c3
+state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T03:10:00+07:00"
-last_checkpoint_at: "2026-09-20T03:10:00+07:00"
+lease_heartbeat_at: "2026-09-20T15:09:00+07:00"
+last_checkpoint_at: "2026-09-20T15:09:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #47 / issue #17 is now merged, removing the identity prerequisite hold. Issue #22 is still not executable because it depends on #19 and #20: PR #51 remains blocked pending Lead reconciliation through #50, and stacked PR #55 remains blocked behind #51. Preserve the merged fail-closed company-context shell; do not invent SignalR/task contracts before the runtime sequence is authoritative. Re-check #51/#55 after Lead integrates #50 -> #51 -> #55, then claim #22. Live identity/API wiring must still wait for the trusted authenticated HTTP authorization contract."
+next_action: "PR #61 exact HEAD 82a98b1a355d65a1e4454e273ecb8a30e56335c3 passed Governance 35496153316 and Build 35496153294 and is now Ready for review. Fixture-backed #59 acceptance is complete: company-scoped list/detail/create/edit, sanitized connection status, accessible interactions, metadata edit separated from explicit transient secret rotation, fail-closed company scope, and component coverage preserving secret redaction. Lead should review/merge exact HEAD; frontend must not start another primary lease while #61 remains open. After merge, release #59 lease and re-evaluate #22 versus authoritative #58 + residual #18 live-wiring readiness; do not invent endpoints or caller-controlled auth."
