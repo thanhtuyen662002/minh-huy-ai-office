@@ -46,6 +46,17 @@ describe("fetchAuthoritativeAuthContext", () => {
     await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
   });
 
+  it("rejects sparse authoritative role arrays instead of letting array holes bypass validation", async () => {
+    const sparseRoles = new Array<string>(1);
+    const fetcher = vi.fn<typeof fetch>(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: sparseRoles }),
+    }) as Response);
+
+    await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
+  });
+
   it("rejects inherited identity fields", async () => {
     const payload = Object.create({ tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member"] });
     Object.assign(payload, { companyId: "company-a", userId: "user-server", roles: ["member"] });
