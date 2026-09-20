@@ -18,7 +18,8 @@ public sealed class PersistentWorkDeliveryHandlerTests
 
         Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
         Assert.Equal(WorkDispatchState.Acknowledged, dispatch.State);
-        Assert.NotNull(execution.CompletedAtUtc);
+        Assert.NotNull(dispatch.AcknowledgedAtUtc);
+        Assert.Null(execution.LeaseId);
         var checkpoint = await db.TaskCheckpoints.SingleAsync();
         Assert.Equal(7, checkpoint.Version);
         Assert.Equal("{\"cursor\":7}", checkpoint.PayloadJson);
