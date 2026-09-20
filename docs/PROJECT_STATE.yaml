@@ -38,10 +38,10 @@ critical_paths:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 76fddd21f53545d76904297237adcd3f71668e94
+    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
     depends_on: 60
     state: in_progress
-    evidence: "Typed fail-closed adapter/session/company-switch hardening continues; no exact-head workflow is visible for 76fddd2. Browser TenantId/UserId remain non-authoritative."
+    evidence: "Actual PR head advanced to 49ac415; frontend has continued fail-closed stale-state/accessibility hardening while exact-head workflow emission remains absent. Browser TenantId/UserId remain non-authoritative."
     next: "Keep Frontend loop active on SAME PR and continue deterministic adapter/accessibility/stale-state tests; reconcile concrete /api/auth/context transport immediately after #60 becomes authoritative."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
@@ -50,7 +50,7 @@ dependency_chain:
   - "PR #55 / issue #20 worker dispatch: recovery + scoped DI landed; safe host registration + executable exact-head green CI remain"
   - "PR #60 / issue #58 trusted HTTP authentication: acceptance implementation present and mergeable; latest exact-head CI is zero-step runner noise"
   - "PR #63 / residual #18: active stacked consumer of stable #60 auth contract; security regressions remain"
-  - "PR #64 / issue #62: active frontend auth-session lane; continue hardening while workflow emission is absent"
+  - "PR #64 / issue #62: active frontend auth-session lane at 49ac415; continue hardening while workflow emission is absent"
 next_issue: 20
 next_action: "Keep #55, #60, #63 and #64 moving in parallel. Merge #60 immediately after executable exact-head green CI; reconcile/sequence #63 after parent merge. Activate Backend #21 after #18 + #19 authoritative and Frontend #22 after #20 authoritative."
 blocked_by:
