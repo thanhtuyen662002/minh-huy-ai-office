@@ -30,11 +30,16 @@ public sealed class RabbitMqWorkOptions
     }
 }
 
-public sealed record WorkDeliveryResult(WorkDeliveryOutcome Outcome, WorkFailureClass? FailureClass, int MaxAttempts, long? DurableCheckpointVersion = null);
+public sealed record WorkDeliveryResult(
+    WorkDeliveryOutcome Outcome,
+    WorkFailureClass? FailureClass,
+    int MaxAttempts,
+    long? DurableCheckpointVersion = null,
+    WorkDispatchEnvelope? DurableRetryEnvelope = null);
 
 public interface IWorkDeliveryHandler
 {
-    /// <summary>Returns only after the delivery outcome and any checkpoint/completion state are durably committed.</summary>
+    /// <summary>Returns only after the delivery outcome and any checkpoint/completion/retry state are durably committed.</summary>
     Task<WorkDeliveryResult> HandleAsync(WorkDispatchEnvelope envelope, CancellationToken cancellationToken);
 }
 
@@ -117,7 +122,8 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
                     await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
                     break;
                 case BrokerSettlement.Requeue:
-                    var retry = envelope.CreateRetry(Guid.NewGuid(), result.DurableCheckpointVersion, DateTimeOffset.UtcNow);
+                    var retry = result.DurableRetryEnvelope
+                        ?? throw new InvalidOperationException("Retry settlement requires a durably persisted retry envelope.");
                     await RabbitMqWorkPublisher.PublishEnvelopeAsync(_channel, _options, retry, CancellationToken.None);
                     await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
                     break;
