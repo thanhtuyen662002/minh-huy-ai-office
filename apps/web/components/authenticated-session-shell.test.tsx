@@ -36,4 +36,19 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
     expect(screen.getByText(/máy chủ vẫn xác thực quyền truy cập/i)).toBeTruthy();
   });
+
+  it("clears stale company data while a newly selected company is being validated", () => {
+    const onSelectCompany = vi.fn();
+    const { rerender } = render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[{ companyId: "internal", companyName: "Minh Huy" }, { companyId: "branch-2", companyName: "Chi nhánh 2" }]} onSelectCompany={onSelectCompany} />);
+    expect(screen.getByRole("heading", { name: "company.erp.production" })).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Đổi công ty"), { target: { value: "branch-2" } });
+    expect(onSelectCompany).toHaveBeenCalledWith("branch-2");
+
+    rerender(<AuthenticatedSessionShell state={{ status: "loading", selectedCompanyId: "branch-2" }} companies={[{ companyId: "internal", companyName: "Minh Huy" }, { companyId: "branch-2", companyName: "Chi nhánh 2" }]} onSelectCompany={onSelectCompany} />);
+    expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("true");
+    expect(screen.queryByRole("region", { name: "Công ty đang làm việc" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "company.erp.production" })).toBeNull();
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+  });
 });
