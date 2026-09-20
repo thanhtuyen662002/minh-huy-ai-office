@@ -4,8 +4,8 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "RECONCILE_PENDING"
-state: in_progress
+head: "f493e0c506d09d4af7fb8e68d6daa11d791ef2db"
+state: waiting_ci
 lease_owner: "runtime-ai"
 lease_heartbeat_at: "2026-09-20T03:08:10Z"
 last_checkpoint_at: "2026-09-20T03:08:10Z"
