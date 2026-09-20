@@ -41,8 +41,12 @@ describe("bootstrapAuthenticatedSession", () => {
     ["missing company name", { ...serverMembership, companyName: " " }],
     ["missing user", { ...serverMembership, userId: "" }],
     ["missing user name", { ...serverMembership, userName: "   " }],
+    ["missing roles", { ...serverMembership, roles: undefined }],
+    ["non-array roles", { ...serverMembership, roles: "admin" }],
+    ["blank role", { ...serverMembership, roles: ["member", " "] }],
+    ["non-string tenant", { ...serverMembership, tenantId: 42 }],
   ] as const)("fails closed for server membership with %s", async (_case, membership) => {
-    const transport: SessionBootstrapTransport = async () => ({ ok: true, membership });
+    const transport = (async () => ({ ok: true, membership })) as unknown as SessionBootstrapTransport;
 
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({
       status: "forbidden",
