@@ -1,16 +1,22 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-platform-core
-status: integration-security-hold
+status: integration
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 17
-current_branch: backend/17-identity-foundation
-current_pr: 47
-last_verified_commit: 1aebe2b56fca717d90464c8a941bd612ab6e4468
-next_issue: 18
-next_action: "PR #54/#52 is merged. Keep PR #47 on security HOLD until the backend specialist fixes the authorization TOCTOU race on the existing branch/PR and adds fail-closed revocation regression evidence. Lead must then verify exact HEAD + CI + security acceptance before merging #47, followed by dependency order #50 -> #51 -> #55 as their own acceptance criteria permit."
+current_issue: 18
+current_branch: erp/18-data-source-registry
+current_pr: 50
+current_target_head: d0ed814f317907acc6bcbcf59bf8e395d8b7dac6
+last_verified_commit: 7c2fcca4ed7647f1ff3ff9fc78f5c0f0bf40195c
+dependency_chain:
+  - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
+  - "PR #50 / issue #18 Data Source Registry: CURRENT integration target"
+  - "PR #51 / issue #19 Durable Task Engine: reconcile after #50"
+  - "PR #55 / issue #20 worker dispatch: secondary stack after #51"
+next_issue: 19
+next_action: "Reconcile PR #50 exact branch HEAD d0ed814f317907acc6bcbcf59bf8e395d8b7dac6 with authoritative main 7c2fcca4ed7647f1ff3ff9fc78f5c0f0bf40195c without losing specialist changes; verify tenant/company isolation, secret-reference and authorization boundaries, EF migration/snapshot compatibility, rerun exact-head Governance + Build, and merge only when all gates pass. Then immediately sequence PR #51."
 blocked_by:
-  - "PR #47 authorization TOCTOU security finding: membership can be revoked between validation and role lookup."
+  - "PR #50 is currently not mergeable with main and requires same-branch reconciliation; keep the existing ERP/Data lease and do not create competing implementation."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
