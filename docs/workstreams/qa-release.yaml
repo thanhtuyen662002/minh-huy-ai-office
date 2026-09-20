@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 5cd719c4ed1a5b49eeabbaceaf9a1729598e08ee
+head: 38c14b2ebbdde4883331a117e437fdd077c620b9
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T17:50:58+07:00"
-last_checkpoint_at: "2026-09-20T17:50:58+07:00"
+lease_heartbeat_at: "2026-09-20T18:51:47+07:00"
+last_checkpoint_at: "2026-09-20T18:51:47+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -22,32 +22,32 @@ scope:
   - cross-workstream-pr-quality-review
 verification_target:
   pr: 55
-  current_pr_head: e13be9e76bb331062ae76d957c47229baf776e8c
+  current_pr_head: 6591874240bff1b1a7632e952577d46a7a48114c
   state: implementation_in_progress
   evidence:
-    - "exact-head Governance 35504891149 SUCCESS"
-    - "exact-head Build 35504891050 SUCCESS"
+    - "exact-head Governance 35507633469 SUCCESS"
+    - "exact-head Build 35507633502 FAILURE in .NET build; EF migration integrity, Web, Compose and deployment/container jobs pass"
   required_before_release_gate:
     - persistence-backed IWorkDeliveryHandler registration
     - durable completion/checkpoint before ACK
     - durable retry/dead-letter state before broker settlement
-    - transport-focused tests
+    - exact-head .NET build/tests green
     - lease fencing and stale-owner rejection
     - retry sequencing without duplicate live attempts
     - idempotent success boundary
     - tenant/company/task isolation and no secret exposure
 parallel_verification:
   pr_60:
-    head: a7e6d4b5639bbaf5fcf4675cd89f4a8ebf926f59
-    governance: "35504839934 SUCCESS"
-    build: "35504839928 SUCCESS"
-    gate: "Do not merge yet: live Backend HANDOFF still requires test-auth integration fixture, protected endpoint/missing-auth-config fail-closed coverage and auth configuration docs."
+    head: f0360d83ade1273f7a94b1a7769ef8c673604975
+    governance: "35506760201 SUCCESS"
+    build: "35506760252 SUCCESS"
+    gate: "Live Backend HANDOFF still requires deterministic Core.Api test-auth fixture and protected endpoint/missing-auth-config fail-closed coverage; merge promptly once those acceptance gates land."
   pr_63:
-    head: 62263ba84ae21953d5899f2c52c039b5d61cf10a
-    governance: "35505211786 SUCCESS"
-    build: "35505211781 FAILURE (.NET build and Core.Api container); EF migration integrity, Compose and Web passed"
-    gate: "Live ERP/Data lease owns fix; retain stack on #60 and require focused cross-company/inactive-membership/missing-auth regression coverage."
+    head: 0fb781c3ff2ae635c3775cdc5af961457a31b85d
+    governance: "35508145312 SUCCESS"
+    build: "35508145292 FAILURE (.NET build and Core.Api container); EF migration integrity, Web and Compose pass"
+    gate: "Live ERP/Data lease owns fix; retain stack on #60 and require cross-company/inactive-membership/missing-auth endpoint regressions."
   pr_64:
-    head: 4c750ce92234ae06370e8f9910e66c63d315b9c4
-    gate: "Implementation live; no exact-head workflow observed yet. Require component tests plus Web test/type-check/build and authoritative #60 transport reconciliation before release readiness."
-next_action: "Do not merge #55 on CI alone; independently review the next Runtime checkpoint proving persistence-before-settlement. Review #60 immediately when remaining acceptance lands; then sequence #63 after parent merge. Preserve live specialist ownership for #63/#64."
+    head: 99d81b61ae612eeea37b13a5df23a611ceaf98d2
+    gate: "Frontend implementation live; no exact-head workflow visible yet. Require Web test/type-check/build and authoritative #60 transport reconciliation before final release readiness."
+next_action: "Do not duplicate live specialist CI fixes. Review #60 immediately when remaining acceptance lands; sequence #63 after parent merge. Keep #55 release gate closed until persistence-before-settlement and exact-head Build are proven."
