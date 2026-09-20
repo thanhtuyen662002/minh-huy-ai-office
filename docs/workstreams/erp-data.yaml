@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 18
 current_pr: 63
 current_branch: erp/18-authenticated-datasource-api
-head: 4c6e2076f000721dc0c0f6ce41c42cba94cc0764
+head: 1ecf1455935a404599883e41d05b6ee23613d8cb
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-20T17:22:19+07:00"
-last_checkpoint_at: "2026-09-20T17:22:19+07:00"
+lease_heartbeat_at: "2026-09-20T17:28:00+07:00"
+last_checkpoint_at: "2026-09-20T17:28:00+07:00"
 last_merged_pr: 50
 last_merge_commit: 2baea2a9fce3103d915649ba36c109b77e549117
 preferred_next_issue: 18
@@ -20,4 +20,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Verify PR #63 exact-head CI and add focused endpoint security regression coverage for cross-company/inactive membership and missing auth configuration. Reconcile this SAME stacked PR if #60 moves."
+next_action: "Verify exact-head CI after replacing target-typed conditional Minimal API results with explicit fail-closed branches. Then add focused endpoint security regression coverage for cross-company/inactive membership and missing auth configuration; reconcile this SAME stacked PR if #60 moves."
