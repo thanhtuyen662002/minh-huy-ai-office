@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: active
-current_issue: 59
-current_pr: 61
-current_branch: frontend/59-datasource-registry-shell
-head: 82a98b1a355d65a1e4454e273ecb8a30e56335c3
-state: ready_for_review
+status: blocked
+current_issue: null
+current_pr: null
+current_branch: null
+head: c245eeba93a9cc8a85118610129aa7e50e114417
+state: blocked
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T15:09:00+07:00"
-last_checkpoint_at: "2026-09-20T15:09:00+07:00"
+lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
+last_checkpoint_at: "2026-09-20T15:58:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 exact HEAD 82a98b1a355d65a1e4454e273ecb8a30e56335c3 passed Governance 35496153316 and Build 35496153294 and is now Ready for review. Fixture-backed #59 acceptance is complete: company-scoped list/detail/create/edit, sanitized connection status, accessible interactions, metadata edit separated from explicit transient secret rotation, fail-closed company scope, and component coverage preserving secret redaction. Lead should review/merge exact HEAD; frontend must not start another primary lease while #61 remains open. After merge, release #59 lease and re-evaluate #22 versus authoritative #58 + residual #18 live-wiring readiness; do not invent endpoints or caller-controlled auth."
+next_action: "PR #61 / issue #59 merged at c245eeba93a9cc8a85118610129aa7e50e114417 after exact-head CI and Lead review. Primary lease is released. Issue #22 remains blocked until #20 is authoritative; live Data Source API wiring waits for #58 + residual #18. Do not invent endpoints or caller-controlled auth."
