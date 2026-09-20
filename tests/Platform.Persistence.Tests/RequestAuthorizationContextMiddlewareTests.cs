@@ -27,7 +27,10 @@ public sealed class RequestAuthorizationContextMiddlewareTests
         await middleware.InvokeAsync(context, directory, accessor);
 
         Assert.True(nextCalled);
-        Assert.Equal(("oidc", "subject-1", companyId), directory.LastRequest);
+        Assert.NotNull(directory.LastRequest);
+        Assert.Equal("oidc", directory.LastRequest.Value.Provider);
+        Assert.Equal("subject-1", directory.LastRequest.Value.Subject);
+        Assert.Equal(companyId, directory.LastRequest.Value.CompanyId);
         Assert.Equal(tenantId, accessor.Current!.Context.TenantId);
         Assert.Equal(userId, accessor.Current.Context.UserId);
     }
