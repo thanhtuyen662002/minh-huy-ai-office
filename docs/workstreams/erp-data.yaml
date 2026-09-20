@@ -1,17 +1,18 @@
 workstream: erp-data
 role: "ERP / Data"
-status: waiting_ci
-state: waiting_ci
+status: blocked
+state: blocked
 current_issue: 18
 current_pr: 50
 current_branch: erp/18-data-source-registry
-head: 3965a051d1a8674f071202f9707784c70f4dd2da
+head: d41cc1c50f06652dcf2be674a3449f7b337c7b13
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-20T05:30:47+07:00"
-last_checkpoint_at: "2026-09-20T05:30:47+07:00"
+lease_heartbeat_at: "2026-09-20T07:27:44+07:00"
+last_checkpoint_at: "2026-09-20T07:27:44+07:00"
 stacked_on: "merged PR #47 / main"
 preferred_next_issue: 18
 blocked_by:
+  - "PR #50 has diverged from main (38 ahead / 14 behind) and still carries duplicated identity-parent history; safe ancestry reconciliation requires Lead/integration sequencing to avoid overwriting newer main changes"
   - "Issue #18 API/UI acceptance requires an authenticated authorization boundary; caller-controlled tenant/company/user identifiers are forbidden"
 scope:
   - datasource-registry
@@ -19,4 +20,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Verify exact-head Governance + Build after removing the stale backend workstream checkpoint from PR #50. If green and the PR is mergeable, restore ready_for_review for Lead/QA integration. Keep authenticated API/UI acceptance deferred until a trusted auth boundary exists; do not create another ERP/Data primary lease while PR #50 remains open."
+next_action: "Lead/integration must reconcile PR #50 ancestry onto current main while preserving the completed Data Source Registry diff and newer main changes. After reconciliation, verify exact-head Governance + Build and restore ready_for_review if green. Keep PR #50 as the sole ERP/Data primary lease; do not create another branch/PR or advance authenticated API/UI acceptance until the trusted auth boundary exists."
