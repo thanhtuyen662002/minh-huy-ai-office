@@ -131,6 +131,9 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
                 services.RemoveAll<DbContextOptions<PlatformDbContext>>();
                 services.RemoveAll<PlatformDbContext>();
                 services.AddDbContext<PlatformDbContext>(options => options.UseInMemoryDatabase(databaseName));
+                services.AddScoped<DataSourceRegistryService>();
+                services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
+                services.AddScoped<DataSourceConnectionTestService>();
             });
         });
     }
