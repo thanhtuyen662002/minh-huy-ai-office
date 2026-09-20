@@ -22,6 +22,12 @@ describe("fetchAuthoritativeAuthContext", () => {
     });
   });
 
+  it("rejects an empty company selector before any authenticated transport is attempted", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    await expect(fetchAuthoritativeAuthContext("   ", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("allowlists authoritative identity fields and never promotes unexpected secret or presentation metadata", async () => {
     const fetcher = vi.fn<typeof fetch>(async () => jsonResponse({
       tenantId: "tenant-server",
@@ -66,6 +72,10 @@ describe("fetchAuthoritativeAuthContext", () => {
     {},
     { tenantId: "tenant-server", companyId: "company-a", userId: "user-server" },
     { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: [""] },
+    { tenantId: 7, companyId: "company-a", userId: "user-server", roles: [] },
+    { tenantId: "tenant-server", companyId: 7, userId: "user-server", roles: [] },
+    { tenantId: "tenant-server", companyId: "company-a", userId: 7, roles: [] },
+    { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: "member" },
   ])("rejects malformed authoritative payloads", async (payload) => {
     const fetcher = vi.fn<typeof fetch>(async () => jsonResponse(payload));
     await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
