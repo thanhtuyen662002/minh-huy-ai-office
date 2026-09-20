@@ -27,10 +27,10 @@ public sealed class RequestAuthorizationContextMiddlewareTests
         await middleware.InvokeAsync(context, directory, accessor);
 
         Assert.True(nextCalled);
-        Assert.NotNull(directory.LastRequest);
-        Assert.Equal("oidc", directory.LastRequest.Value.Provider);
-        Assert.Equal("subject-1", directory.LastRequest.Value.Subject);
-        Assert.Equal(companyId, directory.LastRequest.Value.CompanyId);
+        var request = Assert.IsType<AuthorizationLookupRequest>(directory.LastRequest);
+        Assert.Equal("oidc", request.Provider);
+        Assert.Equal("subject-1", request.Subject);
+        Assert.Equal(companyId, request.CompanyId);
         Assert.Equal(tenantId, accessor.Current!.Context.TenantId);
         Assert.Equal(userId, accessor.Current.Context.UserId);
     }
@@ -84,20 +84,23 @@ public sealed class RequestAuthorizationContextMiddlewareTests
         var claims = new List<Claim>();
         if (provider is not null) claims.Add(new Claim(AuthenticationClaimTypes.IdentityProvider, provider));
         if (subject is not null) claims.Add(new Claim(AuthenticationClaimTypes.Subject, subject));
-        return new DefaultHttpContext
+        var context = new DefaultHttpContext
         {
-            User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test")),
-            Response = { Body = new MemoryStream() }
+            User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test"))
         };
+        context.Response.Body = new MemoryStream();
+        return context;
     }
+
+    private sealed record AuthorizationLookupRequest(string Provider, string Subject, Guid CompanyId);
 
     private sealed class RecordingDirectory(AuthenticatedAuthorizationEntry? result) : IAuthenticatedAuthorizationDirectory
     {
-        public (string Provider, string Subject, Guid CompanyId)? LastRequest { get; private set; }
+        public AuthorizationLookupRequest? LastRequest { get; private set; }
 
         public Task<AuthenticatedAuthorizationEntry?> ResolveAsync(string identityProvider, string subject, Guid companyId, CancellationToken cancellationToken = default)
         {
-            LastRequest = (identityProvider, subject, companyId);
+            LastRequest = new AuthorizationLookupRequest(identityProvider, subject, companyId);
             return Task.FromResult(result);
         }
     }
