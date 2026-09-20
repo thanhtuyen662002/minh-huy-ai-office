@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CompanyShell } from "../components/company-shell";
 import Home from "./page";
@@ -13,9 +13,10 @@ describe("company-scoped product shell", () => {
 
     expect(screen.getByRole("main")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1, name: "AI Office" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Công ty đang làm việc" })).toBeTruthy();
+    const companyContext = screen.getByRole("region", { name: "Công ty đang làm việc" });
+    expect(companyContext).toBeTruthy();
+    expect(within(companyContext).getByText(/Nhân viên nội bộ/)).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Nguồn dữ liệu · Minh Huy" })).toBeTruthy();
-    expect(screen.getAllByText("Nhân viên nội bộ").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { level: 3, name: "company.erp.production" })).toBeTruthy();
     expect(screen.getAllByText(/Thông tin bí mật: đã cấu hình · giá trị được ẩn/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/password|connection string|secret reference/i)).toBeNull();
