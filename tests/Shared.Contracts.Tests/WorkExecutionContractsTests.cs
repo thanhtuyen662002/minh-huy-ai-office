@@ -51,6 +51,61 @@ public sealed class WorkExecutionContractsTests
         Assert.Equal(expected, WorkRetryPolicy.Classify(failureClass, attempt, maxAttempts));
     }
 
+    [Theory]
+    [InlineData(WorkDeliveryOutcome.Completed)]
+    [InlineData(WorkDeliveryOutcome.AlreadyCompleted)]
+    public void Settlement_AcknowledgesSuccessfulAndIdempotentRedelivery(
+        WorkDeliveryOutcome outcome)
+    {
+        Assert.Equal(
+            BrokerSettlement.Acknowledge,
+            WorkDeliverySettlement.Resolve(outcome, null, attempt: 1, maxAttempts: 3));
+    }
+
+    [Fact]
+    public void Settlement_RequeuesOnlyRetryableFailureWithinBudget()
+    {
+        Assert.Equal(
+            BrokerSettlement.Requeue,
+            WorkDeliverySettlement.Resolve(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Transient,
+                attempt: 1,
+                maxAttempts: 3));
+
+        Assert.Equal(
+            BrokerSettlement.DeadLetter,
+            WorkDeliverySettlement.Resolve(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Transient,
+                attempt: 3,
+                maxAttempts: 3));
+
+        Assert.Equal(
+            BrokerSettlement.DeadLetter,
+            WorkDeliverySettlement.Resolve(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Authorization,
+                attempt: 1,
+                maxAttempts: 3));
+    }
+
+    [Fact]
+    public void Settlement_RejectsContradictoryOutcomeMetadata()
+    {
+        Assert.Throws<ArgumentException>(() => WorkDeliverySettlement.Resolve(
+            WorkDeliveryOutcome.Completed,
+            WorkFailureClass.Transient,
+            attempt: 1,
+            maxAttempts: 3));
+
+        Assert.Throws<ArgumentException>(() => WorkDeliverySettlement.Resolve(
+            WorkDeliveryOutcome.Failed,
+            null,
+            attempt: 1,
+            maxAttempts: 3));
+    }
+
     [Fact]
     public void LeaseSnapshot_RejectsExpiredOrStaleWorker()
     {
