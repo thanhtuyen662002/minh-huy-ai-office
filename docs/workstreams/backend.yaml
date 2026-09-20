@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
+status: implementing
 current_issue: 58
 current_pr: 60
 current_branch: backend/58-trusted-http-auth
-head: a0dbc07b442d0d57c9c53dc301ffb698dd134bf6
+head: 9eec7c2fab3bda4007d080458e4f8c447280ab10
 lease_owner: backend
-lease_heartbeat_at: "2026-09-20T17:00:00+07:00"
-last_checkpoint_at: "2026-09-20T17:00:00+07:00"
+lease_heartbeat_at: "2026-09-20T18:02:00+07:00"
+last_checkpoint_at: "2026-09-20T18:02:00+07:00"
 last_completed_issue: 17
 last_merged_pr: 47
 last_merge_commit: 084e90170907ade8854270f3c24d446fb458cef9
@@ -20,13 +20,13 @@ scope:
   - platform-persistence
 verification:
   issue_17_implementation_head: f769be3916c301aad08e1dc720550c3e4b2e3ccb
-  governance_run: 35501251047
-  build_run: 35501251087
-  result: "Governance passed at 50c290a; Build failed only in .NET Build while formatting, Web, container/Compose and EF integrity passed. Test request-capture compile surface simplified at a0dbc07; exact-head CI pending."
+  governance_run: 35504839934
+  build_run: 35504839928
+  result: "Exact-head a7e6d4b Governance and Build both passed after restoring the xUnit namespace. Authentication configuration contract documented at 9eec7c2; new exact-head CI pending."
 known_risks:
   - "Caller-controlled identity headers must never become trusted TenantId, CompanyId, or UserId identity."
   - "JWT authority/audience configuration must fail closed for protected API surfaces; production authentication must never fall back to caller-controlled identity headers."
   - "Authenticated provider/subject plus untrusted company selector must resolve user, active membership, active company, and roles inside one database query before AuthorizationContext exists."
   - "Issue #58 must remain schema-neutral while Runtime owns the active shared EF model/snapshot chain."
 blocked_by: []
-next_action: "Verify exact-head CI after a0dbc07 build remediation and fix any remaining compile/test failure on SAME PR. Then add deterministic test-auth integration fixture plus protected endpoint/missing-auth-config fail-closed coverage and authentication configuration docs; rerun full exact-head CI before Ready for Review."
+next_action: "Add deterministic Core.Api test-auth integration fixture and protected endpoint/missing-auth-config fail-closed coverage on SAME PR, then run full exact-head CI. Keep production startup free of fake/header authentication and do not touch EF model/snapshot/migrations."
