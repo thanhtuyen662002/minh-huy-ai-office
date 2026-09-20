@@ -4,11 +4,11 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "612988d09ab1a134f920faf9117f2f01fa91299b"
-state: waiting_ci
+head: "3cd5561fc336070035eb34a8b8fcc2b74d4cc49e"
+state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-20T06:20:29Z"
-last_checkpoint_at: "2026-09-20T08:22:51Z"
+lease_heartbeat_at: "2026-09-20T09:19:42Z"
+last_checkpoint_at: "2026-09-20T09:19:42Z"
 stacked_on: "main @ d4e87f7fe49b280a0be600b308cc4a539d1ae161"
 scope:
   - task-engine
@@ -17,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Verify exact-head CI after fail-closed RabbitMQ envelope validation. Fix on SAME PR if needed. Then add transport-focused tests and persistence-backed IWorkDeliveryHandler wiring so ACK occurs only after durable completion/checkpoint commit; retry/dead-letter state must be durable before broker settlement."
+next_action: "Envelope-validation checkpoint 3cd5561 is verified by Governance 35499461068 + Build 35499461089. Continue SAME PR with transport-focused tests and persistence-backed IWorkDeliveryHandler wiring so ACK occurs only after durable completion/checkpoint commit; retry/dead-letter state must be durable before broker settlement."
