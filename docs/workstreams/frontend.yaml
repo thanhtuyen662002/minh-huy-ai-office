@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 62
 current_pr: 64
 current_branch: frontend/62-auth-session-bootstrap
-head: c660fb6111ac349aa0c91c923259d6601ff24b65
+head: 128dd13a7ff98db7df255061f1bf84a7562c2a2c
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T18:18:00+07:00"
-last_checkpoint_at: "2026-09-20T18:18:00+07:00"
+lease_heartbeat_at: "2026-09-20T19:13:00+07:00"
+last_checkpoint_at: "2026-09-20T19:13:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -17,5 +17,6 @@ scope:
   - client-contracts
   - realtime-ui
 blocked_by:
-  - "Live HTTP endpoint wiring remains deferred until PR #60 / #58 publishes the final protected endpoint shape; the frontend adapter intentionally injects transport."
-next_action: "Verify exact-head Web tests/type-check/build for PR #64 after accessible loading/unauthenticated/forbidden/company-switch shell coverage. Fix any frontend-owned CI failure on the same PR. Then reconcile the injected transport to PR #60 only when its protected endpoint is authoritative; do not invent an endpoint or browser-controlled TenantId/UserId authority."
+  - "GitHub currently reports no workflow run for PR #64 branch, so exact-head Web CI evidence is still unavailable."
+  - "PR #60 remains Draft. Its current /api/auth/context response is authoritative for TenantId/CompanyId/UserId/Roles but does not provide companyName/userName required by the existing presentation membership; do not fabricate display identity."
+next_action: "Re-check exact-head workflow emission and fix any frontend-owned failure on PR #64. Once PR #60 is authoritative, reconcile /api/auth/context behind the typed adapter and obtain display metadata only from an authoritative contract. Preserve fail-closed behavior: transport rejection, invalid scope and mismatched company must never leave company data authoritative."
