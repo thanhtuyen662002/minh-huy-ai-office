@@ -1,22 +1,28 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-platform-core
-status: integration
+status: integration-waiting-ci
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 18
 current_branch: erp/18-data-source-registry
 current_pr: 50
-current_target_head: d0ed814f317907acc6bcbcf59bf8e395d8b7dac6
-last_verified_commit: 7c2fcca4ed7647f1ff3ff9fc78f5c0f0bf40195c
+current_target_head: cb5898fecd795404fa97b407bc0f01bfa04778f1
+last_verified_commit: a626608dd9be960ac205053a0573463236137a71
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
-  - "PR #50 / issue #18 Data Source Registry: CURRENT integration target"
-  - "PR #51 / issue #19 Durable Task Engine: reconcile after #50"
+  - "PR #50 / issue #18 Data Source Registry foundation: reconciled on main; exact-head CI pending"
+  - "PR #51 / issue #19 Durable Task Engine: reconcile after #50 foundation merge"
   - "PR #55 / issue #20 worker dispatch: secondary stack after #51"
+integration_checkpoint:
+  pr50_previous_head: d0ed814f317907acc6bcbcf59bf8e395d8b7dac6
+  pr50_backup_branch: backup/50-pre-lead-reconcile-20260920
+  pr50_reconciled_head: cb5898fecd795404fa97b407bc0f01bfa04778f1
+  pr50_base_main: a626608dd9be960ac205053a0573463236137a71
 next_issue: 19
-next_action: "Reconcile PR #50 exact branch HEAD d0ed814f317907acc6bcbcf59bf8e395d8b7dac6 with authoritative main 7c2fcca4ed7647f1ff3ff9fc78f5c0f0bf40195c without losing specialist changes; verify tenant/company isolation, secret-reference and authorization boundaries, EF migration/snapshot compatibility, rerun exact-head Governance + Build, and merge only when all gates pass. Then immediately sequence PR #51."
+next_action: "Wait for exact-head Governance + Build on PR #50 reconciled HEAD cb5898fecd795404fa97b407bc0f01bfa04778f1. If green and mergeable, perform final tenant/authorization/secret/migration review and merge the foundation without closing issue #18; then immediately reconcile PR #51 onto the resulting main."
 blocked_by:
-  - "PR #50 is currently not mergeable with main and requires same-branch reconciliation; keep the existing ERP/Data lease and do not create competing implementation."
+  - "PR #50 exact-head CI is running after Lead ancestry reconciliation."
+  - "Issue #18 authenticated API/UI acceptance remains blocked on a trusted HTTP authentication boundary; foundation merge must not close #18."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
