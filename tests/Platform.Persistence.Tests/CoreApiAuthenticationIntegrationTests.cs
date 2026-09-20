@@ -1,3 +1,5 @@
+extern alias CoreApi;
+
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
@@ -10,10 +12,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MinhHuy.AIOffice.Core.Api.Authorization;
+using CoreApi::MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
+using CoreApiProgram = CoreApi::Program;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
@@ -22,7 +25,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
     [Fact]
     public async Task Protected_context_endpoint_fails_closed_when_authentication_is_not_configured()
     {
-        await using var factory = new WebApplicationFactory<Program>()
+        await using var factory = new WebApplicationFactory<CoreApiProgram>()
             .WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
@@ -74,9 +77,9 @@ public sealed class CoreApiAuthenticationIntegrationTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)
+    private static WebApplicationFactory<CoreApiProgram> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)
     {
-        return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        return new WebApplicationFactory<CoreApiProgram>().WithWebHostBuilder(builder =>
         {
             // Use host settings because Program reads authentication configuration while the
             // WebApplicationBuilder is being constructed, before test ConfigureAppConfiguration callbacks run.
