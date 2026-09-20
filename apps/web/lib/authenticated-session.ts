@@ -54,10 +54,17 @@ export async function bootstrapAuthenticatedSession(
   }
 
   const normalizedCompanyId = selectedCompanyId.trim();
-  const result = await transport({
-    selectedCompanyId: normalizedCompanyId,
-    headers: { [COMPANY_SELECTOR_HEADER]: normalizedCompanyId },
-  });
+  let result: SessionBootstrapResult;
+
+  try {
+    result = await transport({
+      selectedCompanyId: normalizedCompanyId,
+      headers: { [COMPANY_SELECTOR_HEADER]: normalizedCompanyId },
+    });
+  } catch {
+    // Network/transport failures must never leave stale company data authoritative.
+    return { status: "forbidden", reason: "invalid-response" };
+  }
 
   if (!result.ok) {
     if (result.reason === "unauthenticated") {
