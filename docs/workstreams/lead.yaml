@@ -3,11 +3,11 @@ role: "Lead / Integrator + QA / Security / Release"
 current_issue: 19
 current_pr: 51
 current_branch: main
-head: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+head: 0358ec0430e2792953bd5c22590a6805d457e91a
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T09:35:00+07:00"
-last_checkpoint_at: "2026-09-20T09:35:00+07:00"
+lease_heartbeat_at: "2026-09-20T10:05:00+07:00"
+last_checkpoint_at: "2026-09-20T10:05:00+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -29,12 +29,17 @@ integration:
   current_target:
     pr: 51
     branch: runtime/19-durable-task-engine
-    current_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+    current_head: cd067d954d8cf3729ae79548eb25fa29806e4d81
     owner: runtime-ai
-    observed_state: "diverged from main; live lease; post-#50 reconciliation not yet checkpointed"
-    required_action: "same-branch reconciliation onto main preserving DataSource + Durable Task EF state, tests and additive migrations"
+    observed_state: "reconciled and mergeable; exact-head Governance 35485567771 + Build 35485567875 green; specialist HANDOFF still waiting_ci"
+    required_action: "wait only for live specialist ready_for_review checkpoint, then final Lead/QA source review and merge"
+  parallel:
+    issue: 58
+    owner: backend
+    state: executable
+    required_action: "claim trusted HTTP authentication boundary now; avoid shared EF/schema changes"
   secondary:
     pr: 55
     state: blocked
     reason: "must follow #51; retry/idempotency correctness HOLD remains"
-next_action: "Runtime-ai immediate resume requested. Do not compete with its live PR #51 lease. On reconciled HEAD, verify source + exact-head CI + migration integrity, merge #51 if all gates pass, then immediately retarget/reconcile #55 and enforce its correctness HOLD."
+next_action: "Merge #51 as soon as Runtime checkpoints ready_for_review on unchanged cd067d9; then immediately sequence #55. In parallel ensure Backend #58 advances and allow ERP/Data residual #18 to stack on its stable auth contract."
