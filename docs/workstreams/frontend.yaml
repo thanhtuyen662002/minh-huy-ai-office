@@ -4,11 +4,11 @@ status: active
 current_issue: 59
 current_pr: 61
 current_branch: frontend/59-datasource-registry-shell
-head: 2c6ce85c1a3c911a4a7bd1a17a248088b0ffaa02
+head: 7f1b778ec291fc5e02ef550dfa0eaa02cff6940a
 state: implementation
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T10:16:00+07:00"
-last_checkpoint_at: "2026-09-20T10:16:00+07:00"
+lease_heartbeat_at: "2026-09-20T11:18:00+07:00"
+last_checkpoint_at: "2026-09-20T11:18:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 exact-head CI still failed only in Web tests after the stale overview assertion fix; all non-web Build jobs and Governance passed. Commit 2c6ce85 makes the company-user assertion robust to repeated accessible text while preserving company scope and fail-closed coverage. Verify the new exact HEAD with web:test, type-check, production build and repository CI, then complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
+next_action: "PR #61 exact-head CI at cd4fa3f failed only in Web tests; Governance and every non-web Build job passed. Commit 7f1b778 hardens the remaining registry-shell assertion around the semantic datasource heading and adds explicit secret-redaction presentation coverage. Verify exact-head web:test/type-check/production build and repository CI, then complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
