@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import type { DataSourceMetadataEdit, DataSourceView } from "../lib/data-source-registry";
 import { applyMetadataEdit, createSecretRotationIntent, dataSourcesForCompany } from "../lib/data-source-registry";
 
