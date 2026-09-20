@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Configuration;
@@ -104,20 +105,20 @@ else
 var dataSources = app.MapGroup("/api/data-sources");
 if (authenticationConfigured)
 {
-    dataSources.MapGet("/", async (IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, CancellationToken cancellationToken) =>
+    dataSources.MapGet("/", async (IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor);
         if (context is null) return (IResult)Results.Forbid();
         return (IResult)Results.Ok(await registry.ListAsync(context, cancellationToken));
     });
-    dataSources.MapPost("/", async (IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
+    dataSources.MapPost("/", async (IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor);
         if (context is null) return (IResult)Results.Forbid();
         var created = await registry.CreateAsync(context, request, cancellationToken);
         return (IResult)Results.Created($"/api/data-sources/{created.Id}", created);
     });
-    dataSources.MapPut("/{dataSourceId:guid}", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
+    dataSources.MapPut("/{dataSourceId:guid}", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor);
         if (context is null) return (IResult)Results.Forbid();
@@ -125,7 +126,7 @@ if (authenticationConfigured)
         if (updated is null) return (IResult)Results.NotFound();
         return (IResult)Results.Ok(updated);
     });
-    dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, DataSourceConnectionTestService tester, CancellationToken cancellationToken) =>
+    dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceConnectionTestService tester, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor);
         if (context is null) return (IResult)Results.Forbid();
