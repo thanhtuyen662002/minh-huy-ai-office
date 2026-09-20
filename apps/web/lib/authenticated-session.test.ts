@@ -54,6 +54,22 @@ describe("bootstrapAuthenticatedSession", () => {
     });
   });
 
+  it.each([
+    ["null envelope", null],
+    ["missing ok discriminator", { membership: serverMembership }],
+    ["non-boolean ok discriminator", { ok: "true", membership: serverMembership }],
+    ["success without membership", { ok: true }],
+    ["failure without reason", { ok: false }],
+    ["unknown failure reason", { ok: false, reason: "server-error" }],
+  ] as const)("fails closed for %s", async (_case, envelope) => {
+    const transport = (async () => envelope) as unknown as SessionBootstrapTransport;
+
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({
+      status: "forbidden",
+      reason: "invalid-response",
+    });
+  });
+
   it("fails closed when the session transport rejects", async () => {
     const transport: SessionBootstrapTransport = async () => {
       throw new Error("network unavailable");
