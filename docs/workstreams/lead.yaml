@@ -1,13 +1,13 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
-current_issue: 18
-current_pr: 50
+current_issue: 19
+current_pr: 51
 current_branch: main
-head: a626608dd9be960ac205053a0573463236137a71
-state: waiting_ci
+head: 2baea2a9fce3103d915649ba36c109b77e549117
+state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T09:07:50+07:00"
-last_checkpoint_at: "2026-09-20T09:07:50+07:00"
+lease_heartbeat_at: "2026-09-20T09:10:21+07:00"
+last_checkpoint_at: "2026-09-20T09:10:21+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -23,9 +23,13 @@ scope:
   - dependency-security-upgrades
   - release-gates
   - cross-workstream-pr-quality-review
-current_target:
-  pr: 50
-  branch: erp/18-data-source-registry
-  reconciled_head: cb5898fecd795404fa97b407bc0f01bfa04778f1
-  backup_branch: backup/50-pre-lead-reconcile-20260920
-next_action: "Verify PR #50 exact-head CI/mergeability and merge the Data Source foundation if all gates pass without closing issue #18. Then immediately sequence PR #51 against the new authoritative main; preserve #55 as secondary stack."
+integration:
+  completed:
+    - "PR #50 merged at 2baea2a9fce3103d915649ba36c109b77e549117 with exact-head Governance 35483176002 and Build 35483176085 green"
+  current_target:
+    pr: 51
+    branch: runtime/19-durable-task-engine
+    current_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+    owner: runtime-ai
+    required_action: "same-branch reconciliation onto main after #50; preserve both Data Source and Durable Task EF state"
+next_action: "Do not compete with the live runtime-ai lease. Trigger/resume runtime-ai on PR #51 now; after its reconciled exact-head CI is green, Lead/QA performs final migration/security review and merges #51, then immediately sequences #55."
