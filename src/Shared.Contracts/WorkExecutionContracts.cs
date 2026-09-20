@@ -22,6 +22,56 @@ public enum WorkDispatchState
     DeadLettered
 }
 
+public enum WorkDeliveryOutcome
+{
+    Completed,
+    AlreadyCompleted,
+    Failed
+}
+
+public enum BrokerSettlement
+{
+    Acknowledge,
+    Requeue,
+    DeadLetter
+}
+
+public static class WorkDeliverySettlement
+{
+    public static BrokerSettlement Resolve(
+        WorkDeliveryOutcome outcome,
+        WorkFailureClass? failureClass,
+        int attempt,
+        int maxAttempts)
+    {
+        if (outcome is WorkDeliveryOutcome.Completed or WorkDeliveryOutcome.AlreadyCompleted)
+        {
+            if (failureClass is not null)
+            {
+                throw new ArgumentException(
+                    "Successful delivery outcomes cannot carry a failure class.",
+                    nameof(failureClass));
+            }
+
+            return BrokerSettlement.Acknowledge;
+        }
+
+        if (failureClass is null)
+        {
+            throw new ArgumentException(
+                "Failed delivery outcomes require a failure class.",
+                nameof(failureClass));
+        }
+
+        return WorkRetryPolicy.Classify(failureClass.Value, attempt, maxAttempts) switch
+        {
+            RetryDisposition.Retry => BrokerSettlement.Requeue,
+            RetryDisposition.DeadLetter => BrokerSettlement.DeadLetter,
+            _ => throw new InvalidOperationException("Unknown retry disposition.")
+        };
+    }
+}
+
 public static class WorkDispatchTransitions
 {
     public static bool CanTransition(WorkDispatchState current, WorkDispatchState next)
