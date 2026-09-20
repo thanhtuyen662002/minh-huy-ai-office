@@ -53,7 +53,9 @@ describe("AuthenticatedSessionShell", () => {
 
   it.each([
     ["unauthenticated", { status: "unauthenticated" } as const],
-    ["forbidden", { status: "forbidden", reason: "invalid-response" } as const],
+    ["forbidden", { status: "forbidden", reason: "forbidden" } as const],
+    ["inactive membership", { status: "forbidden", reason: "inactive-membership" } as const],
+    ["invalid response", { status: "forbidden", reason: "invalid-response" } as const],
   ])("clears stale company data when a ready session becomes %s", (_label, failedState) => {
     const { rerender } = render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={vi.fn()} />);
     expect(screen.getByRole("heading", { name: "company.erp.production" })).toBeTruthy();
@@ -61,6 +63,8 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.queryByRole("region", { name: "Công ty đang làm việc" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "company.erp.production" })).toBeNull();
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.queryByText("Minh Huy")).toBeNull();
+    expect(screen.queryByText("Chi nhánh 2")).toBeNull();
   });
 
   it("exposes accessible failure semantics without leaking company data", () => {
