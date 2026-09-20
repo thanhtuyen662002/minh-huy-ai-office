@@ -22,6 +22,31 @@ describe("fetchAuthoritativeAuthContext", () => {
     });
   });
 
+  it("allowlists authoritative identity fields and never promotes unexpected secret or presentation metadata", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => jsonResponse({
+      tenantId: "tenant-server",
+      companyId: "company-a",
+      userId: "user-server",
+      roles: ["member"],
+      companyName: "browser-visible-name",
+      userName: "browser-visible-user",
+      secretReference: "vault://company-a/erp",
+      connectionString: "Server=secret-host;Password=do-not-surface",
+    }));
+
+    const result = await fetchAuthoritativeAuthContext("company-a", fetcher);
+    expect(result).toEqual({
+      ok: true,
+      context: { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member"] },
+    });
+    if (result.ok) {
+      expect(result.context).not.toHaveProperty("companyName");
+      expect(result.context).not.toHaveProperty("userName");
+      expect(result.context).not.toHaveProperty("secretReference");
+      expect(result.context).not.toHaveProperty("connectionString");
+    }
+  });
+
   it.each([
     [401, "unauthenticated"],
     [403, "forbidden"],
