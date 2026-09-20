@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 62
 current_pr: 64
 current_branch: frontend/62-auth-session-bootstrap
-head: d3dcdd81b2916dbf37d9379a662ab2c510d055e3
+head: 1b3d24fbd36d073609ad7da750b4a148a6a8fece
 state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-21T00:51:00+07:00"
-last_checkpoint_at: "2026-09-21T00:51:00+07:00"
+lease_heartbeat_at: "2026-09-21T02:50:00+07:00"
+last_checkpoint_at: "2026-09-21T02:50:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -17,6 +17,6 @@ scope:
   - client-contracts
   - realtime-ui
 blocked_by:
-  - "GitHub Actions reports zero workflow runs for implementation HEAD d3dcdd81b2916dbf37d9379a662ab2c510d055e3; exact-head Web CI evidence remains unavailable."
+  - "GitHub Actions reports zero workflow runs for prior implementation HEAD 1b3d24fbd36d073609ad7da750b4a148a6a8fece; exact-head Web CI evidence remains unavailable."
   - "Merged /api/auth/context is authoritative for tenantId/companyId/userId/roles but does not expose authoritative company/user display names, so presentation metadata must not be fabricated."
-next_action: "Continue SAME PR #64 safe executable acceptance. HTTP auth context validation now rejects sparse role arrays so JavaScript array holes cannot bypass role validation. Keep display metadata separate until an authoritative source exists; continue component/adapter accessibility and stale-state hardening without inventing companyName/userName. Re-check workflow emission after meaningful checkpoints and fix frontend-owned failures immediately."
+next_action: "Continue SAME PR #64 safe executable acceptance. Loading auth validation now has polite status semantics and unauthenticated denial is an accessible alert, with deterministic component regressions while stale company state remains absent. Keep display metadata separate until an authoritative source exists; re-check workflow emission after this meaningful checkpoint and fix frontend-owned failures immediately."

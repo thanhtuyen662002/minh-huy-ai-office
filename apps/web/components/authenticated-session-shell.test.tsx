@@ -8,15 +8,19 @@ const companies = [{ companyId: "internal", companyName: "Minh Huy" }, { company
 afterEach(cleanup);
 
 describe("AuthenticatedSessionShell", () => {
-  it("fails closed while authentication is loading", () => {
+  it("fails closed while authentication is loading and announces progress accessibly", () => {
     render(<AuthenticatedSessionShell state={{ status: "loading", selectedCompanyId: "internal" }} />);
     expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("true");
+    const status = screen.getByRole("status");
+    expect(status.getAttribute("aria-live")).toBe("polite");
+    expect(status.getAttribute("aria-labelledby")).toBe("session-loading");
     expect(screen.queryByText("company.erp.production")).toBeNull();
   });
 
-  it("fails closed for unauthenticated and forbidden sessions", () => {
+  it("fails closed for unauthenticated and forbidden sessions with accessible alerts", () => {
     const { rerender } = render(<AuthenticatedSessionShell state={{ status: "unauthenticated" }} />);
     expect(screen.getByRole("heading", { name: "Cần đăng nhập" })).toBeTruthy();
+    expect(screen.getByRole("alert").getAttribute("aria-labelledby")).toBe("session-required");
     expect(screen.queryByText("company.erp.production")).toBeNull();
     rerender(<AuthenticatedSessionShell state={{ status: "forbidden", reason: "inactive-membership" }} />);
     expect(screen.getByRole("alert").textContent).toMatch(/không còn hoạt động/i);

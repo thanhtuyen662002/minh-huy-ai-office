@@ -19,11 +19,11 @@ const failureCopy = {
 
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
   if (state.status === "loading") {
-    return <main aria-busy="true" className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section aria-labelledby="session-loading" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="session-loading" className="mt-3 text-3xl font-semibold tracking-tight">Đang xác thực phiên làm việc</h1><p className="mt-3 leading-7 opacity-75">Đang kiểm tra quyền truy cập công ty trước khi hiển thị dữ liệu.</p></section></main>;
+    return <main aria-busy="true" className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="status" aria-live="polite" aria-labelledby="session-loading" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="session-loading" className="mt-3 text-3xl font-semibold tracking-tight">Đang xác thực phiên làm việc</h1><p className="mt-3 leading-7 opacity-75">Đang kiểm tra quyền truy cập công ty trước khi hiển thị dữ liệu.</p></section></main>;
   }
 
   if (state.status === "unauthenticated") {
-    return <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section aria-labelledby="session-required" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="session-required" className="mt-3 text-3xl font-semibold tracking-tight">Cần đăng nhập</h1><p className="mt-3 leading-7 opacity-75">Phiên đăng nhập chưa được xác thực. Không có dữ liệu công ty nào được hiển thị.</p></section></main>;
+    return <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="alert" aria-labelledby="session-required" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="session-required" className="mt-3 text-3xl font-semibold tracking-tight">Cần đăng nhập</h1><p className="mt-3 leading-7 opacity-75">Phiên đăng nhập chưa được xác thực. Không có dữ liệu công ty nào được hiển thị.</p></section></main>;
   }
 
   if (state.status === "forbidden") {
