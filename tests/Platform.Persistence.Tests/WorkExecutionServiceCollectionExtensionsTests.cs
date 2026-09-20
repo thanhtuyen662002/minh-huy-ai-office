@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MinhHuy.AIOffice.Agent.Worker;
+using MinhHuy.AIOffice.Platform.Persistence;
+using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
@@ -42,7 +44,7 @@ public sealed class WorkExecutionServiceCollectionExtensionsTests
     private sealed class TestExecutor : IWorkStepExecutor
     {
         public Task<WorkStepExecutionResult> ExecuteAsync(
-            Shared.Contracts.WorkDispatchEnvelope envelope,
+            WorkDispatchEnvelope envelope,
             WorkLeaseSnapshot lease,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
