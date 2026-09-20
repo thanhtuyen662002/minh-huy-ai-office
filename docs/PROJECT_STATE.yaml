@@ -6,16 +6,16 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 20
 current_branch: runtime/20-worker-dispatch
 current_pr: 55
-current_target_head: b07e9eb1e3bfb470984a022c550153eb10194e39
+current_target_head: e13be9e76bb331062ae76d957c47229baf776e8c
 last_verified_commit: 27058b3578f6bdedca3ff04fdbfc148cf6a93109
 critical_paths:
   runtime:
     issue: 20
     pr: 55
-    head: b07e9eb1e3bfb470984a022c550153eb10194e39
+    head: e13be9e76bb331062ae76d957c47229baf776e8c
     state: in_progress
-    evidence: "Exact HEAD Governance 35502050212 + Build 35502050209 SUCCESS, but acceptance still requires transport tests and persistence-before-settlement handler wiring."
-    next: "Runtime continues SAME PR #55 without pausing on docs/CI-only checkpoints."
+    evidence: "Exact HEAD Governance 35504891149 + Build 35504891050 SUCCESS; acceptance still requires transport-focused tests and persistence-before-settlement handler wiring."
+    next: "Runtime continues SAME PR #55 without pausing on green CI; prove durable completion/checkpoint/retry/dead-letter state before broker settlement."
   backend_auth:
     issue: 58
     pr: 60
@@ -23,29 +23,38 @@ critical_paths:
     head: a7e6d4b5639bbaf5fcf4675cd89f4a8ebf926f59
     state: in_progress
     owner: backend
-    evidence: "Stable schema-neutral auth contract; exact-head Governance 35504839934 SUCCESS and Build 35504839928 in progress."
-    next: "Backend completes SAME PR #60 security/integration acceptance and exact-head CI; downstream lanes may stack now."
+    evidence: "Stable schema-neutral auth contract; exact-head Governance 35504839934 + Build 35504839928 SUCCESS. HANDOFF still requires deterministic test-auth integration fixture, protected endpoint/missing-auth-config fail-closed coverage and auth configuration docs."
+    next: "Backend completes SAME PR #60 acceptance on its live lease; downstream stacks remain authorized."
   erp_data:
     issue: 18
-    foundation_pr: 50
-    foundation_state: merged
-    residual_state: ready_stacked_on_60
-    next: "ERP/Data immediately claims residual authenticated API/connection-test acceptance as Draft PR STACKED_ON #60."
+    pr: 63
+    branch: erp/18-authenticated-datasource-api
+    head: 62263ba84ae21953d5899f2c52c039b5d61cf10a
+    stacked_on: 60
+    state: waiting_ci
+    evidence: "Governance 35505211786 SUCCESS; Build 35505211781 FAILURE in .NET build/Core.Api container while EF migration integrity, Compose and Web passed. Live ERP/Data lease owns the fix."
+    next: "ERP/Data fixes SAME stacked PR #63 and adds focused cross-company/inactive-membership/missing-auth security coverage; do not duplicate from Lead."
   frontend:
     issue: 62
-    state: ready_stacked_on_60
-    next: "Frontend immediately claims authenticated session bootstrap/company-scope wiring as Draft PR STACKED_ON #60; keep adapter isolated and fail closed."
+    pr: 64
+    branch: frontend/62-auth-session-bootstrap
+    head: 4c750ce92234ae06370e8f9910e66c63d315b9c4
+    depends_on: 60
+    state: in_progress
+    evidence: "Frontend live lease has typed fail-closed authenticated-session adapter and is implementing explicit session/company-switch UX; no exact-head workflow run yet on observed PR head."
+    next: "Frontend continues SAME PR #64 with component UX/tests and preserves injected transport until #60 protected endpoint is authoritative."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
-  - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; residual #18 now allowed to stack on #60"
+  - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; residual #18 active as stacked PR #63"
   - "PR #51 / issue #19 Durable Task Engine: MERGED at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817; issue #19 CLOSED"
   - "PR #55 / issue #20 worker dispatch: active; exact-head CI green but real transport/persistence acceptance remains"
-  - "PR #60 / issue #58 trusted HTTP authentication: active stable contract; downstream #18/#62 may stack before merge"
-  - "PR #61 / issue #59 frontend Data Source shell: MERGED at c245eeba93a9cc8a85118610129aa7e50e114417"
+  - "PR #60 / issue #58 trusted HTTP authentication: active; exact-head CI green, acceptance work remains; #63 is stacked on it"
+  - "PR #64 / issue #62 frontend auth session bootstrap: active dependent lane; concrete transport waits for authoritative #60 endpoint"
 next_issue: 20
-next_action: "Keep #55, #60, residual #18 and frontend #62 moving in parallel. Merge acceptance-complete exact-head green lanes promptly; after #18 + #19 authoritative activate Backend #21, and after #20 authoritative unblock Frontend #22."
+next_action: "Keep #55, #60, #63 and #64 moving in parallel. Merge acceptance-complete exact-head green lanes promptly; after #60 merge reconcile #63 to main and sequence residual #18; after #18 + #19 authoritative activate Backend #21; after #20 authoritative unblock Frontend #22."
 blocked_by:
   - "PR #55 still requires persistence-backed handler/transport evidence before merge."
+  - "PR #63 is stacked on #60 and currently has a live implementation-owned Build failure."
   - "Backend #21 waits for residual #18 to become authoritative."
   - "Frontend #22 waits for #20 to become authoritative."
 autonomy:
