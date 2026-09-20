@@ -1,13 +1,17 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_dependency
-current_issue: null
-current_pr: null
-current_branch: null
+status: waiting_ci
+current_issue: 58
+current_pr: 60
+current_branch: backend/58-trusted-http-auth
+head: d6c7f6d25954fdfab10d1b9b9000c759ce8db57b
+lease_owner: backend
+lease_heartbeat_at: "2026-09-20T21:00:00+07:00"
+last_checkpoint_at: "2026-09-20T21:00:00+07:00"
 last_completed_issue: 17
 last_merged_pr: 47
 last_merge_commit: 084e90170907ade8854270f3c24d446fb458cef9
-preferred_next_issue: 21
+preferred_next_issue: 58
 scope:
   - aspnet-core
   - identity
@@ -16,13 +20,13 @@ scope:
   - platform-persistence
 verification:
   issue_17_implementation_head: f769be3916c301aad08e1dc720550c3e4b2e3ccb
-  governance_run: 35456589692
-  build_run: 35456589648
-  result: success
+  governance_run: 35512113609
+  build_run: 35512113594
+  result: "Exact-head d6c7f6d Governance passed. Build substantive jobs all passed, including .NET format/build/tests (integration acceptance), EF migration integrity, Web, Compose and deployment/container validation; Required quality gates alone failed before executing steps, indicating an aggregate/runner-level failure rather than a code/test failure. This durable-state checkpoint retriggers exact-head CI."
 known_risks:
-  - "HTTP authentication provider is not yet part of #17; caller-controlled headers must not become trusted identity."
-  - "Authorization resolution must remain a single database consistency boundary so membership revocation cannot race role reads."
-  - "PR #50 and PR #51 both touch the shared EF model/snapshot; Lead must finish integration sequencing before backend starts another schema-affecting slice."
-blocked_by:
-  - "Lead integration sequencing/reconciliation of PR #50 and PR #51 after merged PR #47."
-next_action: "Wait for Lead to sequence/reconcile PR #50 and PR #51. Do not start a schema-affecting backend implementation while that EF snapshot race is active. Once the prerequisite chain is integrated, re-read open leases and claim the highest-priority unblocked backend-scope issue, expected #21 only after its dependencies #18/#19 are satisfied."
+  - "Caller-controlled identity headers must never become trusted TenantId, CompanyId, or UserId identity."
+  - "JWT authority/audience configuration must fail closed for protected API surfaces; production authentication must never fall back to caller-controlled identity headers."
+  - "Authenticated provider/subject plus untrusted company selector must resolve user, active membership, active company, and roles inside one database query before AuthorizationContext exists."
+  - "Issue #58 must remain schema-neutral while Runtime owns the active shared EF model/snapshot chain."
+blocked_by: []
+next_action: "Verify CI retriggered by this durable-state checkpoint. If Governance and Build are green, refresh PR #60 HANDOFF to exact HEAD and mark Ready for Review immediately; if Required quality gates alone fails again with zero steps while all dependencies pass, inspect workflow aggregation as a CI infrastructure blocker without weakening #58 acceptance."
