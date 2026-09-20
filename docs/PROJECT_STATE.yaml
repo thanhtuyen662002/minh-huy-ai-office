@@ -6,25 +6,25 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 20
 current_branch: runtime/20-worker-dispatch
 current_pr: 55
-current_target_head: 17e604a299a90112900e566c9f68784ddd61002e
+current_target_head: 15d97be4f1da58b45e814ecfeb48f140da9f0b0b
 last_verified_commit: 27058b3578f6bdedca3ff04fdbfc148cf6a93109
 critical_paths:
   runtime:
     issue: 20
     pr: 55
-    head: 17e604a299a90112900e566c9f68784ddd61002e
+    head: 15d97be4f1da58b45e814ecfeb48f140da9f0b0b
     state: in_progress
-    evidence: "Persistence-backed handler and settlement tests have landed. Latest exact-head Build 35513242534 and Governance 35513242536 failed before any job steps executed with runner_id=0, so this is runner/dispatch evidence rather than an implementation regression."
-    next: "Runtime continues SAME PR with publisher-confirm failure/redelivery recovery coverage, then DI/host registration; obtain executable exact-head green CI before merge."
+    evidence: "Recovery implementation now handles retry-publish-confirm failure redelivery without duplicate executor side effects. Exact-head Build 35515333747 and Governance 35515333712 failed with runner_id=0 and zero steps, so they are CI execution noise, not implementation evidence."
+    next: "Runtime continues SAME PR with safe DI/host registration using authoritative executor + persistence wiring; obtain executable exact-head green CI before merge."
   backend_auth:
     issue: 58
     pr: 60
     branch: backend/58-trusted-http-auth
-    head: d6c7f6d25954fdfab10d1b9b9000c759ce8db57b
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
     state: waiting_ci
     owner: backend
-    evidence: "PR is mergeable. Exact-head Governance 35512113609 SUCCESS. Build 35512113594 reports FAILURE although inspected substantive jobs (.NET format/build/tests, EF migration integrity, Web, Compose and deployment/container builds) are green; live Backend lease owns remaining required-quality-gate diagnosis. Auth acceptance implementation is present and contract remains stable for stacked consumers."
-    next: "Backend fixes/clears SAME exact-head Build aggregation/gate and marks ready_for_review when fully green; Lead merges promptly under flow-latency rule if only metadata lags."
+    evidence: "Auth acceptance implementation is present and PR is mergeable. Exact-head Build 35515186798 and Governance 35515186802 both failed with runner_id=0 and zero steps across jobs, so current red status is infrastructure noise rather than a code/test result."
+    next: "Backend verifies an executable exact-head run and marks ready_for_review immediately when green; Lead merges promptly. Stable auth contract remains consumable by stacked ERP/Frontend work."
   erp_data:
     issue: 18
     pr: 63
@@ -32,30 +32,30 @@ critical_paths:
     head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
     stacked_on: 60
     state: in_progress
-    evidence: "Actual PR head advanced beyond HANDOFF; no exact-head workflow run visible yet. Authenticated secret-free API remains stacked on #60."
-    next: "ERP/Data continues SAME stacked PR with cross-company/inactive-membership/missing-auth endpoint regressions and reconciles to authoritative #60 when parent merges."
+    evidence: "Actual PR head is 9c3c339; no exact-head workflow is visible. Authenticated secret-free API remains stacked on #60 and endpoint security regressions remain executable work."
+    next: "ERP/Data continues SAME PR with cross-company/inactive-membership/missing-auth endpoint regressions now; reconcile to authoritative #60 immediately after parent merge."
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 73ca2d6dfbd50e7c91873291552c37900acba414
+    head: ac80c335bc6aafa1ed251fa8ad1b6c4710caeeef
     depends_on: 60
-    state: waiting_ci
-    evidence: "Typed fail-closed adapter/session/company-switch states are live; no exact-head workflow runs are emitted for current PR head. Browser TenantId/UserId remain non-authoritative."
-    next: "Keep Frontend loop active on SAME PR; continue deterministic adapter/accessibility hardening, then reconcile concrete /api/auth/context transport after #60 is authoritative without fabricating display identity."
+    state: in_progress
+    evidence: "Typed fail-closed adapter/session/company-switch hardening continues; no exact-head workflow is visible for ac80c335. Browser TenantId/UserId remain non-authoritative."
+    next: "Keep Frontend loop active on SAME PR and continue deterministic adapter/accessibility tests; reconcile concrete /api/auth/context transport immediately after #60 becomes authoritative."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
   - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; residual #18 active as stacked PR #63"
   - "PR #51 / issue #19 Durable Task Engine: MERGED at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817; issue #19 CLOSED"
-  - "PR #55 / issue #20 worker dispatch: persistence-before-settlement implementation landed; recovery/registration acceptance remains; latest CI failed at runner dispatch before steps"
-  - "PR #60 / issue #58 trusted HTTP authentication: acceptance implementation present and mergeable; Governance green, Build aggregate still red despite inspected substantive jobs green"
-  - "PR #63 / residual #18: active stacked consumer of stable #60 auth contract"
-  - "PR #64 / issue #62: active frontend auth-session lane; exact-head workflows still not emitted"
+  - "PR #55 / issue #20 worker dispatch: recovery semantics landed; safe DI/host registration + executable exact-head green CI remain"
+  - "PR #60 / issue #58 trusted HTTP authentication: acceptance implementation present and mergeable; latest exact-head CI is zero-step runner noise"
+  - "PR #63 / residual #18: active stacked consumer of stable #60 auth contract; security regressions remain"
+  - "PR #64 / issue #62: active frontend auth-session lane; continue hardening while workflow emission is absent"
 next_issue: 20
-next_action: "Keep #55, #60, #63 and #64 moving in parallel. Merge #60 immediately once exact-head Build fully clears; reconcile/sequence #63 after parent merge. Activate Backend #21 after #18 + #19 authoritative and Frontend #22 after #20 authoritative."
+next_action: "Keep #55, #60, #63 and #64 moving in parallel. Merge #60 immediately after executable exact-head green CI; reconcile/sequence #63 after parent merge. Activate Backend #21 after #18 + #19 authoritative and Frontend #22 after #20 authoritative."
 blocked_by:
-  - "PR #55 still requires recovery semantics + registration acceptance and executable exact-head green CI."
-  - "PR #60 exact-head Build aggregate is red; live Backend lease owns simple gate diagnosis while stable contract remains consumable."
+  - "PR #55 still requires safe DI/consumer registration and executable exact-head green CI."
+  - "PR #60 needs an executable exact-head CI result; current red runs are zero-step runner failures only."
   - "Backend #21 waits for residual #18 to become authoritative."
   - "Frontend #22 waits for #20 to become authoritative."
 autonomy:
