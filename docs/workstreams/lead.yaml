@@ -1,13 +1,13 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
-current_issue: 19
-current_pr: 51
+current_issue: 20
+current_pr: 55
 current_branch: main
-head: 0358ec0430e2792953bd5c22590a6805d457e91a
+head: 280e014d473a87c581a74dc456aab0cf3ac9354f
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T10:05:00+07:00"
-last_checkpoint_at: "2026-09-20T10:05:00+07:00"
+lease_heartbeat_at: "2026-09-20T10:07:00+07:00"
+last_checkpoint_at: "2026-09-20T10:07:00+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -26,20 +26,24 @@ scope:
 integration:
   completed:
     - "PR #50 merged at 2baea2a9fce3103d915649ba36c109b77e549117 with exact-head Governance 35483176002 and Build 35483176085 green"
+    - "PR #51 merged at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817 after exact-head Governance 35485567771 and Build 35485567875 green; issue #19 closed"
   current_target:
-    pr: 51
-    branch: runtime/19-durable-task-engine
-    current_head: cd067d954d8cf3729ae79548eb25fa29806e4d81
+    pr: 55
+    branch: runtime/20-worker-dispatch
+    current_head: 9eb260c4e745dd8ec0a9716bcc05f9c579c37c24
     owner: runtime-ai
-    observed_state: "reconciled and mergeable; exact-head Governance 35485567771 + Build 35485567875 green; specialist HANDOFF still waiting_ci"
-    required_action: "wait only for live specialist ready_for_review checkpoint, then final Lead/QA source review and merge"
+    observed_state: "retargeted from merged #51 branch to main; old head is non-mergeable and requires same-branch reconciliation"
+    required_action: "Runtime reconcile onto authoritative main, preserve durable-task/DataSource/identity state, enforce lease/retry/idempotency correctness, complete RabbitMQ transport acceptance, rerun exact-head CI"
   parallel:
     issue: 58
+    pr: 60
     owner: backend
-    state: executable
-    required_action: "claim trusted HTTP authentication boundary now; avoid shared EF/schema changes"
-  secondary:
-    pr: 55
-    state: blocked
-    reason: "must follow #51; retry/idempotency correctness HOLD remains"
-next_action: "Merge #51 as soon as Runtime checkpoints ready_for_review on unchanged cd067d9; then immediately sequence #55. In parallel ensure Backend #58 advances and allow ERP/Data residual #18 to stack on its stable auth contract."
+    head: 4d5b31f9cc4882dd911a69bbddc24ed5f6d005b3
+    state: in_progress
+    required_action: "advance schema-neutral trusted HTTP authentication contract; unblock residual #18"
+  frontend_parallel:
+    issue: 59
+    pr: 61
+    head: 0115af212960159547a5a6d552b65de51cdcb087
+    state: in_progress
+next_action: "Review/reconcile #55 when Runtime checkpoints progress. In parallel review #60 contract and permit ERP/Data residual #18 to stack once stable; preserve independent #61 work."
