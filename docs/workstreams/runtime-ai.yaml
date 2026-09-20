@@ -4,11 +4,11 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "97b23d074785464ffc61781c0f12a4f8ecc5d409"
+head: "612988d09ab1a134f920faf9117f2f01fa91299b"
 state: waiting_ci
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-20T05:18:00Z"
-last_checkpoint_at: "2026-09-20T05:18:00Z"
+lease_heartbeat_at: "2026-09-20T06:20:29Z"
+last_checkpoint_at: "2026-09-20T08:22:51Z"
 stacked_on: "main @ d4e87f7fe49b280a0be600b308cc4a539d1ae161"
 scope:
   - task-engine
@@ -17,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Verify exact-head CI after adding RabbitMQ.Client 7.2.2 publisher/consumer transport. Fix compile/API issues on SAME PR if CI finds any. Then add transport-focused tests and persistence-backed IWorkDeliveryHandler wiring so ACK occurs only after durable completion/checkpoint commit; retryable failures must preserve checkpoint monotonicity and permanent/exhausted failures must dead-letter."
+next_action: "Verify exact-head CI after fail-closed RabbitMQ envelope validation. Fix on SAME PR if needed. Then add transport-focused tests and persistence-backed IWorkDeliveryHandler wiring so ACK occurs only after durable completion/checkpoint commit; retry/dead-letter state must be durable before broker settlement."
