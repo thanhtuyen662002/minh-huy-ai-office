@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -50,8 +51,67 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Authorized_list_is_company_scoped_and_never_exposes_secret_reference()
+    {
+        var tenantId = Guid.NewGuid();
+        var companyId = Guid.NewGuid();
+        var otherCompanyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var context = AuthorizationContext.Create(tenantId, companyId, userId);
+        var entry = new AuthenticatedAuthorizationEntry(context, ["accounting"]);
+        await using var factory = AuthenticatedFactory(entry);
+
+        await SeedDataSourcesAsync(factory,
+            DataSource(tenantId, companyId, "visible", "env://TOP_SECRET_VISIBLE"),
+            DataSource(tenantId, otherCompanyId, "other-company", "env://TOP_SECRET_OTHER"));
+
+        using var client = factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/data-sources/");
+        request.Headers.Add(AuthorizationHeaders.CompanyId, companyId.ToString());
+        var response = await client.SendAsync(request);
+        var payload = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("visible", payload, StringComparison.Ordinal);
+        Assert.DoesNotContain("other-company", payload, StringComparison.Ordinal);
+        Assert.DoesNotContain("TOP_SECRET_VISIBLE", payload, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConnectionSecretReference", payload, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("connectionString", payload, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Authorized_connection_test_cannot_cross_company_scope_even_with_known_data_source_id()
+    {
+        var tenantId = Guid.NewGuid();
+        var companyId = Guid.NewGuid();
+        var otherCompanyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var otherCompanyDataSource = DataSource(tenantId, otherCompanyId, "other-company", "env://SHOULD_NEVER_RESOLVE");
+        var context = AuthorizationContext.Create(tenantId, companyId, userId);
+        var entry = new AuthenticatedAuthorizationEntry(context, ["accounting"]);
+        await using var factory = AuthenticatedFactory(entry);
+
+        await SeedDataSourcesAsync(factory, otherCompanyDataSource);
+
+        using var client = factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/data-sources/{otherCompanyDataSource.Id}/connection-test");
+        request.Headers.Add(AuthorizationHeaders.CompanyId, companyId.ToString());
+        request.Headers.Add("X-AIOffice-Tenant-Id", tenantId.ToString());
+        request.Headers.Add("X-AIOffice-User-Id", userId.ToString());
+        var response = await client.SendAsync(request);
+        var payload = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("not_found", payload, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SHOULD_NEVER_RESOLVE", payload, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConnectionSecretReference", payload, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("connectionString", payload, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)
     {
+        var databaseName = $"core-api-datasource-{Guid.NewGuid():N}";
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("AIOffice:Authentication:Authority", "https://identity.example.invalid");
@@ -65,15 +125,63 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
                     })
                     .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(TestAuthenticationHandler.AuthenticationScheme, _ => { });
                 services.RemoveAll<IAuthenticatedAuthorizationDirectory>();
-                services.AddScoped<IAuthenticatedAuthorizationDirectory>(_ => new StubAuthorizationDirectory(entry));
+                services.AddScoped<IAuthenticatedAuthorizationDirectory>(_ => new StubAuthenticatedAuthorizationDirectory(entry));
+                services.RemoveAll<IAuthorizationDirectory>();
+                services.AddScoped<IAuthorizationDirectory>(_ => new StubAuthorizationDirectory(entry));
+                services.RemoveAll<DbContextOptions<PlatformDbContext>>();
+                services.RemoveAll<PlatformDbContext>();
+                services.AddDbContext<PlatformDbContext>(options => options.UseInMemoryDatabase(databaseName));
             });
         });
     }
 
-    private sealed class StubAuthorizationDirectory(AuthenticatedAuthorizationEntry? entry) : IAuthenticatedAuthorizationDirectory
+    private static async Task SeedDataSourcesAsync(WebApplicationFactory<Program> factory, params DataSourceRecord[] records)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+        dbContext.DataSources.AddRange(records);
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static DataSourceRecord DataSource(Guid tenantId, Guid companyId, string logicalName, string secretReference)
+        => new()
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            Id = Guid.NewGuid(),
+            LogicalName = logicalName,
+            Kind = "sqlserver",
+            Environment = "test",
+            Purpose = "acceptance",
+            ConnectionSecretReference = secretReference,
+            AllowRead = true,
+            AllowWrite = false,
+            MaxConcurrency = 1,
+            IsEnabled = true,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+
+    private sealed class StubAuthenticatedAuthorizationDirectory(AuthenticatedAuthorizationEntry? entry) : IAuthenticatedAuthorizationDirectory
     {
         public Task<AuthenticatedAuthorizationEntry?> ResolveAsync(string identityProvider, string subject, Guid companyId, CancellationToken cancellationToken = default)
-            => Task.FromResult(entry);
+            => Task.FromResult(entry is not null && entry.Context.CompanyId == companyId ? entry : null);
+    }
+
+    private sealed class StubAuthorizationDirectory(AuthenticatedAuthorizationEntry? entry) : IAuthorizationDirectory
+    {
+        public Task<AuthorizationDirectoryEntry?> ResolveAsync(AuthorizationContext context, CancellationToken cancellationToken = default)
+        {
+            if (entry is null
+                || entry.Context.TenantId != context.TenantId
+                || entry.Context.CompanyId != context.CompanyId
+                || entry.Context.UserId != context.UserId)
+            {
+                return Task.FromResult<AuthorizationDirectoryEntry?>(null);
+            }
+
+            return Task.FromResult<AuthorizationDirectoryEntry?>(new AuthorizationDirectoryEntry(entry.Context, entry.Roles));
+        }
     }
 
     private sealed class TestAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
