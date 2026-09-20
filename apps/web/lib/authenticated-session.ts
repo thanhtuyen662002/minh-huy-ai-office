@@ -45,6 +45,25 @@ function isValidMembership(
   );
 }
 
+function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResult {
+  if (value === null || typeof value !== "object" || !("ok" in value)) {
+    return false;
+  }
+
+  if (value.ok === true) {
+    return "membership" in value;
+  }
+
+  return (
+    value.ok === false &&
+    "reason" in value &&
+    (value.reason === "unauthenticated" ||
+      value.reason === "forbidden" ||
+      value.reason === "inactive-membership" ||
+      value.reason === "invalid-response")
+  );
+}
+
 /**
  * Normalizes the trusted backend boundary into frontend state.
  * Browser state may choose a company, but never supplies TenantId/UserId authority.
@@ -59,7 +78,7 @@ export async function bootstrapAuthenticatedSession(
   }
 
   const normalizedCompanyId = selectedCompanyId.trim();
-  let result: SessionBootstrapResult;
+  let result: unknown;
 
   try {
     result = await transport({
@@ -68,6 +87,10 @@ export async function bootstrapAuthenticatedSession(
     });
   } catch {
     // Network/transport failures must never leave stale company data authoritative.
+    return { status: "forbidden", reason: "invalid-response" };
+  }
+
+  if (!isSessionBootstrapResult(result)) {
     return { status: "forbidden", reason: "invalid-response" };
   }
 
