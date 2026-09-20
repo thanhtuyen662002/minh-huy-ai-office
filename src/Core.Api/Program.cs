@@ -80,34 +80,34 @@ dataSources.MapGet("/", async (IRequestAuthorizationContextAccessor accessor, Da
 {
     if (!authenticationConfigured) return AuthenticationUnavailable();
     var context = AuthorizedContext(accessor);
-    if (context is null) return Results.Forbid();
-    return Results.Ok(await registry.ListAsync(context, cancellationToken));
+    if (context is null) return (IResult)Results.Forbid();
+    return (IResult)Results.Ok(await registry.ListAsync(context, cancellationToken));
 });
 dataSources.MapPost("/", async (IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
 {
     if (!authenticationConfigured) return AuthenticationUnavailable();
     var context = AuthorizedContext(accessor);
-    if (context is null) return Results.Forbid();
+    if (context is null) return (IResult)Results.Forbid();
     var created = await registry.CreateAsync(context, request, cancellationToken);
-    return Results.Created($"/api/data-sources/{created.DataSourceId}", created);
+    return (IResult)Results.Created($"/api/data-sources/{created.DataSourceId}", created);
 });
 dataSources.MapPut("/{dataSourceId:guid}", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
 {
     if (!authenticationConfigured) return AuthenticationUnavailable();
     var context = AuthorizedContext(accessor);
-    if (context is null) return Results.Forbid();
+    if (context is null) return (IResult)Results.Forbid();
     var updated = await registry.UpdateAsync(context, dataSourceId, request, cancellationToken);
-    if (updated is null) return Results.NotFound();
-    return Results.Ok(updated);
+    if (updated is null) return (IResult)Results.NotFound();
+    return (IResult)Results.Ok(updated);
 });
 dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, DataSourceConnectionTestService tester, CancellationToken cancellationToken) =>
 {
     if (!authenticationConfigured) return AuthenticationUnavailable();
     var context = AuthorizedContext(accessor);
-    if (context is null) return Results.Forbid();
+    if (context is null) return (IResult)Results.Forbid();
     var result = await tester.TestAsync(context, dataSourceId, cancellationToken);
-    if (result.Status == DataSourceConnectionTestStatus.NotAuthorized) return Results.Forbid();
-    return Results.Ok(result);
+    if (result.Status == DataSourceConnectionTestStatus.NotAuthorized) return (IResult)Results.Forbid();
+    return (IResult)Results.Ok(result);
 });
 
 app.Run();
