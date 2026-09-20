@@ -76,7 +76,7 @@ public sealed class PersistentWorkDeliveryHandler(
                     && x.State == WorkDispatchState.Published)
                 .SingleOrDefaultAsync(cancellationToken)
                 ?? throw new InvalidOperationException("Stale delivery has no durable retry dispatch to recover.");
-            var retryEnvelope = WorkDispatchEnvelope.Create(
+            var recoveredRetryEnvelope = WorkDispatchEnvelope.Create(
                 retryDispatch.MessageId,
                 retryDispatch.TenantId,
                 retryDispatch.CompanyId,
@@ -90,7 +90,7 @@ public sealed class PersistentWorkDeliveryHandler(
                 WorkFailureClass.Transient,
                 retryDispatch.Attempt,
                 retryDispatch.CheckpointVersion,
-                retryEnvelope);
+                recoveredRetryEnvelope);
         }
 
         var nowUtc = DateTimeOffset.UtcNow;
