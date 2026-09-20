@@ -78,21 +78,19 @@ public sealed class CoreApiAuthenticationIntegrationTests
     {
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["AIOffice:Authentication:Authority"] = "https://identity.example.invalid",
-                    ["AIOffice:Authentication:Audience"] = "minh-huy-ai-office-tests"
-                }));
+            // Use host settings because Program reads authentication configuration while the
+            // WebApplicationBuilder is being constructed, before test ConfigureAppConfiguration callbacks run.
+            builder.UseSetting("AIOffice:Authentication:Authority", "https://identity.example.invalid");
+            builder.UseSetting("AIOffice:Authentication:Audience", "minh-huy-ai-office-tests");
             builder.ConfigureServices(services =>
             {
                 services.AddAuthentication(options =>
                     {
-                        options.DefaultAuthenticateScheme = TestAuthenticationHandler.Scheme;
-                        options.DefaultChallengeScheme = TestAuthenticationHandler.Scheme;
+                        options.DefaultAuthenticateScheme = TestAuthenticationHandler.AuthenticationScheme;
+                        options.DefaultChallengeScheme = TestAuthenticationHandler.AuthenticationScheme;
                     })
                     .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
-                        TestAuthenticationHandler.Scheme,
+                        TestAuthenticationHandler.AuthenticationScheme,
                         _ => { });
                 services.RemoveAll<IAuthenticatedAuthorizationDirectory>();
                 services.AddScoped<IAuthenticatedAuthorizationDirectory>(_ => new StubAuthorizationDirectory(entry));
@@ -123,7 +121,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
         UrlEncoder encoder)
         : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
     {
-        public const string Scheme = "DeterministicTest";
+        public const string AuthenticationScheme = "DeterministicTest";
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -132,9 +130,9 @@ public sealed class CoreApiAuthenticationIntegrationTests
                     new Claim(AuthenticationClaimTypes.IdentityProvider, "test-oidc"),
                     new Claim(AuthenticationClaimTypes.Subject, "test-subject")
                 ],
-                Scheme);
+                AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
-            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme)));
+            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, AuthenticationScheme)));
         }
     }
 }
