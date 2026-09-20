@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
+status: active
+current_issue: 59
 current_pr: null
-current_branch: null
-head: 90de748e8b91390fa1a8e529ec37bf62c6425957
-state: blocked
+current_branch: frontend/59-datasource-registry-shell
+head: 5ad729caa80e320a885e794f0291b50d6dd2d0b2
+state: implementation
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T03:10:00+07:00"
-last_checkpoint_at: "2026-09-20T03:10:00+07:00"
+lease_heartbeat_at: "2026-09-20T10:04:00+07:00"
+last_checkpoint_at: "2026-09-20T10:04:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #47 / issue #17 is now merged, removing the identity prerequisite hold. Issue #22 is still not executable because it depends on #19 and #20: PR #51 remains blocked pending Lead reconciliation through #50, and stacked PR #55 remains blocked behind #51. Preserve the merged fail-closed company-context shell; do not invent SignalR/task contracts before the runtime sequence is authoritative. Re-check #51/#55 after Lead integrates #50 -> #51 -> #55, then claim #22. Live identity/API wiring must still wait for the trusted authenticated HTTP authorization contract."
+next_action: "Continue issue #59 fixture-backed Data Source Registry shell. Run exact-head web tests/type-check/build and repository CI; fix failures, complete accessible create/edit/explicit secret-rotation interaction coverage, then update PR HANDOFF. Do not invent live auth/API endpoints; reconcile wiring only after #58 and residual #18 authenticated API contract are authoritative."
