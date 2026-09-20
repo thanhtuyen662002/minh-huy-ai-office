@@ -18,15 +18,16 @@ export type SessionBootstrapTransport = (request: {
 }) => Promise<SessionBootstrapResult>;
 
 const hasText = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
+const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
 function isValidMembership(membership: CompanyMembershipView, selectedCompanyId: string): boolean {
   return membership !== null && typeof membership === "object" && hasText(membership.tenantId) && hasText(membership.companyId) && membership.companyId === selectedCompanyId && hasText(membership.companyName) && hasText(membership.userId) && hasText(membership.userName) && Array.isArray(membership.roles) && membership.roles.every(hasText);
 }
 
 function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResult {
-  if (value === null || typeof value !== "object" || !("ok" in value)) return false;
-  if (value.ok === true) return "membership" in value && !("reason" in value);
-  return value.ok === false && !("membership" in value) && "reason" in value && (value.reason === "unauthenticated" || value.reason === "forbidden" || value.reason === "inactive-membership" || value.reason === "invalid-response");
+  if (value === null || typeof value !== "object" || !hasOwn(value, "ok")) return false;
+  if (value.ok === true) return hasOwn(value, "membership") && !hasOwn(value, "reason");
+  return value.ok === false && !hasOwn(value, "membership") && hasOwn(value, "reason") && (value.reason === "unauthenticated" || value.reason === "forbidden" || value.reason === "inactive-membership" || value.reason === "invalid-response");
 }
 
 /** Browser state may choose a company, but never supplies TenantId/UserId authority. */
