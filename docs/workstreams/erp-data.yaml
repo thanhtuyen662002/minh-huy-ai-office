@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 18
 current_pr: 63
 current_branch: erp/18-authenticated-datasource-api
-head: 929fb855c81cc71338ad34ae8e21eae207a0972d
+head: a103817a7e54df1a1fd33b5b853dd625f4ef7881
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-20T19:28:00+07:00"
-last_checkpoint_at: "2026-09-20T19:28:00+07:00"
+lease_heartbeat_at: "2026-09-20T20:31:00+07:00"
+last_checkpoint_at: "2026-09-20T20:31:00+07:00"
 last_merged_pr: 50
 last_merge_commit: 2baea2a9fce3103d915649ba36c109b77e549117
 preferred_next_issue: 18
@@ -20,4 +20,4 @@ scope:
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Verify exact-head CI after aligning API usage with DataSourceDescriptor.Id and DataSourceConnectionTestResult.Code. If green, add focused endpoint security regression coverage for cross-company/inactive membership and missing auth configuration; reconcile this SAME stacked PR if #60 moves."
+next_action: "Exact-head a103817 has no PR workflow runs yet. Preserve the same stacked lease; when CI dispatches, verify Governance/Build, fix this branch if needed, then add focused endpoint security regression coverage for cross-company/inactive membership and missing auth configuration. Reconcile this SAME PR if #60 moves."
