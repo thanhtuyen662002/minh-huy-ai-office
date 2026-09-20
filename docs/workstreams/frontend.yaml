@@ -4,11 +4,11 @@ status: active
 current_issue: 59
 current_pr: 61
 current_branch: frontend/59-datasource-registry-shell
-head: f2925753433059c6da40d856dae13aad921e503a
-state: implementation
+head: 15b74d97b5d8865ba844fa9aac2a82f68fcf1009
+state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T12:18:00+07:00"
-last_checkpoint_at: "2026-09-20T12:18:00+07:00"
+lease_heartbeat_at: "2026-09-20T13:08:00+07:00"
+last_checkpoint_at: "2026-09-20T13:08:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 CI at 3bc5047 failed only in Web tests because Testing Library exact text matching could not match the combined user/role paragraph; Governance and all non-web Build jobs passed. Commit f292575 scopes the assertion to the active-company region and uses a resilient semantic matcher. Verify exact-head web:test/type-check/production build and repository CI, then complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
+next_action: "PR #61 exact-head e75119f Governance + Build are green. Commits 9c44a82..15b74d9 add accessible fixture-backed create/edit/explicit secret-rotation interactions plus component tests: metadata edits never collect/resubmit secrets, rotation uses a password-only transient input and clears it after submit, new sources start without a secret, company scope remains fail-closed, and stored secret values/references are never rendered. Verify exact-head web:test/type-check/production build and repository CI for the interaction checkpoint; fix any failures on the same PR. If green, refresh HANDOFF and mark PR #61 ready_for_review while live API wiring remains deferred to authoritative #58 + residual #18 contract."
