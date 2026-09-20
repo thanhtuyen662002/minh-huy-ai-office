@@ -6,25 +6,26 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 20
 current_branch: runtime/20-worker-dispatch
 current_pr: 55
-current_target_head: 9eb260c4e745dd8ec0a9716bcc05f9c579c37c24
-last_verified_commit: dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817
+current_target_head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+last_verified_commit: c245eeba93a9cc8a85118610129aa7e50e114417
 critical_paths:
   runtime:
     issue: 20
     pr: 55
-    head: 9eb260c4e745dd8ec0a9716bcc05f9c579c37c24
-    state: reconcile_required
-    evidence: "PR #51 / issue #19 merged at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817 after exact-head Governance 35485567771 + Build 35485567875 passed; issue #19 closed. PR #55 retargeted to main."
-    next: "Runtime resumes SAME PR #55, reconciles onto authoritative main, preserves task-engine/DataSource/identity state, enforces lease/retry/idempotency correctness, completes RabbitMQ transport acceptance, and reruns exact-head CI."
+    head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+    state: in_progress
+    evidence: "PR #55 exact HEAD 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e is mergeable and Governance 35499461068 + Build 35499461089 are green, but HANDOFF still has real transport/persistence work remaining."
+    next: "Runtime continues SAME PR #55: add transport-focused tests and persistence-backed IWorkDeliveryHandler so durable completion/checkpoint/retry/dead-letter state precedes broker settlement."
   backend_auth:
     issue: 58
     pr: 60
     branch: backend/58-trusted-http-auth
-    head: 4d5b31f9cc4882dd911a69bbddc24ed5f6d005b3
+    head: cbab33860f893a7ca857509daf6b365366d51cab
     state: in_progress
     owner: backend
     constraint: "No shared EF model/snapshot/schema changes while Runtime integration is active."
-    next: "Implement trusted HTTP authentication + server-derived AuthorizationContext, fail closed, and publish stable contract for residual #18."
+    evidence: "Exact HEAD Governance 35495823342 SUCCESS; Build 35495823344 FAILURE. Backend lease remains live and owns implementation failure."
+    next: "Backend continues SAME PR #60, completes fail-closed auth/security integration tests and fixes its exact-head Build."
   erp_data:
     issue: 18
     foundation_pr: 50
@@ -34,22 +35,24 @@ critical_paths:
   frontend:
     issue: 59
     pr: 61
-    branch: frontend/59-datasource-registry-shell
-    head: 0115af212960159547a5a6d552b65de51cdcb087
-    state: in_progress
-    next: "Continue fixture-backed Data Source management shell independently; do not invent live auth/API contract. #22 remains blocked until #20 is authoritative."
+    head: eba452e4ede3c5580cf37d49591c67b25dd65273
+    state: merged
+    merge_commit: c245eeba93a9cc8a85118610129aa7e50e114417
+    evidence: "Lead independently verified fixture-backed scope, secret-safe behavior and exact-head Governance 35498818141 + Build 35498818143; merged under FLOW-LATENCY RULE."
+    next: "Release #59 lease. Do not start #22 until #20 is authoritative; live Data Source wiring still waits for #58 + residual #18."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
   - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
   - "PR #51 / issue #19 Durable Task Engine: MERGED at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817; issue #19 CLOSED"
-  - "PR #55 / issue #20 worker dispatch: CURRENT runtime integration target; retargeted to main and requires same-branch reconciliation plus correctness gates"
-  - "PR #60 / issue #58 trusted HTTP authentication: active parallel Backend lease; schema-neutral by contract; unblocks residual #18 and later #21"
-  - "PR #61 / issue #59 frontend Data Source shell: active independent fixture-backed lease; live wiring waits for #58 + residual #18"
+  - "PR #55 / issue #20 worker dispatch: CURRENT runtime integration target; exact-head CI green but persistence-before-settlement transport acceptance remains"
+  - "PR #60 / issue #58 trusted HTTP authentication: active parallel Backend lease; current exact-head Build failing; schema-neutral by contract"
+  - "PR #61 / issue #59 frontend Data Source shell: MERGED at c245eeba93a9cc8a85118610129aa7e50e114417; live wiring remains deferred to #58 + residual #18"
 next_issue: 20
-next_action: "Runtime reconcile/complete PR #55 now that #51 is merged. In parallel review #60 as its auth contract stabilizes and allow ERP/Data residual #18 to stack on it; preserve independent #61 frontend progress. After #18 closes, Backend may open #21 because #19 is already closed; after #20 is authoritative, unblock #22."
+next_action: "Runtime completes SAME PR #55 real transport/persistence acceptance. Backend independently fixes/completes #60; once its auth contract is stable, ERP/Data may stack residual #18. #22 remains blocked until #20 is authoritative."
 blocked_by:
-  - "PR #55 requires Runtime same-branch reconciliation onto merged #51/main before its prior implementation can be trusted or extended."
+  - "PR #55 still lacks persistence-backed handler/transport evidence required for safe broker settlement."
   - "Residual #18 authenticated API acceptance waits for a stable #60 authentication contract."
+  - "Issue #22 waits for #20 to become authoritative."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
