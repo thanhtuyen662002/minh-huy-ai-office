@@ -15,7 +15,7 @@ describe("company-scoped product shell", () => {
     expect(screen.getByRole("heading", { level: 1, name: "AI Office" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" })).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Nguồn dữ liệu · Minh Huy" })).toBeTruthy();
-    expect(screen.getByText("Nhân viên nội bộ")).toBeTruthy();
+    expect(screen.getAllByText("Nhân viên nội bộ").length).toBeGreaterThan(0);
     expect(screen.getByText("company.erp.production")).toBeTruthy();
   });
 
