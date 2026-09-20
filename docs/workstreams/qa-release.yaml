@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 15ea85159468e9c82ef4c2febd6e1877f9655750
+head: 1b256571a222ebfbfe600194751a088d6514245e
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T21:50:50+07:00"
-last_checkpoint_at: "2026-09-20T21:50:50+07:00"
+lease_heartbeat_at: "2026-09-20T22:52:00+07:00"
+last_checkpoint_at: "2026-09-20T22:52:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -22,13 +22,14 @@ scope:
   - cross-workstream-pr-quality-review
 verification_target:
   pr: 55
-  current_pr_head: 15d97be4f1da58b45e814ecfeb48f140da9f0b0b
+  current_pr_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
   state: implementation_in_progress
   evidence:
     - "retry-publish-confirm failure/redelivery recovery landed and avoids duplicate executor side effects"
-    - "exact-head Build 35515333747 and Governance 35515333712 are zero-step runner_id=0 failures; not implementation evidence"
+    - "RabbitMQ consumer creates an async DI scope per delivery so scoped persistence/handler state is not captured by singleton hosted service"
+    - "exact-head Build 35519304358 and Governance 35519304380 are zero-step runner_id=0 failures; not implementation evidence"
   required_before_release_gate:
-    - safe RabbitMQ consumer DI/host registration with authoritative executor and persistence configuration
+    - safe RabbitMQ consumer host registration with authoritative executor and SQL Server configuration
     - durable completion/checkpoint before ACK
     - durable retry/dead-letter state before broker settlement
     - executable exact-head Governance + Build green
@@ -40,12 +41,12 @@ parallel_verification:
   pr_60:
     head: b5c734d466d3b29c3d255d5f1168a372e3679d18
     build: "35515186798 FAILURE, all jobs zero-step runner_id=0"
-    governance: "35515186802 FAILURE, infrastructure/no-step signal"
+    governance: "35515186802 FAILURE, repository-contract zero-step runner_id=0"
     gate: "Acceptance implementation is present and PR mergeable; require executable exact-head green CI, then merge immediately."
   pr_63:
     head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
     gate: "No exact-head workflow visible. ERP/Data must continue cross-company/inactive-membership/missing-auth endpoint regressions on live stacked lease."
   pr_64:
-    head: ac80c335bc6aafa1ed251fa8ad1b6c4710caeeef
-    gate: "No exact-head workflow visible. Frontend remains active on deterministic fail-closed adapter/accessibility hardening; authoritative transport reconciliation follows #60 merge."
+    head: 76fddd21f53545d76904297237adcd3f71668e94
+    gate: "No exact-head workflow visible. Frontend remains active on deterministic fail-closed adapter/accessibility/stale-state hardening; authoritative transport reconciliation follows #60 merge."
 next_action: "Do not duplicate specialist implementation. Treat zero-step CI as infrastructure noise; keep acceptance work moving. Review and merge #60 immediately after executable exact-head green CI, then sequence #63."
