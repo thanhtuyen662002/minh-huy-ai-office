@@ -51,24 +51,11 @@ public sealed class RabbitMqWorkPublisher(IOptions<RabbitMqWorkOptions> options)
         ArgumentNullException.ThrowIfNull(envelope);
         var factory = CreateFactory(_options);
         await using var connection = await factory.CreateConnectionAsync(cancellationToken);
-        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+        await using var channel = await connection.CreateChannelAsync(
+            CreateConfirmingChannelOptions(),
+            cancellationToken);
         await DeclareQueueAsync(channel, _options, cancellationToken);
-
-        var body = JsonSerializer.SerializeToUtf8Bytes(envelope);
-        var properties = new BasicProperties
-        {
-            ContentType = "application/json",
-            DeliveryMode = DeliveryModes.Persistent,
-            MessageId = envelope.MessageId.ToString("N")
-        };
-
-        await channel.BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: _options.QueueName,
-            mandatory: true,
-            basicProperties: properties,
-            body: body,
-            cancellationToken: cancellationToken);
+        await PublishEnvelopeAsync(channel, _options, envelope, cancellationToken);
     }
 
     internal static ConnectionFactory CreateFactory(RabbitMqWorkOptions options) => new()
@@ -82,6 +69,10 @@ public sealed class RabbitMqWorkPublisher(IOptions<RabbitMqWorkOptions> options)
         ConsumerDispatchConcurrency = 1
     };
 
+    internal static CreateChannelOptions CreateConfirmingChannelOptions() => new(
+        publisherConfirmationsEnabled: true,
+        publisherConfirmationTrackingEnabled: true);
+
     internal static Task<QueueDeclareOk> DeclareQueueAsync(
         IChannel channel,
         RabbitMqWorkOptions options,
@@ -93,6 +84,29 @@ public sealed class RabbitMqWorkPublisher(IOptions<RabbitMqWorkOptions> options)
             autoDelete: false,
             arguments: null,
             cancellationToken: cancellationToken);
+
+    internal static ValueTask PublishEnvelopeAsync(
+        IChannel channel,
+        RabbitMqWorkOptions options,
+        WorkDispatchEnvelope envelope,
+        CancellationToken cancellationToken)
+    {
+        var body = JsonSerializer.SerializeToUtf8Bytes(envelope);
+        var properties = new BasicProperties
+        {
+            ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent,
+            MessageId = envelope.MessageId.ToString("N")
+        };
+
+        return channel.BasicPublishAsync(
+            exchange: string.Empty,
+            routingKey: options.QueueName,
+            mandatory: true,
+            basicProperties: properties,
+            body: body,
+            cancellationToken: cancellationToken);
+    }
 }
 
 public sealed class RabbitMqWorkConsumer(
@@ -108,7 +122,9 @@ public sealed class RabbitMqWorkConsumer(
     {
         var factory = RabbitMqWorkPublisher.CreateFactory(_options);
         _connection = await factory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+        _channel = await _connection.CreateChannelAsync(
+            RabbitMqWorkPublisher.CreateConfirmingChannelOptions(),
+            stoppingToken);
         await RabbitMqWorkPublisher.DeclareQueueAsync(_channel, _options, stoppingToken);
         await _channel.BasicQosAsync(0, _options.PrefetchCount, false, stoppingToken);
 
@@ -143,11 +159,16 @@ public sealed class RabbitMqWorkConsumer(
                     await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
                     break;
                 case BrokerSettlement.Requeue:
-                    _ = envelope.CreateRetry(
+                    var retry = envelope.CreateRetry(
                         Guid.NewGuid(),
                         result.DurableCheckpointVersion,
                         DateTimeOffset.UtcNow);
-                    await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
+                    await RabbitMqWorkPublisher.PublishEnvelopeAsync(
+                        _channel,
+                        _options,
+                        retry,
+                        CancellationToken.None);
+                    await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
                     break;
                 case BrokerSettlement.DeadLetter:
                     await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false);
