@@ -36,7 +36,8 @@ builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthoriz
 
 var authority = builder.Configuration["AIOffice:Authentication:Authority"];
 var audience = builder.Configuration["AIOffice:Authentication:Audience"];
-if (!string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience))
+var authenticationConfigured = !string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience);
+if (authenticationConfigured)
 {
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -98,7 +99,7 @@ app.Use(async (httpContext, next) =>
     }
 });
 
-if (!string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience))
+if (authenticationConfigured)
 {
     app.UseAuthentication();
     app.UseMiddleware<RequestAuthorizationContextMiddleware>();
@@ -114,6 +115,29 @@ app.MapGet("/", () => Results.Ok(new
 }));
 
 app.MapHealthChecks("/health");
+
+if (authenticationConfigured)
+{
+    app.MapGet("/api/auth/context", (IRequestAuthorizationContextAccessor accessor) =>
+    {
+        var current = accessor.Current;
+        return current is null
+            ? Results.Forbid()
+            : Results.Ok(new
+            {
+                current.Context.TenantId,
+                current.Context.CompanyId,
+                current.Context.UserId,
+                current.Roles
+            });
+    }).RequireAuthorization();
+}
+else
+{
+    app.MapGet("/api/auth/context", () => Results.Json(
+        new { error = "Authentication is not configured." },
+        statusCode: StatusCodes.Status503ServiceUnavailable));
+}
 
 app.Run();
 
