@@ -50,6 +50,15 @@ describe("AuthenticatedSessionShell", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
   });
 
+  it("does not expose switching when multiple untrusted options still omit the authoritative company", () => {
+    const onSelectCompany = vi.fn();
+    const untrustedCompanies = [companies[1], { companyId: "branch-3", companyName: "Chi nhánh 3" }];
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={untrustedCompanies} onSelectCompany={onSelectCompany} />);
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+    expect(onSelectCompany).not.toHaveBeenCalled();
+  });
+
   it("does not expose a company selector when switching cannot produce an alternative scope", () => {
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[companies[0]]} onSelectCompany={vi.fn()} />);
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
