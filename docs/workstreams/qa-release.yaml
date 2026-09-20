@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 1b256571a222ebfbfe600194751a088d6514245e
+head: 2a96200797373595fb31c5d6f8e09ae91be6a5e2
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T22:52:00+07:00"
-last_checkpoint_at: "2026-09-20T22:52:00+07:00"
+lease_heartbeat_at: "2026-09-20T23:13:00+07:00"
+last_checkpoint_at: "2026-09-20T23:13:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -40,13 +40,13 @@ verification_target:
 parallel_verification:
   pr_60:
     head: b5c734d466d3b29c3d255d5f1168a372e3679d18
-    build: "35515186798 FAILURE, all jobs zero-step runner_id=0"
-    governance: "35515186802 FAILURE, repository-contract zero-step runner_id=0"
+    build: "35515186798 FAILURE; rerun attempt has all six jobs zero-step with runner_id=0"
+    governance: "35515186802 FAILURE; zero-step runner noise"
     gate: "Acceptance implementation is present and PR mergeable; require executable exact-head green CI, then merge immediately."
   pr_63:
     head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
-    gate: "No exact-head workflow visible. ERP/Data must continue cross-company/inactive-membership/missing-auth endpoint regressions on live stacked lease."
+    gate: "No exact-head workflow visible. ERP/Data has been instructed to continue cross-company/inactive-membership/missing-auth endpoint regressions on the live stacked lease, not idle in waiting_ci."
   pr_64:
-    head: 76fddd21f53545d76904297237adcd3f71668e94
-    gate: "No exact-head workflow visible. Frontend remains active on deterministic fail-closed adapter/accessibility/stale-state hardening; authoritative transport reconciliation follows #60 merge."
+    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
+    gate: "No exact-head workflow visible. Frontend remains live and is advancing deterministic fail-closed stale-state/accessibility hardening; authoritative transport reconciliation follows #60 merge."
 next_action: "Do not duplicate specialist implementation. Treat zero-step CI as infrastructure noise; keep acceptance work moving. Review and merge #60 immediately after executable exact-head green CI, then sequence #63."
