@@ -1,19 +1,19 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
+status: ready
+current_issue: 62
 current_pr: null
 current_branch: null
 head: c245eeba93a9cc8a85118610129aa7e50e114417
-state: blocked
+state: ready
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
-last_checkpoint_at: "2026-09-20T15:58:00+07:00"
-preferred_next_issue: 22
+lease_heartbeat_at: "2026-09-20T17:21:00+07:00"
+last_checkpoint_at: "2026-09-20T17:21:00+07:00"
+preferred_next_issue: 62
 scope:
   - nextjs
   - shadcn-ui
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 / issue #59 merged at c245eeba93a9cc8a85118610129aa7e50e114417 after exact-head CI and Lead review. Primary lease is released. Issue #22 remains blocked until #20 is authoritative; live Data Source API wiring waits for #58 + residual #18. Do not invent endpoints or caller-controlled auth."
+next_action: "Claim issue #62 now as a frontend-only Draft PR stacked on the stable PR #60 auth contract. Keep server-derived identity/company scope authoritative, isolate endpoint shape behind one typed adapter, preserve fixture tests and fail closed. Do not modify Backend auth/EF/schema. #22 remains queued until #20 is authoritative."
