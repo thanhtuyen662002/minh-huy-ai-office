@@ -21,7 +21,8 @@ verification:
   result: implementation_in_progress
 known_risks:
   - "Caller-controlled identity headers must never become trusted TenantId, CompanyId, or UserId identity."
+  - "JWT authority/audience configuration must fail closed for protected API surfaces; production authentication must never fall back to caller-controlled identity headers."
   - "Authenticated provider/subject plus untrusted company selector must resolve user, active membership, active company, and roles inside one database query before AuthorizationContext exists."
   - "Issue #58 must remain schema-neutral while Runtime owns the active shared EF model/snapshot chain."
 blocked_by: []
-next_action: "Wire ASP.NET Core authentication to configured provider/subject claims, add request-scoped server-derived AuthorizationContext using IAuthenticatedAuthorizationDirectory, then add spoofing/cross-tenant/inactive membership integration tests and run full CI."
+next_action: "Add focused middleware/directory integration tests for spoofing, cross-tenant selection and inactive membership; harden missing-auth configuration behavior for protected endpoints; run exact-head CI and fix all failures."
