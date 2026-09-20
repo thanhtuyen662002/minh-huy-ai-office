@@ -45,6 +45,16 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByText(/máy chủ vẫn xác thực quyền truy cập/i)).toBeTruthy();
   });
 
+  it("only emits company-switch requests for offered alternative scopes", () => {
+    const onSelectCompany = vi.fn();
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
+    const selector = screen.getByLabelText("Đổi công ty") as HTMLSelectElement;
+    fireEvent.change(selector, { target: { value: "internal" } });
+    fireEvent.change(selector, { target: { value: "spoofed-company" } });
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
+
   it("keeps the authoritative company selected when untrusted options omit it", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[companies[1]]} onSelectCompany={onSelectCompany} />);
