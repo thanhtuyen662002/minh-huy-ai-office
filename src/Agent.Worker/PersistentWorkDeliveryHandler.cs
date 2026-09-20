@@ -62,6 +62,37 @@ public sealed class PersistentWorkDeliveryHandler(
             throw new InvalidOperationException("Only durably published dispatches may be consumed.");
         }
 
+        // A transient failure is committed before the retry is published. If publisher confirm fails,
+        // RabbitMQ redelivers the original message. Recover the already-durable retry instead of
+        // executing the original attempt again and risking duplicate side effects.
+        if (execution.Attempt > envelope.Attempt)
+        {
+            var retryDispatch = await dbContext.TaskDispatches
+                .Where(x => x.TenantId == envelope.TenantId
+                    && x.CompanyId == envelope.CompanyId
+                    && x.TaskId == envelope.TaskId
+                    && x.StepId == envelope.StepId
+                    && x.Attempt == execution.Attempt
+                    && x.State == WorkDispatchState.Published)
+                .SingleOrDefaultAsync(cancellationToken)
+                ?? throw new InvalidOperationException("Stale delivery has no durable retry dispatch to recover.");
+            var retryEnvelope = WorkDispatchEnvelope.Create(
+                retryDispatch.MessageId,
+                retryDispatch.TenantId,
+                retryDispatch.CompanyId,
+                retryDispatch.TaskId,
+                retryDispatch.StepId,
+                retryDispatch.Attempt,
+                retryDispatch.CheckpointVersion,
+                retryDispatch.PublishedAtUtc ?? retryDispatch.CreatedAtUtc);
+            return new WorkDeliveryResult(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Transient,
+                retryDispatch.Attempt,
+                retryDispatch.CheckpointVersion,
+                retryEnvelope);
+        }
+
         var nowUtc = DateTimeOffset.UtcNow;
         var lease = WorkerExecutionStateMachine.AcquireLease(
             execution,
