@@ -69,6 +69,7 @@ describe("bootstrapAuthenticatedSession", () => {
     ["unauthenticated", { status: "unauthenticated" }],
     ["forbidden", { status: "forbidden", reason: "forbidden" }],
     ["inactive-membership", { status: "forbidden", reason: "inactive-membership" }],
+    ["invalid-response", { status: "forbidden", reason: "invalid-response" }],
   ] as const)("maps %s without inventing local authority", async (reason, expected) => {
     const transport: SessionBootstrapTransport = async () => ({ ok: false, reason });
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual(expected);
