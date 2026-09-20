@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 19
 current_pr: 51
 current_branch: main
-head: 2baea2a9fce3103d915649ba36c109b77e549117
-state: idle
+head: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T09:10:21+07:00"
-last_checkpoint_at: "2026-09-20T09:10:21+07:00"
+lease_heartbeat_at: "2026-09-20T09:35:00+07:00"
+last_checkpoint_at: "2026-09-20T09:35:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -22,12 +22,18 @@ scope:
   - cross-workstream-pr-quality-review
 verification_target:
   pr: 51
-  prerequisite_main: 2baea2a9fce3103d915649ba36c109b77e549117
+  prerequisite_main: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+  current_pr_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+  observed:
+    - "current PR head is diverged from authoritative main"
+    - "main PlatformDbContext contains DataSources while stale PR head contains durable-task entities but not DataSources"
+    - "main persistence tests contain DataSource model boundary coverage that must survive reconciliation"
   required_after_reconcile:
     - exact-head Governance
     - exact-head Build
     - EF migration integrity with identity + Data Source + Durable Task migrations
     - PlatformDbContext/model snapshot contains both DataSource and task entities
-    - tenant/company/task composite isolation
-    - resume planner graph validation
-next_action: "Wait for runtime-ai to reconcile the same PR #51 branch onto authoritative main. Then verify source + exact-head CI independently before Lead merge. Keep #55 blocked until #51 closes."
+    - DataSource tenant/company/secret-reference tests remain
+    - task tenant/company/task composite isolation remains
+    - resume planner graph validation remains
+next_action: "Independently review the reconciled PR #51 exact HEAD when runtime-ai checkpoints it. Keep #55 blocked until #51 closes; then verify #55 retry/idempotency invariants before transport/release readiness."
