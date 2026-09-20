@@ -44,6 +44,17 @@ describe("bootstrapAuthenticatedSession", () => {
     });
   });
 
+  it("fails closed when the session transport rejects", async () => {
+    const transport: SessionBootstrapTransport = async () => {
+      throw new Error("network unavailable");
+    };
+
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({
+      status: "forbidden",
+      reason: "invalid-response",
+    });
+  });
+
   it("never calls transport without a company selector", async () => {
     const transport = vi.fn<SessionBootstrapTransport>();
 
