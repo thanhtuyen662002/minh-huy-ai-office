@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 19
 current_pr: 51
 current_branch: main
-head: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+head: 7c9c0abe5c1ecefdac991531f7e11cf6555d7c0e
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T09:35:00+07:00"
-last_checkpoint_at: "2026-09-20T09:35:00+07:00"
+lease_heartbeat_at: "2026-09-20T10:05:00+07:00"
+last_checkpoint_at: "2026-09-20T10:05:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -23,17 +23,14 @@ scope:
 verification_target:
   pr: 51
   prerequisite_main: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
-  current_pr_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+  current_pr_head: cd067d954d8cf3729ae79548eb25fa29806e4d81
   observed:
-    - "current PR head is diverged from authoritative main"
-    - "main PlatformDbContext contains DataSources while stale PR head contains durable-task entities but not DataSources"
-    - "main persistence tests contain DataSource model boundary coverage that must survive reconciliation"
-  required_after_reconcile:
-    - exact-head Governance
-    - exact-head Build
-    - EF migration integrity with identity + Data Source + Durable Task migrations
-    - PlatformDbContext/model snapshot contains both DataSource and task entities
-    - DataSource tenant/company/secret-reference tests remain
-    - task tenant/company/task composite isolation remains
-    - resume planner graph validation remains
-next_action: "Independently review the reconciled PR #51 exact HEAD when runtime-ai checkpoints it. Keep #55 blocked until #51 closes; then verify #55 retry/idempotency invariants before transport/release readiness."
+    - "PR is reconciled onto authoritative main and GitHub reports mergeable=true"
+    - "PlatformDbContext preserves DataSources and adds durable Task/Step/Dependency/Event/Checkpoint entities"
+    - "Durable Task migration is additive after identity and Data Source migrations"
+    - "exact-head Governance 35485567771 SUCCESS"
+    - "exact-head Build 35485567875 SUCCESS, including .NET format/build/tests, EF idempotent migration generation, web, deployment/container and Compose gates"
+  required_before_merge:
+    - "Runtime HANDOFF state ready_for_review on unchanged exact HEAD cd067d954d8cf3729ae79548eb25fa29806e4d81"
+    - "final Lead/QA check for unresolved reviews/security/release blockers"
+next_action: "On Runtime ready_for_review checkpoint, verify HEAD unchanged and merge #51. Immediately move QA target to reconciled #55 and enforce lease/retry/idempotency correctness before transport/release readiness."
