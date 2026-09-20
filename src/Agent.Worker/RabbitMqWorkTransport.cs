@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MinhHuy.AIOffice.Shared.Contracts;
 using RabbitMQ.Client;
@@ -87,7 +88,7 @@ public sealed class RabbitMqWorkPublisher(IOptions<RabbitMqWorkOptions> options)
     }
 }
 
-public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, IWorkDeliveryHandler handler, ILogger<RabbitMqWorkConsumer> logger) : BackgroundService
+public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, IServiceScopeFactory scopeFactory, ILogger<RabbitMqWorkConsumer> logger) : BackgroundService
 {
     private readonly RabbitMqWorkOptions _options = options.Value;
     private IConnection? _connection;
@@ -114,6 +115,8 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
         {
             var envelope = JsonSerializer.Deserialize<WorkDispatchEnvelope>(args.Body.Span) ?? throw new JsonException("Work envelope is empty.");
             ValidateEnvelope(envelope);
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var handler = scope.ServiceProvider.GetRequiredService<IWorkDeliveryHandler>();
             var result = await handler.HandleAsync(envelope, CancellationToken.None);
             var settlement = WorkDeliverySettlement.Resolve(result.Outcome, result.FailureClass, envelope.Attempt, result.MaxAttempts);
             switch (settlement)
