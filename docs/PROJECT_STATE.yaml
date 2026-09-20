@@ -7,7 +7,7 @@ current_issue: 19
 current_branch: runtime/19-durable-task-engine
 current_pr: 51
 current_target_head: cd067d954d8cf3729ae79548eb25fa29806e4d81
-last_verified_commit: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+last_verified_commit: c3e646c1aec28a6496914960d68a781d8917f5c5
 critical_paths:
   runtime:
     issue: 19
@@ -18,32 +18,38 @@ critical_paths:
     next: "Merge #51 after ready_for_review handoff, then immediately reconcile existing stacked PR #55 / issue #20 onto authoritative main."
   backend_auth:
     issue: 58
-    pr: null
-    state: executable
+    pr: 60
+    branch: backend/58-trusted-http-auth
+    head: 4d5b31f9cc4882dd911a69bbddc24ed5f6d005b3
+    state: in_progress
     owner: backend
     constraint: "No shared EF model/snapshot/schema changes while Runtime integration is active."
-    next: "Backend claims #58 now and implements trusted HTTP authentication + server-derived AuthorizationContext."
+    next: "Implement trusted HTTP authentication + server-derived AuthorizationContext, fail closed, and publish stable contract for residual #18."
   erp_data:
     issue: 18
     foundation_pr: 50
     foundation_state: merged
     residual_state: waiting_auth_contract
-    next: "As soon as #58 exposes a stable auth contract, continue residual authenticated API/connection-test acceptance for #18, stacked on #58 if it is not yet merged."
+    next: "As soon as PR #60 exposes a stable auth contract, continue residual authenticated API/connection-test acceptance for #18, stacked on #60 if it is not yet merged."
   frontend:
-    issue: 22
-    state: dependency_blocked
-    next: "Keep realtime task dashboard blocked until #19/#20 contracts are authoritative; independent frontend work remains allowed under frontend lease protocol."
+    issue: 59
+    pr: 61
+    branch: frontend/59-datasource-registry-shell
+    head: 0115af212960159547a5a6d552b65de51cdcb087
+    state: in_progress
+    next: "Continue fixture-backed Data Source management shell independently; do not invent live auth/API contract. #22 remains blocked until #19/#20 are authoritative."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
   - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
   - "PR #51 / issue #19 Durable Task Engine: reconciled onto main at cd067d954d8cf3729ae79548eb25fa29806e4d81; exact-head Governance + Build green; awaiting specialist ready_for_review checkpoint"
   - "PR #55 / issue #20 worker dispatch: blocked secondary stack until #51 merges; correctness HOLD remains on retry/idempotency invariants"
-  - "Issue #58 trusted HTTP authentication: parallel Backend lane; unblocks residual #18 and later #21"
+  - "PR #60 / issue #58 trusted HTTP authentication: active parallel Backend lease; schema-neutral by contract; unblocks residual #18 and later #21"
+  - "PR #61 / issue #59 frontend Data Source shell: active independent fixture-backed lease; live wiring waits for #58 + residual #18"
 next_issue: 20
-next_action: "Lead/QA: merge #51 promptly after Runtime records ready_for_review on exact green HEAD cd067d9, then sequence #55. In parallel Backend must claim #58 without waiting for #51; once #58 contract is stable ERP/Data may stack residual #18 API acceptance on it. After #18 + #19 close, Backend may open #21; after #19/#20 are authoritative, unblock #22."
+next_action: "Lead/QA: merge #51 promptly after Runtime records ready_for_review on exact green HEAD cd067d9, then sequence #55. In parallel review #60 as its auth contract stabilizes and allow ERP/Data residual #18 to stack on it; preserve independent #61 frontend progress. After #18 + #19 close, Backend may open #21; after #19/#20 are authoritative, unblock #22."
 blocked_by:
   - "#51 merge waits only for live Runtime specialist ready_for_review checkpoint; exact-head required CI is already green."
-  - "Residual #18 authenticated API acceptance waits for a stable #58 authentication contract."
+  - "Residual #18 authenticated API acceptance waits for a stable #60 authentication contract."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
