@@ -4,11 +4,11 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "f493e0c506d09d4af7fb8e68d6daa11d791ef2db"
+head: "f708a18ac560dc65e454c3fa2f9fdd634c021005"
 state: waiting_ci
 lease_owner: "runtime-ai"
 lease_heartbeat_at: "2026-09-20T03:08:10Z"
-last_checkpoint_at: "2026-09-20T03:08:10Z"
+last_checkpoint_at: "2026-09-20T03:17:00Z"
 stacked_on: "main @ d4e87f7fe49b280a0be600b308cc4a539d1ae161"
 scope:
   - task-engine
@@ -17,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Verify exact-head CI after same-branch reconciliation onto authoritative main. Preserve identity, Data Source Registry, and Durable Task Engine state; fix any migration/model failure on PR #55, then continue RabbitMQ publisher/consumer ack/nack/dead-letter/checkpoint-resume acceptance on this branch only."
+next_action: "Verify exact-head CI for broker settlement contract/tests. If green, record verified heartbeat and continue on PR #55 with RabbitMQ publisher/consumer wiring that maps Completed/AlreadyCompleted to ack, retryable transient failures to requeue, permanent/exhausted failures to dead-letter, and resumes from checkpoint version without weakening lease fencing or idempotency."
