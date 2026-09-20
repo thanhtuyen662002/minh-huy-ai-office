@@ -4,11 +4,11 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "63e6b4b2ad12a747488c5a4e04adc58916b5ed6e"
+head: "faff67db52c6c119a2edcc634058d7d5ce127570"
 state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-20T13:20:00Z"
-last_checkpoint_at: "2026-09-20T13:20:00Z"
+lease_heartbeat_at: "2026-09-20T14:00:00Z"
+last_checkpoint_at: "2026-09-20T14:00:00Z"
 stacked_on: "main @ d4e87f7fe49b280a0be600b308cc4a539d1ae161"
 scope:
   - task-engine
@@ -17,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Persistence settlement tests now cover durable completion/checkpoint, retry dispatch/idempotency/checkpoint continuity, and permanent dead-letter state before HandleAsync returns to broker settlement. Verify/fix exact-head CI on the same branch, then add retry-publish failure/redelivery recovery coverage and register RabbitMQ consumer only after durable recovery behavior is proven safe."
+next_action: "Retry publisher-confirm failure recovery is implemented and covered: redelivery of the original dispatch recovers the already-durable retry envelope without re-executing side effects. Verify exact-head compile/tests, then wire RabbitMQ consumer/DI only with the authoritative IWorkStepExecutor and SQL Server persistence configuration; run full exact-head CI and mark ready_for_review when green."
