@@ -1,13 +1,13 @@
 workstream: qa-release
 role: "QA / Security / Release (Lead-owned)"
-current_issue: 18
-current_pr: 50
+current_issue: 19
+current_pr: 51
 current_branch: main
-head: a626608dd9be960ac205053a0573463236137a71
-state: waiting_ci
+head: 2baea2a9fce3103d915649ba36c109b77e549117
+state: idle
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T09:07:50+07:00"
-last_checkpoint_at: "2026-09-20T09:07:50+07:00"
+lease_heartbeat_at: "2026-09-20T09:10:21+07:00"
+last_checkpoint_at: "2026-09-20T09:10:21+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -21,14 +21,13 @@ scope:
   - release-gates
   - cross-workstream-pr-quality-review
 verification_target:
-  pr: 50
-  exact_head: cb5898fecd795404fa97b407bc0f01bfa04778f1
-  required:
-    - Governance
-    - Build
-    - EF migration integrity
-    - tenant/company isolation
-    - authorization before secret resolution
-    - secret-reference boundary
-    - connection-failure sanitization
-next_action: "Inspect PR #50 exact-head runs and reconciled diff. If green and mergeable, clear the release gate for the foundation only; keep issue #18 open for authenticated API/UI acceptance. Then review PR #51 reconciliation after #50 merges."
+  pr: 51
+  prerequisite_main: 2baea2a9fce3103d915649ba36c109b77e549117
+  required_after_reconcile:
+    - exact-head Governance
+    - exact-head Build
+    - EF migration integrity with identity + Data Source + Durable Task migrations
+    - PlatformDbContext/model snapshot contains both DataSource and task entities
+    - tenant/company/task composite isolation
+    - resume planner graph validation
+next_action: "Wait for runtime-ai to reconcile the same PR #51 branch onto authoritative main. Then verify source + exact-head CI independently before Lead merge. Keep #55 blocked until #51 closes."
