@@ -145,6 +145,31 @@ public sealed record WorkDispatchEnvelope(
             enqueuedAtUtc);
     }
 
+    public WorkDispatchEnvelope CreateRetry(
+        Guid messageId,
+        long? durableCheckpointVersion,
+        DateTimeOffset enqueuedAtUtc)
+    {
+        if (durableCheckpointVersion is not null
+            && CheckpointVersion is not null
+            && durableCheckpointVersion < CheckpointVersion)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(durableCheckpointVersion),
+                "Retry cannot resume from a checkpoint older than the dispatched checkpoint.");
+        }
+
+        return Create(
+            messageId,
+            TenantId,
+            CompanyId,
+            TaskId,
+            StepId,
+            checked(Attempt + 1),
+            durableCheckpointVersion ?? CheckpointVersion,
+            enqueuedAtUtc);
+    }
+
     private static void EnsureNonEmpty(Guid value, string parameterName)
     {
         if (value == Guid.Empty)
