@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 62
 current_pr: 64
 current_branch: frontend/62-auth-session-bootstrap
-head: 128dd13a7ff98db7df255061f1bf84a7562c2a2c
+head: d705389a808833e16aa65128fa424ac002c2b25b
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T19:13:00+07:00"
-last_checkpoint_at: "2026-09-20T19:13:00+07:00"
+lease_heartbeat_at: "2026-09-20T20:07:00+07:00"
+last_checkpoint_at: "2026-09-20T20:07:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -17,6 +17,6 @@ scope:
   - client-contracts
   - realtime-ui
 blocked_by:
-  - "GitHub currently reports no workflow run for PR #64 branch, so exact-head Web CI evidence is still unavailable."
+  - "GitHub Actions still reports zero workflow runs for PR #64 branch despite pull_request-triggered Build/Governance workflows and fresh implementation commits; exact-head Web CI evidence is unavailable."
   - "PR #60 remains Draft. Its current /api/auth/context response is authoritative for TenantId/CompanyId/UserId/Roles but does not provide companyName/userName required by the existing presentation membership; do not fabricate display identity."
-next_action: "Re-check exact-head workflow emission and fix any frontend-owned failure on PR #64. Once PR #60 is authoritative, reconcile /api/auth/context behind the typed adapter and obtain display metadata only from an authoritative contract. Preserve fail-closed behavior: transport rejection, invalid scope and mismatched company must never leave company data authoritative."
+next_action: "Re-check exact-head workflow emission for PR #64 and fix any frontend-owned failure. Continue deterministic adapter/accessibility hardening that does not depend on live endpoint shape. Once PR #60 is authoritative, reconcile /api/auth/context behind the typed adapter and obtain display metadata only from an authoritative contract. Preserve fail-closed behavior for transport rejection, explicit invalid-response, invalid scope and mismatched company."
