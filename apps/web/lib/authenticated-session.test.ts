@@ -23,6 +23,8 @@ describe("bootstrapAuthenticatedSession", () => {
       });
       expect(request.headers).not.toHaveProperty("TenantId");
       expect(request.headers).not.toHaveProperty("UserId");
+      expect(request.headers).not.toHaveProperty("X-AIOffice-Tenant-Id");
+      expect(request.headers).not.toHaveProperty("X-AIOffice-User-Id");
       return { ok: true, membership: serverMembership };
     });
 
@@ -32,11 +34,15 @@ describe("bootstrapAuthenticatedSession", () => {
     });
   });
 
-  it("fails closed when the server response does not match the selected company", async () => {
-    const transport: SessionBootstrapTransport = async () => ({
-      ok: true,
-      membership: { ...serverMembership, companyId: "company-b" },
-    });
+  it.each([
+    ["company mismatch", { ...serverMembership, companyId: "company-b" }],
+    ["missing tenant", { ...serverMembership, tenantId: "   " }],
+    ["missing company", { ...serverMembership, companyId: "" }],
+    ["missing company name", { ...serverMembership, companyName: " " }],
+    ["missing user", { ...serverMembership, userId: "" }],
+    ["missing user name", { ...serverMembership, userName: "   " }],
+  ] as const)("fails closed for server membership with %s", async (_case, membership) => {
+    const transport: SessionBootstrapTransport = async () => ({ ok: true, membership });
 
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({
       status: "forbidden",
@@ -63,6 +69,28 @@ describe("bootstrapAuthenticatedSession", () => {
       reason: "invalid-response",
     });
     expect(transport).not.toHaveBeenCalled();
+  });
+
+  it("does not let local spoofed identity become transport authority", async () => {
+    const localIdentity = {
+      tenantId: "tenant-browser-spoof",
+      userId: "user-browser-spoof",
+      companyId: "company-a",
+    };
+    const transport = vi.fn<SessionBootstrapTransport>(async (request) => {
+      expect(request).toEqual({
+        selectedCompanyId: localIdentity.companyId,
+        headers: { [COMPANY_SELECTOR_HEADER]: localIdentity.companyId },
+      });
+      expect(JSON.stringify(request)).not.toContain(localIdentity.tenantId);
+      expect(JSON.stringify(request)).not.toContain(localIdentity.userId);
+      return { ok: true, membership: serverMembership };
+    });
+
+    await expect(bootstrapAuthenticatedSession(localIdentity.companyId, transport)).resolves.toEqual({
+      status: "ready",
+      membership: serverMembership,
+    });
   });
 
   it.each([
