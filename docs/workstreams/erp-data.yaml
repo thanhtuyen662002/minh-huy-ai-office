@@ -1,13 +1,28 @@
 workstream: erp-data
 role: "ERP / Data"
-status: ready
-current_issue: null
-current_pr: null
+status: waiting_ci
+current_issue: 18
+current_pr: 50
+current_branch: erp/18-data-source-registry
+head: 4f54113dca664733598e8e39ec05dd7c463ff250
+state: waiting_ci
+lease_owner: lead
+lease_heartbeat_at: "2026-09-20T09:07:30+07:00"
+last_checkpoint_at: "2026-09-20T09:07:30+07:00"
+stacked_on: "main @ a626608dd9be960ac205053a0573463236137a71"
 preferred_next_issue: 18
+blocked_by:
+  - "Authenticated API/UI acceptance for the remainder of issue #18 still requires a trusted HTTP authentication boundary; this foundation PR must not invent caller-controlled identity."
 scope:
   - datasource-registry
   - sql-erp-adapters
   - schema-observer
   - erp-catalog
   - feature-capability-registry
-next_action: "Inspect dependency readiness for #18. Work only against stable company/identity contracts or use an explicit stacked PR."
+reconciliation:
+  previous_head: d0ed814f317907acc6bcbcf59bf8e395d8b7dac6
+  backup_branch: backup/50-pre-lead-reconcile-20260920
+  authoritative_main: a626608dd9be960ac205053a0573463236137a71
+  implementation_head: 4f54113dca664733598e8e39ec05dd7c463ff250
+  strategy: "Replay only Data Source Registry delta on current main; retain identity/backend/frontend state from main."
+next_action: "Verify exact-head Governance + Build and mergeability for PR #50 after Lead ancestry reconciliation. If green, Lead/QA reviews the 15-file Data Source-only diff and merges the foundation without closing issue #18; issue #18 remains open for authenticated API/UI acceptance."

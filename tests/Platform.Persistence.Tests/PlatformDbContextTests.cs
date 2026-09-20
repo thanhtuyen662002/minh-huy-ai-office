@@ -121,6 +121,58 @@ public sealed class PlatformDbContextTests
     }
 
     [Fact]
+    public void DataSourceModel_UsesTenantCompanyBoundaryAndLogicalNameUniqueness()
+    {
+        using var context = CreateContext();
+
+        var dataSource = context.Model.FindEntityType(typeof(DataSourceRecord));
+
+        Assert.NotNull(dataSource);
+        Assert.Equal(PlatformDbContext.DefaultSchema, dataSource.GetSchema());
+        Assert.Equal("DataSources", dataSource.GetTableName());
+        Assert.Equal(
+            new[]
+            {
+                nameof(DataSourceRecord.TenantId),
+                nameof(DataSourceRecord.CompanyId),
+                nameof(DataSourceRecord.Id)
+            },
+            dataSource.FindPrimaryKey()!.Properties.Select(property => property.Name));
+
+        Assert.Contains(
+            dataSource.GetForeignKeys(),
+            foreignKey =>
+                foreignKey.PrincipalEntityType.ClrType == typeof(CompanyRecord)
+                && foreignKey.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(DataSourceRecord.TenantId),
+                            nameof(DataSourceRecord.CompanyId)
+                        }));
+
+        Assert.Contains(
+            dataSource.GetIndexes(),
+            index =>
+                index.IsUnique
+                && index.Properties.Select(property => property.Name)
+                    .SequenceEqual(
+                        new[]
+                        {
+                            nameof(DataSourceRecord.TenantId),
+                            nameof(DataSourceRecord.CompanyId),
+                            nameof(DataSourceRecord.LogicalName)
+                        }));
+
+        Assert.Equal(
+            DataSourceRecord.MaximumSecretReferenceLength,
+            dataSource.FindProperty(nameof(DataSourceRecord.ConnectionSecretReference))?.GetMaxLength());
+        Assert.Equal(
+            200,
+            dataSource.FindProperty(nameof(DataSourceRecord.LogicalName))?.GetMaxLength());
+    }
+
+    [Fact]
     public void ConnectionFactory_ReturnsClosedSqlConnection()
     {
         var factory = new SqlServerConnectionFactory();

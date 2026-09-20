@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Platform.Configuration\Platform.Configuration.csproj" />
     <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>
 </Project>

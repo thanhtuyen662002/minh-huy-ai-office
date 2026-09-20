@@ -16,6 +16,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
 
     public DbSet<RoleAssignmentRecord> RoleAssignments => Set<RoleAssignmentRecord>();
 
+    public DbSet<DataSourceRecord> DataSources => Set<DataSourceRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
@@ -88,6 +90,46 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
                 .WithMany()
                 .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.UserId })
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DataSourceRecord>(entity =>
+        {
+            entity.ToTable("DataSources", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_DataSources_ConnectionSecretReference",
+                    "[ConnectionSecretReference] LIKE N'secretref://%'");
+                table.HasCheckConstraint(
+                    "CK_DataSources_AccessMode",
+                    "[AllowRead] = CAST(1 AS bit) OR [AllowWrite] = CAST(1 AS bit)");
+                table.HasCheckConstraint(
+                    "CK_DataSources_MaxConcurrency",
+                    "[MaxConcurrency] >= 1 AND [MaxConcurrency] <= 1024");
+            });
+
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.Id });
+            entity.Property(x => x.LogicalName).HasMaxLength(200);
+            entity.Property(x => x.Kind).HasMaxLength(100);
+            entity.Property(x => x.Environment).HasMaxLength(50);
+            entity.Property(x => x.Purpose).HasMaxLength(200);
+            entity.Property(x => x.ConnectionSecretReference)
+                .HasMaxLength(DataSourceRecord.MaximumSecretReferenceLength);
+            entity.Property(x => x.AllowRead).HasDefaultValue(true);
+            entity.Property(x => x.AllowWrite).HasDefaultValue(false);
+            entity.Property(x => x.MaxConcurrency).HasDefaultValue(1);
+            entity.Property(x => x.IsEnabled).HasDefaultValue(true);
+            entity.Property(x => x.CreatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            entity.Property(x => x.UpdatedAtUtc)
+                .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.LogicalName })
+                .IsUnique();
+
+            entity.HasOne<CompanyRecord>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId })
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
