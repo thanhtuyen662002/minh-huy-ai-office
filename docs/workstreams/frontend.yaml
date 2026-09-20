@@ -4,11 +4,11 @@ status: active
 current_issue: 59
 current_pr: 61
 current_branch: frontend/59-datasource-registry-shell
-head: 15b74d97b5d8865ba844fa9aac2a82f68fcf1009
-state: waiting_ci
+head: 678595847f28430293f472623a7a566e5a932979
+state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T13:08:00+07:00"
-last_checkpoint_at: "2026-09-20T13:08:00+07:00"
+lease_heartbeat_at: "2026-09-20T14:09:00+07:00"
+last_checkpoint_at: "2026-09-20T14:09:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 exact-head e75119f Governance + Build are green. Commits 9c44a82..15b74d9 add accessible fixture-backed create/edit/explicit secret-rotation interactions plus component tests: metadata edits never collect/resubmit secrets, rotation uses a password-only transient input and clears it after submit, new sources start without a secret, company scope remains fail-closed, and stored secret values/references are never rendered. Verify exact-head web:test/type-check/production build and repository CI for the interaction checkpoint; fix any failures on the same PR. If green, refresh HANDOFF and mark PR #61 ready_for_review while live API wiring remains deferred to authoritative #58 + residual #18 contract."
+next_action: "PR #61 implementation HEAD 678595847f28430293f472623a7a566e5a932979 passed exact-head Governance 35493539369 and Build 35493539370. Fixture-backed #59 acceptance is complete: company-scoped list/detail/create/edit, sanitized connection status, accessible interactions, metadata edit separated from explicit transient secret rotation, fail-closed company scope, and component coverage preserving secret redaction. This state-only checkpoint records readiness; verify CI on the resulting checkpoint HEAD, then mark PR #61 ready_for_review for Lead. Live API/auth wiring remains deferred to authoritative #58 + residual #18 contract; do not invent endpoints or caller-controlled auth."
