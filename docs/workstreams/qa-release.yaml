@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 38c14b2ebbdde4883331a117e437fdd077c620b9
+head: 15ea85159468e9c82ef4c2febd6e1877f9655750
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T18:51:47+07:00"
-last_checkpoint_at: "2026-09-20T18:51:47+07:00"
+lease_heartbeat_at: "2026-09-20T21:50:50+07:00"
+last_checkpoint_at: "2026-09-20T21:50:50+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -22,32 +22,30 @@ scope:
   - cross-workstream-pr-quality-review
 verification_target:
   pr: 55
-  current_pr_head: 6591874240bff1b1a7632e952577d46a7a48114c
+  current_pr_head: 15d97be4f1da58b45e814ecfeb48f140da9f0b0b
   state: implementation_in_progress
   evidence:
-    - "exact-head Governance 35507633469 SUCCESS"
-    - "exact-head Build 35507633502 FAILURE in .NET build; EF migration integrity, Web, Compose and deployment/container jobs pass"
+    - "retry-publish-confirm failure/redelivery recovery landed and avoids duplicate executor side effects"
+    - "exact-head Build 35515333747 and Governance 35515333712 are zero-step runner_id=0 failures; not implementation evidence"
   required_before_release_gate:
-    - persistence-backed IWorkDeliveryHandler registration
+    - safe RabbitMQ consumer DI/host registration with authoritative executor and persistence configuration
     - durable completion/checkpoint before ACK
     - durable retry/dead-letter state before broker settlement
-    - exact-head .NET build/tests green
+    - executable exact-head Governance + Build green
     - lease fencing and stale-owner rejection
     - retry sequencing without duplicate live attempts
     - idempotent success boundary
     - tenant/company/task isolation and no secret exposure
 parallel_verification:
   pr_60:
-    head: f0360d83ade1273f7a94b1a7769ef8c673604975
-    governance: "35506760201 SUCCESS"
-    build: "35506760252 SUCCESS"
-    gate: "Live Backend HANDOFF still requires deterministic Core.Api test-auth fixture and protected endpoint/missing-auth-config fail-closed coverage; merge promptly once those acceptance gates land."
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
+    build: "35515186798 FAILURE, all jobs zero-step runner_id=0"
+    governance: "35515186802 FAILURE, infrastructure/no-step signal"
+    gate: "Acceptance implementation is present and PR mergeable; require executable exact-head green CI, then merge immediately."
   pr_63:
-    head: 0fb781c3ff2ae635c3775cdc5af961457a31b85d
-    governance: "35508145312 SUCCESS"
-    build: "35508145292 FAILURE (.NET build and Core.Api container); EF migration integrity, Web and Compose pass"
-    gate: "Live ERP/Data lease owns fix; retain stack on #60 and require cross-company/inactive-membership/missing-auth endpoint regressions."
+    head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
+    gate: "No exact-head workflow visible. ERP/Data must continue cross-company/inactive-membership/missing-auth endpoint regressions on live stacked lease."
   pr_64:
-    head: 99d81b61ae612eeea37b13a5df23a611ceaf98d2
-    gate: "Frontend implementation live; no exact-head workflow visible yet. Require Web test/type-check/build and authoritative #60 transport reconciliation before final release readiness."
-next_action: "Do not duplicate live specialist CI fixes. Review #60 immediately when remaining acceptance lands; sequence #63 after parent merge. Keep #55 release gate closed until persistence-before-settlement and exact-head Build are proven."
+    head: ac80c335bc6aafa1ed251fa8ad1b6c4710caeeef
+    gate: "No exact-head workflow visible. Frontend remains active on deterministic fail-closed adapter/accessibility hardening; authoritative transport reconciliation follows #60 merge."
+next_action: "Do not duplicate specialist implementation. Treat zero-step CI as infrastructure noise; keep acceptance work moving. Review and merge #60 immediately after executable exact-head green CI, then sequence #63."
