@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 62
 current_pr: 64
 current_branch: frontend/62-auth-session-bootstrap
-head: 4631cd7fb6828301e3e4089c97322ea2271ce554
+head: dc3eac40e8b89c71124fd911d8f63148d982fd0f
 state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T22:12:00+07:00"
-last_checkpoint_at: "2026-09-20T22:12:00+07:00"
+lease_heartbeat_at: "2026-09-20T23:09:00+07:00"
+last_checkpoint_at: "2026-09-20T23:09:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -17,6 +17,6 @@ scope:
   - client-contracts
   - realtime-ui
 blocked_by:
-  - "GitHub Actions still reports zero workflow runs for branch frontend/62-auth-session-bootstrap after implementation HEAD 4631cd7fb6828301e3e4089c97322ea2271ce554; exact-head Web CI evidence remains unavailable."
+  - "GitHub Actions reports zero workflow runs for implementation HEAD dc3eac40e8b89c71124fd911d8f63148d982fd0f; exact-head Web CI evidence remains unavailable."
   - "PR #60 remains Draft/moving; concrete /api/auth/context transport must stay isolated behind the typed adapter until authoritative reconciliation."
-next_action: "Continue same-PR frontend acceptance hardening while CI emission is absent: verify component accessibility and stale-company clearing under malformed/failed bootstrap transitions. Re-check workflow emission after each meaningful checkpoint and fix frontend-owned failures immediately. Once PR #60 is authoritative, reconcile /api/auth/context behind the typed adapter using only authoritative metadata; do not invent display identity or browser TenantId/UserId authority."
+next_action: "Continue same-PR frontend acceptance hardening while CI emission is absent. Stale ready-company data is now covered across loading, unauthenticated, and invalid-response transitions, with accessible failure semantics and no selector/company leakage. Re-check workflow emission after meaningful checkpoints and fix frontend-owned failures immediately. Once PR #60 is authoritative, reconcile /api/auth/context behind the typed adapter using only authoritative metadata; do not invent display identity or browser TenantId/UserId authority."
