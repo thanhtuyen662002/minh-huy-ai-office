@@ -1,23 +1,49 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-platform-core
-status: integration-awaiting-runtime-reconcile
+status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 19
 current_branch: runtime/19-durable-task-engine
 current_pr: 51
-current_target_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
+current_target_head: cd067d954d8cf3729ae79548eb25fa29806e4d81
 last_verified_commit: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+critical_paths:
+  runtime:
+    issue: 19
+    pr: 51
+    head: cd067d954d8cf3729ae79548eb25fa29806e4d81
+    state: waiting_ci_handoff
+    evidence: "Exact-head Governance 35485567771 SUCCESS and Build 35485567875 SUCCESS; mergeable=true. Runtime specialist must checkpoint ready_for_review, then Lead/QA final-review and merge."
+    next: "Merge #51 after ready_for_review handoff, then immediately reconcile existing stacked PR #55 / issue #20 onto authoritative main."
+  backend_auth:
+    issue: 58
+    pr: null
+    state: executable
+    owner: backend
+    constraint: "No shared EF model/snapshot/schema changes while Runtime integration is active."
+    next: "Backend claims #58 now and implements trusted HTTP authentication + server-derived AuthorizationContext."
+  erp_data:
+    issue: 18
+    foundation_pr: 50
+    foundation_state: merged
+    residual_state: waiting_auth_contract
+    next: "As soon as #58 exposes a stable auth contract, continue residual authenticated API/connection-test acceptance for #18, stacked on #58 if it is not yet merged."
+  frontend:
+    issue: 22
+    state: dependency_blocked
+    next: "Keep realtime task dashboard blocked until #19/#20 contracts are authoritative; independent frontend work remains allowed under frontend lease protocol."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
   - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
-  - "PR #51 / issue #19 Durable Task Engine: CURRENT integration target; live runtime-ai lease; branch diverged and must reconcile onto authoritative main"
+  - "PR #51 / issue #19 Durable Task Engine: reconciled onto main at cd067d954d8cf3729ae79548eb25fa29806e4d81; exact-head Governance + Build green; awaiting specialist ready_for_review checkpoint"
   - "PR #55 / issue #20 worker dispatch: blocked secondary stack until #51 merges; correctness HOLD remains on retry/idempotency invariants"
+  - "Issue #58 trusted HTTP authentication: parallel Backend lane; unblocks residual #18 and later #21"
 next_issue: 20
-next_action: "Runtime-ai immediate resume was requested for the live PR #51 lease. Reconcile SAME branch onto authoritative main, preserve DataSource + Durable Task mappings/tests/migrations and additive migration order, rerun exact-head Governance + Build, and return ready_for_review. Lead/QA then independently verifies EF snapshot/migration/tenant boundaries and merges #51 before sequencing #55."
+next_action: "Lead/QA: merge #51 promptly after Runtime records ready_for_review on exact green HEAD cd067d9, then sequence #55. In parallel Backend must claim #58 without waiting for #51; once #58 contract is stable ERP/Data may stack residual #18 API acceptance on it. After #18 + #19 close, Backend may open #21; after #19/#20 are authoritative, unblock #22."
 blocked_by:
-  - "PR #51 live runtime-ai reconciliation is in progress; Lead must not create a competing implementation."
-  - "Issue #18 remains open for authenticated API/UI acceptance but does not block #19 integration."
+  - "#51 merge waits only for live Runtime specialist ready_for_review checkpoint; exact-head required CI is already green."
+  - "Residual #18 authenticated API acceptance waits for a stable #58 authentication contract."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
