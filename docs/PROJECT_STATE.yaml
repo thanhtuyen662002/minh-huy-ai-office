@@ -1,23 +1,51 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-platform-core
-status: integration-awaiting-runtime-reconcile
+status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 19
-current_branch: runtime/19-durable-task-engine
-current_pr: 51
-current_target_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
-last_verified_commit: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+current_issue: 20
+current_branch: runtime/20-worker-dispatch
+current_pr: 55
+current_target_head: 04b3b52c0350412513f248bf919e0e197d00008d
+last_verified_commit: 81e15a938e5cc267a267c7b1d09e52edf1ccd1e0
+critical_paths:
+  runtime:
+    issue: 20
+    pr: 55
+    head: 04b3b52c0350412513f248bf919e0e197d00008d
+    state: in_progress
+    next: "Verify exact-head executable CI; continue safe acceptance/host activation only with authoritative executor/config."
+  backend_auth:
+    issue: 58
+    pr: 60
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
+    state: merged
+    merge_commit: 81e15a938e5cc267a267c7b1d09e52edf1ccd1e0
+    evidence: "Exact-head Build 35515186798 and Governance 35515186802 succeeded; Lead merged immediately."
+  erp_data:
+    issue: 18
+    pr: 63
+    branch: erp/18-authenticated-datasource-api
+    head: 0dbbb5f2c9c06d0f809ac05724c34242debd5f05
+    state: in_progress
+    next: "Reconcile SAME PR onto authoritative main after #60 merge; complete authorized success-path secret/reference non-exposure and company-scoped connection-test regressions; require exact executable green CI."
+  frontend:
+    issue: 62
+    pr: 64
+    branch: frontend/62-auth-session-bootstrap
+    head: deeeb86855cdc177ce3974cfa43f84c6c4c58ff8
+    state: in_progress
+    next: "Reconcile concrete /api/auth/context transport against merged #60 while preserving server-authoritative identity and fail-closed behavior."
 dependency_chain:
-  - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
-  - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; issue #18 remains open for authenticated API/UI acceptance"
-  - "PR #51 / issue #19 Durable Task Engine: CURRENT integration target; live runtime-ai lease; branch diverged and must reconcile onto authoritative main"
-  - "PR #55 / issue #20 worker dispatch: blocked secondary stack until #51 merges; correctness HOLD remains on retry/idempotency invariants"
-next_issue: 20
-next_action: "Runtime-ai immediate resume was requested for the live PR #51 lease. Reconcile SAME branch onto authoritative main, preserve DataSource + Durable Task mappings/tests/migrations and additive migration order, rerun exact-head Governance + Build, and return ready_for_review. Lead/QA then independently verifies EF snapshot/migration/tenant boundaries and merges #51 before sequencing #55."
+  - "PR #51 / issue #19 Durable Task Engine: MERGED"
+  - "PR #60 / issue #58 trusted HTTP authentication: MERGED at 81e15a938e5cc267a267c7b1d09e52edf1ccd1e0"
+  - "PR #63 / residual #18: reconcile now to authoritative main; close only after security/success-path acceptance and exact green CI"
+  - "PR #55 / issue #20: active Runtime acceptance target"
+  - "PR #64 / issue #62: active Frontend auth-session lane; merged #60 transport is now authoritative"
+next_action: "Keep #55, #63 and #64 moving in parallel. ERP immediate run requested after #60 merge. Activate Backend #21 immediately after #18 closes; activate Frontend #22 immediately after #20 closes."
 blocked_by:
-  - "PR #51 live runtime-ai reconciliation is in progress; Lead must not create a competing implementation."
-  - "Issue #18 remains open for authenticated API/UI acceptance but does not block #19 integration."
+  - "Backend #21 waits for residual #18 to become authoritative."
+  - "Frontend #22 waits for #20 to become authoritative."
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates

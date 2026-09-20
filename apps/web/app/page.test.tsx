@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CompanyShell } from "../components/company-shell";
 import Home from "./page";
@@ -8,14 +8,18 @@ afterEach(() => {
 });
 
 describe("company-scoped product shell", () => {
-  it("renders an explicit active-company context", () => {
+  it("renders the data source registry inside an explicit active-company context", () => {
     render(<Home />);
 
     expect(screen.getByRole("main")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1, name: "AI Office" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Công ty đang làm việc" })).toBeTruthy();
-    expect(screen.getByText("Không gian làm việc của Minh Huy")).toBeTruthy();
-    expect(screen.getByText("demo-user")).toBeTruthy();
+    const companyContext = screen.getByRole("region", { name: "Công ty đang làm việc" });
+    expect(companyContext).toBeTruthy();
+    expect(within(companyContext).getByText(/Nhân viên nội bộ/)).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Nguồn dữ liệu · Minh Huy" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 3, name: "company.erp.production" })).toBeTruthy();
+    expect(screen.getAllByText(/Thông tin bí mật: đã cấu hình · giá trị được ẩn/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/password|connection string|secret reference/i)).toBeNull();
   });
 
   it("fails closed when tenant/company/user scope is incomplete", () => {
@@ -34,6 +38,6 @@ describe("company-scoped product shell", () => {
 
     expect(screen.getByRole("heading", { name: "Chưa có phạm vi làm việc" })).toBeTruthy();
     expect(screen.getByText(/sẽ không hiển thị dữ liệu công ty/i)).toBeTruthy();
-    expect(screen.queryByText("Không gian làm việc của Minh Huy")).toBeNull();
+    expect(screen.queryByRole("heading", { name: /Nguồn dữ liệu/ })).toBeNull();
   });
 });

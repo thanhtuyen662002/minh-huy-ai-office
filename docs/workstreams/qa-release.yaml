@@ -1,13 +1,13 @@
 workstream: qa-release
 role: "QA / Security / Release (Lead-owned)"
-current_issue: 19
-current_pr: 51
+current_issue: 20
+current_pr: 55
 current_branch: main
-head: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
+head: 2a96200797373595fb31c5d6f8e09ae91be6a5e2
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T09:35:00+07:00"
-last_checkpoint_at: "2026-09-20T09:35:00+07:00"
+lease_heartbeat_at: "2026-09-20T23:13:00+07:00"
+last_checkpoint_at: "2026-09-20T23:13:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -21,19 +21,32 @@ scope:
   - release-gates
   - cross-workstream-pr-quality-review
 verification_target:
-  pr: 51
-  prerequisite_main: 0c1f7693b180ea06adf5a91a1bdcb9261520d8ec
-  current_pr_head: 1dbca3f2729b81072e8b21bd6288d87ed28771e4
-  observed:
-    - "current PR head is diverged from authoritative main"
-    - "main PlatformDbContext contains DataSources while stale PR head contains durable-task entities but not DataSources"
-    - "main persistence tests contain DataSource model boundary coverage that must survive reconciliation"
-  required_after_reconcile:
-    - exact-head Governance
-    - exact-head Build
-    - EF migration integrity with identity + Data Source + Durable Task migrations
-    - PlatformDbContext/model snapshot contains both DataSource and task entities
-    - DataSource tenant/company/secret-reference tests remain
-    - task tenant/company/task composite isolation remains
-    - resume planner graph validation remains
-next_action: "Independently review the reconciled PR #51 exact HEAD when runtime-ai checkpoints it. Keep #55 blocked until #51 closes; then verify #55 retry/idempotency invariants before transport/release readiness."
+  pr: 55
+  current_pr_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
+  state: implementation_in_progress
+  evidence:
+    - "retry-publish-confirm failure/redelivery recovery landed and avoids duplicate executor side effects"
+    - "RabbitMQ consumer creates an async DI scope per delivery so scoped persistence/handler state is not captured by singleton hosted service"
+    - "exact-head Build 35519304358 and Governance 35519304380 are zero-step runner_id=0 failures; not implementation evidence"
+  required_before_release_gate:
+    - safe RabbitMQ consumer host registration with authoritative executor and SQL Server configuration
+    - durable completion/checkpoint before ACK
+    - durable retry/dead-letter state before broker settlement
+    - executable exact-head Governance + Build green
+    - lease fencing and stale-owner rejection
+    - retry sequencing without duplicate live attempts
+    - idempotent success boundary
+    - tenant/company/task isolation and no secret exposure
+parallel_verification:
+  pr_60:
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
+    build: "35515186798 FAILURE; rerun attempt has all six jobs zero-step with runner_id=0"
+    governance: "35515186802 FAILURE; zero-step runner noise"
+    gate: "Acceptance implementation is present and PR mergeable; require executable exact-head green CI, then merge immediately."
+  pr_63:
+    head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
+    gate: "No exact-head workflow visible. ERP/Data has been instructed to continue cross-company/inactive-membership/missing-auth endpoint regressions on the live stacked lease, not idle in waiting_ci."
+  pr_64:
+    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
+    gate: "No exact-head workflow visible. Frontend remains live and is advancing deterministic fail-closed stale-state/accessibility hardening; authoritative transport reconciliation follows #60 merge."
+next_action: "Do not duplicate specialist implementation. Treat zero-step CI as infrastructure noise; keep acceptance work moving. Review and merge #60 immediately after executable exact-head green CI, then sequence #63."

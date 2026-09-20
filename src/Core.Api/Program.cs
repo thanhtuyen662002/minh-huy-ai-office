@@ -38,7 +38,14 @@ if (authenticationConfigured)
         options.Authority = authority;
         options.Audience = audience;
         options.RequireHttpsMetadata = true;
-        options.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, NameClaimType = AuthenticationClaimTypes.Subject };
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            NameClaimType = AuthenticationClaimTypes.Subject
+        };
     });
     builder.Services.AddAuthorization();
 }
@@ -55,6 +62,7 @@ app.Use(async (httpContext, next) =>
         await httpContext.Response.WriteAsJsonAsync(new { error = "Invalid observability correlation header." });
         return;
     }
+
     correlation.ApplyTo(System.Diagnostics.Activity.Current);
     using var scope = correlationLogger.BeginScope(correlation.ToLogScope());
     var started = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -74,6 +82,21 @@ static IResult AuthenticationUnavailable() => Results.Problem(statusCode: Status
 
 app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, component = "Core.Api", environment = deploymentEnvironment.ToString(), status = "ok" }));
 app.MapHealthChecks("/health");
+
+if (authenticationConfigured)
+{
+    app.MapGet("/api/auth/context", (IRequestAuthorizationContextAccessor accessor) =>
+    {
+        var current = accessor.Current;
+        return current is null
+            ? Results.Forbid()
+            : Results.Ok(new { current.Context.TenantId, current.Context.CompanyId, current.Context.UserId, current.Roles });
+    }).RequireAuthorization();
+}
+else
+{
+    app.MapGet("/api/auth/context", () => Results.Json(new { error = "Authentication is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
+}
 
 var dataSources = app.MapGroup("/api/data-sources");
 dataSources.MapGet("/", async (IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, CancellationToken cancellationToken) =>
