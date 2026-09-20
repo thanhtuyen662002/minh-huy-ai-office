@@ -14,17 +14,25 @@ export type AuthContextHttpResult =
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 const hasText = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 
+function hasDenseTextRoles(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!hasOwn(value, index) || !hasText(value[index])) return false;
+  }
+  return true;
+}
+
 function parseContext(value: unknown, selectedCompanyId: string): AuthoritativeAuthContext | null {
   if (value === null || typeof value !== "object") return null;
   if (!hasOwn(value, "tenantId") || !hasOwn(value, "companyId") || !hasOwn(value, "userId") || !hasOwn(value, "roles")) return null;
   const candidate = value as Record<string, unknown>;
   if (!hasText(candidate.tenantId) || !hasText(candidate.companyId) || candidate.companyId !== selectedCompanyId || !hasText(candidate.userId)) return null;
-  if (!Array.isArray(candidate.roles) || !candidate.roles.every(hasText)) return null;
+  if (!hasDenseTextRoles(candidate.roles)) return null;
   return {
     tenantId: candidate.tenantId,
     companyId: candidate.companyId,
     userId: candidate.userId,
-    roles: candidate.roles,
+    roles: [...candidate.roles],
   };
 }
 
