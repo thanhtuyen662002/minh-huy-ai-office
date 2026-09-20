@@ -1,9 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: implementation
+status: waiting_ci
 current_issue: 58
 current_pr: 60
 current_branch: backend/58-trusted-http-auth
+head: da24514a1b2f10539335b7bd0b2f0a823ff3e8c4
+lease_owner: backend
+lease_heartbeat_at: "2026-09-20T16:01:50+07:00"
+last_checkpoint_at: "2026-09-20T16:01:50+07:00"
 last_completed_issue: 17
 last_merged_pr: 47
 last_merge_commit: 084e90170907ade8854270f3c24d446fb458cef9
@@ -16,13 +20,13 @@ scope:
   - platform-persistence
 verification:
   issue_17_implementation_head: f769be3916c301aad08e1dc720550c3e4b2e3ccb
-  governance_run: 35456589692
-  build_run: 35456589648
-  result: implementation_in_progress
+  governance_run: 35495823342
+  build_run: 35495823344
+  result: "previous exact-head Build failed during .NET build after formatting passed; nullable tuple assertion compile-risk fixed at da24514a"
 known_risks:
   - "Caller-controlled identity headers must never become trusted TenantId, CompanyId, or UserId identity."
   - "JWT authority/audience configuration must fail closed for protected API surfaces; production authentication must never fall back to caller-controlled identity headers."
   - "Authenticated provider/subject plus untrusted company selector must resolve user, active membership, active company, and roles inside one database query before AuthorizationContext exists."
   - "Issue #58 must remain schema-neutral while Runtime owns the active shared EF model/snapshot chain."
 blocked_by: []
-next_action: "Wait for exact-head CI on auth boundary tests and fix failures. Then add deterministic test-auth integration fixture plus protected endpoint/auth-config fail-closed coverage, update authentication configuration docs, and rerun full CI before Ready for Review."
+next_action: "Verify exact-head CI for da24514a and fix any remaining compile/test failure on SAME PR. Then add deterministic test-auth integration fixture plus protected endpoint/missing-auth-config fail-closed coverage and authentication configuration docs; rerun full exact-head CI before Ready for Review."
