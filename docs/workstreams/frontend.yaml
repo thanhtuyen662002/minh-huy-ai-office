@@ -1,19 +1,21 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
+status: in_progress
+current_issue: 62
 current_pr: null
-current_branch: null
-head: c245eeba93a9cc8a85118610129aa7e50e114417
-state: blocked
+current_branch: frontend/62-auth-session-bootstrap
+head: 495ba6c95919792aaa99be40e1319057cc2aed7c
+state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
-last_checkpoint_at: "2026-09-20T15:58:00+07:00"
-preferred_next_issue: 22
+lease_heartbeat_at: "2026-09-20T17:21:00+07:00"
+last_checkpoint_at: "2026-09-20T17:21:00+07:00"
+preferred_next_issue: 62
 scope:
   - nextjs
   - shadcn-ui
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 / issue #59 merged at c245eeba93a9cc8a85118610129aa7e50e114417 after exact-head CI and Lead review. Primary lease is released. Issue #22 remains blocked until #20 is authoritative; live Data Source API wiring waits for #58 + residual #18. Do not invent endpoints or caller-controlled auth."
+blocked_by:
+  - "Live HTTP endpoint wiring remains deferred until PR #60 / #58 publishes the final protected endpoint shape; the frontend adapter intentionally injects transport."
+next_action: "Continue issue #62 on frontend/62-auth-session-bootstrap: add explicit loading/unauthenticated/forbidden/company-switch UI around the typed authenticated-session adapter, preserve the merged #59 Data Source shell, run Web tests/type-check/build, then open a Draft PR with HANDOFF. Reconcile the adapter to PR #60 after its auth contract becomes authoritative; do not invent an endpoint or browser-controlled TenantId/UserId authority."
