@@ -146,6 +146,7 @@ public sealed class RabbitMqWorkConsumer(
         {
             var envelope = JsonSerializer.Deserialize<WorkDispatchEnvelope>(args.Body.Span)
                 ?? throw new JsonException("Work envelope is empty.");
+            ValidateEnvelope(envelope);
             var result = await handler.HandleAsync(envelope, CancellationToken.None);
             var settlement = WorkDeliverySettlement.Resolve(
                 result.Outcome,
@@ -190,6 +191,30 @@ public sealed class RabbitMqWorkConsumer(
         {
             logger.LogError(exception, "RabbitMQ work delivery failed before durable settlement");
             await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
+        }
+    }
+
+    private static void ValidateEnvelope(WorkDispatchEnvelope envelope)
+    {
+        if (envelope.MessageId == Guid.Empty
+            || envelope.TenantId == Guid.Empty
+            || envelope.CompanyId == Guid.Empty
+            || envelope.TaskId == Guid.Empty
+            || envelope.StepId == Guid.Empty
+            || envelope.Attempt < 1
+            || envelope.CheckpointVersion < 0)
+        {
+            throw new JsonException("Work envelope contains invalid execution metadata.");
+        }
+
+        var expectedIdempotencyKey = WorkIdempotencyKey.ForStep(
+            envelope.TenantId,
+            envelope.CompanyId,
+            envelope.TaskId,
+            envelope.StepId);
+        if (!string.Equals(envelope.IdempotencyKey, expectedIdempotencyKey, StringComparison.Ordinal))
+        {
+            throw new JsonException("Work envelope idempotency identity is invalid.");
         }
     }
 
