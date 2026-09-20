@@ -6,55 +6,55 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 20
 current_branch: runtime/20-worker-dispatch
 current_pr: 55
-current_target_head: e13be9e76bb331062ae76d957c47229baf776e8c
+current_target_head: 6591874240bff1b1a7632e952577d46a7a48114c
 last_verified_commit: 27058b3578f6bdedca3ff04fdbfc148cf6a93109
 critical_paths:
   runtime:
     issue: 20
     pr: 55
-    head: e13be9e76bb331062ae76d957c47229baf776e8c
+    head: 6591874240bff1b1a7632e952577d46a7a48114c
     state: in_progress
-    evidence: "Exact HEAD Governance 35504891149 + Build 35504891050 SUCCESS; acceptance still requires transport-focused tests and persistence-before-settlement handler wiring."
-    next: "Runtime continues SAME PR #55 without pausing on green CI; prove durable completion/checkpoint/retry/dead-letter state before broker settlement."
+    evidence: "Exact HEAD Governance 35507633469 SUCCESS; Build 35507633502 FAILURE in .NET build while EF migration integrity, Web, Compose and deployment/container gates pass. Transport safety tests are present; persistence-before-settlement handler acceptance remains."
+    next: "Runtime fixes SAME PR exact-head .NET failure and continues immediately with persistence-backed IWorkDeliveryHandler; durable completion/checkpoint/retry/dead-letter state must commit before broker settlement."
   backend_auth:
     issue: 58
     pr: 60
     branch: backend/58-trusted-http-auth
-    head: a7e6d4b5639bbaf5fcf4675cd89f4a8ebf926f59
+    head: f0360d83ade1273f7a94b1a7769ef8c673604975
     state: in_progress
     owner: backend
-    evidence: "Stable schema-neutral auth contract; exact-head Governance 35504839934 + Build 35504839928 SUCCESS. HANDOFF still requires deterministic test-auth integration fixture, protected endpoint/missing-auth-config fail-closed coverage and auth configuration docs."
-    next: "Backend completes SAME PR #60 acceptance on its live lease; downstream stacks remain authorized."
+    evidence: "Exact HEAD Governance 35506760201 + Build 35506760252 SUCCESS. Stable schema-neutral auth contract remains available to stacked ERP/Frontend work; acceptance still requires deterministic Core.Api test-auth fixture plus protected endpoint/missing-auth-config fail-closed coverage."
+    next: "Backend completes SAME live PR #60 acceptance; Lead merges promptly once acceptance-complete and exact-head green."
   erp_data:
     issue: 18
     pr: 63
     branch: erp/18-authenticated-datasource-api
-    head: 62263ba84ae21953d5899f2c52c039b5d61cf10a
+    head: 0fb781c3ff2ae635c3775cdc5af961457a31b85d
     stacked_on: 60
     state: waiting_ci
-    evidence: "Governance 35505211786 SUCCESS; Build 35505211781 FAILURE in .NET build/Core.Api container while EF migration integrity, Compose and Web passed. Live ERP/Data lease owns the fix."
-    next: "ERP/Data fixes SAME stacked PR #63 and adds focused cross-company/inactive-membership/missing-auth security coverage; do not duplicate from Lead."
+    evidence: "Exact HEAD Governance 35508145312 SUCCESS; Build 35508145292 FAILURE in .NET build and Core.Api container while EF migration integrity, Web and Compose pass. Live ERP/Data lease owns fix."
+    next: "ERP/Data fixes SAME stacked PR and then adds cross-company/inactive-membership/missing-auth endpoint regression coverage; reconcile after #60 merge."
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 4c750ce92234ae06370e8f9910e66c63d315b9c4
+    head: 99d81b61ae612eeea37b13a5df23a611ceaf98d2
     depends_on: 60
-    state: in_progress
-    evidence: "Frontend live lease has typed fail-closed authenticated-session adapter and is implementing explicit session/company-switch UX; no exact-head workflow run yet on observed PR head."
-    next: "Frontend continues SAME PR #64 with component UX/tests and preserves injected transport until #60 protected endpoint is authoritative."
+    state: waiting_ci
+    evidence: "Frontend live lease completed typed fail-closed session adapter and accessible session/company-switch states; no exact-head workflow run is visible yet for current PR head."
+    next: "Frontend keeps SAME PR active, verifies Web CI and fixes frontend-owned failures; concrete transport remains isolated until #60 protected endpoint is authoritative."
 dependency_chain:
   - "PR #47 / issue #17 identity: MERGED at 084e90170907ade8854270f3c24d446fb458cef9"
   - "PR #50 Data Source Registry foundation: MERGED at 2baea2a9fce3103d915649ba36c109b77e549117; residual #18 active as stacked PR #63"
   - "PR #51 / issue #19 Durable Task Engine: MERGED at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817; issue #19 CLOSED"
-  - "PR #55 / issue #20 worker dispatch: active; exact-head CI green but real transport/persistence acceptance remains"
-  - "PR #60 / issue #58 trusted HTTP authentication: active; exact-head CI green, acceptance work remains; #63 is stacked on it"
+  - "PR #55 / issue #20 worker dispatch: active; transport tests landed, persistence-before-settlement handler remains and current exact-head .NET Build fails"
+  - "PR #60 / issue #58 trusted HTTP authentication: active; exact-head CI green, acceptance work remains; #63 consumes its stable contract"
   - "PR #64 / issue #62 frontend auth session bootstrap: active dependent lane; concrete transport waits for authoritative #60 endpoint"
 next_issue: 20
-next_action: "Keep #55, #60, #63 and #64 moving in parallel. Merge acceptance-complete exact-head green lanes promptly; after #60 merge reconcile #63 to main and sequence residual #18; after #18 + #19 authoritative activate Backend #21; after #20 authoritative unblock Frontend #22."
+next_action: "Keep #55, #60, #63 and #64 moving in parallel. Merge acceptance-complete exact-head green lanes promptly; after #60 merge reconcile/sequence #63; after #18 + #19 authoritative activate Backend #21; after #20 authoritative unblock Frontend #22."
 blocked_by:
-  - "PR #55 still requires persistence-backed handler/transport evidence before merge."
-  - "PR #63 is stacked on #60 and currently has a live implementation-owned Build failure."
+  - "PR #55 still requires persistence-backed handler acceptance and currently has an implementation-owned .NET Build failure."
+  - "PR #63 is stacked on #60 and currently has a live implementation-owned .NET/Core.Api Build failure."
   - "Backend #21 waits for residual #18 to become authoritative."
   - "Frontend #22 waits for #20 to become authoritative."
 autonomy:
