@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 47a413350195f82b3e5b209594139fbc23c7c078
+head: ec0be6c87516fa9820dbaef40c1284d75b408b5e
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T10:07:00+07:00"
-last_checkpoint_at: "2026-09-20T10:07:00+07:00"
+lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
+last_checkpoint_at: "2026-09-20T15:58:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -21,24 +21,26 @@ scope:
   - release-gates
   - cross-workstream-pr-quality-review
 completed_verification:
-  pr: 51
-  merged_commit: dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817
+  pr: 61
+  merged_commit: c245eeba93a9cc8a85118610129aa7e50e114417
   evidence:
-    - "exact-head Governance 35485567771 SUCCESS"
-    - "exact-head Build 35485567875 SUCCESS including .NET tests, EF idempotent migration, web, Compose and deployment/container gates"
-    - "tenant/company/task composite persistence and additive migration order reviewed"
+    - "exact-head eba452e4ede3c5580cf37d49591c67b25dd65273 Governance 35498818141 SUCCESS"
+    - "exact-head Build 35498818143 SUCCESS"
+    - "Lead source/security review confirmed fixture-only scope, fail-closed company filtering, explicit transient secret rotation and no rendered secret values/raw references"
 verification_target:
   pr: 55
-  current_pr_head: 9eb260c4e745dd8ec0a9716bcc05f9c579c37c24
-  prerequisite_main: dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817
-  state: reconcile_required
-  required_after_reconcile:
-    - exact-head Governance and Build
-    - additive migration/model integrity on merged durable-task base
+  current_pr_head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+  state: implementation_in_progress
+  evidence:
+    - "exact-head Governance 35499461068 SUCCESS"
+    - "exact-head Build 35499461089 SUCCESS"
+  required_before_release_gate:
+    - persistence-backed IWorkDeliveryHandler registration
+    - durable completion/checkpoint before ACK
+    - durable retry/dead-letter state before broker settlement
+    - transport-focused tests
     - lease fencing and stale-owner rejection
-    - retry classification and attempt sequencing without duplicate live attempts
-    - idempotent success boundary preventing redispatch after completion
-    - RabbitMQ ack/nack/dead-letter behavior
-    - checkpoint-resume integration
+    - retry sequencing without duplicate live attempts
+    - idempotent success boundary
     - tenant/company/task isolation and no secret exposure
-next_action: "Independently review reconciled #55 source/tests/CI after Runtime checkpoints it; do not clear release gate until retry/idempotency/lease correctness and transport acceptance are proven."
+next_action: "Do not merge #55 on CI alone: independently review the next Runtime checkpoint proving persistence-before-settlement transport acceptance. Track #60 separately; its live Backend lease owns current Build failure."
