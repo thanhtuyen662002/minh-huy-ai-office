@@ -3,11 +3,11 @@ role: "Lead / Integrator + QA / Security / Release"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 03fc262a4f55d3d05780916318061692e2180ad1
+head: 058e11eda7630afaf303dc28f6ca1670e52ebbaf
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T21:50:50+07:00"
-last_checkpoint_at: "2026-09-20T21:50:50+07:00"
+lease_heartbeat_at: "2026-09-20T22:52:00+07:00"
+last_checkpoint_at: "2026-09-20T22:52:00+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -26,10 +26,10 @@ scope:
 integration:
   current_target:
     pr: 55
-    current_head: 15d97be4f1da58b45e814ecfeb48f140da9f0b0b
+    current_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
     owner: runtime-ai
     state: in_progress
-    required_action: "Latest Build/Governance are zero-step runner failures, not code evidence. Runtime continues safe DI/host registration after retry-publish/redelivery recovery landed; Lead waits for executable exact-head gates."
+    required_action: "Latest Build/Governance are zero-step runner failures, not code evidence. Runtime continues safe host registration after recovery + scoped-per-delivery DI landed; Lead waits for executable exact-head gates."
   parallel_backend:
     issue: 58
     pr: 60
@@ -46,7 +46,7 @@ integration:
   parallel_frontend:
     issue: 62
     pr: 64
-    head: ac80c335bc6aafa1ed251fa8ad1b6c4710caeeef
+    head: 76fddd21f53545d76904297237adcd3f71668e94
     state: in_progress
-    required_action: "No exact-head workflow visible; keep loop active and continue frontend-owned adapter/accessibility hardening. Reconcile live transport after #60 merges."
+    required_action: "No exact-head workflow visible; keep loop active and continue frontend-owned adapter/accessibility/stale-state hardening. Reconcile live transport after #60 merges."
 next_action: "Maintain all four lanes. Merge #60 immediately on executable exact-head green; then reconcile/sequence #63. Activate #21 after #18/#19 authoritative and #22 after #20 authoritative."
