@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Platform.Observability;
@@ -29,6 +32,31 @@ if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
 
 builder.Services.AddHealthChecks();
 builder.Services.AddPlatformPersistence(platformConnectionString);
+builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
+
+var authority = builder.Configuration["AIOffice:Authentication:Authority"];
+var audience = builder.Configuration["AIOffice:Authentication:Audience"];
+var authenticationConfigured = !string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience);
+if (authenticationConfigured)
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = authority;
+            options.Audience = audience;
+            options.RequireHttpsMetadata = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                NameClaimType = AuthenticationClaimTypes.Subject
+            };
+        });
+    builder.Services.AddAuthorization();
+}
 
 var app = builder.Build();
 
@@ -71,6 +99,13 @@ app.Use(async (httpContext, next) =>
     }
 });
 
+if (authenticationConfigured)
+{
+    app.UseAuthentication();
+    app.UseMiddleware<RequestAuthorizationContextMiddleware>();
+    app.UseAuthorization();
+}
+
 app.MapGet("/", () => Results.Ok(new
 {
     service = ProjectInfo.ProductName,
@@ -80,6 +115,29 @@ app.MapGet("/", () => Results.Ok(new
 }));
 
 app.MapHealthChecks("/health");
+
+if (authenticationConfigured)
+{
+    app.MapGet("/api/auth/context", (IRequestAuthorizationContextAccessor accessor) =>
+    {
+        var current = accessor.Current;
+        return current is null
+            ? Results.Forbid()
+            : Results.Ok(new
+            {
+                current.Context.TenantId,
+                current.Context.CompanyId,
+                current.Context.UserId,
+                current.Roles
+            });
+    }).RequireAuthorization();
+}
+else
+{
+    app.MapGet("/api/auth/context", () => Results.Json(
+        new { error = "Authentication is not configured." },
+        statusCode: StatusCodes.Status503ServiceUnavailable));
+}
 
 app.Run();
 

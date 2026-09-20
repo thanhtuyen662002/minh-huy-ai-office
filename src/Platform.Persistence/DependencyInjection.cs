@@ -19,6 +19,7 @@ public static class DependencyInjection
                         "__EFMigrationsHistory",
                         PlatformDbContext.DefaultSchema)));
             services.AddScoped<IAuthorizationDirectory, EfAuthorizationDirectory>();
+            services.AddScoped<IAuthenticatedAuthorizationDirectory, EfAuthenticatedAuthorizationDirectory>();
         }
 
         return services;

@@ -1,19 +1,19 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
+status: ready
+current_issue: 62
 current_pr: null
 current_branch: null
-head: 90de748e8b91390fa1a8e529ec37bf62c6425957
-state: blocked
+head: c245eeba93a9cc8a85118610129aa7e50e114417
+state: ready
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T03:10:00+07:00"
-last_checkpoint_at: "2026-09-20T03:10:00+07:00"
-preferred_next_issue: 22
+lease_heartbeat_at: "2026-09-20T17:21:00+07:00"
+last_checkpoint_at: "2026-09-20T17:21:00+07:00"
+preferred_next_issue: 62
 scope:
   - nextjs
   - shadcn-ui
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #47 / issue #17 is now merged, removing the identity prerequisite hold. Issue #22 is still not executable because it depends on #19 and #20: PR #51 remains blocked pending Lead reconciliation through #50, and stacked PR #55 remains blocked behind #51. Preserve the merged fail-closed company-context shell; do not invent SignalR/task contracts before the runtime sequence is authoritative. Re-check #51/#55 after Lead integrates #50 -> #51 -> #55, then claim #22. Live identity/API wiring must still wait for the trusted authenticated HTTP authorization contract."
+next_action: "Claim issue #62 now as a frontend-only Draft PR stacked on the stable PR #60 auth contract. Keep server-derived identity/company scope authoritative, isolate endpoint shape behind one typed adapter, preserve fixture tests and fail closed. Do not modify Backend auth/EF/schema. #22 remains queued until #20 is authoritative."
