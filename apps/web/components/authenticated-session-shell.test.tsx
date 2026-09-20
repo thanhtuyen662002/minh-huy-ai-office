@@ -36,9 +36,12 @@ describe("AuthenticatedSessionShell", () => {
   it("treats company switching as a selector request rather than identity authority", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
-    fireEvent.change(screen.getByLabelText("Đổi công ty"), { target: { value: "branch-2" } });
+    const selector = screen.getByLabelText("Đổi công ty") as HTMLSelectElement;
+    expect(selector.value).toBe("internal");
+    fireEvent.change(selector, { target: { value: "branch-2" } });
     expect(onSelectCompany).toHaveBeenCalledWith("branch-2");
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+    expect(selector.value).toBe("internal");
     expect(screen.getByText(/máy chủ vẫn xác thực quyền truy cập/i)).toBeTruthy();
   });
 
