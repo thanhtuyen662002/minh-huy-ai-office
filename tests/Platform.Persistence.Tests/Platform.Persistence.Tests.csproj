@@ -14,6 +14,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Core.Api\Core.Api.csproj" />
     <ProjectReference Include="..\..\src\Platform.Configuration\Platform.Configuration.csproj" />
     <ProjectReference Include="..\..\src\Platform.Persistence\Platform.Persistence.csproj" />
     <ProjectReference Include="..\..\src\Shared.Contracts\Shared.Contracts.csproj" />
