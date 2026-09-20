@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: ec0be6c87516fa9820dbaef40c1284d75b408b5e
+head: 5cd719c4ed1a5b49eeabbaceaf9a1729598e08ee
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
-last_checkpoint_at: "2026-09-20T15:58:00+07:00"
+lease_heartbeat_at: "2026-09-20T17:50:58+07:00"
+last_checkpoint_at: "2026-09-20T17:50:58+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -20,20 +20,13 @@ scope:
   - dependency-security-upgrade-review
   - release-gates
   - cross-workstream-pr-quality-review
-completed_verification:
-  pr: 61
-  merged_commit: c245eeba93a9cc8a85118610129aa7e50e114417
-  evidence:
-    - "exact-head eba452e4ede3c5580cf37d49591c67b25dd65273 Governance 35498818141 SUCCESS"
-    - "exact-head Build 35498818143 SUCCESS"
-    - "Lead source/security review confirmed fixture-only scope, fail-closed company filtering, explicit transient secret rotation and no rendered secret values/raw references"
 verification_target:
   pr: 55
-  current_pr_head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+  current_pr_head: e13be9e76bb331062ae76d957c47229baf776e8c
   state: implementation_in_progress
   evidence:
-    - "exact-head Governance 35499461068 SUCCESS"
-    - "exact-head Build 35499461089 SUCCESS"
+    - "exact-head Governance 35504891149 SUCCESS"
+    - "exact-head Build 35504891050 SUCCESS"
   required_before_release_gate:
     - persistence-backed IWorkDeliveryHandler registration
     - durable completion/checkpoint before ACK
@@ -43,4 +36,18 @@ verification_target:
     - retry sequencing without duplicate live attempts
     - idempotent success boundary
     - tenant/company/task isolation and no secret exposure
-next_action: "Do not merge #55 on CI alone: independently review the next Runtime checkpoint proving persistence-before-settlement transport acceptance. Track #60 separately; its live Backend lease owns current Build failure."
+parallel_verification:
+  pr_60:
+    head: a7e6d4b5639bbaf5fcf4675cd89f4a8ebf926f59
+    governance: "35504839934 SUCCESS"
+    build: "35504839928 SUCCESS"
+    gate: "Do not merge yet: live Backend HANDOFF still requires test-auth integration fixture, protected endpoint/missing-auth-config fail-closed coverage and auth configuration docs."
+  pr_63:
+    head: 62263ba84ae21953d5899f2c52c039b5d61cf10a
+    governance: "35505211786 SUCCESS"
+    build: "35505211781 FAILURE (.NET build and Core.Api container); EF migration integrity, Compose and Web passed"
+    gate: "Live ERP/Data lease owns fix; retain stack on #60 and require focused cross-company/inactive-membership/missing-auth regression coverage."
+  pr_64:
+    head: 4c750ce92234ae06370e8f9910e66c63d315b9c4
+    gate: "Implementation live; no exact-head workflow observed yet. Require component tests plus Web test/type-check/build and authoritative #60 transport reconciliation before release readiness."
+next_action: "Do not merge #55 on CI alone; independently review the next Runtime checkpoint proving persistence-before-settlement. Review #60 immediately when remaining acceptance lands; then sequence #63 after parent merge. Preserve live specialist ownership for #63/#64."
