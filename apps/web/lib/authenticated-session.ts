@@ -24,19 +24,24 @@ export type SessionBootstrapTransport = (request: {
   headers: Readonly<Record<string, string>>;
 }) => Promise<SessionBootstrapResult>;
 
-const hasText = (value: string) => value.trim().length > 0;
+const hasText = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
 
 function isValidMembership(
   membership: CompanyMembershipView,
   selectedCompanyId: string,
 ): boolean {
   return (
+    membership !== null &&
+    typeof membership === "object" &&
     hasText(membership.tenantId) &&
     hasText(membership.companyId) &&
     membership.companyId === selectedCompanyId &&
     hasText(membership.companyName) &&
     hasText(membership.userId) &&
-    hasText(membership.userName)
+    hasText(membership.userName) &&
+    Array.isArray(membership.roles) &&
+    membership.roles.every(hasText)
   );
 }
 
