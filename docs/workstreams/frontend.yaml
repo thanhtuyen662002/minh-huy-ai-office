@@ -4,11 +4,11 @@ status: active
 current_issue: 59
 current_pr: 61
 current_branch: frontend/59-datasource-registry-shell
-head: 7f1b778ec291fc5e02ef550dfa0eaa02cff6940a
+head: f2925753433059c6da40d856dae13aad921e503a
 state: implementation
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T11:18:00+07:00"
-last_checkpoint_at: "2026-09-20T11:18:00+07:00"
+lease_heartbeat_at: "2026-09-20T12:18:00+07:00"
+last_checkpoint_at: "2026-09-20T12:18:00+07:00"
 preferred_next_issue: 22
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #61 exact-head CI at cd4fa3f failed only in Web tests; Governance and every non-web Build job passed. Commit 7f1b778 hardens the remaining registry-shell assertion around the semantic datasource heading and adds explicit secret-redaction presentation coverage. Verify exact-head web:test/type-check/production build and repository CI, then complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
+next_action: "PR #61 CI at 3bc5047 failed only in Web tests because Testing Library exact text matching could not match the combined user/role paragraph; Governance and all non-web Build jobs passed. Commit f292575 scopes the assertion to the active-company region and uses a resilient semantic matcher. Verify exact-head web:test/type-check/production build and repository CI, then complete accessible create/edit/explicit secret-rotation interaction coverage. Keep stored secret values/references hidden and do not invent live auth/API endpoints; reconcile live wiring only after #58 and residual #18 authenticated API contract are authoritative."
