@@ -1,5 +1,7 @@
 using Xunit;
+
 namespace MinhHuy.AIOffice.Shared.Contracts.Tests;
+
 public sealed class TaskExecutionTransitionsTests
 {
     [Theory]
@@ -12,6 +14,7 @@ public sealed class TaskExecutionTransitionsTests
     [InlineData(TaskExecutionStatus.PermissionRequired, TaskExecutionStatus.Running)]
     [InlineData(TaskExecutionStatus.Blocked, TaskExecutionStatus.Running)]
     public void CanTransition_AllowsResumableRuntimeStates(TaskExecutionStatus current, TaskExecutionStatus next) => Assert.True(TaskExecutionTransitions.CanTransition(current, next));
+
     [Theory]
     [InlineData(TaskExecutionStatus.Completed, TaskExecutionStatus.Running)]
     [InlineData(TaskExecutionStatus.Failed, TaskExecutionStatus.Running)]
