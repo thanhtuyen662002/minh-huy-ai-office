@@ -4,10 +4,10 @@ status: waiting_ci
 current_issue: 58
 current_pr: 60
 current_branch: backend/58-trusted-http-auth
-head: 91a79826160a603bee2e901374d1c4a88dcbd802
+head: d6c7f6d25954fdfab10d1b9b9000c759ce8db57b
 lease_owner: backend
-lease_heartbeat_at: "2026-09-20T19:08:00+07:00"
-last_checkpoint_at: "2026-09-20T19:08:00+07:00"
+lease_heartbeat_at: "2026-09-20T21:00:00+07:00"
+last_checkpoint_at: "2026-09-20T21:00:00+07:00"
 last_completed_issue: 17
 last_merged_pr: 47
 last_merge_commit: 084e90170907ade8854270f3c24d446fb458cef9
@@ -20,13 +20,13 @@ scope:
   - platform-persistence
 verification:
   issue_17_implementation_head: f769be3916c301aad08e1dc720550c3e4b2e3ccb
-  governance_run: 35506760201
-  build_run: 35506760252
-  result: "Prior exact-head f0360d8 Governance and Build passed. New checkpoint 91a7982 adds fail-closed protected context endpoint plus deterministic Core.Api test-auth integration coverage; exact-head CI pending."
+  governance_run: 35512113609
+  build_run: 35512113594
+  result: "Exact-head d6c7f6d Governance passed. Build substantive jobs all passed, including .NET format/build/tests (integration acceptance), EF migration integrity, Web, Compose and deployment/container validation; Required quality gates alone failed before executing steps, indicating an aggregate/runner-level failure rather than a code/test failure. This durable-state checkpoint retriggers exact-head CI."
 known_risks:
   - "Caller-controlled identity headers must never become trusted TenantId, CompanyId, or UserId identity."
   - "JWT authority/audience configuration must fail closed for protected API surfaces; production authentication must never fall back to caller-controlled identity headers."
   - "Authenticated provider/subject plus untrusted company selector must resolve user, active membership, active company, and roles inside one database query before AuthorizationContext exists."
   - "Issue #58 must remain schema-neutral while Runtime owns the active shared EF model/snapshot chain."
 blocked_by: []
-next_action: "Verify exact-head CI for the Core.Api integration checkpoint. Fix any same-branch compile/test failure immediately; when all #58 acceptance and exact-head gates are green, refresh HANDOFF and mark PR #60 Ready for Review for Lead merge."
+next_action: "Verify CI retriggered by this durable-state checkpoint. If Governance and Build are green, refresh PR #60 HANDOFF to exact HEAD and mark Ready for Review immediately; if Required quality gates alone fails again with zero steps while all dependencies pass, inspect workflow aggregation as a CI infrastructure blocker without weakening #58 acceptance."
