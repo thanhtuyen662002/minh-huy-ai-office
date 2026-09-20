@@ -89,7 +89,7 @@ dataSources.MapPost("/", async (IRequestAuthorizationContextAccessor accessor, D
     var context = AuthorizedContext(accessor);
     if (context is null) return (IResult)Results.Forbid();
     var created = await registry.CreateAsync(context, request, cancellationToken);
-    return (IResult)Results.Created($"/api/data-sources/{created.DataSourceId}", created);
+    return (IResult)Results.Created($"/api/data-sources/{created.Id}", created);
 });
 dataSources.MapPut("/{dataSourceId:guid}", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
 {
@@ -106,7 +106,7 @@ dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (Guid dataSour
     var context = AuthorizedContext(accessor);
     if (context is null) return (IResult)Results.Forbid();
     var result = await tester.TestAsync(context, dataSourceId, cancellationToken);
-    if (result.Status == DataSourceConnectionTestStatus.NotAuthorized) return (IResult)Results.Forbid();
+    if (result.Code == DataSourceConnectionTestCodes.NotAuthorized) return (IResult)Results.Forbid();
     return (IResult)Results.Ok(result);
 });
 
