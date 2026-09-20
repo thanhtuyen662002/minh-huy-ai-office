@@ -16,7 +16,9 @@ describe("company-scoped product shell", () => {
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" })).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Nguồn dữ liệu · Minh Huy" })).toBeTruthy();
     expect(screen.getAllByText("Nhân viên nội bộ").length).toBeGreaterThan(0);
-    expect(screen.getByText("company.erp.production")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 3, name: "company.erp.production" })).toBeTruthy();
+    expect(screen.getAllByText(/Thông tin bí mật: đã cấu hình · giá trị được ẩn/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/password|connection string|secret reference/i)).toBeNull();
   });
 
   it("fails closed when tenant/company/user scope is incomplete", () => {
