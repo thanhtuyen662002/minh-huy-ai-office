@@ -8,14 +8,15 @@ afterEach(() => {
 });
 
 describe("company-scoped product shell", () => {
-  it("renders an explicit active-company context", () => {
+  it("renders the data source registry inside an explicit active-company context", () => {
     render(<Home />);
 
     expect(screen.getByRole("main")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1, name: "AI Office" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" })).toBeTruthy();
-    expect(screen.getByText("Không gian làm việc của Minh Huy")).toBeTruthy();
-    expect(screen.getByText("demo-user")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Nguồn dữ liệu · Minh Huy" })).toBeTruthy();
+    expect(screen.getByText("Nhân viên nội bộ")).toBeTruthy();
+    expect(screen.getByText("company.erp.production")).toBeTruthy();
   });
 
   it("fails closed when tenant/company/user scope is incomplete", () => {
@@ -34,6 +35,6 @@ describe("company-scoped product shell", () => {
 
     expect(screen.getByRole("heading", { name: "Chưa có phạm vi làm việc" })).toBeTruthy();
     expect(screen.getByText(/sẽ không hiển thị dữ liệu công ty/i)).toBeTruthy();
-    expect(screen.queryByText("Không gian làm việc của Minh Huy")).toBeNull();
+    expect(screen.queryByRole("heading", { name: /Nguồn dữ liệu/ })).toBeNull();
   });
 });
