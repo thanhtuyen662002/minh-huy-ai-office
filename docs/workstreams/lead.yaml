@@ -3,11 +3,11 @@ role: "Lead / Integrator + QA / Security / Release"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: 2c5a390d7206415cec79257aee1bc23e3a705b10
+head: 03fc262a4f55d3d05780916318061692e2180ad1
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T18:51:47+07:00"
-last_checkpoint_at: "2026-09-20T18:51:47+07:00"
+lease_heartbeat_at: "2026-09-20T21:50:50+07:00"
+last_checkpoint_at: "2026-09-20T21:50:50+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -26,27 +26,27 @@ scope:
 integration:
   current_target:
     pr: 55
-    current_head: 6591874240bff1b1a7632e952577d46a7a48114c
+    current_head: 15d97be4f1da58b45e814ecfeb48f140da9f0b0b
     owner: runtime-ai
     state: in_progress
-    required_action: "Governance green; exact-head Build fails in .NET build. Runtime owns fix and must continue persistence-before-settlement handler acceptance without pausing on docs/CI-only checkpoints."
+    required_action: "Latest Build/Governance are zero-step runner failures, not code evidence. Runtime continues safe DI/host registration after retry-publish/redelivery recovery landed; Lead waits for executable exact-head gates."
   parallel_backend:
     issue: 58
     pr: 60
-    head: f0360d83ade1273f7a94b1a7769ef8c673604975
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
     owner: backend
-    state: in_progress
-    required_action: "Exact-head Governance + Build green; finish Core.Api test-auth fixture and protected endpoint/missing-auth-config fail-closed acceptance on SAME live lease."
+    state: waiting_ci
+    required_action: "Acceptance implementation is present and PR mergeable. Latest exact-head Build/Governance failed with runner_id=0 and zero steps; merge immediately after executable exact-head green CI."
   parallel_erp:
     issue: 18
     pr: 63
-    head: 0fb781c3ff2ae635c3775cdc5af961457a31b85d
-    state: waiting_ci
-    required_action: "Live ERP/Data lease fixes exact-head .NET/Core.Api Build failure, then completes focused endpoint security regressions on SAME PR stacked on #60."
+    head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
+    state: in_progress
+    required_action: "No exact-head workflow visible; continue endpoint security regressions on SAME stacked PR rather than idling."
   parallel_frontend:
     issue: 62
     pr: 64
-    head: 99d81b61ae612eeea37b13a5df23a611ceaf98d2
-    state: waiting_ci
-    required_action: "Keep loop active; verify Web CI and fix frontend-owned failures. Reconcile concrete transport only when #60 endpoint is authoritative."
-next_action: "Maintain all four lanes. Merge #60 immediately when acceptance-complete exact-head green; then reconcile/sequence #63. Activate #21 after #18/#19 authoritative and #22 after #20 authoritative."
+    head: ac80c335bc6aafa1ed251fa8ad1b6c4710caeeef
+    state: in_progress
+    required_action: "No exact-head workflow visible; keep loop active and continue frontend-owned adapter/accessibility hardening. Reconcile live transport after #60 merges."
+next_action: "Maintain all four lanes. Merge #60 immediately on executable exact-head green; then reconcile/sequence #63. Activate #21 after #18/#19 authoritative and #22 after #20 authoritative."
