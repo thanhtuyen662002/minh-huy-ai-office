@@ -4,11 +4,11 @@ status: ready
 current_issue: 20
 current_pr: 55
 current_branch: "runtime/20-worker-dispatch"
-head: "35f5fc07a236525be0c7abf67a6a3453831c9ab7"
+head: "63e6b4b2ad12a747488c5a4e04adc58916b5ed6e"
 state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-20T12:22:00Z"
-last_checkpoint_at: "2026-09-20T12:22:00Z"
+lease_heartbeat_at: "2026-09-20T13:20:00Z"
+last_checkpoint_at: "2026-09-20T13:20:00Z"
 stacked_on: "main @ d4e87f7fe49b280a0be600b308cc4a539d1ae161"
 scope:
   - task-engine
@@ -17,4 +17,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Persistence-backed delivery boundary is implemented: durable lease acquisition precedes execution; completion/checkpoint/dead-letter/retry dispatch state is saved before broker settlement; consumer publishes only the handler-provided durable retry envelope. Exact-head CI is running. Fix any same-branch compile/test failure, add persistence-focused handler tests including retry-publish recovery, then register the consumer only after those gates are green."
+next_action: "Persistence settlement tests now cover durable completion/checkpoint, retry dispatch/idempotency/checkpoint continuity, and permanent dead-letter state before HandleAsync returns to broker settlement. Verify/fix exact-head CI on the same branch, then add retry-publish failure/redelivery recovery coverage and register RabbitMQ consumer only after durable recovery behavior is proven safe."
