@@ -33,6 +33,11 @@ export function AuthenticatedSessionShell({ state, companies = [], onSelectCompa
   const hasAuthoritativeOption = companies.some((company) => company.companyId === state.membership.companyId);
   const hasAlternativeScope = companies.some((company) => company.companyId !== state.membership.companyId);
   const canSwitchCompany = hasAuthoritativeOption && hasAlternativeScope && onSelectCompany;
+  const requestCompanySwitch = (companyId: string) => {
+    if (companyId === state.membership.companyId) return;
+    if (!companies.some((company) => company.companyId === companyId)) return;
+    onSelectCompany?.(companyId);
+  };
 
-  return <><CompanyShell membership={state.membership} />{canSwitchCompany ? <aside aria-label="Đổi công ty" className="fixed bottom-4 right-4 rounded-xl border border-black/10 bg-white p-3 shadow-sm dark:border-white/15 dark:bg-black"><label className="text-xs font-medium" htmlFor="company-selector">Đổi công ty</label><select id="company-selector" className="ml-2 rounded-lg border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20" value={state.membership.companyId} onChange={(event) => onSelectCompany(event.target.value)}>{companies.map((company) => <option key={company.companyId} value={company.companyId}>{company.companyName}</option>)}</select><p className="mt-1 max-w-xs text-xs opacity-60">Lựa chọn này chỉ yêu cầu đổi phạm vi; máy chủ vẫn xác thực quyền truy cập.</p></aside> : null}</>;
+  return <><CompanyShell membership={state.membership} />{canSwitchCompany ? <aside aria-label="Đổi công ty" className="fixed bottom-4 right-4 rounded-xl border border-black/10 bg-white p-3 shadow-sm dark:border-white/15 dark:bg-black"><label className="text-xs font-medium" htmlFor="company-selector">Đổi công ty</label><select id="company-selector" className="ml-2 rounded-lg border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20" value={state.membership.companyId} onChange={(event) => requestCompanySwitch(event.target.value)}>{companies.map((company) => <option key={company.companyId} value={company.companyId}>{company.companyName}</option>)}</select><p className="mt-1 max-w-xs text-xs opacity-60">Lựa chọn này chỉ yêu cầu đổi phạm vi; máy chủ vẫn xác thực quyền truy cập.</p></aside> : null}</>;
 }
