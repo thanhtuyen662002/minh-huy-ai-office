@@ -66,6 +66,22 @@ describe("fetchAuthoritativeAuthContext hostile runtime payloads", () => {
     expect(iterator).not.toHaveBeenCalled();
   });
 
+  it("returns an immutable authoritative snapshot detached from the transport payload", async () => {
+    const roles = ["member"];
+    const payload = { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles };
+    const fetcher = vi.fn<typeof fetch>(async () => ({ ok: true, status: 200, json: async () => payload }) as Response);
+
+    const result = await fetchAuthoritativeAuthContext("company-a", fetcher);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected authoritative context");
+
+    expect(Object.isFrozen(result.context)).toBe(true);
+    expect(Object.isFrozen(result.context.roles)).toBe(true);
+    payload.companyId = "company-b";
+    roles[0] = "admin";
+    expect(result.context).toEqual({ tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member"] });
+  });
+
   it("fails closed when authoritative role inspection throws", async () => {
     const hostileRoles = new Proxy(["member"], {
       getOwnPropertyDescriptor(target, property) {
