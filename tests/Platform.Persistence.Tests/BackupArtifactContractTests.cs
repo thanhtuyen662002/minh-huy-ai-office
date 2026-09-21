@@ -71,6 +71,52 @@ public sealed class BackupArtifactContractTests
         Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, "company01", "AIOffice_Company01", Hash));
     }
 
+    [Fact]
+    public void VerifyRecoveryDrill_AcceptsFreshOnlineRestoreForExpectedCompany()
+    {
+        var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
+        var evidence = new RecoveryDrillEvidence(CreateDescriptor(), completedAt, Hash, DatabaseOnline: true);
+
+        Assert.True(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence,
+            "company01",
+            "AIOffice_Company01",
+            completedAt.AddHours(2),
+            TimeSpan.FromHours(24)));
+    }
+
+    [Fact]
+    public void VerifyRecoveryDrill_RejectsStaleOfflineFutureOrCrossCompanyEvidence()
+    {
+        var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
+        var evidence = new RecoveryDrillEvidence(CreateDescriptor(), completedAt, Hash, DatabaseOnline: true);
+
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence,
+            "company01",
+            "AIOffice_Company01",
+            completedAt.AddHours(25),
+            TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence with { DatabaseOnline = false },
+            "company01",
+            "AIOffice_Company01",
+            completedAt.AddHours(1),
+            TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence with { CompletedAtUtc = completedAt.AddMinutes(1) },
+            "company01",
+            "AIOffice_Company01",
+            completedAt,
+            TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence,
+            "company02",
+            "AIOffice_Company01",
+            completedAt.AddHours(1),
+            TimeSpan.FromHours(24)));
+    }
+
     [Theory]
     [InlineData("AIOffice;DROP DATABASE master")]
     [InlineData("../AIOffice")]
