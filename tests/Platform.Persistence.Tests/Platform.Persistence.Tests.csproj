@@ -16,9 +16,11 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Agent.Worker\Agent.Worker.csproj" />
+    <ProjectReference Include="..\..\src\Agent.Worker\Agent.Worker.csproj">
+      <Aliases>RuntimeWorker</Aliases>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\Core.Api\Core.Api.csproj">
-      <Aliases>CoreApi</Aliases>
+      <Aliases>global,CoreApi</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\src\Platform.Configuration\Platform.Configuration.csproj" />
     <ProjectReference Include="..\..\src\Platform.Persistence\Platform.Persistence.csproj" />
