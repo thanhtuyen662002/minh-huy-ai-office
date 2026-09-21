@@ -43,10 +43,15 @@ const normalizeCompanyOption = (company: CompanyOption): CompanyOption | null =>
 
 const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
   try {
+    if (!Array.isArray(companies)) return [];
+    const length = getOwnDataProperty(companies, "length");
+    if (!Number.isSafeInteger(length) || (length as number) < 0) return [];
     const normalized: CompanyOption[] = [];
     const seen = new Set<string>();
-    for (const company of companies) {
-      const option = normalizeCompanyOption(company);
+    for (let index = 0; index < (length as number); index += 1) {
+      const company = getOwnDataProperty(companies, String(index));
+      if (company === undefined) return [];
+      const option = normalizeCompanyOption(company as CompanyOption);
       if (!option || seen.has(option.companyId)) return [];
       seen.add(option.companyId);
       normalized.push(option);
