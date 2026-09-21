@@ -1,4 +1,5 @@
 using MinhHuyAiOffice.Shared.Contracts;
+using Xunit;
 
 namespace MinhHuyAiOffice.Shared.Contracts.Tests;
 
