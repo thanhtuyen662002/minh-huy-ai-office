@@ -8,8 +8,15 @@ public static class TaskStatusRealtime
 {
     public const string HubPath = "/hubs/task-status";
 
-    public static string CompanyGroup(Guid tenantId, Guid companyId) =>
-        $"tenant:{tenantId:D}:company:{companyId:D}";
+    public static string CompanyGroup(Guid tenantId, Guid companyId)
+    {
+        if (tenantId == Guid.Empty || companyId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant and company identifiers are required for realtime group membership.");
+        }
+
+        return $"tenant:{tenantId:D}:company:{companyId:D}";
+    }
 }
 
 public sealed record TaskStatusChanged(
