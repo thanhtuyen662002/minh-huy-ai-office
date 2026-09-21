@@ -26,11 +26,13 @@ const hasCanonicalCompanyOption = (company: CompanyOption) =>
   company.companyName.trim() === company.companyName;
 
 const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
-  const counts = new Map<string, number>();
+  if (!companies.every(hasCanonicalCompanyOption)) return [];
+  const seen = new Set<string>();
   for (const company of companies) {
-    if (hasCanonicalCompanyOption(company)) counts.set(company.companyId, (counts.get(company.companyId) ?? 0) + 1);
+    if (seen.has(company.companyId)) return [];
+    seen.add(company.companyId);
   }
-  return companies.filter((company) => hasCanonicalCompanyOption(company) && counts.get(company.companyId) === 1);
+  return companies;
 };
 
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
