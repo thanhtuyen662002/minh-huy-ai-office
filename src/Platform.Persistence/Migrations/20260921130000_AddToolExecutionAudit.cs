@@ -1,9 +1,12 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Migrations;
 
+[DbContext(typeof(PlatformDbContext))]
+[Migration("20260921130000_AddToolExecutionAudit")]
 public partial class AddToolExecutionAudit : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
