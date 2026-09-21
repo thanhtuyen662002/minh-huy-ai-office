@@ -2,6 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 import { fetchAuthoritativeAuthContext } from "./auth-context-http";
 
 describe("fetchAuthoritativeAuthContext hostile runtime payloads", () => {
+  it("fails closed when authoritative response inspection throws", async () => {
+    const hostileResponse = new Proxy({}, {
+      get(_target, property) {
+        if (property === "status") throw new Error("hostile auth response");
+        return undefined;
+      },
+    }) as Response;
+    const fetcher = vi.fn<typeof fetch>(async () => hostileResponse);
+
+    await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({
+      ok: false,
+      reason: "invalid-response",
+    });
+  });
+
   it("fails closed when authoritative payload inspection throws", async () => {
     const hostilePayload = new Proxy({}, {
       getOwnPropertyDescriptor() {
