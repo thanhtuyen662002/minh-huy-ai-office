@@ -8,6 +8,12 @@ public sealed record BackupArtifactDescriptor(
     string Sha256,
     string EncryptionKeyReference);
 
+public sealed record RecoveryDrillEvidence(
+    BackupArtifactDescriptor Artifact,
+    DateTimeOffset CompletedAtUtc,
+    string RestoredSha256,
+    bool DatabaseOnline);
+
 public static class BackupArtifactContract
 {
     public static BackupArtifactDescriptor Create(
@@ -49,6 +55,33 @@ public static class BackupArtifactContract
             && string.Equals(descriptor.DatabaseName, expectedDatabase, StringComparison.Ordinal)
             && string.Equals(descriptor.Sha256, observedHash, StringComparison.Ordinal)
             && descriptor == canonical;
+    }
+
+    public static bool VerifyRecoveryDrill(
+        RecoveryDrillEvidence evidence,
+        string expectedCompanyId,
+        string expectedDatabaseName,
+        DateTimeOffset now,
+        TimeSpan maximumAge)
+    {
+        ArgumentNullException.ThrowIfNull(evidence);
+        if (maximumAge <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumAge), "Recovery drill maximum age must be positive.");
+        }
+
+        var completedAtUtc = evidence.CompletedAtUtc.ToUniversalTime();
+        var nowUtc = now.ToUniversalTime();
+        if (!evidence.DatabaseOnline || completedAtUtc > nowUtc || nowUtc - completedAtUtc > maximumAge)
+        {
+            return false;
+        }
+
+        return VerifyForRestore(
+            evidence.Artifact,
+            expectedCompanyId,
+            expectedDatabaseName,
+            evidence.RestoredSha256);
     }
 
     private static string RequireSafeToken(string value, string parameterName)
