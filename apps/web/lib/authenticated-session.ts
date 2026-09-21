@@ -33,11 +33,12 @@ function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResu
 
 /** Browser state may choose a company, but never supplies TenantId/UserId authority. */
 export async function bootstrapAuthenticatedSession(selectedCompanyId: string | null | undefined, transport: SessionBootstrapTransport): Promise<AuthenticatedSessionState> {
-  if (!selectedCompanyId || !hasText(selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
-  const normalizedCompanyId = selectedCompanyId.trim();
+  // Selector input is browser-controlled. Reject ambiguous/non-canonical values rather than
+  // silently rewriting them before they cross the typed transport boundary.
+  if (!hasCanonicalText(selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
   let result: unknown;
   try {
-    result = await transport({ selectedCompanyId: normalizedCompanyId, headers: { [COMPANY_SELECTOR_HEADER]: normalizedCompanyId } });
+    result = await transport({ selectedCompanyId, headers: { [COMPANY_SELECTOR_HEADER]: selectedCompanyId } });
   } catch {
     return { status: "forbidden", reason: "invalid-response" };
   }
@@ -46,6 +47,6 @@ export async function bootstrapAuthenticatedSession(selectedCompanyId: string | 
     if (result.reason === "unauthenticated") return { status: "unauthenticated" };
     return { status: "forbidden", reason: result.reason === "inactive-membership" ? "inactive-membership" : result.reason === "forbidden" ? "forbidden" : "invalid-response" };
   }
-  if (!isValidMembership(result.membership, normalizedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
+  if (!isValidMembership(result.membership, selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
   return { status: "ready", membership: result.membership };
 }
