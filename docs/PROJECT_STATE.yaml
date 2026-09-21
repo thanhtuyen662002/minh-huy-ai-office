@@ -6,41 +6,41 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: b2f5dc675bffb00ec144b3d5c5197a41d414afc4
-last_verified_commit: d30d81ac1feeb5ec6f7646eff54c056f77217912
+current_target_head: 1d3797af2f8abde39900414d96123342d1543618
+last_verified_commit: ee66f870423d5ff33c3f522b289aebfb4f9c4aa6
 
 critical_paths:
   backend:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: b2f5dc675bffb00ec144b3d5c5197a41d414afc4
+    head: 1d3797af2f8abde39900414d96123342d1543618
     state: in_progress
-    next: "Close exact-head CI after the formatting fix, then implement the smallest architecture-consistent bridge from authoritative durable worker transitions to Core.Api SignalR publication. Do not introduce reverse process/project dependencies or race shared EF ownership."
+    next: "Build 35641999712 is terminal red on exact HEAD: xUnit2014 in TaskStatusRealtimeIsolationTests requires async exception assertions. Backend has been immediately re-entered; fix SAME PR, then continue the architecture-consistent durable-transition-to-SignalR publication bridge without reverse project dependencies."
 
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 2e833d2566acc2e71f37e0e67401985eb5692fb0
+    head: 1aee4d2ac6e9910b951d27818cae3c7ac98c7c42
     state: in_progress
-    next: "Continue executable auth/session acceptance on SAME PR; exact-head workflow emission remains absent/intermittent. Do not fabricate company/user presentation identity. Reconcile against current main and move to #22 frontend realtime UI immediately after #62 closes."
+    next: "PR is currently non-mergeable against main and HANDOFF remains stale at dcf20dcb. Frontend has been immediately re-entered: reconcile SAME PR against current main, preserve server-derived authority, continue executable #62 acceptance, and do not fabricate company/user presentation identity."
 
   runtime_ai:
     issue: 26
     pr: 77
     branch: runtime/26-usage-cost-ledger
-    head: 0e31049f32fa9d7624ca0f605c4b2cfb783c3d1e
+    head: c08eb9f252ce030f5c708787711b3054f1b87087
     state: in_progress
-    next: "Build 35637655247 is terminal red on exact HEAD with executable runners: EF persistence build, .NET build, and Core.Api container build fail. Runtime has been immediately re-entered; inspect exact failed logs, fix SAME PR, complete deterministic ledger tests/acceptance, and own exact-head CI closure."
+    next: "Exact-head Governance 35644368656 and Build 35644368421 are green, but PR body/HANDOFF is stale and still says acceptance work remains. Runtime has been immediately re-entered to reconcile HANDOFF/source acceptance; mark ready_for_review if #26 is complete, otherwise continue meaningful SAME-PR work."
 
   erp_data:
     issue: 27
     pr: 78
     branch: erp/27-eval-replay-harness
-    head: 596b4b5fa43e6aab0d224649a47806e92525bc55
-    state: waiting_ci
-    next: "ERP/Data has claimed #27 deterministic ERP eval/replay harness. Resolve exact-head CI for the actual HEAD and continue remaining acceptance on SAME PR; preserve explicit tenant/company scope and content-hash evidence with no secret references."
+    head: 9d574addaf7febc609940f671d6fe93c374d369c
+    state: in_progress
+    next: "Governance 35645430253 is green; Build 35645430245 is terminal red with one actionable test failure: ErpEvaluationReplayTests.Deserialize_FailsClosedWhenDatasetAuthorityIsTampered expected InvalidOperationException but none was thrown. ERP/Data has been immediately re-entered to fix SAME PR and close exact-head CI."
 
 recent_authoritative_merges:
   - "PR #76 / issue #25 Context Engine and durable task memory manifest: MERGED at a94ab116c4f362b3b0ace122c9993813efdd95ef"
@@ -57,16 +57,16 @@ dependency_chain:
   - "PR #73 / issue #22 backend SignalR integration is active; Runtime event contract/projection prerequisites are merged."
   - "PR #64 / issue #62 frontend auth-session lane remains active; after completion Frontend advances to #22 realtime UI."
   - "Issue #25 Context Engine is authoritative after merged PR #76."
-  - "Runtime PR #77 / issue #26 Usage/Cost Ledger is active."
+  - "Runtime PR #77 / issue #26 Usage/Cost Ledger is active with exact-head green CI pending acceptance/HANDOFF reconciliation."
   - "ERP/Data PR #78 / issue #27 deterministic ERP eval/replay harness is active and non-competing with Runtime #26."
 
-next_action: "Keep #73, #64, #77 and #78 moving in parallel. Runtime fixes exact-head actionable build failures immediately; Backend closes CI then continues #22 publication bridge; Frontend continues fail-closed #62 acceptance despite missing workflow emission; ERP/Data closes #78 exact-head CI and continues #27 acceptance. Lead/Watchdog refreshes this file whenever live ownership or HEAD changes."
+next_action: "Keep #73, #64, #77 and #78 moving in parallel. Backend fixes actionable xUnit2014 then continues #22 bridge; Frontend reconciles non-mergeable #64 against current main and continues fail-closed #62; Runtime reconciles green exact-head #77 acceptance/HANDOFF and readies or continues; ERP/Data fixes the actionable replay tamper test on #78. Lead refreshes this file whenever live ownership or HEAD changes."
 
 blocked_by:
-  - "Frontend #64 exact-head workflow emission remains absent/intermittent and presentation metadata is not authoritative; continue acceptance without inventing identity."
-  - "Runtime #77 exact-head Build 35637655247 is red with executable runner failures and requires same-PR diagnostics/fix."
-  - "Backend #73 acceptance still requires the durable-transition-to-SignalR publication bridge after exact-head CI closure."
-  - "ERP/Data #78 exact-head CI closure remains active; waiting_ci retains the lease."
+  - "Backend #73 exact-head Build 35641999712 is red with actionable xUnit2014 async assertion diagnostics; same-PR fix required."
+  - "Frontend #64 is currently non-mergeable against current main and HANDOFF lags actual HEAD; same-PR reconciliation required without inventing presentation identity."
+  - "Runtime #77 exact-head gates are green but acceptance/HANDOFF must be reconciled before merge readiness."
+  - "ERP/Data #78 Build 35645430245 is red because replay dataset-authority tamper is not rejected as the test requires."
 
 autonomy:
   routine_engineering: autonomous
