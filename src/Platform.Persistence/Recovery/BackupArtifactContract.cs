@@ -22,6 +22,24 @@ public sealed record RecoveryReferenceSet(
     string ConfigurationReference,
     string SecretReference);
 
+public enum RecoveryFailureScenario
+{
+    WorkerUnavailable,
+    ServerUnavailable,
+    ProviderUnavailable,
+    QueueUnavailable,
+    DatabaseUnavailable
+}
+
+public sealed record RecoveryFailureDrillEvidence(
+    string CompanyId,
+    RecoveryFailureScenario Scenario,
+    DateTimeOffset StartedAtUtc,
+    DateTimeOffset RecoveredAtUtc,
+    bool WorkloadRecovered,
+    bool DataIntegrityVerified,
+    bool TenantIsolationVerified);
+
 public static class BackupArtifactContract
 {
     public static BackupArtifactDescriptor Create(
@@ -119,6 +137,31 @@ public static class BackupArtifactContract
             expectedCompanyId,
             expectedDatabaseName,
             evidence.RestoredSha256);
+    }
+
+    public static bool VerifyFailureDrill(
+        RecoveryFailureDrillEvidence evidence,
+        string expectedCompanyId,
+        TimeSpan maximumRecoveryTime)
+    {
+        ArgumentNullException.ThrowIfNull(evidence);
+        if (maximumRecoveryTime <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumRecoveryTime), "Maximum recovery time must be positive.");
+        }
+
+        var expectedCompany = RequireSafeToken(expectedCompanyId, nameof(expectedCompanyId));
+        var evidenceCompany = RequireSafeToken(evidence.CompanyId, nameof(evidence.CompanyId));
+        var startedAtUtc = evidence.StartedAtUtc.ToUniversalTime();
+        var recoveredAtUtc = evidence.RecoveredAtUtc.ToUniversalTime();
+
+        return string.Equals(evidenceCompany, expectedCompany, StringComparison.Ordinal)
+            && Enum.IsDefined(evidence.Scenario)
+            && recoveredAtUtc >= startedAtUtc
+            && recoveredAtUtc - startedAtUtc <= maximumRecoveryTime
+            && evidence.WorkloadRecovered
+            && evidence.DataIntegrityVerified
+            && evidence.TenantIsolationVerified;
     }
 
     private static string RequireSafeToken(string value, string parameterName)
