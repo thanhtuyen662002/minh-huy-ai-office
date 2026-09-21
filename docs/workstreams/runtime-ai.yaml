@@ -1,20 +1,21 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: ready
-current_issue: 20
-current_pr: 55
-current_branch: "runtime/20-worker-dispatch"
-head: "10183d5e8061a06aec6a8fa69124bc881c6950a0"
-state: ready_for_review
+status: active
+current_issue: 22
+current_pr: 70
+current_branch: "runtime/22-task-worker-event-contract"
+head: "4ff7a2d77e53b41a1e95a838cb9ba11695e22556"
+state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T04:40:38Z"
-last_checkpoint_at: "2026-09-21T04:40:38Z"
-stacked_on: "main @ 76735987647b34300a2ea6c88e8799431bf2d520"
+lease_heartbeat_at: "2026-09-21T06:27:00Z"
+last_checkpoint_at: "2026-09-21T06:27:00Z"
+stacked_on: "main @ f9ecb316dc557ca1cf476fb09e80d93d102a3837"
 scope:
   - task-engine
   - rabbitmq-workers
   - leases-retries-idempotency
+  - realtime-event-contracts
   - ai-gateway
   - model-router
   - context-engine
-next_action: "Issue #20 acceptance is complete at implementation HEAD 10183d5e8061a06aec6a8fa69124bc881c6950a0: durable publisher-confirm failure/redelivery recovery is covered without duplicate executor side effects; RabbitMQ consumer/DI host registration is fail-closed behind an explicit authoritative executor and SQL Server configuration; persistence remains ahead of broker settlement. Exact-head Governance run 35560784467 and Build run 35560784455 both completed successfully. Lead should review/reconcile/merge PR #55; after #20 closes, Runtime should publish/solidify the authoritative task/worker event contract needed by #22 and move to the next Runtime priority."
+next_action: "PR #70 is the sole Runtime lease supporting #22. Initial authoritative TaskWorkerRealtimeEvent contract is versioned, sequenced, tenant/company/task scoped, fail-closed by event kind, and covered by deterministic Shared.Contracts tests. Frontend SignalR/dashboard implementation remains Frontend-owned. No EF/migration changes were made, avoiding Backend PR #66 migration ownership. Close exact-head Governance/Build CI for the current code checkpoint; fix actionable RED on SAME PR. If green, solidify any remaining runtime producer/integration boundary needed for #22 without duplicating frontend work, then hand off the shared contract."
