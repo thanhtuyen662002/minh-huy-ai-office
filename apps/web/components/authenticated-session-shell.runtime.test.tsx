@@ -35,4 +35,25 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
+
+  it("rejects inherited company metadata instead of treating prototype values as offered scopes", () => {
+    const onSelectCompany = vi.fn();
+    const inherited = Object.create({ companyId: "branch-2", companyName: "Spoofed branch" });
+    const inheritedRuntimeOptions = [
+      { companyId: "internal", companyName: "Minh Huy" },
+      inherited,
+    ] as readonly { companyId: string; companyName: string }[];
+
+    render(
+      <AuthenticatedSessionShell
+        state={{ status: "ready", membership }}
+        companies={inheritedRuntimeOptions}
+        onSelectCompany={onSelectCompany}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
 });
