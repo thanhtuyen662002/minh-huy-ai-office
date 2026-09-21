@@ -1,3 +1,4 @@
+using Platform.Persistence;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
@@ -9,9 +10,7 @@ public sealed class ToolExecutionAuditServiceTests
     {
         var sink = new RecordingSink();
         var service = new ToolExecutionAuditService(sink);
-        var request = new ToolAuthorizationRequest(
-            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
-            "ledger", "post", ToolRiskLevel.High);
+        var request = new ToolAuthorizationRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "ledger", "post", ToolRiskLevel.High);
         var decision = ToolAuthorizationDecision.Deny("risk_exceeds_permission");
         var occurredAt = DateTimeOffset.Parse("2026-09-21T03:30:00Z");
 
@@ -37,20 +36,15 @@ public sealed class ToolExecutionAuditServiceTests
     {
         var sink = new RecordingSink();
         var service = new ToolExecutionAuditService(sink);
-        var request = new ToolAuthorizationRequest(
-            Guid.Empty, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
-            "ledger", "post", ToolRiskLevel.Low);
+        var request = new ToolAuthorizationRequest(Guid.Empty, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "ledger", "post", ToolRiskLevel.Low);
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.RecordAsync(request, ToolAuthorizationDecision.Deny("missing_authority"), DateTimeOffset.UtcNow));
-
+        await Assert.ThrowsAsync<ArgumentException>(() => service.RecordAsync(request, ToolAuthorizationDecision.Deny("missing_authority"), DateTimeOffset.UtcNow));
         Assert.Empty(sink.Entries);
     }
 
     private sealed class RecordingSink : IToolExecutionAuditSink
     {
         public List<ToolExecutionAuditEntry> Entries { get; } = [];
-
         public Task AppendAsync(ToolExecutionAuditEntry entry, CancellationToken cancellationToken = default)
         {
             Entries.Add(entry);
