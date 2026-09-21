@@ -6,41 +6,41 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: 98962e2a5974829d0380ae8e2b2e7ee8d0e8a0ae
-last_verified_commit: a871052bff124648d07195f0e8f85db82a0322c1
+current_target_head: b2f5dc675bffb00ec144b3d5c5197a41d414afc4
+last_verified_commit: d30d81ac1feeb5ec6f7646eff54c056f77217912
 
 critical_paths:
   backend:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: 98962e2a5974829d0380ae8e2b2e7ee8d0e8a0ae
+    head: b2f5dc675bffb00ec144b3d5c5197a41d414afc4
     state: in_progress
-    next: "Exact-head Governance/Build are green. Continue SAME PR with deterministic publisher identity acceptance and the smallest architecture-consistent bridge from authoritative durable worker transitions to Core.Api SignalR publication; do not introduce reverse project dependencies or race shared EF ownership."
+    next: "Close exact-head CI after the formatting fix, then implement the smallest architecture-consistent bridge from authoritative durable worker transitions to Core.Api SignalR publication. Do not introduce reverse process/project dependencies or race shared EF ownership."
 
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 78134e6d8f2485a530fcc8850830af2fbd2f8d0d
+    head: 2e833d2566acc2e71f37e0e67401985eb5692fb0
     state: in_progress
-    next: "Continue executable auth/session acceptance on SAME PR; exact-head workflow emission remains absent. Do not fabricate presentation identity. Reconcile mergeability against current main and, after #62 closes, move immediately to #22 frontend realtime UI."
+    next: "Continue executable auth/session acceptance on SAME PR; exact-head workflow emission remains absent/intermittent. Do not fabricate company/user presentation identity. Reconcile against current main and move to #22 frontend realtime UI immediately after #62 closes."
 
   runtime_ai:
     issue: 26
     pr: 77
     branch: runtime/26-usage-cost-ledger
-    head: 7b9de7a3b9043f0f7766f03e64dba79d072911b6
+    head: 0e31049f32fa9d7624ca0f605c4b2cfb783c3d1e
     state: in_progress
-    next: "Build 35631280739 is terminal red with actionable CS0246: AiCapability is unresolved in Shared.Contracts/AiUsageLedger.cs. Runtime has been immediately re-entered; fix SAME PR, add deterministic ledger tests, then own exact-head CI closure."
+    next: "Build 35637655247 is terminal red on exact HEAD with executable runners: EF persistence build, .NET build, and Core.Api container build fail. Runtime has been immediately re-entered; inspect exact failed logs, fix SAME PR, complete deterministic ledger tests/acceptance, and own exact-head CI closure."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: 02b780f81426820f5fa0c26ddc0bbe448d9f8a0e
-    state: idle
-    next: "No live ERP/Data PR. Claim the highest-priority unblocked ERP/Data roadmap issue without duplicating another lease; prefer a safe independent data/schema slice and keep migrations/tenant/secret boundaries intact."
+    issue: 27
+    pr: 78
+    branch: erp/27-eval-replay-harness
+    head: 596b4b5fa43e6aab0d224649a47806e92525bc55
+    state: waiting_ci
+    next: "ERP/Data has claimed #27 deterministic ERP eval/replay harness. Resolve exact-head CI for the actual HEAD and continue remaining acceptance on SAME PR; preserve explicit tenant/company scope and content-hash evidence with no secret references."
 
 recent_authoritative_merges:
   - "PR #76 / issue #25 Context Engine and durable task memory manifest: MERGED at a94ab116c4f362b3b0ace122c9993813efdd95ef"
@@ -57,15 +57,16 @@ dependency_chain:
   - "PR #73 / issue #22 backend SignalR integration is active; Runtime event contract/projection prerequisites are merged."
   - "PR #64 / issue #62 frontend auth-session lane remains active; after completion Frontend advances to #22 realtime UI."
   - "Issue #25 Context Engine is authoritative after merged PR #76."
-  - "Runtime PR #77 / issue #26 Usage/Cost Ledger is active; #27 Eval/Replay follows dependency readiness."
-  - "ERP/Data currently has no live PR and should claim the next safe unblocked data lane."
+  - "Runtime PR #77 / issue #26 Usage/Cost Ledger is active."
+  - "ERP/Data PR #78 / issue #27 deterministic ERP eval/replay harness is active and non-competing with Runtime #26."
 
-next_action: "Keep #73, #64 and #77 moving in parallel. Runtime fixes the actionable #77 compile failure immediately; Backend continues #73 acceptance despite green CI; Frontend reconciles #64 and continues fail-closed acceptance; ERP/Data claims its next safe executable lease. Lead/Watchdog refreshes this file whenever merged/live PR ownership changes."
+next_action: "Keep #73, #64, #77 and #78 moving in parallel. Runtime fixes exact-head actionable build failures immediately; Backend closes CI then continues #22 publication bridge; Frontend continues fail-closed #62 acceptance despite missing workflow emission; ERP/Data closes #78 exact-head CI and continues #27 acceptance. Lead/Watchdog refreshes this file whenever live ownership or HEAD changes."
 
 blocked_by:
-  - "Frontend #64 exact-head workflow emission remains absent and the PR is currently non-mergeable against current main."
-  - "Runtime #77 exact-head Build is red with actionable CS0246 AiCapability resolution failure."
-  - "Backend #73 exact-head CI is green, but acceptance still requires the durable-transition-to-SignalR publication bridge."
+  - "Frontend #64 exact-head workflow emission remains absent/intermittent and presentation metadata is not authoritative; continue acceptance without inventing identity."
+  - "Runtime #77 exact-head Build 35637655247 is red with executable runner failures and requires same-PR diagnostics/fix."
+  - "Backend #73 acceptance still requires the durable-transition-to-SignalR publication bridge after exact-head CI closure."
+  - "ERP/Data #78 exact-head CI closure remains active; waiting_ci retains the lease."
 
 autonomy:
   routine_engineering: autonomous
