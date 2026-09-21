@@ -137,4 +137,29 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
+
+  it("fails closed instead of throwing when authoritative company membership is hostile", () => {
+    const onSelectCompany = vi.fn();
+    const hostileMembership = new Proxy(membership, {
+      get(target, property, receiver) {
+        if (property === "companyId") throw new Error("hostile authoritative membership");
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    expect(() =>
+      render(
+        <AuthenticatedSessionShell
+          state={{ status: "ready", membership: hostileMembership }}
+          companies={[
+            { companyId: "internal", companyName: "Minh Huy" },
+            { companyId: "branch-2", companyName: "Chi nhánh 2" },
+          ]}
+          onSelectCompany={onSelectCompany}
+        />,
+      ),
+    ).not.toThrow();
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+  });
 });
