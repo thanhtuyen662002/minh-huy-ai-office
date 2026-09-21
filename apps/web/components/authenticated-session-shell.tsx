@@ -17,9 +17,14 @@ const failureCopy = {
   "invalid-response": "Không thể xác thực phạm vi công ty. Dữ liệu sẽ không được hiển thị.",
 } as const;
 
+const hasOwn = (value: object, key: PropertyKey) => Object.prototype.hasOwnProperty.call(value, key);
 const hasCanonicalCompanyOption = (company: CompanyOption) =>
-  typeof company?.companyId === "string" &&
-  typeof company?.companyName === "string" &&
+  company !== null &&
+  typeof company === "object" &&
+  hasOwn(company, "companyId") &&
+  hasOwn(company, "companyName") &&
+  typeof company.companyId === "string" &&
+  typeof company.companyName === "string" &&
   company.companyId.length > 0 &&
   company.companyId.trim() === company.companyId &&
   company.companyName.length > 0 &&
