@@ -14,13 +14,22 @@ const membership = {
 afterEach(cleanup);
 
 describe("AuthenticatedSessionShell company collection length boundary", () => {
-  it("does not execute an accessor-backed collection length while deciding offered scopes", () => {
-    const lengthGetter = vi.fn(() => 2);
-    const companies = [
-      { companyId: "internal", companyName: "Minh Huy" },
-      { companyId: "branch-2", companyName: "Chi nhánh 2" },
-    ];
-    Object.defineProperty(companies, "length", { get: lengthGetter });
+  it("fails closed when browser-controlled collection length inspection throws", () => {
+    const lengthInspection = vi.fn(() => {
+      throw new Error("hostile company collection length");
+    });
+    const companies = new Proxy(
+      [
+        { companyId: "internal", companyName: "Minh Huy" },
+        { companyId: "branch-2", companyName: "Chi nhánh 2" },
+      ],
+      {
+        getOwnPropertyDescriptor(target, property) {
+          if (property === "length") return lengthInspection();
+          return Reflect.getOwnPropertyDescriptor(target, property);
+        },
+      },
+    );
 
     const onSelectCompany = vi.fn();
     expect(() =>
@@ -33,7 +42,7 @@ describe("AuthenticatedSessionShell company collection length boundary", () => {
       ),
     ).not.toThrow();
 
-    expect(lengthGetter).not.toHaveBeenCalled();
+    expect(lengthInspection).toHaveBeenCalledTimes(1);
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
     expect(onSelectCompany).not.toHaveBeenCalled();
   });
