@@ -19,6 +19,14 @@ const failureCopy = {
 
 const hasCanonicalCompanyId = (company: CompanyOption) => company.companyId.length > 0 && company.companyId.trim() === company.companyId;
 
+const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
+  const counts = new Map<string, number>();
+  for (const company of companies) {
+    if (hasCanonicalCompanyId(company)) counts.set(company.companyId, (counts.get(company.companyId) ?? 0) + 1);
+  }
+  return companies.filter((company) => hasCanonicalCompanyId(company) && counts.get(company.companyId) === 1);
+};
+
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
   if (state.status === "loading") {
     return <main aria-busy="true" className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="status" aria-live="polite" aria-labelledby="session-loading" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="session-loading" className="mt-3 text-3xl font-semibold tracking-tight">Đang xác thực phiên làm việc</h1><p className="mt-3 leading-7 opacity-75">Đang kiểm tra quyền truy cập công ty trước khi hiển thị dữ liệu.</p></section></main>;
@@ -32,7 +40,7 @@ export function AuthenticatedSessionShell({ state, companies = [], onSelectCompa
     return <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="alert" aria-labelledby="scope-denied" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="scope-denied" className="mt-3 text-3xl font-semibold tracking-tight">Không thể mở phạm vi công ty</h1><p className="mt-3 leading-7 opacity-75">{failureCopy[state.reason]}</p></section></main>;
   }
 
-  const switchableCompanies = companies.filter(hasCanonicalCompanyId);
+  const switchableCompanies = getUnambiguousCompanyOptions(companies);
   const hasAuthoritativeOption = switchableCompanies.some((company) => company.companyId === state.membership.companyId);
   const hasAlternativeScope = switchableCompanies.some((company) => company.companyId !== state.membership.companyId);
   const canSwitchCompany = hasAuthoritativeOption && hasAlternativeScope && onSelectCompany;
