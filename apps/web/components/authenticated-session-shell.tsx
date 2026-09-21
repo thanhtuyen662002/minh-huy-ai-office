@@ -17,18 +17,24 @@ const failureCopy = {
   "invalid-response": "Không thể xác thực phạm vi công ty. Dữ liệu sẽ không được hiển thị.",
 } as const;
 
-const hasOwn = (value: object, key: PropertyKey) => Object.prototype.hasOwnProperty.call(value, key);
-const hasCanonicalCompanyOption = (company: CompanyOption) =>
-  company !== null &&
-  typeof company === "object" &&
-  hasOwn(company, "companyId") &&
-  hasOwn(company, "companyName") &&
-  typeof company.companyId === "string" &&
-  typeof company.companyName === "string" &&
-  company.companyId.length > 0 &&
-  company.companyId.trim() === company.companyId &&
-  company.companyName.length > 0 &&
-  company.companyName.trim() === company.companyName;
+const getOwnDataProperty = (value: object, key: PropertyKey) => {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor && "value" in descriptor ? descriptor.value : undefined;
+};
+
+const hasCanonicalCompanyOption = (company: CompanyOption) => {
+  if (company === null || typeof company !== "object") return false;
+  const companyId = getOwnDataProperty(company, "companyId");
+  const companyName = getOwnDataProperty(company, "companyName");
+  return (
+    typeof companyId === "string" &&
+    typeof companyName === "string" &&
+    companyId.length > 0 &&
+    companyId.trim() === companyId &&
+    companyName.length > 0 &&
+    companyName.trim() === companyName
+  );
+};
 
 const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
   if (!companies.every(hasCanonicalCompanyOption)) return [];
