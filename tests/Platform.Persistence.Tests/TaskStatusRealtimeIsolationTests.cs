@@ -45,4 +45,13 @@ public sealed class TaskStatusRealtimeIsolationTests
 
         Assert.NotEqual(groupA, groupB);
     }
+
+    [Theory]
+    [InlineData("00000000-0000-0000-0000-000000000000", "22222222-2222-2222-2222-222222222222")]
+    [InlineData("11111111-1111-1111-1111-111111111111", "00000000-0000-0000-0000-000000000000")]
+    public void CompanyGroup_FailsClosedWhenAuthorityScopeIsIncomplete(string tenant, string company)
+    {
+        Assert.Throws<ArgumentException>(() =>
+            Realtime.TaskStatusRealtime.CompanyGroup(Guid.Parse(tenant), Guid.Parse(company)));
+    }
 }
