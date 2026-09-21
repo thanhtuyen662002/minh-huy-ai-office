@@ -54,4 +54,50 @@ public sealed class TaskStatusRealtimeIsolationTests
         Assert.Throws<ArgumentException>(() =>
             Realtime.TaskStatusRealtime.CompanyGroup(Guid.Parse(tenant), Guid.Parse(company)));
     }
+
+    [Fact]
+    public void Publisher_FailsClosedBeforeDispatchWhenTaskIdentityIsMissing()
+    {
+        var publisher = new Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new Realtime.TaskStatusChanged(Guid.Empty, "running", DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Fact]
+    public void Publisher_FailsClosedBeforeDispatchWhenStepIdentityIsMissing()
+    {
+        var publisher = new Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new Realtime.TaskStepStatusChanged(Guid.NewGuid(), Guid.Empty, "running", DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Publisher_FailsClosedBeforeDispatchWhenWorkerIdentityIsMissing(string workerId)
+    {
+        var publisher = new Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new Realtime.WorkerStatusChanged(Guid.NewGuid(), workerId, "running", DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Theory]
+    [InlineData("", "approval_required")]
+    [InlineData("approval", "")]
+    [InlineData("   ", "approval_required")]
+    [InlineData("approval", "   ")]
+    public void Publisher_FailsClosedBeforeDispatchWhenAttentionMetadataIsIncomplete(string kind, string reasonCode)
+    {
+        var publisher = new Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new Realtime.TaskAttentionRequired(Guid.NewGuid(), kind, reasonCode, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishAttentionRequiredAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
 }
