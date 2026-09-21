@@ -1,15 +1,15 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 26
-current_pr: 77
-current_branch: "runtime/26-usage-cost-ledger"
-head: "c08eb9f252ce030f5c708787711b3054f1b87087"
-state: ready_for_review
+current_issue: 80
+current_pr: null
+current_branch: "runtime/80-conversation-attachment-ingestion"
+head: "efee886d3a989721e18f27572ec333be0f712499"
+state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T20:18:15Z"
-last_checkpoint_at: "2026-09-21T20:18:15Z"
-stacked_on: "main @ a871052bff124648d07195f0e8f85db82a0322c1"
+lease_heartbeat_at: "2026-09-21T21:46:00Z"
+last_checkpoint_at: "2026-09-21T21:46:00Z"
+stacked_on: "main @ 08efe4be9c74448600a8a52a3188a9a58ad13d13"
 scope:
   - task-engine
   - rabbitmq-workers
@@ -19,4 +19,5 @@ scope:
   - model-router
   - context-engine
   - usage-cost-ledger
-next_action: "PR #77 / issue #26 acceptance is complete. Implementation HEAD c08eb9f252ce030f5c708787711b3054f1b87087 has exact-head Governance #35644368656 PASS and Build #35644368421 PASS. PR is Ready for review and mergeable; HANDOFF is reconciled. Lead owns review/merge sequencing. Runtime must not open a competing primary lease before #77 integration; after merge, select the highest-priority unblocked Runtime/AI roadmap issue."
+  - conversation-attachment-ingestion
+next_action: "Issue #80 claimed after merged #77 released the prior Runtime lease. Initial provider-neutral conversation/attachment ingestion contracts and deterministic fencing tests are pushed. Open one Draft PR, capture exact HEAD/workflow IDs, fix actionable CI RED on the SAME branch, and continue acceptance without Frontend UI or Backend/ERP persistence overlap."
