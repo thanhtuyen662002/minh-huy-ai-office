@@ -38,4 +38,15 @@ describe("bootstrapAuthenticatedSession hostile runtime boundary", () => {
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "ready", membership: { ...membership, roles: ["member"] } });
     expect(iteratorGetter).not.toHaveBeenCalled();
   });
+
+  it("rejects accessor-backed role entries without executing transport getters", async () => {
+    const roleGetter = vi.fn(() => "admin");
+    const roles = ["member"];
+    Object.defineProperty(roles, "0", { configurable: true, enumerable: true, get: roleGetter });
+    const membership = { tenantId: "tenant-a", companyId: "company-a", companyName: "Company A", userId: "user-a", userName: "User A", roles };
+    const transport = (async () => ({ ok: true, membership })) as unknown as SessionBootstrapTransport;
+
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual(invalidResponse);
+    expect(roleGetter).not.toHaveBeenCalled();
+  });
 });
