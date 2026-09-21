@@ -56,4 +56,30 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
+
+  it("rejects accessor-backed company metadata without invoking browser-controlled getters", () => {
+    const onSelectCompany = vi.fn();
+    const companyIdGetter = vi.fn(() => "branch-2");
+    const accessorBacked = { companyName: "Spoofed branch" } as Record<string, unknown>;
+    Object.defineProperty(accessorBacked, "companyId", { enumerable: true, get: companyIdGetter });
+    const accessorRuntimeOptions = [
+      { companyId: "internal", companyName: "Minh Huy" },
+      accessorBacked,
+    ] as unknown as readonly { companyId: string; companyName: string }[];
+
+    expect(() =>
+      render(
+        <AuthenticatedSessionShell
+          state={{ status: "ready", membership }}
+          companies={accessorRuntimeOptions}
+          onSelectCompany={onSelectCompany}
+        />,
+      ),
+    ).not.toThrow();
+
+    expect(companyIdGetter).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
 });
