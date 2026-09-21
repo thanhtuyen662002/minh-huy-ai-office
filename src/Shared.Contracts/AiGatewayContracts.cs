@@ -64,7 +64,7 @@ public sealed record AiGatewayResponse(
             throw new InvalidOperationException("AI gateway response capability mismatch.");
         }
 
-        if (string.IsNullOrWhiteSpace(Model) || InputTokens < 0 || OutputTokens < 0)
+        if (string.IsNullOrWhiteSpace(Output) || string.IsNullOrWhiteSpace(Model) || InputTokens < 0 || OutputTokens < 0)
         {
             throw new InvalidOperationException("AI gateway response metadata is invalid.");
         }
@@ -83,4 +83,50 @@ public interface IAiProviderAdapter
     bool Supports(AiCapability capability);
 
     Task<AiGatewayResponse> ExecuteAsync(AiGatewayRequest request, CancellationToken cancellationToken = default);
+}
+
+public sealed class ProviderNeutralAiGateway : IAiGateway
+{
+    private readonly IReadOnlyList<IAiProviderAdapter> _adapters;
+
+    public ProviderNeutralAiGateway(IEnumerable<IAiProviderAdapter> adapters)
+    {
+        ArgumentNullException.ThrowIfNull(adapters);
+        _adapters = adapters.ToArray();
+
+        if (_adapters.Any(adapter => adapter is null))
+        {
+            throw new ArgumentException("AI provider adapters cannot contain null entries.", nameof(adapters));
+        }
+
+        var duplicateProvider = _adapters
+            .GroupBy(adapter => adapter.ProviderId, StringComparer.Ordinal)
+            .FirstOrDefault(group => string.IsNullOrWhiteSpace(group.Key) || group.Count() > 1);
+        if (duplicateProvider is not null)
+        {
+            throw new InvalidOperationException("AI provider identifiers must be non-empty and unique.");
+        }
+    }
+
+    public async Task<AiGatewayResponse> ExecuteAsync(
+        AiGatewayRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        request.Validate();
+
+        var candidates = _adapters.Where(adapter => adapter.Supports(request.Capability)).ToArray();
+        if (candidates.Length != 1)
+        {
+            throw new InvalidOperationException(
+                candidates.Length == 0
+                    ? $"No AI provider supports capability {request.Capability}."
+                    : $"AI provider selection for capability {request.Capability} is ambiguous.");
+        }
+
+        var response = await candidates[0].ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(response);
+        response.ValidateFor(request);
+        return response;
+    }
 }
