@@ -1,29 +1,46 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MinhHuy.AIOffice.Platform.Persistence;
+using Platform.Persistence;
 
 namespace MinhHuy.AIOffice.Agent.Worker;
 
 public static class WorkExecutionServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the durable RabbitMQ execution pipeline. The caller must provide the authoritative
-    /// step executor and platform database configuration; this deliberately has no placeholder
-    /// executor or implicit connection string so the hosted consumer cannot start in an unsafe mode.
+    /// Registers the durable RabbitMQ execution pipeline with mandatory prompt-independent tool
+    /// authorization and immutable audit. The raw executor is never exposed as IWorkStepExecutor;
+    /// the delivery handler can resolve only the authorized decorator.
     /// </summary>
-    public static IServiceCollection AddDurableRabbitMqWorkExecution<TExecutor>(
+    public static IServiceCollection AddDurableRabbitMqWorkExecution<TExecutor, TMetadataProvider, TPermissionProvider>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder> configureDatabase,
         Action<RabbitMqWorkOptions> configureRabbitMq)
-        where TExecutor : class, IWorkStepExecutor
+        where TExecutor : class, IRawWorkStepExecutor
+        where TMetadataProvider : class, ITrustedToolExecutionMetadataProvider
+        where TPermissionProvider : class, IToolPermissionProvider
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configureDatabase);
         ArgumentNullException.ThrowIfNull(configureRabbitMq);
 
         services.AddDbContext<PlatformDbContext>(configureDatabase);
-        services.AddScoped<IWorkStepExecutor, TExecutor>();
+
+        // Keep the side-effecting executor behind an internal marker. All worker delivery resolves
+        // IWorkStepExecutor to the authorization/audit decorator, so prompts and broker payloads
+        // cannot bypass policy enforcement by selecting the raw implementation directly.
+        services.AddScoped<TExecutor>();
+        services.AddScoped<IRawWorkStepExecutor>(provider => provider.GetRequiredService<TExecutor>());
+        services.AddScoped<ITrustedToolExecutionMetadataProvider, TMetadataProvider>();
+        services.AddScoped<IToolPermissionProvider, TPermissionProvider>();
+        services.AddScoped<ToolAuthorizationPolicy>();
+        services.AddScoped<TrustedToolAuthorizationRequestFactory>();
+        services.AddScoped<IToolExecutionAuditSink, SqlToolExecutionAuditSink>();
+        services.AddScoped<ToolExecutionAuditService>();
+        services.AddScoped<AuthorizedToolExecutionGate>();
+        services.AddScoped<IWorkStepExecutor, AuthorizedWorkStepExecutor>();
         services.AddScoped<IWorkDeliveryHandler, PersistentWorkDeliveryHandler>();
+
         services.AddOptions<RabbitMqWorkOptions>()
             .Configure(configureRabbitMq)
             .Validate(options => IsValid(options), "RabbitMQ work options are invalid.")
