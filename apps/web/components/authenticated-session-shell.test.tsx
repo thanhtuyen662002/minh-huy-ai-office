@@ -63,13 +63,13 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
 
-  it("filters malformed company selectors before they can become switch requests", () => {
+  it("fails the entire switcher closed when any offered option is malformed", () => {
     const onSelectCompany = vi.fn();
-    const malformedCompanies = [companies[0], { companyId: " branch-2 ", companyName: "Spoofed padded scope" }, { companyId: "", companyName: "Blank scope" }];
+    const malformedCompanies = [...companies, { companyId: " branch-3 ", companyName: "Spoofed padded scope" }];
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={malformedCompanies} onSelectCompany={onSelectCompany} />);
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.queryByText("Chi nhánh 2")).toBeNull();
     expect(screen.queryByText("Spoofed padded scope")).toBeNull();
-    expect(screen.queryByText("Blank scope")).toBeNull();
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
@@ -84,12 +84,13 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
 
-  it("rejects duplicate company IDs instead of rendering ambiguous switch metadata", () => {
+  it("rejects the entire switcher when duplicate company IDs make metadata ambiguous", () => {
     const onSelectCompany = vi.fn();
-    const ambiguousCompanies = [companies[0], companies[1], { companyId: "branch-2", companyName: "Spoofed branch label" }];
+    const ambiguousCompanies = [companies[0], companies[1], { companyId: "branch-2", companyName: "Spoofed branch label" }, { companyId: "branch-3", companyName: "Chi nhánh 3" }];
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={ambiguousCompanies} onSelectCompany={onSelectCompany} />);
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
     expect(screen.queryByText("Chi nhánh 2")).toBeNull();
+    expect(screen.queryByText("Chi nhánh 3")).toBeNull();
     expect(screen.queryByText("Spoofed branch label")).toBeNull();
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
