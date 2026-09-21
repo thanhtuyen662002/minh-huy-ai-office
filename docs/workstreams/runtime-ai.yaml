@@ -4,11 +4,11 @@ status: active
 current_issue: 26
 current_pr: 77
 current_branch: "runtime/26-usage-cost-ledger"
-head: "8657c47f1db2bee6fcd7bf3c551c35e43be19590"
+head: "da9151f0de4b0c6cf7c8580b81d3a27f92760f00"
 state: waiting_ci
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T18:35:16Z"
-last_checkpoint_at: "2026-09-21T18:35:16Z"
+lease_heartbeat_at: "2026-09-21T19:21:39Z"
+last_checkpoint_at: "2026-09-21T19:21:39Z"
 stacked_on: "main @ a871052bff124648d07195f0e8f85db82a0322c1"
 scope:
   - task-engine
@@ -19,4 +19,4 @@ scope:
   - model-router
   - context-engine
   - usage-cost-ledger
-next_action: "PR #77 is the sole Runtime lease for #26. Exact-head a20073d5588dc3c8e6da32c5d8999013e2588f08 had Governance #35637637043 PASS and Build #35637637404 cancelled after real compile/container/EF failures. Root cause: AiGatewayContracts.cs authoritative namespace is MinhHuyAiOffice.Shared.Contracts, while AiUsageLedger.cs and its tests had been moved to MinhHuy.AiOffice.Shared.Contracts, making AiCapability unresolved and cascading into dependent builds. Fixed on SAME branch: usage ledger and tests now align with the gateway namespace; implementation/test repair head before this checkpoint is 8657c47f1db2bee6fcd7bf3c551c35e43be19590. Capture exact branch HEAD after this checkpoint and its Governance/Build run IDs; inspect/fix any actionable RED on SAME PR. Once exact-head required gates are green, continue remaining #26 persistence/acceptance work without overlapping Backend/ERP EF ownership; mark ready_for_review only when acceptance is complete."
+next_action: "PR #77 is the sole Runtime lease for #26. Implementation HEAD da9151f0de4b0c6cf7c8580b81d3a27f92760f00 has exact-head Governance #35639446868 PASS and Build #35639446663 PASS after same-branch namespace repair. Issue #26 acceptance is satisfied by provider/model/capability/token-equivalent/provider-cost entries scoped to tenant/company/task/agent/request plus deterministic complete execution-tree aggregation with duplicate-charge, parent-tree, canonical-scope, UTC and malformed-usage fencing. No EF/migration persistence is required by #26 acceptance and adding it would overlap Backend/ERP ownership. This checkpoint records acceptance evidence; capture the new exact branch HEAD and close its Governance/Build. If both pass, set ready_for_review and hand merge sequencing to Lead."
