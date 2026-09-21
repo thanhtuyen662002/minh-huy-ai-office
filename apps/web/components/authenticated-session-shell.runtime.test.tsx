@@ -82,4 +82,33 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
+
+  it("fails closed when hostile browser metadata throws during property inspection", () => {
+    const onSelectCompany = vi.fn();
+    const hostileOption = new Proxy(
+      {},
+      {
+        getOwnPropertyDescriptor() {
+          throw new Error("hostile browser metadata");
+        },
+      },
+    );
+    const hostileRuntimeOptions = [
+      { companyId: "internal", companyName: "Minh Huy" },
+      hostileOption,
+    ] as unknown as readonly { companyId: string; companyName: string }[];
+
+    expect(() =>
+      render(
+        <AuthenticatedSessionShell
+          state={{ status: "ready", membership }}
+          companies={hostileRuntimeOptions}
+          onSelectCompany={onSelectCompany}
+        />,
+      ),
+    ).not.toThrow();
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
 });
