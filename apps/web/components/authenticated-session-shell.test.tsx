@@ -45,6 +45,14 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByText(/máy chủ vẫn xác thực quyền truy cập/i)).toBeTruthy();
   });
 
+  it("exposes the company switcher as a labelled combobox with explanatory copy", () => {
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={vi.fn()} />);
+    const selector = screen.getByRole("combobox", { name: "Đổi công ty" });
+    expect(selector.getAttribute("id")).toBe("company-selector");
+    expect(screen.getByRole("complementary", { name: "Đổi công ty" })).toBeTruthy();
+    expect(screen.getByText(/chỉ yêu cầu đổi phạm vi/i)).toBeTruthy();
+  });
+
   it("only emits company-switch requests for offered alternative scopes", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
