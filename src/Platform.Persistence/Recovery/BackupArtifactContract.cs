@@ -12,7 +12,9 @@ public sealed record RecoveryDrillEvidence(
     BackupArtifactDescriptor Artifact,
     DateTimeOffset CompletedAtUtc,
     string RestoredSha256,
-    bool DatabaseOnline);
+    bool DatabaseOnline,
+    bool IntegrityCheckPassed = true,
+    bool ApplicationProbePassed = true);
 
 public sealed record RecoveryReferenceSet(
     string CompanyId,
@@ -103,7 +105,11 @@ public static class BackupArtifactContract
 
         var completedAtUtc = evidence.CompletedAtUtc.ToUniversalTime();
         var nowUtc = now.ToUniversalTime();
-        if (!evidence.DatabaseOnline || completedAtUtc > nowUtc || nowUtc - completedAtUtc > maximumAge)
+        if (!evidence.DatabaseOnline
+            || !evidence.IntegrityCheckPassed
+            || !evidence.ApplicationProbePassed
+            || completedAtUtc > nowUtc
+            || nowUtc - completedAtUtc > maximumAge)
         {
             return false;
         }
