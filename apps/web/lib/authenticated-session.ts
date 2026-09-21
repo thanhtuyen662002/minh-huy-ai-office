@@ -18,10 +18,11 @@ export type SessionBootstrapTransport = (request: {
 }) => Promise<SessionBootstrapResult>;
 
 const hasText = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
+const hasCanonicalText = (value: unknown): value is string => hasText(value) && value.trim() === value;
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
 function isValidMembership(membership: CompanyMembershipView, selectedCompanyId: string): boolean {
-  return membership !== null && typeof membership === "object" && hasText(membership.tenantId) && hasText(membership.companyId) && membership.companyId === selectedCompanyId && hasText(membership.companyName) && hasText(membership.userId) && hasText(membership.userName) && Array.isArray(membership.roles) && membership.roles.every(hasText);
+  return membership !== null && typeof membership === "object" && hasCanonicalText(membership.tenantId) && hasCanonicalText(membership.companyId) && membership.companyId === selectedCompanyId && hasCanonicalText(membership.companyName) && hasCanonicalText(membership.userId) && hasCanonicalText(membership.userName) && Array.isArray(membership.roles) && membership.roles.every(hasCanonicalText);
 }
 
 function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResult {
