@@ -1,15 +1,15 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 80
+current_issue: null
 current_pr: null
-current_branch: "runtime/80-conversation-attachment-ingestion"
-head: "efee886d3a989721e18f27572ec333be0f712499"
-state: in_progress
-lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T21:46:00Z"
-last_checkpoint_at: "2026-09-21T21:46:00Z"
-stacked_on: "main @ 08efe4be9c74448600a8a52a3188a9a58ad13d13"
+current_branch: null
+head: null
+state: blocked
+lease_owner: null
+lease_heartbeat_at: "2026-09-21T22:38:10Z"
+last_checkpoint_at: "2026-09-21T22:38:10Z"
+stacked_on: null
 scope:
   - task-engine
   - rabbitmq-workers
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Issue #80 claimed after merged #77 released the prior Runtime lease. Initial provider-neutral conversation/attachment ingestion contracts and deterministic fencing tests are pushed. Open one Draft PR, capture exact HEAD/workflow IDs, fix actionable CI RED on the SAME branch, and continue acceptance without Frontend UI or Backend/ERP persistence overlap."
+next_action: "Merged PR #81 / issue #80 released. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 are authoritative. Do not overlap Backend PR #73 / issue #22, which owns the remaining SignalR durable-transition bridge. The next roadmap Runtime candidate, P4 issue #31 IT Agent development loop, depends on #30; #30 depends on #28/#29, with ERP/Data PR #79 actively owning #28 and #29 still dependent on #28. No safe non-competing Runtime implementation is currently executable. Re-enter after #28/#29/#30 advance or if Lead creates a new unblocked Runtime-owned prerequisite; otherwise remain blocked rather than creating heartbeat work."
