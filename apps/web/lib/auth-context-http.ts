@@ -19,7 +19,7 @@ function ownDataValue(value: object, key: PropertyKey): unknown {
   return descriptor && "value" in descriptor ? descriptor.value : undefined;
 }
 
-function snapshotCanonicalRoles(value: unknown): string[] | null {
+function snapshotCanonicalRoles(value: unknown): readonly string[] | null {
   if (!Array.isArray(value)) return null;
   const length = ownDataValue(value, "length");
   if (!Number.isSafeInteger(length) || (length as number) < 0) return null;
@@ -32,7 +32,7 @@ function snapshotCanonicalRoles(value: unknown): string[] | null {
     seen.add(role);
     roles.push(role);
   }
-  return roles;
+  return Object.freeze(roles);
 }
 
 function parseContext(value: unknown, selectedCompanyId: string): AuthoritativeAuthContext | null {
@@ -43,7 +43,7 @@ function parseContext(value: unknown, selectedCompanyId: string): AuthoritativeA
     const userId = ownDataValue(value, "userId");
     const roles = snapshotCanonicalRoles(ownDataValue(value, "roles"));
     if (!hasCanonicalText(tenantId) || !hasCanonicalText(companyId) || companyId !== selectedCompanyId || !hasCanonicalText(userId) || !roles) return null;
-    return { tenantId, companyId, userId, roles };
+    return Object.freeze({ tenantId, companyId, userId, roles });
   } catch {
     return null;
   }
