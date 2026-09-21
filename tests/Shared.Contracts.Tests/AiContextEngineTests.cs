@@ -71,4 +71,61 @@ public sealed class AiContextEngineTests
         Assert.Equal(AiContextSourceKind.ToolResult, entry.Kind);
         Assert.DoesNotContain("secret-bearing", entry.ToString(), StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task DurableEngine_PersistsCheckpointWithoutRawSourceContent()
+    {
+        var store = new CapturingCheckpointStore();
+        var engine = new DurableAiContextEngine(new DeterministicAiContextAssembler(), store);
+        var request = new AiContextRequest("tenant-a", "company-a", "task-a", "model-a", 100,
+        [new("tool-result-42", AiContextSourceKind.ToolResult, "secret-bearing runtime payload", 10, 0)]);
+
+        var checkpoint = await engine.AssembleAndCheckpointAsync(
+            "checkpoint-1", new DateTimeOffset(2026, 9, 21, 16, 0, 0, TimeSpan.Zero), request);
+
+        Assert.Same(checkpoint, store.Saved);
+        Assert.Equal("checkpoint-1", checkpoint.CheckpointId);
+        Assert.Equal("tenant-a", checkpoint.Manifest.TenantId);
+        Assert.DoesNotContain("secret-bearing", checkpoint.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DurableEngine_PropagatesPersistenceFailure()
+    {
+        var engine = new DurableAiContextEngine(new DeterministicAiContextAssembler(), new FailingCheckpointStore());
+        var request = new AiContextRequest("tenant-a", "company-a", "task-a", "model-a", 100,
+        [new("policy", AiContextSourceKind.Policy, "policy", 10, 0, true)]);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => engine.AssembleAndCheckpointAsync(
+            "checkpoint-1", new DateTimeOffset(2026, 9, 21, 16, 0, 0, TimeSpan.Zero), request));
+    }
+
+    [Fact]
+    public async Task DurableEngine_RejectsNonUtcCheckpointBeforePersistence()
+    {
+        var store = new CapturingCheckpointStore();
+        var engine = new DurableAiContextEngine(new DeterministicAiContextAssembler(), store);
+        var request = new AiContextRequest("tenant-a", "company-a", "task-a", "model-a", 100,
+        [new("policy", AiContextSourceKind.Policy, "policy", 10, 0, true)]);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => engine.AssembleAndCheckpointAsync(
+            "checkpoint-1", new DateTimeOffset(2026, 9, 21, 23, 0, 0, TimeSpan.FromHours(7)), request));
+        Assert.Null(store.Saved);
+    }
+
+    private sealed class CapturingCheckpointStore : IAiContextCheckpointStore
+    {
+        public AiContextCheckpoint? Saved { get; private set; }
+        public Task SaveAsync(AiContextCheckpoint checkpoint, CancellationToken cancellationToken = default)
+        {
+            Saved = checkpoint;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FailingCheckpointStore : IAiContextCheckpointStore
+    {
+        public Task SaveAsync(AiContextCheckpoint checkpoint, CancellationToken cancellationToken = default) =>
+            Task.FromException(new InvalidOperationException("durable store unavailable"));
+    }
 }
