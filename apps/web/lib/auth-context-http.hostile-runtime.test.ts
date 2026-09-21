@@ -35,11 +35,42 @@ describe("fetchAuthoritativeAuthContext hostile runtime payloads", () => {
     });
   });
 
+  it("rejects accessor-backed authoritative identity without executing the getter", async () => {
+    const tenantGetter = vi.fn(() => "tenant-server");
+    const payload = {
+      companyId: "company-a",
+      userId: "user-server",
+      roles: ["member"],
+    };
+    Object.defineProperty(payload, "tenantId", { enumerable: true, get: tenantGetter });
+    const fetcher = vi.fn<typeof fetch>(async () => ({ ok: true, status: 200, json: async () => payload }) as Response);
+
+    await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
+    expect(tenantGetter).not.toHaveBeenCalled();
+  });
+
+  it("rejects hostile role iteration without executing the iterator", async () => {
+    const iterator = vi.fn(function* () { yield "admin"; });
+    const roles = ["member"];
+    Object.defineProperty(roles, Symbol.iterator, { value: iterator });
+    const fetcher = vi.fn<typeof fetch>(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles }),
+    }) as Response);
+
+    await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({
+      ok: true,
+      context: { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member"] },
+    });
+    expect(iterator).not.toHaveBeenCalled();
+  });
+
   it("fails closed when authoritative role inspection throws", async () => {
     const hostileRoles = new Proxy(["member"], {
-      get(target, property, receiver) {
+      getOwnPropertyDescriptor(target, property) {
         if (property === "0") throw new Error("hostile role payload");
-        return Reflect.get(target, property, receiver);
+        return Reflect.getOwnPropertyDescriptor(target, property);
       },
     });
     const fetcher = vi.fn<typeof fetch>(async () => ({
