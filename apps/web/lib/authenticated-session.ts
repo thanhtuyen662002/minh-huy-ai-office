@@ -94,7 +94,12 @@ export async function bootstrapAuthenticatedSession(selectedCompanyId: string | 
   if (!hasCanonicalText(selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
   let result: unknown;
   try {
-    result = await transport({ selectedCompanyId, headers: { [COMPANY_SELECTOR_HEADER]: selectedCompanyId } });
+    // Snapshot and freeze selector input before crossing the transport boundary. The selector
+    // remains browser-controlled and non-authoritative, but a transport must not be able to
+    // rewrite the request object/header after bootstrap has validated the canonical value.
+    const headers = Object.freeze({ [COMPANY_SELECTOR_HEADER]: selectedCompanyId });
+    const request = Object.freeze({ selectedCompanyId, headers });
+    result = await transport(request);
   } catch {
     return { status: "forbidden", reason: "invalid-response" };
   }
