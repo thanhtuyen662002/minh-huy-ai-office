@@ -13,11 +13,14 @@ export type AuthContextHttpResult =
 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 const hasText = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
+const hasCanonicalText = (value: unknown): value is string => hasText(value) && value.trim() === value;
 
-function hasDenseTextRoles(value: unknown): value is string[] {
+function hasDenseCanonicalRoles(value: unknown): value is string[] {
   if (!Array.isArray(value)) return false;
+  const seen = new Set<string>();
   for (let index = 0; index < value.length; index += 1) {
-    if (!hasOwn(value, index) || !hasText(value[index])) return false;
+    if (!hasOwn(value, index) || !hasCanonicalText(value[index]) || seen.has(value[index])) return false;
+    seen.add(value[index]);
   }
   return true;
 }
@@ -26,8 +29,8 @@ function parseContext(value: unknown, selectedCompanyId: string): AuthoritativeA
   if (value === null || typeof value !== "object") return null;
   if (!hasOwn(value, "tenantId") || !hasOwn(value, "companyId") || !hasOwn(value, "userId") || !hasOwn(value, "roles")) return null;
   const candidate = value as Record<string, unknown>;
-  if (!hasText(candidate.tenantId) || !hasText(candidate.companyId) || candidate.companyId !== selectedCompanyId || !hasText(candidate.userId)) return null;
-  if (!hasDenseTextRoles(candidate.roles)) return null;
+  if (!hasCanonicalText(candidate.tenantId) || !hasCanonicalText(candidate.companyId) || candidate.companyId !== selectedCompanyId || !hasCanonicalText(candidate.userId)) return null;
+  if (!hasDenseCanonicalRoles(candidate.roles)) return null;
   return {
     tenantId: candidate.tenantId,
     companyId: candidate.companyId,
@@ -46,15 +49,16 @@ export async function fetchAuthoritativeAuthContext(
   selectedCompanyId: string,
   fetcher: typeof fetch = fetch,
 ): Promise<AuthContextHttpResult> {
-  const normalizedCompanyId = selectedCompanyId.trim();
-  if (!normalizedCompanyId) return { ok: false, reason: "invalid-response" };
+  // Keep browser-controlled selector semantics aligned with the session adapter: reject
+  // ambiguous values instead of silently canonicalizing them before transport.
+  if (!hasCanonicalText(selectedCompanyId)) return { ok: false, reason: "invalid-response" };
 
   let response: Response;
   try {
     response = await fetcher("/api/auth/context", {
       method: "GET",
       credentials: "same-origin",
-      headers: { [COMPANY_SELECTOR_HEADER]: normalizedCompanyId },
+      headers: { [COMPANY_SELECTOR_HEADER]: selectedCompanyId },
     });
   } catch {
     return { ok: false, reason: "invalid-response" };
@@ -71,6 +75,6 @@ export async function fetchAuthoritativeAuthContext(
     return { ok: false, reason: "invalid-response" };
   }
 
-  const context = parseContext(payload, normalizedCompanyId);
+  const context = parseContext(payload, selectedCompanyId);
   return context ? { ok: true, context } : { ok: false, reason: "invalid-response" };
 }
