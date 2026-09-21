@@ -1,0 +1,135 @@
+using MinhHuy.AIOffice.Platform.Persistence.Recovery;
+using Xunit;
+
+namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
+
+public sealed class BackupArtifactContractTests
+{
+    private const string Hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    [Fact]
+    public void Create_ProducesDeterministicUtcArtifactWithoutSecretMaterial()
+    {
+        var descriptor = CreateDescriptor();
+
+        Assert.Equal("company01-AIOffice_Company01-20260921T033045Z-0123456789ab.bak", descriptor.ArtifactName);
+        Assert.Equal("company01", descriptor.CompanyId);
+        Assert.Equal(Hash, descriptor.Sha256);
+        Assert.Equal("keyvault://backup/aioffice/company01/v3", descriptor.EncryptionKeyReference);
+        Assert.Equal(TimeSpan.Zero, descriptor.CreatedAtUtc.Offset);
+        Assert.DoesNotContain("Password", descriptor.ArtifactName, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(descriptor.EncryptionKeyReference, descriptor.ArtifactName, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VerifyForRestore_AcceptsCanonicalArtifactForExpectedCompanyDatabaseAndHash()
+    {
+        var descriptor = CreateDescriptor();
+
+        Assert.True(BackupArtifactContract.VerifyForRestore(descriptor, "company01", "AIOffice_Company01", Hash.ToUpperInvariant()));
+    }
+
+    [Fact]
+    public void VerifyForRestore_RejectsCrossCompanyRestoreCandidateEvenWhenDatabaseMatches()
+    {
+        var descriptor = CreateDescriptor();
+
+        Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, "company02", descriptor.DatabaseName, Hash));
+    }
+
+    [Fact]
+    public void VerifyForRestore_RejectsCrossDatabaseRestoreCandidate()
+    {
+        var descriptor = CreateDescriptor();
+
+        Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, descriptor.CompanyId, "AIOffice_Company02", Hash));
+    }
+
+    [Fact]
+    public void VerifyForRestore_RejectsTamperedContentHash()
+    {
+        var descriptor = CreateDescriptor();
+        const string otherHash = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+
+        Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, descriptor.CompanyId, descriptor.DatabaseName, otherHash));
+    }
+
+    [Theory]
+    [InlineData("CompanyId", "company02")]
+    [InlineData("DatabaseName", "AIOffice_Company02")]
+    [InlineData("ArtifactName", "other.bak")]
+    public void VerifyForRestore_RejectsTamperedManifestFields(string field, string value)
+    {
+        var descriptor = CreateDescriptor();
+        descriptor = field switch
+        {
+            "CompanyId" => descriptor with { CompanyId = value },
+            "DatabaseName" => descriptor with { DatabaseName = value },
+            _ => descriptor with { ArtifactName = value }
+        };
+
+        Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, "company01", "AIOffice_Company01", Hash));
+    }
+
+    [Theory]
+    [InlineData("AIOffice;DROP DATABASE master")]
+    [InlineData("../AIOffice")]
+    [InlineData("AIOffice Company")]
+    public void Create_RejectsUnsafeDatabaseNames(string databaseName)
+    {
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
+            "company01",
+            databaseName,
+            DateTimeOffset.UtcNow,
+            Hash,
+            "keyvault://backup/key"));
+    }
+
+    [Theory]
+    [InlineData("company;DROP")]
+    [InlineData("../company")]
+    [InlineData("company 01")]
+    public void Create_RejectsUnsafeCompanyIds(string companyId)
+    {
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
+            companyId,
+            "AIOffice",
+            DateTimeOffset.UtcNow,
+            Hash,
+            "keyvault://backup/key"));
+    }
+
+    [Theory]
+    [InlineData("Server=db;Password=secret")]
+    [InlineData("secret=value")]
+    public void Create_RejectsSecretLikeEncryptionKeyValues(string secretLikeValue)
+    {
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
+            "company01",
+            "AIOffice",
+            DateTimeOffset.UtcNow,
+            Hash,
+            secretLikeValue));
+    }
+
+    [Theory]
+    [InlineData("not-a-sha256")]
+    [InlineData("")]
+    public void Create_RejectsInvalidIntegrityHash(string invalidHash)
+    {
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
+            "company01",
+            "AIOffice",
+            DateTimeOffset.UtcNow,
+            invalidHash,
+            "keyvault://backup/key"));
+    }
+
+    private static BackupArtifactDescriptor CreateDescriptor()
+        => BackupArtifactContract.Create(
+            "company01",
+            "AIOffice_Company01",
+            new DateTimeOffset(2026, 9, 21, 10, 30, 45, TimeSpan.FromHours(7)),
+            Hash.ToUpperInvariant(),
+            "keyvault://backup/aioffice/company01/v3");
+}
