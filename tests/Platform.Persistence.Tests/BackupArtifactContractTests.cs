@@ -72,6 +72,33 @@ public sealed class BackupArtifactContractTests
     }
 
     [Fact]
+    public void RecoveryReferences_AreCompanyScopedAndContainReferencesOnly()
+    {
+        var references = BackupArtifactContract.CreateRecoveryReferences(
+            "company01",
+            "object://backups/company01/sql",
+            "config://aioffice/company01/production",
+            "keyvault://aioffice/company01/sql");
+
+        Assert.True(BackupArtifactContract.VerifyRecoveryReferences(references, "company01"));
+        Assert.False(BackupArtifactContract.VerifyRecoveryReferences(references, "company02"));
+        Assert.DoesNotContain("Password", string.Join('|', references.ObjectStorageReference, references.ConfigurationReference, references.SecretReference), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("Server=db;Password=secret")]
+    [InlineData("Password=secret")]
+    [InlineData("token=secret")]
+    public void RecoveryReferences_RejectSecretLikeValues(string secretLikeValue)
+    {
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.CreateRecoveryReferences(
+            "company01",
+            "object://backups/company01",
+            "config://aioffice/company01",
+            secretLikeValue));
+    }
+
+    [Fact]
     public void VerifyRecoveryDrill_AcceptsFreshOnlineRestoreForExpectedCompany()
     {
         var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
