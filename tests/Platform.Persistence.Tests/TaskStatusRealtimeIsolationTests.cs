@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class TaskStatusRealtimeIsolationTests
