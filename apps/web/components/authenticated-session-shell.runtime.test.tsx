@@ -162,4 +162,23 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
     expect(onSelectCompany).not.toHaveBeenCalled();
   });
+
+  it("fails closed when the runtime company-switch callback is not callable", () => {
+    const invalidCallback = { spoofed: true } as unknown as (companyId: string) => void;
+
+    expect(() =>
+      render(
+        <AuthenticatedSessionShell
+          state={{ status: "ready", membership }}
+          companies={[
+            { companyId: "internal", companyName: "Minh Huy" },
+            { companyId: "branch-2", companyName: "Chi nhánh 2" },
+          ]}
+          onSelectCompany={invalidCallback}
+        />,
+      ),
+    ).not.toThrow();
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
 });
