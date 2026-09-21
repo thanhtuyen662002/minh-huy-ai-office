@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MinhHuy.AIOffice.Platform.Persistence;
 
 namespace Platform.Persistence;
 
@@ -7,7 +8,7 @@ public sealed record TrustedToolExecutionMetadata(string Resource, string Action
 /// <summary>
 /// Builds tool authorization requests from durable server-side task authority plus explicit
 /// trusted execution metadata. Broker/caller identity is never accepted as user authority.
-/// Missing, ambiguous, or cross-company task authority fails closed.
+/// Missing or cross-company task authority fails closed.
 /// </summary>
 public sealed class TrustedToolAuthorizationRequestFactory(PlatformDbContext dbContext)
 {
@@ -30,14 +31,14 @@ public sealed class TrustedToolAuthorizationRequestFactory(PlatformDbContext dbC
             throw new UnauthorizedAccessException("Tool execution scope is incomplete.");
         }
 
-        var tasks = await dbContext.Tasks
+        var userIds = await dbContext.Tasks
             .AsNoTracking()
             .Where(task => task.TenantId == tenantId && task.CompanyId == companyId && task.Id == taskId)
             .Select(task => task.CreatedByUserId)
             .Take(2)
             .ToArrayAsync(cancellationToken);
 
-        if (tasks.Length != 1 || tasks[0] == Guid.Empty)
+        if (userIds.Length != 1 || userIds[0] == Guid.Empty)
         {
             throw new UnauthorizedAccessException("Durable task authority is missing or ambiguous.");
         }
@@ -45,7 +46,7 @@ public sealed class TrustedToolAuthorizationRequestFactory(PlatformDbContext dbC
         return new ToolAuthorizationRequest(
             tenantId,
             companyId,
-            tasks[0],
+            userIds[0],
             taskId,
             metadata.Resource.Trim(),
             metadata.Action.Trim(),
