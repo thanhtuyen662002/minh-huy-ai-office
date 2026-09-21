@@ -8,7 +8,7 @@ const jsonResponse = (body: unknown, status = 200) => new Response(JSON.stringif
 });
 
 describe("fetchAuthoritativeAuthContext", () => {
-  it("sends only the untrusted company selector and accepts server-derived identity", async () => {
+  it("sends only the canonical untrusted company selector and accepts server-derived identity", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_input, init) => {
       expect(init?.headers).toEqual({ [COMPANY_SELECTOR_HEADER]: "company-a" });
       expect(init).not.toHaveProperty("tenantId");
@@ -16,15 +16,15 @@ describe("fetchAuthoritativeAuthContext", () => {
       return jsonResponse({ tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member"] });
     });
 
-    await expect(fetchAuthoritativeAuthContext(" company-a ", fetcher)).resolves.toEqual({
+    await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({
       ok: true,
       context: { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member"] },
     });
   });
 
-  it("rejects an empty company selector before any authenticated transport is attempted", async () => {
+  it.each(["", "   ", " company-a "])("rejects malformed company selector %j before authenticated transport", async (selector) => {
     const fetcher = vi.fn<typeof fetch>();
-    await expect(fetchAuthoritativeAuthContext("   ", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
+    await expect(fetchAuthoritativeAuthContext(selector, fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -76,6 +76,10 @@ describe("fetchAuthoritativeAuthContext", () => {
     { tenantId: "tenant-server", companyId: 7, userId: "user-server", roles: [] },
     { tenantId: "tenant-server", companyId: "company-a", userId: 7, roles: [] },
     { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: "member" },
+    { tenantId: " tenant-server ", companyId: "company-a", userId: "user-server", roles: [] },
+    { tenantId: "tenant-server", companyId: "company-a", userId: " user-server ", roles: [] },
+    { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: [" member "] },
+    { tenantId: "tenant-server", companyId: "company-a", userId: "user-server", roles: ["member", "member"] },
   ])("rejects malformed authoritative payloads", async (payload) => {
     const fetcher = vi.fn<typeof fetch>(async () => jsonResponse(payload));
     await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
