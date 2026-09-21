@@ -25,6 +25,23 @@ function ownDataValue(value: object, key: PropertyKey): unknown {
   return descriptor && "value" in descriptor ? descriptor.value : undefined;
 }
 
+function snapshotCanonicalRoles(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+
+  // Do not iterate runtime arrays: a Proxy can replace Symbol.iterator and execute
+  // transport-controlled code after the membership envelope has otherwise validated.
+  const length = ownDataValue(value, "length");
+  if (!Number.isSafeInteger(length) || (length as number) < 0) return null;
+
+  const snapshot: string[] = [];
+  for (let index = 0; index < (length as number); index += 1) {
+    const role = ownDataValue(value, String(index));
+    if (!hasCanonicalText(role)) return null;
+    snapshot.push(role);
+  }
+  return new Set(snapshot).size === snapshot.length ? snapshot : null;
+}
+
 function normalizeMembership(value: unknown, selectedCompanyId: string): CompanyMembershipView | null {
   if (value === null || typeof value !== "object") return null;
 
@@ -33,7 +50,7 @@ function normalizeMembership(value: unknown, selectedCompanyId: string): Company
   const companyName = ownDataValue(value, "companyName");
   const userId = ownDataValue(value, "userId");
   const userName = ownDataValue(value, "userName");
-  const roles = ownDataValue(value, "roles");
+  const roles = snapshotCanonicalRoles(ownDataValue(value, "roles"));
 
   if (
     !hasCanonicalText(tenantId) ||
@@ -42,17 +59,12 @@ function normalizeMembership(value: unknown, selectedCompanyId: string): Company
     !hasCanonicalText(companyName) ||
     !hasCanonicalText(userId) ||
     !hasCanonicalText(userName) ||
-    !Array.isArray(roles)
+    !roles
   ) {
     return null;
   }
 
-  const roleSnapshot = Array.from(roles);
-  if (!roleSnapshot.every(hasCanonicalText) || new Set(roleSnapshot).size !== roleSnapshot.length) return null;
-
-  // Return a plain snapshot rather than retaining a runtime/custom transport object. This
-  // prevents validated proxy/accessor state from changing underneath later UI rendering.
-  return { tenantId, companyId, companyName, userId, userName, roles: roleSnapshot };
+  return { tenantId, companyId, companyName, userId, userName, roles };
 }
 
 function inspectSessionBootstrapResult(value: unknown):
@@ -61,8 +73,6 @@ function inspectSessionBootstrapResult(value: unknown):
   | null {
   if (value === null || typeof value !== "object") return null;
 
-  // Read only own data properties. Runtime/custom transports must not be able to execute
-  // accessors while the frontend is deciding whether an envelope is authoritative.
   const ok = ownDataValue(value, "ok");
   const membership = ownDataValue(value, "membership");
   const reason = ownDataValue(value, "reason");
@@ -79,8 +89,6 @@ function inspectSessionBootstrapResult(value: unknown):
 
 /** Browser state may choose a company, but never supplies TenantId/UserId authority. */
 export async function bootstrapAuthenticatedSession(selectedCompanyId: string | null | undefined, transport: SessionBootstrapTransport): Promise<AuthenticatedSessionState> {
-  // Selector input is browser-controlled. Reject ambiguous/non-canonical values rather than
-  // silently rewriting them before they cross the typed transport boundary.
   if (!hasCanonicalText(selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
   let result: unknown;
   try {
@@ -89,9 +97,6 @@ export async function bootstrapAuthenticatedSession(selectedCompanyId: string | 
     return { status: "forbidden", reason: "invalid-response" };
   }
 
-  // A custom/runtime transport is outside TypeScript's guarantees. Treat exceptions raised
-  // while inspecting its envelope or membership as invalid server data rather than allowing
-  // hostile accessors/proxies to escape the fail-closed session boundary.
   try {
     const inspected = inspectSessionBootstrapResult(result);
     if (!inspected) return { status: "forbidden", reason: "invalid-response" };
