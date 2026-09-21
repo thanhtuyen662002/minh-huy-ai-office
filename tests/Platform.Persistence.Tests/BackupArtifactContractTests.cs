@@ -113,6 +113,26 @@ public sealed class BackupArtifactContractTests
     }
 
     [Fact]
+    public void VerifyRecoveryDrill_RejectsFailedIntegrityOrApplicationProbe()
+    {
+        var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
+        var evidence = new RecoveryDrillEvidence(CreateDescriptor(), completedAt, Hash, DatabaseOnline: true);
+
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence with { IntegrityCheckPassed = false },
+            "company01",
+            "AIOffice_Company01",
+            completedAt.AddHours(1),
+            TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
+            evidence with { ApplicationProbePassed = false },
+            "company01",
+            "AIOffice_Company01",
+            completedAt.AddHours(1),
+            TimeSpan.FromHours(24)));
+    }
+
+    [Fact]
     public void VerifyRecoveryDrill_RejectsStaleOfflineFutureOrCrossCompanyEvidence()
     {
         var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
