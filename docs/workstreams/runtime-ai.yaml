@@ -4,11 +4,11 @@ status: active
 current_issue: 26
 current_pr: 77
 current_branch: "runtime/26-usage-cost-ledger"
-head: "da9151f0de4b0c6cf7c8580b81d3a27f92760f00"
-state: waiting_ci
+head: "c08eb9f252ce030f5c708787711b3054f1b87087"
+state: ready_for_review
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T19:21:39Z"
-last_checkpoint_at: "2026-09-21T19:21:39Z"
+lease_heartbeat_at: "2026-09-21T20:18:15Z"
+last_checkpoint_at: "2026-09-21T20:18:15Z"
 stacked_on: "main @ a871052bff124648d07195f0e8f85db82a0322c1"
 scope:
   - task-engine
@@ -19,4 +19,4 @@ scope:
   - model-router
   - context-engine
   - usage-cost-ledger
-next_action: "PR #77 is the sole Runtime lease for #26. Implementation HEAD da9151f0de4b0c6cf7c8580b81d3a27f92760f00 has exact-head Governance #35639446868 PASS and Build #35639446663 PASS after same-branch namespace repair. Issue #26 acceptance is satisfied by provider/model/capability/token-equivalent/provider-cost entries scoped to tenant/company/task/agent/request plus deterministic complete execution-tree aggregation with duplicate-charge, parent-tree, canonical-scope, UTC and malformed-usage fencing. No EF/migration persistence is required by #26 acceptance and adding it would overlap Backend/ERP ownership. This checkpoint records acceptance evidence; capture the new exact branch HEAD and close its Governance/Build. If both pass, set ready_for_review and hand merge sequencing to Lead."
+next_action: "PR #77 / issue #26 acceptance is complete. Implementation HEAD c08eb9f252ce030f5c708787711b3054f1b87087 has exact-head Governance #35644368656 PASS and Build #35644368421 PASS. PR is Ready for review and mergeable; HANDOFF is reconciled. Lead owns review/merge sequencing. Runtime must not open a competing primary lease before #77 integration; after merge, select the highest-priority unblocked Runtime/AI roadmap issue."
