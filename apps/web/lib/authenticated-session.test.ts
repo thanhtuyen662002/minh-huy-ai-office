@@ -38,6 +38,11 @@ describe("bootstrapAuthenticatedSession", () => {
     ["non-array roles", { ...serverMembership, roles: "admin" }],
     ["blank role", { ...serverMembership, roles: ["member", " "] }],
     ["non-string tenant", { ...serverMembership, tenantId: 42 }],
+    ["padded tenant", { ...serverMembership, tenantId: " tenant-server " }],
+    ["padded company name", { ...serverMembership, companyName: " Company A " }],
+    ["padded user id", { ...serverMembership, userId: " user-server " }],
+    ["padded user name", { ...serverMembership, userName: " Server User " }],
+    ["padded role", { ...serverMembership, roles: [" member "] }],
   ] as const)("fails closed for server membership with %s", async (_case, membership) => {
     const transport = (async () => ({ ok: true, membership })) as unknown as SessionBootstrapTransport;
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
