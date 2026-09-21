@@ -17,14 +17,18 @@ const failureCopy = {
   "invalid-response": "Không thể xác thực phạm vi công ty. Dữ liệu sẽ không được hiển thị.",
 } as const;
 
-const hasCanonicalCompanyId = (company: CompanyOption) => company.companyId.length > 0 && company.companyId.trim() === company.companyId;
+const hasCanonicalCompanyOption = (company: CompanyOption) =>
+  company.companyId.length > 0 &&
+  company.companyId.trim() === company.companyId &&
+  company.companyName.length > 0 &&
+  company.companyName.trim() === company.companyName;
 
 const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
   const counts = new Map<string, number>();
   for (const company of companies) {
-    if (hasCanonicalCompanyId(company)) counts.set(company.companyId, (counts.get(company.companyId) ?? 0) + 1);
+    if (hasCanonicalCompanyOption(company)) counts.set(company.companyId, (counts.get(company.companyId) ?? 0) + 1);
   }
-  return companies.filter((company) => hasCanonicalCompanyId(company) && counts.get(company.companyId) === 1);
+  return companies.filter((company) => hasCanonicalCompanyOption(company) && counts.get(company.companyId) === 1);
 };
 
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
