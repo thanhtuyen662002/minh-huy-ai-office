@@ -49,6 +49,20 @@ describe("fetchAuthoritativeAuthContext hostile runtime payloads", () => {
     expect(tenantGetter).not.toHaveBeenCalled();
   });
 
+  it("rejects accessor-backed authoritative roles without executing the getter", async () => {
+    const rolesGetter = vi.fn(() => ["admin"]);
+    const payload = {
+      tenantId: "tenant-server",
+      companyId: "company-a",
+      userId: "user-server",
+    } as Record<string, unknown>;
+    Object.defineProperty(payload, "roles", { enumerable: true, get: rolesGetter });
+    const fetcher = vi.fn<typeof fetch>(async () => ({ ok: true, status: 200, json: async () => payload }) as Response);
+
+    await expect(fetchAuthoritativeAuthContext("company-a", fetcher)).resolves.toEqual({ ok: false, reason: "invalid-response" });
+    expect(rolesGetter).not.toHaveBeenCalled();
+  });
+
   it("rejects hostile role iteration without executing the iterator", async () => {
     const iterator = vi.fn(function* () { yield "admin"; });
     const roles = ["member"];
