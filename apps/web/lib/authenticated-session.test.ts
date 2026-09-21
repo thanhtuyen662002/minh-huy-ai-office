@@ -49,6 +49,16 @@ describe("bootstrapAuthenticatedSession", () => {
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
   });
 
+  it("rejects accessor-backed authoritative identity without invoking transport-controlled getters", async () => {
+    const tenantIdGetter = vi.fn(() => "tenant-server");
+    const membership = { ...serverMembership } as Record<string, unknown>;
+    Object.defineProperty(membership, "tenantId", { enumerable: true, get: tenantIdGetter });
+    const transport = (async () => ({ ok: true, membership })) as unknown as SessionBootstrapTransport;
+
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
+    expect(tenantIdGetter).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["null envelope", null],
     ["missing ok discriminator", { membership: serverMembership }],
