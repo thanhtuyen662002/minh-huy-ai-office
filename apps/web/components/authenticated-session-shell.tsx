@@ -42,15 +42,19 @@ const normalizeCompanyOption = (company: CompanyOption): CompanyOption | null =>
 };
 
 const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
-  const normalized: CompanyOption[] = [];
-  const seen = new Set<string>();
-  for (const company of companies) {
-    const option = normalizeCompanyOption(company);
-    if (!option || seen.has(option.companyId)) return [];
-    seen.add(option.companyId);
-    normalized.push(option);
+  try {
+    const normalized: CompanyOption[] = [];
+    const seen = new Set<string>();
+    for (const company of companies) {
+      const option = normalizeCompanyOption(company);
+      if (!option || seen.has(option.companyId)) return [];
+      seen.add(option.companyId);
+      normalized.push(option);
+    }
+    return normalized;
+  } catch {
+    return [];
   }
-  return normalized;
 };
 
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
@@ -76,5 +80,5 @@ export function AuthenticatedSessionShell({ state, companies = [], onSelectCompa
     onSelectCompany?.(companyId);
   };
 
-  return <><CompanyShell membership={state.membership} />{canSwitchCompany ? <aside aria-label="Đổi công ty" className="fixed bottom-4 right-4 rounded-xl border border-black/10 bg-white p-3 shadow-sm dark:border-white/15 dark:bg-black"><label className="text-xs font-medium" htmlFor="company-selector">Đổi công ty</label><select id="company-selector" className="ml-2 rounded-lg border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20" value={state.membership.companyId} onChange={(event) => requestCompanySwitch(event.target.value)}>{switchableCompanies.map((company) => <option key={company.companyId} value={company.companyId}>{company.companyName}</option>)}</select><p className="mt-1 max-w-xs text-xs opacity-60">Lựa chọn này chỉ yêu cầu đổi phạm vi; máy chủ vẫn xác thực quyền truy cập.</p></aside> : null}</>;
+  return <><CompanyShell membership={state.membership} />{canSwitchCompany ? <aside aria-label="Đổi công ty" className="fixed bottom-4 right-4 rounded-xl border border-black/10 bg-white p-3 shadow-sm dark:border-black/15 dark:bg-black"><label className="text-xs font-medium" htmlFor="company-selector">Đổi công ty</label><select id="company-selector" className="ml-2 rounded-lg border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20" value={state.membership.companyId} onChange={(event) => requestCompanySwitch(event.target.value)}>{switchableCompanies.map((company) => <option key={company.companyId} value={company.companyId}>{company.companyName}</option>)}</select><p className="mt-1 max-w-xs text-xs opacity-60">Lựa chọn này chỉ yêu cầu đổi phạm vi; máy chủ vẫn xác thực quyền truy cập.</p></aside> : null}</>;
 }
