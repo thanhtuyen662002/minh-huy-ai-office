@@ -34,9 +34,10 @@ public sealed class PersistentWorkDeliveryHandlerTests
         var result = await handler.HandleAsync(envelope, CancellationToken.None);
         Assert.NotNull(result.DurableRetryEnvelope);
         Assert.Equal(WorkDispatchState.Published, original.State);
-        Assert.NotNull(execution.NextAttemptAtUtc);
         var retry = await db.TaskDispatches.SingleAsync(x => x.MessageId == result.DurableRetryEnvelope!.MessageId);
         Assert.Equal(WorkDispatchState.Published, retry.State);
+        Assert.True(retry.AvailableAtUtc > retry.CreatedAtUtc);
+        Assert.Null(execution.NextAttemptAtUtc);
         Assert.Equal(envelope.Attempt + 1, retry.Attempt);
         Assert.Equal(4, retry.CheckpointVersion);
         Assert.Equal(envelope.IdempotencyKey, retry.IdempotencyKey);
