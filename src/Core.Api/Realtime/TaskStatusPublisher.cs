@@ -13,17 +13,44 @@ public interface ITaskStatusPublisher
 public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskStatusClient> hubContext)
     : ITaskStatusPublisher
 {
-    public Task PublishTaskStatusAsync(Guid tenantId, Guid companyId, TaskStatusChanged message, CancellationToken cancellationToken = default) =>
-        Company(tenantId, companyId).TaskStatusChanged(message);
+    public Task PublishTaskStatusAsync(Guid tenantId, Guid companyId, TaskStatusChanged message, CancellationToken cancellationToken = default)
+    {
+        EnsureTaskId(message.TaskId);
+        return Company(tenantId, companyId).TaskStatusChanged(message);
+    }
 
-    public Task PublishStepStatusAsync(Guid tenantId, Guid companyId, TaskStepStatusChanged message, CancellationToken cancellationToken = default) =>
-        Company(tenantId, companyId).TaskStepStatusChanged(message);
+    public Task PublishStepStatusAsync(Guid tenantId, Guid companyId, TaskStepStatusChanged message, CancellationToken cancellationToken = default)
+    {
+        EnsureTaskId(message.TaskId);
+        if (message.StepId == Guid.Empty)
+        {
+            throw new ArgumentException("Step identifier is required for realtime publication.", nameof(message));
+        }
 
-    public Task PublishWorkerStatusAsync(Guid tenantId, Guid companyId, WorkerStatusChanged message, CancellationToken cancellationToken = default) =>
-        Company(tenantId, companyId).WorkerStatusChanged(message);
+        return Company(tenantId, companyId).TaskStepStatusChanged(message);
+    }
 
-    public Task PublishAttentionRequiredAsync(Guid tenantId, Guid companyId, TaskAttentionRequired message, CancellationToken cancellationToken = default) =>
-        Company(tenantId, companyId).AttentionRequired(message);
+    public Task PublishWorkerStatusAsync(Guid tenantId, Guid companyId, WorkerStatusChanged message, CancellationToken cancellationToken = default)
+    {
+        EnsureTaskId(message.TaskId);
+        if (string.IsNullOrWhiteSpace(message.WorkerId))
+        {
+            throw new ArgumentException("Worker identifier is required for realtime publication.", nameof(message));
+        }
+
+        return Company(tenantId, companyId).WorkerStatusChanged(message);
+    }
+
+    public Task PublishAttentionRequiredAsync(Guid tenantId, Guid companyId, TaskAttentionRequired message, CancellationToken cancellationToken = default)
+    {
+        EnsureTaskId(message.TaskId);
+        if (string.IsNullOrWhiteSpace(message.Kind) || string.IsNullOrWhiteSpace(message.ReasonCode))
+        {
+            throw new ArgumentException("Attention kind and reason code are required for realtime publication.", nameof(message));
+        }
+
+        return Company(tenantId, companyId).AttentionRequired(message);
+    }
 
     private ITaskStatusClient Company(Guid tenantId, Guid companyId)
     {
@@ -33,5 +60,13 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
         }
 
         return hubContext.Clients.Group(TaskStatusRealtime.CompanyGroup(tenantId, companyId));
+    }
+
+    private static void EnsureTaskId(Guid taskId)
+    {
+        if (taskId == Guid.Empty)
+        {
+            throw new ArgumentException("Task identifier is required for realtime publication.");
+        }
     }
 }
