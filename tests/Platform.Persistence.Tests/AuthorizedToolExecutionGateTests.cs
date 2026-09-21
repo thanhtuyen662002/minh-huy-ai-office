@@ -23,6 +23,35 @@ public sealed class AuthorizedToolExecutionGateTests
         Assert.Equal("executed", result);
     }
 
+    [Fact]
+    public async Task Denied_request_is_audited_and_never_reaches_executor()
+    {
+        var sink = new RecordingSink();
+        var gate = new AuthorizedToolExecutionGate(new ToolAuthorizationPolicy(), new ToolExecutionAuditService(sink));
+        var request = new ToolAuthorizationRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "ledger", "post", ToolRiskLevel.High);
+        var permission = new ToolPermission(request.TenantId, request.CompanyId, request.UserId, request.Resource, request.Action, ToolRiskLevel.Medium);
+        var executed = false;
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => gate.ExecuteAsync(
+            request,
+            [permission],
+            _ =>
+            {
+                executed = true;
+                return Task.FromResult("must-not-run");
+            }));
+
+        Assert.False(executed);
+        var audit = Assert.Single(sink.Entries);
+        Assert.False(audit.Authorized);
+        Assert.Equal("risk_exceeds_permission", audit.DecisionReason);
+        Assert.Equal(request.TenantId, audit.TenantId);
+        Assert.Equal(request.CompanyId, audit.CompanyId);
+        Assert.Equal(request.UserId, audit.UserId);
+        Assert.Equal(request.TaskId, audit.TaskId);
+        Assert.Contains("risk_exceeds_permission", exception.Message, StringComparison.Ordinal);
+    }
+
     private sealed class RecordingSink : IToolExecutionAuditSink
     {
         public List<ToolExecutionAuditEntry> Entries { get; } = [];
