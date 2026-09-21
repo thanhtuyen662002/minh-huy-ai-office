@@ -22,6 +22,16 @@ describe("bootstrapAuthenticatedSession hostile runtime boundary", () => {
     expect(membershipGetter).not.toHaveBeenCalled();
   });
 
+  it("rejects accessor-backed failure reasons without executing transport getters", async () => {
+    const reasonGetter = vi.fn(() => "forbidden");
+    const envelope = { ok: false } as Record<string, unknown>;
+    Object.defineProperty(envelope, "reason", { enumerable: true, get: reasonGetter });
+    const transport = (async () => envelope) as unknown as SessionBootstrapTransport;
+
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual(invalidResponse);
+    expect(reasonGetter).not.toHaveBeenCalled();
+  });
+
   it("fails closed when authoritative membership throws during validation", async () => {
     const membership = new Proxy({}, { getOwnPropertyDescriptor(_target, property) { if (property === "tenantId") throw new Error("hostile membership"); return undefined; } });
     const transport = (async () => ({ ok: true, membership })) as unknown as SessionBootstrapTransport;
