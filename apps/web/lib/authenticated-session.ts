@@ -22,7 +22,24 @@ const hasCanonicalText = (value: unknown): value is string => hasText(value) && 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
 function isValidMembership(membership: CompanyMembershipView, selectedCompanyId: string): boolean {
-  return membership !== null && typeof membership === "object" && hasCanonicalText(membership.tenantId) && hasCanonicalText(membership.companyId) && membership.companyId === selectedCompanyId && hasCanonicalText(membership.companyName) && hasCanonicalText(membership.userId) && hasCanonicalText(membership.userName) && Array.isArray(membership.roles) && membership.roles.every(hasCanonicalText);
+  if (
+    membership === null ||
+    typeof membership !== "object" ||
+    !hasCanonicalText(membership.tenantId) ||
+    !hasCanonicalText(membership.companyId) ||
+    membership.companyId !== selectedCompanyId ||
+    !hasCanonicalText(membership.companyName) ||
+    !hasCanonicalText(membership.userId) ||
+    !hasCanonicalText(membership.userName) ||
+    !Array.isArray(membership.roles) ||
+    !membership.roles.every(hasCanonicalText)
+  ) {
+    return false;
+  }
+
+  // Treat repeated role claims as an ambiguous server envelope instead of silently
+  // canonicalizing authorization-adjacent data in the browser.
+  return new Set(membership.roles).size === membership.roles.length;
 }
 
 function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResult {
