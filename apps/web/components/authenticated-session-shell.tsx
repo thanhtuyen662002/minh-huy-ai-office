@@ -64,7 +64,9 @@ const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
 
 const readReadyCompanyId = (state: Extract<AuthenticatedSessionState, { status: "ready" }>) => {
   try {
-    const companyId = state.membership.companyId;
+    const membership = getOwnDataProperty(state, "membership");
+    if (membership === null || typeof membership !== "object") return null;
+    const companyId = getOwnDataProperty(membership, "companyId");
     return typeof companyId === "string" && companyId.length > 0 && companyId.trim() === companyId ? companyId : null;
   } catch {
     return null;
