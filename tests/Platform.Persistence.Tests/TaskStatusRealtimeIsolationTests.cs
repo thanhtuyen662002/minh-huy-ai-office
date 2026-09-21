@@ -1,8 +1,7 @@
 extern alias CoreApi;
 
-using Xunit;
-
 using Realtime = CoreApi::MinhHuy.AIOffice.Core.Api.Realtime;
+using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
