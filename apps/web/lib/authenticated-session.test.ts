@@ -24,7 +24,7 @@ describe("bootstrapAuthenticatedSession", () => {
       expect(request.headers).not.toHaveProperty("X-AIOffice-User-Id");
       return { ok: true, membership: serverMembership };
     });
-    await expect(bootstrapAuthenticatedSession(" company-a ", transport)).resolves.toEqual({ status: "ready", membership: serverMembership });
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "ready", membership: serverMembership });
   });
 
   it.each([
@@ -70,9 +70,9 @@ describe("bootstrapAuthenticatedSession", () => {
     await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
   });
 
-  it("never calls transport without a company selector", async () => {
+  it.each([null, undefined, "", "  ", " company-a "])("never calls transport for malformed company selector %s", async (selector) => {
     const transport = vi.fn<SessionBootstrapTransport>();
-    await expect(bootstrapAuthenticatedSession("  ", transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
+    await expect(bootstrapAuthenticatedSession(selector, transport)).resolves.toEqual({ status: "forbidden", reason: "invalid-response" });
     expect(transport).not.toHaveBeenCalled();
   });
 
