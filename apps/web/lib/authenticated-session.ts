@@ -19,7 +19,6 @@ export type SessionBootstrapTransport = (request: {
 
 const hasText = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 const hasCanonicalText = (value: unknown): value is string => hasText(value) && value.trim() === value;
-const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
 function ownDataValue(value: object, key: PropertyKey): unknown {
   const descriptor = Object.getOwnPropertyDescriptor(value, key);
@@ -56,10 +55,26 @@ function normalizeMembership(value: unknown, selectedCompanyId: string): Company
   return { tenantId, companyId, companyName, userId, userName, roles: roleSnapshot };
 }
 
-function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResult {
-  if (value === null || typeof value !== "object" || !hasOwn(value, "ok")) return false;
-  if (value.ok === true) return hasOwn(value, "membership") && !hasOwn(value, "reason");
-  return value.ok === false && !hasOwn(value, "membership") && hasOwn(value, "reason") && (value.reason === "unauthenticated" || value.reason === "forbidden" || value.reason === "inactive-membership" || value.reason === "invalid-response");
+function inspectSessionBootstrapResult(value: unknown):
+  | { kind: "success"; membership: unknown }
+  | { kind: "failure"; reason: SessionFailure }
+  | null {
+  if (value === null || typeof value !== "object") return null;
+
+  // Read only own data properties. Runtime/custom transports must not be able to execute
+  // accessors while the frontend is deciding whether an envelope is authoritative.
+  const ok = ownDataValue(value, "ok");
+  const membership = ownDataValue(value, "membership");
+  const reason = ownDataValue(value, "reason");
+  if (ok === true && membership !== undefined && reason === undefined) return { kind: "success", membership };
+  if (
+    ok === false &&
+    membership === undefined &&
+    (reason === "unauthenticated" || reason === "forbidden" || reason === "inactive-membership" || reason === "invalid-response")
+  ) {
+    return { kind: "failure", reason };
+  }
+  return null;
 }
 
 /** Browser state may choose a company, but never supplies TenantId/UserId authority. */
@@ -78,12 +93,13 @@ export async function bootstrapAuthenticatedSession(selectedCompanyId: string | 
   // while inspecting its envelope or membership as invalid server data rather than allowing
   // hostile accessors/proxies to escape the fail-closed session boundary.
   try {
-    if (!isSessionBootstrapResult(result)) return { status: "forbidden", reason: "invalid-response" };
-    if (!result.ok) {
-      if (result.reason === "unauthenticated") return { status: "unauthenticated" };
-      return { status: "forbidden", reason: result.reason === "inactive-membership" ? "inactive-membership" : result.reason === "forbidden" ? "forbidden" : "invalid-response" };
+    const inspected = inspectSessionBootstrapResult(result);
+    if (!inspected) return { status: "forbidden", reason: "invalid-response" };
+    if (inspected.kind === "failure") {
+      if (inspected.reason === "unauthenticated") return { status: "unauthenticated" };
+      return { status: "forbidden", reason: inspected.reason === "inactive-membership" ? "inactive-membership" : inspected.reason === "forbidden" ? "forbidden" : "invalid-response" };
     }
-    const membership = normalizeMembership(result.membership, selectedCompanyId);
+    const membership = normalizeMembership(inspected.membership, selectedCompanyId);
     if (!membership) return { status: "forbidden", reason: "invalid-response" };
     return { status: "ready", membership };
   } catch {
