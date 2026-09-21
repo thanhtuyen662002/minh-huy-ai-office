@@ -68,17 +68,18 @@ export async function fetchAuthoritativeAuthContext(
     return { ok: false, reason: "invalid-response" };
   }
 
-  if (response.status === 401) return { ok: false, reason: "unauthenticated" };
-  if (response.status === 403) return { ok: false, reason: "forbidden" };
-  if (!response.ok) return { ok: false, reason: "invalid-response" };
-
-  let payload: unknown;
+  // Treat the response object as an untrusted runtime boundary too. A custom fetcher,
+  // browser extension, or compromised transport shim must not be able to crash the shell
+  // through throwing status/ok/json accessors.
   try {
-    payload = await response.json();
+    if (response.status === 401) return { ok: false, reason: "unauthenticated" };
+    if (response.status === 403) return { ok: false, reason: "forbidden" };
+    if (!response.ok) return { ok: false, reason: "invalid-response" };
+
+    const payload: unknown = await response.json();
+    const context = parseContext(payload, selectedCompanyId);
+    return context ? { ok: true, context } : { ok: false, reason: "invalid-response" };
   } catch {
     return { ok: false, reason: "invalid-response" };
   }
-
-  const context = parseContext(payload, selectedCompanyId);
-  return context ? { ok: true, context } : { ok: false, reason: "invalid-response" };
 }
