@@ -1,56 +1,77 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P1-platform-core
+phase: P1-P2-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 20
-current_branch: runtime/20-worker-dispatch
-current_pr: 55
-current_target_head: 04b3b52c0350412513f248bf919e0e197d00008d
-last_verified_commit: 81e15a938e5cc267a267c7b1d09e52edf1ccd1e0
+current_issue: 22
+current_branch: backend/22-realtime-task-dashboard
+current_pr: 73
+current_target_head: 2cae68c97e2afbfb9caa80fe45369f835ce8cf9b
+last_verified_commit: 18436f96b8bd0cdf02c27e3f3dd6c8923706e39f
+
 critical_paths:
-  runtime:
-    issue: 20
-    pr: 55
-    head: 04b3b52c0350412513f248bf919e0e197d00008d
+  backend:
+    issue: 22
+    pr: 73
+    branch: backend/22-realtime-task-dashboard
+    head: 2cae68c97e2afbfb9caa80fe45369f835ce8cf9b
     state: in_progress
-    next: "Verify exact-head executable CI; continue safe acceptance/host activation only with authoritative executor/config."
-  backend_auth:
-    issue: 58
-    pr: 60
-    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
-    state: merged
-    merge_commit: 81e15a938e5cc267a267c7b1d09e52edf1ccd1e0
-    evidence: "Exact-head Build 35515186798 and Governance 35515186802 succeeded; Lead merged immediately."
-  erp_data:
-    issue: 18
-    pr: 63
-    branch: erp/18-authenticated-datasource-api
-    head: 0dbbb5f2c9c06d0f809ac05724c34242debd5f05
-    state: in_progress
-    next: "Reconcile SAME PR onto authoritative main after #60 merge; complete authorized success-path secret/reference non-exposure and company-scoped connection-test regressions; require exact executable green CI."
+    next: "Fix exact-head formatting failure in TaskStatusRealtimeIsolationTests.cs, rerun focused verification, push SAME PR, then integrate publisher calls at authoritative task-state transition sources and close exact-head CI."
+
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: deeeb86855cdc177ce3974cfa43f84c6c4c58ff8
+    head: ea036272e0c7543305ced78b03bd008ebe468653
     state: in_progress
-    next: "Reconcile concrete /api/auth/context transport against merged #60 while preserving server-authoritative identity and fail-closed behavior."
+    next: "Continue executable auth/session acceptance on SAME PR; exact-head workflow emission is still absent. Do not fabricate presentation identity. After #62 closes, move immediately to #22 frontend realtime UI."
+
+  runtime_ai:
+    issue: 25
+    pr: 76
+    branch: runtime/25-context-engine
+    head: fa27aa917d7a52b8aec1c5ad96d80e766e8a3329
+    state: in_progress
+    next: "Fix exact-head test compile failure in AiContextEngineTests.cs (xUnit Fact/FactAttribute resolution), push SAME PR, close CI, then complete durable context checkpoint/persistence acceptance."
+
+  erp_data:
+    issue: 36
+    pr: null
+    branch: null
+    head: 02b780f81426820f5fa0c26ddc0bbe448d9f8a0e
+    state: idle
+    next: "PR #67 recovery/backup safety slice is merged. Resume remaining #36 recovery/failure-drill acceptance or the highest-priority unblocked ERP/Data issue without duplicating another live lease."
+
+recent_authoritative_merges:
+  - "PR #55 / issue #20 RabbitMQ workers, leases, retries and idempotency: MERGED at f9ecb316dc557ca1cf476fb09e80d93d102a3837"
+  - "PR #66 / issue #21 Permission/Policy Engine + immutable audit: MERGED at 23de9d82d1bb376e24006253fbf64698c54053b0"
+  - "PR #67 / issue #36 recovery/backup safety slice: MERGED at 02b780f81426820f5fa0c26ddc0bbe448d9f8a0e"
+  - "PR #70 / #72 realtime event contract/projection support for #22: MERGED"
+  - "PR #74 / issue #23 provider-neutral AI Gateway: MERGED at f67ea8173a100a1ab0074cc4238297b1262c8564"
+  - "PR #75 / issue #24 Model Capability Registry/router/fallback: MERGED at 18436f96b8bd0cdf02c27e3f3dd6c8923706e39f"
+  - "PR #69 / issue #68 CI closure protocol: MERGED at 4877d96083d3ba9f3ca486ab84b26a273b4edd4a"
+
 dependency_chain:
-  - "PR #51 / issue #19 Durable Task Engine: MERGED"
-  - "PR #60 / issue #58 trusted HTTP authentication: MERGED at 81e15a938e5cc267a267c7b1d09e52edf1ccd1e0"
-  - "PR #63 / residual #18: reconcile now to authoritative main; close only after security/success-path acceptance and exact green CI"
-  - "PR #55 / issue #20: active Runtime acceptance target"
-  - "PR #64 / issue #62: active Frontend auth-session lane; merged #60 transport is now authoritative"
-next_action: "Keep #55, #63 and #64 moving in parallel. ERP immediate run requested after #60 merge. Activate Backend #21 immediately after #18 closes; activate Frontend #22 immediately after #20 closes."
+  - "P1 durable task/worker/auth/data/policy foundations are authoritative."
+  - "PR #73 / issue #22 backend SignalR integration is active; Runtime event contract/projection prerequisites are merged."
+  - "PR #64 / issue #62 frontend auth-session lane remains active; after completion Frontend advances to #22 realtime UI."
+  - "PR #76 / issue #25 Context Engine is active on top of merged #23 AI Gateway and #24 model router."
+  - "After #25, prioritize #26 Usage/Cost Ledger and #27 Eval/Replay according to dependency readiness."
+  - "ERP/Data should continue remaining #36 recovery work or the next safe unblocked ERP/Data slice."
+
+next_action: "Keep #73, #64 and #76 moving in parallel with exact-head CI closure. ERP/Data takes the next safe executable lease. Lead/Watchdog must refresh this file whenever merged/live PR ownership changes; never leave merged PRs recorded as active."
+
 blocked_by:
-  - "Backend #21 waits for residual #18 to become authoritative."
-  - "Frontend #22 waits for #20 to become authoritative."
+  - "Frontend #64 exact-head workflow emission remains unreliable/absent."
+  - "PR #73 has an actionable formatting failure, not an architecture blocker."
+  - "PR #76 has an actionable xUnit test compile failure, not an architecture blocker."
+
 autonomy:
   routine_engineering: autonomous
   staging_deploy: autonomous_after_gates
   production_low_risk: autonomous_after_policy
   production_high_risk: approval_required
+
 handoff_contract:
   required: true
   checkpoint_frequency: "after each verified unit of work"
