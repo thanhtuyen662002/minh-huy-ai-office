@@ -18,6 +18,8 @@ const failureCopy = {
 } as const;
 
 const hasCanonicalCompanyOption = (company: CompanyOption) =>
+  typeof company?.companyId === "string" &&
+  typeof company?.companyName === "string" &&
   company.companyId.length > 0 &&
   company.companyId.trim() === company.companyId &&
   company.companyName.length > 0 &&
