@@ -66,6 +66,17 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
 
+  it("rejects duplicate company IDs instead of rendering ambiguous switch metadata", () => {
+    const onSelectCompany = vi.fn();
+    const ambiguousCompanies = [companies[0], companies[1], { companyId: "branch-2", companyName: "Spoofed branch label" }];
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={ambiguousCompanies} onSelectCompany={onSelectCompany} />);
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.queryByText("Chi nhánh 2")).toBeNull();
+    expect(screen.queryByText("Spoofed branch label")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
+
   it("keeps the authoritative company selected when untrusted options omit it", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[companies[1]]} onSelectCompany={onSelectCompany} />);
