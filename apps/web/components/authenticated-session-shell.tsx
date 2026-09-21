@@ -18,8 +18,12 @@ const failureCopy = {
 } as const;
 
 const getOwnDataProperty = (value: object, key: PropertyKey) => {
-  const descriptor = Object.getOwnPropertyDescriptor(value, key);
-  return descriptor && "value" in descriptor ? descriptor.value : undefined;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && "value" in descriptor ? descriptor.value : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const hasCanonicalCompanyOption = (company: CompanyOption) => {
