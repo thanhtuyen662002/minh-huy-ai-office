@@ -16,6 +16,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
     public Task PublishTaskStatusAsync(Guid tenantId, Guid companyId, TaskStatusChanged message, CancellationToken cancellationToken = default)
     {
         EnsureTaskId(message.TaskId);
+        EnsureStatus(message.Status);
         return Company(tenantId, companyId).TaskStatusChanged(message);
     }
 
@@ -27,6 +28,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
             throw new ArgumentException("Step identifier is required for realtime publication.", nameof(message));
         }
 
+        EnsureStatus(message.Status);
         return Company(tenantId, companyId).TaskStepStatusChanged(message);
     }
 
@@ -38,6 +40,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
             throw new ArgumentException("Worker identifier is required for realtime publication.", nameof(message));
         }
 
+        EnsureStatus(message.Status);
         return Company(tenantId, companyId).WorkerStatusChanged(message);
     }
 
@@ -67,6 +70,14 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
         if (taskId == Guid.Empty)
         {
             throw new ArgumentException("Task identifier is required for realtime publication.");
+        }
+    }
+
+    private static void EnsureStatus(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            throw new ArgumentException("Status is required for realtime publication.");
         }
     }
 }
