@@ -41,14 +41,16 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
             objects.Add(new ErpSchemaObject(kind, schema, name, HashDefinition(definition)));
         }
 
-        return authority with
+        var snapshot = authority with
         {
             Objects = objects
                 .OrderBy(item => item.Kind)
                 .ThenBy(item => item.Schema, StringComparer.Ordinal)
                 .ThenBy(item => item.Name, StringComparer.Ordinal)
                 .ToArray()
-        }.Validate();
+        };
+
+        return snapshot.Validate();
     }
 
     private static ErpSchemaObjectKind ParseKind(string value) => value switch
