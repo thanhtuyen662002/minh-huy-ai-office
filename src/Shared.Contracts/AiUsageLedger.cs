@@ -1,4 +1,4 @@
-namespace MinhHuy.AiOffice.Shared.Contracts;
+namespace MinhHuyAiOffice.Shared.Contracts;
 
 public sealed record AiUsageScope(
     string TenantId,
