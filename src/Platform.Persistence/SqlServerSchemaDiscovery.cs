@@ -7,7 +7,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 
 public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFactory)
 {
-    private const string DiscoverySql = """
+    internal const string DiscoverySql = """
         SELECT object_kind, schema_name, object_name, definition_text
         FROM dbo.AIOfficeSchemaDiscoveryView
         ORDER BY object_kind, schema_name, object_name;
@@ -35,8 +35,8 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
         while (await reader.ReadAsync(cancellationToken))
         {
             var kind = ParseKind(reader.GetString(0));
-            var schema = reader.GetString(1);
-            var name = reader.GetString(2);
+            var schema = RequireMetadataValue(reader.GetString(1), "schema_name");
+            var name = RequireMetadataValue(reader.GetString(2), "object_name");
             var definition = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
             objects.Add(new ErpSchemaObject(kind, schema, name, HashDefinition(definition)));
         }
@@ -53,7 +53,7 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
         return snapshot.Validate();
     }
 
-    private static ErpSchemaObjectKind ParseKind(string value) => value switch
+    internal static ErpSchemaObjectKind ParseKind(string value) => value switch
     {
         "TABLE" => ErpSchemaObjectKind.Table,
         "VIEW" => ErpSchemaObjectKind.View,
@@ -65,6 +65,13 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
         _ => throw new InvalidOperationException("Unsupported SQL Server schema object kind.")
     };
 
-    private static string HashDefinition(string definition) =>
+    internal static string HashDefinition(string definition) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(definition)));
+
+    private static string RequireMetadataValue(string value, string column)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value != value.Trim())
+            throw new InvalidOperationException($"SQL Server schema metadata column {column} is not canonical.");
+        return value;
+    }
 }
