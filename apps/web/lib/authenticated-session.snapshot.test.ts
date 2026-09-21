@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bootstrapAuthenticatedSession, type SessionBootstrapTransport } from "./authenticated-session";
+import { bootstrapAuthenticatedSession, COMPANY_SELECTOR_HEADER, type SessionBootstrapTransport } from "./authenticated-session";
 
 const membership = {
   tenantId: "tenant-server",
@@ -47,6 +47,24 @@ describe("authenticated session membership snapshot", () => {
     }).toThrow();
     expect(state.membership.companyId).toBe("company-a");
     expect(state.membership.roles).toEqual(["member"]);
+  });
+
+  it("freezes the validated selector request before crossing the transport boundary", async () => {
+    const transport: SessionBootstrapTransport = async (request) => {
+      expect(Object.isFrozen(request)).toBe(true);
+      expect(Object.isFrozen(request.headers)).toBe(true);
+      expect(request.selectedCompanyId).toBe("company-a");
+      expect(request.headers[COMPANY_SELECTOR_HEADER]).toBe("company-a");
+      expect(() => {
+        (request as { selectedCompanyId: string }).selectedCompanyId = "company-b";
+      }).toThrow();
+      expect(() => {
+        (request.headers as Record<string, string>)[COMPANY_SELECTOR_HEADER] = "company-b";
+      }).toThrow();
+      return { ok: true, membership };
+    };
+
+    await expect(bootstrapAuthenticatedSession("company-a", transport)).resolves.toMatchObject({ status: "ready" });
   });
 
   it("rejects accessor-backed authoritative fields without invoking their getters", async () => {
