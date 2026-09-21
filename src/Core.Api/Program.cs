@@ -65,6 +65,7 @@ if (authenticationConfigured)
         });
     builder.Services.AddAuthorization();
     builder.Services.AddSignalR();
+    builder.Services.AddSingleton<ITaskStatusPublisher, SignalRTaskStatusPublisher>();
 }
 
 var app = builder.Build();
