@@ -1,15 +1,15 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 25
-current_pr: 76
-current_branch: "runtime/25-context-engine"
-head: "f5720f16b0b23f0a7967a86bd876022b5f6b1389"
-state: in_progress
+current_issue: 26
+current_pr: 77
+current_branch: "runtime/26-usage-cost-ledger"
+head: "a20073d5588dc3c8e6da32c5d8999013e2588f08"
+state: waiting_ci
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T16:21:00Z"
-last_checkpoint_at: "2026-09-21T16:21:00Z"
-stacked_on: "main @ 18436f96b8bd0cdf02c27e3f3dd6c8923706e39f"
+lease_heartbeat_at: "2026-09-21T18:18:48Z"
+last_checkpoint_at: "2026-09-21T18:18:48Z"
+stacked_on: "main @ a871052bff124648d07195f0e8f85db82a0322c1"
 scope:
   - task-engine
   - rabbitmq-workers
@@ -18,4 +18,5 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "PR #76 is the sole Runtime lease for #25. Exact-head fe268860 had Governance #35622614108 PASS and Build #35622613885 PASS. Acceptance still required durable manifest/checkpoint persistence, so the same PR now adds IAiContextCheckpointStore + DurableAiContextEngine persistence boundary and deterministic tests proving raw source content does not cross it, persistence failures propagate, and non-UTC checkpoints fail before persistence. Current implementation HEAD before this state checkpoint is f5720f16b0b23f0a7967a86bd876022b5f6b1389. Capture workflows for the new exact HEAD after this state commit; inspect/fix actionable RED on SAME PR. If exact-head required gates are green and no acceptance gap remains, mark PR #76 ready_for_review and hand merge sequencing to Lead."
+  - usage-cost-ledger
+next_action: "PR #77 is the sole Runtime lease for #26. Exact-head a573ed04 had Governance #35632871510 PASS but Build #35632871671 RED: .NET build, EF persistence build and container build failed downstream of a compile error introduced by the usage-ledger tests. Inspection found the test imported MinhHuyAiOffice.Shared.Contracts while the authoritative namespace is MinhHuy.AiOffice.Shared.Contracts. Fixed on SAME branch in commit a20073d5588dc3c8e6da32c5d8999013e2588f08. Capture Governance/Build run IDs for the new exact HEAD after this state checkpoint; inspect/fix any actionable RED on SAME PR. If exact-head required gates are green, complete remaining #26 persistence/acceptance work without overlapping active Backend/ERP EF ownership, then mark ready_for_review only when acceptance is complete."
