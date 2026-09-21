@@ -1,6 +1,8 @@
+extern alias RuntimeWorker;
+
 using System.Reflection;
 using System.Text.Json;
-using MinhHuy.AIOffice.Agent.Worker;
+using RuntimeWorker::MinhHuy.AIOffice.Agent.Worker;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
 
@@ -14,9 +16,7 @@ public sealed class RabbitMqWorkTransportTests
     public void Options_reject_unbounded_or_excessive_prefetch(ushort prefetch)
     {
         var options = new RabbitMqWorkOptions { PrefetchCount = prefetch };
-
         var exception = Assert.Throws<InvalidOperationException>(options.Validate);
-
         Assert.Contains("prefetch", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -27,7 +27,6 @@ public sealed class RabbitMqWorkTransportTests
     public void Options_accept_bounded_prefetch(ushort prefetch)
     {
         var options = new RabbitMqWorkOptions { PrefetchCount = prefetch };
-
         options.Validate();
     }
 
@@ -36,9 +35,7 @@ public sealed class RabbitMqWorkTransportTests
     {
         var valid = CreateEnvelope();
         var tampered = valid with { IdempotencyKey = "v1:tampered" };
-
         var exception = InvokeEnvelopeValidation(tampered);
-
         Assert.IsType<JsonException>(exception);
     }
 
@@ -46,9 +43,7 @@ public sealed class RabbitMqWorkTransportTests
     public void Consumer_rejects_invalid_attempt_before_handler()
     {
         var invalid = CreateEnvelope() with { Attempt = 0 };
-
         var exception = InvokeEnvelopeValidation(invalid);
-
         Assert.IsType<JsonException>(exception);
     }
 
@@ -56,7 +51,6 @@ public sealed class RabbitMqWorkTransportTests
     public void Consumer_accepts_contract_created_envelope()
     {
         var exception = InvokeEnvelopeValidation(CreateEnvelope());
-
         Assert.Null(exception);
     }
 
