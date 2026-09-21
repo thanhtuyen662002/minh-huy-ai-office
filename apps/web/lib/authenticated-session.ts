@@ -59,11 +59,19 @@ export async function bootstrapAuthenticatedSession(selectedCompanyId: string | 
   } catch {
     return { status: "forbidden", reason: "invalid-response" };
   }
-  if (!isSessionBootstrapResult(result)) return { status: "forbidden", reason: "invalid-response" };
-  if (!result.ok) {
-    if (result.reason === "unauthenticated") return { status: "unauthenticated" };
-    return { status: "forbidden", reason: result.reason === "inactive-membership" ? "inactive-membership" : result.reason === "forbidden" ? "forbidden" : "invalid-response" };
+
+  // A custom/runtime transport is outside TypeScript's guarantees. Treat exceptions raised
+  // while inspecting its envelope or membership as invalid server data rather than allowing
+  // hostile accessors/proxies to escape the fail-closed session boundary.
+  try {
+    if (!isSessionBootstrapResult(result)) return { status: "forbidden", reason: "invalid-response" };
+    if (!result.ok) {
+      if (result.reason === "unauthenticated") return { status: "unauthenticated" };
+      return { status: "forbidden", reason: result.reason === "inactive-membership" ? "inactive-membership" : result.reason === "forbidden" ? "forbidden" : "invalid-response" };
+    }
+    if (!isValidMembership(result.membership, selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
+    return { status: "ready", membership: result.membership };
+  } catch {
+    return { status: "forbidden", reason: "invalid-response" };
   }
-  if (!isValidMembership(result.membership, selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
-  return { status: "ready", membership: result.membership };
 }
