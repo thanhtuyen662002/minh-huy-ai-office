@@ -6,43 +6,44 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: e483e09237f70d8c8a9ec34110998d0244814be9
-last_verified_commit: ccad67e3fef0edf9843c36ff34d2904cc31b6013
+current_target_head: 56ae79381951a3edccaa32fec4d207a75e7b577d
+last_verified_commit: 0693313c75063e7b5ed6dc2f373f65b12462c9ba
 
 critical_paths:
   backend:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: e483e09237f70d8c8a9ec34110998d0244814be9
+    head: 56ae79381951a3edccaa32fec4d207a75e7b577d
     state: in_progress
-    next: "Governance 35648520040 is green; Build 35648520069 is terminal red on executable runner with xUnit2014 at TaskStatusRealtimeIsolationTests.cs lines 63/73/85/99. Backend immediate re-entry requested: replace synchronous Throws assertions for async-returning publisher calls, close exact-head CI, then continue the architecture-consistent durable-transition-to-SignalR publication bridge without reverse project dependency."
+    next: "Exact-head Build 35654516018 is terminal red on an executable runner: .NET format passed but the .NET build step failed; other visible deployment/container, EF migration, Web and Compose jobs passed. Backend immediate re-entry requested to inspect the failed build diagnostic, fix SAME PR, close exact-head CI, then continue the architecture-consistent durable-transition-to-SignalR bridge without reverse project dependency."
 
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 04ad8cfa9fd58df2bc944e8fc022487b3af45dc2
+    head: 515f30a6fdfafee92c487184f1b033a2800c1ce4
     state: in_progress
-    next: "Actual PR remains draft/non-mergeable and exact HEAD has no workflow emission. Frontend immediate re-entry requested: reconcile SAME PR against current main, continue executable #62 acceptance, preserve server-derived authority and do not fabricate company/user presentation identity."
+    next: "Actual PR remains draft with executable #62 acceptance. Frontend immediate re-entry requested: reconcile SAME PR against authoritative main after Runtime #77 merge, continue fail-closed auth-context/component acceptance, preserve server-derived authority and do not fabricate company/user presentation identity."
 
   runtime_ai:
-    issue: 26
-    pr: 77
-    branch: runtime/26-usage-cost-ledger
-    head: be1f6257519ef1cdb659772696026952da056c00
-    state: in_progress
-    next: "Exact-head Governance 35650247210 and Build 35650247225 are green and HANDOFF says #26 acceptance complete, but PR is currently non-mergeable/diverged after recent main advances. Runtime immediate re-entry requested to reconcile SAME PR onto authoritative main, preserve ledger fencing, obtain exact-head gates, and restore ready_for_review."
-
-  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: idle
-    next: "PR #78 / issue #27 deterministic ERP eval/replay harness merged at ccad67e3fef0edf9843c36ff34d2904cc31b6013 after exact-head Governance 35645895825 and Build 35645895848 passed. ERP/Data immediate re-entry requested to release stale lease and claim highest-priority unblocked ERP/Data work; #28 Schema Observer is now dependency-unblocked by authoritative #18/#27."
+    next: "PR #77 / issue #26 Usage and Cost Ledger merged at 0693313c75063e7b5ed6dc2f373f65b12462c9ba after exact-head Governance 35650247210 and Build 35650247225 passed. Runtime immediate re-entry requested to release stale #77 lease and claim the highest-priority unblocked Runtime/AI roadmap work without duplicating another live lease."
+
+  erp_data:
+    issue: 28
+    pr: 79
+    branch: erp/28-schema-observer
+    head: f3c7e00dbe39bd19dd724f8f19455378a997dbf2
+    state: waiting_ci
+    next: "Schema Observer is actively claimed. Previous executable HEAD 17932a4c3b95cb2305191e483856b048100d6127 had Governance 35652312664 and Build 35652312727 green; current executable discovery HEAD f3c7e00dbe39bd19dd724f8f19455378a997dbf2 requires exact-head closure and further metadata discovery hardening. ERP/Data immediate re-entry requested; preserve tenant/company/data-source authority and secret boundaries."
 
 recent_authoritative_merges:
+  - "PR #77 / issue #26 Usage and Cost Ledger: MERGED at 0693313c75063e7b5ed6dc2f373f65b12462c9ba"
   - "PR #78 / issue #27 deterministic ERP eval/replay harness: MERGED at ccad67e3fef0edf9843c36ff34d2904cc31b6013"
   - "PR #76 / issue #25 Context Engine and durable task memory manifest: MERGED at a94ab116c4f362b3b0ace122c9993813efdd95ef"
   - "PR #75 / issue #24 Model Capability Registry/router/fallback: MERGED at 18436f96b8bd0cdf02c27e3f3dd6c8923706e39f"
@@ -57,15 +58,15 @@ dependency_chain:
   - "P1 durable task/worker/auth/data/policy foundations are authoritative."
   - "PR #73 / issue #22 backend SignalR integration remains active; Runtime event contract/projection prerequisites are merged."
   - "PR #64 / issue #62 frontend auth-session lane remains active; after completion Frontend advances to #22 realtime UI."
-  - "P2 #23/#24/#25/#27 are authoritative; Runtime #26 is acceptance-complete but requires current-main reconciliation before merge."
-  - "ERP/Data #28 Schema Observer is unblocked now that #18 and #27 are authoritative."
+  - "P2 #23/#24/#25/#26/#27 are authoritative."
+  - "ERP/Data PR #79 / issue #28 Schema Observer is active now that #18 and #27 are authoritative."
 
-next_action: "Keep #73, #64 and #77 moving while ERP/Data claims #28. Backend fixes actionable xUnit2014 and continues #22 bridge; Frontend reconciles non-mergeable #64 and continues fail-closed #62; Runtime reconciles green acceptance-complete #77 onto current main and re-closes exact-head gates; ERP/Data releases merged #78 and claims unblocked #28. Lead refreshes this file whenever live ownership or HEAD changes."
+next_action: "Keep Backend #73, Frontend #64 and ERP/Data #79 moving; Runtime releases merged #77 and claims the next unblocked Runtime priority. Backend diagnoses/fixes executable .NET build RED on exact HEAD and continues #22 bridge. Frontend continues fail-closed #62 without invented presentation identity. ERP/Data closes current #79 CI and continues Schema Observer acceptance. Lead refreshes this file whenever live ownership or HEAD changes."
 
 blocked_by:
-  - "Backend #73 exact-head Build 35648520069 is red with actionable xUnit2014 async assertion diagnostics; same-PR fix required."
-  - "Frontend #64 is non-mergeable against current main and exact-head workflow emission is absent; same-PR reconciliation required without inventing presentation identity."
-  - "Runtime #77 exact-head gates are green and acceptance complete, but PR is non-mergeable/diverged after main advanced; same-PR current-main reconciliation required."
+  - "Backend #73 exact-head Build 35654516018 is red on the executable .NET build step; same-PR diagnostic/fix required."
+  - "Frontend #64 still has executable #62 acceptance and must reconcile against current main without inventing presentation identity."
+  - "ERP/Data #79 current executable HEAD requires exact-head CI closure and remaining Schema Observer hardening."
 
 autonomy:
   routine_engineering: autonomous
