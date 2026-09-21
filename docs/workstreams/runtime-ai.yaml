@@ -1,15 +1,15 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 22
-current_pr: 70
-current_branch: "runtime/22-task-worker-event-contract"
-head: "4ff7a2d77e53b41a1e95a838cb9ba11695e22556"
+current_issue: 25
+current_pr: 76
+current_branch: "runtime/25-context-engine"
+head: "f5720f16b0b23f0a7967a86bd876022b5f6b1389"
 state: in_progress
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T06:27:00Z"
-last_checkpoint_at: "2026-09-21T06:27:00Z"
-stacked_on: "main @ f9ecb316dc557ca1cf476fb09e80d93d102a3837"
+lease_heartbeat_at: "2026-09-21T16:21:00Z"
+last_checkpoint_at: "2026-09-21T16:21:00Z"
+stacked_on: "main @ 18436f96b8bd0cdf02c27e3f3dd6c8923706e39f"
 scope:
   - task-engine
   - rabbitmq-workers
@@ -18,4 +18,4 @@ scope:
   - ai-gateway
   - model-router
   - context-engine
-next_action: "PR #70 is the sole Runtime lease supporting #22. Initial authoritative TaskWorkerRealtimeEvent contract is versioned, sequenced, tenant/company/task scoped, fail-closed by event kind, and covered by deterministic Shared.Contracts tests. Frontend SignalR/dashboard implementation remains Frontend-owned. No EF/migration changes were made, avoiding Backend PR #66 migration ownership. Close exact-head Governance/Build CI for the current code checkpoint; fix actionable RED on SAME PR. If green, solidify any remaining runtime producer/integration boundary needed for #22 without duplicating frontend work, then hand off the shared contract."
+next_action: "PR #76 is the sole Runtime lease for #25. Exact-head fe268860 had Governance #35622614108 PASS and Build #35622613885 PASS. Acceptance still required durable manifest/checkpoint persistence, so the same PR now adds IAiContextCheckpointStore + DurableAiContextEngine persistence boundary and deterministic tests proving raw source content does not cross it, persistence failures propagate, and non-UTC checkpoints fail before persistence. Current implementation HEAD before this state checkpoint is f5720f16b0b23f0a7967a86bd876022b5f6b1389. Capture workflows for the new exact HEAD after this state commit; inspect/fix actionable RED on SAME PR. If exact-head required gates are green and no acceptance gap remains, mark PR #76 ready_for_review and hand merge sequencing to Lead."
