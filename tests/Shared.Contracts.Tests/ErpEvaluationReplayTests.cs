@@ -37,7 +37,10 @@ public sealed class ErpEvaluationReplayTests
     public void Deserialize_FailsClosedWhenDatasetAuthorityIsTampered()
     {
         var payload = ErpEvaluationReplay.Serialize(new[] { Case("a") })
-            .Replace("ledger-2026-09", "ledger-tampered", StringComparison.Ordinal);
+            .Replace(
+                "\"datasetVersion\":\"ledger-2026-09\",\"cases\"",
+                "\"datasetVersion\":\"ledger-tampered\",\"cases\"",
+                StringComparison.Ordinal);
 
         Assert.Throws<InvalidOperationException>(() => ErpEvaluationReplay.Deserialize(payload));
     }
