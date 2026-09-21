@@ -87,11 +87,12 @@ export function AuthenticatedSessionShell({ state, companies = [], onSelectCompa
   const switchableCompanies = getUnambiguousCompanyOptions(companies);
   const hasAuthoritativeOption = switchableCompanies.some((company) => company.companyId === authoritativeCompanyId);
   const hasAlternativeScope = switchableCompanies.some((company) => company.companyId !== authoritativeCompanyId);
-  const canSwitchCompany = hasAuthoritativeOption && hasAlternativeScope && onSelectCompany;
+  const canSwitchCompany = hasAuthoritativeOption && hasAlternativeScope && typeof onSelectCompany === "function";
   const requestCompanySwitch = (companyId: string) => {
     if (companyId === authoritativeCompanyId) return;
     if (!switchableCompanies.some((company) => company.companyId === companyId)) return;
-    onSelectCompany?.(companyId);
+    if (typeof onSelectCompany !== "function") return;
+    onSelectCompany(companyId);
   };
 
   return <><CompanyShell membership={state.membership} />{canSwitchCompany ? <aside aria-label="Đổi công ty" className="fixed bottom-4 right-4 rounded-xl border border-black/10 bg-white p-3 shadow-sm dark:border-white/15 dark:bg-black"><label className="text-xs font-medium" htmlFor="company-selector">Đổi công ty</label><select id="company-selector" className="ml-2 rounded-lg border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20" value={authoritativeCompanyId} onChange={(event) => requestCompanySwitch(event.target.value)}>{switchableCompanies.map((company) => <option key={company.companyId} value={company.companyId}>{company.companyName}</option>)}</select><p className="mt-1 max-w-xs text-xs opacity-60">Lựa chọn này chỉ yêu cầu đổi phạm vi; máy chủ vẫn xác thực quyền truy cập.</p></aside> : null}</>;
