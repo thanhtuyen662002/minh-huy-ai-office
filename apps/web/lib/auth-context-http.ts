@@ -11,33 +11,39 @@ export type AuthContextHttpResult =
   | { ok: true; context: AuthoritativeAuthContext }
   | { ok: false; reason: "unauthenticated" | "forbidden" | "invalid-response" };
 
-const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 const hasText = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 const hasCanonicalText = (value: unknown): value is string => hasText(value) && value.trim() === value;
 
-function hasDenseCanonicalRoles(value: unknown): value is string[] {
-  if (!Array.isArray(value)) return false;
+function ownDataValue(value: object, key: PropertyKey): unknown {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor && "value" in descriptor ? descriptor.value : undefined;
+}
+
+function snapshotCanonicalRoles(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const length = ownDataValue(value, "length");
+  if (!Number.isSafeInteger(length) || (length as number) < 0) return null;
+
+  const roles: string[] = [];
   const seen = new Set<string>();
-  for (let index = 0; index < value.length; index += 1) {
-    if (!hasOwn(value, index) || !hasCanonicalText(value[index]) || seen.has(value[index])) return false;
-    seen.add(value[index]);
+  for (let index = 0; index < (length as number); index += 1) {
+    const role = ownDataValue(value, String(index));
+    if (!hasCanonicalText(role) || seen.has(role)) return null;
+    seen.add(role);
+    roles.push(role);
   }
-  return true;
+  return roles;
 }
 
 function parseContext(value: unknown, selectedCompanyId: string): AuthoritativeAuthContext | null {
   try {
     if (value === null || typeof value !== "object") return null;
-    if (!hasOwn(value, "tenantId") || !hasOwn(value, "companyId") || !hasOwn(value, "userId") || !hasOwn(value, "roles")) return null;
-    const candidate = value as Record<string, unknown>;
-    if (!hasCanonicalText(candidate.tenantId) || !hasCanonicalText(candidate.companyId) || candidate.companyId !== selectedCompanyId || !hasCanonicalText(candidate.userId)) return null;
-    if (!hasDenseCanonicalRoles(candidate.roles)) return null;
-    return {
-      tenantId: candidate.tenantId,
-      companyId: candidate.companyId,
-      userId: candidate.userId,
-      roles: [...candidate.roles],
-    };
+    const tenantId = ownDataValue(value, "tenantId");
+    const companyId = ownDataValue(value, "companyId");
+    const userId = ownDataValue(value, "userId");
+    const roles = snapshotCanonicalRoles(ownDataValue(value, "roles"));
+    if (!hasCanonicalText(tenantId) || !hasCanonicalText(companyId) || companyId !== selectedCompanyId || !hasCanonicalText(userId) || !roles) return null;
+    return { tenantId, companyId, userId, roles };
   } catch {
     return null;
   }
