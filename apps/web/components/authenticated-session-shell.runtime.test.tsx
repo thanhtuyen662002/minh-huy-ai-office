@@ -111,4 +111,30 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
+
+  it("fails closed when a hostile company collection throws during iteration", () => {
+    const onSelectCompany = vi.fn();
+    const hostileCollection = new Proxy(
+      [{ companyId: "internal", companyName: "Minh Huy" }],
+      {
+        get(target, property, receiver) {
+          if (property === Symbol.iterator) throw new Error("hostile company collection");
+          return Reflect.get(target, property, receiver);
+        },
+      },
+    ) as readonly { companyId: string; companyName: string }[];
+
+    expect(() =>
+      render(
+        <AuthenticatedSessionShell
+          state={{ status: "ready", membership }}
+          companies={hostileCollection}
+          onSelectCompany={onSelectCompany}
+        />,
+      ),
+    ).not.toThrow();
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
 });
