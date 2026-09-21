@@ -21,25 +21,39 @@ const hasText = (value: unknown): value is string => typeof value === "string" &
 const hasCanonicalText = (value: unknown): value is string => hasText(value) && value.trim() === value;
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
-function isValidMembership(membership: CompanyMembershipView, selectedCompanyId: string): boolean {
+function ownDataValue(value: object, key: PropertyKey): unknown {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor && "value" in descriptor ? descriptor.value : undefined;
+}
+
+function normalizeMembership(value: unknown, selectedCompanyId: string): CompanyMembershipView | null {
+  if (value === null || typeof value !== "object") return null;
+
+  const tenantId = ownDataValue(value, "tenantId");
+  const companyId = ownDataValue(value, "companyId");
+  const companyName = ownDataValue(value, "companyName");
+  const userId = ownDataValue(value, "userId");
+  const userName = ownDataValue(value, "userName");
+  const roles = ownDataValue(value, "roles");
+
   if (
-    membership === null ||
-    typeof membership !== "object" ||
-    !hasCanonicalText(membership.tenantId) ||
-    !hasCanonicalText(membership.companyId) ||
-    membership.companyId !== selectedCompanyId ||
-    !hasCanonicalText(membership.companyName) ||
-    !hasCanonicalText(membership.userId) ||
-    !hasCanonicalText(membership.userName) ||
-    !Array.isArray(membership.roles) ||
-    !membership.roles.every(hasCanonicalText)
+    !hasCanonicalText(tenantId) ||
+    !hasCanonicalText(companyId) ||
+    companyId !== selectedCompanyId ||
+    !hasCanonicalText(companyName) ||
+    !hasCanonicalText(userId) ||
+    !hasCanonicalText(userName) ||
+    !Array.isArray(roles)
   ) {
-    return false;
+    return null;
   }
 
-  // Treat repeated role claims as an ambiguous server envelope instead of silently
-  // canonicalizing authorization-adjacent data in the browser.
-  return new Set(membership.roles).size === membership.roles.length;
+  const roleSnapshot = Array.from(roles);
+  if (!roleSnapshot.every(hasCanonicalText) || new Set(roleSnapshot).size !== roleSnapshot.length) return null;
+
+  // Return a plain snapshot rather than retaining a runtime/custom transport object. This
+  // prevents validated proxy/accessor state from changing underneath later UI rendering.
+  return { tenantId, companyId, companyName, userId, userName, roles: roleSnapshot };
 }
 
 function isSessionBootstrapResult(value: unknown): value is SessionBootstrapResult {
@@ -69,8 +83,9 @@ export async function bootstrapAuthenticatedSession(selectedCompanyId: string | 
       if (result.reason === "unauthenticated") return { status: "unauthenticated" };
       return { status: "forbidden", reason: result.reason === "inactive-membership" ? "inactive-membership" : result.reason === "forbidden" ? "forbidden" : "invalid-response" };
     }
-    if (!isValidMembership(result.membership, selectedCompanyId)) return { status: "forbidden", reason: "invalid-response" };
-    return { status: "ready", membership: result.membership };
+    const membership = normalizeMembership(result.membership, selectedCompanyId);
+    if (!membership) return { status: "forbidden", reason: "invalid-response" };
+    return { status: "ready", membership };
   } catch {
     return { status: "forbidden", reason: "invalid-response" };
   }
