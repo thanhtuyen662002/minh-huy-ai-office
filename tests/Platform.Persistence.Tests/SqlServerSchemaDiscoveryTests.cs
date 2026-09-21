@@ -1,4 +1,5 @@
 using MinhHuy.AIOffice.Platform.Persistence;
+using MinhHuy.AiOffice.Shared.Contracts.Erp;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
@@ -43,6 +44,38 @@ public sealed class SqlServerSchemaDiscoveryTests
                 "Server=unused;Database=unused"));
 
         Assert.False(factory.WasCalled);
+    }
+
+    [Theory]
+    [InlineData("TABLE", ErpSchemaObjectKind.Table)]
+    [InlineData("VIEW", ErpSchemaObjectKind.View)]
+    [InlineData("PROCEDURE", ErpSchemaObjectKind.StoredProcedure)]
+    [InlineData("FUNCTION", ErpSchemaObjectKind.Function)]
+    [InlineData("TRIGGER", ErpSchemaObjectKind.Trigger)]
+    [InlineData("FOREIGN_KEY", ErpSchemaObjectKind.ForeignKey)]
+    [InlineData("INDEX", ErpSchemaObjectKind.Index)]
+    public void ParseKind_MapsOnlySupportedProjectionKinds(string value, ErpSchemaObjectKind expected)
+    {
+        Assert.Equal(expected, SqlServerSchemaDiscovery.ParseKind(value));
+    }
+
+    [Fact]
+    public void ParseKind_FailsClosedForUnknownProjectionKind()
+    {
+        Assert.Throws<InvalidOperationException>(() => SqlServerSchemaDiscovery.ParseKind("SEQUENCE"));
+    }
+
+    [Fact]
+    public void HashDefinition_IsDeterministicAndDoesNotExposeDefinitionText()
+    {
+        const string definition = "CREATE VIEW dbo.SecretView AS SELECT SecretColumn FROM dbo.SecretTable";
+
+        var first = SqlServerSchemaDiscovery.HashDefinition(definition);
+        var second = SqlServerSchemaDiscovery.HashDefinition(definition);
+
+        Assert.Equal(first, second);
+        Assert.Equal(64, first.Length);
+        Assert.DoesNotContain("Secret", first, StringComparison.Ordinal);
     }
 
     private sealed class RejectingConnectionFactory : ISqlConnectionFactory
