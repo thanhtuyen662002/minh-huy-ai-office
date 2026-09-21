@@ -164,6 +164,38 @@ public static class BackupArtifactContract
             && evidence.TenantIsolationVerified;
     }
 
+    public static bool VerifyRepeatedFailureDrills(
+        IEnumerable<RecoveryFailureDrillEvidence> evidence,
+        string expectedCompanyId,
+        DateTimeOffset now,
+        TimeSpan maximumAge,
+        TimeSpan maximumRecoveryTime)
+    {
+        ArgumentNullException.ThrowIfNull(evidence);
+        if (maximumAge <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumAge), "Failure drill maximum age must be positive.");
+        }
+
+        var nowUtc = now.ToUniversalTime();
+        var validScenarios = new HashSet<RecoveryFailureScenario>();
+        foreach (var drill in evidence)
+        {
+            ArgumentNullException.ThrowIfNull(drill);
+            var recoveredAtUtc = drill.RecoveredAtUtc.ToUniversalTime();
+            if (recoveredAtUtc > nowUtc
+                || nowUtc - recoveredAtUtc > maximumAge
+                || !VerifyFailureDrill(drill, expectedCompanyId, maximumRecoveryTime))
+            {
+                return false;
+            }
+
+            validScenarios.Add(drill.Scenario);
+        }
+
+        return validScenarios.Count == Enum.GetValues<RecoveryFailureScenario>().Length;
+    }
+
     private static string RequireSafeToken(string value, string parameterName)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Any(ch => !char.IsLetterOrDigit(ch) && ch is not '-' and not '_'))
