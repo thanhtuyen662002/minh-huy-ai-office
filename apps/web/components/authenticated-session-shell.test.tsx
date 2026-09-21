@@ -55,6 +55,17 @@ describe("AuthenticatedSessionShell", () => {
     expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
   });
 
+  it("filters malformed company selectors before they can become switch requests", () => {
+    const onSelectCompany = vi.fn();
+    const malformedCompanies = [companies[0], { companyId: " branch-2 ", companyName: "Spoofed padded scope" }, { companyId: "", companyName: "Blank scope" }];
+    render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={malformedCompanies} onSelectCompany={onSelectCompany} />);
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+    expect(screen.queryByText("Spoofed padded scope")).toBeNull();
+    expect(screen.queryByText("Blank scope")).toBeNull();
+    expect(onSelectCompany).not.toHaveBeenCalled();
+    expect(screen.getByRole("region", { name: "Công ty đang làm việc" }).textContent).toContain("Minh Huy");
+  });
+
   it("keeps the authoritative company selected when untrusted options omit it", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[companies[1]]} onSelectCompany={onSelectCompany} />);
