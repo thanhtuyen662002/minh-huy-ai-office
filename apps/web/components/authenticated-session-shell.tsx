@@ -26,28 +26,31 @@ const getOwnDataProperty = (value: object, key: PropertyKey) => {
   }
 };
 
-const hasCanonicalCompanyOption = (company: CompanyOption) => {
-  if (company === null || typeof company !== "object") return false;
+const normalizeCompanyOption = (company: CompanyOption): CompanyOption | null => {
+  if (company === null || typeof company !== "object") return null;
   const companyId = getOwnDataProperty(company, "companyId");
   const companyName = getOwnDataProperty(company, "companyName");
-  return (
-    typeof companyId === "string" &&
-    typeof companyName === "string" &&
-    companyId.length > 0 &&
-    companyId.trim() === companyId &&
-    companyName.length > 0 &&
-    companyName.trim() === companyName
-  );
+  if (
+    typeof companyId !== "string" ||
+    typeof companyName !== "string" ||
+    companyId.length === 0 ||
+    companyId.trim() !== companyId ||
+    companyName.length === 0 ||
+    companyName.trim() !== companyName
+  ) return null;
+  return { companyId, companyName };
 };
 
 const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
-  if (!companies.every(hasCanonicalCompanyOption)) return [];
+  const normalized: CompanyOption[] = [];
   const seen = new Set<string>();
   for (const company of companies) {
-    if (seen.has(company.companyId)) return [];
-    seen.add(company.companyId);
+    const option = normalizeCompanyOption(company);
+    if (!option || seen.has(option.companyId)) return [];
+    seen.add(option.companyId);
+    normalized.push(option);
   }
-  return companies;
+  return normalized;
 };
 
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
