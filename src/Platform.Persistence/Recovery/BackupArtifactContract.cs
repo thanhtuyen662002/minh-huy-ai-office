@@ -14,6 +14,12 @@ public sealed record RecoveryDrillEvidence(
     string RestoredSha256,
     bool DatabaseOnline);
 
+public sealed record RecoveryReferenceSet(
+    string CompanyId,
+    string ObjectStorageReference,
+    string ConfigurationReference,
+    string SecretReference);
+
 public static class BackupArtifactContract
 {
     public static BackupArtifactDescriptor Create(
@@ -31,6 +37,31 @@ public static class BackupArtifactContract
         var artifactName = $"{safeCompanyId}-{safeDatabaseName}-{utc:yyyyMMddTHHmmssZ}-{normalizedHash[..12]}.bak";
 
         return new BackupArtifactDescriptor(safeCompanyId, safeDatabaseName, artifactName, utc, normalizedHash, keyReference);
+    }
+
+    public static RecoveryReferenceSet CreateRecoveryReferences(
+        string companyId,
+        string objectStorageReference,
+        string configurationReference,
+        string secretReference)
+        => new(
+            RequireSafeToken(companyId, nameof(companyId)),
+            RequireReference(objectStorageReference),
+            RequireReference(configurationReference),
+            RequireReference(secretReference));
+
+    public static bool VerifyRecoveryReferences(RecoveryReferenceSet references, string expectedCompanyId)
+    {
+        ArgumentNullException.ThrowIfNull(references);
+        var expectedCompany = RequireSafeToken(expectedCompanyId, nameof(expectedCompanyId));
+        var canonical = CreateRecoveryReferences(
+            references.CompanyId,
+            references.ObjectStorageReference,
+            references.ConfigurationReference,
+            references.SecretReference);
+
+        return string.Equals(references.CompanyId, expectedCompany, StringComparison.Ordinal)
+            && references == canonical;
     }
 
     public static bool VerifyForRestore(
@@ -108,7 +139,7 @@ public static class BackupArtifactContract
     {
         if (string.IsNullOrWhiteSpace(value) || value.Contains('=') || value.Contains(';'))
         {
-            throw new ArgumentException("Encryption key must be an opaque reference, never secret material.", nameof(value));
+            throw new ArgumentException("Recovery metadata must be an opaque reference, never secret material.", nameof(value));
         }
 
         return value;
