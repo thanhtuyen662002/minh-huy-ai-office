@@ -72,6 +72,25 @@ public sealed record AiContextManifest(
     int UsedTokens,
     IReadOnlyList<AiContextManifestEntry> Entries);
 
+public sealed record AiContextCheckpoint(
+    string CheckpointId,
+    AiContextManifest Manifest,
+    DateTimeOffset CreatedAtUtc)
+{
+    public void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(CheckpointId) || !string.Equals(CheckpointId, CheckpointId.Trim(), StringComparison.Ordinal))
+            throw new ArgumentException("CheckpointId must be non-empty and canonical.", nameof(CheckpointId));
+        ArgumentNullException.ThrowIfNull(Manifest);
+        if (CreatedAtUtc.Offset != TimeSpan.Zero) throw new ArgumentException("Checkpoint timestamp must be UTC.", nameof(CreatedAtUtc));
+    }
+}
+
+public interface IAiContextCheckpointStore
+{
+    Task SaveAsync(AiContextCheckpoint checkpoint, CancellationToken cancellationToken = default);
+}
+
 public interface IAiContextAssembler
 {
     AiContextManifest Assemble(AiContextRequest request);
@@ -107,5 +126,24 @@ public sealed class DeterministicAiContextAssembler : IAiContextAssembler
         }
 
         return new AiContextManifest(request.TenantId, request.CompanyId, request.TaskId, request.ModelId, request.TokenBudget, used, entries);
+    }
+}
+
+public sealed class DurableAiContextEngine(IAiContextAssembler assembler, IAiContextCheckpointStore checkpointStore)
+{
+    public async Task<AiContextCheckpoint> AssembleAndCheckpointAsync(
+        string checkpointId,
+        DateTimeOffset createdAtUtc,
+        AiContextRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var manifest = assembler.Assemble(request);
+        var checkpoint = new AiContextCheckpoint(checkpointId, manifest, createdAtUtc);
+        checkpoint.Validate();
+
+        // The checkpoint contains only the manifest/reference metadata. Raw source content never crosses this persistence boundary.
+        await checkpointStore.SaveAsync(checkpoint, cancellationToken);
+        return checkpoint;
     }
 }
