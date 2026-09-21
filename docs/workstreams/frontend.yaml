@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 62
 current_pr: 64
 current_branch: frontend/62-auth-session-bootstrap
-head: b7ee5943b452688a946733013b2ea67011ea5618
+head: f6a55c84b0218a6864892aeb9cf4cd6786a63963
 state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-22T03:18:00+07:00"
-last_checkpoint_at: "2026-09-22T03:18:00+07:00"
+lease_heartbeat_at: "2026-09-22T05:09:00+07:00"
+last_checkpoint_at: "2026-09-22T05:09:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -17,6 +17,6 @@ scope:
   - client-contracts
   - realtime-ui
 blocked_by:
-  - "GitHub Actions reports zero workflow runs for exact implementation/test HEAD b7ee5943b452688a946733013b2ea67011ea5618; exact-head Web CI evidence remains unavailable."
+  - "GitHub Actions reports zero workflow runs for exact implementation/test HEAD f6a55c84b0218a6864892aeb9cf4cd6786a63963; exact-head Web CI evidence remains unavailable."
   - "Merged /api/auth/context is authoritative for tenantId/companyId/userId/roles but does not expose authoritative company/user display names, so presentation metadata must not be fabricated."
-next_action: "Continue SAME PR #64 executable acceptance. Accepted session membership and role snapshots are now runtime-frozen so downstream code cannot rewrite trusted identity after validation; deterministic coverage verifies attempted mutation fails. Re-check exact-head workflow emission and fix any frontend-owned RED immediately; do not create state-only retrigger commits."
+next_action: "Continue SAME PR #64 executable acceptance. Browser-provided company collections are now snapshotted through own indexed data descriptors so custom iterators are not executed; deterministic component coverage proves a hostile iterator cannot alter offered scopes. Re-check exact-head workflow emission and fix any frontend-owned RED immediately; do not create state-only retrigger commits."
