@@ -26,17 +26,21 @@ function hasDenseCanonicalRoles(value: unknown): value is string[] {
 }
 
 function parseContext(value: unknown, selectedCompanyId: string): AuthoritativeAuthContext | null {
-  if (value === null || typeof value !== "object") return null;
-  if (!hasOwn(value, "tenantId") || !hasOwn(value, "companyId") || !hasOwn(value, "userId") || !hasOwn(value, "roles")) return null;
-  const candidate = value as Record<string, unknown>;
-  if (!hasCanonicalText(candidate.tenantId) || !hasCanonicalText(candidate.companyId) || candidate.companyId !== selectedCompanyId || !hasCanonicalText(candidate.userId)) return null;
-  if (!hasDenseCanonicalRoles(candidate.roles)) return null;
-  return {
-    tenantId: candidate.tenantId,
-    companyId: candidate.companyId,
-    userId: candidate.userId,
-    roles: [...candidate.roles],
-  };
+  try {
+    if (value === null || typeof value !== "object") return null;
+    if (!hasOwn(value, "tenantId") || !hasOwn(value, "companyId") || !hasOwn(value, "userId") || !hasOwn(value, "roles")) return null;
+    const candidate = value as Record<string, unknown>;
+    if (!hasCanonicalText(candidate.tenantId) || !hasCanonicalText(candidate.companyId) || candidate.companyId !== selectedCompanyId || !hasCanonicalText(candidate.userId)) return null;
+    if (!hasDenseCanonicalRoles(candidate.roles)) return null;
+    return {
+      tenantId: candidate.tenantId,
+      companyId: candidate.companyId,
+      userId: candidate.userId,
+      roles: [...candidate.roles],
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**
