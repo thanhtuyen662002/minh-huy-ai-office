@@ -1,5 +1,7 @@
+extern alias RuntimeWorker;
+
 using Microsoft.EntityFrameworkCore;
-using MinhHuy.AIOffice.Agent.Worker;
+using RuntimeWorker::MinhHuy.AIOffice.Agent.Worker;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
 
@@ -13,9 +15,7 @@ public sealed class PersistentWorkDeliveryHandlerTests
         await using var db = NewDb();
         var (execution, dispatch, envelope) = SeedPublishedDispatch(db);
         var handler = new PersistentWorkDeliveryHandler(db, new StubExecutor(new WorkStepExecutionResult(WorkDeliveryOutcome.Completed, null, 3, 7, "{\"cursor\":7}")));
-
         var result = await handler.HandleAsync(envelope, CancellationToken.None);
-
         Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
         Assert.Equal(WorkDispatchState.Acknowledged, dispatch.State);
         Assert.NotNull(dispatch.AcknowledgedAtUtc);
@@ -31,9 +31,7 @@ public sealed class PersistentWorkDeliveryHandlerTests
         await using var db = NewDb();
         var (execution, original, envelope) = SeedPublishedDispatch(db);
         var handler = new PersistentWorkDeliveryHandler(db, new StubExecutor(new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, 3, 4, "{}")));
-
         var result = await handler.HandleAsync(envelope, CancellationToken.None);
-
         Assert.NotNull(result.DurableRetryEnvelope);
         Assert.Equal(WorkDispatchState.Published, original.State);
         Assert.NotNull(execution.NextAttemptAtUtc);
@@ -51,14 +49,10 @@ public sealed class PersistentWorkDeliveryHandlerTests
         var (_, original, envelope) = SeedPublishedDispatch(db);
         var executor = new CountingExecutor(new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, 3, 4, "{}"));
         var handler = new PersistentWorkDeliveryHandler(db, executor);
-
         var first = await handler.HandleAsync(envelope, CancellationToken.None);
         Assert.NotNull(first.DurableRetryEnvelope);
         Assert.Equal(1, executor.CallCount);
-
-        // Simulate publisher-confirm failure: the durable retry exists, but the original broker delivery is redelivered.
         var recovered = await handler.HandleAsync(envelope, CancellationToken.None);
-
         Assert.Equal(1, executor.CallCount);
         Assert.Equal(WorkDeliveryOutcome.Failed, recovered.Outcome);
         Assert.Equal(WorkFailureClass.Transient, recovered.FailureClass);
@@ -73,9 +67,7 @@ public sealed class PersistentWorkDeliveryHandlerTests
         await using var db = NewDb();
         var (execution, dispatch, envelope) = SeedPublishedDispatch(db);
         var handler = new PersistentWorkDeliveryHandler(db, new StubExecutor(new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Permanent, 3)));
-
         var result = await handler.HandleAsync(envelope, CancellationToken.None);
-
         Assert.Equal(WorkDeliveryOutcome.Failed, result.Outcome);
         Assert.Equal(WorkDispatchState.DeadLettered, dispatch.State);
         Assert.NotNull(execution.DeadLetteredAtUtc);
