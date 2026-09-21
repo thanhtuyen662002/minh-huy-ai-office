@@ -181,3 +181,31 @@ Merge only when:
 - acceptance criteria are satisfied,
 - required CI/evals are green on the exact HEAD,
 - dependency merge order is correct.
+
+## CI closure loop
+
+A specialist owns not only implementation but also the exact-head CI result produced by its checkpoint. Do not treat `push -> waiting_ci -> stop` as the normal success path.
+
+Preferred closure cycle:
+
+```text
+code -> local test/verify -> commit/push -> capture exact HEAD
+     -> observe exact-head CI
+        -> pending: do other safe same-PR work, then re-check
+        -> real red: inspect logs -> fix SAME branch -> verify -> push -> repeat
+        -> infrastructure/zero-step red: retry once -> classify if repeated
+        -> green + acceptance remains: continue implementation
+        -> green + acceptance complete: ready_for_review
+```
+
+Rules:
+- Keep the current automation execution alive through CI while execution budget remains; do not voluntarily terminate immediately after a push when CI is expected to settle within the same run.
+- Never busy-spin. Use pending time for source review, focused tests, documentation that belongs to the implementation, or the next safe unit on the same PR, then re-query CI.
+- A real failing job with actionable logs belongs to the specialist that owns the PR. Fix it immediately on the same lease rather than deferring to the next hourly schedule.
+- A zero-step/runner-assignment/infrastructure failure may be retried once. Repeated identical infrastructure failure is evidence, not a reason for retry storms.
+- `waiting_ci` retains the lease and is allowed only when the current execution/session limit is being reached, exact-head CI remains non-terminal after useful same-PR work is exhausted, or another genuine blocker exists.
+- Before entering `waiting_ci`, HANDOFF/workstream state must include exact HEAD, workflow/run IDs and status, locally verified evidence, and exact NEXT ACTION.
+- Lead/Watchdog must inspect active `waiting_ci` leases. If their exact-head CI becomes terminal red after the specialist execution ended, Lead requests an immediate run of that specialist automation. Do not wait for its next scheduled hour.
+- If exact-head CI is green and acceptance is complete, Lead should review/merge promptly and immediately unblock dependent work.
+- Required exact-head merge/release gates are unchanged; this protocol reduces latency, not assurance.
+

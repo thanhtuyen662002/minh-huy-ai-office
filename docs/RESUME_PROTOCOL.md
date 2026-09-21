@@ -48,3 +48,17 @@ Unexpected quota/session termination must be recoverable from the latest commit 
 
 ## Stale worker rule
 A previous agent's ownership is advisory. If no active checkpoint progress exists, a new worker may take over after reading the state and preserving the branch history.
+
+## CI ownership on resume
+If the active PR is in `waiting_ci`, treat it as an active implementation lease, not as finished work.
+
+On resume:
+1. Resolve the PR's actual exact HEAD from GitHub; do not trust a stale YAML/head field.
+2. Inspect exact-head workflow runs before starting unrelated work.
+3. If CI is terminal red with actionable logs, fix the failure immediately on the SAME branch/PR, run focused verification, push, and remain in the CI closure loop while execution budget permits.
+4. If CI is pending, continue safe same-PR work and re-check before voluntarily ending the run.
+5. If CI is green but acceptance remains, continue implementation; green CI alone does not release the lease.
+6. Stop in `waiting_ci` only when the execution/session limit is being reached, CI is still non-terminal after useful same-PR work is exhausted, or a genuine blocker exists. Persist exact HEAD, workflow/run IDs/status, verification and NEXT ACTION first.
+
+A replacement session must be able to distinguish "CI pending but owned" from "work complete" using only GitHub state.
+
