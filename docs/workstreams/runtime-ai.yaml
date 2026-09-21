@@ -4,11 +4,11 @@ status: active
 current_issue: 26
 current_pr: 77
 current_branch: "runtime/26-usage-cost-ledger"
-head: "a20073d5588dc3c8e6da32c5d8999013e2588f08"
+head: "8657c47f1db2bee6fcd7bf3c551c35e43be19590"
 state: waiting_ci
 lease_owner: "runtime-ai"
-lease_heartbeat_at: "2026-09-21T18:18:48Z"
-last_checkpoint_at: "2026-09-21T18:18:48Z"
+lease_heartbeat_at: "2026-09-21T18:35:16Z"
+last_checkpoint_at: "2026-09-21T18:35:16Z"
 stacked_on: "main @ a871052bff124648d07195f0e8f85db82a0322c1"
 scope:
   - task-engine
@@ -19,4 +19,4 @@ scope:
   - model-router
   - context-engine
   - usage-cost-ledger
-next_action: "PR #77 is the sole Runtime lease for #26. Exact-head a573ed04 had Governance #35632871510 PASS but Build #35632871671 RED: .NET build, EF persistence build and container build failed downstream of a compile error introduced by the usage-ledger tests. Inspection found the test imported MinhHuyAiOffice.Shared.Contracts while the authoritative namespace is MinhHuy.AiOffice.Shared.Contracts. Fixed on SAME branch in commit a20073d5588dc3c8e6da32c5d8999013e2588f08. Capture Governance/Build run IDs for the new exact HEAD after this state checkpoint; inspect/fix any actionable RED on SAME PR. If exact-head required gates are green, complete remaining #26 persistence/acceptance work without overlapping active Backend/ERP EF ownership, then mark ready_for_review only when acceptance is complete."
+next_action: "PR #77 is the sole Runtime lease for #26. Exact-head a20073d5588dc3c8e6da32c5d8999013e2588f08 had Governance #35637637043 PASS and Build #35637637404 cancelled after real compile/container/EF failures. Root cause: AiGatewayContracts.cs authoritative namespace is MinhHuyAiOffice.Shared.Contracts, while AiUsageLedger.cs and its tests had been moved to MinhHuy.AiOffice.Shared.Contracts, making AiCapability unresolved and cascading into dependent builds. Fixed on SAME branch: usage ledger and tests now align with the gateway namespace; implementation/test repair head before this checkpoint is 8657c47f1db2bee6fcd7bf3c551c35e43be19590. Capture exact branch HEAD after this checkpoint and its Governance/Build run IDs; inspect/fix any actionable RED on SAME PR. Once exact-head required gates are green, continue remaining #26 persistence/acceptance work without overlapping Backend/ERP EF ownership; mark ready_for_review only when acceptance is complete."
