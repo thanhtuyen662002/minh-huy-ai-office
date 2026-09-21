@@ -37,6 +37,7 @@ describe("bootstrapAuthenticatedSession", () => {
     ["missing roles", { ...serverMembership, roles: undefined }],
     ["non-array roles", { ...serverMembership, roles: "admin" }],
     ["blank role", { ...serverMembership, roles: ["member", " "] }],
+    ["duplicate role", { ...serverMembership, roles: ["member", "member"] }],
     ["non-string tenant", { ...serverMembership, tenantId: 42 }],
     ["padded tenant", { ...serverMembership, tenantId: " tenant-server " }],
     ["padded company name", { ...serverMembership, companyName: " Company A " }],
