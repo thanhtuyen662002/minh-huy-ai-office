@@ -25,7 +25,6 @@ public sealed class BackupArtifactContractTests
     public void VerifyForRestore_AcceptsCanonicalArtifactForExpectedCompanyDatabaseAndHash()
     {
         var descriptor = CreateDescriptor();
-
         Assert.True(BackupArtifactContract.VerifyForRestore(descriptor, "company01", "AIOffice_Company01", Hash.ToUpperInvariant()));
     }
 
@@ -33,7 +32,6 @@ public sealed class BackupArtifactContractTests
     public void VerifyForRestore_RejectsCrossCompanyRestoreCandidateEvenWhenDatabaseMatches()
     {
         var descriptor = CreateDescriptor();
-
         Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, "company02", descriptor.DatabaseName, Hash));
     }
 
@@ -41,7 +39,6 @@ public sealed class BackupArtifactContractTests
     public void VerifyForRestore_RejectsCrossDatabaseRestoreCandidate()
     {
         var descriptor = CreateDescriptor();
-
         Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, descriptor.CompanyId, "AIOffice_Company02", Hash));
     }
 
@@ -50,7 +47,6 @@ public sealed class BackupArtifactContractTests
     {
         var descriptor = CreateDescriptor();
         const string otherHash = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
-
         Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, descriptor.CompanyId, descriptor.DatabaseName, otherHash));
     }
 
@@ -67,19 +63,13 @@ public sealed class BackupArtifactContractTests
             "DatabaseName" => descriptor with { DatabaseName = value },
             _ => descriptor with { ArtifactName = value }
         };
-
         Assert.False(BackupArtifactContract.VerifyForRestore(descriptor, "company01", "AIOffice_Company01", Hash));
     }
 
     [Fact]
     public void RecoveryReferences_AreCompanyScopedAndContainReferencesOnly()
     {
-        var references = BackupArtifactContract.CreateRecoveryReferences(
-            "company01",
-            "object://backups/company01/sql",
-            "config://aioffice/company01/production",
-            "keyvault://aioffice/company01/sql");
-
+        var references = BackupArtifactContract.CreateRecoveryReferences("company01", "object://backups/company01/sql", "config://aioffice/company01/production", "keyvault://aioffice/company01/sql");
         Assert.True(BackupArtifactContract.VerifyRecoveryReferences(references, "company01"));
         Assert.False(BackupArtifactContract.VerifyRecoveryReferences(references, "company02"));
         Assert.DoesNotContain("Password", string.Join('|', references.ObjectStorageReference, references.ConfigurationReference, references.SecretReference), StringComparison.OrdinalIgnoreCase);
@@ -91,11 +81,7 @@ public sealed class BackupArtifactContractTests
     [InlineData("token=secret")]
     public void RecoveryReferences_RejectSecretLikeValues(string secretLikeValue)
     {
-        Assert.Throws<ArgumentException>(() => BackupArtifactContract.CreateRecoveryReferences(
-            "company01",
-            "object://backups/company01",
-            "config://aioffice/company01",
-            secretLikeValue));
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.CreateRecoveryReferences("company01", "object://backups/company01", "config://aioffice/company01", secretLikeValue));
     }
 
     [Fact]
@@ -103,13 +89,7 @@ public sealed class BackupArtifactContractTests
     {
         var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
         var evidence = new RecoveryDrillEvidence(CreateDescriptor(), completedAt, Hash, DatabaseOnline: true);
-
-        Assert.True(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence,
-            "company01",
-            "AIOffice_Company01",
-            completedAt.AddHours(2),
-            TimeSpan.FromHours(24)));
+        Assert.True(BackupArtifactContract.VerifyRecoveryDrill(evidence, "company01", "AIOffice_Company01", completedAt.AddHours(2), TimeSpan.FromHours(24)));
     }
 
     [Fact]
@@ -117,19 +97,8 @@ public sealed class BackupArtifactContractTests
     {
         var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
         var evidence = new RecoveryDrillEvidence(CreateDescriptor(), completedAt, Hash, DatabaseOnline: true);
-
-        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence with { IntegrityCheckPassed = false },
-            "company01",
-            "AIOffice_Company01",
-            completedAt.AddHours(1),
-            TimeSpan.FromHours(24)));
-        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence with { ApplicationProbePassed = false },
-            "company01",
-            "AIOffice_Company01",
-            completedAt.AddHours(1),
-            TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(evidence with { IntegrityCheckPassed = false }, "company01", "AIOffice_Company01", completedAt.AddHours(1), TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(evidence with { ApplicationProbePassed = false }, "company01", "AIOffice_Company01", completedAt.AddHours(1), TimeSpan.FromHours(24)));
     }
 
     [Fact]
@@ -137,31 +106,36 @@ public sealed class BackupArtifactContractTests
     {
         var completedAt = new DateTimeOffset(2026, 9, 21, 6, 0, 0, TimeSpan.Zero);
         var evidence = new RecoveryDrillEvidence(CreateDescriptor(), completedAt, Hash, DatabaseOnline: true);
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(evidence, "company01", "AIOffice_Company01", completedAt.AddHours(25), TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(evidence with { DatabaseOnline = false }, "company01", "AIOffice_Company01", completedAt.AddHours(1), TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(evidence with { CompletedAtUtc = completedAt.AddMinutes(1) }, "company01", "AIOffice_Company01", completedAt, TimeSpan.FromHours(24)));
+        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(evidence, "company02", "AIOffice_Company01", completedAt.AddHours(1), TimeSpan.FromHours(24)));
+    }
 
-        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence,
-            "company01",
-            "AIOffice_Company01",
-            completedAt.AddHours(25),
-            TimeSpan.FromHours(24)));
-        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence with { DatabaseOnline = false },
-            "company01",
-            "AIOffice_Company01",
-            completedAt.AddHours(1),
-            TimeSpan.FromHours(24)));
-        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence with { CompletedAtUtc = completedAt.AddMinutes(1) },
-            "company01",
-            "AIOffice_Company01",
-            completedAt,
-            TimeSpan.FromHours(24)));
-        Assert.False(BackupArtifactContract.VerifyRecoveryDrill(
-            evidence,
-            "company02",
-            "AIOffice_Company01",
-            completedAt.AddHours(1),
-            TimeSpan.FromHours(24)));
+    [Theory]
+    [InlineData(RecoveryFailureScenario.WorkerUnavailable)]
+    [InlineData(RecoveryFailureScenario.ServerUnavailable)]
+    [InlineData(RecoveryFailureScenario.ProviderUnavailable)]
+    [InlineData(RecoveryFailureScenario.QueueUnavailable)]
+    [InlineData(RecoveryFailureScenario.DatabaseUnavailable)]
+    public void VerifyFailureDrill_AcceptsRecoveredInfrastructureScenario(RecoveryFailureScenario scenario)
+    {
+        var startedAt = new DateTimeOffset(2026, 9, 21, 7, 0, 0, TimeSpan.Zero);
+        var evidence = new RecoveryFailureDrillEvidence("company01", scenario, startedAt, startedAt.AddMinutes(8), true, true, true);
+        Assert.True(BackupArtifactContract.VerifyFailureDrill(evidence, "company01", TimeSpan.FromMinutes(15)));
+    }
+
+    [Fact]
+    public void VerifyFailureDrill_FailsClosedForScopeRecoveryIntegrityIsolationOrRtoFailure()
+    {
+        var startedAt = new DateTimeOffset(2026, 9, 21, 7, 0, 0, TimeSpan.Zero);
+        var evidence = new RecoveryFailureDrillEvidence("company01", RecoveryFailureScenario.DatabaseUnavailable, startedAt, startedAt.AddMinutes(8), true, true, true);
+        Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence, "company02", TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { WorkloadRecovered = false }, "company01", TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { DataIntegrityVerified = false }, "company01", TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { TenantIsolationVerified = false }, "company01", TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { RecoveredAtUtc = startedAt.AddMinutes(16) }, "company01", TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { RecoveredAtUtc = startedAt.AddSeconds(-1) }, "company01", TimeSpan.FromMinutes(15)));
     }
 
     [Theory]
@@ -170,12 +144,7 @@ public sealed class BackupArtifactContractTests
     [InlineData("AIOffice Company")]
     public void Create_RejectsUnsafeDatabaseNames(string databaseName)
     {
-        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
-            "company01",
-            databaseName,
-            DateTimeOffset.UtcNow,
-            Hash,
-            "keyvault://backup/key"));
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create("company01", databaseName, DateTimeOffset.UtcNow, Hash, "keyvault://backup/key"));
     }
 
     [Theory]
@@ -184,12 +153,7 @@ public sealed class BackupArtifactContractTests
     [InlineData("company 01")]
     public void Create_RejectsUnsafeCompanyIds(string companyId)
     {
-        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
-            companyId,
-            "AIOffice",
-            DateTimeOffset.UtcNow,
-            Hash,
-            "keyvault://backup/key"));
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(companyId, "AIOffice", DateTimeOffset.UtcNow, Hash, "keyvault://backup/key"));
     }
 
     [Theory]
@@ -197,12 +161,7 @@ public sealed class BackupArtifactContractTests
     [InlineData("secret=value")]
     public void Create_RejectsSecretLikeEncryptionKeyValues(string secretLikeValue)
     {
-        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
-            "company01",
-            "AIOffice",
-            DateTimeOffset.UtcNow,
-            Hash,
-            secretLikeValue));
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create("company01", "AIOffice", DateTimeOffset.UtcNow, Hash, secretLikeValue));
     }
 
     [Theory]
@@ -210,19 +169,9 @@ public sealed class BackupArtifactContractTests
     [InlineData("")]
     public void Create_RejectsInvalidIntegrityHash(string invalidHash)
     {
-        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create(
-            "company01",
-            "AIOffice",
-            DateTimeOffset.UtcNow,
-            invalidHash,
-            "keyvault://backup/key"));
+        Assert.Throws<ArgumentException>(() => BackupArtifactContract.Create("company01", "AIOffice", DateTimeOffset.UtcNow, invalidHash, "keyvault://backup/key"));
     }
 
     private static BackupArtifactDescriptor CreateDescriptor()
-        => BackupArtifactContract.Create(
-            "company01",
-            "AIOffice_Company01",
-            new DateTimeOffset(2026, 9, 21, 10, 30, 45, TimeSpan.FromHours(7)),
-            Hash.ToUpperInvariant(),
-            "keyvault://backup/aioffice/company01/v3");
+        => BackupArtifactContract.Create("company01", "AIOffice_Company01", new DateTimeOffset(2026, 9, 21, 10, 30, 45, TimeSpan.FromHours(7)), Hash.ToUpperInvariant(), "keyvault://backup/aioffice/company01/v3");
 }
