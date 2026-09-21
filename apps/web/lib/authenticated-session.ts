@@ -25,7 +25,7 @@ function ownDataValue(value: object, key: PropertyKey): unknown {
   return descriptor && "value" in descriptor ? descriptor.value : undefined;
 }
 
-function snapshotCanonicalRoles(value: unknown): string[] | null {
+function snapshotCanonicalRoles(value: unknown): readonly string[] | null {
   if (!Array.isArray(value)) return null;
 
   // Do not iterate runtime arrays: a Proxy can replace Symbol.iterator and execute
@@ -39,7 +39,7 @@ function snapshotCanonicalRoles(value: unknown): string[] | null {
     if (!hasCanonicalText(role)) return null;
     snapshot.push(role);
   }
-  return new Set(snapshot).size === snapshot.length ? snapshot : null;
+  return new Set(snapshot).size === snapshot.length ? Object.freeze(snapshot) : null;
 }
 
 function normalizeMembership(value: unknown, selectedCompanyId: string): CompanyMembershipView | null {
@@ -64,7 +64,9 @@ function normalizeMembership(value: unknown, selectedCompanyId: string): Company
     return null;
   }
 
-  return { tenantId, companyId, companyName, userId, userName, roles };
+  // Freeze the accepted authority snapshot as well as its role list. Type-level readonly
+  // is erased at runtime; downstream code must not be able to rewrite trusted identity.
+  return Object.freeze({ tenantId, companyId, companyName, userId, userName, roles });
 }
 
 function inspectSessionBootstrapResult(value: unknown):
