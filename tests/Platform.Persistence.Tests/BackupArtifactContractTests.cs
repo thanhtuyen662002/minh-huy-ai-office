@@ -11,7 +11,6 @@ public sealed class BackupArtifactContractTests
     public void Create_ProducesDeterministicUtcArtifactWithoutSecretMaterial()
     {
         var descriptor = CreateDescriptor();
-
         Assert.Equal("company01-AIOffice_Company01-20260921T033045Z-0123456789ab.bak", descriptor.ArtifactName);
         Assert.Equal("company01", descriptor.CompanyId);
         Assert.Equal(Hash, descriptor.Sha256);
@@ -136,6 +135,20 @@ public sealed class BackupArtifactContractTests
         Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { TenantIsolationVerified = false }, "company01", TimeSpan.FromMinutes(15)));
         Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { RecoveredAtUtc = startedAt.AddMinutes(16) }, "company01", TimeSpan.FromMinutes(15)));
         Assert.False(BackupArtifactContract.VerifyFailureDrill(evidence with { RecoveredAtUtc = startedAt.AddSeconds(-1) }, "company01", TimeSpan.FromMinutes(15)));
+    }
+
+    [Fact]
+    public void VerifyRepeatedFailureDrills_RequiresFreshCoverageOfEveryScenario()
+    {
+        var now = new DateTimeOffset(2026, 9, 21, 9, 0, 0, TimeSpan.Zero);
+        var evidence = Enum.GetValues<RecoveryFailureScenario>()
+            .Select((scenario, index) => new RecoveryFailureDrillEvidence("company01", scenario, now.AddMinutes(-20 - index), now.AddMinutes(-12 - index), true, true, true))
+            .ToArray();
+
+        Assert.True(BackupArtifactContract.VerifyRepeatedFailureDrills(evidence, "company01", now, TimeSpan.FromHours(24), TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyRepeatedFailureDrills(evidence.Where(item => item.Scenario != RecoveryFailureScenario.QueueUnavailable), "company01", now, TimeSpan.FromHours(24), TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyRepeatedFailureDrills(evidence.Select(item => item.Scenario == RecoveryFailureScenario.ServerUnavailable ? item with { RecoveredAtUtc = now.AddHours(-25) } : item), "company01", now, TimeSpan.FromHours(24), TimeSpan.FromMinutes(15)));
+        Assert.False(BackupArtifactContract.VerifyRepeatedFailureDrills(evidence.Select(item => item.Scenario == RecoveryFailureScenario.ProviderUnavailable ? item with { CompanyId = "company02" } : item), "company01", now, TimeSpan.FromHours(24), TimeSpan.FromMinutes(15)));
     }
 
     [Theory]
