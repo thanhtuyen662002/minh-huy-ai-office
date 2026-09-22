@@ -4,11 +4,11 @@ status: active
 current_issue: 31
 current_pr: 86
 current_branch: runtime/31-it-agent-development-loop
-head: 8c32e290a9ea638afb84eab4fb32652d183a8651
-state: ready_for_review
+head: a982c3a6ca1e03f4578e517bca8ecf5d74857a82
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T12:23:00Z"
-last_checkpoint_at: "2026-09-22T12:23:00Z"
+lease_heartbeat_at: "2026-09-22T12:25:00Z"
+last_checkpoint_at: "2026-09-22T12:25:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Draft PR #86 is the authoritative Runtime lease for #31. Exact-head 8c32e290a9ea638afb84eab4fb32652d183a8651 completed Governance 35722394748 GREEN and Build 35722394739 GREEN. Acceptance is satisfied by the fail-closed candidate verification gate and ordered IssueAccepted -> BranchCreated -> PullRequestOpened -> VerificationPending -> Verified progression: exact candidate/version/source commit identity is fenced, CI and eval must both pass, stale/denied evidence cannot advance, and tenant/company authority remains canonical. PR is ready for Lead review/merge. Do not bypass versioned PR/CI/eval/release gates or expand into Release Controller #32 scope."
+next_action: "Draft PR #86 is the authoritative Runtime lease for #31. Previous exact-head 8c32e290a9ea638afb84eab4fb32652d183a8651 completed Governance 35722394748 GREEN and Build 35722394739 GREEN. Acceptance review found the Runtime slice complete without entering Release Controller #32 scope. State checkpoint a982c3a6ca1e03f4578e517bca8ecf5d74857a82 emitted Governance 35726930332 in_progress and Build 35726930346 queued. Re-query CI for the actual HEAD after this waiting_ci checkpoint; fix any actionable RED on the SAME branch. If exact-head CI is GREEN, mark PR ready_for_review. Do not bypass versioned PR/CI/eval/release gates or expand into #32 scope."
