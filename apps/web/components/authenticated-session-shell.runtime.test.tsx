@@ -23,6 +23,20 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(screen.getByRole("alert").textContent).toContain("Không thể xác thực phạm vi công ty");
   });
 
+  it("fails closed when hostile session status descriptor inspection throws", () => {
+    const descriptorInspection = vi.fn(() => { throw new Error("hostile session descriptor"); });
+    const hostileState = new Proxy({ status: "ready", membership }, {
+      getOwnPropertyDescriptor(target, property) {
+        if (property === "status") return descriptorInspection();
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
+    expect(() => render(<AuthenticatedSessionShell state={hostileState as never} />)).not.toThrow();
+    expect(descriptorInspection).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alert").textContent).toContain("Không thể xác thực phạm vi công ty");
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+  });
+
   it("rejects accessor-backed ready membership without invoking its getter", () => {
     const membershipGetter = vi.fn(() => membership);
     const accessorState = { status: "ready" } as Record<string, unknown>;
