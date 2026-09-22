@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 93
-current_pr: 94
-current_branch: runtime/93-model-upgrade-candidates
-head: 81b67040995a8071576766c6444b2347d57b111e
-state: waiting_ci
+current_issue: 95
+current_pr: null
+current_branch: runtime/95-self-healing-policy
+head: bd889d2184d78e9493b52284044a72a3e7b457b6
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T16:22:00Z"
-last_checkpoint_at: "2026-09-22T16:22:00Z"
+lease_heartbeat_at: "2026-09-22T16:36:00Z"
+last_checkpoint_at: "2026-09-22T16:36:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -23,4 +23,5 @@ scope:
   - release-controller
   - emergency-capability-isolation
   - model-upgrade-candidates
-next_action: "Draft PR #94 remains the authoritative Runtime lease for issue #93. Prior exact HEAD b22fc1cf5349f2cbdbf68d344527c3ad42596aba completed Governance 35748663082 GREEN and Build 35748663211 GREEN. Acceptance review found deterministic rollback/current-model selection needed explicit representation, so HEAD 81b67040995a8071576766c6444b2347d57b111e now records the exact previous provider/model in successful activation and provides authority-fenced rollback selection, with focused coverage. Own exact-head CI for this checkpoint; fix actionable RED on this SAME branch. When GREEN, mark PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE or merge directly."
+  - self-healing-policy
+next_action: "Issue #95 is the authoritative Runtime lease after merged #94. Initial implementation separates bounded pre-authorized reversible self-healing from versioned self-improvement, fails closed on tenant/company authority, escalates repeated/unsafe healing, and requires CI+eval+release gates for source/schema/model/workflow/skill/release mutations. Open Draft PR, own exact-head CI, fix actionable RED on this SAME branch, then reassess acceptance. Do not edit PROJECT_STATE or merge directly."
