@@ -15,6 +15,8 @@ export type CompanyContextResult =
   | CompanyContext
   | { status: "unavailable"; reason: string };
 
+const MAX_ROLE_CLAIMS = 256;
+
 const unavailable = (): CompanyContextResult => ({
   status: "unavailable",
   reason: "Không thể xác định đầy đủ người dùng và công ty đang làm việc.",
@@ -31,7 +33,7 @@ const canonicalText = (value: unknown): value is string =>
 const snapshotRoles = (value: unknown): readonly string[] | null => {
   if (!Array.isArray(value)) return null;
   const length = ownDataValue(value, "length");
-  if (!Number.isSafeInteger(length) || (length as number) < 0) return null;
+  if (!Number.isSafeInteger(length) || (length as number) < 0 || (length as number) > MAX_ROLE_CLAIMS) return null;
   const roles: string[] = [];
   const seen = new Set<string>();
   for (let index = 0; index < (length as number); index += 1) {
