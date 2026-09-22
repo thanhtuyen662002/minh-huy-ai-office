@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 95
-current_pr: null
+current_pr: 96
 current_branch: runtime/95-self-healing-policy
-head: bd889d2184d78e9493b52284044a72a3e7b457b6
-state: in_progress
+head: 1f79b81c6b665101ac1f75309b93874cb3f1ffe9
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T16:36:00Z"
-last_checkpoint_at: "2026-09-22T16:36:00Z"
+lease_heartbeat_at: "2026-09-22T16:37:00Z"
+last_checkpoint_at: "2026-09-22T16:37:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -24,4 +24,4 @@ scope:
   - emergency-capability-isolation
   - model-upgrade-candidates
   - self-healing-policy
-next_action: "Issue #95 is the authoritative Runtime lease after merged #94. Initial implementation separates bounded pre-authorized reversible self-healing from versioned self-improvement, fails closed on tenant/company authority, escalates repeated/unsafe healing, and requires CI+eval+release gates for source/schema/model/workflow/skill/release mutations. Open Draft PR, own exact-head CI, fix actionable RED on this SAME branch, then reassess acceptance. Do not edit PROJECT_STATE or merge directly."
+next_action: "Draft PR #96 is the authoritative Runtime lease for issue #95. Implementation separates bounded pre-authorized reversible self-healing from versioned self-improvement, fails closed on tenant/company authority, escalates repeated/unsafe healing, and requires CI+eval+release gates for source/schema/model/workflow/skill/release mutations. Prior implementation HEAD 1f79b81c6b665101ac1f75309b93874cb3f1ffe9 emitted Build 35755157971 and Governance 35755157895. This durable checkpoint changes HEAD; own exact-head CI for the actual branch HEAD, fix actionable RED on this SAME branch, and continue acceptance review. Do not edit PROJECT_STATE or merge directly."
