@@ -11,25 +11,9 @@ public sealed record RuntimeRecoveryIdentity(Guid TenantId, Guid CompanyId, Guid
     }
 }
 
-public sealed record RuntimeDurableCheckpoint(
-    RuntimeRecoveryIdentity Identity,
-    long Version,
-    string EvidenceId,
-    DateTimeOffset PersistedAt);
-
-public sealed record RuntimeRecoveryLease(
-    RuntimeRecoveryIdentity Identity,
-    long Generation,
-    long CheckpointVersion,
-    string RecoveryNodeId,
-    DateTimeOffset StartedAt);
-
-public sealed record RuntimeRecoveryCompletion(
-    RuntimeRecoveryIdentity Identity,
-    long Generation,
-    long CheckpointVersion,
-    string RestoreEvidenceId,
-    DateTimeOffset PersistedAt);
+public sealed record RuntimeDurableCheckpoint(RuntimeRecoveryIdentity Identity, long Version, string EvidenceId, DateTimeOffset PersistedAt);
+public sealed record RuntimeRecoveryLease(RuntimeRecoveryIdentity Identity, long Generation, long CheckpointVersion, string RecoveryNodeId, DateTimeOffset StartedAt);
+public sealed record RuntimeRecoveryCompletion(RuntimeRecoveryIdentity Identity, long Generation, long CheckpointVersion, string RestoreEvidenceId, DateTimeOffset PersistedAt);
 
 public static class RuntimeRecoveryFencing
 {
@@ -38,6 +22,7 @@ public static class RuntimeRecoveryFencing
         RuntimeDurableCheckpoint checkpoint,
         long generation,
         string recoveryNodeId,
+        DateTimeOffset startedAt,
         RuntimeRecoveryLease? latest = null)
     {
         identity.Validate();
@@ -56,7 +41,7 @@ public static class RuntimeRecoveryFencing
                 throw new InvalidOperationException("Recovery cannot roll durable checkpoint state backward.");
         }
 
-        return new(identity, generation, checkpoint.Version, recoveryNodeId, DateTimeOffset.UtcNow);
+        return new(identity, generation, checkpoint.Version, recoveryNodeId, startedAt);
     }
 
     public static RuntimeRecoveryCompletion Complete(
@@ -84,16 +69,12 @@ public static class RuntimeRecoveryFencing
         return persisted;
     }
 
-    public static void AuthorizeDispatchResume(
-        RuntimeRecoveryLease active,
-        RuntimeRecoveryCompletion? persisted,
-        long generation)
+    public static void AuthorizeDispatchResume(RuntimeRecoveryLease active, RuntimeRecoveryCompletion? persisted, long generation)
     {
         if (persisted is null)
             throw new InvalidOperationException("Recovery completion must be persisted before dispatch resume.");
         RequireSameIdentity(active.Identity, persisted.Identity);
-        if (active.Generation != generation || persisted.Generation != generation ||
-            active.CheckpointVersion != persisted.CheckpointVersion)
+        if (active.Generation != generation || persisted.Generation != generation || active.CheckpointVersion != persisted.CheckpointVersion)
             throw new InvalidOperationException("Dispatch resume requires the exact persisted recovery fence.");
     }
 
