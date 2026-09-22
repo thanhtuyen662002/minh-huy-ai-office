@@ -3,20 +3,20 @@ repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-P3-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 29
-current_branch: erp/29-erp-catalog
-current_pr: 82
-current_target_head: 4f3f3dbfbad6127355d6234124f3e3ffd0ed40c9
-last_verified_commit: de8947f4960b7e0d67dd7432cdbf82f3dfdbae4e
+current_issue: 30
+current_branch: null
+current_pr: null
+current_target_head: null
+last_verified_commit: 41c73dd9e1be9edf9df1e770a6d91fac652683cf
 
 critical_paths:
   backend:
     issue: 35
     pr: 83
     branch: backend/35-customer-billing-foundation
-    head: 95b52a98b4b65778755ec38bd970df240e25dd62
+    head: a4e2a2f6a3b8201152ac58f481444f0059abcc27
     state: waiting_ci
-    next: "Live Backend PR #83 owns #35. Exact-head Governance 35700475633 is GREEN; Build 35700475629 is actionable RED on a real runner. Job 106657025091 fails Build with 16 CS0246 diagnostics because CustomerBillingTests.cs is missing Xunit imports for Fact/Theory/InlineData. Backend immediate re-entry requested to fix the SAME PR and own new exact-head CI."
+    next: "Live Backend PR #83 owns #35. Exact-head Governance 35705869101 is GREEN; Build 35705868971 is actionable RED on a real runner. Lead retrieved job 106674512222 logs: CustomerBillingTests.cs has 16 CS0246 errors because Fact/Theory/InlineData cannot resolve and the file lacks using Xunit. Backend immediate re-entry requested to fix the SAME PR, own new exact-head CI, then continue #35 acceptance."
 
   frontend:
     issue: null
@@ -24,7 +24,7 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "PR #64 / issue #62 is merged. No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate live Backend #35 or ERP/Data #29."
+    next: "PR #64 / issue #62 is merged. No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Backend #35 or ERP/Data roadmap ownership."
 
   runtime_ai:
     issue: null
@@ -32,17 +32,18 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime #31 remains dependency-blocked by ERP/Data #29 then #30. Runtime automation was unexpectedly disabled again and Lead re-enabled it in this cycle; it must remain enabled while blocked and re-evaluate live GitHub every run without heartbeat work."
+    next: "Runtime #31 remains dependency-blocked by #30. ERP/Data #29 is now authoritative after PR #82 merge. Runtime automation was unexpectedly disabled again and Lead re-enabled it in this cycle; it must remain enabled while blocked and re-evaluate live GitHub without heartbeat work."
 
   erp_data:
-    issue: 29
-    pr: 82
-    branch: erp/29-erp-catalog
-    head: 4f3f3dbfbad6127355d6234124f3e3ffd0ed40c9
-    state: waiting_ci
-    next: "Live PR #82 is mergeable/draft. PR HANDOFF is stale versus actual HEAD. Exact-head Governance 35704979162 and Build 35704979093 are GREEN. ERP/Data immediate re-entry requested to reconcile HANDOFF/workstream state, re-resolve #29 acceptance, mark ready_for_review if complete, or continue the smallest missing acceptance unit on the SAME PR."
+    issue: 30
+    pr: null
+    branch: null
+    head: null
+    state: claimed
+    next: "PR #82 / issue #29 passed exact-head Governance 35704979162 and Build 35704979093, was non-draft/mergeable/acceptance-complete, and Lead squash-merged it at 41c73dd9e1be9edf9df1e770a6d91fac652683cf. Issue #30 is now dependency-unblocked (#28 + #29 authoritative). ERP/Data immediate re-entry requested to release #29 state and claim/implement #30 without waiting for the next hourly cycle."
 
 recent_authoritative_merges:
+  - "PR #82 / issue #29 ERP Catalog / Feature / Capability Registry contracts: MERGED at 41c73dd9e1be9edf9df1e770a6d91fac652683cf"
   - "PR #73 / issue #22 realtime task dashboard via SignalR: MERGED at 72aab4092e1238d70885185e5f8d43cc719dbdaf"
   - "PR #64 / issue #62 authenticated-session bootstrap: MERGED at 36a9a63f6d2ef53476b7e984e542f724a52b774f"
   - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
@@ -60,13 +61,13 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
-  - "P3 #28 Schema Observer is authoritative. ERP/Data PR #82 owns #29; #30 depends on #28/#29, and Runtime #31 depends on #30."
+  - "P3 #28 Schema Observer and #29 ERP Catalog are authoritative. #30 Change impact analysis is now unblocked; Runtime #31 depends on #30."
   - "Backend independently owns customer-facing #35 foundation on PR #83; this must not bypass fail-closed tenant/company authority or billing/secret boundaries."
 
-next_action: "ERP/Data re-resolves green exact-head #82 acceptance and advances #29 immediately. Backend fixes actionable Xunit import compile failure on #83 and owns exact-head CI. Runtime remains enabled while waiting on #29 -> #30. Frontend re-evaluates for safe non-overlapping work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
+next_action: "ERP/Data claims and advances newly-unblocked #30 immediately. Backend fixes the concrete missing-Xunit compile failure on #83 and owns exact-head CI. Runtime remains enabled while waiting only on #30, then claims #31 when #30 becomes authoritative. Frontend re-evaluates for safe non-overlapping work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
 
 blocked_by:
-  - "Runtime next roadmap implementation is dependency-blocked by ERP/Data #29 -> #30; automation remains enabled."
+  - "Runtime next roadmap implementation #31 is dependency-blocked only by #30; automation remains enabled."
 
 automation_liveness:
   backend: enabled
