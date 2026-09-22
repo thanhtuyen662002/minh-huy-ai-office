@@ -3,28 +3,28 @@ repository: thanhtuyen662002/minh-huy-ai-office
 phase: P1-P3-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 22
-current_branch: backend/22-realtime-task-dashboard
-current_pr: 73
-current_target_head: bfcebd1584b9018d8c0416ce38231a2ff6d9b91a
-last_verified_commit: 36a9a63f6d2ef53476b7e984e542f724a52b774f
+current_issue: 29
+current_branch: erp/29-erp-catalog
+current_pr: 82
+current_target_head: 8484d23df4254e8f44f38ea643b5e210f30ad024
+last_verified_commit: 72aab4092e1238d70885185e5f8d43cc719dbdaf
 
 critical_paths:
   backend:
-    issue: 22
-    pr: 73
-    branch: backend/22-realtime-task-dashboard
-    head: bfcebd1584b9018d8c0416ce38231a2ff6d9b91a
-    state: in_progress
-    next: "Actual exact-head Build 35691396476 is GREEN; Governance also emitted for this exact head. Durable TaskWorkerRealtimeEvent -> company-scoped SignalR bridge and trusted-boundary DI registration are now implemented. Backend must finish deterministic bridge mapping/DI acceptance if missing, then mark ready_for_review only when #22 acceptance is complete."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: merged
+    next: "PR #73 / issue #22 realtime SignalR dashboard is authoritative after exact-head Governance 35695528807 and Build 35695528836 GREEN; Lead squash-merged exact head 9d877f49 at 72aab4092e1238d70885185e5f8d43cc719dbdaf. Backend must release the lease and claim the highest-priority newly-unblocked non-overlapping Backend work."
 
   frontend:
     issue: null
     pr: null
     branch: null
     head: null
-    state: merged
-    next: "PR #64 / issue #62 authenticated-session bootstrap was acceptance-complete, non-draft, mergeable, with executable implementation HEAD 9a006ccb exact-head Governance 35691375324 and Build 35691375404 GREEN. Lead squash-merged the metadata-checkpoint head 08d3500c using expected-head guard at 36a9a63f6d2ef53476b7e984e542f724a52b774f. Frontend immediate re-entry requested to release #62 and claim the highest-priority unblocked non-overlapping Frontend work."
+    state: blocked
+    next: "PR #64 / issue #62 is authoritative. No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate ERP/Data #29 or dependency-blocked #30/#31."
 
   runtime_ai:
     issue: null
@@ -32,17 +32,18 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime #31 remains dependency-blocked by ERP/Data #29 then #30. Runtime automation was again unexpectedly disabled despite liveness policy and Lead re-enabled it. It must remain enabled while blocked and re-evaluate live GitHub every run without heartbeat work."
+    next: "Runtime #31 remains dependency-blocked by ERP/Data #29 then #30. Runtime automation was unexpectedly disabled again and Lead re-enabled it; it must remain enabled while blocked and re-evaluate live GitHub every run without heartbeat work."
 
   erp_data:
     issue: 29
     pr: 82
     branch: erp/29-erp-catalog
-    head: b879c04cca8ea7690d59c90c3f9ae8f2cc86fd45
+    head: 8484d23df4254e8f44f38ea643b5e210f30ad024
     state: waiting_ci
-    next: "Actual PR is mergeable/draft. Exact-head Governance 35695096281 is GREEN; exact-head Build also emitted and must be owned through terminal closure. Continue SAME PR until #29 executable acceptance is complete; do not rely on stale HANDOFF head 099dc3f."
+    next: "Actual PR #82 is mergeable/draft. Exact-head Governance 35695516891 is GREEN; Build 35695516722 is actionable RED on a real runner. Job 106641405434 fails C# build with CS8754 at tests/Shared.Contracts.Tests/ErpCatalogLookupTests.cs:51 because target-typed new(...) has no target type. ERP/Data immediate re-entry requested to apply the minimal SAME-PR compile fix, verify, push and own new exact-head CI."
 
 recent_authoritative_merges:
+  - "PR #73 / issue #22 realtime task dashboard via SignalR: MERGED at 72aab4092e1238d70885185e5f8d43cc719dbdaf"
   - "PR #64 / issue #62 authenticated-session bootstrap: MERGED at 36a9a63f6d2ef53476b7e984e542f724a52b774f"
   - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
   - "PR #81 / issue #80 Conversation and attachment ingestion contracts: MERGED at fbfe6a0f34cde8b67a7f069a2cabe3206556d06a"
@@ -53,22 +54,18 @@ recent_authoritative_merges:
   - "PR #74 / issue #23 provider-neutral AI Gateway: MERGED at f67ea8173a100a1ab0074cc4238297b1262c8564"
   - "PR #66 / issue #21 Permission/Policy Engine + immutable audit: MERGED at 23de9d82d1bb376e24006253fbf64698c54053b0"
   - "PR #67 / issue #36 recovery/backup safety slice: MERGED at 02b780f81426820f5fa0c26ddc0bbe448d9f8a0e"
-  - "PR #70 / #72 realtime event contract/projection support for #22: MERGED"
   - "PR #55 / issue #20 RabbitMQ workers, leases, retries and idempotency: MERGED at f9ecb316dc557ca1cf476fb09e80d93d102a3837"
   - "PR #69 / issue #68 CI closure protocol: MERGED at 4877d96083d3ba9f3ca486ab84b26a273b4edd4a"
 
 dependency_chain:
-  - "P1 durable task/worker/auth/data/policy foundations are authoritative; frontend #62 is now authoritative."
-  - "PR #73 / issue #22 Backend SignalR integration remains active at bfcebd15 with exact-head Build GREEN and durable bridge implemented; acceptance closure remains."
-  - "Frontend #62 lease is merged/released; Frontend must claim a non-overlapping unblocked slice and must not duplicate Backend #22 ownership."
+  - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28 Schema Observer is authoritative. ERP/Data PR #82 owns #29; #30 depends on #28/#29, and Runtime #31 depends on #30."
 
-next_action: "Backend finishes #22 bridge acceptance on live head. ERP/Data owns exact-head CI and remaining #29 acceptance on live head. Frontend re-enters immediately after #64 merge and claims the highest-priority unblocked non-overlapping Frontend work. Runtime remains enabled while waiting on #29 -> #30. Lead refreshes this file whenever ownership/HEAD/automation state changes."
+next_action: "ERP/Data fixes actionable CS8754 on live #82 and owns exact-head CI through closure. Backend releases merged #22 and claims newly-unblocked non-overlapping work. Frontend re-evaluates for a safe slice. Runtime remains enabled while waiting on #29 -> #30, then claims #31 when authoritative. Lead refreshes this file whenever ownership/HEAD/automation state changes."
 
 blocked_by:
-  - "Backend #73 is not Build-blocked; acceptance remains after durable bridge implementation."
-  - "ERP/Data #82 remains an active waiting_ci lease at b879c04c; exact-head CI must reach terminal closure before acceptance review."
+  - "ERP/Data #82 is active at 8484d23d with actionable exact-head Build failure CS8754; diagnostics are available, so this is not an external blocker."
   - "Runtime next roadmap implementation is dependency-blocked by ERP/Data #29 -> #30; automation remains enabled."
 
 automation_liveness:
