@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: bfa442bc92a56cb095b240a1e06fddc20b563311
+last_verified_commit: d17ac882cbb42edb4db1c4cfad7902afb627d5a5
 
 critical_paths:
   backend:
@@ -19,30 +19,31 @@ critical_paths:
     next: "No live Backend PR observed. Backend remains enabled and must re-evaluate live GitHub for the highest-priority unblocked non-overlapping Backend slice."
 
   frontend:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: blocked
-    next: "No live Frontend PR observed. Frontend remains enabled and must re-evaluate live GitHub for newly-unblocked non-overlapping work."
+    issue: 101
+    pr: 102
+    branch: frontend/101-customer-portal-shell
+    head: eb6ebd8acdb23da2db79eb13b5706963c61936d6
+    state: in_progress
+    next: "PR #102 is the authoritative Frontend lease. Exact-head Governance 35778902938 is GREEN; Build 35778902969 is actionable RED in Web type-check: customer-portal-shell.tsx lines 48-49 retain unknown for companyName/userName (TS2322). Frontend must fix this SAME PR, add hostile-runtime/non-fabrication tests and continue authenticated-session acceptance."
 
   runtime_ai:
     issue: 99
     pr: 100
     branch: runtime/99-exception-escalation
-    head: ac261501452c43f660edf06ebf2596d372f17cf1
-    state: waiting_ci
-    next: "PR #100 is the authoritative Runtime lease. Actual HEAD ac261501452c43f660edf06ebf2596d372f17cf1 is mergeable; Governance 35774641396 GREEN and Build 35774641402 pending. Acceptance implementation covers stable exception identity, tenant/company/capability authority, lease epoch claim/reclaim, exact-claim evidence resolution and deterministic disposition. Runtime owns exact-head CI and must fix actionable RED on the SAME lease; after GREEN, reassess acceptance for ready_for_review."
+    head: 5e0212f19a8b756457d5d689db023ccfa398323d
+    state: in_progress
+    next: "PR #100 acceptance implementation is complete and exact-head Governance 35779683873 + Build 35779683884 are GREEN. PR was marked ready_for_review, but main advanced after ERP/Data PR #98 merged and live mergeability is now false. Runtime has been requested immediately to reconcile current main on the SAME lease, rerun exact-head gates, and restore mergeability without weakening exception authority/lease/evidence fencing."
 
   erp_data:
-    issue: 97
-    pr: 98
-    branch: erp/97-order-inventory-contract
-    head: 52bcf31f20c334b4a770ae4f7090a1e635fa3ef1
-    state: in_progress
-    next: "PR #98 is the authoritative ERP/Data lease. Actual HEAD 52bcf31f20c334b4a770ae4f7090a1e635fa3ef1 is mergeable and exact-head Governance 35774324077 + Build 35774323751 are GREEN. Acceptance implementation includes authorized audit-before-write execution and execution-once idempotency fencing. ERP/Data has been requested to run immediately to reconcile stale HANDOFF/main assumptions, complete acceptance review and mark ready_for_review when warranted."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #98 / issue #97 order/inventory deterministic workflow contracts merged at d17ac882cbb42edb4db1c4cfad7902afb627d5a5 after exact-head Governance 35774882236 + Build 35774882876 GREEN. ERP/Data has been requested immediately to reconcile its specialist state and claim the next highest-priority unblocked non-overlapping ERP/Data slice."
 
 recent_authoritative_merges:
+  - "PR #98 / issue #97 order/inventory deterministic workflow contracts: MERGED at d17ac882cbb42edb4db1c4cfad7902afb627d5a5"
   - "PR #96 / issue #95 self-healing versus self-improvement policy gate: MERGED at a47ad91b36deaa23fd41c65c7a2159af2268ef77"
   - "PR #92 / issue #91 tax/invoice deterministic import contract: MERGED at 1c0389bbb863f8c0d964172dcc117e4107889f29"
   - "PR #94 / issue #93 model upgrade candidate gate: MERGED at a848e38556145e35c1b601d4becf5f12e1ce7648"
@@ -60,10 +61,10 @@ dependency_chain:
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28/#29/#30 are authoritative."
   - "P4 #31/#32/#33, model upgrade candidate #93, and self-healing policy #95 are authoritative."
-  - "P5 accounting investigation #34, posting preview/execute/reconcile #88, and tax/invoice import #91 are authoritative; order/inventory #97 is actively owned by ERP/Data PR #98; exception queue/specialist escalation #99 is actively owned by Runtime PR #100."
-  - "P6 company-scoped billing foundation #35 is authoritative."
+  - "P5 accounting investigation #34, posting preview/execute/reconcile #88, tax/invoice import #91, and order/inventory #97 are authoritative; exception queue/specialist escalation #99 remains actively owned by Runtime PR #100."
+  - "P6 company-scoped billing foundation #35 is authoritative; customer portal authority-bound shell #101 is actively owned by Frontend PR #102."
 
-next_action: "ERP/Data immediately closes PR #98 acceptance now that exact-head gates are GREEN and the PR is mergeable. Runtime continues PR #100 exact-head Build closure and acceptance review. Backend and Frontend re-evaluate live GitHub for safe non-overlapping work. Lead reviews/merges acceptance-complete PRs promptly, then immediately unblocks the next dependency-safe slice; continue issue #65 CI-efficiency work only when it does not compete with critical-path integration."
+next_action: "Runtime immediately reconciles PR #100 with current main after #98 merge and restores exact-head GREEN/mergeability for integration. Frontend immediately fixes actionable TS2322 on PR #102 and continues hostile-runtime/non-fabrication acceptance. ERP/Data re-evaluates and claims its next safe slice. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
