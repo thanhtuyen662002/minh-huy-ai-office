@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 31
-current_pr: null
+current_pr: 86
 current_branch: runtime/31-it-agent-development-loop
-head: 8385c3ad29d43335e02ac34552508b19cbaa3319
-state: claimed
+head: 23757aa4a956f2e5802f621646a0213ef8b2f178
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T11:34:15Z"
-last_checkpoint_at: "2026-09-22T11:34:15Z"
+lease_heartbeat_at: "2026-09-22T11:36:00Z"
+last_checkpoint_at: "2026-09-22T11:36:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Issue #31 is dependency-unblocked because #27 and #30 are authoritative. Runtime claimed branch runtime/31-it-agent-development-loop from main ef9705f8f74359d4ce77efa9718f4ff93fa274be. Initial fail-closed IT Agent development gate and deterministic tests fence CI/eval evidence to exact candidate/version/source commit and preserve explicit tenant/company authority. Open one Draft PR, capture its actual HEAD, run exact-head CI closure, then continue acceptance toward controlled issue -> branch -> PR -> CI -> eval orchestration without bypassing release gates."
+next_action: "Draft PR #86 is the authoritative Runtime lease for issue #31. Initial fail-closed IT Agent development gate and deterministic tests fence CI/eval evidence to exact candidate/version/source commit and preserve explicit tenant/company authority. Re-query exact-head CI for the actual branch HEAD after this checkpoint; inspect/fix any real RED on the SAME branch. If green, continue the narrow controlled issue -> branch -> PR -> CI -> eval orchestration acceptance without bypassing versioned release gates."
