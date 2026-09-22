@@ -4,11 +4,11 @@ status: active
 current_issue: 99
 current_pr: 100
 current_branch: runtime/99-exception-escalation
-head: 58762887542d50d8df7be49b4ff7c1ee30c27c68
+head: b427651ce2dd3094da8d1095260be05d28db3319
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T19:33:00Z"
-last_checkpoint_at: "2026-09-22T19:33:00Z"
+lease_heartbeat_at: "2026-09-22T20:19:00Z"
+last_checkpoint_at: "2026-09-22T20:19:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -25,4 +25,4 @@ scope:
   - model-upgrade-candidates
   - self-healing-policy
   - exception-queue-specialist-escalation
-next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Build 35773912650 on prior actual HEAD b82a077f596d92e8f2570bfb234a4982e5666565 failed compilation because tests still called the pre-authority Claim signature; Governance 35773912855 was GREEN. Commit 58762887542d50d8df7be49b4ff7c1ee30c27c68 updates focused tests to pass RuntimeExceptionAssignmentAuthority and adds unauthorized-capability rejection coverage. Own exact-head CI after this checkpoint; fix actionable RED on this SAME branch. If GREEN, review #99 acceptance and mark ready_for_review only when complete. Do not edit PROJECT_STATE, modify ERP/Data #98 contracts, or merge directly."
+next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Implementation HEAD ac261501452c43f660edf06ebf2596d372f17cf1 passed exact-head Governance 35774641396 and Build 35774641402 GREEN. Live main then advanced to ec879a58767f1a1aa02c9ff3bae175218529de50; Runtime reconciled that authoritative main into the SAME lease at merge checkpoint b427651ce2dd3094da8d1095260be05d28db3319 while preserving lead-owned PROJECT_STATE. Own exact-head CI after this durable checkpoint; fix actionable RED on this SAME branch. If GREEN and GitHub reports mergeable, acceptance for #99 is complete and PR may be marked ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify ERP/Data #98 contracts, expose secrets, or merge directly."
