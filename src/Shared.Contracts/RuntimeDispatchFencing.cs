@@ -73,12 +73,15 @@ public static class RuntimeDispatchFencing
     {
         identity.Validate();
         RequireSameIdentity(identity, active.Identity);
-        RequireActiveFence(active, epoch, workerId, now);
         if (string.IsNullOrWhiteSpace(evidenceId)) throw new ArgumentException("Completion evidence is required.", nameof(evidenceId));
 
         if (persisted is null)
+        {
+            RequireActiveFence(active, epoch, workerId, now);
             return new(identity, epoch, evidenceId, now);
+        }
 
+        RequireFenceOwner(active, epoch, workerId);
         RequireSameIdentity(identity, persisted.Identity);
         if (persisted.Epoch != epoch || !string.Equals(persisted.EvidenceId, evidenceId, StringComparison.Ordinal))
             throw new InvalidOperationException("Conflicting completion evidence for dispatch fence.");
@@ -102,10 +105,15 @@ public static class RuntimeDispatchFencing
 
     private static void RequireActiveFence(RuntimeDispatchClaim active, long epoch, string workerId, DateTimeOffset now)
     {
-        if (epoch != active.Epoch || !string.Equals(workerId, active.WorkerId, StringComparison.Ordinal))
-            throw new InvalidOperationException("Stale or foreign dispatch fence.");
+        RequireFenceOwner(active, epoch, workerId);
         if (now >= active.ExpiresAt)
             throw new InvalidOperationException("Dispatch lease has expired.");
+    }
+
+    private static void RequireFenceOwner(RuntimeDispatchClaim active, long epoch, string workerId)
+    {
+        if (epoch != active.Epoch || !string.Equals(workerId, active.WorkerId, StringComparison.Ordinal))
+            throw new InvalidOperationException("Stale or foreign dispatch fence.");
     }
 
     private static void RequireSameIdentity(RuntimeDispatchIdentity expected, RuntimeDispatchIdentity actual)
