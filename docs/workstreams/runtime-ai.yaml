@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 95
-current_pr: 96
-current_branch: runtime/95-self-healing-policy
-head: 7a19879a1766ce1e7241bae57c7f5277805e64ba
+current_issue: 105
+current_pr: 106
+current_branch: runtime/105-sla-priority-scheduling
+head: 6f6b5675b1d86db6c9d6e4e69b2fa1ae6201639b
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T17:40:00Z"
-last_checkpoint_at: "2026-09-22T17:40:00Z"
+lease_heartbeat_at: "2026-09-22T21:38:00Z"
+last_checkpoint_at: "2026-09-22T21:38:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -24,4 +24,6 @@ scope:
   - emergency-capability-isolation
   - model-upgrade-candidates
   - self-healing-policy
-next_action: "Draft PR #96 is the authoritative Runtime lease for issue #95. Exact implementation HEAD ef639de29ae7fe65cacfe65bc2b9893c58126a97 completed Governance 35760172660 GREEN and Build 35760172647 GREEN. Live main advanced to 3929e42c1bccafb8512d4ea396317fa7bde0b20e; Runtime reconciled that main into the SAME lease at merge checkpoint 7a19879a1766ce1e7241bae57c7f5277805e64ba without changing the accepted fail-closed recovery contract. Own exact-head CI for the actual branch HEAD after this durable checkpoint; fix actionable RED on this SAME branch. If GREEN and acceptance remains complete, mark PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE or merge directly."
+  - exception-queue-specialist-escalation
+  - sla-priority-scheduling
+next_action: "Draft PR #106 is the authoritative Runtime lease for issue #105. Implementation through 6f6b5675 adds company-scoped SLA/priority scheduling plus fail-closed malformed policy/authority tests. Exact-head workflow emission is pending. Own Governance/Build when emitted; fix actionable RED on this SAME branch. If GREEN, verify mergeability and final acceptance, then mark ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."

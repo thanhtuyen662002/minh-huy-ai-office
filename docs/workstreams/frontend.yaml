@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: in_progress
-current_issue: 101
-current_pr: 102
-current_branch: "frontend/101-customer-portal-shell"
-head: "3935ed25292c496d6a77dfa922542ec5ff7f0d92"
-state: in_progress
+status: blocked
+current_issue: null
+current_pr: null
+current_branch: null
+head: null
+state: blocked
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T04:12:40+07:00"
-last_checkpoint_at: "2026-09-23T04:12:40+07:00"
+lease_heartbeat_at: "2026-09-22T13:34:20+07:00"
+last_checkpoint_at: "2026-09-22T13:34:20+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Resume PR #102 / issue #101. Prior exact-head ccaa994fb0aee3b4fa49441c9427307ae57d33d7 is GREEN: Governance 35781689552 and Build 35781689556. Meaningful acceptance continued through implementation HEAD 3935ed25292c496d6a77dfa922542ec5ff7f0d92: customer portal is wired behind AuthenticatedSessionShell; company switching remains a request hint; optional portal capabilities are snapshotted only from the server bootstrap result; unknown/malformed capability metadata fails closed; focused component/bootstrap tests added. Exact-head workflows had not emitted at checkpoint. PR is currently behind main and must be reconciled safely before ready_for_review. Re-query exact-head CI, fix actionable RED on the SAME PR, reconcile authoritative main without overwriting other lanes, then complete acceptance review."
+next_action: "PR #64 / issue #62 is merged (merge commit 36a9a63f6d2ef53476b7e984e542f724a52b774f). No Frontend live PR remains. Issue #22 is actively owned by Backend PR #73 and must not be duplicated. The remaining open implementation issues are dependency-blocked or owned by other lanes: #29 has ERP/Data PR #82; #30 depends on #29; #31 depends on #30; #32 depends on #31; #33 depends on #32; #34 requires the P1-P3 minimum viable foundation; #35 requires validated internal Phase 1. Re-resolve live GitHub state next run and claim the highest-priority newly-unblocked non-overlapping Frontend issue or a Lead-approved frontend slice. Do not create heartbeat-only commits."
