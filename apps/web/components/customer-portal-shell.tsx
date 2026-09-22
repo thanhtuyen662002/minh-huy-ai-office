@@ -23,7 +23,16 @@ function readAuthority(state: AuthenticatedSessionState) {
   const userId = ownDataValue(membership, "userId");
   const userName = ownDataValue(membership, "userName");
 
-  if (![tenantId, companyId, companyName, userId, userName].every(hasCanonicalText)) return null;
+  if (
+    !hasCanonicalText(tenantId) ||
+    !hasCanonicalText(companyId) ||
+    !hasCanonicalText(companyName) ||
+    !hasCanonicalText(userId) ||
+    !hasCanonicalText(userName)
+  ) {
+    return null;
+  }
+
   return { tenantId, companyId, companyName, userId, userName } as const;
 }
 
