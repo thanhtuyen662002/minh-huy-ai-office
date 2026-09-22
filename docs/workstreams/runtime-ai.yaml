@@ -4,11 +4,11 @@ status: active
 current_issue: 32
 current_pr: 87
 current_branch: runtime/32-release-controller
-head: be14b9f9d049040cd9527c5358570e2268d35e0b
+head: 1f41dafbf6e7927387cd50a6a68e5aa6bdd96162
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T13:19:00Z"
-last_checkpoint_at: "2026-09-22T13:19:00Z"
+lease_heartbeat_at: "2026-09-22T13:35:00Z"
+last_checkpoint_at: "2026-09-22T13:35:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -21,4 +21,4 @@ scope:
   - usage-cost-ledger
   - conversation-attachment-ingestion
   - release-controller
-next_action: "Draft PR #87 is the authoritative Runtime lease for #32. Implementation head be14b9f9d049040cd9527c5358570e2268d35e0b adds ReleaseManifest attribution across source/component/schema/workflow/skill versions, tenant/company-scoped durable TaskReleasePin, and fail-closed deterministic rollout progression Registered -> Canary -> Promoted -> DrainingPrevious -> Stable with exact-previous rollback fencing. Focused Shared.Contracts tests cover attribution validation, authority isolation, release-gate enforcement, progression and rollback. GitHub has not emitted exact-head workflow runs yet after repeated queries. Re-query CI for the actual HEAD after this state checkpoint; if actionable RED, inspect/fix on this SAME branch. If GREEN, continue #32 acceptance by adding only the smallest missing release-catalog/controller behavior; do not enter #33 kill-switch scope."
+next_action: "Draft PR #87 is the authoritative Runtime lease for #32. Exact-head f97cb6feeab1b3c8c686d0376866b202f641f553 had Governance 35732651872 GREEN and Build 35732651869 actionable RED in job 106762044629: four CS0023 compiler failures in ReleaseCatalogTests.cs caused ambiguous record with-expressions inside Assert.Throws lambdas. Fixed those expressions on the SAME branch at 1f41dafbf6e7927387cd50a6a68e5aa6bdd96162 by parenthesizing the with-expressions. GitHub had not emitted workflow runs for that fix HEAD after repeated queries. Re-query exact-head CI for the actual HEAD after this state checkpoint; if actionable RED, inspect/fix on this SAME branch. If GREEN, reassess #32 acceptance and move ready_for_review only when source/component/schema/workflow/skill attribution, durable task release pinning, progressive canary/promote/drain/stable behavior and exact-previous rollback are fully covered. Do not enter #33 kill-switch scope."
