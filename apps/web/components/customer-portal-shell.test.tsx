@@ -1,6 +1,7 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthenticatedSessionState } from "../lib/authenticated-session";
+import { AuthenticatedSessionShell } from "./authenticated-session-shell";
 import { CustomerPortalShell } from "./customer-portal-shell";
 
 const serverMembership = {
@@ -68,5 +69,42 @@ describe("CustomerPortalShell authority boundary", () => {
 
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(screen.queryByText(serverMembership.companyName)).toBeNull();
+  });
+
+  it("is reachable only after the authenticated-session boundary accepts a ready authority snapshot", () => {
+    const { rerender } = render(
+      <AuthenticatedSessionShell state={{ status: "unauthenticated" }} surface="customer-portal" />,
+    );
+    expect(screen.getByRole("heading", { name: "Cần đăng nhập" })).toBeTruthy();
+    expect(screen.queryByText(serverMembership.companyName)).toBeNull();
+
+    rerender(
+      <AuthenticatedSessionShell
+        state={{ status: "ready", membership: serverMembership }}
+        surface="customer-portal"
+      />,
+    );
+    expect(screen.getByRole("heading", { name: serverMembership.companyName })).toBeTruthy();
+    expect(screen.getByText(`Đăng nhập với ${serverMembership.userName}`)).toBeTruthy();
+  });
+
+  it("keeps company switching as a request hint while the portal retains server authority", () => {
+    const onSelectCompany = vi.fn();
+    render(
+      <AuthenticatedSessionShell
+        state={{ status: "ready", membership: serverMembership }}
+        surface="customer-portal"
+        companies={[
+          { companyId: "company-server", companyName: "Công ty từ máy chủ" },
+          { companyId: "browser-company", companyName: "Browser company hint" },
+        ]}
+        onSelectCompany={onSelectCompany}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Đổi công ty"), { target: { value: "browser-company" } });
+    expect(onSelectCompany).toHaveBeenCalledWith("browser-company");
+    expect(screen.getByRole("heading", { name: serverMembership.companyName })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Browser company hint" })).toBeNull();
   });
 });
