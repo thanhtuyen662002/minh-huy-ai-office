@@ -17,7 +17,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
     {
         EnsureTaskId(message.TaskId);
         EnsureStatus(message.Status);
-        return Company(tenantId, companyId).TaskStatusChanged(message);
+        return Company(tenantId, companyId).TaskStatusChanged(message).WaitAsync(cancellationToken);
     }
 
     public Task PublishStepStatusAsync(Guid tenantId, Guid companyId, TaskStepStatusChanged message, CancellationToken cancellationToken = default)
@@ -29,7 +29,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
         }
 
         EnsureStatus(message.Status);
-        return Company(tenantId, companyId).TaskStepStatusChanged(message);
+        return Company(tenantId, companyId).TaskStepStatusChanged(message).WaitAsync(cancellationToken);
     }
 
     public Task PublishWorkerStatusAsync(Guid tenantId, Guid companyId, WorkerStatusChanged message, CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
         }
 
         EnsureStatus(message.Status);
-        return Company(tenantId, companyId).WorkerStatusChanged(message);
+        return Company(tenantId, companyId).WorkerStatusChanged(message).WaitAsync(cancellationToken);
     }
 
     public Task PublishAttentionRequiredAsync(Guid tenantId, Guid companyId, TaskAttentionRequired message, CancellationToken cancellationToken = default)
@@ -52,7 +52,7 @@ public sealed class SignalRTaskStatusPublisher(IHubContext<TaskStatusHub, ITaskS
             throw new ArgumentException("Attention kind and reason code are required for realtime publication.", nameof(message));
         }
 
-        return Company(tenantId, companyId).AttentionRequired(message);
+        return Company(tenantId, companyId).AttentionRequired(message).WaitAsync(cancellationToken);
     }
 
     private ITaskStatusClient Company(Guid tenantId, Guid companyId)
