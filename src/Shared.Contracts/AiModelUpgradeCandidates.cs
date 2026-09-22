@@ -55,7 +55,15 @@ public sealed record AiModelUpgradeCandidate(
         if (!evidence.Passed || !releaseGatesPassed)
             throw new InvalidOperationException("Eval and release gates must pass before model upgrade activation.");
 
-        return new(TenantId, CompanyId, CandidateId, CandidateVersion, Proposed.ProviderId, Proposed.ModelId);
+        return new(
+            TenantId,
+            CompanyId,
+            CandidateId,
+            CandidateVersion,
+            Proposed.ProviderId,
+            Proposed.ModelId,
+            Current.ProviderId,
+            Current.ModelId);
     }
 
     private static void Require(string value, string name)
@@ -92,6 +100,23 @@ public sealed record AiModelUpgradeActivation(
     string CompanyId,
     string CandidateId,
     string CandidateVersion,
+    string ProviderId,
+    string ModelId,
+    string PreviousProviderId,
+    string PreviousModelId)
+{
+    public AiModelSelection Rollback(string tenantId, string companyId)
+    {
+        if (!StringComparer.Ordinal.Equals(TenantId, tenantId) || !StringComparer.Ordinal.Equals(CompanyId, companyId))
+            throw new InvalidOperationException("Model rollback authority mismatch.");
+
+        return new(TenantId, CompanyId, PreviousProviderId, PreviousModelId);
+    }
+}
+
+public sealed record AiModelSelection(
+    string TenantId,
+    string CompanyId,
     string ProviderId,
     string ModelId);
 
