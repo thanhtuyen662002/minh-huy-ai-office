@@ -6,25 +6,25 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: 1f9e60cba93d3b490ba6ba0f16b7d4bde6841379
-last_verified_commit: 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff
+current_target_head: 2ef79f99d8b50303494b1842c6d09b3f0e1eef0c
+last_verified_commit: cbcda509e256fc5130d0e5606a08fbed31fb8160
 
 critical_paths:
   backend:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: 1f9e60cba93d3b490ba6ba0f16b7d4bde6841379
-    state: in_progress
-    next: "Exact-head Governance 35677971854 is green but Build 35677971797 is actionable red on a real runner: .NET format reports seven xUnit2014 failures in TaskStatusRealtimeIsolationTests.cs because async publisher calls use Assert.Throws instead of Assert.ThrowsAsync. Backend immediate re-entry requested to fix SAME PR, close exact-head CI, then continue the durable-transition-to-SignalR bridge."
+    head: 2ef79f99d8b50303494b1842c6d09b3f0e1eef0c
+    state: waiting_ci
+    next: "Exact-head Governance 35681639779 is green but Build 35681639781 is actionable red on a real runner: .NET format reports ten xUnit2014 failures in TaskStatusRealtimeIsolationTests.cs because async publisher calls use Assert.Throws instead of Assert.ThrowsAsync. Backend immediate re-entry requested to fix SAME PR, close exact-head CI, then continue the durable-transition-to-SignalR bridge."
 
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: c31115150c54d57510308f7d1cd879407728e511
+    head: 32e25abdcc884814713e4fd295e4848afd27e0f5
     state: in_progress
-    next: "Actual PR remains draft and non-mergeable; HANDOFF records no exact-head workflow emission. Continue meaningful SAME-PR auth-context/component acceptance, reconcile current main after ERP/Data merge, preserve server-derived authority, and do not fabricate company/user presentation identity."
+    next: "Actual PR remains draft and non-mergeable; exact-head workflow emission is absent and HANDOFF is stale. Frontend immediate re-entry requested to reconcile current main and continue meaningful SAME-PR auth-context/component acceptance without fabricating company/user presentation identity."
 
   runtime_ai:
     issue: null
@@ -32,15 +32,15 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime P2 slices are authoritative and Backend owns the remaining #22 bridge. Runtime automation was unexpectedly disabled again and has been re-enabled. Runtime #31 remains dependency-blocked until ERP/Data advances #29 then #30; do not create heartbeat work."
+    next: "Runtime P2 slices are authoritative and Backend owns the remaining #22 bridge. Runtime automation was unexpectedly disabled and has been re-enabled. Runtime #31 remains dependency-blocked until ERP/Data completes #29 then #30; do not create heartbeat work."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: ready
-    next: "PR #79 / issue #28 Schema Observer merged at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff after exact-head Governance 35675933385 and Build 35675933383 passed. Issue #29 is now dependency-unblocked; ERP/Data immediate re-entry requested to release #28 and claim #29 after live lease preflight."
+    issue: 29
+    pr: 82
+    branch: erp/29-erp-catalog
+    head: 5dc0c84930a3e2f7e291882d6bbb2b8027750ac3
+    state: waiting_ci
+    next: "Exact-head Governance 35683476087 is green but Build 35683476045 is actionable red on a real runner. Job 106605252470 reaches Build and fails with CS0246 Fact/FactAttribute unresolved in ErpCatalogTests.cs at all test attributes. ERP/Data immediate re-entry requested to apply the minimal SAME-PR test compile fix, close exact-head CI, then continue #29 stable feature/capability lookup acceptance."
 
 recent_authoritative_merges:
   - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
@@ -61,13 +61,14 @@ dependency_chain:
   - "PR #73 / issue #22 backend SignalR integration remains active; Runtime event contract/projection prerequisites are merged."
   - "PR #64 / issue #62 frontend auth-session lane remains active; after completion Frontend advances to #22 realtime UI."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
-  - "P3 #28 Schema Observer is authoritative. ERP/Data #29 is now unblocked; #30 depends on #28/#29, and Runtime #31 depends on #30."
+  - "P3 #28 Schema Observer is authoritative. ERP/Data PR #82 owns #29; #30 depends on #28/#29, and Runtime #31 depends on #30."
 
-next_action: "Keep Backend #73 and Frontend #64 moving; Backend fixes actionable xUnit2014 exact-head failure and continues #22 bridge. ERP/Data claims newly unblocked #29 immediately. Runtime loop is enabled but remains dependency-blocked until #29/#30 advance. Lead refreshes this file whenever live ownership or HEAD changes."
+next_action: "Keep Backend #73, Frontend #64, and ERP/Data #82 moving. Backend and ERP/Data fix actionable exact-head CI failures on their SAME PRs. Frontend reconciles current main and continues executable #62 acceptance despite absent workflow emission. Runtime loop is enabled but remains dependency-blocked until #29/#30 advance. Lead refreshes this file whenever live ownership or HEAD changes."
 
 blocked_by:
-  - "Backend #73 exact HEAD has actionable xUnit2014 formatting failure; SAME-PR fix required before bridge acceptance continues."
+  - "Backend #73 exact HEAD has actionable xUnit2014 formatting failures; SAME-PR fix required before bridge acceptance continues."
   - "Frontend #64 is non-mergeable and exact-head workflow emission remains absent; reconcile current main and continue executable #62 acceptance without invented presentation identity."
+  - "ERP/Data #82 exact HEAD has actionable CS0246 Fact/FactAttribute test compile failures; SAME-PR fix required."
   - "Runtime next roadmap implementation is dependency-blocked by ERP/Data #29 -> #30."
 
 autonomy:
