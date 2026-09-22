@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 32
-current_pr: null
+current_pr: 87
 current_branch: runtime/32-release-controller
-head: 62b00c8e6289758891e99aff59512a6901b776d5
-state: claimed
+head: be14b9f9d049040cd9527c5358570e2268d35e0b
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T13:17:00Z"
-last_checkpoint_at: "2026-09-22T13:17:00Z"
+lease_heartbeat_at: "2026-09-22T13:19:00Z"
+last_checkpoint_at: "2026-09-22T13:19:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -21,4 +21,4 @@ scope:
   - usage-cost-ledger
   - conversation-attachment-ingestion
   - release-controller
-next_action: "Issue #31 / PR #86 is authoritative on main. Issue #32 is dependency-unblocked and has no competing open PR. Runtime claimed #32 on runtime/32-release-controller from authoritative main 62b00c8e6289758891e99aff59512a6901b776d5. Open the Draft PR immediately, then implement the smallest Release Catalog contract that pins source commit + component/schema/workflow/skill versions and supports deterministic progressive rollout/drain/rollback without weakening tenant/company, audit, or release gates."
+next_action: "Draft PR #87 is the authoritative Runtime lease for #32. Implementation head be14b9f9d049040cd9527c5358570e2268d35e0b adds ReleaseManifest attribution across source/component/schema/workflow/skill versions, tenant/company-scoped durable TaskReleasePin, and fail-closed deterministic rollout progression Registered -> Canary -> Promoted -> DrainingPrevious -> Stable with exact-previous rollback fencing. Focused Shared.Contracts tests cover attribution validation, authority isolation, release-gate enforcement, progression and rollback. GitHub has not emitted exact-head workflow runs yet after repeated queries. Re-query CI for the actual HEAD after this state checkpoint; if actionable RED, inspect/fix on this SAME branch. If GREEN, continue #32 acceptance by adding only the smallest missing release-catalog/controller behavior; do not enter #33 kill-switch scope."
