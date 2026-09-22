@@ -4,11 +4,11 @@ status: active
 current_issue: 105
 current_pr: 106
 current_branch: runtime/105-sla-priority-scheduling
-head: b7d4c9a81004af8bd67437f11cbd40a146c3ccb8
-state: in_progress
+head: 6f6b5675b1d86db6c9d6e4e69b2fa1ae6201639b
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T21:37:00Z"
-last_checkpoint_at: "2026-09-22T21:37:00Z"
+lease_heartbeat_at: "2026-09-22T21:38:00Z"
+last_checkpoint_at: "2026-09-22T21:38:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -26,4 +26,4 @@ scope:
   - self-healing-policy
   - exception-queue-specialist-escalation
   - sla-priority-scheduling
-next_action: "Draft PR #106 is the authoritative Runtime lease for issue #105. Initial company-scoped SLA/priority scheduling contract and focused authority/stability tests are committed. Own exact-head Governance/Build; fix actionable RED on this SAME branch. While CI settles, harden fail-closed malformed policy/authority coverage. If GREEN, acceptance-complete and mergeable, mark ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+next_action: "Draft PR #106 is the authoritative Runtime lease for issue #105. Implementation through 6f6b5675 adds company-scoped SLA/priority scheduling plus fail-closed malformed policy/authority tests. Exact-head workflow emission is pending. Own Governance/Build when emitted; fix actionable RED on this SAME branch. If GREEN, verify mergeability and final acceptance, then mark ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
