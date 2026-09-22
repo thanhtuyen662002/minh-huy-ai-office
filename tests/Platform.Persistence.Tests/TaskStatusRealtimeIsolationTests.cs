@@ -1,7 +1,7 @@
 using MinhHuy.AIOffice.Core.Api.Realtime;
 using Xunit;
 
-namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
+namespace Platform.Persistence.Tests;
 
 public sealed class TaskStatusRealtimeIsolationTests
 {
