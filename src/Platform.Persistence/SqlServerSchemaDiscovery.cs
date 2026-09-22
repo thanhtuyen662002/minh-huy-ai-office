@@ -31,26 +31,39 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
         command.CommandText = DiscoverySql;
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        var objects = new List<ErpSchemaObject>();
+        var rows = new List<(string Kind, string Schema, string Name, string Definition)>();
         while (await reader.ReadAsync(cancellationToken))
         {
-            var kind = ParseKind(reader.GetString(0));
-            var schema = RequireMetadataValue(reader.GetString(1), "schema_name");
-            var name = RequireMetadataValue(reader.GetString(2), "object_name");
-            var definition = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
-            objects.Add(new ErpSchemaObject(kind, schema, name, HashDefinition(definition)));
+            rows.Add((
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.IsDBNull(3) ? string.Empty : reader.GetString(3)));
         }
 
-        var snapshot = authority with
-        {
-            Objects = objects
-                .OrderBy(item => item.Kind)
-                .ThenBy(item => item.Schema, StringComparer.Ordinal)
-                .ThenBy(item => item.Name, StringComparer.Ordinal)
-                .ToArray()
-        };
+        return Materialize(authority, rows);
+    }
 
-        return snapshot.Validate();
+    internal static ErpSchemaSnapshot Materialize(
+        ErpSchemaSnapshot authority,
+        IEnumerable<(string Kind, string Schema, string Name, string Definition)> rows)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        ArgumentNullException.ThrowIfNull(rows);
+        authority.Validate();
+
+        var objects = rows
+            .Select(row => new ErpSchemaObject(
+                ParseKind(row.Kind),
+                RequireMetadataValue(row.Schema, "schema_name"),
+                RequireMetadataValue(row.Name, "object_name"),
+                HashDefinition(row.Definition ?? string.Empty)))
+            .OrderBy(item => item.Kind)
+            .ThenBy(item => item.Schema, StringComparer.Ordinal)
+            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ToArray();
+
+        return (authority with { Objects = objects }).Validate();
     }
 
     internal static ErpSchemaObjectKind ParseKind(string value) => value switch
