@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 105
-current_pr: 106
-current_branch: runtime/105-sla-priority-scheduling
-head: 6f6b5675b1d86db6c9d6e4e69b2fa1ae6201639b
-state: waiting_ci
+current_issue: 107
+current_pr: null
+current_branch: runtime/107-multiserver-dispatch-fencing
+head: 58a89600d6ba05f0b9046ba091cebfcfbbe696f7
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T21:38:00Z"
-last_checkpoint_at: "2026-09-22T21:38:00Z"
+lease_heartbeat_at: "2026-09-22T22:38:00Z"
+last_checkpoint_at: "2026-09-22T22:38:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -26,4 +26,5 @@ scope:
   - self-healing-policy
   - exception-queue-specialist-escalation
   - sla-priority-scheduling
-next_action: "Draft PR #106 is the authoritative Runtime lease for issue #105. Implementation through 6f6b5675 adds company-scoped SLA/priority scheduling plus fail-closed malformed policy/authority tests. Exact-head workflow emission is pending. Own Governance/Build when emitted; fix actionable RED on this SAME branch. If GREEN, verify mergeability and final acceptance, then mark ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+  - multi-server-dispatch-fencing
+next_action: "Issue #107 is the authoritative Runtime lease. Initial implementation adds durable tenant/company/task/step dispatch identity, epoch fencing, expiry-only reclaim, stale-worker rejection, idempotent exact completion evidence and persistence-before-broker-settlement authorization. Open Draft PR, capture actual HEAD and exact-head Governance/Build, fix actionable RED on this SAME branch, then harden acceptance. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
