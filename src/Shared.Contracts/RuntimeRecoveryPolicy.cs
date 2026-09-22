@@ -25,6 +25,10 @@ public sealed record RuntimeRecoveryRequest(
     bool Reversible);
 
 public sealed record SelfImprovementEvidence(
+    string TenantId,
+    string CompanyId,
+    string TaskId,
+    string RecoveryId,
     string CandidateId,
     string CandidateVersion,
     string SourceCommit,
@@ -80,6 +84,7 @@ public static class RuntimeRecoveryPolicy
         if (!IsImprovement(request.Kind))
             throw new InvalidOperationException("Only versioned mutation kinds may enter the self-improvement gate.");
 
+        RequireEvidenceAuthority(request, evidence);
         Require(evidence.CandidateId, nameof(evidence.CandidateId));
         Require(evidence.CandidateVersion, nameof(evidence.CandidateVersion));
         Require(evidence.SourceCommit, nameof(evidence.SourceCommit));
@@ -121,6 +126,19 @@ public static class RuntimeRecoveryPolicy
         if (!StringComparer.Ordinal.Equals(request.TenantId, tenantId) ||
             !StringComparer.Ordinal.Equals(request.CompanyId, companyId))
             throw new InvalidOperationException("Runtime recovery authority mismatch.");
+    }
+
+    private static void RequireEvidenceAuthority(RuntimeRecoveryRequest request, SelfImprovementEvidence evidence)
+    {
+        Require(evidence.TenantId, nameof(evidence.TenantId));
+        Require(evidence.CompanyId, nameof(evidence.CompanyId));
+        Require(evidence.TaskId, nameof(evidence.TaskId));
+        Require(evidence.RecoveryId, nameof(evidence.RecoveryId));
+        if (!StringComparer.Ordinal.Equals(request.TenantId, evidence.TenantId) ||
+            !StringComparer.Ordinal.Equals(request.CompanyId, evidence.CompanyId) ||
+            !StringComparer.Ordinal.Equals(request.TaskId, evidence.TaskId) ||
+            !StringComparer.Ordinal.Equals(request.RecoveryId, evidence.RecoveryId))
+            throw new InvalidOperationException("Self-improvement evidence does not belong to this recovery request.");
     }
 
     private static void Require(string value, string name)
