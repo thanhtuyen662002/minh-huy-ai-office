@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 107
-current_pr: 108
-current_branch: runtime/107-multiserver-dispatch-fencing
-head: 12bcfc1b91e2b4ba5162dedfda096a533611ec14
-state: ready_for_review
+current_issue: 109
+current_pr: null
+current_branch: runtime/109-dr-checkpoint-restore-fencing
+head: 95c2b7186f49cd882d6c95c649994d559e2a9ec0
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T23:18:00Z"
-last_checkpoint_at: "2026-09-22T23:18:00Z"
+lease_heartbeat_at: "2026-09-22T23:43:00Z"
+last_checkpoint_at: "2026-09-22T23:43:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -27,4 +27,5 @@ scope:
   - exception-queue-specialist-escalation
   - sla-priority-scheduling
   - multi-server-dispatch-fencing
-next_action: "PR #108 is ready_for_review for Lead sequencing. Exact implementation HEAD 12bcfc1b91e2b4ba5162dedfda096a533611ec14 passed Governance 35793587862 and Build 35793587857, GitHub reports mergeable=true, acceptance review found no unresolved review threads, and the PR is non-draft. Lead should review/merge when sequencing permits. Runtime must not claim a competing primary lease until live GitHub shows #108 merged/closed or Lead requests changes; after merge, re-evaluate the highest-priority unblocked non-overlapping Runtime/AI slice. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+  - disaster-recovery-checkpoint-fencing
+next_action: "Issue #109 is the authoritative Runtime lease on branch runtime/109-dr-checkpoint-restore-fencing. Initial contract and focused tests implement authority-bound checkpoint restore, monotonic recovery generation/checkpoint fencing, idempotent persisted completion and persistence-before-dispatch-resume. Open a Draft PR, run exact-head CI, inspect acceptance and fix actionable failures on this SAME branch. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
