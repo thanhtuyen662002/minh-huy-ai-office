@@ -97,6 +97,16 @@ public sealed class TaskStatusRealtimeIsolationTests
             publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
+    [Fact]
+    public void Publisher_FailsClosedBeforeDispatchWhenTaskStatusIsNull()
+    {
+        var publisher = new SignalRTaskStatusPublisher(null!);
+        var message = new TaskStatusChanged(Guid.NewGuid(), null!, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -109,6 +119,16 @@ public sealed class TaskStatusRealtimeIsolationTests
             publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
+    [Fact]
+    public void Publisher_FailsClosedBeforeDispatchWhenStepStatusIsNull()
+    {
+        var publisher = new SignalRTaskStatusPublisher(null!);
+        var message = new TaskStepStatusChanged(Guid.NewGuid(), Guid.NewGuid(), null!, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -116,6 +136,16 @@ public sealed class TaskStatusRealtimeIsolationTests
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new WorkerStatusChanged(Guid.NewGuid(), "worker-1", status, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Fact]
+    public void Publisher_FailsClosedBeforeDispatchWhenWorkerStatusIsNull()
+    {
+        var publisher = new SignalRTaskStatusPublisher(null!);
+        var message = new WorkerStatusChanged(Guid.NewGuid(), "worker-1", null!, DateTimeOffset.UtcNow);
 
         Assert.Throws<ArgumentException>(() =>
             publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
