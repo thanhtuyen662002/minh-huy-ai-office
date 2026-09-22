@@ -6,25 +6,25 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: 1f9e60cba93d3b490ba6ba0f16b7d4bde6841379
-last_verified_commit: 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff
+current_target_head: f4b06c642cae8adede138494921da65216bdc2ca
+last_verified_commit: a08215da6a9cab1fc5a30afcd35005ff46a787f7
 
 critical_paths:
   backend:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: 1f9e60cba93d3b490ba6ba0f16b7d4bde6841379
+    head: f4b06c642cae8adede138494921da65216bdc2ca
     state: in_progress
-    next: "Exact-head Governance 35677971854 is green but Build 35677971797 is actionable red on a real runner: .NET format reports seven xUnit2014 failures in TaskStatusRealtimeIsolationTests.cs because async publisher calls use Assert.Throws instead of Assert.ThrowsAsync. Backend immediate re-entry requested to fix SAME PR, close exact-head CI, then continue the durable-transition-to-SignalR bridge."
+    next: "Actual exact-head Governance 35685406442 and companion Build are emitted after meaningful fail-closed publisher acceptance. Previous exact head was green; current PR HANDOFF requires CI closure, then the smallest architecture-consistent durable TaskEvents/state -> ITaskStatusPublisher bridge in Core.Api if acceptance remains. Immediate Backend re-entry requested; live GitHub remains authoritative."
 
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: c31115150c54d57510308f7d1cd879407728e511
+    head: 108690af06b952c98c452b0196a6e2c85f3ee19a
     state: in_progress
-    next: "Actual PR remains draft and non-mergeable; HANDOFF records no exact-head workflow emission. Continue meaningful SAME-PR auth-context/component acceptance, reconcile current main after ERP/Data merge, preserve server-derived authority, and do not fabricate company/user presentation identity."
+    next: "Actual PR remains draft; PR body/HANDOFF contains newer implementation checkpoint metadata than main specialist YAML. Continue SAME PR auth-context/component acceptance, preserve server-derived identity/company authority, and never fabricate presentation identity."
 
   runtime_ai:
     issue: null
@@ -32,15 +32,15 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime P2 slices are authoritative and Backend owns the remaining #22 bridge. Runtime automation was unexpectedly disabled again and has been re-enabled. Runtime #31 remains dependency-blocked until ERP/Data advances #29 then #30; do not create heartbeat work."
+    next: "Runtime P2 slices remain authoritative. Backend owns remaining #22 bridge. Runtime loop is enabled and must remain enabled while dependency-blocked. Runtime #31 waits for ERP/Data #29 then #30; re-evaluate live GitHub every run without heartbeat work."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: ready
-    next: "PR #79 / issue #28 Schema Observer merged at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff after exact-head Governance 35675933385 and Build 35675933383 passed. Issue #29 is now dependency-unblocked; ERP/Data immediate re-entry requested to release #28 and claim #29 after live lease preflight."
+    issue: 29
+    pr: 82
+    branch: erp/29-erp-catalog
+    head: 784c86cb8df01f70300253235a02a637186a65e2
+    state: waiting_ci
+    next: "Actual exact-head Governance 35687097781 is green and companion Build emitted for meaningful stable catalog lookup authority acceptance. PR remains draft and reports divergence from main; immediate ERP/Data re-entry requested to close exact-head CI, reconcile current main safely without editing PROJECT_STATE, and continue #29 acceptance/ready-for-review evaluation."
 
 recent_authoritative_merges:
   - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
@@ -61,14 +61,23 @@ dependency_chain:
   - "PR #73 / issue #22 backend SignalR integration remains active; Runtime event contract/projection prerequisites are merged."
   - "PR #64 / issue #62 frontend auth-session lane remains active; after completion Frontend advances to #22 realtime UI."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
-  - "P3 #28 Schema Observer is authoritative. ERP/Data #29 is now unblocked; #30 depends on #28/#29, and Runtime #31 depends on #30."
+  - "P3 #28 Schema Observer is authoritative. ERP/Data PR #82 owns #29; #30 depends on #28/#29, and Runtime #31 depends on #30."
 
-next_action: "Keep Backend #73 and Frontend #64 moving; Backend fixes actionable xUnit2014 exact-head failure and continues #22 bridge. ERP/Data claims newly unblocked #29 immediately. Runtime loop is enabled but remains dependency-blocked until #29/#30 advance. Lead refreshes this file whenever live ownership or HEAD changes."
+next_action: "Keep Backend #73, Frontend #64, and ERP/Data #82 moving from live heads. Backend closes exact-head CI then continues durable-event-to-SignalR acceptance. ERP/Data closes exact-head CI/reconciles main then continues #29. Frontend continues #62. Runtime stays enabled while dependency-blocked. Lead refreshes this file whenever live ownership/HEAD/automation state changes."
 
 blocked_by:
-  - "Backend #73 exact HEAD has actionable xUnit2014 formatting failure; SAME-PR fix required before bridge acceptance continues."
-  - "Frontend #64 is non-mergeable and exact-head workflow emission remains absent; reconcile current main and continue executable #62 acceptance without invented presentation identity."
+  - "Backend #73 acceptance remains active after exact-head f4b06c64 publisher hardening; CI closure then durable bridge work remains."
+  - "Frontend #64 remains active and must continue SAME-PR acceptance without fabricating identity/presentation authority."
+  - "ERP/Data #82 exact HEAD 784c86cb has green Governance and emitted Build but remains draft/diverged; SAME-PR CI closure and reconciliation required."
   - "Runtime next roadmap implementation is dependency-blocked by ERP/Data #29 -> #30."
+
+automation_liveness:
+  backend: enabled
+  frontend: enabled
+  runtime_ai: enabled
+  erp_data: enabled
+  lead_watchdog: enabled
+  retired_legacy_loops: disabled
 
 autonomy:
   routine_engineering: autonomous
