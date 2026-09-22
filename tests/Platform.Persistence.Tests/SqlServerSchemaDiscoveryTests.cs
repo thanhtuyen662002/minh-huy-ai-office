@@ -46,6 +46,19 @@ public sealed class SqlServerSchemaDiscoveryTests
         Assert.False(factory.WasCalled);
     }
 
+    [Fact]
+    public void DiscoverySql_UsesNarrowDeterministicProjection()
+    {
+        var sql = SqlServerSchemaDiscovery.DiscoverySql;
+
+        Assert.Contains("SELECT object_kind, schema_name, object_name, definition_text", sql, StringComparison.Ordinal);
+        Assert.Contains("FROM dbo.AIOfficeSchemaDiscoveryView", sql, StringComparison.Ordinal);
+        Assert.Contains("ORDER BY object_kind, schema_name, object_name", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("SELECT *", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("connection", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("secret", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData("TABLE", ErpSchemaObjectKind.Table)]
     [InlineData("VIEW", ErpSchemaObjectKind.View)]
