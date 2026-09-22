@@ -25,6 +25,39 @@ public sealed class ErpCatalogTests
     }
 
     [Fact]
+    public void Catalog_database_objects_bind_to_authoritative_schema_snapshot()
+    {
+        var catalog = ValidCatalog().Validate();
+        var snapshot = ValidSnapshot();
+
+        catalog.AssertSchemaSnapshot(snapshot);
+    }
+
+    [Fact]
+    public void Schema_binding_rejects_cross_authority_version_and_missing_objects()
+    {
+        var catalog = ValidCatalog().Validate();
+
+        Assert.Throws<InvalidOperationException>(() => catalog.AssertSchemaSnapshot(ValidSnapshot() with { CompanyId = "company-b" }));
+        Assert.Throws<InvalidOperationException>(() => catalog.AssertSchemaSnapshot(ValidSnapshot() with { Version = 13 }));
+        Assert.Throws<InvalidOperationException>(() => catalog.AssertSchemaSnapshot(ValidSnapshot() with
+        {
+            Objects = [new ErpSchemaObject(ErpSchemaObjectKind.Table, "dbo", "Other", "sha256:other")]
+        }));
+    }
+
+    [Fact]
+    public void Database_catalog_item_without_schema_identity_fails_closed()
+    {
+        var catalog = ValidCatalog() with
+        {
+            Items = [new ErpCatalogItem(ErpCatalogItemKind.DatabaseObject, "dbo.Inventory", "12")]
+        };
+
+        Assert.Throws<InvalidOperationException>(() => catalog.Validate());
+    }
+
+    [Fact]
     public void Missing_capability_reference_fails_closed()
     {
         var catalog = ValidCatalog() with
@@ -64,4 +97,11 @@ public sealed class ErpCatalogTests
         [new ErpCatalogItem(ErpCatalogItemKind.DatabaseObject, "dbo.Inventory", "12", "Table:dbo.Inventory")],
         [new ErpCapability("inventory.read", "1")],
         [new ErpFeature("sales.order", "1", ["inventory.read"])]);
+
+    private static ErpSchemaSnapshot ValidSnapshot() => new(
+        "tenant-a",
+        "company-a",
+        "erp-main",
+        12,
+        [new ErpSchemaObject(ErpSchemaObjectKind.Table, "dbo", "Inventory", "sha256:inventory")]);
 }
