@@ -4,11 +4,11 @@ status: active
 current_issue: 31
 current_pr: 86
 current_branch: runtime/31-it-agent-development-loop
-head: 23757aa4a956f2e5802f621646a0213ef8b2f178
-state: in_progress
+head: d701491c6226f3210006ce3a412f83cad350fa51
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T11:36:00Z"
-last_checkpoint_at: "2026-09-22T11:36:00Z"
+lease_heartbeat_at: "2026-09-22T11:39:00Z"
+last_checkpoint_at: "2026-09-22T11:39:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Draft PR #86 is the authoritative Runtime lease for issue #31. Initial fail-closed IT Agent development gate and deterministic tests fence CI/eval evidence to exact candidate/version/source commit and preserve explicit tenant/company authority. Re-query exact-head CI for the actual branch HEAD after this checkpoint; inspect/fix any real RED on the SAME branch. If green, continue the narrow controlled issue -> branch -> PR -> CI -> eval orchestration acceptance without bypassing versioned release gates."
+next_action: "Draft PR #86 is the authoritative Runtime lease for #31. Implemented a fail-closed candidate verification gate plus ordered IssueAccepted -> BranchCreated -> PullRequestOpened -> VerificationPending -> Verified progression. Exact candidate/version/source commit identity is fenced; CI and eval must both pass; stale/denied evidence cannot advance; tenant/company authority is canonical and explicit. No exact-head workflow runs had emitted yet for implementation HEAD d701491c6226f3210006ce3a412f83cad350fa51 after repeated queries. Re-query CI for the actual HEAD after this state checkpoint, inspect/fix any actionable RED on the SAME branch, then continue acceptance if GREEN. Do not bypass versioned PR/CI/eval/release gates."
