@@ -1,13 +1,13 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P4-P6-parallel
+phase: P5-P6-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: a47ad91b36deaa23fd41c65c7a2159af2268ef77
+last_verified_commit: bfa442bc92a56cb095b240a1e06fddc20b563311
 
 critical_paths:
   backend:
@@ -16,7 +16,7 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #83 / issue #35 company-scoped billing foundation is authoritative. Backend remains enabled and must re-evaluate live GitHub for the highest-priority unblocked non-overlapping Backend slice."
+    next: "No live Backend PR observed. Backend remains enabled and must re-evaluate live GitHub for the highest-priority unblocked non-overlapping Backend slice."
 
   frontend:
     issue: null
@@ -24,23 +24,23 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "No Frontend live PR observed. Frontend remains enabled and must re-evaluate live GitHub for newly-unblocked non-overlapping work."
+    next: "No live Frontend PR observed. Frontend remains enabled and must re-evaluate live GitHub for newly-unblocked non-overlapping work."
 
   runtime_ai:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: done
-    next: "PR #96 / issue #95 self-healing versus self-improvement policy gate merged at a47ad91b36deaa23fd41c65c7a2159af2268ef77 after exact-head Governance 35762188592 and Build 35762188599 GREEN. Runtime remains enabled and must re-evaluate live GitHub for the next safe non-overlapping Runtime slice."
+    issue: 99
+    pr: 100
+    branch: runtime/99-exception-escalation
+    head: ac261501452c43f660edf06ebf2596d372f17cf1
+    state: waiting_ci
+    next: "PR #100 is the authoritative Runtime lease. Actual HEAD ac261501452c43f660edf06ebf2596d372f17cf1 is mergeable; Governance 35774641396 GREEN and Build 35774641402 pending. Acceptance implementation covers stable exception identity, tenant/company/capability authority, lease epoch claim/reclaim, exact-claim evidence resolution and deterministic disposition. Runtime owns exact-head CI and must fix actionable RED on the SAME lease; after GREEN, reassess acceptance for ready_for_review."
 
   erp_data:
     issue: 97
     pr: 98
     branch: erp/97-order-inventory-contract
-    head: 274c430eae0ca0e740728175ea9408958cb904b4
+    head: 52bcf31f20c334b4a770ae4f7090a1e635fa3ef1
     state: in_progress
-    next: "PR #98 is the authoritative ERP/Data lease. Actual HEAD 274c430eae0ca0e740728175ea9408958cb904b4 is mergeable; Governance 35767961971 is in progress and Build 35767962087 pending. Acceptance still requires authorized audit-before-write execution plus execution-once idempotency fencing, so ERP/Data must continue the SAME lease after exact-head CI settles."
+    next: "PR #98 is the authoritative ERP/Data lease. Actual HEAD 52bcf31f20c334b4a770ae4f7090a1e635fa3ef1 is mergeable and exact-head Governance 35774324077 + Build 35774323751 are GREEN. Acceptance implementation includes authorized audit-before-write execution and execution-once idempotency fencing. ERP/Data has been requested to run immediately to reconcile stale HANDOFF/main assumptions, complete acceptance review and mark ready_for_review when warranted."
 
 recent_authoritative_merges:
   - "PR #96 / issue #95 self-healing versus self-improvement policy gate: MERGED at a47ad91b36deaa23fd41c65c7a2159af2268ef77"
@@ -59,11 +59,11 @@ dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28/#29/#30 are authoritative."
-  - "P4 #31/#32/#33, model upgrade candidate #93, and self-healing policy #95 are authoritative after PR #96 merge."
-  - "P5 accounting investigation #34, posting preview/execute/reconcile #88, and tax/invoice import #91 are authoritative; order/inventory #97 is actively owned by ERP/Data PR #98."
+  - "P4 #31/#32/#33, model upgrade candidate #93, and self-healing policy #95 are authoritative."
+  - "P5 accounting investigation #34, posting preview/execute/reconcile #88, and tax/invoice import #91 are authoritative; order/inventory #97 is actively owned by ERP/Data PR #98; exception queue/specialist escalation #99 is actively owned by Runtime PR #100."
   - "P6 company-scoped billing foundation #35 is authoritative."
 
-next_action: "ERP/Data continues PR #98 through exact-head CI and completes authorized audit-before-write execution plus execution-once idempotency acceptance. Runtime immediately re-evaluates live GitHub after merged #96 for the next safe slice. Backend and Frontend re-evaluate live GitHub for safe work. Lead continues issue #65 CI-efficiency work when it does not compete with specialist critical-path implementation and refreshes this file on every ownership/HEAD/merge/liveness change."
+next_action: "ERP/Data immediately closes PR #98 acceptance now that exact-head gates are GREEN and the PR is mergeable. Runtime continues PR #100 exact-head Build closure and acceptance review. Backend and Frontend re-evaluate live GitHub for safe non-overlapping work. Lead reviews/merges acceptance-complete PRs promptly, then immediately unblocks the next dependency-safe slice; continue issue #65 CI-efficiency work only when it does not compete with critical-path integration."
 
 blocked_by: []
 
