@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 88
 current_pr: 89
 current_branch: erp/88-accounting-posting-contract
-head: e906ebf27e74ddc9c4a9cf27436197b532b6f235
+head: 9d19e11b45bb2484a7b7e9e81c092eaa6215cd89
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-22T14:31:00Z"
-last_checkpoint_at: "2026-09-22T14:31:00Z"
+lease_heartbeat_at: "2026-09-22T14:35:00Z"
+last_checkpoint_at: "2026-09-22T14:35:00Z"
 last_merged_pr: 85
 last_merge_commit: 364864c8698d7b5d6cad51f2af9ce2128b0d8052
 preferred_next_issue: 88
@@ -21,4 +21,4 @@ scope:
   - feature-capability-registry
   - accounting-investigation
   - accounting-posting
-next_action: "Close exact-head CI after the authorized/idempotent posting execution seam. If GREEN, add deterministic reconciliation mismatch behavior and reassess #88 acceptance without weakening tenant/company/data-source authority or exposing secrets."
+next_action: "Own exact-head CI after deterministic reconciliation totals/mismatch acceptance. Fix any actionable RED on this same PR; once GREEN, reconcile current main because PR is currently non-mergeable, rerun exact-head CI, and reassess #88 for ready_for_review."
