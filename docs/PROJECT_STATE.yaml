@@ -4,19 +4,19 @@ phase: P4-P6-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 32
-current_branch: null
-current_pr: null
-current_target_head: null
-last_verified_commit: 2bf6c8d2db9a957031bea4e83614f5e81bfed0f0
+current_branch: runtime/32-release-controller
+current_pr: 87
+current_target_head: f97cb6feeab1b3c8c686d0376866b202f641f553
+last_verified_commit: 364864c8698d7b5d6cad51f2af9ce2128b0d8052
 
 critical_paths:
   backend:
-    issue: 35
-    pr: 83
-    branch: backend/35-customer-billing-foundation
-    head: d91d693c8d61c4fde14dbf0c2ca6c3dd80f4acb2
-    state: in_progress
-    next: "Live Backend PR #83 owns #35. Exact-head Governance 35724571107 and Build 35724571092 are GREEN. Acceptance remains: add endpoint coverage for authenticated authority/no-plan and authentication-unconfigured behavior, then reassess #35 without inventing pricing policy or persistence schema. Backend immediate re-entry requested."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #83 / issue #35 company-scoped billing foundation merged at 95acff127e0e3d1827bd444ac95c08eeb6be3142 after exact-head Governance 35728358339 and Build 35728358228 were GREEN. Backend immediate re-entry requested to reconcile its workstream state and claim the highest-priority unblocked Backend issue without competing with live Runtime #32."
 
   frontend:
     issue: null
@@ -24,25 +24,27 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Backend #35, ERP/Data #34, or Runtime/Release ownership."
+    next: "No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Runtime #32 or another specialist lease."
 
   runtime_ai:
+    issue: 32
+    pr: 87
+    branch: runtime/32-release-controller
+    head: f97cb6feeab1b3c8c686d0376866b202f641f553
+    state: waiting_ci
+    next: "Live Runtime PR #87 owns #32. Exact-head Governance 35732651872 is GREEN; Build 35732651869 is actionable RED on a real runner. Job 106762044629 reaches dotnet build and fails with 4x CS0023 in tests/Shared.Contracts.Tests/ReleaseCatalogTests.cs lines 11-14 because the record with-expression is parsed ambiguously inside Assert.Throws lambdas. Lead posted exact diagnostics and requested immediate Runtime re-entry to fix the SAME PR, verify, push and own new exact-head CI."
+
+  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: done
-    next: "PR #86 / issue #31 Controlled IT Agent development gate merged at 2bf6c8d2db9a957031bea4e83614f5e81bfed0f0 after exact-head Governance 35726967488 and Build 35726967342 were GREEN. Runtime immediate re-entry requested to reconcile its own state and claim the highest-priority newly-unblocked Runtime/Release slice, expected #32 if no competing lease exists."
-
-  erp_data:
-    issue: 34
-    pr: 85
-    branch: erp/34-accounting-vertical-slice
-    head: e01e7443a3874c9d45765fb9fc4c5ce9d3e8a50a
-    state: in_progress
-    next: "Live ERP/Data PR #85 owns #34. Exact-head Governance 35727634550 and Build 35727635064 are GREEN. Acceptance remains: connect the smallest deterministic accounting investigation execution surface without bypassing policy/audit gates, then reassess #34. ERP/Data immediate re-entry requested."
+    next: "PR #85 / issue #34 accounting investigation evidence/execution contract merged at 364864c8698d7b5d6cad51f2af9ce2128b0d8052 after exact-head Governance 35728888570 and Build 35728888582 were GREEN. ERP/Data immediate re-entry requested to reconcile state and claim the highest-priority unblocked ERP/Data issue without competing leases."
 
 recent_authoritative_merges:
+  - "PR #85 / issue #34 accounting investigation evidence/execution contract: MERGED at 364864c8698d7b5d6cad51f2af9ce2128b0d8052"
+  - "PR #83 / issue #35 company-scoped billing foundation: MERGED at 95acff127e0e3d1827bd444ac95c08eeb6be3142"
   - "PR #86 / issue #31 Controlled IT Agent development gate: MERGED at 2bf6c8d2db9a957031bea4e83614f5e81bfed0f0"
   - "PR #84 / issue #30 Change impact analysis and compatibility contracts: MERGED at d2fab0072bfc6a787aaa363dd0c5fb088a8f5dd9"
   - "PR #82 / issue #29 ERP Catalog / Feature / Capability Registry contracts: MERGED at 41c73dd9e1be9edf9df1e770a6d91fac652683cf"
@@ -64,10 +66,10 @@ dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28/#29/#30 are authoritative."
-  - "P4 #31 Controlled IT Agent development gate is authoritative; next release-control work can now be re-resolved from live issue dependencies."
-  - "ERP/Data independently owns accounting investigation #34 on PR #85; Backend independently owns customer-facing #35 on PR #83. Both must preserve fail-closed tenant/company authority and secret boundaries."
+  - "P4 #31 Controlled IT Agent development gate is authoritative; Runtime now owns #32 Release Catalog/rollout controller on PR #87."
+  - "P5 accounting investigation #34 and P6 company-scoped billing foundation #35 are authoritative after PR #85 and PR #83 merges."
 
-next_action: "Runtime immediately re-resolves and claims the highest-priority newly-unblocked Runtime/Release issue after #31, expected #32 if no competing lease exists. Backend continues #35 endpoint acceptance despite green CI. ERP/Data continues #34 deterministic execution surface despite green CI. Frontend re-evaluates for safe non-overlapping work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
+next_action: "Runtime immediately fixes actionable exact-head Build RED on PR #87/#32 and continues acceptance through CI closure. Backend and ERP/Data immediately reconcile their merged leases and claim only newly-unblocked non-overlapping work. Frontend re-evaluates for safe work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
 
 blocked_by: []
 
