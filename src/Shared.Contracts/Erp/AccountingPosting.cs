@@ -82,6 +82,8 @@ public sealed record AccountingPostingExecutionResult(
     string IdempotencyKey,
     string PostingId,
     IReadOnlyList<AccountingEvidence> Evidence,
+    decimal ActualDebit,
+    decimal ActualCredit,
     AccountingReconciliationState ReconciliationState)
 {
     public AccountingPostingExecutionResult Validate(AccountingPostingPreview preview)
@@ -98,6 +100,18 @@ public sealed record AccountingPostingExecutionResult(
         if (Evidence.Count == 0)
             throw new InvalidOperationException("Posting reconciliation requires deterministic ERP evidence.");
         foreach (var item in Evidence) item.Validate();
+
+        if (ActualDebit < 0 || ActualCredit < 0)
+            throw new InvalidOperationException("Reconciliation totals cannot be negative.");
+
+        var expectedDebit = preview.Lines.Sum(x => x.Debit);
+        var expectedCredit = preview.Lines.Sum(x => x.Credit);
+        var expectedState = ActualDebit == expectedDebit && ActualCredit == expectedCredit
+            ? AccountingReconciliationState.Balanced
+            : AccountingReconciliationState.Mismatch;
+        if (ReconciliationState != expectedState)
+            throw new InvalidOperationException("Reconciliation state must be derived from deterministic ERP totals, not supplied independently.");
+
         return this;
     }
 
