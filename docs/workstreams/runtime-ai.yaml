@@ -4,11 +4,11 @@ status: active
 current_issue: 99
 current_pr: 100
 current_branch: runtime/99-exception-escalation
-head: 4270c3ee694cc3d836cd7b0d54900a0659a4b287
-state: in_progress
+head: 58762887542d50d8df7be49b4ff7c1ee30c27c68
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T18:36:00Z"
-last_checkpoint_at: "2026-09-22T18:36:00Z"
+lease_heartbeat_at: "2026-09-22T19:33:00Z"
+last_checkpoint_at: "2026-09-22T19:33:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -25,4 +25,4 @@ scope:
   - model-upgrade-candidates
   - self-healing-policy
   - exception-queue-specialist-escalation
-next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Initial implementation at 4270c3ee694cc3d836cd7b0d54900a0659a4b287 adds stable exception idempotency identity, tenant/company authority fencing, specialist lease epoch claim/reclaim and exact-claim evidence-bound resolution with deterministic replay disposition. Focused tests cover duplicate enqueue identity, cross-company rejection, concurrent/stale claims and resolution fencing. Own exact-head CI for the actual branch HEAD after this durable checkpoint; fix actionable RED on this SAME branch. Continue acceptance hardening if CI is GREEN. Do not edit PROJECT_STATE, modify ERP/Data #98 contracts, or merge directly."
+next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Build 35773912650 on prior actual HEAD b82a077f596d92e8f2570bfb234a4982e5666565 failed compilation because tests still called the pre-authority Claim signature; Governance 35773912855 was GREEN. Commit 58762887542d50d8df7be49b4ff7c1ee30c27c68 updates focused tests to pass RuntimeExceptionAssignmentAuthority and adds unauthorized-capability rejection coverage. Own exact-head CI after this checkpoint; fix actionable RED on this SAME branch. If GREEN, review #99 acceptance and mark ready_for_review only when complete. Do not edit PROJECT_STATE, modify ERP/Data #98 contracts, or merge directly."
