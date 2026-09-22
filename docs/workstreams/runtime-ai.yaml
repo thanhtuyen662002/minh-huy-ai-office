@@ -7,8 +7,8 @@ current_branch: null
 head: null
 state: blocked
 lease_owner: null
-lease_heartbeat_at: "2026-09-22T04:21:08Z"
-last_checkpoint_at: "2026-09-22T04:21:08Z"
+lease_heartbeat_at: "2026-09-22T05:21:11Z"
+last_checkpoint_at: "2026-09-22T05:21:11Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Live GitHub re-evaluated 2026-09-22T04:21:08Z. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 remain authoritative. Backend owns remaining #22 SignalR bridge; do not overlap. #28 is merged/authoritative. ERP/Data Draft PR #82 exclusively owns #29 and has advanced to actual exact HEAD d1e0c021b6f72295ee20276adc7b38088eac1fd4; exact-head Governance run 35684306172 and Build run 35684306240 are both green, but #29 remains open and PR #82 remains Draft with acceptance work still owned by ERP/Data, so #29 is not authoritative yet. Issue #30 depends on #28 + #29 and remains blocked; Runtime #31 depends on #27 + #30 and remains blocked. No safe non-competing Runtime implementation is executable. Keep Runtime automation enabled and re-evaluate live GitHub next run; immediately claim #31 only after #30 becomes authoritative and no competing lease exists, or claim a newly-created higher-priority unblocked Runtime issue if Lead establishes one. Do not fabricate heartbeat implementation commits or steal ERP/Data/Backend/Frontend scope."
+next_action: "Live GitHub re-evaluated 2026-09-22T05:21:11Z. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 remain authoritative. Backend PR #73 exclusively owns remaining #22 SignalR bridge; Frontend owns UI; do not overlap. #28 is merged/authoritative. ERP/Data Draft PR #82 exclusively owns #29 and has advanced to actual exact HEAD a772d696cfef5dd732b1756e93bf3dae92336155 after reconciling main. Exact-head Governance run 35687803668 is GREEN; exact-head Build run 35687803632 is terminal RED, so #29 remains non-authoritative and actionable CI closure belongs to ERP/Data on the SAME branch. Issue #30 depends on #28 + #29 and remains blocked; Runtime #31 depends on #27 + #30 and remains blocked. No safe non-competing Runtime implementation is executable. Keep Runtime automation enabled and re-evaluate live GitHub next run; immediately claim #31 only after #30 becomes authoritative and no competing lease exists, or claim a newly-created higher-priority unblocked Runtime issue if Lead establishes one. Do not fabricate heartbeat implementation commits, fix another specialist's live PR, or steal ERP/Data/Backend/Frontend scope."
