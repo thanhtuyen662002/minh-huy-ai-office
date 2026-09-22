@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: null
-current_pr: null
-current_branch: null
-head: null
-state: blocked
-lease_owner: null
-lease_heartbeat_at: "2026-09-22T05:21:11Z"
-last_checkpoint_at: "2026-09-22T05:21:11Z"
+current_issue: 31
+current_pr: 86
+current_branch: runtime/31-it-agent-development-loop
+head: a982c3a6ca1e03f4578e517bca8ecf5d74857a82
+state: waiting_ci
+lease_owner: runtime-ai
+lease_heartbeat_at: "2026-09-22T12:25:00Z"
+last_checkpoint_at: "2026-09-22T12:25:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Live GitHub re-evaluated 2026-09-22T05:21:11Z. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 remain authoritative. Backend PR #73 exclusively owns remaining #22 SignalR bridge; Frontend owns UI; do not overlap. #28 is merged/authoritative. ERP/Data Draft PR #82 exclusively owns #29 and has advanced to actual exact HEAD a772d696cfef5dd732b1756e93bf3dae92336155 after reconciling main. Exact-head Governance run 35687803668 is GREEN; exact-head Build run 35687803632 is terminal RED, so #29 remains non-authoritative and actionable CI closure belongs to ERP/Data on the SAME branch. Issue #30 depends on #28 + #29 and remains blocked; Runtime #31 depends on #27 + #30 and remains blocked. No safe non-competing Runtime implementation is executable. Keep Runtime automation enabled and re-evaluate live GitHub next run; immediately claim #31 only after #30 becomes authoritative and no competing lease exists, or claim a newly-created higher-priority unblocked Runtime issue if Lead establishes one. Do not fabricate heartbeat implementation commits, fix another specialist's live PR, or steal ERP/Data/Backend/Frontend scope."
+next_action: "Draft PR #86 is the authoritative Runtime lease for #31. Previous exact-head 8c32e290a9ea638afb84eab4fb32652d183a8651 completed Governance 35722394748 GREEN and Build 35722394739 GREEN. Acceptance review found the Runtime slice complete without entering Release Controller #32 scope. State checkpoint a982c3a6ca1e03f4578e517bca8ecf5d74857a82 emitted Governance 35726930332 in_progress and Build 35726930346 queued. Re-query CI for the actual HEAD after this waiting_ci checkpoint; fix any actionable RED on the SAME branch. If exact-head CI is GREEN, mark PR ready_for_review. Do not bypass versioned PR/CI/eval/release gates or expand into #32 scope."
