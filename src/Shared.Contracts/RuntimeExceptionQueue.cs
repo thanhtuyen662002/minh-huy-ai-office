@@ -21,6 +21,13 @@ public sealed record RuntimeExceptionEnvelope(
     string WorkflowVersion,
     string ModelPin);
 
+public sealed record RuntimeExceptionAssignmentAuthority(
+    string TenantId,
+    string CompanyId,
+    string SpecialistId,
+    string Capability,
+    string AuthorizationRef);
+
 public sealed record RuntimeExceptionClaim(
     string ExceptionId,
     string ClaimId,
@@ -48,9 +55,7 @@ public static class RuntimeExceptionQueuePolicy
 
     public static RuntimeExceptionClaim Claim(
         RuntimeExceptionEnvelope envelope,
-        string tenantId,
-        string companyId,
-        string specialistId,
+        RuntimeExceptionAssignmentAuthority authority,
         string claimId,
         long leaseEpoch,
         DateTimeOffset leaseExpiresAt,
@@ -58,8 +63,7 @@ public static class RuntimeExceptionQueuePolicy
         DateTimeOffset? now = null)
     {
         Validate(envelope);
-        RequireAuthority(envelope.TenantId, envelope.CompanyId, tenantId, companyId);
-        Require(specialistId, nameof(specialistId));
+        ValidateAssignmentAuthority(envelope, authority);
         Require(claimId, nameof(claimId));
         if (leaseEpoch < 0) throw new ArgumentOutOfRangeException(nameof(leaseEpoch));
 
@@ -77,7 +81,7 @@ public static class RuntimeExceptionQueuePolicy
         }
 
         return new(envelope.ExceptionId, claimId, envelope.TenantId, envelope.CompanyId,
-            specialistId, leaseEpoch, leaseExpiresAt);
+            authority.SpecialistId, leaseEpoch, leaseExpiresAt);
     }
 
     public static RuntimeExceptionDisposition Resolve(
@@ -120,6 +124,19 @@ public static class RuntimeExceptionQueuePolicy
         Require(value.ReleaseId, nameof(value.ReleaseId));
         Require(value.WorkflowVersion, nameof(value.WorkflowVersion));
         Require(value.ModelPin, nameof(value.ModelPin));
+    }
+
+    private static void ValidateAssignmentAuthority(RuntimeExceptionEnvelope envelope, RuntimeExceptionAssignmentAuthority authority)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        Require(authority.TenantId, nameof(authority.TenantId));
+        Require(authority.CompanyId, nameof(authority.CompanyId));
+        Require(authority.SpecialistId, nameof(authority.SpecialistId));
+        Require(authority.Capability, nameof(authority.Capability));
+        Require(authority.AuthorizationRef, nameof(authority.AuthorizationRef));
+        RequireAuthority(envelope.TenantId, envelope.CompanyId, authority.TenantId, authority.CompanyId);
+        if (!StringComparer.Ordinal.Equals(authority.Capability, envelope.Capability))
+            throw new InvalidOperationException("Specialist assignment is not authorized for the exception capability.");
     }
 
     private static void RequireClaimAuthority(RuntimeExceptionEnvelope envelope, RuntimeExceptionClaim claim)
