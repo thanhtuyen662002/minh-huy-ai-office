@@ -4,9 +4,9 @@ phase: P1-P3-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
 current_issue: 30
-current_branch: null
-current_pr: null
-current_target_head: null
+current_branch: erp/30-change-impact-analysis
+current_pr: 84
+current_target_head: 66d9abef6fcdba2e66836c2040595fa9c8c363c8
 last_verified_commit: 41c73dd9e1be9edf9df1e770a6d91fac652683cf
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 35
     pr: 83
     branch: backend/35-customer-billing-foundation
-    head: a4e2a2f6a3b8201152ac58f481444f0059abcc27
-    state: waiting_ci
-    next: "Live Backend PR #83 owns #35. Exact-head Governance 35705869101 is GREEN; Build 35705868971 is actionable RED on a real runner. Lead retrieved job 106674512222 logs: CustomerBillingTests.cs has 16 CS0246 errors because Fact/Theory/InlineData cannot resolve and the file lacks using Xunit. Backend immediate re-entry requested to fix the SAME PR, own new exact-head CI, then continue #35 acceptance."
+    head: 2892eee837ecbc6a9020d108ee25967f4d106846
+    state: in_progress
+    next: "Live Backend PR #83 owns #35. Exact-head Governance 35713622952 and Build 35713622920 are GREEN, but acceptance remains: deterministic CompanyBillingReader coverage and the smallest authenticated billing read surface/source without inventing persistence schema. Backend immediate re-entry requested; GREEN CI does not release this lease."
 
   frontend:
     issue: null
@@ -24,7 +24,7 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "PR #64 / issue #62 is merged. No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Backend #35 or ERP/Data roadmap ownership."
+    next: "PR #64 / issue #62 is merged. No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Backend #35 or ERP/Data #30 ownership."
 
   runtime_ai:
     issue: null
@@ -32,15 +32,15 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime #31 remains dependency-blocked by #30. ERP/Data #29 is now authoritative after PR #82 merge. Runtime automation was unexpectedly disabled again and Lead re-enabled it in this cycle; it must remain enabled while blocked and re-evaluate live GitHub without heartbeat work."
+    next: "Runtime #31 remains dependency-blocked only by #30. Runtime automation was unexpectedly disabled again and Lead re-enabled it this cycle; it must remain enabled while blocked and re-evaluate live GitHub. Immediate Runtime re-evaluation requested because #30 now has an active ERP/Data lease."
 
   erp_data:
     issue: 30
-    pr: null
-    branch: null
-    head: null
-    state: claimed
-    next: "PR #82 / issue #29 passed exact-head Governance 35704979162 and Build 35704979093, was non-draft/mergeable/acceptance-complete, and Lead squash-merged it at 41c73dd9e1be9edf9df1e770a6d91fac652683cf. Issue #30 is now dependency-unblocked (#28 + #29 authoritative). ERP/Data immediate re-entry requested to release #29 state and claim/implement #30 without waiting for the next hourly cycle."
+    pr: 84
+    branch: erp/30-change-impact-analysis
+    head: 66d9abef6fcdba2e66836c2040595fa9c8c363c8
+    state: waiting_ci
+    next: "Live ERP/Data PR #84 owns #30. Exact-head Governance 35716447467 is GREEN; Build 35716447536 is actionable RED on a real runner. The .NET format/build/tests job 106708959782 fails at Verify formatting; Web, Compose, EF migration integrity and deployment/container jobs execute successfully. ERP/Data immediate re-entry requested to inspect/fix the formatting failure on SAME PR, then add the already-declared deterministic contract tests and continue acceptance."
 
 recent_authoritative_merges:
   - "PR #82 / issue #29 ERP Catalog / Feature / Capability Registry contracts: MERGED at 41c73dd9e1be9edf9df1e770a6d91fac652683cf"
@@ -61,13 +61,13 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
-  - "P3 #28 Schema Observer and #29 ERP Catalog are authoritative. #30 Change impact analysis is now unblocked; Runtime #31 depends on #30."
+  - "P3 #28 Schema Observer and #29 ERP Catalog are authoritative. ERP/Data PR #84 actively owns #30 Change impact analysis; Runtime #31 depends on #30."
   - "Backend independently owns customer-facing #35 foundation on PR #83; this must not bypass fail-closed tenant/company authority or billing/secret boundaries."
 
-next_action: "ERP/Data claims and advances newly-unblocked #30 immediately. Backend fixes the concrete missing-Xunit compile failure on #83 and owns exact-head CI. Runtime remains enabled while waiting only on #30, then claims #31 when #30 becomes authoritative. Frontend re-evaluates for safe non-overlapping work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
+next_action: "ERP/Data fixes exact-head #84 formatting failure and continues #30 acceptance immediately. Backend continues #35 acceptance despite green CI. Runtime remains enabled while waiting only on #30 and re-evaluates immediately. Frontend re-evaluates for safe non-overlapping work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
 
 blocked_by:
-  - "Runtime next roadmap implementation #31 is dependency-blocked only by #30; automation remains enabled."
+  - "Runtime next roadmap implementation #31 is dependency-blocked only by active ERP/Data #30; automation remains enabled."
 
 automation_liveness:
   backend: enabled
