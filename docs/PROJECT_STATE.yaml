@@ -6,25 +6,25 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: 2ef79f99d8b50303494b1842c6d09b3f0e1eef0c
-last_verified_commit: cbcda509e256fc5130d0e5606a08fbed31fb8160
+current_target_head: 603b920b7647c9c82f35b810a3a5aa817c246a4e
+last_verified_commit: a08215da6a9cab1fc5a30afcd35005ff46a787f7
 
 critical_paths:
   backend:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: 2ef79f99d8b50303494b1842c6d09b3f0e1eef0c
+    head: 603b920b7647c9c82f35b810a3a5aa817c246a4e
     state: waiting_ci
-    next: "Exact-head Governance 35681639779 is green but Build 35681639781 is actionable red on a real runner: .NET format reports ten xUnit2014 failures in TaskStatusRealtimeIsolationTests.cs because async publisher calls use Assert.Throws instead of Assert.ThrowsAsync. Backend immediate re-entry requested to fix SAME PR, close exact-head CI, then continue the durable-transition-to-SignalR bridge."
+    next: "Actual exact-head Governance 35683815995 is green; Build 35683815996 is actionable red on a real runner. Job 106606288372 fails Verify formatting with ten xUnit2014 diagnostics in TaskStatusRealtimeIsolationTests.cs because async publisher calls use Assert.Throws instead of Assert.ThrowsAsync. Backend automation prompt corrected and immediate re-entry requested to fix SAME PR, close exact-head CI, then continue the smallest architecture-consistent durable-transition-to-SignalR bridge if acceptance remains."
 
   frontend:
     issue: 62
     pr: 64
     branch: frontend/62-auth-session-bootstrap
-    head: 32e25abdcc884814713e4fd295e4848afd27e0f5
+    head: 108690af06b952c98c452b0196a6e2c85f3ee19a
     state: in_progress
-    next: "Actual PR remains draft and non-mergeable; exact-head workflow emission is absent and HANDOFF is stale. Frontend immediate re-entry requested to reconcile current main and continue meaningful SAME-PR auth-context/component acceptance without fabricating company/user presentation identity."
+    next: "Actual PR is draft and non-mergeable against current main; PR HANDOFF names older heads and exact-head workflow emission is absent. Frontend automation prompt corrected and immediate re-entry requested to reconcile SAME PR onto authoritative main, refresh durable specialist state/HANDOFF, continue meaningful #62 acceptance, and never fabricate company/user presentation identity."
 
   runtime_ai:
     issue: null
@@ -32,7 +32,7 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime P2 slices are authoritative and Backend owns the remaining #22 bridge. Runtime automation was unexpectedly disabled and has been re-enabled. Runtime #31 remains dependency-blocked until ERP/Data completes #29 then #30; do not create heartbeat work."
+    next: "Runtime P2 slices are authoritative and Backend owns the remaining #22 bridge. Runtime automation is enabled and must remain enabled while dependency-blocked. Runtime #31 remains blocked until ERP/Data completes #29 then #30; re-evaluate live GitHub every run and do not create heartbeat work."
 
   erp_data:
     issue: 29
@@ -40,7 +40,7 @@ critical_paths:
     branch: erp/29-erp-catalog
     head: 5dc0c84930a3e2f7e291882d6bbb2b8027750ac3
     state: waiting_ci
-    next: "Exact-head Governance 35683476087 is green but Build 35683476045 is actionable red on a real runner. Job 106605252470 reaches Build and fails with CS0246 Fact/FactAttribute unresolved in ErpCatalogTests.cs at all test attributes. ERP/Data immediate re-entry requested to apply the minimal SAME-PR test compile fix, close exact-head CI, then continue #29 stable feature/capability lookup acceptance."
+    next: "Actual exact-head Governance 35683476087 is green; Build 35683476045 is actionable red on a real runner with the known ErpCatalogTests.cs Fact/FactAttribute CS0246 compile defect. PR is also non-mergeable against current main. ERP/Data automation prompt corrected and immediate re-entry requested to apply the minimal SAME-PR compile fix, reconcile current main safely, close exact-head CI, then continue #29 stable feature/capability lookup acceptance."
 
 recent_authoritative_merges:
   - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
@@ -63,13 +63,21 @@ dependency_chain:
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28 Schema Observer is authoritative. ERP/Data PR #82 owns #29; #30 depends on #28/#29, and Runtime #31 depends on #30."
 
-next_action: "Keep Backend #73, Frontend #64, and ERP/Data #82 moving. Backend and ERP/Data fix actionable exact-head CI failures on their SAME PRs. Frontend reconciles current main and continues executable #62 acceptance despite absent workflow emission. Runtime loop is enabled but remains dependency-blocked until #29/#30 advance. Lead refreshes this file whenever live ownership or HEAD changes."
+next_action: "Keep Backend #73, Frontend #64, and ERP/Data #82 moving via corrected specialist prompts and immediate re-entry. Backend fixes exact-head xUnit2014 on SAME PR. ERP/Data fixes exact-head test compile failure and reconciles main. Frontend reconciles its non-mergeable SAME PR and continues #62 despite absent workflow emission. Runtime loop stays enabled while dependency-blocked. Lead refreshes this file whenever live ownership/HEAD/automation state changes."
 
 blocked_by:
-  - "Backend #73 exact HEAD has actionable xUnit2014 formatting failures; SAME-PR fix required before bridge acceptance continues."
-  - "Frontend #64 is non-mergeable and exact-head workflow emission remains absent; reconcile current main and continue executable #62 acceptance without invented presentation identity."
-  - "ERP/Data #82 exact HEAD has actionable CS0246 Fact/FactAttribute test compile failures; SAME-PR fix required."
+  - "Backend #73 exact HEAD 603b920b has actionable xUnit2014 formatting failures; SAME-PR fix required."
+  - "Frontend #64 exact HEAD 108690af is non-mergeable and has no exact-head workflow emission; SAME-PR reconciliation plus continued acceptance required."
+  - "ERP/Data #82 exact HEAD 5dc0c849 has actionable Fact/FactAttribute test compile failure and is non-mergeable; SAME-PR fix/reconciliation required."
   - "Runtime next roadmap implementation is dependency-blocked by ERP/Data #29 -> #30."
+
+automation_liveness:
+  backend: enabled
+  frontend: enabled
+  runtime_ai: enabled
+  erp_data: enabled
+  lead_watchdog: enabled
+  retired_legacy_loops: disabled
 
 autonomy:
   routine_engineering: autonomous
