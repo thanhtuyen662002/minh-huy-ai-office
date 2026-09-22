@@ -48,7 +48,7 @@ public sealed class ErpCatalogLookupTests
         Assert.Throws<ArgumentException>(() => catalog.FindFeature("tenant-a", "company-a", "erp-main", " "));
     }
 
-    private static ErpCatalog ValidCatalog() => new(
+    private static ErpCatalog ValidCatalog() => new ErpCatalog(
         "tenant-a",
         "company-a",
         "erp-main",
