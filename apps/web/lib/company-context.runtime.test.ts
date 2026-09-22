@@ -10,12 +10,36 @@ const membership = (roles: readonly string[]): CompanyMembershipView => ({
   roles,
 });
 
+const unavailable = {
+  status: "unavailable",
+  reason: "Không thể xác định đầy đủ người dùng và công ty đang làm việc.",
+};
+
 describe("resolveCompanyContext runtime role boundary", () => {
   it("fails closed when presentation membership contains duplicate roles", () => {
-    expect(resolveCompanyContext(membership(["Workspace member", "Workspace member"]))).toEqual({
-      status: "unavailable",
-      reason: "Không thể xác định đầy đủ người dùng và công ty đang làm việc.",
+    expect(resolveCompanyContext(membership(["Workspace member", "Workspace member"]))).toEqual(unavailable);
+  });
+
+  it("fails closed when presentation identity is inherited instead of own data", () => {
+    const inherited = Object.create(membership(["Workspace member"])) as CompanyMembershipView;
+
+    expect(resolveCompanyContext(inherited)).toEqual(unavailable);
+  });
+
+  it("fails closed without executing accessor-backed presentation identity", () => {
+    let getterCalls = 0;
+    const hostile = membership(["Workspace member"]);
+    Object.defineProperty(hostile, "userName", {
+      configurable: true,
+      enumerable: true,
+      get() {
+        getterCalls += 1;
+        return "Injected name";
+      },
     });
+
+    expect(resolveCompanyContext(hostile)).toEqual(unavailable);
+    expect(getterCalls).toBe(0);
   });
 
   it("keeps an immutable role snapshot for unambiguous membership", () => {
