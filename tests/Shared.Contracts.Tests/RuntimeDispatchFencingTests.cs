@@ -55,14 +55,15 @@ public sealed class RuntimeDispatchFencingTests
     }
 
     [Fact]
-    public void Duplicate_exact_completion_is_idempotent_but_conflict_is_rejected()
+    public void Duplicate_exact_completion_is_idempotent_even_after_expiry_but_conflict_is_rejected()
     {
         var now = DateTimeOffset.UnixEpoch;
         var active = RuntimeDispatchFencing.Claim(identity, "node-a", now, Lease);
         var first = RuntimeDispatchFencing.Complete(active, identity, active.Epoch, "node-a", "evidence-1", now.AddSeconds(1));
-        var duplicate = RuntimeDispatchFencing.Complete(active, identity, active.Epoch, "node-a", "evidence-1", now.AddSeconds(2), first);
+        var duplicate = RuntimeDispatchFencing.Complete(active, identity, active.Epoch, "node-a", "evidence-1", active.ExpiresAt.AddMinutes(1), first);
         Assert.Same(first, duplicate);
         Assert.Throws<InvalidOperationException>(() => RuntimeDispatchFencing.Complete(active, identity, active.Epoch, "node-a", "evidence-2", now.AddSeconds(2), first));
+        Assert.Throws<InvalidOperationException>(() => RuntimeDispatchFencing.Complete(active, identity, active.Epoch, "node-b", "evidence-1", now.AddSeconds(2), first));
     }
 
     [Fact]
