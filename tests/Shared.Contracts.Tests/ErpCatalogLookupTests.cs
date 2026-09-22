@@ -19,6 +19,20 @@ public sealed class ErpCatalogLookupTests
     }
 
     [Fact]
+    public void Feature_capability_resolution_is_stable_and_authority_scoped()
+    {
+        var catalog = ValidCatalog();
+
+        var capabilities = catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", "sales.order");
+
+        Assert.NotNull(capabilities);
+        Assert.Equal(["inventory.read"], capabilities.Select(capability => capability.Key));
+        Assert.Null(catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", "sales.missing"));
+        Assert.Throws<InvalidOperationException>(() => catalog.FindFeatureCapabilities("tenant-b", "company-a", "erp-main", "sales.order"));
+        Assert.Throws<ArgumentException>(() => catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", " sales.order"));
+    }
+
+    [Fact]
     public void Lookup_rejects_caller_authority_and_noncanonical_keys()
     {
         var catalog = ValidCatalog();
