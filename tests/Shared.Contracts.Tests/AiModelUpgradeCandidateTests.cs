@@ -56,6 +56,18 @@ public sealed class AiModelUpgradeCandidateTests
         pin.AssertAuthority("tenant", "company");
     }
 
+    [Fact]
+    public void Activation_RollbackSelectsExactPreviousModelWithinAuthority()
+    {
+        var activation = Candidate().Activate("tenant", "company", Evidence(), true);
+
+        var rollback = activation.Rollback("tenant", "company");
+
+        Assert.Equal("provider-old", rollback.ProviderId);
+        Assert.Equal("model-old", rollback.ModelId);
+        Assert.Throws<InvalidOperationException>(() => activation.Rollback("tenant", "other-company"));
+    }
+
     private static AiModelUpgradeCandidate Candidate() => new(
         "candidate-1",
         "v1",
