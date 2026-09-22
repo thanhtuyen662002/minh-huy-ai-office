@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 107
-current_pr: null
+current_pr: 108
 current_branch: runtime/107-multiserver-dispatch-fencing
-head: 58a89600d6ba05f0b9046ba091cebfcfbbe696f7
-state: in_progress
+head: 946e8b0806e988c25eac850561f4f82ba770112b
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T22:38:00Z"
-last_checkpoint_at: "2026-09-22T22:38:00Z"
+lease_heartbeat_at: "2026-09-22T22:39:00Z"
+last_checkpoint_at: "2026-09-22T22:39:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -27,4 +27,4 @@ scope:
   - exception-queue-specialist-escalation
   - sla-priority-scheduling
   - multi-server-dispatch-fencing
-next_action: "Issue #107 is the authoritative Runtime lease. Initial implementation adds durable tenant/company/task/step dispatch identity, epoch fencing, expiry-only reclaim, stale-worker rejection, idempotent exact completion evidence and persistence-before-broker-settlement authorization. Open Draft PR, capture actual HEAD and exact-head Governance/Build, fix actionable RED on this SAME branch, then harden acceptance. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+next_action: "Draft PR #108 is the authoritative Runtime lease for issue #107. Initial contract adds durable tenant/company/task/step dispatch identity, epoch fencing, expiry-only reclaim, stale-worker rejection, idempotent exact completion evidence and persistence-before-broker-settlement authorization. Own exact-head Governance/Build on the latest branch HEAD; fix actionable RED on this SAME branch. If GREEN, harden final acceptance and mark ready_for_review only when complete. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
