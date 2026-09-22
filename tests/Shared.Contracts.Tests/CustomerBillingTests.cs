@@ -12,7 +12,7 @@ public sealed class CustomerBillingTests
 
         plan.DemandAuthority(authority);
 
-        Assert.Equal(750_000, plan.RemainingAiCredits);
+        Assert.Equal(750_000L, plan.RemainingAiCredits);
     }
 
     [Fact]
@@ -74,6 +74,6 @@ public sealed class CustomerBillingTests
 
         plan.Validate();
 
-        Assert.Equal(0, plan.RemainingAiCredits);
+        Assert.Equal(0L, plan.RemainingAiCredits);
     }
 }
