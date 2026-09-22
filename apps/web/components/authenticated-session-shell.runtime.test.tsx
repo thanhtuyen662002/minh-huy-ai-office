@@ -23,6 +23,16 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(screen.getByRole("alert").textContent).toContain("Không thể xác thực phạm vi công ty");
   });
 
+  it("rejects accessor-backed ready membership without invoking its getter", () => {
+    const membershipGetter = vi.fn(() => membership);
+    const accessorState = { status: "ready" } as Record<string, unknown>;
+    Object.defineProperty(accessorState, "membership", { enumerable: true, get: membershipGetter });
+    expect(() => render(<AuthenticatedSessionShell state={accessorState as never} />)).not.toThrow();
+    expect(membershipGetter).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert").textContent).toContain("Không thể xác thực phạm vi công ty");
+    expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
+  });
+
   it("fails closed instead of throwing when untrusted option fields are non-strings", () => {
     const onSelectCompany = vi.fn();
     const malformedRuntimeOptions = [{ companyId: "internal", companyName: "Minh Huy" }, { companyId: 42, companyName: "Numeric id" }, { companyId: "branch-2", companyName: { spoofed: true } }] as unknown as readonly { companyId: string; companyName: string }[];
