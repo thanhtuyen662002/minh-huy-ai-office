@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: ready
+status: ready_for_review
 current_issue: 62
-current_pr: null
-current_branch: null
-head: c245eeba93a9cc8a85118610129aa7e50e114417
-state: ready
+current_pr: 64
+current_branch: frontend/62-auth-session-bootstrap
+head: 9a006ccbb162386415d3d91b1d8318704a6428cb
+state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-20T17:21:00+07:00"
-last_checkpoint_at: "2026-09-20T17:21:00+07:00"
+lease_heartbeat_at: "2026-09-22T13:07:00+07:00"
+last_checkpoint_at: "2026-09-22T13:07:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Claim issue #62 now as a frontend-only Draft PR stacked on the stable PR #60 auth contract. Keep server-derived identity/company scope authoritative, isolate endpoint shape behind one typed adapter, preserve fixture tests and fail closed. Do not modify Backend auth/EF/schema. #22 remains queued until #20 is authoritative."
+next_action: "PR #64 / issue #62 acceptance is complete on implementation HEAD 9a006ccbb162386415d3d91b1d8318704a6428cb with exact-head Governance 35691375324 GREEN and Build 35691375404 GREEN. Keep the frontend lease on #64 through review/merge. After #64 merges/closes, re-resolve live leases; issue #22 already has Backend PR #73, so do not duplicate that lane. Claim the highest-priority unblocked non-overlapping Frontend issue or a Lead-approved frontend slice."

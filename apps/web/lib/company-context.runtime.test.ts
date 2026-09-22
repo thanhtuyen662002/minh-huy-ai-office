@@ -1,0 +1,72 @@
+import { describe, expect, it } from "vitest";
+import { resolveCompanyContext, type CompanyMembershipView } from "./company-context";
+
+const membership = (roles: readonly string[]): CompanyMembershipView => ({
+  tenantId: "minh-huy",
+  companyId: "internal",
+  companyName: "Minh Huy",
+  userId: "server-user",
+  userName: "Nhân viên",
+  roles,
+});
+
+const unavailable = {
+  status: "unavailable",
+  reason: "Không thể xác định đầy đủ người dùng và công ty đang làm việc.",
+};
+
+describe("resolveCompanyContext runtime role boundary", () => {
+  it("fails closed when presentation membership contains duplicate roles", () => {
+    expect(resolveCompanyContext(membership(["Workspace member", "Workspace member"]))).toEqual(unavailable);
+  });
+
+  it("fails closed before inspecting an oversized presentation role collection", () => {
+    let roleReads = 0;
+    const roles = new Array(257);
+    Object.defineProperty(roles, "0", {
+      configurable: true,
+      get() {
+        roleReads += 1;
+        return "Workspace member";
+      },
+    });
+
+    expect(resolveCompanyContext(membership(roles))).toEqual(unavailable);
+    expect(roleReads).toBe(0);
+  });
+
+  it("fails closed when presentation identity is inherited instead of own data", () => {
+    const inherited = Object.create(membership(["Workspace member"])) as CompanyMembershipView;
+
+    expect(resolveCompanyContext(inherited)).toEqual(unavailable);
+  });
+
+  it("fails closed without executing accessor-backed presentation identity", () => {
+    let getterCalls = 0;
+    const hostile = membership(["Workspace member"]);
+    Object.defineProperty(hostile, "userName", {
+      configurable: true,
+      enumerable: true,
+      get() {
+        getterCalls += 1;
+        return "Injected name";
+      },
+    });
+
+    expect(resolveCompanyContext(hostile)).toEqual(unavailable);
+    expect(getterCalls).toBe(0);
+  });
+
+  it("keeps an immutable role snapshot for unambiguous membership", () => {
+    const roles = ["Workspace member", "Billing reader"];
+    const context = resolveCompanyContext(membership(roles));
+
+    expect(context.status).toBe("ready");
+    if (context.status !== "ready") return;
+
+    expect(context.roles).toEqual(roles);
+    expect(context.roles).not.toBe(roles);
+    expect(Object.isFrozen(context.roles)).toBe(true);
+    expect(Object.isFrozen(context)).toBe(true);
+  });
+});
