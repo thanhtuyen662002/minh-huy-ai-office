@@ -26,7 +26,7 @@ public sealed class ErpCatalogLookupTests
         var capabilities = catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", "sales.order");
 
         Assert.NotNull(capabilities);
-        Assert.Equal(["inventory.read", "inventory.reserve"], capabilities!.Select(capability => capability.Key).ToArray());
+        Assert.Equal(new[] { "inventory.read", "inventory.reserve" }, capabilities!.Select(capability => capability.Key).ToArray());
         Assert.Null(catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", "sales.missing"));
         Assert.Throws<InvalidOperationException>(() => catalog.FindFeatureCapabilities("tenant-b", "company-a", "erp-main", "sales.order"));
         Assert.Throws<InvalidOperationException>(() => catalog.FindFeatureCapabilities("tenant-a", "company-b", "erp-main", "sales.order"));
