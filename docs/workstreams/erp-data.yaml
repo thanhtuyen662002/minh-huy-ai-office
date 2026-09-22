@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 97
-current_pr: 98
-current_branch: erp/97-order-inventory-contract
-head: 70efee754af65ed09ec7e8771d86815f049020a7
-state: waiting_ci
+current_issue: 103
+current_pr: 104
+current_branch: erp/103-bulk-deterministic-execution
+head: 32d7e7ebb2f10299338a9a6cce8f19ee4ccf22c5
+state: in_progress
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-22T18:40:00Z"
-last_checkpoint_at: "2026-09-22T18:40:00Z"
-last_merged_pr: 92
-last_merge_commit: 1c0389bbb863f8c0d964172dcc117e4107889f29
-preferred_next_issue: 97
+lease_heartbeat_at: "2026-09-22T21:30:00Z"
+last_checkpoint_at: "2026-09-22T21:30:00Z"
+last_merged_pr: 98
+last_merge_commit: d17ac882cbb42edb4db1c4cfad7902afb627d5a5
+preferred_next_issue: 103
 blocked_by: []
 scope:
   - datasource-registry
@@ -23,4 +23,5 @@ scope:
   - accounting-posting
   - tax-invoice
   - order-inventory
-next_action: "Own exact-head CI on PR #98 after authorized audit-before-write execution seam and execution-once idempotency fencing; fix actionable RED on this SAME branch, then reconcile current main if still non-mergeable and finish acceptance."
+  - bulk-deterministic-execution
+next_action: "Own exact-head CI on PR #104 and continue the SAME lease with explicit high-risk authorization + audit-before-write execution seam, execution-once idempotency fencing, and exact ERP reconciliation. Fix actionable CI RED on this branch; never edit docs/PROJECT_STATE.yaml."
