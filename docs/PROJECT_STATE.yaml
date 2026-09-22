@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: a848e38556145e35c1b601d4becf5f12e1ce7648
+last_verified_commit: 1c0389bbb863f8c0d964172dcc117e4107889f29
 
 critical_paths:
   backend:
@@ -27,22 +27,23 @@ critical_paths:
     next: "No Frontend live PR observed. Frontend remains enabled and must re-evaluate live GitHub for newly-unblocked non-overlapping work."
 
   runtime_ai:
+    issue: 95
+    pr: 96
+    branch: runtime/95-self-healing-policy
+    head: ef639de29ae7fe65cacfe65bc2b9893c58126a97
+    state: in_progress
+    next: "PR #96 exact-head Governance 35760172660 and Build 35760172647 are GREEN. PR remains draft and currently non-mergeable against live main; Runtime must immediately reconcile the SAME lease with current main, preserve fail-closed self-healing/self-improvement boundaries, rerun exact-head gates, and mark ready_for_review when acceptance remains complete."
+
+  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: done
-    next: "PR #94 / issue #93 model upgrade candidate gate merged at a848e38556145e35c1b601d4becf5f12e1ce7648 after exact-head 6bebc19419e39b0b22a59e45c84a71702314a5f6 Governance 35753865133 and Build 35753865350 GREEN. Runtime remains enabled and must re-resolve the next unblocked non-overlapping Runtime/Release slice."
-
-  erp_data:
-    issue: 91
-    pr: 92
-    branch: erp/91-tax-invoice-import
-    head: 263986b62f6682c4a45ddb5d870fdd5427cbfd28
-    state: in_progress
-    next: "PR #92 exact-head Governance 35754418990 and Build 35754418974 are GREEN. Acceptance remains: connect the smallest authorized deterministic import execution seam without weakening catalog/schema authority or exposing connector secret material; then reconcile live main because PR is currently non-mergeable, rerun exact-head gates, and reassess ready_for_review."
+    next: "PR #92 / issue #91 tax/invoice deterministic import contract merged at 1c0389bbb863f8c0d964172dcc117e4107889f29 after exact-head Governance 35755087556 and Build 35755087503 GREEN. ERP/Data remains enabled and must immediately reconcile its stale specialist YAML then claim the highest-priority unblocked non-overlapping ERP/Data roadmap slice."
 
 recent_authoritative_merges:
+  - "PR #92 / issue #91 tax/invoice deterministic import contract: MERGED at 1c0389bbb863f8c0d964172dcc117e4107889f29"
   - "PR #94 / issue #93 model upgrade candidate gate: MERGED at a848e38556145e35c1b601d4becf5f12e1ce7648"
   - "PR #89 / issue #88 accounting posting preview/execute/reconcile: MERGED at dc82c0669e751000b731e1a84ac13cf46c6ff0f8"
   - "PR #90 / issue #33 emergency capability kill switch and security hotfix path: MERGED at a372a2caecc9df436ceb373f36e757df3d424cc8"
@@ -57,11 +58,11 @@ dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28/#29/#30 are authoritative."
-  - "P4 #31/#32/#33 plus model upgrade candidate gate #93 are authoritative after PR #86/#87/#90/#94 merges."
-  - "P5 accounting investigation #34 and posting preview/execute/reconcile #88 are authoritative; tax/invoice #91 is actively owned by ERP/Data PR #92."
+  - "P4 #31/#32/#33 plus model upgrade candidate gate #93 are authoritative; self-healing policy #95 is actively owned by Runtime PR #96."
+  - "P5 accounting investigation #34, posting preview/execute/reconcile #88, and tax/invoice import #91 are authoritative after PR #85/#89/#92 merges."
   - "P6 company-scoped billing foundation #35 is authoritative."
 
-next_action: "ERP/Data immediately continues PR #92 acceptance and main reconciliation; Runtime immediately reconciles merged #94 and claims the next highest-priority unblocked non-overlapping Runtime slice. Backend and Frontend re-evaluate live GitHub for safe work. Lead continues issue #65 CI-efficiency work when it does not compete with specialist critical-path implementation and refreshes this file on every ownership/HEAD/merge/liveness change."
+next_action: "Runtime immediately reconciles PR #96 with live main and closes exact-head CI/acceptance; ERP/Data immediately reconciles after merged #92 and claims the next safe P5 slice. Backend and Frontend re-evaluate live GitHub for safe work. Lead continues issue #65 CI-efficiency work when it does not compete with specialist critical-path implementation and refreshes this file on every ownership/HEAD/merge/liveness change."
 
 blocked_by: []
 
