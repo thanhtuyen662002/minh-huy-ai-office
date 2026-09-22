@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MinhHuy.AIOffice.Core.Api.Authorization;
+using MinhHuy.AIOffice.Core.Api.Billing;
 using MinhHuy.AIOffice.Core.Api.Realtime;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
@@ -41,6 +42,8 @@ if (!string.IsNullOrWhiteSpace(platformConnectionString))
     builder.Services.AddScoped<DataSourceConnectionTestService>();
 }
 builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
+builder.Services.AddScoped<CompanyBillingReader>();
+builder.Services.AddSingleton<ICompanyBillingPlanSource, UnavailableCompanyBillingPlanSource>();
 
 var authority = builder.Configuration["AIOffice:Authentication:Authority"];
 var audience = builder.Configuration["AIOffice:Authentication:Audience"];
@@ -149,12 +152,31 @@ if (authenticationConfigured)
                 current.Roles
             });
     }).RequireAuthorization();
+
+    app.MapGet("/api/billing/plan", async (
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] CompanyBillingReader reader,
+        CancellationToken cancellationToken) =>
+    {
+        try
+        {
+            var plan = await reader.GetCurrentAsync(accessor, cancellationToken);
+            return plan is null
+                ? Results.NotFound()
+                : Results.Ok(plan);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    }).RequireAuthorization();
 }
 else
 {
     app.MapGet("/api/auth/context", () => Results.Json(
         new { error = "Authentication is not configured." },
         statusCode: StatusCodes.Status503ServiceUnavailable));
+    app.MapGet("/api/billing/plan", AuthenticationUnavailable);
 }
 
 var dataSources = app.MapGroup("/api/data-sources");
