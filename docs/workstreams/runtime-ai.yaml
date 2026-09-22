@@ -4,11 +4,11 @@ status: active
 current_issue: 107
 current_pr: 108
 current_branch: runtime/107-multiserver-dispatch-fencing
-head: c4e43571967bff85e52cb9ff52e03c8a151dccd2
-state: waiting_ci
+head: 12bcfc1b91e2b4ba5162dedfda096a533611ec14
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T22:40:00Z"
-last_checkpoint_at: "2026-09-22T22:40:00Z"
+lease_heartbeat_at: "2026-09-22T23:18:00Z"
+last_checkpoint_at: "2026-09-22T23:18:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -27,4 +27,4 @@ scope:
   - exception-queue-specialist-escalation
   - sla-priority-scheduling
   - multi-server-dispatch-fencing
-next_action: "Draft PR #108 is the authoritative Runtime lease for issue #107. Acceptance implementation includes durable tenant/company/task/step identity, epoch fencing, expiry-only reclaim, stale-worker rejection, exact completion evidence idempotency including safe duplicate replay after lease expiry, and persistence-before-broker-settlement authorization. Own exact-head Governance/Build on latest HEAD; fix actionable RED on this SAME branch. If GREEN and mergeable, perform final acceptance review then mark ready_for_review. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+next_action: "PR #108 is ready_for_review for Lead sequencing. Exact implementation HEAD 12bcfc1b91e2b4ba5162dedfda096a533611ec14 passed Governance 35793587862 and Build 35793587857, GitHub reports mergeable=true, acceptance review found no unresolved review threads, and the PR is non-draft. Lead should review/merge when sequencing permits. Runtime must not claim a competing primary lease until live GitHub shows #108 merged/closed or Lead requests changes; after merge, re-evaluate the highest-priority unblocked non-overlapping Runtime/AI slice. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
