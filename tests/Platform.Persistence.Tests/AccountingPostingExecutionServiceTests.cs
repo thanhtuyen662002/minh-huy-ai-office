@@ -101,6 +101,20 @@ public sealed class AccountingPostingExecutionServiceTests
         Assert.Empty(fixture.Audit.Entries);
     }
 
+    [Fact]
+    public async Task Writer_cannot_claim_balanced_when_erp_totals_mismatch_preview()
+    {
+        var fixture = Fixture.Create();
+        var falseBalanced = fixture.Result with { ActualCredit = 99m };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.ExecuteAsync(
+            fixture.Preview,
+            fixture.Catalog,
+            fixture.Authorization,
+            [fixture.Permission],
+            _ => Task.FromResult(falseBalanced)));
+    }
+
     private sealed record Fixture(
         AccountingPostingExecutionService Service,
         RecordingAuditSink Audit,
@@ -135,7 +149,8 @@ public sealed class AccountingPostingExecutionServiceTests
                 tenantId, companyId, userId, resource, AccountingPostingExecutionService.WriteAction, ToolRiskLevel.High);
             var result = new AccountingPostingExecutionResult(
                 catalog.TenantId, catalog.CompanyId, dataSourceId, preview.IdempotencyKey, "posting-001",
-                [new AccountingEvidence("dbo.GL", "gl:001", "Journal entry 001")], AccountingReconciliationState.Balanced);
+                [new AccountingEvidence("dbo.GL", "gl:001", "Journal entry 001")],
+                100m, 100m, AccountingReconciliationState.Balanced);
 
             return new Fixture(new AccountingPostingExecutionService(gate), audit, preview, catalog, authorization, permission, result);
         }
