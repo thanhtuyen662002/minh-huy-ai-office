@@ -7,8 +7,8 @@ current_branch: null
 head: null
 state: blocked
 lease_owner: null
-lease_heartbeat_at: "2026-09-21T22:38:10Z"
-last_checkpoint_at: "2026-09-21T22:38:10Z"
+lease_heartbeat_at: "2026-09-22T03:43:40Z"
+last_checkpoint_at: "2026-09-22T03:43:40Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Merged PR #81 / issue #80 released. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 are authoritative. Do not overlap Backend PR #73 / issue #22, which owns the remaining SignalR durable-transition bridge. The next roadmap Runtime candidate, P4 issue #31 IT Agent development loop, depends on #30; #30 depends on #28/#29, with ERP/Data PR #79 actively owning #28 and #29 still dependent on #28. No safe non-competing Runtime implementation is currently executable. Re-enter after #28/#29/#30 advance or if Lead creates a new unblocked Runtime-owned prerequisite; otherwise remain blocked rather than creating heartbeat work."
+next_action: "Live GitHub re-evaluated 2026-09-22T03:43:40Z. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 remain authoritative. Backend Draft PR #73 exclusively owns remaining #22 SignalR durable-transition bridge; do not overlap. #28 is merged/authoritative. ERP/Data Draft PR #82 exclusively owns #29 at exact HEAD 5dc0c84930a3e2f7e291882d6bbb2b8027750ac3; Governance run 35683476087 is green and Build run 35683476045 is actionable red, so #29 is not authoritative yet. Issue #30 depends on #28 + #29 and therefore remains blocked; Runtime #31 depends on #27 + #30 and therefore remains blocked. No safe non-competing Runtime implementation is executable. Keep this automation enabled and re-evaluate live GitHub next run; immediately claim #31 only after #30 becomes authoritative and no competing lease exists, or claim a newly-created higher-priority unblocked Runtime issue if Lead establishes one. Do not fabricate heartbeat implementation commits."
