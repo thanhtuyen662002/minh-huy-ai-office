@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 0d230bae20be0321315cf69d63efd8b9d8e2e615
+last_verified_commit: 8b2aa9e634094cfdaafd040846653956b3863624
 
 critical_paths:
   backend:
@@ -24,7 +24,7 @@ critical_paths:
     branch: frontend/101-customer-portal-shell
     head: ee231b2e357d0e2e7beef90968579282e1d04dce
     state: in_progress
-    next: "PR #102 is the authoritative Frontend lease. Actual head ee231b2e357d0e2e7beef90968579282e1d04dce has exact-head Governance 35785476254 + Build 35785476229 GREEN, but PR is draft and non-mergeable after main advanced. Frontend has been requested immediately to reconcile current main on the SAME lease, preserve server-derived authority/non-fabrication invariants, rerun exact-head gates, and finish acceptance."
+    next: "PR #102 is the authoritative Frontend lease. Live GitHub reports actual head ee231b2e357d0e2e7beef90968579282e1d04dce, non-draft but currently non-mergeable after main advanced. Frontend has been requested immediately to reconcile authoritative main on the SAME lease, preserve server-derived authority/non-fabrication invariants, rerun exact-head gates and close final acceptance."
 
   runtime_ai:
     issue: null
@@ -32,17 +32,18 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #100 / issue #99 exception queue and specialist escalation merged at 0d230bae20be0321315cf69d63efd8b9d8e2e615 after exact-head Governance 35781678231 + Build 35781678203 GREEN. Runtime has been requested immediately to reconcile specialist state and claim the next highest-priority unblocked non-overlapping Runtime/AI slice."
+    next: "PR #106 / issue #105 company-scoped SLA and priority scheduling merged at 8b2aa9e634094cfdaafd040846653956b3863624 after exact-head Governance 35787717511 + Build 35787717438 GREEN. Runtime has been requested immediately to reconcile its specialist state and claim the next highest-priority unblocked non-overlapping Runtime/AI slice."
 
   erp_data:
     issue: 103
     pr: 104
     branch: erp/103-bulk-deterministic-execution
-    head: 2ebd25102a0fcf6b60eac2d9910ac1fd84b34e46
+    head: 2dc90c7fb622187b750a14362cebbcd8497d81aa
     state: in_progress
-    next: "PR #104 is the authoritative ERP/Data lease. Actual head 2ebd25102a0fcf6b60eac2d9910ac1fd84b34e46 has exact-head Governance 35787056833 + Build 35787056849 GREEN, but acceptance remains explicit authorization/audit-before-write, execution-once idempotency fencing and exact ERP reconciliation; PR is draft/non-mergeable after main advanced. ERP/Data has been requested immediately to continue SAME lease and reconcile current main."
+    next: "PR #104 is the authoritative ERP/Data lease. Actual head 2dc90c7fb622187b750a14362cebbcd8497d81aa has exact-head Governance 35792941096 + Build 35792941092 GREEN and acceptance implementation is reported complete, but live GitHub is draft/non-mergeable after main advanced. ERP/Data has been requested immediately to reconcile current main on the SAME lease, rerun exact-head gates and finish ready_for_review transition."
 
 recent_authoritative_merges:
+  - "PR #106 / issue #105 company-scoped SLA and priority scheduling: MERGED at 8b2aa9e634094cfdaafd040846653956b3863624"
   - "PR #100 / issue #99 exception queue and specialist escalation: MERGED at 0d230bae20be0321315cf69d63efd8b9d8e2e615"
   - "PR #98 / issue #97 order/inventory deterministic workflow contracts: MERGED at d17ac882cbb42edb4db1c4cfad7902afb627d5a5"
   - "PR #96 / issue #95 self-healing versus self-improvement policy gate: MERGED at a47ad91b36deaa23fd41c65c7a2159af2268ef77"
@@ -52,15 +53,14 @@ recent_authoritative_merges:
   - "PR #90 / issue #33 emergency capability kill switch and security hotfix path: MERGED at a372a2caecc9df436ceb373f36e757df3d424cc8"
   - "PR #87 / issue #32 Release Catalog and rollout controller: MERGED at b275a1b095eeb3c5fe39d30d1160f36f55dee1b5"
   - "PR #85 / issue #34 accounting investigation evidence/execution contract: MERGED at 364864c8698d7b5d6cad51f2af9ce2128b0d8052"
-  - "PR #83 / issue #35 company-scoped billing foundation: MERGED at 95acff127e0e3d1827bd444ac95c08eeb6be3142"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting investigation, posting/reconcile, tax/invoice, order/inventory and exception queue/specialist escalation are authoritative."
-  - "P5 bulk deterministic execution #103 is actively owned by ERP/Data PR #104."
-  - "P6 company-scoped billing foundation #35 is authoritative; customer portal authority-bound shell #101 is actively owned by Frontend PR #102."
+  - "P5 bulk deterministic execution #103 remains actively owned by ERP/Data PR #104 pending main reconciliation/final review."
+  - "P6 company-scoped billing foundation and SLA/priority scheduling #105 are authoritative; customer portal authority-bound shell #101 remains actively owned by Frontend PR #102."
 
-next_action: "Frontend immediately reconciles PR #102 with current main and closes exact-head acceptance. ERP/Data continues PR #104 authorization/idempotency/reconciliation acceptance and reconciles current main. Runtime immediately re-evaluates and claims its next safe slice after #100 merge. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Frontend immediately reconciles PR #102 with current main and closes exact-head acceptance. ERP/Data immediately reconciles PR #104 with current main and closes exact-head final review. Runtime immediately re-evaluates and claims its next safe slice after #106 merge. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
