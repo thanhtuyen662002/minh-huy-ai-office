@@ -19,6 +19,8 @@ public sealed record ErpCatalogItem(
         RequireCanonical(Key, nameof(Key));
         RequireCanonical(Version, nameof(Version));
         if (SchemaObjectIdentity is not null) RequireCanonical(SchemaObjectIdentity, nameof(SchemaObjectIdentity));
+        if (Kind == ErpCatalogItemKind.DatabaseObject && SchemaObjectIdentity is null)
+            throw new InvalidOperationException("Database catalog items require a schema object identity.");
         return this;
     }
 
@@ -113,6 +115,25 @@ public sealed record ErpCatalog(
             !StringComparer.Ordinal.Equals(CompanyId, companyId) ||
             !StringComparer.Ordinal.Equals(DataSourceId, dataSourceId))
             throw new InvalidOperationException("ERP catalog authority does not match server-derived tenant/company/data-source scope.");
+    }
+
+    public void AssertSchemaSnapshot(ErpSchemaSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        Validate();
+        snapshot.Validate();
+        AssertAuthority(snapshot.TenantId, snapshot.CompanyId, snapshot.DataSourceId);
+        if (SchemaSnapshotVersion != snapshot.Version)
+            throw new InvalidOperationException("ERP catalog schema version does not match the authoritative schema snapshot.");
+
+        var identities = snapshot.Objects
+            .Select(item => $"{item.Kind}:{item.Schema}.{item.Name}")
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var item in Items.Where(item => item.Kind == ErpCatalogItemKind.DatabaseObject))
+        {
+            if (!identities.Contains(item.SchemaObjectIdentity!))
+                throw new InvalidOperationException($"ERP catalog database object is absent from the authoritative schema snapshot: {item.SchemaObjectIdentity}");
+        }
     }
 
     private static void ValidateUnique(IEnumerable<string> keys, string label)
