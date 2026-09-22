@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
-current_pr: null
-current_branch: null
-head: null
-state: blocked
+status: in_progress
+current_issue: 101
+current_pr: 102
+current_branch: "frontend/101-customer-portal-shell"
+head: "76f13e7da82ba107c195104080103f3a823271e8"
+state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-22T13:34:20+07:00"
-last_checkpoint_at: "2026-09-22T13:34:20+07:00"
+lease_heartbeat_at: "2026-09-23T03:38:12+07:00"
+last_checkpoint_at: "2026-09-23T03:38:12+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #64 / issue #62 is merged (merge commit 36a9a63f6d2ef53476b7e984e542f724a52b774f). No Frontend live PR remains. Issue #22 is actively owned by Backend PR #73 and must not be duplicated. The remaining open implementation issues are dependency-blocked or owned by other lanes: #29 has ERP/Data PR #82; #30 depends on #29; #31 depends on #30; #32 depends on #31; #33 depends on #32; #34 requires the P1-P3 minimum viable foundation; #35 requires validated internal Phase 1. Re-resolve live GitHub state next run and claim the highest-priority newly-unblocked non-overlapping Frontend issue or a Lead-approved frontend slice. Do not create heartbeat-only commits."
+next_action: "Resume PR #102 / issue #101 at implementation HEAD 76f13e7da82ba107c195104080103f3a823271e8. Build 35778902969 on prior HEAD eb6ebd8 failed Web type-check because readAuthority returned unknown presentation fields; fixed with explicit canonical field guards and added hostile-runtime/non-fabrication component tests. Exact-head workflows for 76f13e7 had not emitted at checkpoint. Re-query exact-head CI; fix actionable RED on the SAME PR. If green, continue authenticated-session wiring and capability presentation acceptance without broadening browser authority."
