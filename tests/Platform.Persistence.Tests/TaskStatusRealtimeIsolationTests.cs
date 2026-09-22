@@ -76,10 +76,11 @@ public sealed class TaskStatusRealtimeIsolationTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task Publisher_FailsClosedBeforeDispatchWhenWorkerIdentityIsMissing(string workerId)
+    [InlineData(null)]
+    public async Task Publisher_FailsClosedBeforeDispatchWhenWorkerIdentityIsMissing(string? workerId)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
-        var message = new WorkerStatusChanged(Guid.NewGuid(), workerId, "running", DateTimeOffset.UtcNow);
+        var message = new WorkerStatusChanged(Guid.NewGuid(), workerId!, "running", DateTimeOffset.UtcNow);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
@@ -156,10 +157,12 @@ public sealed class TaskStatusRealtimeIsolationTests
     [InlineData("approval", "")]
     [InlineData("   ", "approval_required")]
     [InlineData("approval", "   ")]
-    public async Task Publisher_FailsClosedBeforeDispatchWhenAttentionMetadataIsIncomplete(string kind, string reasonCode)
+    [InlineData(null, "approval_required")]
+    [InlineData("approval", null)]
+    public async Task Publisher_FailsClosedBeforeDispatchWhenAttentionMetadataIsIncomplete(string? kind, string? reasonCode)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
-        var message = new TaskAttentionRequired(Guid.NewGuid(), kind, reasonCode, DateTimeOffset.UtcNow);
+        var message = new TaskAttentionRequired(Guid.NewGuid(), kind!, reasonCode!, DateTimeOffset.UtcNow);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishAttentionRequiredAsync(Guid.NewGuid(), Guid.NewGuid(), message));
