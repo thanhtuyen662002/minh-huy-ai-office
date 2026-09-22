@@ -4,11 +4,11 @@ status: active
 current_issue: 99
 current_pr: 100
 current_branch: runtime/99-exception-escalation
-head: b427651ce2dd3094da8d1095260be05d28db3319
+head: 44342d467de9f495c9dd094bbd8c25a8460608dc
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T20:19:00Z"
-last_checkpoint_at: "2026-09-22T20:19:00Z"
+lease_heartbeat_at: "2026-09-22T20:42:00Z"
+last_checkpoint_at: "2026-09-22T20:42:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -25,4 +25,4 @@ scope:
   - model-upgrade-candidates
   - self-healing-policy
   - exception-queue-specialist-escalation
-next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Implementation HEAD ac261501452c43f660edf06ebf2596d372f17cf1 passed exact-head Governance 35774641396 and Build 35774641402 GREEN. Live main then advanced to ec879a58767f1a1aa02c9ff3bae175218529de50; Runtime reconciled that authoritative main into the SAME lease at merge checkpoint b427651ce2dd3094da8d1095260be05d28db3319 while preserving lead-owned PROJECT_STATE. Own exact-head CI after this durable checkpoint; fix actionable RED on this SAME branch. If GREEN and GitHub reports mergeable, acceptance for #99 is complete and PR may be marked ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify ERP/Data #98 contracts, expose secrets, or merge directly."
+next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Acceptance implementation was GREEN before reconciliation. Live main advanced to 1b7b51da85bd05ff2712c201eaa3c8f450501b1e after ERP/Data #98 and Lead state reconciliation; Runtime merged that authoritative main into this SAME lease at 44342d467de9f495c9dd094bbd8c25a8460608dc while preserving main-owned PROJECT_STATE and ERP/Data files. Own exact-head Governance/Build after this checkpoint; fix actionable RED on this SAME branch. If GREEN and GitHub reports mergeable, mark PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify ERP/Data contracts, expose secrets, or merge directly."
