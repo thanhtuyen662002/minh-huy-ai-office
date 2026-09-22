@@ -1,22 +1,22 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P1-P3-parallel
+phase: P1-P4-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 30
-current_branch: erp/30-change-impact-analysis
-current_pr: 84
-current_target_head: 66d9abef6fcdba2e66836c2040595fa9c8c363c8
-last_verified_commit: 41c73dd9e1be9edf9df1e770a6d91fac652683cf
+current_issue: 31
+current_branch: null
+current_pr: null
+current_target_head: null
+last_verified_commit: d2fab0072bfc6a787aaa363dd0c5fb088a8f5dd9
 
 critical_paths:
   backend:
     issue: 35
     pr: 83
     branch: backend/35-customer-billing-foundation
-    head: 2892eee837ecbc6a9020d108ee25967f4d106846
+    head: 03682a9c578855561c99b1e693206439e18b965d
     state: in_progress
-    next: "Live Backend PR #83 owns #35. Exact-head Governance 35713622952 and Build 35713622920 are GREEN, but acceptance remains: deterministic CompanyBillingReader coverage and the smallest authenticated billing read surface/source without inventing persistence schema. Backend immediate re-entry requested; GREEN CI does not release this lease."
+    next: "Live Backend PR #83 owns #35. Exact-head Governance 35719450213 and Build 35719449797 are GREEN, but acceptance remains: wire the smallest authenticated /api/billing/plan read surface using CompanyBillingReader and fail-closed source registration, then endpoint acceptance coverage. Backend immediate re-entry requested; GREEN CI does not release this lease."
 
   frontend:
     issue: null
@@ -24,25 +24,26 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "PR #64 / issue #62 is merged. No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Backend #35 or ERP/Data #30 ownership."
+    next: "No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Backend #35 or Runtime #31 ownership."
 
   runtime_ai:
+    issue: 31
+    pr: null
+    branch: null
+    head: null
+    state: claimed
+    next: "Issue #31 is now dependency-unblocked because #27 and #30 are authoritative. Runtime automation was unexpectedly disabled and Lead re-enabled it this cycle, then requested immediate execution to claim #31 if no competing lease exists. Runtime must remain enabled."
+
+  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
-    state: blocked
-    next: "Runtime #31 remains dependency-blocked only by #30. Runtime automation was unexpectedly disabled again and Lead re-enabled it this cycle; it must remain enabled while blocked and re-evaluate live GitHub. Immediate Runtime re-evaluation requested because #30 now has an active ERP/Data lease."
-
-  erp_data:
-    issue: 30
-    pr: 84
-    branch: erp/30-change-impact-analysis
-    head: 66d9abef6fcdba2e66836c2040595fa9c8c363c8
-    state: waiting_ci
-    next: "Live ERP/Data PR #84 owns #30. Exact-head Governance 35716447467 is GREEN; Build 35716447536 is actionable RED on a real runner. The .NET format/build/tests job 106708959782 fails at Verify formatting; Web, Compose, EF migration integrity and deployment/container jobs execute successfully. ERP/Data immediate re-entry requested to inspect/fix the formatting failure on SAME PR, then add the already-declared deterministic contract tests and continue acceptance."
+    state: done
+    next: "PR #84 / issue #30 Change impact analysis merged at d2fab0072bfc6a787aaa363dd0c5fb088a8f5dd9 after exact-head Governance 35721898657 and Build 35721898598 were GREEN. ERP/Data immediate re-entry requested to reconcile its own stale workstream state and claim only safe newly-unblocked ERP/Data work."
 
 recent_authoritative_merges:
+  - "PR #84 / issue #30 Change impact analysis and compatibility contracts: MERGED at d2fab0072bfc6a787aaa363dd0c5fb088a8f5dd9"
   - "PR #82 / issue #29 ERP Catalog / Feature / Capability Registry contracts: MERGED at 41c73dd9e1be9edf9df1e770a6d91fac652683cf"
   - "PR #73 / issue #22 realtime task dashboard via SignalR: MERGED at 72aab4092e1238d70885185e5f8d43cc719dbdaf"
   - "PR #64 / issue #62 authenticated-session bootstrap: MERGED at 36a9a63f6d2ef53476b7e984e542f724a52b774f"
@@ -61,13 +62,12 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
-  - "P3 #28 Schema Observer and #29 ERP Catalog are authoritative. ERP/Data PR #84 actively owns #30 Change impact analysis; Runtime #31 depends on #30."
+  - "P3 #28/#29/#30 are authoritative. Runtime #31 is now unblocked and should be claimed immediately."
   - "Backend independently owns customer-facing #35 foundation on PR #83; this must not bypass fail-closed tenant/company authority or billing/secret boundaries."
 
-next_action: "ERP/Data fixes exact-head #84 formatting failure and continues #30 acceptance immediately. Backend continues #35 acceptance despite green CI. Runtime remains enabled while waiting only on #30 and re-evaluates immediately. Frontend re-evaluates for safe non-overlapping work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
+next_action: "Runtime claims #31 immediately now that #30 is authoritative. Backend continues #35 authenticated billing read acceptance despite green CI. ERP/Data reconciles its own stale YAML after #84 merge and selects only safe non-overlapping work. Frontend re-evaluates for safe work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
 
-blocked_by:
-  - "Runtime next roadmap implementation #31 is dependency-blocked only by active ERP/Data #30; automation remains enabled."
+blocked_by: []
 
 automation_liveness:
   backend: enabled
