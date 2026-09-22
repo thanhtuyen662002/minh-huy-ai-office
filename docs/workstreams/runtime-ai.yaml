@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 31
-current_pr: 86
-current_branch: runtime/31-it-agent-development-loop
-head: a982c3a6ca1e03f4578e517bca8ecf5d74857a82
-state: waiting_ci
+current_issue: 32
+current_pr: null
+current_branch: runtime/32-release-controller
+head: 62b00c8e6289758891e99aff59512a6901b776d5
+state: claimed
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T12:25:00Z"
-last_checkpoint_at: "2026-09-22T12:25:00Z"
+lease_heartbeat_at: "2026-09-22T13:17:00Z"
+last_checkpoint_at: "2026-09-22T13:17:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,5 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Draft PR #86 is the authoritative Runtime lease for #31. Previous exact-head 8c32e290a9ea638afb84eab4fb32652d183a8651 completed Governance 35722394748 GREEN and Build 35722394739 GREEN. Acceptance review found the Runtime slice complete without entering Release Controller #32 scope. State checkpoint a982c3a6ca1e03f4578e517bca8ecf5d74857a82 emitted Governance 35726930332 in_progress and Build 35726930346 queued. Re-query CI for the actual HEAD after this waiting_ci checkpoint; fix any actionable RED on the SAME branch. If exact-head CI is GREEN, mark PR ready_for_review. Do not bypass versioned PR/CI/eval/release gates or expand into #32 scope."
+  - release-controller
+next_action: "Issue #31 / PR #86 is authoritative on main. Issue #32 is dependency-unblocked and has no competing open PR. Runtime claimed #32 on runtime/32-release-controller from authoritative main 62b00c8e6289758891e99aff59512a6901b776d5. Open the Draft PR immediately, then implement the smallest Release Catalog contract that pins source commit + component/schema/workflow/skill versions and supports deterministic progressive rollout/drain/rollback without weakening tenant/company, audit, or release gates."
