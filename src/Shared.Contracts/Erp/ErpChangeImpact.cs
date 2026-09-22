@@ -24,7 +24,9 @@ public sealed record ErpChangedObject(
     private static void RequireCanonical(string value, string name)
     {
         if (string.IsNullOrWhiteSpace(value) || value != value.Trim())
+        {
             throw new ArgumentException($"{name} must be non-empty canonical text.", name);
+        }
     }
 }
 
@@ -53,14 +55,19 @@ public sealed record ErpImpactBinding(
         foreach (var value in values)
         {
             RequireCanonical(value, name);
-            if (!seen.Add(value)) throw new InvalidOperationException($"{name} keys must be unique.");
+            if (!seen.Add(value))
+            {
+                throw new InvalidOperationException($"{name} keys must be unique.");
+            }
         }
     }
 
     private static void RequireCanonical(string value, string name)
     {
         if (string.IsNullOrWhiteSpace(value) || value != value.Trim())
+        {
             throw new ArgumentException($"{name} must be non-empty canonical text.", name);
+        }
     }
 }
 
@@ -97,7 +104,9 @@ public sealed class ErpChangeImpactAnalyzer
         {
             change.Validate();
             if (!bindingIndex.TryGetValue((change.Kind, change.Key), out var binding))
+            {
                 throw new InvalidOperationException($"No compatibility binding exists for changed ERP object {change.Kind}:{change.Key}.");
+            }
 
             var affectedFeatures = binding.FeatureKeys.ToArray();
             var affectedCapabilities = binding.CapabilityKeys.ToArray();
@@ -129,8 +138,19 @@ public sealed class ErpChangeImpactAnalyzer
         var features = catalog.Features.Select(x => x.Key).ToHashSet(StringComparer.Ordinal);
         var capabilities = catalog.Capabilities.Select(x => x.Key).ToHashSet(StringComparer.Ordinal);
         foreach (var key in featureKeys)
-            if (!features.Contains(key)) throw new InvalidOperationException($"Impact binding references unavailable ERP feature: {key}");
+        {
+            if (!features.Contains(key))
+            {
+                throw new InvalidOperationException($"Impact binding references unavailable ERP feature: {key}");
+            }
+        }
+
         foreach (var key in capabilityKeys)
-            if (!capabilities.Contains(key)) throw new InvalidOperationException($"Impact binding references unavailable ERP capability: {key}");
+        {
+            if (!capabilities.Contains(key))
+            {
+                throw new InvalidOperationException($"Impact binding references unavailable ERP capability: {key}");
+            }
+        }
     }
 }
