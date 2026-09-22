@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 88
-current_pr: 89
-current_branch: erp/88-accounting-posting-contract
-head: 9d19e11b45bb2484a7b7e9e81c092eaa6215cd89
-state: waiting_ci
+current_issue: 97
+current_pr: null
+current_branch: erp/97-order-inventory-contract
+head: a52f0130e05e06ad95695aed9a5c8115dc67f549
+state: in_progress
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-22T14:35:00Z"
-last_checkpoint_at: "2026-09-22T14:35:00Z"
-last_merged_pr: 85
-last_merge_commit: 364864c8698d7b5d6cad51f2af9ce2128b0d8052
-preferred_next_issue: 88
+lease_heartbeat_at: "2026-09-22T18:32:00Z"
+last_checkpoint_at: "2026-09-22T18:32:00Z"
+last_merged_pr: 92
+last_merge_commit: 1c0389bbb863f8c0d964172dcc117e4107889f29
+preferred_next_issue: 97
 blocked_by: []
 scope:
   - datasource-registry
@@ -21,4 +21,6 @@ scope:
   - feature-capability-registry
   - accounting-investigation
   - accounting-posting
-next_action: "Own exact-head CI after deterministic reconciliation totals/mismatch acceptance. Fix any actionable RED on this same PR; once GREEN, reconcile current main because PR is currently non-mergeable, rerun exact-head CI, and reassess #88 for ready_for_review."
+  - tax-invoice
+  - order-inventory
+next_action: "Open Draft PR for #97 from this implementation checkpoint, own exact-head CI, then add the authorized audit-before-write execution seam with execution-once idempotency fencing."
