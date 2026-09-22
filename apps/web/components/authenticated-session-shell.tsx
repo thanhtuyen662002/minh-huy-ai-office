@@ -7,6 +7,7 @@ type CompanyOption = { companyId: string; companyName: string };
 type AuthenticatedSessionShellProps = { state: AuthenticatedSessionState; companies?: readonly CompanyOption[]; onSelectCompany?: (companyId: string) => void };
 
 const failureCopy = { forbidden: "Bạn không có quyền truy cập công ty đã chọn.", "inactive-membership": "Quyền thành viên của bạn tại công ty này không còn hoạt động.", "invalid-response": "Không thể xác thực phạm vi công ty. Dữ liệu sẽ không được hiển thị." } as const;
+const MAX_COMPANY_OPTIONS = 1000;
 
 const getOwnDataProperty = (value: object, key: PropertyKey) => {
   try { const descriptor = Object.getOwnPropertyDescriptor(value, key); return descriptor && "value" in descriptor ? descriptor.value : undefined; } catch { return undefined; }
@@ -24,7 +25,7 @@ const getUnambiguousCompanyOptions = (companies: readonly CompanyOption[]) => {
   try {
     if (!Array.isArray(companies)) return [];
     const length = getOwnDataProperty(companies, "length");
-    if (!Number.isSafeInteger(length) || (length as number) < 0) return [];
+    if (!Number.isSafeInteger(length) || (length as number) < 0 || (length as number) > MAX_COMPANY_OPTIONS) return [];
     const normalized: CompanyOption[] = [];
     const seen = new Set<string>();
     for (let index = 0; index < (length as number); index += 1) {
