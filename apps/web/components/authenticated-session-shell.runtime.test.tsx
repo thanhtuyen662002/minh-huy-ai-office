@@ -14,13 +14,18 @@ const membership = {
 afterEach(cleanup);
 
 describe("AuthenticatedSessionShell runtime company-option boundary", () => {
+  it("rejects accessor-backed session status without invoking its getter", () => {
+    const statusGetter = vi.fn(() => "ready");
+    const accessorState = { membership } as Record<string, unknown>;
+    Object.defineProperty(accessorState, "status", { enumerable: true, get: statusGetter });
+    expect(() => render(<AuthenticatedSessionShell state={accessorState as never} />)).not.toThrow();
+    expect(statusGetter).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert").textContent).toContain("Không thể xác thực phạm vi công ty");
+  });
+
   it("fails closed instead of throwing when untrusted option fields are non-strings", () => {
     const onSelectCompany = vi.fn();
-    const malformedRuntimeOptions = [
-      { companyId: "internal", companyName: "Minh Huy" },
-      { companyId: 42, companyName: "Numeric id" },
-      { companyId: "branch-2", companyName: { spoofed: true } },
-    ] as unknown as readonly { companyId: string; companyName: string }[];
+    const malformedRuntimeOptions = [{ companyId: "internal", companyName: "Minh Huy" }, { companyId: 42, companyName: "Numeric id" }, { companyId: "branch-2", companyName: { spoofed: true } }] as unknown as readonly { companyId: string; companyName: string }[];
     expect(() => render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={malformedRuntimeOptions} onSelectCompany={onSelectCompany} />)).not.toThrow();
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
     expect(onSelectCompany).not.toHaveBeenCalled();
