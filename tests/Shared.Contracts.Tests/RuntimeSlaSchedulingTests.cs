@@ -32,6 +32,23 @@ public sealed class RuntimeSlaSchedulingTests
     }
 
     [Fact]
+    public void Malformed_policy_and_broadened_authority_fail_closed()
+    {
+        var (policy, authority) = Policy(80);
+        Assert.Throws<InvalidOperationException>(() => RuntimeSlaScheduler.Bind(policy with { PolicyId = " " }, authority, Guid.NewGuid(), RuntimeTaskClass.Standard, 1, DateTimeOffset.UnixEpoch));
+        Assert.Throws<InvalidOperationException>(() => RuntimeSlaScheduler.Bind(policy, authority with { PriorityCeiling = 81 }, Guid.NewGuid(), RuntimeTaskClass.Standard, 1, DateTimeOffset.UnixEpoch));
+        Assert.Throws<InvalidOperationException>(() => RuntimeSlaScheduler.Bind(policy with { StandardTarget = TimeSpan.Zero }, authority, Guid.NewGuid(), RuntimeTaskClass.Standard, 1, DateTimeOffset.UnixEpoch));
+        Assert.Throws<ArgumentException>(() => RuntimeSlaScheduler.Bind(policy, authority, Guid.Empty, RuntimeTaskClass.Standard, 1, DateTimeOffset.UnixEpoch));
+    }
+
+    [Fact]
+    public void Unknown_classification_fails_closed()
+    {
+        var (policy, authority) = Policy(80);
+        Assert.Throws<InvalidOperationException>(() => RuntimeSlaScheduler.Bind(policy, authority, Guid.NewGuid(), (RuntimeTaskClass)999, 1, DateTimeOffset.UnixEpoch));
+    }
+
+    [Fact]
     public void Resume_preserves_exact_authority_snapshot()
     {
         var (policy, authority) = Policy(80);
@@ -62,6 +79,7 @@ public sealed class RuntimeSlaSchedulingTests
         Assert.Equal(70, rebound.EffectivePriority);
         Assert.Equal(current.TaskId, rebound.TaskId);
         Assert.Throws<InvalidOperationException>(() => RuntimeSlaScheduler.Rebind(current, policy, authority, 20, DateTimeOffset.UnixEpoch));
+        Assert.Throws<UnauthorizedAccessException>(() => RuntimeSlaScheduler.Rebind(current, newer with { CompanyId = Guid.NewGuid() }, newerAuthority with { CompanyId = Guid.NewGuid() }, 20, DateTimeOffset.UnixEpoch));
     }
 
     private (RuntimeSlaPolicy Policy, RuntimeSchedulingAuthority Authority) Policy(int ceiling)
