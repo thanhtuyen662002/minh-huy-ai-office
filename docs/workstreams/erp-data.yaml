@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 97
 current_pr: 98
 current_branch: erp/97-order-inventory-contract
-head: 8077336e23589fca42fc630a67347fbc665f7988
+head: 70efee754af65ed09ec7e8771d86815f049020a7
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-22T18:34:00Z"
-last_checkpoint_at: "2026-09-22T18:34:00Z"
+lease_heartbeat_at: "2026-09-22T18:40:00Z"
+last_checkpoint_at: "2026-09-22T18:40:00Z"
 last_merged_pr: 92
 last_merge_commit: 1c0389bbb863f8c0d964172dcc117e4107889f29
 preferred_next_issue: 97
@@ -23,4 +23,4 @@ scope:
   - accounting-posting
   - tax-invoice
   - order-inventory
-next_action: "Own exact-head CI on PR #98; fix actionable RED on this SAME branch, then add the authorized audit-before-write execution seam with execution-once idempotency fencing."
+next_action: "Own exact-head CI on PR #98 after authorized audit-before-write execution seam and execution-once idempotency fencing; fix actionable RED on this SAME branch, then reconcile current main if still non-mergeable and finish acceptance."
