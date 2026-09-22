@@ -3,11 +3,11 @@ role: "Lead / Integrator + QA / Security / Release"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: ec0be6c87516fa9820dbaef40c1284d75b408b5e
+head: 81ab64d10625d4f31b9d723dc27110150f7a63b8
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
-last_checkpoint_at: "2026-09-20T15:58:00+07:00"
+lease_heartbeat_at: "2026-09-20T23:13:00+07:00"
+last_checkpoint_at: "2026-09-20T23:13:00+07:00"
 scope:
   - integration
   - roadmap-priority
@@ -24,26 +24,29 @@ scope:
   - release-gates
   - cross-workstream-pr-quality-review
 integration:
-  completed:
-    - "PR #51 merged at dcaa0266e9e6c7e8e8ee4afaf7b024313c4db817 after exact-head Governance 35485567771 and Build 35485567875 green; issue #19 closed"
-    - "PR #61 / issue #59 merged at c245eeba93a9cc8a85118610129aa7e50e114417 after Lead exact-head source/security review and Governance 35498818141 + Build 35498818143 green"
   current_target:
     pr: 55
-    branch: runtime/20-worker-dispatch
-    current_head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+    current_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
     owner: runtime-ai
-    observed_state: "mergeable with exact-head CI green, but real persistence-backed handler and transport-focused acceptance remain"
-    required_action: "Runtime continues SAME PR #55; prove durable state before broker settlement and complete transport tests"
-  parallel:
+    state: in_progress
+    required_action: "Zero-step CI remains infrastructure noise; Runtime must continue safe host registration on SAME live lease and then obtain executable exact-head gates."
+  parallel_backend:
     issue: 58
     pr: 60
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
     owner: backend
-    head: cbab33860f893a7ca857509daf6b365366d51cab
+    state: waiting_ci
+    required_action: "Acceptance implementation is present and PR mergeable. Exact-head rerun again has all Build jobs zero-step/runner_id=0; merge immediately after executable exact-head green CI."
+  parallel_erp:
+    issue: 18
+    pr: 63
+    head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
     state: in_progress
-    required_action: "Backend owns current exact-head Build failure and completes trusted HTTP auth/security tests; Lead does not duplicate live implementation"
-  frontend_parallel:
-    issue: 59
-    pr: 61
-    head: eba452e4ede3c5580cf37d49591c67b25dd65273
-    state: merged
-next_action: "Review #55 after Runtime completes persistence/transport acceptance. In parallel review #60 when Backend fixes Build and stabilizes auth contract; then unblock ERP/Data residual #18. Keep #22 blocked until #20 is authoritative."
+    required_action: "No exact-head workflow visible; Lead explicitly instructed ERP/Data to continue endpoint security regressions instead of idling in waiting_ci."
+  parallel_frontend:
+    issue: 62
+    pr: 64
+    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
+    state: in_progress
+    required_action: "Frontend is actively advancing fail-closed stale-state/accessibility hardening despite absent workflow emission; reconcile live transport after #60 merges."
+next_action: "Maintain all four lanes. Merge #60 immediately on executable exact-head green; then reconcile/sequence #63. Activate #21 after #18/#19 authoritative and #22 after #20 authoritative."

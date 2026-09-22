@@ -3,11 +3,11 @@ role: "QA / Security / Release (Lead-owned)"
 current_issue: 20
 current_pr: 55
 current_branch: main
-head: ec0be6c87516fa9820dbaef40c1284d75b408b5e
+head: 2a96200797373595fb31c5d6f8e09ae91be6a5e2
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T15:58:00+07:00"
-last_checkpoint_at: "2026-09-20T15:58:00+07:00"
+lease_heartbeat_at: "2026-09-20T23:13:00+07:00"
+last_checkpoint_at: "2026-09-20T23:13:00+07:00"
 preferred_next_issue: 36
 scope:
   - ci
@@ -20,27 +20,33 @@ scope:
   - dependency-security-upgrade-review
   - release-gates
   - cross-workstream-pr-quality-review
-completed_verification:
-  pr: 61
-  merged_commit: c245eeba93a9cc8a85118610129aa7e50e114417
-  evidence:
-    - "exact-head eba452e4ede3c5580cf37d49591c67b25dd65273 Governance 35498818141 SUCCESS"
-    - "exact-head Build 35498818143 SUCCESS"
-    - "Lead source/security review confirmed fixture-only scope, fail-closed company filtering, explicit transient secret rotation and no rendered secret values/raw references"
 verification_target:
   pr: 55
-  current_pr_head: 3cd5561fc336070035eb34a8b8fcc2b74d4cc49e
+  current_pr_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
   state: implementation_in_progress
   evidence:
-    - "exact-head Governance 35499461068 SUCCESS"
-    - "exact-head Build 35499461089 SUCCESS"
+    - "retry-publish-confirm failure/redelivery recovery landed and avoids duplicate executor side effects"
+    - "RabbitMQ consumer creates an async DI scope per delivery so scoped persistence/handler state is not captured by singleton hosted service"
+    - "exact-head Build 35519304358 and Governance 35519304380 are zero-step runner_id=0 failures; not implementation evidence"
   required_before_release_gate:
-    - persistence-backed IWorkDeliveryHandler registration
+    - safe RabbitMQ consumer host registration with authoritative executor and SQL Server configuration
     - durable completion/checkpoint before ACK
     - durable retry/dead-letter state before broker settlement
-    - transport-focused tests
+    - executable exact-head Governance + Build green
     - lease fencing and stale-owner rejection
     - retry sequencing without duplicate live attempts
     - idempotent success boundary
     - tenant/company/task isolation and no secret exposure
-next_action: "Do not merge #55 on CI alone: independently review the next Runtime checkpoint proving persistence-before-settlement transport acceptance. Track #60 separately; its live Backend lease owns current Build failure."
+parallel_verification:
+  pr_60:
+    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
+    build: "35515186798 FAILURE; rerun attempt has all six jobs zero-step with runner_id=0"
+    governance: "35515186802 FAILURE; zero-step runner noise"
+    gate: "Acceptance implementation is present and PR mergeable; require executable exact-head green CI, then merge immediately."
+  pr_63:
+    head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
+    gate: "No exact-head workflow visible. ERP/Data has been instructed to continue cross-company/inactive-membership/missing-auth endpoint regressions on the live stacked lease, not idle in waiting_ci."
+  pr_64:
+    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
+    gate: "No exact-head workflow visible. Frontend remains live and is advancing deterministic fail-closed stale-state/accessibility hardening; authoritative transport reconciliation follows #60 merge."
+next_action: "Do not duplicate specialist implementation. Treat zero-step CI as infrastructure noise; keep acceptance work moving. Review and merge #60 immediately after executable exact-head green CI, then sequence #63."

@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Platform.Observability;
@@ -17,18 +21,49 @@ builder.Logging.AddAiOfficeOpenTelemetryLogging(
 string? platformConnectionString = null;
 var platformConnectionSecretReference =
     builder.Configuration["AIOffice:PlatformDatabase:ConnectionSecretRef"];
+var secretResolver = new CompositeSecretResolver(
+    new ISecretResolver[] { new EnvironmentVariableSecretResolver() });
 
 if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
 {
-    var secretResolver = new CompositeSecretResolver(
-        new ISecretResolver[] { new EnvironmentVariableSecretResolver() });
-
     platformConnectionString = await secretResolver.ResolveAsync(
         SecretReference.Parse(platformConnectionSecretReference));
 }
 
 builder.Services.AddHealthChecks();
 builder.Services.AddPlatformPersistence(platformConnectionString);
+builder.Services.AddSingleton(secretResolver);
+if (!string.IsNullOrWhiteSpace(platformConnectionString))
+{
+    builder.Services.AddScoped<DataSourceRegistryService>();
+    builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
+    builder.Services.AddScoped<DataSourceConnectionTestService>();
+}
+builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
+
+var authority = builder.Configuration["AIOffice:Authentication:Authority"];
+var audience = builder.Configuration["AIOffice:Authentication:Audience"];
+var authenticationConfigured = !string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(audience);
+if (authenticationConfigured)
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = authority;
+            options.Audience = audience;
+            options.RequireHttpsMetadata = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                NameClaimType = AuthenticationClaimTypes.Subject
+            };
+        });
+    builder.Services.AddAuthorization();
+}
 
 var app = builder.Build();
 
@@ -71,6 +106,18 @@ app.Use(async (httpContext, next) =>
     }
 });
 
+if (authenticationConfigured)
+{
+    app.UseAuthentication();
+    app.UseMiddleware<RequestAuthorizationContextMiddleware>();
+    app.UseAuthorization();
+}
+
+static AuthorizationContext? AuthorizedContext(IRequestAuthorizationContextAccessor accessor) => accessor.Current?.Context;
+static IResult AuthenticationUnavailable() => Results.Problem(
+    statusCode: StatusCodes.Status503ServiceUnavailable,
+    title: "Authentication is not configured.");
+
 app.MapGet("/", () => Results.Ok(new
 {
     service = ProjectInfo.ProductName,
@@ -80,6 +127,107 @@ app.MapGet("/", () => Results.Ok(new
 }));
 
 app.MapHealthChecks("/health");
+
+if (authenticationConfigured)
+{
+    app.MapGet("/api/auth/context", (IRequestAuthorizationContextAccessor accessor) =>
+    {
+        var current = accessor.Current;
+        return current is null
+            ? Results.Forbid()
+            : Results.Ok(new
+            {
+                current.Context.TenantId,
+                current.Context.CompanyId,
+                current.Context.UserId,
+                current.Roles
+            });
+    }).RequireAuthorization();
+}
+else
+{
+    app.MapGet("/api/auth/context", () => Results.Json(
+        new { error = "Authentication is not configured." },
+        statusCode: StatusCodes.Status503ServiceUnavailable));
+}
+
+var dataSources = app.MapGroup("/api/data-sources");
+if (authenticationConfigured)
+{
+    dataSources.MapGet("/", async (
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] DataSourceRegistryService registry,
+        CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null)
+        {
+            return (IResult)Results.Forbid();
+        }
+
+        return Results.Ok(await registry.ListAsync(context, cancellationToken));
+    });
+
+    dataSources.MapPost("/", async (
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] DataSourceRegistryService registry,
+        DataSourceRegistryWriteRequest request,
+        CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null)
+        {
+            return (IResult)Results.Forbid();
+        }
+
+        var created = await registry.CreateAsync(context, request, cancellationToken);
+        return Results.Created($"/api/data-sources/{created.Id}", created);
+    });
+
+    dataSources.MapPut("/{dataSourceId:guid}", async (
+        Guid dataSourceId,
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] DataSourceRegistryService registry,
+        DataSourceRegistryWriteRequest request,
+        CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null)
+        {
+            return (IResult)Results.Forbid();
+        }
+
+        var updated = await registry.UpdateAsync(context, dataSourceId, request, cancellationToken);
+        return updated is null
+            ? Results.NotFound()
+            : Results.Ok(updated);
+    });
+
+    dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (
+        Guid dataSourceId,
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] DataSourceConnectionTestService tester,
+        CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null)
+        {
+            return (IResult)Results.Forbid();
+        }
+
+        var result = await tester.TestAsync(context, dataSourceId, cancellationToken);
+        return result.Code == DataSourceConnectionTestCodes.NotAuthorized
+            ? Results.Forbid()
+            : Results.Ok(result);
+    });
+}
+else
+{
+    dataSources.MapGet("/", AuthenticationUnavailable);
+    dataSources.MapPost("/", AuthenticationUnavailable);
+    dataSources.MapPut("/{dataSourceId:guid}", AuthenticationUnavailable);
+    dataSources.MapPost("/{dataSourceId:guid}/connection-test", AuthenticationUnavailable);
+}
 
 app.Run();
 

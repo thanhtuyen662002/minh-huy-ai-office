@@ -51,3 +51,18 @@ Agents may make routine technical decisions consistent with repository architect
 - Docs/ADR updated when architecture changes.
 - PR contains a current HANDOFF block.
 - Durable project/workstream state reflects the next executable action.
+
+## CI closure ownership
+A pushed implementation checkpoint is not the end of a coding run. The specialist that owns the branch/PR also owns the exact-head CI closure loop.
+
+After every meaningful code/test push:
+1. Capture the exact HEAD and associated workflow/run IDs when available.
+2. While the current execution still has budget, keep the run alive through CI. Re-check exact-head status after doing other safe same-PR work; do not voluntarily stop just because CI is pending.
+3. If CI reaches a real terminal failure, inspect the failing job/log immediately, fix the defect on the SAME branch/PR, run focused local verification, push a new HEAD, and repeat the loop.
+4. If CI fails before executing steps because of runner/infrastructure/capacity noise, retry once. If the same zero-step condition repeats, record the evidence and continue other safe executable work without retry spam.
+5. Green CI is not completion when issue acceptance work remains; continue implementation.
+
+`waiting_ci` means an active owned lease, not finished work. A worker may stop in `waiting_ci` only when the execution/session limit is actually being reached, CI remains non-terminal after useful same-PR work is exhausted, or a genuine external/dependency blocker prevents further safe progress. Before stopping, persist exact HEAD, workflow/run IDs/status, local verification, and the precise next action in HANDOFF/workstream state.
+
+Lead/Watchdog must immediately re-enter the owning specialist when exact-head CI becomes terminal red after that specialist's run ended, instead of waiting for the next normal hourly schedule. Push is a checkpoint; CI closure is part of the unit of work.
+

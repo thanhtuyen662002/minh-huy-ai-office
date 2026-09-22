@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: in_progress
+status: ready
 current_issue: 62
-current_pr: 64
-current_branch: frontend/62-auth-session-bootstrap
-head: d2fc2601b09e37b68765e8dde9b92a7669145a66
-state: in_progress
+current_pr: null
+current_branch: null
+head: c245eeba93a9cc8a85118610129aa7e50e114417
+state: ready
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-22T08:39:00+07:00"
-last_checkpoint_at: "2026-09-22T08:39:00+07:00"
+lease_heartbeat_at: "2026-09-20T17:21:00+07:00"
+last_checkpoint_at: "2026-09-20T17:21:00+07:00"
 preferred_next_issue: 62
 scope:
   - nextjs
@@ -16,7 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-blocked_by:
-  - "GitHub Actions reports zero workflow runs for exact implementation/test HEAD d2fc2601b09e37b68765e8dde9b92a7669145a66; exact-head Web CI evidence remains unavailable."
-  - "Merged /api/auth/context is authoritative for tenantId/companyId/userId/roles but does not expose authoritative company/user display names, so presentation metadata must not be fabricated."
-next_action: "Continue SAME PR #64 executable acceptance. Runtime company-context coverage now proves inherited presentation identity fails closed and accessor-backed userName is rejected without executing its getter. Re-check exact-head workflow emission and fix any frontend-owned RED immediately; do not create state-only CI retrigger commits."
+next_action: "Claim issue #62 now as a frontend-only Draft PR stacked on the stable PR #60 auth contract. Keep server-derived identity/company scope authoritative, isolate endpoint shape behind one typed adapter, preserve fixture tests and fail closed. Do not modify Backend auth/EF/schema. #22 remains queued until #20 is authoritative."
