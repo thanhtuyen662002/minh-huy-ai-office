@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 93
-current_pr: null
+current_pr: 94
 current_branch: runtime/93-model-upgrade-candidates
-head: 52d5470ceff59a510a50ea4a1d3278820164d0e6
-state: claimed
+head: 31bacead5e93846a31353dcd382ea88ce39c6f9b
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T15:36:00Z"
-last_checkpoint_at: "2026-09-22T15:36:00Z"
+lease_heartbeat_at: "2026-09-22T15:38:00Z"
+last_checkpoint_at: "2026-09-22T15:38:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -23,4 +23,4 @@ scope:
   - release-controller
   - emergency-capability-isolation
   - model-upgrade-candidates
-next_action: "Issue #93 is the authoritative Runtime lease after merged #90. Implement provider-neutral model upgrade candidate validation and exact eval/release activation fencing on runtime/93-model-upgrade-candidates; preserve tenant/company authority and in-flight model pins. Open Draft PR, own exact-head CI, and fix actionable RED on this SAME branch. Do not edit PROJECT_STATE or merge directly."
+next_action: "Draft PR #94 is the authoritative Runtime lease for issue #93. Implementation HEAD 31bacead5e93846a31353dcd382ea88ce39c6f9b adds provider-neutral model upgrade candidate validation, exact candidate/version/source eval fencing, release-gate activation, tenant/company authority, and in-flight task model-pin preservation. Own exact-head CI for this checkpoint; fix actionable RED on this SAME branch, then reassess acceptance before ready_for_review. Do not edit PROJECT_STATE or merge directly."
