@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 34
-current_pr: 85
-current_branch: erp/34-accounting-vertical-slice
-head: f676497bfa90821f64ba8d4c22ad6cebe8a1df76
-state: waiting_ci
+current_issue: 88
+current_pr: null
+current_branch: erp/88-accounting-posting-contract
+head: 8e3be279f914c1ee74ebc8676566431c26b79c42
+state: in_progress
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-22T12:45:00Z"
-last_checkpoint_at: "2026-09-22T12:45:00Z"
-last_merged_pr: 84
-last_merge_commit: d2fab0072bfc6a787aaa363dd0c5fb088a8f5dd9
-preferred_next_issue: 34
+lease_heartbeat_at: "2026-09-22T13:38:00Z"
+last_checkpoint_at: "2026-09-22T13:38:00Z"
+last_merged_pr: 85
+last_merge_commit: 364864c8698d7b5d6cad51f2af9ce2128b0d8052
+preferred_next_issue: 88
 blocked_by: []
 scope:
   - datasource-registry
@@ -20,4 +20,5 @@ scope:
   - erp-catalog
   - feature-capability-registry
   - accounting-investigation
-next_action: "Close exact-head CI after the deterministic accounting execution seam and main reconciliation. If GREEN, reassess issue #34 end-to-end acceptance; preserve durable task-derived tool authority, read-only ERP scope, pre-execution audit, deterministic evidence, and no secret/reference exposure."
+  - accounting-posting
+next_action: "Open Draft PR for #88, own exact-head CI, then add the authorized/idempotent write execution seam and reconciliation behavior without weakening tenant/company/data-source authority or exposing secrets."
