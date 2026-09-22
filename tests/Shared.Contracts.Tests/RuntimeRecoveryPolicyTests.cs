@@ -56,6 +56,17 @@ public sealed class RuntimeRecoveryPolicyTests
     }
 
     [Fact]
+    public void Improvement_FailsClosedWhenEvidenceBelongsToAnotherAuthorityOrRecovery()
+    {
+        var request = Healing() with { Kind = RuntimeRecoveryKind.ChangeWorkflow };
+
+        Assert.Throws<InvalidOperationException>(() =>
+            RuntimeRecoveryPolicy.EvaluateImprovement(request, "tenant", "company", Evidence() with { CompanyId = "other-company" }));
+        Assert.Throws<InvalidOperationException>(() =>
+            RuntimeRecoveryPolicy.EvaluateImprovement(request, "tenant", "company", Evidence() with { RecoveryId = "other-recovery" }));
+    }
+
+    [Fact]
     public void Improvement_DoesNotAcceptOrdinaryHealingKind()
     {
         Assert.Throws<InvalidOperationException>(() =>
@@ -67,5 +78,6 @@ public sealed class RuntimeRecoveryPolicyTests
         RuntimeRecoveryKind.RetryTransientOperation, 0, true, true);
 
     private static SelfImprovementEvidence Evidence() => new(
+        "tenant", "company", "task-1", "recovery-1",
         "candidate-1", "v1", "abc123", "eval-1", true, true, true);
 }
