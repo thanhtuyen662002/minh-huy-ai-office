@@ -4,11 +4,11 @@ status: active
 current_issue: 93
 current_pr: 94
 current_branch: runtime/93-model-upgrade-candidates
-head: 31bacead5e93846a31353dcd382ea88ce39c6f9b
+head: 81b67040995a8071576766c6444b2347d57b111e
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T15:38:00Z"
-last_checkpoint_at: "2026-09-22T15:38:00Z"
+lease_heartbeat_at: "2026-09-22T16:22:00Z"
+last_checkpoint_at: "2026-09-22T16:22:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -23,4 +23,4 @@ scope:
   - release-controller
   - emergency-capability-isolation
   - model-upgrade-candidates
-next_action: "Draft PR #94 is the authoritative Runtime lease for issue #93. Implementation HEAD 31bacead5e93846a31353dcd382ea88ce39c6f9b adds provider-neutral model upgrade candidate validation, exact candidate/version/source eval fencing, release-gate activation, tenant/company authority, and in-flight task model-pin preservation. Own exact-head CI for this checkpoint; fix actionable RED on this SAME branch, then reassess acceptance before ready_for_review. Do not edit PROJECT_STATE or merge directly."
+next_action: "Draft PR #94 remains the authoritative Runtime lease for issue #93. Prior exact HEAD b22fc1cf5349f2cbdbf68d344527c3ad42596aba completed Governance 35748663082 GREEN and Build 35748663211 GREEN. Acceptance review found deterministic rollback/current-model selection needed explicit representation, so HEAD 81b67040995a8071576766c6444b2347d57b111e now records the exact previous provider/model in successful activation and provides authority-fenced rollback selection, with focused coverage. Own exact-head CI for this checkpoint; fix actionable RED on this SAME branch. When GREEN, mark PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE or merge directly."
