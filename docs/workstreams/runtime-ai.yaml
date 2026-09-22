@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 32
-current_pr: 87
-current_branch: runtime/32-release-controller
-head: 67eade02f372292a5582260d266933d3a0608403
+current_issue: 33
+current_pr: 90
+current_branch: runtime/33-emergency-kill-switch
+head: aa85cf9f2959838adca926f2dc60cf2160cc1c33
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T14:19:00Z"
-last_checkpoint_at: "2026-09-22T14:19:00Z"
+lease_heartbeat_at: "2026-09-22T14:37:00Z"
+last_checkpoint_at: "2026-09-22T14:37:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -21,4 +21,5 @@ scope:
   - usage-cost-ledger
   - conversation-attachment-ingestion
   - release-controller
-next_action: "Draft PR #87 is the authoritative Runtime lease for #32. Implementation HEAD 67eade02f372292a5582260d266933d3a0608403 completed exact-head Governance 35734622014 GREEN and Build 35734621960 GREEN. Acceptance review confirms #32 scope is complete: source/component/schema/workflow/skill attribution, durable tenant/company/task release pinning, progressive Registered->Canary->Promoted->DrainingPrevious->Stable rollout, first-release stabilization, and exact-previous rollback fencing are covered without entering #33 kill-switch scope. This durable-state checkpoint changes HEAD, so own exact-head CI for the checkpoint; if GREEN, mark PR ready_for_review. If actionable RED, fix on this SAME branch. Do not enter #33 scope or merge without Lead sequencing."
+  - emergency-capability-isolation
+next_action: "Draft PR #90 is the authoritative Runtime lease for #33 after #21 and #32 became authoritative. Initial implementation HEAD aa85cf9f2959838adca926f2dc60cf2160cc1c33 adds tenant/company/capability-scoped fail-closed isolation, preserves durable waiting task release pins, and requires matching incident + different validated hotfix release + passed release gates before resume. Focused Shared.Contracts tests cover scoped isolation, cross-company rejection, resume gates, and durable pin preservation. This durable-state checkpoint changes HEAD; own exact-head CI, fix actionable RED on this SAME branch, and reassess #33 acceptance/security hotfix boundaries before ready_for_review. Do not edit PROJECT_STATE or merge without Lead sequencing."
