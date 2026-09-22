@@ -90,6 +90,15 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
     expect(onSelectCompany).not.toHaveBeenCalled();
   });
 
+  it("rejects accessor-backed presentation membership without invoking its getter", () => {
+    const companyNameGetter = vi.fn(() => "Spoofed name");
+    const accessorMembership = { ...membership } as Record<string, unknown>;
+    Object.defineProperty(accessorMembership, "companyName", { enumerable: true, get: companyNameGetter });
+    expect(() => render(<AuthenticatedSessionShell state={{ status: "ready", membership: accessorMembership as typeof membership }} />)).not.toThrow();
+    expect(companyNameGetter).not.toHaveBeenCalled();
+    expect(screen.getByText("Chưa có phạm vi làm việc")).toBeTruthy();
+  });
+
   it("fails closed when the runtime company-switch callback is not callable", () => {
     const invalidCallback = { spoofed: true } as unknown as (companyId: string) => void;
     expect(() => render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={[{ companyId: "internal", companyName: "Minh Huy" }, { companyId: "branch-2", companyName: "Chi nhánh 2" }]} onSelectCompany={invalidCallback} />)).not.toThrow();
