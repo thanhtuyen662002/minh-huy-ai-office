@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > roadmap-
 current_issue: 22
 current_branch: backend/22-realtime-task-dashboard
 current_pr: 73
-current_target_head: 603b920b7647c9c82f35b810a3a5aa817c246a4e
+current_target_head: f4b06c642cae8adede138494921da65216bdc2ca
 last_verified_commit: a08215da6a9cab1fc5a30afcd35005ff46a787f7
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 22
     pr: 73
     branch: backend/22-realtime-task-dashboard
-    head: 603b920b7647c9c82f35b810a3a5aa817c246a4e
-    state: waiting_ci
-    next: "Actual exact-head Governance 35683815995 is green; Build 35683815996 is actionable red on a real runner. Job 106606288372 fails Verify formatting with ten xUnit2014 diagnostics in TaskStatusRealtimeIsolationTests.cs because async publisher calls use Assert.Throws instead of Assert.ThrowsAsync. Backend automation prompt corrected and immediate re-entry requested to fix SAME PR, close exact-head CI, then continue the smallest architecture-consistent durable-transition-to-SignalR bridge if acceptance remains."
+    head: f4b06c642cae8adede138494921da65216bdc2ca
+    state: in_progress
+    next: "Actual exact-head Governance 35685406442 and companion Build are emitted after meaningful fail-closed publisher acceptance. Previous exact head was green; current PR HANDOFF requires CI closure, then the smallest architecture-consistent durable TaskEvents/state -> ITaskStatusPublisher bridge in Core.Api if acceptance remains. Immediate Backend re-entry requested; live GitHub remains authoritative."
 
   frontend:
     issue: 62
@@ -24,7 +24,7 @@ critical_paths:
     branch: frontend/62-auth-session-bootstrap
     head: 108690af06b952c98c452b0196a6e2c85f3ee19a
     state: in_progress
-    next: "Actual PR is draft and non-mergeable against current main; PR HANDOFF names older heads and exact-head workflow emission is absent. Frontend automation prompt corrected and immediate re-entry requested to reconcile SAME PR onto authoritative main, refresh durable specialist state/HANDOFF, continue meaningful #62 acceptance, and never fabricate company/user presentation identity."
+    next: "Actual PR remains draft; PR body/HANDOFF contains newer implementation checkpoint metadata than main specialist YAML. Continue SAME PR auth-context/component acceptance, preserve server-derived identity/company authority, and never fabricate presentation identity."
 
   runtime_ai:
     issue: null
@@ -32,15 +32,15 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "Runtime P2 slices are authoritative and Backend owns the remaining #22 bridge. Runtime automation is enabled and must remain enabled while dependency-blocked. Runtime #31 remains blocked until ERP/Data completes #29 then #30; re-evaluate live GitHub every run and do not create heartbeat work."
+    next: "Runtime P2 slices remain authoritative. Backend owns remaining #22 bridge. Runtime loop is enabled and must remain enabled while dependency-blocked. Runtime #31 waits for ERP/Data #29 then #30; re-evaluate live GitHub every run without heartbeat work."
 
   erp_data:
     issue: 29
     pr: 82
     branch: erp/29-erp-catalog
-    head: 5dc0c84930a3e2f7e291882d6bbb2b8027750ac3
+    head: 784c86cb8df01f70300253235a02a637186a65e2
     state: waiting_ci
-    next: "Actual exact-head Governance 35683476087 is green; Build 35683476045 is actionable red on a real runner with the known ErpCatalogTests.cs Fact/FactAttribute CS0246 compile defect. PR is also non-mergeable against current main. ERP/Data automation prompt corrected and immediate re-entry requested to apply the minimal SAME-PR compile fix, reconcile current main safely, close exact-head CI, then continue #29 stable feature/capability lookup acceptance."
+    next: "Actual exact-head Governance 35687097781 is green and companion Build emitted for meaningful stable catalog lookup authority acceptance. PR remains draft and reports divergence from main; immediate ERP/Data re-entry requested to close exact-head CI, reconcile current main safely without editing PROJECT_STATE, and continue #29 acceptance/ready-for-review evaluation."
 
 recent_authoritative_merges:
   - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
@@ -63,12 +63,12 @@ dependency_chain:
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28 Schema Observer is authoritative. ERP/Data PR #82 owns #29; #30 depends on #28/#29, and Runtime #31 depends on #30."
 
-next_action: "Keep Backend #73, Frontend #64, and ERP/Data #82 moving via corrected specialist prompts and immediate re-entry. Backend fixes exact-head xUnit2014 on SAME PR. ERP/Data fixes exact-head test compile failure and reconciles main. Frontend reconciles its non-mergeable SAME PR and continues #62 despite absent workflow emission. Runtime loop stays enabled while dependency-blocked. Lead refreshes this file whenever live ownership/HEAD/automation state changes."
+next_action: "Keep Backend #73, Frontend #64, and ERP/Data #82 moving from live heads. Backend closes exact-head CI then continues durable-event-to-SignalR acceptance. ERP/Data closes exact-head CI/reconciles main then continues #29. Frontend continues #62. Runtime stays enabled while dependency-blocked. Lead refreshes this file whenever live ownership/HEAD/automation state changes."
 
 blocked_by:
-  - "Backend #73 exact HEAD 603b920b has actionable xUnit2014 formatting failures; SAME-PR fix required."
-  - "Frontend #64 exact HEAD 108690af is non-mergeable and has no exact-head workflow emission; SAME-PR reconciliation plus continued acceptance required."
-  - "ERP/Data #82 exact HEAD 5dc0c849 has actionable Fact/FactAttribute test compile failure and is non-mergeable; SAME-PR fix/reconciliation required."
+  - "Backend #73 acceptance remains active after exact-head f4b06c64 publisher hardening; CI closure then durable bridge work remains."
+  - "Frontend #64 remains active and must continue SAME-PR acceptance without fabricating identity/presentation authority."
+  - "ERP/Data #82 exact HEAD 784c86cb has green Governance and emitted Build but remains draft/diverged; SAME-PR CI closure and reconciliation required."
   - "Runtime next roadmap implementation is dependency-blocked by ERP/Data #29 -> #30."
 
 automation_liveness:
