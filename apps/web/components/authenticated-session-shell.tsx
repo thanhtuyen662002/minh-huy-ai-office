@@ -7,6 +7,7 @@ type CompanyOption = { companyId: string; companyName: string };
 type AuthenticatedSessionShellProps = { state: AuthenticatedSessionState; companies?: readonly CompanyOption[]; onSelectCompany?: (companyId: string) => void };
 
 const failureCopy = { forbidden: "Bạn không có quyền truy cập công ty đã chọn.", "inactive-membership": "Quyền thành viên của bạn tại công ty này không còn hoạt động.", "invalid-response": "Không thể xác thực phạm vi công ty. Dữ liệu sẽ không được hiển thị." } as const;
+type FailureReason = keyof typeof failureCopy;
 const MAX_COMPANY_OPTIONS = 1000;
 
 const getOwnDataProperty = (value: object, key: PropertyKey) => {
@@ -49,6 +50,8 @@ const readReadyCompanyId = (state: Extract<AuthenticatedSessionState, { status: 
   } catch { return null; }
 };
 
+const isFailureReason = (value: unknown): value is FailureReason => value === "forbidden" || value === "inactive-membership" || value === "invalid-response";
+
 const InvalidScope = () => <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="alert" aria-labelledby="scope-invalid" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="scope-invalid" className="mt-3 text-3xl font-semibold tracking-tight">Không thể mở phạm vi công ty</h1><p className="mt-3 leading-7 opacity-75">{failureCopy["invalid-response"]}</p></section></main>;
 
 export function AuthenticatedSessionShell({ state, companies = [], onSelectCompany }: AuthenticatedSessionShellProps) {
@@ -58,7 +61,7 @@ export function AuthenticatedSessionShell({ state, companies = [], onSelectCompa
   if (status === "unauthenticated") return <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="alert" aria-labelledby="session-required" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="session-required" className="mt-3 text-3xl font-semibold tracking-tight">Cần đăng nhập</h1><p className="mt-3 leading-7 opacity-75">Phiên đăng nhập chưa được xác thực. Không có dữ liệu công ty nào được hiển thị.</p></section></main>;
   if (status === "forbidden") {
     const reason = getOwnDataProperty(state, "reason");
-    const copy = reason === "forbidden" || reason === "inactive-membership" || reason === "invalid-response" ? failureCopy[reason] : failureCopy["invalid-response"];
+    const copy = isFailureReason(reason) ? failureCopy[reason] : failureCopy["invalid-response"];
     return <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-16"><section role="alert" aria-labelledby="scope-denied" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15"><p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p><h1 id="scope-denied" className="mt-3 text-3xl font-semibold tracking-tight">Không thể mở phạm vi công ty</h1><p className="mt-3 leading-7 opacity-75">{copy}</p></section></main>;
   }
   if (status !== "ready") return <InvalidScope />;
