@@ -72,6 +72,27 @@ public sealed class CompanyBillingReaderTests
             await reader.GetCurrentAsync(accessor));
     }
 
+    [Fact]
+    public async Task UnavailableSource_ReturnsNoPlanForValidAuthority()
+    {
+        var source = new Billing.UnavailableCompanyBillingPlanSource();
+        var authority = new CompanyBillingAuthority(Guid.NewGuid(), Guid.NewGuid());
+
+        var plan = await source.GetAsync(authority);
+
+        Assert.Null(plan);
+    }
+
+    [Fact]
+    public async Task UnavailableSource_RejectsInvalidAuthority()
+    {
+        var source = new Billing.UnavailableCompanyBillingPlanSource();
+        var authority = new CompanyBillingAuthority(Guid.Empty, Guid.NewGuid());
+
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await source.GetAsync(authority));
+    }
+
     private static Authorization.RequestAuthorizationContextAccessor CreateAccessor(Guid tenantId, Guid companyId)
     {
         var context = AuthorizationContext.Create(tenantId, companyId, Guid.NewGuid());
