@@ -26,10 +26,11 @@ public sealed class ErpCatalogLookupTests
         var capabilities = catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", "sales.order");
 
         Assert.NotNull(capabilities);
-        var capability = Assert.Single(capabilities);
-        Assert.Equal("inventory.read", capability.Key);
+        Assert.Equal(["inventory.read", "inventory.reserve"], capabilities!.Select(capability => capability.Key).ToArray());
         Assert.Null(catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", "sales.missing"));
         Assert.Throws<InvalidOperationException>(() => catalog.FindFeatureCapabilities("tenant-b", "company-a", "erp-main", "sales.order"));
+        Assert.Throws<InvalidOperationException>(() => catalog.FindFeatureCapabilities("tenant-a", "company-b", "erp-main", "sales.order"));
+        Assert.Throws<InvalidOperationException>(() => catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-other", "sales.order"));
         Assert.Throws<ArgumentException>(() => catalog.FindFeatureCapabilities("tenant-a", "company-a", "erp-main", " sales.order"));
     }
 
@@ -55,6 +56,6 @@ public sealed class ErpCatalogLookupTests
         "2026.09",
         12,
         [new ErpCatalogItem(ErpCatalogItemKind.DatabaseObject, "dbo.Inventory", "12", "Table:dbo.Inventory")],
-        [new ErpCapability("inventory.read", "1")],
-        [new ErpFeature("sales.order", "1", ["inventory.read"])]).Validate();
+        [new ErpCapability("inventory.read", "1"), new ErpCapability("inventory.reserve", "1")],
+        [new ErpFeature("sales.order", "1", ["inventory.read", "inventory.reserve"])]).Validate();
 }
