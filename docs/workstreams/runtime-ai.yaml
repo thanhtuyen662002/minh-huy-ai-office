@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 99
-current_pr: 100
-current_branch: runtime/99-exception-escalation
-head: 44342d467de9f495c9dd094bbd8c25a8460608dc
-state: waiting_ci
+current_issue: 105
+current_pr: null
+current_branch: runtime/105-sla-priority-scheduling
+head: f2ea973911a2493387fc759c5d8b66090c3dff81
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T20:42:00Z"
-last_checkpoint_at: "2026-09-22T20:42:00Z"
+lease_heartbeat_at: "2026-09-22T21:36:00Z"
+last_checkpoint_at: "2026-09-22T21:36:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -25,4 +25,5 @@ scope:
   - model-upgrade-candidates
   - self-healing-policy
   - exception-queue-specialist-escalation
-next_action: "Draft PR #100 is the authoritative Runtime lease for issue #99. Acceptance implementation was GREEN before reconciliation. Live main advanced to 1b7b51da85bd05ff2712c201eaa3c8f450501b1e after ERP/Data #98 and Lead state reconciliation; Runtime merged that authoritative main into this SAME lease at 44342d467de9f495c9dd094bbd8c25a8460608dc while preserving main-owned PROJECT_STATE and ERP/Data files. Own exact-head Governance/Build after this checkpoint; fix actionable RED on this SAME branch. If GREEN and GitHub reports mergeable, mark PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify ERP/Data contracts, expose secrets, or merge directly."
+  - sla-priority-scheduling
+next_action: "Issue #105 is the authoritative Runtime lease. Initial company-scoped SLA/priority scheduling contract and focused authority/stability tests are committed on runtime/105-sla-priority-scheduling. Open Draft PR, bind this state to the PR, own exact-head Governance/Build, fix actionable RED on this SAME branch, then harden acceptance before ready_for_review. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
