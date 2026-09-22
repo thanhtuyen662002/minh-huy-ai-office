@@ -53,16 +53,25 @@ public sealed class AccountingPostingTests
     {
         var catalog = Catalog();
         var preview = Preview(catalog).Validate(catalog);
-        var result = new AccountingPostingExecutionResult(
-            preview.TenantId,
-            "other-company",
-            preview.DataSourceId,
-            preview.IdempotencyKey,
-            "posting-001",
-            [new AccountingEvidence("dbo.GL", "gl:001", "Journal entry 001")],
-            AccountingReconciliationState.Balanced);
+        var result = Result(preview) with { CompanyId = "other-company" };
 
         Assert.Throws<UnauthorizedAccessException>(() => result.Validate(preview));
+    }
+
+    [Fact]
+    public void Reconciliation_mismatch_must_be_derived_from_erp_totals()
+    {
+        var catalog = Catalog();
+        var preview = Preview(catalog).Validate(catalog);
+        var mismatch = Result(preview) with
+        {
+            ActualCredit = 99m,
+            ReconciliationState = AccountingReconciliationState.Mismatch
+        };
+
+        Assert.Same(mismatch, mismatch.Validate(preview));
+        Assert.Throws<InvalidOperationException>(() =>
+            (mismatch with { ReconciliationState = AccountingReconciliationState.Balanced }).Validate(preview));
     }
 
     private static ErpCatalog Catalog() => new(
@@ -88,4 +97,15 @@ public sealed class AccountingPostingTests
             new AccountingPostingLine("111", 100m, 0m, "Cash"),
             new AccountingPostingLine("511", 0m, 100m, "Revenue")
         ]);
+
+    private static AccountingPostingExecutionResult Result(AccountingPostingPreview preview) => new(
+        preview.TenantId,
+        preview.CompanyId,
+        preview.DataSourceId,
+        preview.IdempotencyKey,
+        "posting-001",
+        [new AccountingEvidence("dbo.GL", "gl:001", "Journal entry 001")],
+        100m,
+        100m,
+        AccountingReconciliationState.Balanced);
 }
