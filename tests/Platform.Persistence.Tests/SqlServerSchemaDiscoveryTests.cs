@@ -28,15 +28,37 @@ public sealed class SqlServerSchemaDiscoveryTests
     }
 
     [Fact]
-    public void DiscoverySql_UsesNarrowDeterministicProjection()
+    public void DiscoverySql_UsesReadOnlyCatalogProjectionWithoutProvisionedCustomerObjects()
     {
         var sql = SqlServerSchemaDiscovery.DiscoverySql;
-        Assert.Contains("SELECT object_kind, schema_name, object_name, definition_text", sql, StringComparison.Ordinal);
-        Assert.Contains("FROM dbo.AIOfficeSchemaDiscoveryView", sql, StringComparison.Ordinal);
+        Assert.Contains("sys.objects", sql, StringComparison.Ordinal);
+        Assert.Contains("sys.columns", sql, StringComparison.Ordinal);
+        Assert.Contains("sys.foreign_keys", sql, StringComparison.Ordinal);
+        Assert.Contains("sys.foreign_key_columns", sql, StringComparison.Ordinal);
+        Assert.Contains("sys.indexes", sql, StringComparison.Ordinal);
+        Assert.Contains("sys.index_columns", sql, StringComparison.Ordinal);
         Assert.Contains("ORDER BY object_kind, schema_name, object_name", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("AIOfficeSchemaDiscoveryView", sql, StringComparison.Ordinal);
         Assert.DoesNotContain("SELECT *", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("CREATE ", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ALTER ", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DROP ", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("connection", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("secret", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DiscoverySql_FingerprintsStructuralDetailsForTablesForeignKeysAndIndexes()
+    {
+        var sql = SqlServerSchemaDiscovery.DiscoverySql;
+        Assert.Contains("c.is_nullable", sql, StringComparison.Ordinal);
+        Assert.Contains("c.is_identity", sql, StringComparison.Ordinal);
+        Assert.Contains("c.is_computed", sql, StringComparison.Ordinal);
+        Assert.Contains("fkc.parent_column_id", sql, StringComparison.Ordinal);
+        Assert.Contains("fkc.referenced_column_id", sql, StringComparison.Ordinal);
+        Assert.Contains("i.is_unique", sql, StringComparison.Ordinal);
+        Assert.Contains("ic.is_descending_key", sql, StringComparison.Ordinal);
+        Assert.Contains("ic.is_included_column", sql, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -46,9 +68,8 @@ public sealed class SqlServerSchemaDiscoveryTests
         var snapshot = SqlServerSchemaDiscovery.Materialize(authority,
         [
             ("VIEW", "dbo", "ZView", "CREATE VIEW dbo.ZView AS SELECT 1 AS Value"),
-            ("TABLE", "sales", "Orders", "CREATE TABLE sales.Orders(Id int)")
+            ("TABLE", "sales", "Orders", "1:Id:int:4:10:0:nullable=0")
         ]);
-
         Assert.Equal("tenant-1", snapshot.TenantId);
         Assert.Equal("company-1", snapshot.CompanyId);
         Assert.Equal("source-1", snapshot.DataSourceId);
