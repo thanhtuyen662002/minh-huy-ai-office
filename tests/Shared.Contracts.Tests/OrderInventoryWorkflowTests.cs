@@ -1,4 +1,5 @@
 using MinhHuy.AIOffice.Shared.Contracts.Erp;
+using Xunit;
 
 namespace MinhHuy.AIOffice.Shared.Contracts.Tests;
 
