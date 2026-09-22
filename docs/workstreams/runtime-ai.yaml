@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: null
+current_issue: 31
 current_pr: null
-current_branch: null
-head: null
-state: blocked
-lease_owner: null
-lease_heartbeat_at: "2026-09-22T05:21:11Z"
-last_checkpoint_at: "2026-09-22T05:21:11Z"
+current_branch: runtime/31-it-agent-development-loop
+head: 8385c3ad29d43335e02ac34552508b19cbaa3319
+state: claimed
+lease_owner: runtime-ai
+lease_heartbeat_at: "2026-09-22T11:34:15Z"
+last_checkpoint_at: "2026-09-22T11:34:15Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,4 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Live GitHub re-evaluated 2026-09-22T05:21:11Z. P2 Runtime/AI slices #23/#24/#25/#26/#27/#80 remain authoritative. Backend PR #73 exclusively owns remaining #22 SignalR bridge; Frontend owns UI; do not overlap. #28 is merged/authoritative. ERP/Data Draft PR #82 exclusively owns #29 and has advanced to actual exact HEAD a772d696cfef5dd732b1756e93bf3dae92336155 after reconciling main. Exact-head Governance run 35687803668 is GREEN; exact-head Build run 35687803632 is terminal RED, so #29 remains non-authoritative and actionable CI closure belongs to ERP/Data on the SAME branch. Issue #30 depends on #28 + #29 and remains blocked; Runtime #31 depends on #27 + #30 and remains blocked. No safe non-competing Runtime implementation is executable. Keep Runtime automation enabled and re-evaluate live GitHub next run; immediately claim #31 only after #30 becomes authoritative and no competing lease exists, or claim a newly-created higher-priority unblocked Runtime issue if Lead establishes one. Do not fabricate heartbeat implementation commits, fix another specialist's live PR, or steal ERP/Data/Backend/Frontend scope."
+next_action: "Issue #31 is dependency-unblocked because #27 and #30 are authoritative. Runtime claimed branch runtime/31-it-agent-development-loop from main ef9705f8f74359d4ce77efa9718f4ff93fa274be. Initial fail-closed IT Agent development gate and deterministic tests fence CI/eval evidence to exact candidate/version/source commit and preserve explicit tenant/company authority. Open one Draft PR, capture its actual HEAD, run exact-head CI closure, then continue acceptance toward controlled issue -> branch -> PR -> CI -> eval orchestration without bypassing release gates."
