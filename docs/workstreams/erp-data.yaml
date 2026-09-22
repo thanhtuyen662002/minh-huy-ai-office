@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 103
 current_pr: 104
 current_branch: erp/103-bulk-deterministic-execution
-head: RECONCILING_CURRENT_MAIN
+head: 62065e2a5474e477a9f4c0b532d590163972044a
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-22T23:39:00Z"
-last_checkpoint_at: "2026-09-22T23:39:00Z"
+lease_heartbeat_at: "2026-09-22T23:40:00Z"
+last_checkpoint_at: "2026-09-22T23:40:00Z"
 last_merged_pr: 98
 last_merge_commit: d17ac882cbb42edb4db1c4cfad7902afb627d5a5
 preferred_next_issue: 103
@@ -24,4 +24,4 @@ scope:
   - tax-invoice
   - order-inventory
   - bulk-deterministic-execution
-next_action: "PR #104 remains the authoritative ERP/Data lease for issue #103. Acceptance implementation is complete and prior exact-head CI was GREEN. Current authoritative main eb424b725b2759f1b63b40a8f6f4216a953ca419 is being reconciled into this SAME lease while preserving main-owned PROJECT_STATE and Runtime integration. Own exact-head Governance/Build after reconciliation; fix actionable RED on this SAME branch. If GREEN and mergeable, keep PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify Frontend/Runtime leases, expose secrets, broaden tenant/company/data-source authority, or merge directly."
+next_action: "PR #104 remains the authoritative ERP/Data lease for issue #103. Acceptance implementation is complete. Authoritative main eb424b725b2759f1b63b40a8f6f4216a953ca419 was reconciled into this SAME lease at merge checkpoint 62065e2a5474e477a9f4c0b532d590163972044a while preserving main-owned PROJECT_STATE and Runtime integration. Own exact-head Governance/Build for the current checkpoint; fix actionable RED on this SAME branch. If GREEN and mergeable, keep PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify Frontend/Runtime leases, expose secrets, broaden tenant/company/data-source authority, or merge directly."
