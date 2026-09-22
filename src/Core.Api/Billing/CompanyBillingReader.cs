@@ -10,6 +10,19 @@ public interface ICompanyBillingPlanSource
         CancellationToken cancellationToken = default);
 }
 
+public sealed class UnavailableCompanyBillingPlanSource : ICompanyBillingPlanSource
+{
+    public ValueTask<CompanyPlan?> GetAsync(
+        CompanyBillingAuthority authority,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        authority.Validate();
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult<CompanyPlan?>(null);
+    }
+}
+
 public sealed class CompanyBillingReader(ICompanyBillingPlanSource source)
 {
     public async ValueTask<CompanyPlan?> GetCurrentAsync(
