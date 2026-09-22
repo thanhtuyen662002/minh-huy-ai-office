@@ -20,6 +20,21 @@ describe("resolveCompanyContext runtime role boundary", () => {
     expect(resolveCompanyContext(membership(["Workspace member", "Workspace member"]))).toEqual(unavailable);
   });
 
+  it("fails closed before inspecting an oversized presentation role collection", () => {
+    let roleReads = 0;
+    const roles = new Array(257);
+    Object.defineProperty(roles, "0", {
+      configurable: true,
+      get() {
+        roleReads += 1;
+        return "Workspace member";
+      },
+    });
+
+    expect(resolveCompanyContext(membership(roles))).toEqual(unavailable);
+    expect(roleReads).toBe(0);
+  });
+
   it("fails closed when presentation identity is inherited instead of own data", () => {
     const inherited = Object.create(membership(["Workspace member"])) as CompanyMembershipView;
 
