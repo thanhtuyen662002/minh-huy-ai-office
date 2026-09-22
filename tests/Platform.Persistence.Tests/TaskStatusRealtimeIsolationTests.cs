@@ -85,6 +85,42 @@ public sealed class TaskStatusRealtimeIsolationTests
     }
 
     [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Publisher_FailsClosedBeforeDispatchWhenTaskStatusIsMissing(string status)
+    {
+        var publisher = new global::MinhHuy.AIOffice.Core.Api.Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new global::MinhHuy.AIOffice.Core.Api.Realtime.TaskStatusChanged(Guid.NewGuid(), status, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Publisher_FailsClosedBeforeDispatchWhenStepStatusIsMissing(string status)
+    {
+        var publisher = new global::MinhHuy.AIOffice.Core.Api.Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new global::MinhHuy.AIOffice.Core.Api.Realtime.TaskStepStatusChanged(Guid.NewGuid(), Guid.NewGuid(), status, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Publisher_FailsClosedBeforeDispatchWhenWorkerStatusIsMissing(string status)
+    {
+        var publisher = new global::MinhHuy.AIOffice.Core.Api.Realtime.SignalRTaskStatusPublisher(null!);
+        var message = new global::MinhHuy.AIOffice.Core.Api.Realtime.WorkerStatusChanged(Guid.NewGuid(), "worker-1", status, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
+    }
+
+    [Theory]
     [InlineData("", "approval_required")]
     [InlineData("approval", "")]
     [InlineData("   ", "approval_required")]
