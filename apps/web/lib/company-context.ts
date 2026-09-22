@@ -33,9 +33,11 @@ const snapshotRoles = (value: unknown): readonly string[] | null => {
   const length = ownDataValue(value, "length");
   if (!Number.isSafeInteger(length) || (length as number) < 0) return null;
   const roles: string[] = [];
+  const seen = new Set<string>();
   for (let index = 0; index < (length as number); index += 1) {
     const role = ownDataValue(value, String(index));
-    if (!canonicalText(role)) return null;
+    if (!canonicalText(role) || seen.has(role)) return null;
+    seen.add(role);
     roles.push(role);
   }
   return Object.freeze(roles);
