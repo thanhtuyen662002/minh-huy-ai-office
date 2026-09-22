@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MinhHuy.AIOffice.Core.Api.Authorization;
+using MinhHuy.AIOffice.Core.Api.Realtime;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Platform.Observability;
@@ -63,6 +64,9 @@ if (authenticationConfigured)
             };
         });
     builder.Services.AddAuthorization();
+    builder.Services.AddSignalR();
+    builder.Services.AddSingleton<ITaskStatusPublisher, SignalRTaskStatusPublisher>();
+    builder.Services.AddSingleton<ITaskWorkerRealtimeEventPublisher, TaskWorkerRealtimeSignalRBridge>();
 }
 
 var app = builder.Build();
@@ -130,6 +134,8 @@ app.MapHealthChecks("/health");
 
 if (authenticationConfigured)
 {
+    app.MapHub<TaskStatusHub>(TaskStatusRealtime.HubPath).RequireAuthorization();
+
     app.MapGet("/api/auth/context", (IRequestAuthorizationContextAccessor accessor) =>
     {
         var current = accessor.Current;
