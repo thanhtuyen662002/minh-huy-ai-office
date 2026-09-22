@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 31
-current_pr: 86
-current_branch: runtime/31-it-agent-development-loop
-head: a982c3a6ca1e03f4578e517bca8ecf5d74857a82
+current_issue: 32
+current_pr: 87
+current_branch: runtime/32-release-controller
+head: 67eade02f372292a5582260d266933d3a0608403
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T12:25:00Z"
-last_checkpoint_at: "2026-09-22T12:25:00Z"
+lease_heartbeat_at: "2026-09-22T14:19:00Z"
+last_checkpoint_at: "2026-09-22T14:19:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -20,4 +20,5 @@ scope:
   - context-engine
   - usage-cost-ledger
   - conversation-attachment-ingestion
-next_action: "Draft PR #86 is the authoritative Runtime lease for #31. Previous exact-head 8c32e290a9ea638afb84eab4fb32652d183a8651 completed Governance 35722394748 GREEN and Build 35722394739 GREEN. Acceptance review found the Runtime slice complete without entering Release Controller #32 scope. State checkpoint a982c3a6ca1e03f4578e517bca8ecf5d74857a82 emitted Governance 35726930332 in_progress and Build 35726930346 queued. Re-query CI for the actual HEAD after this waiting_ci checkpoint; fix any actionable RED on the SAME branch. If exact-head CI is GREEN, mark PR ready_for_review. Do not bypass versioned PR/CI/eval/release gates or expand into #32 scope."
+  - release-controller
+next_action: "Draft PR #87 is the authoritative Runtime lease for #32. Implementation HEAD 67eade02f372292a5582260d266933d3a0608403 completed exact-head Governance 35734622014 GREEN and Build 35734621960 GREEN. Acceptance review confirms #32 scope is complete: source/component/schema/workflow/skill attribution, durable tenant/company/task release pinning, progressive Registered->Canary->Promoted->DrainingPrevious->Stable rollout, first-release stabilization, and exact-previous rollback fencing are covered without entering #33 kill-switch scope. This durable-state checkpoint changes HEAD, so own exact-head CI for the checkpoint; if GREEN, mark PR ready_for_review. If actionable RED, fix on this SAME branch. Do not enter #33 scope or merge without Lead sequencing."
