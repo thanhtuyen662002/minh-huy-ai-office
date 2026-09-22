@@ -3,11 +3,11 @@ repository: thanhtuyen662002/minh-huy-ai-office
 phase: P4-P6-parallel
 status: parallel-critical-path
 priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
-current_issue: 32
-current_branch: runtime/32-release-controller
-current_pr: 87
-current_target_head: f97cb6feeab1b3c8c686d0376866b202f641f553
-last_verified_commit: 364864c8698d7b5d6cad51f2af9ce2128b0d8052
+current_issue: 88
+current_branch: erp/88-accounting-posting-contract
+current_pr: 89
+current_target_head: cd816c804dbb22c8bbe2c4e27919194556c15426
+last_verified_commit: b275a1b095eeb3c5fe39d30d1160f36f55dee1b5
 
 critical_paths:
   backend:
@@ -16,7 +16,7 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #83 / issue #35 company-scoped billing foundation merged at 95acff127e0e3d1827bd444ac95c08eeb6be3142 after exact-head Governance 35728358339 and Build 35728358228 were GREEN. Backend immediate re-entry requested to reconcile its workstream state and claim the highest-priority unblocked Backend issue without competing with live Runtime #32."
+    next: "PR #83 / issue #35 company-scoped billing foundation is authoritative. Backend remains enabled and must re-evaluate live GitHub for the highest-priority unblocked non-overlapping Backend slice."
 
   frontend:
     issue: null
@@ -24,25 +24,26 @@ critical_paths:
     branch: null
     head: null
     state: blocked
-    next: "No Frontend live PR remains. Re-evaluate live GitHub each run and claim the highest-priority newly-unblocked non-overlapping Frontend slice; do not duplicate Runtime #32 or another specialist lease."
+    next: "No Frontend live PR observed. Frontend remains enabled and must re-evaluate live GitHub for newly-unblocked non-overlapping work."
 
   runtime_ai:
-    issue: 32
-    pr: 87
-    branch: runtime/32-release-controller
-    head: f97cb6feeab1b3c8c686d0376866b202f641f553
-    state: waiting_ci
-    next: "Live Runtime PR #87 owns #32. Exact-head Governance 35732651872 is GREEN; Build 35732651869 is actionable RED on a real runner. Job 106762044629 reaches dotnet build and fails with 4x CS0023 in tests/Shared.Contracts.Tests/ReleaseCatalogTests.cs lines 11-14 because the record with-expression is parsed ambiguously inside Assert.Throws lambdas. Lead posted exact diagnostics and requested immediate Runtime re-entry to fix the SAME PR, verify, push and own new exact-head CI."
-
-  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: done
-    next: "PR #85 / issue #34 accounting investigation evidence/execution contract merged at 364864c8698d7b5d6cad51f2af9ce2128b0d8052 after exact-head Governance 35728888570 and Build 35728888582 were GREEN. ERP/Data immediate re-entry requested to reconcile state and claim the highest-priority unblocked ERP/Data issue without competing leases."
+    next: "PR #87 / issue #32 Release Catalog and rollout controller merged at b275a1b095eeb3c5fe39d30d1160f36f55dee1b5 after actual checkpoint HEAD 531d494c98ba3d9f94bb6500e417ac09b2a16cec completed exact-head required quality gates successfully. Runtime immediate re-entry requested to reconcile state and claim the next unblocked Runtime/Release slice without competing leases."
+
+  erp_data:
+    issue: 88
+    pr: 89
+    branch: erp/88-accounting-posting-contract
+    head: cd816c804dbb22c8bbe2c4e27919194556c15426
+    state: in_progress
+    next: "Live ERP/Data PR #89 owns issue #88. Exact-head cd816c804dbb22c8bbe2c4e27919194556c15426 CI is GREEN, including Required quality gates and .NET format/build/tests. Acceptance still requires deterministic reconciliation mismatch behavior and final reassessment; immediate ERP/Data re-entry requested rather than idling on GREEN CI."
 
 recent_authoritative_merges:
+  - "PR #87 / issue #32 Release Catalog and rollout controller: MERGED at b275a1b095eeb3c5fe39d30d1160f36f55dee1b5"
   - "PR #85 / issue #34 accounting investigation evidence/execution contract: MERGED at 364864c8698d7b5d6cad51f2af9ce2128b0d8052"
   - "PR #83 / issue #35 company-scoped billing foundation: MERGED at 95acff127e0e3d1827bd444ac95c08eeb6be3142"
   - "PR #86 / issue #31 Controlled IT Agent development gate: MERGED at 2bf6c8d2db9a957031bea4e83614f5e81bfed0f0"
@@ -50,26 +51,16 @@ recent_authoritative_merges:
   - "PR #82 / issue #29 ERP Catalog / Feature / Capability Registry contracts: MERGED at 41c73dd9e1be9edf9df1e770a6d91fac652683cf"
   - "PR #73 / issue #22 realtime task dashboard via SignalR: MERGED at 72aab4092e1238d70885185e5f8d43cc719dbdaf"
   - "PR #64 / issue #62 authenticated-session bootstrap: MERGED at 36a9a63f6d2ef53476b7e984e542f724a52b774f"
-  - "PR #79 / issue #28 Schema Observer and versioned schema snapshots/diffs: MERGED at 0ea3606dd82ee5fa38cf21622c5e8fe14964f1ff"
-  - "PR #81 / issue #80 Conversation and attachment ingestion contracts: MERGED at fbfe6a0f34cde8b67a7f069a2cabe3206556d06a"
-  - "PR #77 / issue #26 Usage and Cost Ledger: MERGED at 0693313c75063e7b5ed6dc2f373f65b12462c9ba"
-  - "PR #78 / issue #27 deterministic ERP eval/replay harness: MERGED at ccad67e3fef0edf9843c36ff34d2904cc31b6013"
-  - "PR #76 / issue #25 Context Engine and durable task memory manifest: MERGED at a94ab116c4f362b3b0ace122c9993813efdd95ef"
-  - "PR #75 / issue #24 Model Capability Registry/router/fallback: MERGED at 18436f96b8bd0cdf02c27e3f3dd6c8923706e39f"
-  - "PR #74 / issue #23 provider-neutral AI Gateway: MERGED at f67ea8173a100a1ab0074cc4238297b1262c8564"
-  - "PR #66 / issue #21 Permission/Policy Engine + immutable audit: MERGED at 23de9d82d1bb376e24006253fbf64698c54053b0"
-  - "PR #67 / issue #36 recovery/backup safety slice: MERGED at 02b780f81426820f5fa0c26ddc0bbe448d9f8a0e"
-  - "PR #55 / issue #20 RabbitMQ workers, leases, retries and idempotency: MERGED at f9ecb316dc557ca1cf476fb09e80d93d102a3837"
-  - "PR #69 / issue #68 CI closure protocol: MERGED at 4877d96083d3ba9f3ca486ab84b26a273b4edd4a"
 
 dependency_chain:
   - "P1 foundations including Backend #22 and Frontend #62 are authoritative."
   - "P2 #23/#24/#25/#26/#27 plus conversation/attachment ingestion #80 are authoritative."
   - "P3 #28/#29/#30 are authoritative."
-  - "P4 #31 Controlled IT Agent development gate is authoritative; Runtime now owns #32 Release Catalog/rollout controller on PR #87."
-  - "P5 accounting investigation #34 and P6 company-scoped billing foundation #35 are authoritative after PR #85 and PR #83 merges."
+  - "P4 #31 and #32 are authoritative after PR #86 and PR #87 merges; Runtime re-resolves the next live release/control issue."
+  - "P5 accounting investigation #34 is authoritative; ERP/Data now owns #88 posting preview/execute/reconcile on PR #89."
+  - "P6 company-scoped billing foundation #35 is authoritative."
 
-next_action: "Runtime immediately fixes actionable exact-head Build RED on PR #87/#32 and continues acceptance through CI closure. Backend and ERP/Data immediately reconcile their merged leases and claim only newly-unblocked non-overlapping work. Frontend re-evaluates for safe work. Lead refreshes this file whenever ownership/HEAD/automation state changes."
+next_action: "ERP/Data immediately continues PR #89/#88 deterministic reconciliation mismatch acceptance despite GREEN exact-head CI. Runtime immediately re-resolves and claims the next unblocked non-overlapping Runtime/Release slice after #32 merge. Backend and Frontend re-evaluate live GitHub for safe work. Lead refreshes this file whenever ownership, HEAD, merge or automation state changes."
 
 blocked_by: []
 
