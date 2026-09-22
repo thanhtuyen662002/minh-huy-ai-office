@@ -8,10 +8,10 @@ public sealed class ReleaseCatalogTests
     [Fact]
     public void Manifest_RequiresEveryAttributionDimension()
     {
-        Assert.Throws<ArgumentException>(() => Manifest() with { SourceCommit = " " }.Validate());
-        Assert.Throws<ArgumentException>(() => Manifest() with { SchemaContractVersion = " schema-v1" }.Validate());
-        Assert.Throws<ArgumentException>(() => Manifest() with { WorkflowVersion = "" }.Validate());
-        Assert.Throws<ArgumentException>(() => Manifest() with { SkillVersion = " " }.Validate());
+        Assert.Throws<ArgumentException>(() => (Manifest() with { SourceCommit = " " }).Validate());
+        Assert.Throws<ArgumentException>(() => (Manifest() with { SchemaContractVersion = " schema-v1" }).Validate());
+        Assert.Throws<ArgumentException>(() => (Manifest() with { WorkflowVersion = "" }).Validate());
+        Assert.Throws<ArgumentException>(() => (Manifest() with { SkillVersion = " " }).Validate());
     }
 
     [Fact]
