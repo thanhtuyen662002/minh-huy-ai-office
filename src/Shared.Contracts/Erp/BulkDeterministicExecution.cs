@@ -18,7 +18,8 @@ public sealed record BulkExecutionItem(
     string ItemIdentity,
     string Operation,
     string PayloadFingerprint,
-    string PreviewEvidenceReference)
+    string PreviewEvidenceReference,
+    string ExpectedResultFingerprint)
 {
     public string GetExecutionIdentity(BulkExecutionAuthority authority)
         => BulkDeterministicExecutionContract.GetItemExecutionIdentity(authority, this);
@@ -39,6 +40,12 @@ public enum BulkExecutionItemState
     Exception
 }
 
+public enum BulkReconciliationState
+{
+    Matched,
+    Mismatch
+}
+
 public sealed record BulkExecutionItemResult(
     Guid TenantId,
     Guid CompanyId,
@@ -47,6 +54,7 @@ public sealed record BulkExecutionItemResult(
     BulkExecutionItemState State,
     string EvidenceReference,
     string ActualResultFingerprint,
+    BulkReconciliationState ReconciliationState,
     string AuditCorrelationId);
 
 public static class BulkDeterministicExecutionContract
@@ -68,7 +76,8 @@ public static class BulkDeterministicExecutionContract
             AuthorityIdentity(authority),
             Canonical(item.ItemIdentity),
             Canonical(item.Operation),
-            item.PayloadFingerprint.Trim()));
+            item.PayloadFingerprint.Trim(),
+            item.ExpectedResultFingerprint.Trim()));
     }
 
     public static void ValidatePlan(BulkExecutionPlan plan)
@@ -102,6 +111,15 @@ public static class BulkDeterministicExecutionContract
         Require(result.ActualResultFingerprint, nameof(result.ActualResultFingerprint));
         if (!StringComparer.Ordinal.Equals(result.AuditCorrelationId, plan.AuditCorrelationId))
             throw new InvalidOperationException("Bulk result audit correlation does not match the authorized plan.");
+
+        var derivedReconciliation = StringComparer.Ordinal.Equals(
+            result.ActualResultFingerprint.Trim(), item.ExpectedResultFingerprint.Trim())
+            ? BulkReconciliationState.Matched
+            : BulkReconciliationState.Mismatch;
+        if (result.ReconciliationState != derivedReconciliation)
+            throw new InvalidOperationException("Bulk reconciliation state must be derived from the exact expected and actual ERP result fingerprints.");
+        if (result.State == BulkExecutionItemState.Succeeded && derivedReconciliation != BulkReconciliationState.Matched)
+            throw new InvalidOperationException("Bulk item cannot succeed until the ERP result exactly reconciles with the previewed expectation.");
     }
 
     public static IReadOnlyList<BulkExecutionItem> GetRetryableItems(
@@ -119,7 +137,7 @@ public static class BulkDeterministicExecutionContract
         }
 
         var succeeded = priorResults
-            .Where(result => result.State == BulkExecutionItemState.Succeeded)
+            .Where(result => result.State == BulkExecutionItemState.Succeeded && result.ReconciliationState == BulkReconciliationState.Matched)
             .Select(result => result.ItemExecutionIdentity)
             .ToHashSet(StringComparer.Ordinal);
         return plan.Items
@@ -147,6 +165,7 @@ public static class BulkDeterministicExecutionContract
         Require(item.Operation, nameof(item.Operation));
         Require(item.PayloadFingerprint, nameof(item.PayloadFingerprint));
         Require(item.PreviewEvidenceReference, nameof(item.PreviewEvidenceReference));
+        Require(item.ExpectedResultFingerprint, nameof(item.ExpectedResultFingerprint));
     }
 
     private static string AuthorityIdentity(BulkExecutionAuthority authority) => string.Join(':',
