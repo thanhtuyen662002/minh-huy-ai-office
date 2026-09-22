@@ -54,100 +54,100 @@ public sealed class TaskStatusRealtimeIsolationTests
     }
 
     [Fact]
-    public void Publisher_FailsClosedBeforeDispatchWhenTaskIdentityIsMissing()
+    public async Task Publisher_FailsClosedBeforeDispatchWhenTaskIdentityIsMissing()
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskStatusChanged(Guid.Empty, "running", DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Fact]
-    public void Publisher_FailsClosedBeforeDispatchWhenStepIdentityIsMissing()
+    public async Task Publisher_FailsClosedBeforeDispatchWhenStepIdentityIsMissing()
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskStepStatusChanged(Guid.NewGuid(), Guid.Empty, "running", DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Publisher_FailsClosedBeforeDispatchWhenWorkerIdentityIsMissing(string workerId)
+    public async Task Publisher_FailsClosedBeforeDispatchWhenWorkerIdentityIsMissing(string workerId)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new WorkerStatusChanged(Guid.NewGuid(), workerId, "running", DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Publisher_FailsClosedBeforeDispatchWhenTaskStatusIsMissing(string status)
+    public async Task Publisher_FailsClosedBeforeDispatchWhenTaskStatusIsMissing(string status)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskStatusChanged(Guid.NewGuid(), status, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Fact]
-    public void Publisher_FailsClosedBeforeDispatchWhenTaskStatusIsNull()
+    public async Task Publisher_FailsClosedBeforeDispatchWhenTaskStatusIsNull()
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskStatusChanged(Guid.NewGuid(), null!, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishTaskStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Publisher_FailsClosedBeforeDispatchWhenStepStatusIsMissing(string status)
+    public async Task Publisher_FailsClosedBeforeDispatchWhenStepStatusIsMissing(string status)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskStepStatusChanged(Guid.NewGuid(), Guid.NewGuid(), status, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Fact]
-    public void Publisher_FailsClosedBeforeDispatchWhenStepStatusIsNull()
+    public async Task Publisher_FailsClosedBeforeDispatchWhenStepStatusIsNull()
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskStepStatusChanged(Guid.NewGuid(), Guid.NewGuid(), null!, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishStepStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Publisher_FailsClosedBeforeDispatchWhenWorkerStatusIsMissing(string status)
+    public async Task Publisher_FailsClosedBeforeDispatchWhenWorkerStatusIsMissing(string status)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new WorkerStatusChanged(Guid.NewGuid(), "worker-1", status, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
     [Fact]
-    public void Publisher_FailsClosedBeforeDispatchWhenWorkerStatusIsNull()
+    public async Task Publisher_FailsClosedBeforeDispatchWhenWorkerStatusIsNull()
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new WorkerStatusChanged(Guid.NewGuid(), "worker-1", null!, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishWorkerStatusAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 
@@ -156,12 +156,12 @@ public sealed class TaskStatusRealtimeIsolationTests
     [InlineData("approval", "")]
     [InlineData("   ", "approval_required")]
     [InlineData("approval", "   ")]
-    public void Publisher_FailsClosedBeforeDispatchWhenAttentionMetadataIsIncomplete(string kind, string reasonCode)
+    public async Task Publisher_FailsClosedBeforeDispatchWhenAttentionMetadataIsIncomplete(string kind, string reasonCode)
     {
         var publisher = new SignalRTaskStatusPublisher(null!);
         var message = new TaskAttentionRequired(Guid.NewGuid(), kind, reasonCode, DateTimeOffset.UtcNow);
 
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             publisher.PublishAttentionRequiredAsync(Guid.NewGuid(), Guid.NewGuid(), message));
     }
 }
