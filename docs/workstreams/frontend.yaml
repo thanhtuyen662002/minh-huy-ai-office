@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 101
 current_pr: 102
 current_branch: "frontend/101-customer-portal-shell"
-head: "76f13e7da82ba107c195104080103f3a823271e8"
+head: "3935ed25292c496d6a77dfa922542ec5ff7f0d92"
 state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T03:38:12+07:00"
-last_checkpoint_at: "2026-09-23T03:38:12+07:00"
+lease_heartbeat_at: "2026-09-23T04:12:40+07:00"
+last_checkpoint_at: "2026-09-23T04:12:40+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Resume PR #102 / issue #101 at implementation HEAD 76f13e7da82ba107c195104080103f3a823271e8. Build 35778902969 on prior HEAD eb6ebd8 failed Web type-check because readAuthority returned unknown presentation fields; fixed with explicit canonical field guards and added hostile-runtime/non-fabrication component tests. Exact-head workflows for 76f13e7 had not emitted at checkpoint. Re-query exact-head CI; fix actionable RED on the SAME PR. If green, continue authenticated-session wiring and capability presentation acceptance without broadening browser authority."
+next_action: "Resume PR #102 / issue #101. Prior exact-head ccaa994fb0aee3b4fa49441c9427307ae57d33d7 is GREEN: Governance 35781689552 and Build 35781689556. Meaningful acceptance continued through implementation HEAD 3935ed25292c496d6a77dfa922542ec5ff7f0d92: customer portal is wired behind AuthenticatedSessionShell; company switching remains a request hint; optional portal capabilities are snapshotted only from the server bootstrap result; unknown/malformed capability metadata fails closed; focused component/bootstrap tests added. Exact-head workflows had not emitted at checkpoint. PR is currently behind main and must be reconciled safely before ready_for_review. Re-query exact-head CI, fix actionable RED on the SAME PR, reconcile authoritative main without overwriting other lanes, then complete acceptance review."
