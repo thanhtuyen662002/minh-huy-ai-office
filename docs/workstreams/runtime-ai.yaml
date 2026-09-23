@@ -4,11 +4,11 @@ status: active
 current_issue: 125
 current_pr: 126
 current_branch: runtime/125-customer-ai-credit-usage
-head: 49484a6d1d7d1977e4cfc14bb1ccc3cf3b6ac8d4
+head: 090a0efd3f223bd1e325ba57c7a99c7d8ce8ed41
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T07:35:00Z"
-last_checkpoint_at: "2026-09-23T07:35:00Z"
+lease_heartbeat_at: "2026-09-23T07:37:00Z"
+last_checkpoint_at: "2026-09-23T07:37:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -33,4 +33,4 @@ scope:
   - customer-chat-response-projection
   - customer-conversation-context
   - customer-ai-credit-usage
-next_action: "PR #126 / issue #125 is the authoritative Runtime lease. Implementation adds authority/version-bound customer AI credit projection over durable AiUsageLedger evidence with exact tenant/company fencing, replay idempotency/conflict rejection, provider-neutral versioned pricing, deterministic evidence ordering and checked arithmetic. Exact implementation HEAD 49484a6d1d7d1977e4cfc14bb1ccc3cf3b6ac8d4; re-query exact-head Governance/Build, inspect/fix actionable RED on this SAME branch, continue acceptance hardening, and do not edit PROJECT_STATE or other specialist leases."
+next_action: "PR #126 / issue #125 is the authoritative Runtime lease. Acceptance review hardened durable usage evidence with exact BillingAuthorityVersion fencing in addition to tenant/company scope, replay idempotency/conflict rejection, provider-neutral versioned pricing, deterministic evidence ordering and checked arithmetic. Exact implementation HEAD 090a0efd3f223bd1e325ba57c7a99c7d8ce8ed41 currently has no emitted exact-head workflows; re-query Governance/Build, inspect/fix actionable RED on this SAME branch, and continue safe acceptance work without heartbeat commits. Do not edit PROJECT_STATE or other specialist leases."
