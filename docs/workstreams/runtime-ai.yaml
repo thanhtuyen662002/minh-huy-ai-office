@@ -4,11 +4,11 @@ status: active
 current_issue: 135
 current_pr: 137
 current_branch: runtime/135-ai-credit-reservation
-head: 3f83e5687f76828f0f7af524978db03cf4b083cb
+head: 41ff718e9dcc226e6a254269b8d6c6b9a66bad83
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T13:34:00Z"
-last_checkpoint_at: "2026-09-23T13:34:00Z"
+lease_heartbeat_at: "2026-09-23T13:36:00Z"
+last_checkpoint_at: "2026-09-23T13:36:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -35,4 +35,4 @@ scope:
   - customer-ai-credit-usage
   - customer-ai-credit-admission
   - customer-ai-credit-reservation
-next_action: "PR #137 / issue #135 is being reconciled on the SAME lease with authoritative main 91bf7a6f33ed72108bb4a27ef7ab07dc7c0d8741 after ERP/Data #142 and watchdog state advanced main. Preserve the Runtime reservation contract/tests while taking main as authoritative for PROJECT_STATE and ERP/Data changes. After reconciliation, capture the new exact HEAD, re-query Governance/Build, fix actionable RED on this SAME branch, and return ready_for_review only after GREEN, mergeability and clear review threads. Do not edit PROJECT_STATE or other specialist leases."
+next_action: "PR #137 / issue #135 reconciled on the SAME lease with authoritative main 91bf7a6f33ed72108bb4a27ef7ab07dc7c0d8741 via merge commit 41ff718e9dcc226e6a254269b8d6c6b9a66bad83; compare is behind=0 and PR mergeable=true. Exact-head Governance 35868127630 is GREEN; Build 35868127641 is in_progress with real runner steps and no actionable RED observed. Re-query Build on the current checkpoint, fix actionable RED on this SAME branch, and return ready_for_review only after GREEN and clear review threads. Do not edit PROJECT_STATE or other specialist leases."
