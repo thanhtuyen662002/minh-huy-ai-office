@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 158
-current_pr: null
+current_pr: 159
 current_branch: runtime/158-ai-credit-active-reservations
-head: 0e35d0d0d4999a850c57e4694135488cb3eacb49
-state: in_progress
+head: 6da772beb8bbf5eb61796fbf484164fd86e85a19
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T20:40:00Z"
-last_checkpoint_at: "2026-09-23T20:40:00Z"
+lease_heartbeat_at: "2026-09-23T20:41:00Z"
+last_checkpoint_at: "2026-09-23T20:41:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -37,4 +37,4 @@ scope:
   - customer-ai-credit-reservation
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
-next_action: "Issue #158 is claimed on runtime/158-ai-credit-active-reservations after #153 merged authoritative. Implementation now reconciles authoritative reservation + settlement evidence into deterministic active reservation capacity, rejecting orphan/conflicting/stale/cross-company/policy evidence and checked overflow. Open Draft PR, run exact-head CI, fix actionable RED on this SAME branch, then persist HANDOFF with exact workflow IDs. Do not edit PROJECT_STATE or other specialist leases."
+next_action: "PR #159 / issue #158 owns active-reservation reconciliation. Implementation checkpoint 6da772beb8bbf5eb61796fbf484164fd86e85a19 was ahead-only/behind=0 against authoritative main 2f7f654e143279ff026fbb4a843a55e953276b1c. Exact-head CI must be captured for the latest metadata checkpoint; inspect/fix actionable RED on this SAME branch, then verify acceptance, mergeability and review threads before ready_for_review. Do not edit PROJECT_STATE or other specialist leases."
