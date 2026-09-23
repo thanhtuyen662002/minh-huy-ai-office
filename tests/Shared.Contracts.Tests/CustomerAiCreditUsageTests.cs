@@ -11,8 +11,8 @@ public sealed class CustomerAiCreditUsageTests
     [Fact]
     public void Project_IsDeterministicAndIdempotentForIdenticalReplay()
     {
-        var first = Usage("usage-b", 600_000, "provider-a", "model-a");
-        var second = Usage("usage-a", 600_000, "provider-b", "model-b");
+        var first = Evidence(Usage("usage-b", 600_000, "provider-a", "model-a"));
+        var second = Evidence(Usage("usage-a", 600_000, "provider-b", "model-b"));
 
         var result = CustomerAiCreditUsage.Project(Authority, Pricing, [first, second, first]);
 
@@ -31,14 +31,21 @@ public sealed class CustomerAiCreditUsageTests
             Scope = new AiUsageScope("tenant-a", "company-b", "task-a", "agent-a", "request-a")
         };
 
-        Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditUsage.Project(Authority, Pricing, [entry]));
+        Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditUsage.Project(Authority, Pricing, [Evidence(entry)]));
+    }
+
+    [Fact]
+    public void Project_RejectsStaleAuthorityVersionEvidence()
+    {
+        var evidence = Evidence(Usage("usage-a", 10, "provider-a", "model-a")) with { AuthorityVersion = 6 };
+        Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditUsage.Project(Authority, Pricing, [evidence]));
     }
 
     [Fact]
     public void Project_RejectsConflictingReplay()
     {
-        var first = Usage("usage-a", 10, "provider-a", "model-a");
-        var conflicting = Usage("usage-a", 11, "provider-a", "model-a");
+        var first = Evidence(Usage("usage-a", 10, "provider-a", "model-a"));
+        var conflicting = Evidence(Usage("usage-a", 11, "provider-a", "model-a"));
 
         Assert.Throws<InvalidOperationException>(() => CustomerAiCreditUsage.Project(Authority, Pricing, [first, conflicting]));
     }
@@ -46,8 +53,8 @@ public sealed class CustomerAiCreditUsageTests
     [Fact]
     public void Project_IsProviderNeutralForCustomerCredits()
     {
-        var cheap = Usage("usage-a", 500_000, "provider-a", "model-a", 0.01m);
-        var expensive = Usage("usage-b", 500_000, "provider-z", "model-z", 99m);
+        var cheap = Evidence(Usage("usage-a", 500_000, "provider-a", "model-a", 0.01m));
+        var expensive = Evidence(Usage("usage-b", 500_000, "provider-z", "model-z", 99m));
 
         var result = CustomerAiCreditUsage.Project(Authority, Pricing, [cheap, expensive]);
 
@@ -77,10 +84,12 @@ public sealed class CustomerAiCreditUsageTests
     public void Project_FailsClosedOnCreditRoundingOverflow()
     {
         var pricing = Pricing with { TokenEquivalentPerCredit = long.MaxValue };
-        var entry = Usage("usage-a", long.MaxValue, "provider-a", "model-a");
+        var entry = Evidence(Usage("usage-a", long.MaxValue, "provider-a", "model-a"));
 
         Assert.Throws<OverflowException>(() => CustomerAiCreditUsage.Project(Authority, pricing, [entry]));
     }
+
+    private static CustomerUsageEvidence Evidence(AiUsageEntry entry) => new(Authority.AuthorityVersion, entry);
 
     private static AiUsageEntry Usage(
         string entryId,
