@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 113
-current_pr: 114
-current_branch: erp/113-datasource-failover
-head: d49e2913f057e2590619c22e806be2a6d7d50887
+current_issue: 123
+current_pr: 124
+current_branch: erp/123-datasource-health-evidence
+head: 85255f884aa9567ba40ccb21e06d8d677263302a
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T05:36:00Z"
-last_checkpoint_at: "2026-09-23T05:36:00Z"
-last_merged_pr: 104
-last_merge_commit: 39d5f95187b27224b00630f34418febdab5305ba
-preferred_next_issue: 113
+lease_heartbeat_at: "2026-09-23T07:34:31Z"
+last_checkpoint_at: "2026-09-23T07:34:31Z"
+last_merged_pr: 114
+last_merge_commit: ccf386c96f4f5602712e217eb2af95a38831ed2e
+preferred_next_issue: 123
 blocked_by: []
 scope:
   - datasource-registry
@@ -25,4 +25,5 @@ scope:
   - order-inventory
   - bulk-deterministic-execution
   - datasource-failover
-next_action: "PR #114 remains the authoritative ERP/Data lease for issue #113. Exact-head Governance 35823006855 and Build 35823006815 were GREEN on pre-reconciliation HEAD 7bf8a41ecc9a1f1e83e18e5a907ce88ef5402459. Authoritative main f1cefd31588b1891612ae7194af8b44da99bb0c1 was reconciled into this SAME lease at two-parent merge d49e2913f057e2590619c22e806be2a6d7d50887 while preserving main-owned PROJECT_STATE/runtime response projection and ERP/Data implementation/test blobs. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; fix actionable RED on this SAME branch. If GREEN, mergeable, and review threads remain clear, keep ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+  - datasource-health-evidence
+next_action: "PR #124 remains the authoritative ERP/Data lease for issue #123. Current main 97022929311339a5d879ea921f375a65cff9b93f was reconciled into this SAME lease by two-parent merge 85255f884aa9567ba40ccb21e06d8d677263302a while preserving main-owned PROJECT_STATE/runtime context changes and ERP/Data health-evidence implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
