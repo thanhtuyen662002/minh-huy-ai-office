@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 154
 current_pr: 155
 current_branch: erp/154-failover-decision-validation
-head: c9ba88226a71a20495ba514e5f02f80f67f615e7
-state: waiting_ci
+head: 6db5c1d7699fd01748e5098f97c24775eaf381e1
+state: ready_for_review
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T19:34:00Z"
-last_checkpoint_at: "2026-09-23T19:34:00Z"
+lease_heartbeat_at: "2026-09-23T20:29:00Z"
+last_checkpoint_at: "2026-09-23T20:29:00Z"
 last_merged_pr: 147
 last_merge_commit: c58b11617aa85a050d005ff013583715ee156b0c
 preferred_next_issue: 154
@@ -31,4 +31,4 @@ scope:
   - datasource-failover-decision-evidence
   - datasource-failover-operation-authority
   - datasource-failover-decision-validation
-next_action: "PR #155 reconciled authoritative main 54074a43d4fdf06e33595410702f88541433064c on the SAME lease via merge checkpoint c9ba88226a71a20495ba514e5f02f80f67f615e7; branch is ahead-only/behind=0 and preserves main PROJECT_STATE plus Backend integration. Acceptance implementation and focused tests remain intact. Own exact-head Governance/Build to GREEN; fix actionable RED here, then mark ready for review. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+next_action: "PR #155 acceptance is complete at exact implementation HEAD 6db5c1d7699fd01748e5098f97c24775eaf381e1 with Governance 35910305507 and Build 35910305530 GREEN, mergeable=true and review threads clear. PR is Ready for review. ERP/Data retains this SAME lease until Lead integration and must re-enter it for review feedback, CI drift or mergeability drift. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
