@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CustomerChatPresentation } from "./customer-chat-presentation";
 
 const authority = { tenantId: "tenant-1", companyId: "company-1", userId: "user-1", conversationId: "conversation-1", authorityVersion: 4 };
@@ -22,15 +22,21 @@ describe("CustomerChatPresentation", () => {
   });
 
   it.each([
-    ["tenantId", "tenant-2"],
-    ["companyId", "company-2"],
-    ["userId", "user-2"],
-    ["conversationId", "conversation-2"],
-    ["authorityVersion", 3],
+    ["tenantId", "tenant-2"], ["companyId", "company-2"], ["userId", "user-2"],
+    ["conversationId", "conversation-2"], ["authorityVersion", 3],
   ])("fails closed when %s crosses authority", (key, value) => {
     render(<CustomerChatPresentation authority={authority} messages={[message({ [key]: value })]} />);
     expect(screen.getByRole("alert")).toHaveTextContent("không khớp phạm vi");
     expect(screen.queryByText("Cần hỗ trợ đối chiếu công nợ")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [{ ...authority, authorityVersion: 0 }],
+    [{ ...authority, companyId: " company-1" }],
+    [{ ...authority, conversationId: "" }],
+  ])("fails closed on malformed authority", (invalidAuthority) => {
+    render(<CustomerChatPresentation authority={invalidAuthority} messages={[]} />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
   it("deduplicates identical durable evidence but rejects conflicting duplicate ids", () => {
@@ -40,10 +46,24 @@ describe("CustomerChatPresentation", () => {
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
+  it("uses MessageId as deterministic tie-breaker", () => {
+    render(<CustomerChatPresentation authority={authority} messages={[message({ messageId: "z", text: "Z" }), message({ messageId: "a", text: "A" })]} />);
+    expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual(["A", "Z"]);
+  });
+
   it("does not read provider diagnostics or browser-selected presentation metadata", () => {
     render(<CustomerChatPresentation authority={{ ...authority, companyName: "Tên từ trình duyệt", userName: "Người dùng giả" }} messages={[message({ provider: "provider-secret", model: "model-secret", workerId: "worker-secret" })]} />);
     expect(screen.getByText("Cần hỗ trợ đối chiếu công nợ")).toBeInTheDocument();
     expect(screen.queryByText(/Tên từ trình duyệt|Người dùng giả|provider-secret|model-secret|worker-secret/)).not.toBeInTheDocument();
+  });
+
+  it("never invokes inherited authority getters", () => {
+    const inherited = vi.fn(() => "company-1");
+    const hostile = Object.create({ get companyId() { return inherited(); } });
+    Object.assign(hostile, { tenantId: "tenant-1", userId: "user-1", conversationId: "conversation-1", authorityVersion: 4 });
+    render(<CustomerChatPresentation authority={hostile} messages={[]} />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(inherited).not.toHaveBeenCalled();
   });
 
   it("shows an explicit empty state without inventing messages", () => {
