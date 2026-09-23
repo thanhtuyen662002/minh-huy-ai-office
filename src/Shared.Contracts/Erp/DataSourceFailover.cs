@@ -39,12 +39,27 @@ public static class DataSourceFailoverContract
         if (!Enum.IsDefined(operation)) throw new ArgumentOutOfRangeException(nameof(operation));
         if (candidates.Count == 0) throw new InvalidOperationException("No failover candidates are available.");
 
+        var evidenceByReference = new Dictionary<string, DataSourceHealthEvidence>(StringComparer.Ordinal);
         var evidenceByEndpoint = new Dictionary<string, DataSourceHealthEvidence>(StringComparer.Ordinal);
         foreach (var evidence in healthEvidence)
         {
             ValidateEvidence(evidence, authority, decisionAt);
-            if (!evidenceByEndpoint.TryAdd(evidence.EndpointId, evidence))
-                throw new InvalidOperationException("Health evidence contains a duplicate endpoint identity.");
+            if (evidenceByReference.TryGetValue(evidence.EvidenceReference, out var replay))
+            {
+                if (replay != evidence)
+                    throw new InvalidOperationException("Health evidence reference was reused with conflicting evidence.");
+                continue;
+            }
+            evidenceByReference.Add(evidence.EvidenceReference, evidence);
+
+            if (!evidenceByEndpoint.TryGetValue(evidence.EndpointId, out var current) || evidence.ObservedAt > current.ObservedAt)
+            {
+                evidenceByEndpoint[evidence.EndpointId] = evidence;
+                continue;
+            }
+
+            if (evidence.ObservedAt == current.ObservedAt && evidence != current)
+                throw new InvalidOperationException("Health evidence contains conflicting observations at the same endpoint timestamp.");
         }
 
         var eligible = new List<(DataSourceFailoverCandidate Candidate, DataSourceHealthEvidence Evidence)>();

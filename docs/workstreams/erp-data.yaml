@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 123
-current_pr: 124
-current_branch: erp/123-datasource-health-evidence
-head: 85255f884aa9567ba40ccb21e06d8d677263302a
+current_issue: 129
+current_pr: 130
+current_branch: erp/129-health-evidence-replay-fencing
+head: 11423d46644339b2f8fca91724b0e0742f15c53a
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T07:34:31Z"
-last_checkpoint_at: "2026-09-23T07:34:31Z"
-last_merged_pr: 114
-last_merge_commit: ccf386c96f4f5602712e217eb2af95a38831ed2e
-preferred_next_issue: 123
+lease_heartbeat_at: "2026-09-23T11:37:08Z"
+last_checkpoint_at: "2026-09-23T11:37:08Z"
+last_merged_pr: 124
+last_merge_commit: 55956b22514092f74325dd548c98ef491970c2c2
+preferred_next_issue: 129
 blocked_by: []
 scope:
   - datasource-registry
@@ -26,4 +26,5 @@ scope:
   - bulk-deterministic-execution
   - datasource-failover
   - datasource-health-evidence
-next_action: "PR #124 remains the authoritative ERP/Data lease for issue #123. Current main 97022929311339a5d879ea921f375a65cff9b93f was reconciled into this SAME lease by two-parent merge 85255f884aa9567ba40ccb21e06d8d677263302a while preserving main-owned PROJECT_STATE/runtime context changes and ERP/Data health-evidence implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+  - datasource-health-evidence-replay
+next_action: "PR #130 remains the authoritative ERP/Data lease for issue #129. Reconciled authoritative main 8d1afa597435752fa8642b8ea37d6370cd77074a into this SAME branch via two-parent merge 11423d46644339b2f8fca91724b0e0742f15c53a, preserving main-owned PROJECT_STATE/backend cache-hardening changes and ERP/Data replay-fencing implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
