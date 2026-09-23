@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: waiting_ci
-current_issue: 101
-current_pr: 102
-current_branch: "frontend/101-customer-portal-shell"
-head: "1f91014e807848c93a74aea4c42f475a5aa5599b"
-state: waiting_ci
+status: in_progress
+current_issue: 121
+current_pr: null
+current_branch: "frontend/121-customer-chat-presentation"
+head: "7f59594eef9b27b28da297bbd3cb8b9440389cd5"
+state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T09:08:25+07:00"
-last_checkpoint_at: "2026-09-23T09:08:25+07:00"
+lease_heartbeat_at: "2026-09-23T13:10:00+07:00"
+last_checkpoint_at: "2026-09-23T13:10:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #102 / issue #101 has been reconciled on the SAME lease with authoritative main 1bccf2861f03243d5da74c5c95c26ae139f86d79. Reconciliation head 1f91014e807848c93a74aea4c42f475a5aa5599b is ahead-only/behind=0 and preserves main-owned PROJECT_STATE; compare remains scoped to five Frontend implementation/test paths plus this Frontend state. Re-resolve actual HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME PR, and return ready_for_review when GREEN/mergeable with no unresolved review threads. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
+next_action: "Issue #121 authority-bound customer chat presentation adapter has initial component + focused authority tests on this branch. Open the primary Draft PR, resolve actual HEAD, run exact-head Governance/Build, fix actionable RED on the SAME lease, then continue acceptance hardening. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
