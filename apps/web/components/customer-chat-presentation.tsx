@@ -38,18 +38,18 @@ function readAuthority(value: unknown): ChatAuthority | null {
   const conversationId = own(value, "conversationId");
   const authorityVersion = own(value, "authorityVersion");
   if (!canonical(tenantId) || !canonical(companyId) || !canonical(userId) || !canonical(conversationId)) return null;
-  if (!Number.isSafeInteger(authorityVersion) || (authorityVersion as number) <= 0) return null;
-  return { tenantId, companyId, userId, conversationId, authorityVersion: authorityVersion as number };
+  if (typeof authorityVersion !== "number" || !Number.isSafeInteger(authorityVersion) || authorityVersion <= 0) return null;
+  return { tenantId, companyId, userId, conversationId, authorityVersion };
 }
 
 function readMessages(value: unknown, authority: ChatAuthority): ChatMessage[] | null {
   if (!Array.isArray(value)) return null;
   const length = own(value, "length");
-  if (!Number.isSafeInteger(length) || (length as number) < 0 || (length as number) > 500) return null;
+  if (typeof length !== "number" || !Number.isSafeInteger(length) || length < 0 || length > 500) return null;
   const messages: ChatMessage[] = [];
   const byId = new Map<string, string>();
 
-  for (let index = 0; index < (length as number); index += 1) {
+  for (let index = 0; index < length; index += 1) {
     const item = own(value, String(index));
     if (item === null || typeof item !== "object") return null;
     const messageId = own(item, "messageId");
@@ -61,7 +61,8 @@ function readMessages(value: unknown, authority: ChatAuthority): ChatMessage[] |
     const occurredAt = own(item, "occurredAt");
     const role = own(item, "role");
     const text = own(item, "text");
-    if (!canonical(messageId) || !canonical(occurredAt) || !canonical(text)) return null;
+    if (!canonical(messageId) || !canonical(tenantId) || !canonical(companyId) || !canonical(userId) || !canonical(conversationId) || !canonical(occurredAt) || !canonical(text)) return null;
+    if (typeof authorityVersion !== "number" || !Number.isSafeInteger(authorityVersion) || authorityVersion <= 0) return null;
     if (role !== "customer" && role !== "assistant") return null;
     if (tenantId !== authority.tenantId || companyId !== authority.companyId || userId !== authority.userId || conversationId !== authority.conversationId || authorityVersion !== authority.authorityVersion) return null;
     if (Number.isNaN(Date.parse(occurredAt))) return null;
@@ -72,7 +73,7 @@ function readMessages(value: unknown, authority: ChatAuthority): ChatMessage[] |
       continue;
     }
     byId.set(messageId, fingerprint);
-    messages.push({ messageId, tenantId, companyId, userId, conversationId, authorityVersion: authorityVersion as number, occurredAt, role, text });
+    messages.push({ messageId, tenantId, companyId, userId, conversationId, authorityVersion, occurredAt, role, text });
   }
 
   return messages.sort((left, right) => left.occurredAt.localeCompare(right.occurredAt) || left.messageId.localeCompare(right.messageId));
