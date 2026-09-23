@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 135
-current_pr: 137
-current_branch: runtime/135-ai-credit-reservation
-head: bab722ee1eec5ae8e0db8601bd162a57757511c3
+current_issue: 152
+current_pr: 153
+current_branch: runtime/152-ai-credit-settlement
+head: 0fc2e1856b45d1cf650d28d171719e4f322fba65
 state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T17:22:00Z"
-last_checkpoint_at: "2026-09-23T17:22:00Z"
+lease_heartbeat_at: "2026-09-23T20:17:00Z"
+last_checkpoint_at: "2026-09-23T20:17:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -35,4 +35,5 @@ scope:
   - customer-ai-credit-usage
   - customer-ai-credit-admission
   - customer-ai-credit-reservation
-next_action: "PR #137 / issue #135 is acceptance-complete and ready for Lead review/integration. Exact checkpoint HEAD bab722ee1eec5ae8e0db8601bd162a57757511c3 passed Governance 35890122671 and Build 35890122665 GREEN; PR is mergeable=true against authoritative main eb00bdfcee4f17a539a1958752aa7cc00fafd42e and review threads are clear. Lead should verify final exact-head gates on this ready-state checkpoint before merge. Runtime must re-enter this SAME lease if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
+  - customer-ai-credit-settlement
+next_action: "PR #153 / issue #152 is acceptance-complete on reconciled checkpoint 0fc2e1856b45d1cf650d28d171719e4f322fba65: exact-head Governance 35910339295 and Build 35910339424 GREEN, compare ahead-only/behind=0, mergeable=true, review threads clear, and diff remains limited to Runtime settlement contract/tests plus this workstream state. Lead should review/integrate after verifying exact-head gates for this ready-state checkpoint. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
