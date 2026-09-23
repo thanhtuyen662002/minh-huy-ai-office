@@ -55,7 +55,7 @@ public sealed class CustomerAuditProjectionTests
     }
 
     private static ToolExecutionAuditEntry Entry(Guid auditId, Guid tenantId, Guid companyId, Guid userId, DateTimeOffset occurredAt) =>
-        new(auditId, tenantId, companyId, userId, Guid.NewGuid(), "accounting.invoice", "read", ToolRiskLevel.ReadOnly, true, "allowed", occurredAt, "exec-1");
+        new(auditId, tenantId, companyId, userId, Guid.NewGuid(), "accounting.invoice", "read", ToolRiskLevel.Low, true, "allowed", occurredAt, "exec-1");
 
     private sealed class StubStore(IReadOnlyList<ToolExecutionAuditEntry> entries) : ICustomerAuditStore
     {
