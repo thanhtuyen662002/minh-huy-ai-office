@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 121
 current_pr: 122
 current_branch: "frontend/121-customer-chat-presentation"
-head: "403b29091258c47be831d8e809b8b7842f60c912"
+head: "8d822c3d4b689b4987ee1eaee5e06195cf957309"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T17:38:00+07:00"
-last_checkpoint_at: "2026-09-23T17:38:00+07:00"
+lease_heartbeat_at: "2026-09-23T20:34:45+07:00"
+last_checkpoint_at: "2026-09-23T20:34:45+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #122 / issue #121 remains the authoritative Frontend lease. Reconciled SAME branch onto authoritative main 94590926d7182231bc1cc3de8d0d89a46646fe28 via two-parent merge 403b29091258c47be831d8e809b8b7842f60c912, preserving lead-owned docs/PROJECT_STATE.yaml and the authority-bound presentation implementation/tests. Re-resolve actual HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME PR, and return ready_for_review only when GREEN/mergeable with acceptance complete and no unresolved review threads. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
+next_action: "PR #122 / issue #121 remains the authoritative Frontend lease. Reconciled SAME branch onto authoritative main 91bf7a6f33ed72108bb4a27ef7ab07dc7c0d8741 via two-parent merge 8d822c3d4b689b4987ee1eaee5e06195cf957309, using main as base tree and overlaying only the authority-bound Frontend component/test plus this Frontend state; lead-owned docs/PROJECT_STATE.yaml was preserved. Re-resolve actual HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME PR, and return ready_for_review only when GREEN/mergeable with acceptance complete and no unresolved review threads. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
