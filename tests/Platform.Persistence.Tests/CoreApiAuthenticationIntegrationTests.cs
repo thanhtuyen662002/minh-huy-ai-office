@@ -37,6 +37,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
         var response = await client.GetAsync("/api/auth/context");
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        AssertNoStore(response);
     }
 
     [Fact]
@@ -54,6 +55,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
         var response = await client.GetAsync("/api/billing/plan");
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        AssertNoStore(response);
     }
 
     [Fact]
@@ -73,6 +75,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        AssertNoStore(response);
     }
 
     [Fact]
@@ -93,6 +96,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<AuthorizationContextResponse>();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        AssertNoStore(response);
         Assert.NotNull(payload);
         Assert.Equal(tenantId, payload.TenantId);
         Assert.Equal(companyId, payload.CompanyId);
@@ -111,6 +115,13 @@ public sealed class CoreApiAuthenticationIntegrationTests
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        AssertNoStore(response);
+    }
+
+    private static void AssertNoStore(HttpResponseMessage response)
+    {
+        Assert.NotNull(response.Headers.CacheControl);
+        Assert.True(response.Headers.CacheControl.NoStore);
     }
 
     private static WebApplicationFactory<CoreApiProgram> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)
