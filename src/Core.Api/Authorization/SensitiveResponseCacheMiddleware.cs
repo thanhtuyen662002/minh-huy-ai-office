@@ -14,12 +14,7 @@ public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
             || context.Request.Path.Equals(BillingPlanPath)
             || context.Request.Path.StartsWithSegments(DataSourcesPath))
         {
-            context.Response.OnStarting(static state =>
-            {
-                var response = (HttpResponse)state;
-                response.Headers.CacheControl = "no-store";
-                return Task.CompletedTask;
-            }, context.Response);
+            context.Response.Headers.CacheControl = "no-store";
         }
 
         await next(context);
