@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 113
 current_pr: 114
 current_branch: erp/113-datasource-failover
-head: d96f21a594c64269366b86b93e424cbe7681d86f
+head: 861c83463914c863d35e79edf28ea0c125daeeae
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T01:45:00Z"
-last_checkpoint_at: "2026-09-23T01:45:00Z"
+lease_heartbeat_at: "2026-09-23T02:32:00Z"
+last_checkpoint_at: "2026-09-23T02:32:00Z"
 last_merged_pr: 104
 last_merge_commit: 39d5f95187b27224b00630f34418febdab5305ba
 preferred_next_issue: 113
@@ -25,4 +25,4 @@ scope:
   - order-inventory
   - bulk-deterministic-execution
   - datasource-failover
-next_action: "PR #114 is the authoritative ERP/Data lease for issue #113. Initial authority-bound data-source failover contract and focused tests are implemented. Resolve actual branch HEAD after this durable checkpoint, own exact-head Governance/Build closure, and fix actionable RED on this SAME branch. If GREEN, complete acceptance review for deterministic evidence and fail-closed write/version fencing before ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+next_action: "PR #114 remains the authoritative ERP/Data lease. Previous implementation HEAD 1bb688aab5e617cea9f60ef8ad33e5ad06be2ecd passed Governance 35807344741 and Build 35807344749. Acceptance hardening now rejects duplicate endpoint identities and undefined operation/role/access enum values, with focused tests. Resolve actual HEAD after this durable checkpoint and close exact-head Governance/Build; fix actionable RED on this SAME branch. If GREEN and review threads remain clear, mark ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
