@@ -39,12 +39,39 @@ public sealed class DataSourceFailoverTests
     }
 
     [Fact]
-    public void Evidence_RejectsUndefinedStateDuplicatesAndSecretMaterial()
+    public void Evidence_RejectsUndefinedStateAndSecretMaterial()
     {
         var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
         Assert.Throws<ArgumentOutOfRangeException>(() => Select(new[] { candidate }, new[] { Evidence("primary") with { State = (DataSourceHealthState)99 } }));
-        Assert.Throws<InvalidOperationException>(() => Select(new[] { candidate }, new[] { Evidence("primary"), Evidence("primary", DataSourceHealthState.Unhealthy) }));
         Assert.Throws<ArgumentException>(() => Select(new[] { candidate }, new[] { Evidence("primary") with { EvidenceReference = "Server=db;Password=secret" } }));
+    }
+
+    [Fact]
+    public void Evidence_ReplayIsIdempotentAndConflictingReferenceFailsClosed()
+    {
+        var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
+        var evidence = Evidence("primary");
+        Assert.Equal("primary", Select(new[] { candidate }, new[] { evidence, evidence }).EndpointId);
+        Assert.Throws<InvalidOperationException>(() => Select(new[] { candidate }, new[] { evidence, evidence with { State = DataSourceHealthState.Unhealthy } }));
+    }
+
+    [Fact]
+    public void Evidence_NewestObservationWinsRegardlessOfInputOrder()
+    {
+        var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
+        var olderHealthy = Evidence("primary") with { ObservedAt = Now.AddMinutes(-2), ExpiresAt = Now.AddMinutes(1), EvidenceReference = "health-ref:primary:old" };
+        var newerUnhealthy = Evidence("primary", DataSourceHealthState.Unhealthy) with { ObservedAt = Now.AddSeconds(-10), EvidenceReference = "health-ref:primary:new" };
+        Assert.Throws<InvalidOperationException>(() => Select(new[] { candidate }, new[] { olderHealthy, newerUnhealthy }));
+        Assert.Throws<InvalidOperationException>(() => Select(new[] { candidate }, new[] { newerUnhealthy, olderHealthy }));
+    }
+
+    [Fact]
+    public void Evidence_EqualTimeConflictFailsClosed()
+    {
+        var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
+        var healthy = Evidence("primary") with { EvidenceReference = "health-ref:primary:healthy" };
+        var unhealthy = Evidence("primary", DataSourceHealthState.Unhealthy) with { EvidenceReference = "health-ref:primary:unhealthy" };
+        Assert.Throws<InvalidOperationException>(() => Select(new[] { candidate }, new[] { healthy, unhealthy }));
     }
 
     [Fact]
