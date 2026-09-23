@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
 status: waiting_ci
-current_issue: 101
-current_pr: 102
-current_branch: "frontend/101-customer-portal-shell"
-head: "1f91014e807848c93a74aea4c42f475a5aa5599b"
+current_issue: 121
+current_pr: 122
+current_branch: "frontend/121-customer-chat-presentation"
+head: "78c019b1d6d3cb26c1a427a9fb20390e616848ff"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T09:08:25+07:00"
-last_checkpoint_at: "2026-09-23T09:08:25+07:00"
+lease_heartbeat_at: "2026-09-23T16:12:47+07:00"
+last_checkpoint_at: "2026-09-23T16:12:47+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #102 / issue #101 has been reconciled on the SAME lease with authoritative main 1bccf2861f03243d5da74c5c95c26ae139f86d79. Reconciliation head 1f91014e807848c93a74aea4c42f475a5aa5599b is ahead-only/behind=0 and preserves main-owned PROJECT_STATE; compare remains scoped to five Frontend implementation/test paths plus this Frontend state. Re-resolve actual HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME PR, and return ready_for_review when GREEN/mergeable with no unresolved review threads. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
+next_action: "PR #122 / issue #121 remains the authoritative Frontend lease. Reconciled SAME branch onto authoritative main c0e536b303c32e4b37d53191e5276ab7fd52b66c with merge commit 78c019b1d6d3cb26c1a427a9fb20390e616848ff, preserving main-owned PROJECT_STATE and carrying only the customer chat presentation component/test across the merge. Prior exact-head Governance 35835661119 and Build 35835661076 were GREEN before reconciliation. Re-resolve actual HEAD after this state checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME PR, and mark ready_for_review only when GREEN/mergeable with acceptance complete and no unresolved review threads. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
