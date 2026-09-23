@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 146
-current_pr: 147
-current_branch: erp/146-failover-operation-authority
-head: 1ec403edc80e84de9101af39c3efca2551485dd3
-state: ready_for_review
+current_issue: 154
+current_pr: 155
+current_branch: erp/154-failover-decision-validation
+head: 431b815e4bb090a225137367c3618ff700f4ad64
+state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T18:32:00Z"
-last_checkpoint_at: "2026-09-23T18:32:00Z"
-last_merged_pr: 145
-last_merge_commit: c874e4ed398c9849a46fcfc8c7539dcf76d2ac5d
-preferred_next_issue: 146
+lease_heartbeat_at: "2026-09-23T19:27:00Z"
+last_checkpoint_at: "2026-09-23T19:27:00Z"
+last_merged_pr: 147
+last_merge_commit: c58b11617aa85a050d005ff013583715ee156b0c
+preferred_next_issue: 154
 blocked_by: []
 scope:
   - datasource-registry
@@ -30,4 +30,5 @@ scope:
   - datasource-health-evidence-freshness
   - datasource-failover-decision-evidence
   - datasource-failover-operation-authority
-next_action: "PR #147 is the authoritative ERP/Data lease for issue #146. Acceptance is complete and exact-head 1ec403edc80e84de9101af39c3efca2551485dd3 closed Governance 35890088644 and Build 35890088514 GREEN; PR is mergeable and review-thread clear. Lead may integrate. If main, mergeability, reviews, or CI drift before merge, resume this SAME lease and reconcile/fix without weakening operation-authority/write-capability/tenant/freshness fences. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+  - datasource-failover-decision-validation
+next_action: "PR #155 is the authoritative ERP/Data lease for issue #154. ValidateDecision now fail-closes exact tenant/company/data-source, requested operation, and registry/schema/catalog version authority; focused tests cover exact acceptance, Read-to-Write replay, cross-company/source, and version drift. Own exact-head Governance/Build to GREEN on this SAME lease; fix actionable RED here. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
