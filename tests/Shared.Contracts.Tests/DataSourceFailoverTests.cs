@@ -39,6 +39,32 @@ public sealed class DataSourceFailoverTests
     }
 
     [Fact]
+    public void Evidence_AuthorityFreshnessFenceRejectsProducerExtendedExpiry()
+    {
+        var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
+        var staleButUnexpired = Evidence("primary") with { ObservedAt = Now.AddMinutes(-2), ExpiresAt = Now.AddHours(12) };
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.Select(Authority(TimeSpan.FromMinutes(1)), DataSourceOperationKind.Read, new[] { candidate }, new[] { staleButUnexpired }, Now));
+    }
+
+    [Fact]
+    public void Evidence_AuthorityFreshnessBoundaryIsAccepted()
+    {
+        var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
+        var boundary = Evidence("primary") with { ObservedAt = Now.AddMinutes(-1), ExpiresAt = Now.AddMinutes(1) };
+        var selected = DataSourceFailoverContract.Select(Authority(TimeSpan.FromMinutes(1)), DataSourceOperationKind.Read, new[] { candidate }, new[] { boundary }, Now);
+        Assert.Equal("primary", selected.EndpointId);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Authority_RejectsNonPositiveFreshnessPolicy(int seconds)
+    {
+        var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceFailoverContract.Select(Authority(TimeSpan.FromSeconds(seconds)), DataSourceOperationKind.Read, new[] { candidate }, new[] { Evidence("primary") }, Now));
+    }
+
+    [Fact]
     public void Evidence_RejectsUndefinedStateAndSecretMaterial()
     {
         var candidate = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0);
@@ -103,7 +129,8 @@ public sealed class DataSourceFailoverTests
     private static DataSourceFailoverDecision Select(DataSourceFailoverCandidate[] candidates, DataSourceHealthEvidence[] evidence, DataSourceOperationKind operation = DataSourceOperationKind.Read)
         => DataSourceFailoverContract.Select(Authority(), operation, candidates, evidence, Now);
 
-    private static DataSourceFailoverAuthority Authority() => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12");
+    private static DataSourceFailoverAuthority Authority(TimeSpan? maxHealthEvidenceAge = null)
+        => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12", maxHealthEvidenceAge ?? TimeSpan.FromMinutes(5));
 
     private static DataSourceFailoverCandidate Candidate(string endpoint, DataSourceFailoverRole role, DataSourceAccessMode access, int priority)
         => new(Tenant, Company, Source, endpoint, $"secret-ref:{endpoint}", role, access, priority, "registry-7", "schema-43", "catalog-12");
