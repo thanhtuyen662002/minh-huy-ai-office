@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: in_progress
+status: waiting_ci
 current_issue: 156
-current_pr: null
+current_pr: 157
 current_branch: backend/156-sla-priority-admission
-head: f3655b9b233f9e5e6a394309a5a74e803c027534
+head: 6cbb1352cd8950641c61633ab8eecb52f4d24e9d
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T02:34:00+07:00"
-last_checkpoint_at: "2026-09-24T02:34:00+07:00"
+lease_heartbeat_at: "2026-09-24T02:36:00+07:00"
+last_checkpoint_at: "2026-09-24T02:36:00+07:00"
 last_completed_issue: 149
 last_merged_pr: 151
 scope:
@@ -17,13 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: f3655b9b233f9e5e6a394309a5a74e803c027534
+  prior_head: 6cbb1352cd8950641c61633ab8eecb52f4d24e9d
   governance_run: null
   build_run: null
-  result: "Claimed next unblocked Backend P6 SLA/priority slice from authoritative main 54074a43d4fdf06e33595410702f88541433064c. Added side-effect-free authority-bound SLA priority admission contract and focused replay/authority/policy/ceiling tests."
+  result: "Draft PR #157 opened for issue #156 from authoritative main. Side-effect-free authority-bound SLA priority admission and focused replay/authority/policy/ceiling tests are pushed; exact-head CI closure is active."
 known_risks:
   - "Tenant/company/user authority and SLA policy/version must remain server-derived; caller-controlled priority must never become scheduler authority."
   - "Persist admission evidence before scheduler enqueue in later integration; no secret/provider/worker metadata may become priority authority."
   - "Do not edit docs/PROJECT_STATE.yaml, migrations, or other specialist leases."
-blocked_by: []
-next_action: "Open Draft PR for issue #156, resolve exact HEAD, close exact-head Governance/Build, fix actionable RED on this SAME branch, then continue acceptance or mark ready_for_review."
+blocked_by:
+  - "Exact-head Governance/Build for PR #157."
+next_action: "Resolve exact HEAD after this lease checkpoint, close exact-head Governance and Build on PR #157, fix any actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review."
