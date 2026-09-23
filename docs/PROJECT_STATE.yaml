@@ -24,7 +24,7 @@ critical_paths:
     branch: frontend/121-customer-chat-presentation
     head: 36dbb490a0da818d3b6c24d24a46e74a4b79e8a1
     state: ready_for_review
-    next: "PR #122 acceptance is complete, but Backend #139 merge advanced authoritative main to 56153567f0a3da018ef5a5174786aaf768853fee and live PR is now non-mergeable. Frontend was immediately re-entered on the SAME lease to reconcile current main, preserve authority-bound customer chat presentation invariants, and re-close exact-head gates."
+    next: "PR #122 acceptance is complete, but Backend #139 merge plus the same-cycle Lead state checkpoint advanced authoritative main and live PR is non-mergeable. Frontend was immediately re-entered on the SAME lease to reconcile current authoritative main, preserve authority-bound customer chat presentation invariants, and re-close exact-head gates."
 
   runtime_ai:
     issue: 135
@@ -32,7 +32,7 @@ critical_paths:
     branch: runtime/135-ai-credit-reservation
     head: 35297ecce9924f3dd516403a9cf73c14bd623e0b
     state: ready_for_review
-    next: "PR #137 acceptance is complete, but Backend #139 merge advanced authoritative main to 56153567f0a3da018ef5a5174786aaf768853fee and live PR is now non-mergeable. Runtime was immediately re-entered on the SAME lease to reconcile current main, preserve reservation authority/idempotency/capacity invariants, and re-close exact-head gates."
+    next: "PR #137 acceptance is complete, but Backend #139 merge plus the same-cycle Lead state checkpoint advanced authoritative main and live PR is non-mergeable. Runtime was immediately re-entered on the SAME lease to reconcile current authoritative main, preserve reservation authority/idempotency/capacity invariants, and re-close exact-head gates."
 
   erp_data:
     issue: 146
@@ -40,7 +40,7 @@ critical_paths:
     branch: erp/146-failover-operation-authority
     head: 1da13edee494ec0516cfd4b1539c0eb81fc02981
     state: waiting_ci
-    next: "PR #147 acceptance implementation previously closed GREEN gates, but Backend #139 merge advanced authoritative main to 56153567f0a3da018ef5a5174786aaf768853fee and live PR is now non-mergeable. ERP/Data was immediately re-entered on the SAME lease to reconcile current main, preserve operation-authority/write-capability/tenant/freshness fences, and re-close exact-head gates."
+    next: "PR #147 acceptance implementation previously closed GREEN gates, but Backend #139 merge plus the same-cycle Lead state checkpoint advanced authoritative main and live PR is non-mergeable. ERP/Data was immediately re-entered on the SAME lease to reconcile current authoritative main, preserve operation-authority/write-capability/tenant/freshness fences, and re-close exact-head gates."
 
 recent_authoritative_merges:
   - "PR #139 / issue #138 tenant data-source response no-store fencing: MERGED at 56153567f0a3da018ef5a5174786aaf768853fee"
@@ -59,9 +59,9 @@ dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
   - "P6 billing, scheduling, multi-server/DR, customer audit/portal/chat/context, data-source failover/health/replay/freshness/decision observation, AI credit usage/admission and sensitive response/data-source no-store fencing are authoritative."
-  - "Frontend #122, Runtime #137 and ERP/Data #147 must reconcile authoritative main after Backend #139. Backend is free to claim the next safe non-overlapping slice."
+  - "Frontend #122, Runtime #137 and ERP/Data #147 must reconcile current authoritative main after Backend #139 and this Lead checkpoint. Backend is free to claim the next safe non-overlapping slice."
 
-next_action: "Frontend #122, Runtime #137 and ERP/Data #147 reconcile authoritative main 56153567f0a3da018ef5a5174786aaf768853fee on their SAME leases and re-close exact-head gates; Backend discovers/claims the next safe slice. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Frontend #122, Runtime #137 and ERP/Data #147 reconcile current authoritative main on their SAME leases and re-close exact-head gates; Backend discovers/claims the next safe slice. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
