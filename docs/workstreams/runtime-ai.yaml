@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 109
-current_pr: 110
-current_branch: runtime/109-dr-checkpoint-restore-fencing
-head: 8d9bdfa3c78ad2bb3747eb9661eddd6152cfb568
+current_issue: 111
+current_pr: 112
+current_branch: runtime/111-customer-audit-projection
+head: c948579d7bebc913dd405d87e7b97211d10e47e9
 state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T23:44:00Z"
-last_checkpoint_at: "2026-09-22T23:44:00Z"
+lease_heartbeat_at: "2026-09-23T00:38:00Z"
+last_checkpoint_at: "2026-09-23T00:38:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -28,4 +28,5 @@ scope:
   - sla-priority-scheduling
   - multi-server-dispatch-fencing
   - disaster-recovery-checkpoint-fencing
-next_action: "PR #110 / issue #109 is the authoritative Runtime lease. Initial authority-bound checkpoint restore contract and focused tests are implemented. Own exact-head CI on this SAME branch, inspect acceptance and fix actionable failures before ready_for_review. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+  - customer-audit-reporting
+next_action: "PR #112 / issue #111 is the authoritative Runtime lease. Initial authority-bound customer audit projection contract and focused tests are implemented. Own exact-head CI on this SAME branch, harden acceptance while pending, fix actionable failures, and only then mark ready_for_review. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
