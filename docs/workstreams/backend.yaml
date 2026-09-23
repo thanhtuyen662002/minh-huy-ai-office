@@ -1,17 +1,17 @@
 workstream: backend
 role: "Backend Platform"
 status: waiting_ci
-current_issue: 127
-current_pr: 128
-current_branch: backend/127-sensitive-response-no-store
-head: 63712e685fcdf150ce10941895e8370bd36d0ae2
+current_issue: 35
+current_pr: 83
+current_branch: backend/35-customer-billing-foundation
+head: be611cf895e1d4624ba730d927d565de5bba11f3
 lease_owner: backend
-lease_heartbeat_at: "2026-09-23T14:42:00+07:00"
-last_checkpoint_at: "2026-09-23T14:42:00+07:00"
-last_completed_issue: 35
-last_merged_pr: 83
-last_merge_commit: null
-preferred_next_issue: 127
+lease_heartbeat_at: "2026-09-22T18:02:00+07:00"
+last_checkpoint_at: "2026-09-22T18:02:00+07:00"
+last_completed_issue: 22
+last_merged_pr: 73
+last_merge_commit: 72aab4092e1238d70885185e5f8d43cc719dbdaf
+preferred_next_issue: 35
 scope:
   - aspnet-core
   - identity
@@ -19,13 +19,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 97022929311339a5d879ea921f375a65cff9b93f
-  governance_run: null
-  build_run: null
-  result: "Draft PR #128 is live. Sensitive auth/billing endpoints now receive Cache-Control: no-store before auth middleware can short-circuit; focused integration assertions cover 503/404/200/403 paths. Exact-head workflows not yet emitted at first query."
+  prior_head: 4594650a0c475a7e6a0dbcabba66767ad587f446
+  governance_run: 35717229231
+  build_run: 35717228891
+  result: "Prior exact-head Governance and Build GREEN. Current head adds a fail-closed unavailable billing source plus deterministic tests; exact-head CI pending publication."
 known_risks:
-  - "Sensitive response cache fencing must cover success and fail-closed paths without changing authorization semantics."
-  - "Billing tenant/company authority remains server-derived; no caller-controlled scope selectors."
-  - "No persistence schema, migration, pricing policy, or secret handling changes are permitted in this slice."
+  - "Billing tenant/company authority must remain server-derived from IRequestAuthorizationContextAccessor."
+  - "Caller-controlled route/header/body identifiers must never select billing scope."
+  - "Do not invent persistence schema or pricing policy while wiring the initial billing read surface."
+  - "Cross-tenant/company source data must be rejected before exposure."
 blocked_by: []
-next_action: "Re-query exact-head Governance/Build for PR #128. Fix actionable RED on the SAME branch; when GREEN, verify acceptance and mark ready for review. Do not edit docs/PROJECT_STATE.yaml."
+next_action: "Close exact-head CI for be611cf895e1d4624ba730d927d565de5bba11f3 on PR #83. If GREEN, wire the smallest authenticated /api/billing/plan read surface using CompanyBillingReader and the fail-closed source registration, then add endpoint acceptance coverage; do not edit docs/PROJECT_STATE.yaml."
