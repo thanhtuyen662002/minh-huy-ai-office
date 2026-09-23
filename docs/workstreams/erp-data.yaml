@@ -2,13 +2,13 @@ workstream: erp-data
 role: "ERP / Data"
 status: in_progress
 current_issue: 129
-current_pr: null
+current_pr: 130
 current_branch: erp/129-health-evidence-replay-fencing
-head: c0e536b303c32e4b37d53191e5276ab7fd52b66c
-state: claimed
+head: 00cde1b6a26300b3bfc0d862f1cf8377e6104126
+state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T08:38:30Z"
-last_checkpoint_at: "2026-09-23T08:38:30Z"
+lease_heartbeat_at: "2026-09-23T09:34:28Z"
+last_checkpoint_at: "2026-09-23T09:34:28Z"
 last_merged_pr: 124
 last_merge_commit: 55956b22514092f74325dd548c98ef491970c2c2
 preferred_next_issue: 129
@@ -27,4 +27,4 @@ scope:
   - datasource-failover
   - datasource-health-evidence
   - datasource-health-evidence-replay
-next_action: "Issue #129 is the primary ERP/Data lease after merged #124. Implement deterministic replay-safe endpoint health evidence selection on branch erp/129-health-evidence-replay-fencing: identical evidence replay idempotent, conflicting EvidenceReference reuse fail-closed, newest valid endpoint observation authoritative, equal-time conflicts fail-closed, input order irrelevant. Preserve tenant/company/data-source/version fences, opaque references and ReadWrite-only write failover. Open Draft PR after this meaningful checkpoint, add focused tests, then own exact-head Governance/Build. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+next_action: "PR #130 remains the authoritative ERP/Data lease for issue #129. Reconciled current main c604953040baeab896f43f2d81481d2a0b87f982 into this SAME branch by two-parent merge 00cde1b6a26300b3bfc0d862f1cf8377e6104126 while preserving main-owned PROJECT_STATE/runtime AI-credit usage changes and ERP/Data replay-fencing implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect and fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
