@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 141
-current_pr: 142
-current_branch: erp/141-health-evidence-authority-freshness
-head: e12de1c235cfd06678bb3de7f1f7596788892b1c
+current_issue: 144
+current_pr: 145
+current_branch: erp/144-failover-decision-observation
+head: aa0ec7d4c905190beb028a270acce288d41a9762
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T12:36:26Z"
-last_checkpoint_at: "2026-09-23T12:36:26Z"
-last_merged_pr: 130
-last_merge_commit: 9e256f65e54c5f3670250ff016f1995e1de40504
-preferred_next_issue: 141
+lease_heartbeat_at: "2026-09-23T13:39:00Z"
+last_checkpoint_at: "2026-09-23T13:39:00Z"
+last_merged_pr: 142
+last_merge_commit: 9beb56b4157f66e25d2fa288f7a273b7e13db8ae
+preferred_next_issue: 144
 blocked_by: []
 scope:
   - datasource-registry
@@ -28,4 +28,5 @@ scope:
   - datasource-health-evidence
   - datasource-health-evidence-replay
   - datasource-health-evidence-freshness
-next_action: "PR #142 is the authoritative ERP/Data lease for issue #141. Implementation adds server-derived MaxHealthEvidenceAge so producer-controlled ExpiresAt cannot keep stale endpoint health eligible; focused tests cover over-age rejection, exact freshness boundary and invalid authority policy while preserving replay/version/secret/write fences. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+  - datasource-failover-decision-evidence
+next_action: "PR #145 is the authoritative ERP/Data lease for issue #144. Implementation binds DataSourceFailoverDecision to the selected authoritative health ObservedAt and focused tests cover primary/fallback plus newest-observation evidence. Resolve actual HEAD after this durable checkpoint, own exact-head Governance/Build, and fix actionable RED on this SAME branch. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
