@@ -6,10 +6,7 @@ public enum CustomerConversationMessageRole
     Assistant = 2
 }
 
-public sealed record CustomerConversationContextAttachment(
-    CustomerChatAuthority Authority,
-    Guid AttachmentId,
-    string ObjectReference);
+public sealed record CustomerConversationContextAttachment(CustomerChatAuthority Authority, Guid AttachmentId, string ObjectReference);
 
 public sealed record CustomerConversationContextMessage(
     CustomerChatAuthority Authority,
@@ -72,7 +69,7 @@ public static class CustomerConversationContext
             byId.Add(message.MessageId, message);
         }
 
-        if (!byId.ContainsKey(selectedMessageId))
+        if (!byId.TryGetValue(selectedMessageId, out var selectedMessage))
             throw new InvalidOperationException("Selected durable message is not present in the authorized conversation evidence.");
 
         var required = new HashSet<Guid>();
@@ -84,20 +81,19 @@ public static class CustomerConversationContext
             var current = byId[cursor];
             if (current.InReplyToMessageId is not Guid parentId)
                 break;
-            if (!byId.ContainsKey(parentId))
+            if (!byId.TryGetValue(parentId, out var parent))
                 throw new InvalidOperationException("Conversation reply ancestry is incomplete.");
+            if (CompareOrder(parent, current) >= 0)
+                throw new InvalidOperationException("Conversation reply ancestry must precede the replying message.");
             cursor = parentId;
         }
 
         if (required.Count > maxMessages)
             throw new InvalidOperationException("Context window is too small to preserve selected message ancestry.");
 
-        var ordered = byId.Values
-            .OrderBy(x => x.OccurredAt)
-            .ThenBy(x => x.MessageId)
-            .ToArray();
+        var ordered = byId.Values.OrderBy(x => x.OccurredAt).ThenBy(x => x.MessageId).ToArray();
         var selected = new HashSet<Guid>(required);
-        foreach (var candidate in ordered.Reverse())
+        foreach (var candidate in ordered.Where(x => CompareOrder(x, selectedMessage) <= 0).Reverse())
         {
             if (selected.Count >= maxMessages)
                 break;
@@ -117,6 +113,12 @@ public static class CustomerConversationContext
             .ToArray();
 
         return new CustomerConversationContextSnapshot(trustedAuthority, trustedAuthorityVersion, selectedMessageId, entries);
+    }
+
+    private static int CompareOrder(CustomerConversationContextMessage left, CustomerConversationContextMessage right)
+    {
+        var occurredAt = left.OccurredAt.CompareTo(right.OccurredAt);
+        return occurredAt != 0 ? occurredAt : left.MessageId.CompareTo(right.MessageId);
     }
 
     private static void ValidateMessage(CustomerChatAuthority authority, long authorityVersion, CustomerConversationContextMessage message)
@@ -154,10 +156,8 @@ public static class CustomerConversationContext
 
     private static void RejectSecretMaterial(string value)
     {
-        if (value.Contains("password=", StringComparison.OrdinalIgnoreCase) ||
-            value.Contains("secret=", StringComparison.OrdinalIgnoreCase) ||
-            value.Contains("accountkey=", StringComparison.OrdinalIgnoreCase) ||
-            value.Contains("connection string", StringComparison.OrdinalIgnoreCase))
+        if (value.Contains("password=", StringComparison.OrdinalIgnoreCase) || value.Contains("secret=", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("accountkey=", StringComparison.OrdinalIgnoreCase) || value.Contains("connection string", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Conversation context accepts opaque references only.");
     }
 }
