@@ -26,7 +26,7 @@ public sealed class CustomerAuditProjectionTests
         var foreign = authority with { CompanyId = Guid.NewGuid() };
         var foreignEvent = Event(Guid.NewGuid(), 1) with { Authority = foreign };
         Assert.Throws<UnauthorizedAccessException>(() => CustomerAuditProjection.Project(authority, new[] { foreignEvent }));
-        Assert.Throws<UnauthorizedAccessException>(() => CustomerAuditProjection.Project(authority, Array.Empty<CustomerAuditEvent>(), new CustomerAuditCursor(foreign, 1, Guid.NewGuid())));
+        Assert.Throws<UnauthorizedAccessException>(() => CustomerAuditProjection.Project(authority, Array.Empty<CustomerAuditEvent>(), new CustomerAuditCursor(foreign, Now, 1, Guid.NewGuid())));
     }
 
     [Fact]
@@ -43,12 +43,28 @@ public sealed class CustomerAuditProjectionTests
     {
         var first = Event(Guid.Parse("00000000-0000-0000-0000-000000000001"), 1);
         var second = Event(Guid.Parse("00000000-0000-0000-0000-000000000002"), 2);
-        var cursor = new CustomerAuditCursor(authority, 1, first.EventId);
+        var cursor = new CustomerAuditCursor(authority, first.OccurredAt, 1, first.EventId);
         var rows = CustomerAuditProjection.Project(authority, new[] { first, second }, cursor);
         Assert.Equal(second.EventId, Assert.Single(rows).EventId);
         var next = CustomerAuditProjection.NextCursor(authority, rows, cursor);
         Assert.Equal(2, next.Version);
-        Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.NextCursor(authority, new[] { new CustomerAuditRow(first.EventId, 1, Now, "actor", "read", "resource", "evidence") }, next));
+        Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.NextCursor(authority, new[] { new CustomerAuditRow(first.EventId, 1, Now.AddTicks(-1), "actor", "read", "resource", "evidence") }, next));
+    }
+
+    [Fact]
+    public void Cursor_uses_the_same_chronological_order_as_projection()
+    {
+        var earlierId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var laterId = Guid.Parse("00000000-0000-0000-0000-000000000002");
+        var earlier = Event(earlierId, 20, Now);
+        var later = Event(laterId, 10, Now.AddMinutes(1));
+
+        var firstPage = CustomerAuditProjection.Project(authority, new[] { later, earlier });
+        Assert.Equal(new[] { earlierId, laterId }, firstPage.Select(x => x.EventId));
+
+        var cursor = CustomerAuditProjection.NextCursor(authority, new[] { firstPage[0] });
+        var secondPage = CustomerAuditProjection.Project(authority, new[] { later, earlier }, cursor);
+        Assert.Equal(laterId, Assert.Single(secondPage).EventId);
     }
 
     [Fact]
@@ -72,6 +88,8 @@ public sealed class CustomerAuditProjectionTests
         Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(new CustomerAuditAuthority(Guid.Empty, authority.CompanyId), Array.Empty<CustomerAuditEvent>()));
         Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(authority, new[] { Event(Guid.Empty, 1) }));
         Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(authority, new[] { Event(Guid.NewGuid(), 0) }));
-        Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(authority, Array.Empty<CustomerAuditEvent>(), new CustomerAuditCursor(authority, -1, Guid.Empty)));
+        Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(authority, Array.Empty<CustomerAuditEvent>(), new CustomerAuditCursor(authority, DateTimeOffset.MinValue, -1, Guid.Empty)));
+        Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(authority, Array.Empty<CustomerAuditEvent>(), new CustomerAuditCursor(authority, Now, 0, Guid.Empty)));
+        Assert.Throws<InvalidOperationException>(() => CustomerAuditProjection.Project(authority, Array.Empty<CustomerAuditEvent>(), new CustomerAuditCursor(authority, Now, 1, Guid.Empty)));
     }
 }
