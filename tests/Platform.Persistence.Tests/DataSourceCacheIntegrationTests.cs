@@ -59,12 +59,12 @@ public sealed class DataSourceCacheIntegrationTests
     }
 
     [Fact]
-    public async Task Public_health_response_is_not_forced_to_no_store()
+    public async Task Public_root_response_is_not_forced_to_no_store()
     {
         await using var factory = new WebApplicationFactory<Program>();
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync("/");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Null(response.Headers.CacheControl);
@@ -93,6 +93,8 @@ public sealed class DataSourceCacheIntegrationTests
                     .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(TestAuthenticationHandler.AuthenticationScheme, _ => { });
                 services.RemoveAll<IAuthenticatedAuthorizationDirectory>();
                 services.AddScoped<IAuthenticatedAuthorizationDirectory>(_ => new StubAuthenticatedAuthorizationDirectory(entry));
+                services.RemoveAll<IAuthorizationDirectory>();
+                services.AddScoped<IAuthorizationDirectory>(_ => new StubAuthorizationDirectory(entry));
                 services.RemoveAll<DbContextOptions<PlatformDbContext>>();
                 services.RemoveAll<PlatformDbContext>();
                 services.AddDbContext<PlatformDbContext>(options => options.UseInMemoryDatabase(databaseName));
@@ -109,6 +111,16 @@ public sealed class DataSourceCacheIntegrationTests
             Guid companyId,
             CancellationToken cancellationToken = default)
             => Task.FromResult(entry is not null && entry.Context.CompanyId == companyId ? entry : null);
+    }
+
+    private sealed class StubAuthorizationDirectory(AuthenticatedAuthorizationEntry? entry) : IAuthorizationDirectory
+    {
+        public Task<AuthorizationDirectoryEntry?> ResolveAsync(
+            AuthorizationContext context,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(entry is not null && entry.Context == context
+                ? new AuthorizationDirectoryEntry(entry.Context, entry.Roles)
+                : null);
     }
 
     private sealed class TestAuthenticationHandler(
