@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CustomerChatPresentation } from "../components/customer-chat-presentation";
 
 const authority = { tenantId: "tenant-1", companyId: "company-1", userId: "user-1", conversationId: "conversation-1", authorityVersion: 4 };
@@ -11,6 +11,8 @@ const message = (overrides: Record<string, unknown> = {}) => ({
   text: "Cần hỗ trợ đối chiếu công nợ",
   ...overrides,
 });
+
+afterEach(() => cleanup());
 
 describe("CustomerChatPresentation", () => {
   it("renders exact-authority messages in durable order without presentation identity fabrication", () => {
