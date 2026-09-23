@@ -4,11 +4,11 @@ status: active
 current_issue: 158
 current_pr: 159
 current_branch: runtime/158-ai-credit-active-reservations
-head: 6da772beb8bbf5eb61796fbf484164fd86e85a19
-state: waiting_ci
+head: 62c8b190c4c2d6ebce1a2a3ce4f7b74051748ed0
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T20:41:00Z"
-last_checkpoint_at: "2026-09-23T20:41:00Z"
+lease_heartbeat_at: "2026-09-23T21:17:00Z"
+last_checkpoint_at: "2026-09-23T21:17:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -37,4 +37,4 @@ scope:
   - customer-ai-credit-reservation
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
-next_action: "PR #159 / issue #158 owns active-reservation reconciliation. Implementation checkpoint 6da772beb8bbf5eb61796fbf484164fd86e85a19 was ahead-only/behind=0 against authoritative main 2f7f654e143279ff026fbb4a843a55e953276b1c. Exact-head CI must be captured for the latest metadata checkpoint; inspect/fix actionable RED on this SAME branch, then verify acceptance, mergeability and review threads before ready_for_review. Do not edit PROJECT_STATE or other specialist leases."
+next_action: "PR #159 / issue #158 acceptance is complete at checkpoint 62c8b190c4c2d6ebce1a2a3ce4f7b74051748ed0: exact-head Build 35917375385 and Governance 35917375477 GREEN, compare against authoritative main 2f7f654e143279ff026fbb4a843a55e953276b1c is ahead-only/behind=0, and review threads are clear. Lead should review/integrate after verifying exact-head gates for this ready-state checkpoint. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
