@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 119
-current_pr: 120
-current_branch: runtime/119-customer-conversation-context
-head: 9eb91dc80a65253172e6a38684254b0a94272987
+current_issue: 125
+current_pr: 126
+current_branch: runtime/125-customer-ai-credit-usage
+head: 506d3e620d84f6492b492984d9467a9160c3539f
 state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T07:21:00Z"
-last_checkpoint_at: "2026-09-23T07:21:00Z"
+lease_heartbeat_at: "2026-09-23T09:22:00Z"
+last_checkpoint_at: "2026-09-23T09:22:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -32,4 +32,5 @@ scope:
   - customer-chat-ingress
   - customer-chat-response-projection
   - customer-conversation-context
-next_action: "PR #120 / issue #119 is acceptance-complete and ready for Lead review/merge sequencing. Exact reconciled HEAD 9eb91dc80a65253172e6a38684254b0a94272987 passed Governance 35827745055 and Build 35827745058 GREEN; PR is mergeable, review threads are clear, and comparison against authoritative main 3d72b2d24e38042b0ab065b232b2769172f93f12 is ahead-only with behind=0. Lead should verify final state-checkpoint CI remains GREEN before merge. Do not edit PROJECT_STATE, expose secrets, broaden authority, or merge directly."
+  - customer-ai-credit-usage
+next_action: "PR #126 / issue #125 is acceptance-complete and ready for Lead review/merge sequencing. Exact reconciled HEAD 506d3e620d84f6492b492984d9467a9160c3539f passed Governance 35838311299 and Build 35838311110 GREEN; PR is mergeable, review threads are clear, and comparison against authoritative main c0e536b303c32e4b37d53191e5276ab7fd52b66c is ahead-only with behind=0. Lead should verify final state-checkpoint CI remains GREEN before merge. Do not edit PROJECT_STATE, other specialist leases, expose provider cost as customer authority, or merge directly."
