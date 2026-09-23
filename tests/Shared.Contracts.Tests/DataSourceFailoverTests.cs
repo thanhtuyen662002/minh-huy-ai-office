@@ -53,6 +53,25 @@ public sealed class DataSourceFailoverTests
         Assert.Throws<ArgumentException>(() => DataSourceFailoverContract.Select(Authority(), DataSourceOperationKind.Read, new[] { exposed }));
     }
 
+    [Fact]
+    public void Select_RejectsDuplicateEndpointIdentity()
+    {
+        var first = Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0, true);
+        var conflicting = first with { Role = DataSourceFailoverRole.Fallback, Priority = 99, HealthEvidenceReference = "health-ref:conflicting" };
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.Select(Authority(), DataSourceOperationKind.Read, new[] { first, conflicting }));
+    }
+
+    [Fact]
+    public void Select_RejectsUndefinedOperationRoleAndAccessMode()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceFailoverContract.Select(Authority(), (DataSourceOperationKind)99,
+            new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0, true) }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceFailoverContract.Select(Authority(), DataSourceOperationKind.Read,
+            new[] { Candidate("role", (DataSourceFailoverRole)99, DataSourceAccessMode.ReadWrite, 0, true) }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceFailoverContract.Select(Authority(), DataSourceOperationKind.Read,
+            new[] { Candidate("access", DataSourceFailoverRole.Primary, (DataSourceAccessMode)99, 0, true) }));
+    }
+
     private static DataSourceFailoverAuthority Authority() => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12");
 
     private static DataSourceFailoverCandidate Candidate(string endpoint, DataSourceFailoverRole role, DataSourceAccessMode access, int priority, bool healthy)
