@@ -4,11 +4,11 @@ status: active
 current_issue: 115
 current_pr: 116
 current_branch: runtime/115-customer-chat-ingress
-head: 83e495f4e4aa2d0e7711701426be7978fefd10fb
+head: 85f1ebb427c6bf31ff6d88ccd46f28764bd456aa
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T02:37:00Z"
-last_checkpoint_at: "2026-09-23T02:37:00Z"
+lease_heartbeat_at: "2026-09-23T02:39:00Z"
+last_checkpoint_at: "2026-09-23T02:39:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -30,4 +30,4 @@ scope:
   - disaster-recovery-checkpoint-fencing
   - customer-audit-reporting
   - customer-chat-ingress
-next_action: "PR #116 / issue #115 is the authoritative Runtime lease. Authority-bound customer chat ingress contract and focused tests are implemented. Own exact-head Governance/Build CI on this SAME branch, inspect acceptance edge cases and fix actionable RED before ready_for_review. Preserve server-derived authority, opaque attachment/persistence references, provider-neutral routing hints and persistence-before-dispatch. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #114, expose secrets, or merge directly."
+next_action: "PR #116 / issue #115 is the authoritative Runtime lease. Acceptance hardening now fences request AuthorityVersion against trusted server version and compares reconstructed durable replays structurally rather than by collection reference identity. Re-query exact-head Governance/Build CI for the latest checkpoint; fix actionable RED on this SAME branch, then mark ready_for_review only when exact-head gates are GREEN and mergeability remains true. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #114, expose secrets, or merge directly."
