@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 113
 current_pr: 114
 current_branch: erp/113-datasource-failover
-head: 12f3415979d1b8394125047549e4cb822fcd8ac6
+head: 3ec3cbb4274aa30e72a787e99a76da09cc02af32
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T03:37:00Z"
-last_checkpoint_at: "2026-09-23T03:37:00Z"
+lease_heartbeat_at: "2026-09-23T05:32:00Z"
+last_checkpoint_at: "2026-09-23T05:32:00Z"
 last_merged_pr: 104
 last_merge_commit: 39d5f95187b27224b00630f34418febdab5305ba
 preferred_next_issue: 113
@@ -25,4 +25,4 @@ scope:
   - order-inventory
   - bulk-deterministic-execution
   - datasource-failover
-next_action: "PR #114 remains the authoritative ERP/Data lease for issue #113. Exact-head Governance 35811093476 and Build 35811093363 were GREEN on pre-reconciliation HEAD 3bedef61051b98242ba78f646db18ea3d59335f0. Authoritative main b37fee356ed5e40776f6ff27dab56f8d5b165eeb was reconciled into this SAME lease at two-parent merge 12f3415979d1b8394125047549e4cb822fcd8ac6 while preserving main-owned PROJECT_STATE/frontend changes and ERP/Data implementation/test blobs. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; fix actionable RED on this SAME branch. If GREEN, mergeable, and review threads remain clear, mark ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+next_action: "PR #114 remains the authoritative ERP/Data lease for issue #113. Exact-head Governance 35815107830 and Build 35815107776 were GREEN on pre-reconciliation HEAD b1d2823af547f0e63a5cd942406c616c4f851b0b. Authoritative main 34683388c1ca516d747805b90d24986489e478e4 was reconciled into this SAME lease at two-parent merge 3ec3cbb4274aa30e72a787e99a76da09cc02af32 while preserving main-owned PROJECT_STATE/runtime chat ingress changes and ERP/Data implementation/test blobs. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; fix actionable RED on this SAME branch. If GREEN, mergeable, and review threads remain clear, keep ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
