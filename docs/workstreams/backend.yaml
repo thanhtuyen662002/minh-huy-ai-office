@@ -1,17 +1,17 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
-current_issue: 35
-current_pr: 83
-current_branch: backend/35-customer-billing-foundation
-head: be611cf895e1d4624ba730d927d565de5bba11f3
+status: in_progress
+current_issue: 127
+current_pr: null
+current_branch: backend/127-sensitive-response-no-store
+head: 93cea2642288b8c91b9861d8e252080e43995e13
 lease_owner: backend
-lease_heartbeat_at: "2026-09-22T18:02:00+07:00"
-last_checkpoint_at: "2026-09-22T18:02:00+07:00"
-last_completed_issue: 22
-last_merged_pr: 73
-last_merge_commit: 72aab4092e1238d70885185e5f8d43cc719dbdaf
-preferred_next_issue: 35
+lease_heartbeat_at: "2026-09-23T14:40:00+07:00"
+last_checkpoint_at: "2026-09-23T14:40:00+07:00"
+last_completed_issue: 35
+last_merged_pr: 83
+last_merge_commit: null
+preferred_next_issue: 127
 scope:
   - aspnet-core
   - identity
@@ -19,14 +19,13 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 4594650a0c475a7e6a0dbcabba66767ad587f446
-  governance_run: 35717229231
-  build_run: 35717228891
-  result: "Prior exact-head Governance and Build GREEN. Current head adds a fail-closed unavailable billing source plus deterministic tests; exact-head CI pending publication."
+  prior_head: 97022929311339a5d879ea921f375a65cff9b93f
+  governance_run: null
+  build_run: null
+  result: "Claimed P6 Backend hardening issue #127 from current main. Added no-store middleware for /api/auth/context and /api/billing/plan plus focused integration assertions; exact-head CI pending after PR creation."
 known_risks:
-  - "Billing tenant/company authority must remain server-derived from IRequestAuthorizationContextAccessor."
-  - "Caller-controlled route/header/body identifiers must never select billing scope."
-  - "Do not invent persistence schema or pricing policy while wiring the initial billing read surface."
-  - "Cross-tenant/company source data must be rejected before exposure."
+  - "Sensitive response cache fencing must cover success and fail-closed paths without changing authorization semantics."
+  - "Billing tenant/company authority remains server-derived; no caller-controlled scope selectors."
+  - "No persistence schema, migration, pricing policy, or secret handling changes are permitted in this slice."
 blocked_by: []
-next_action: "Close exact-head CI for be611cf895e1d4624ba730d927d565de5bba11f3 on PR #83. If GREEN, wire the smallest authenticated /api/billing/plan read surface using CompanyBillingReader and the fail-closed source registration, then add endpoint acceptance coverage; do not edit docs/PROJECT_STATE.yaml."
+next_action: "Open Draft PR for issue #127, capture actual HEAD and exact-head Governance/Build. Fix actionable RED on the SAME branch; when GREEN, verify acceptance and mark ready for review. Do not edit docs/PROJECT_STATE.yaml."
