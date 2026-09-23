@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: in_progress
+status: waiting_ci
 current_issue: 162
-current_pr: pending
+current_pr: 163
 current_branch: "frontend/162-customer-audit-presentation"
-head: "6d0d104c902329515bfd85040dc7568523a79c36"
-state: in_progress
+head: "cd427344bf00ebaf844b8f0595074383e059dba9"
+state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T04:39:00+07:00"
-last_checkpoint_at: "2026-09-24T04:39:00+07:00"
+lease_heartbeat_at: "2026-09-24T04:40:00+07:00"
+last_checkpoint_at: "2026-09-24T04:40:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Issue #162 claimed on frontend/162-customer-audit-presentation from authoritative main bb5893cc8993ebfce8503974ea017d8c4967b07c. Customer audit presentation and focused Vitest coverage are implemented with fail-closed payload validation, exact duplicate idempotency/conflicting replay rejection, deterministic newest-first ordering, and no browser-selected tenant/company/user authority or fabricated presentation identity. Open Draft PR, resolve actual HEAD, run exact-head Governance/Build, fix actionable RED on this SAME lease, then continue acceptance until ready_for_review. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #163 / issue #162 is the active Frontend lease. Implementation and focused Vitest coverage are pushed with fail-closed audit payload validation, bounded collection size, exact duplicate idempotency/conflicting replay rejection, deterministic newest-first ordering, and no browser-selected tenant/company/user authority or fabricated presentation identity. Resolve actual HEAD after this metadata checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME branch, and continue acceptance until ready_for_review. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
