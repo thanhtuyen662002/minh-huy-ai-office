@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: e392e26d5b36d2e04342223918f3700c8201844f
+last_verified_commit: b5f619c3a5a61a443d1ee20e23622d613e7bf197
 
 critical_paths:
   backend:
@@ -24,25 +24,26 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #102 / issue #101 customer portal authority-bound shell merged at e392e26d5b36d2e04342223918f3700c8201844f after exact-head Governance 35809224673 + Build 35809224775 GREEN. Frontend immediate re-entry requested to reconcile specialist state and claim the next safe non-overlapping Frontend slice."
+    next: "PR #102 / issue #101 customer portal authority-bound shell is authoritative. Frontend remains enabled and must claim the next safe non-overlapping Frontend slice."
 
   runtime_ai:
-    issue: 115
-    pr: 116
-    branch: runtime/115-customer-chat-ingress
-    head: d2dfddddd3be087c58364900570a2526cfe8a59a
-    state: in_progress
-    next: "PR #116 is the authoritative Runtime lease. Exact-head checks are GREEN after the formatting fix and no review comments are open, but main advanced after Frontend #102 merged and live GitHub now reports non-mergeable. Runtime immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and return ready_for_review."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #116 / issue #115 authority-bound customer chat ingress merged at b5f619c3a5a61a443d1ee20e23622d613e7bf197 after exact-head required checks GREEN and clear review threads. Runtime must immediately claim the next safe non-overlapping Runtime slice."
 
   erp_data:
     issue: 113
     pr: 114
     branch: erp/113-datasource-failover
-    head: 3bedef61051b98242ba78f646db18ea3d59335f0
+    head: b1d2823af547f0e63a5cd942406c616c4f851b0b
     state: in_progress
-    next: "PR #114 is the authoritative ERP/Data lease. Exact-head Governance 35811093476 and Build checks are GREEN, but main advanced after Frontend #102 merged and live GitHub now reports non-mergeable. ERP/Data immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and return ready_for_review."
+    next: "PR #114 remains the authoritative ERP/Data lease. Its reconciled checkpoint was acceptance-complete/ready, but main advanced after Runtime #116 merged and live GitHub reports non-mergeable. ERP/Data must immediately reconcile SAME lease with current main, rerun exact-head gates and return ready_for_review."
 
 recent_authoritative_merges:
+  - "PR #116 / issue #115 authority-bound customer chat ingress: MERGED at b5f619c3a5a61a443d1ee20e23622d613e7bf197"
   - "PR #102 / issue #101 customer portal authority-bound shell: MERGED at e392e26d5b36d2e04342223918f3700c8201844f"
   - "PR #112 / issue #111 customer-scoped audit report projection: MERGED at 90c6091ff8e2455256f7e7516293bba2d2b34fe1"
   - "PR #104 / issue #103 bulk deterministic execution: MERGED at 39d5f95187b27224b00630f34418febdab5305ba"
@@ -58,11 +59,10 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting investigation, posting/reconcile, tax/invoice, order/inventory, exception queue/specialist escalation and bulk deterministic execution are authoritative."
-  - "P6 company-scoped billing foundation, SLA/priority scheduling, multi-server dispatch fencing, DR checkpoint restore fencing, customer audit/reporting and customer portal shell are authoritative."
-  - "P6 customer chat ingress #115 remains actively owned by Runtime PR #116 pending current-main reconciliation."
+  - "P6 company-scoped billing foundation, SLA/priority scheduling, multi-server dispatch fencing, DR checkpoint restore fencing, customer audit/reporting, customer portal shell and authority-bound customer chat ingress are authoritative."
   - "P6 authority-bound data-source failover #113 remains actively owned by ERP/Data PR #114 pending current-main reconciliation."
 
-next_action: "Runtime immediately reconciles PR #116 with current main and closes exact-head acceptance. ERP/Data immediately reconciles PR #114 with current main and closes exact-head acceptance. Frontend immediately reconciles its merged lease and claims the next safe roadmap slice. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "ERP/Data immediately reconciles PR #114 with current main and closes exact-head acceptance. Runtime immediately claims the next safe roadmap slice after #116 merge. Frontend and Backend re-evaluate live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
