@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 123
-current_pr: 124
-current_branch: erp/123-datasource-health-evidence
-head: 85255f884aa9567ba40ccb21e06d8d677263302a
-state: waiting_ci
+current_issue: 129
+current_pr: null
+current_branch: erp/129-health-evidence-replay-fencing
+head: c0e536b303c32e4b37d53191e5276ab7fd52b66c
+state: claimed
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T07:34:31Z"
-last_checkpoint_at: "2026-09-23T07:34:31Z"
-last_merged_pr: 114
-last_merge_commit: ccf386c96f4f5602712e217eb2af95a38831ed2e
-preferred_next_issue: 123
+lease_heartbeat_at: "2026-09-23T08:38:30Z"
+last_checkpoint_at: "2026-09-23T08:38:30Z"
+last_merged_pr: 124
+last_merge_commit: 55956b22514092f74325dd548c98ef491970c2c2
+preferred_next_issue: 129
 blocked_by: []
 scope:
   - datasource-registry
@@ -26,4 +26,5 @@ scope:
   - bulk-deterministic-execution
   - datasource-failover
   - datasource-health-evidence
-next_action: "PR #124 remains the authoritative ERP/Data lease for issue #123. Current main 97022929311339a5d879ea921f375a65cff9b93f was reconciled into this SAME lease by two-parent merge 85255f884aa9567ba40ccb21e06d8d677263302a while preserving main-owned PROJECT_STATE/runtime context changes and ERP/Data health-evidence implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+  - datasource-health-evidence-replay
+next_action: "Issue #129 is the primary ERP/Data lease after merged #124. Implement deterministic replay-safe endpoint health evidence selection on branch erp/129-health-evidence-replay-fencing: identical evidence replay idempotent, conflicting EvidenceReference reuse fail-closed, newest valid endpoint observation authoritative, equal-time conflicts fail-closed, input order irrelevant. Preserve tenant/company/data-source/version fences, opaque references and ReadWrite-only write failover. Open Draft PR after this meaningful checkpoint, add focused tests, then own exact-head Governance/Build. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
