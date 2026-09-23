@@ -4,11 +4,11 @@ status: active
 current_issue: 119
 current_pr: 120
 current_branch: runtime/119-customer-conversation-context
-head: 6989a92dd93939506ad26d3ee61f2f9847e2ad78
+head: 7b3906220dccc5837748b080ab1681c77175331e
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T06:21:00Z"
-last_checkpoint_at: "2026-09-23T06:21:00Z"
+lease_heartbeat_at: "2026-09-23T06:39:00Z"
+last_checkpoint_at: "2026-09-23T06:39:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -32,4 +32,4 @@ scope:
   - customer-chat-ingress
   - customer-chat-response-projection
   - customer-conversation-context
-next_action: "PR #120 / issue #119 remains the active Runtime lease. Governance 35823544396 was GREEN but Build 35823544296 failed at .NET Build with CS0246 Fact/FactAttribute because CustomerConversationContextTests.cs omitted using Xunit; fixed on SAME branch at implementation HEAD 6989a92dd93939506ad26d3ee61f2f9847e2ad78. Re-query exact-head workflows, fix any further actionable RED on this SAME branch, then complete acceptance/review-thread check when GREEN. Do not edit PROJECT_STATE, ERP/Data #114, expose secrets, broaden authority, or merge directly."
+next_action: "PR #120 / issue #119 remains the authoritative Runtime lease. Pre-reconciliation exact HEAD 9c30936852124c7cf42af08a7835684234fda9c8 passed Governance 35826375123 and Build 35826375158 GREEN after the xUnit import fix. Authoritative main 3d72b2d24e38042b0ab065b232b2769172f93f12 was reconciled into this SAME lease at two-parent merge 7b3906220dccc5837748b080ab1681c77175331e, preserving main-owned PROJECT_STATE and ERP/Data #114 while retaining Runtime implementation/test blobs; comparison is ahead-only (behind=0). Resolve actual HEAD after this durable checkpoint, own exact-head Governance/Build, fix actionable RED on this SAME branch, then perform final mergeability/review-thread acceptance and mark ready_for_review when GREEN. Do not edit PROJECT_STATE, expose secrets, broaden authority, or merge directly."
