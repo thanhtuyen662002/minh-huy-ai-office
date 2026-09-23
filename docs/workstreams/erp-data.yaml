@@ -2,9 +2,9 @@ workstream: erp-data
 role: "ERP / Data"
 status: in_progress
 current_issue: 165
-current_pr: null
+current_pr: 166
 current_branch: erp/165-failover-execution-revalidation
-head: 73ab999a5579cadd8be7942c53f0c47d8ee5bf16
+head: 3f5d54c24b0bf47f09b668e2ec587bd055d6a2ea
 state: in_progress
 lease_owner: erp-data
 lease_heartbeat_at: "2026-09-23T23:33:00Z"
@@ -32,4 +32,4 @@ scope:
   - datasource-failover-operation-authority
   - datasource-failover-decision-validation
   - datasource-failover-execution-revalidation
-next_action: "Issue #165 is the primary ERP/Data lease. Implement execution-time revalidation of the exact authoritative health evidence bound to a persisted failover decision; reject stale/expired/unhealthy/substituted/cross-authority evidence while preserving operation/version/opaque-reference fences. Never edit PROJECT_STATE or other specialist leases."
+next_action: "PR #166 / issue #165 is the primary ERP/Data lease. Implement execution-time revalidation of the exact authoritative health evidence bound to a persisted failover decision; reject stale/expired/unhealthy/substituted/cross-authority evidence while preserving operation/version/opaque-reference fences. Never edit PROJECT_STATE or other specialist leases."
