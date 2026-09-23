@@ -27,12 +27,16 @@ public static class DataSourceFailoverContract
         ArgumentNullException.ThrowIfNull(authority);
         ArgumentNullException.ThrowIfNull(candidates);
         ValidateAuthority(authority);
+        if (!Enum.IsDefined(operation)) throw new ArgumentOutOfRangeException(nameof(operation));
         if (candidates.Count == 0) throw new InvalidOperationException("No failover candidates are available.");
 
         var eligible = new List<DataSourceFailoverCandidate>();
+        var endpointIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var candidate in candidates)
         {
             ValidateCandidate(candidate);
+            if (!endpointIds.Add(candidate.EndpointId))
+                throw new InvalidOperationException("Failover candidates contain a duplicate endpoint identity.");
             if (candidate.TenantId != authority.TenantId || candidate.CompanyId != authority.CompanyId || candidate.DataSourceId != authority.DataSourceId)
                 throw new UnauthorizedAccessException("Failover candidate authority does not match the requested data source.");
             if (!StringComparer.Ordinal.Equals(candidate.RegistryVersion, authority.RegistryVersion))
@@ -78,6 +82,8 @@ public static class DataSourceFailoverContract
         RequireCanonical(candidate.SchemaVersion, nameof(candidate.SchemaVersion));
         RequireCanonical(candidate.CatalogVersion, nameof(candidate.CatalogVersion));
         RequireCanonical(candidate.HealthEvidenceReference, nameof(candidate.HealthEvidenceReference));
+        if (!Enum.IsDefined(candidate.Role)) throw new ArgumentOutOfRangeException(nameof(candidate.Role));
+        if (!Enum.IsDefined(candidate.AccessMode)) throw new ArgumentOutOfRangeException(nameof(candidate.AccessMode));
         if (candidate.CredentialReference.Contains('=') || candidate.CredentialReference.Contains(';'))
             throw new ArgumentException("CredentialReference must be opaque and must not contain connection-string material.", nameof(candidate.CredentialReference));
         if (candidate.Priority < 0) throw new ArgumentOutOfRangeException(nameof(candidate.Priority));
