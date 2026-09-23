@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 105
-current_pr: 106
-current_branch: runtime/105-sla-priority-scheduling
-head: 6f6b5675b1d86db6c9d6e4e69b2fa1ae6201639b
-state: waiting_ci
+current_issue: 107
+current_pr: 108
+current_branch: runtime/107-multiserver-dispatch-fencing
+head: 12bcfc1b91e2b4ba5162dedfda096a533611ec14
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-22T21:38:00Z"
-last_checkpoint_at: "2026-09-22T21:38:00Z"
+lease_heartbeat_at: "2026-09-22T23:18:00Z"
+last_checkpoint_at: "2026-09-22T23:18:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -26,4 +26,5 @@ scope:
   - self-healing-policy
   - exception-queue-specialist-escalation
   - sla-priority-scheduling
-next_action: "Draft PR #106 is the authoritative Runtime lease for issue #105. Implementation through 6f6b5675 adds company-scoped SLA/priority scheduling plus fail-closed malformed policy/authority tests. Exact-head workflow emission is pending. Own Governance/Build when emitted; fix actionable RED on this SAME branch. If GREEN, verify mergeability and final acceptance, then mark ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+  - multi-server-dispatch-fencing
+next_action: "PR #108 is ready_for_review for Lead sequencing. Exact implementation HEAD 12bcfc1b91e2b4ba5162dedfda096a533611ec14 passed Governance 35793587862 and Build 35793587857, GitHub reports mergeable=true, acceptance review found no unresolved review threads, and the PR is non-draft. Lead should review/merge when sequencing permits. Runtime must not claim a competing primary lease until live GitHub shows #108 merged/closed or Lead requests changes; after merge, re-evaluate the highest-priority unblocked non-overlapping Runtime/AI slice. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
