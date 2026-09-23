@@ -21,7 +21,7 @@ public sealed record DataSourceHealthEvidence(
 public sealed record DataSourceFailoverDecision(
     Guid TenantId, Guid CompanyId, Guid DataSourceId, string EndpointId,
     string RegistryVersion, string SchemaVersion, string CatalogVersion,
-    string EvidenceReference, DateTimeOffset ObservedAt, string Reason);
+    DataSourceOperationKind Operation, string EvidenceReference, DateTimeOffset ObservedAt, string Reason);
 
 public static class DataSourceFailoverContract
 {
@@ -91,7 +91,7 @@ public static class DataSourceFailoverContract
         return new DataSourceFailoverDecision(
             authority.TenantId, authority.CompanyId, authority.DataSourceId, selected.Candidate.EndpointId,
             authority.RegistryVersion, authority.SchemaVersion, authority.CatalogVersion,
-            selected.Evidence.EvidenceReference, selected.Evidence.ObservedAt,
+            operation, selected.Evidence.EvidenceReference, selected.Evidence.ObservedAt,
             selected.Candidate.Role == DataSourceFailoverRole.Primary ? "primary-healthy" : "primary-unavailable-fallback-selected");
     }
 
