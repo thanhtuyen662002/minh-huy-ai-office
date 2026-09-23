@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 146
 current_pr: 147
 current_branch: erp/146-failover-operation-authority
-head: f32252a68a100c8f2fff29d30978be3ce8427caf
-state: waiting_ci
+head: fd71489c48300485c694f303720f405909455c45
+state: ready_for_review
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T14:37:00Z"
-last_checkpoint_at: "2026-09-23T14:37:00Z"
+lease_heartbeat_at: "2026-09-23T15:31:00Z"
+last_checkpoint_at: "2026-09-23T15:31:00Z"
 last_merged_pr: 145
 last_merge_commit: c874e4ed398c9849a46fcfc8c7539dcf76d2ac5d
 preferred_next_issue: 146
@@ -30,4 +30,4 @@ scope:
   - datasource-health-evidence-freshness
   - datasource-failover-decision-evidence
   - datasource-failover-operation-authority
-next_action: "PR #147 is the authoritative ERP/Data lease for issue #146. Implementation binds DataSourceFailoverDecision to exact validated Read/Write operation; focused tests cover primary read and write fallback while preserving write-capability, health freshness/version/replay and secret-reference fences. Resolve actual HEAD after this durable checkpoint, own exact-head Governance/Build, and fix actionable RED on this SAME branch. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+next_action: "PR #147 is ready for Lead review/integration at exact HEAD fd71489c48300485c694f303720f405909455c45. Governance 35875483292 GREEN and Build 35875483301 GREEN; PR mergeable=true with no unresolved review threads. ERP/Data retains this SAME lease until merge and must resume it for review feedback, CI drift, or mergeability drift. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
