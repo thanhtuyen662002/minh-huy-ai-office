@@ -93,7 +93,7 @@ public sealed class CustomerAiCreditUsageTests
             new AiUsageScope("tenant-a", "company-a", "task-a", "agent-a", "request-a"),
             provider,
             model,
-            AiCapability.Chat,
+            AiCapability.Reasoning,
             new AiUsageAmount(totalTokens, 0, totalTokens, providerCost),
             DateTimeOffset.UnixEpoch);
 }
