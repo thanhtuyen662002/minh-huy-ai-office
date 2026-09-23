@@ -4,11 +4,11 @@ status: active
 current_issue: 152
 current_pr: 153
 current_branch: runtime/152-ai-credit-settlement
-head: 3a050e4727581005320603fa2aa5219f80b18bd2
-state: waiting_ci
+head: c9e64736f791347d4b9a2bb08bdb9d8ee7fd5562
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T17:44:00Z"
-last_checkpoint_at: "2026-09-23T17:44:00Z"
+lease_heartbeat_at: "2026-09-23T18:24:00Z"
+last_checkpoint_at: "2026-09-23T18:24:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -36,4 +36,4 @@ scope:
   - customer-ai-credit-admission
   - customer-ai-credit-reservation
   - customer-ai-credit-settlement
-next_action: "PR #153 / issue #152 implements authority-bound AI credit reservation settlement fencing. Re-query exact-head Governance/Build on the current checkpoint, inspect/fix actionable RED on this SAME branch, and mark ready_for_review only after GREEN, mergeability and clear review threads. Do not edit PROJECT_STATE or other specialist leases."
+next_action: "PR #153 / issue #152 is acceptance-complete and ready for Lead review/integration. Exact implementation checkpoint c9e64736f791347d4b9a2bb08bdb9d8ee7fd5562 passed Governance 35897174234 and Build 35897174282 GREEN; compare is ahead-only/behind=0, PR is mergeable=true and review threads are clear. Lead should verify final exact-head gates on this ready-state checkpoint before merge. Runtime must re-enter this SAME lease if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
