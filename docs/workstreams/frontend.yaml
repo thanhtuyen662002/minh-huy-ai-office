@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: waiting_ci
+status: ready_for_review
 current_issue: 101
 current_pr: 102
 current_branch: "frontend/101-customer-portal-shell"
-head: "8198a0e65838d570bf2422ff338bf16e387e6c3f"
-state: waiting_ci
+head: "7967a85ce6ec2ae917e64c0c7dbb70d4558b502d"
+state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T07:38:00+07:00"
-last_checkpoint_at: "2026-09-23T07:38:00+07:00"
+lease_heartbeat_at: "2026-09-23T08:07:39+07:00"
+last_checkpoint_at: "2026-09-23T08:07:39+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Resume PR #102 / issue #101. Authoritative main b2dc6137bc08bd3d749a1ef94041dd00ca773f00 is now an ancestor of this SAME lease after reconciliation. Cross-lane main content is preserved; compare is ahead-only and scoped to five Frontend implementation/test paths plus this Frontend state. Re-resolve the actual HEAD after this state checkpoint, own exact-head Governance/Build to terminal status, fix actionable RED on this SAME PR, and keep/mark ready_for_review when GREEN and mergeable. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
+next_action: "PR #102 / issue #101 acceptance is complete at implementation head 7967a85ce6ec2ae917e64c0c7dbb70d4558b502d: exact-head Governance 35802891320 and Build 35802891409 are GREEN, GitHub reports mergeable=true, and there are no open review threads. Keep this SAME Frontend lease ready_for_review for Lead integration sequencing. Re-resolve actual branch HEAD and exact-head CI after this durable-state checkpoint; fix any actionable RED on this SAME PR. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
