@@ -5,7 +5,7 @@ public enum DataSourceAccessMode { ReadOnly = 0, ReadWrite = 1 }
 public enum DataSourceOperationKind { Read = 0, Write = 1 }
 public enum DataSourceHealthState { Unhealthy = 0, Healthy = 1 }
 
-public sealed record DataSourceFailoverAuthority(Guid TenantId, Guid CompanyId, Guid DataSourceId, string RegistryVersion, string SchemaVersion, string CatalogVersion);
+public sealed record DataSourceFailoverAuthority(Guid TenantId, Guid CompanyId, Guid DataSourceId, string RegistryVersion, string SchemaVersion, string CatalogVersion, TimeSpan MaxHealthEvidenceAge);
 
 public sealed record DataSourceFailoverCandidate(
     Guid TenantId, Guid CompanyId, Guid DataSourceId, string EndpointId, string CredentialReference,
@@ -102,6 +102,8 @@ public static class DataSourceFailoverContract
         RequireCanonical(authority.RegistryVersion, nameof(authority.RegistryVersion));
         RequireCanonical(authority.SchemaVersion, nameof(authority.SchemaVersion));
         RequireCanonical(authority.CatalogVersion, nameof(authority.CatalogVersion));
+        if (authority.MaxHealthEvidenceAge <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(authority.MaxHealthEvidenceAge), "Maximum health evidence age must be positive.");
     }
 
     private static void ValidateCandidate(DataSourceFailoverCandidate candidate)
@@ -148,6 +150,8 @@ public static class DataSourceFailoverContract
             throw new InvalidOperationException("Health evidence cannot be observed in the future.");
         if (evidence.ExpiresAt <= evidence.ObservedAt || evidence.ExpiresAt <= decisionAt)
             throw new InvalidOperationException("Health evidence is malformed or expired.");
+        if (decisionAt - evidence.ObservedAt > authority.MaxHealthEvidenceAge)
+            throw new InvalidOperationException("Health evidence exceeds the authority freshness policy.");
     }
 
     private static void RequireOpaqueReference(string value, string name)
