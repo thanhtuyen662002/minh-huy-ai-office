@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 115
-current_pr: 116
-current_branch: runtime/115-customer-chat-ingress
-head: a45c603eb60002c1a1ad1c6ceae1e0ed38235549
+current_issue: 117
+current_pr: 118
+current_branch: runtime/117-customer-chat-response-projection
+head: ccab44d2fd73c7cc20a6669fe2139e33a5a794eb
 state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T04:18:00Z"
-last_checkpoint_at: "2026-09-23T04:18:00Z"
+lease_heartbeat_at: "2026-09-23T05:18:00Z"
+last_checkpoint_at: "2026-09-23T05:18:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -30,4 +30,5 @@ scope:
   - disaster-recovery-checkpoint-fencing
   - customer-audit-reporting
   - customer-chat-ingress
-next_action: "PR #116 / issue #115 is acceptance-complete and ready for Lead review/merge sequencing. Implementation exact HEAD a45c603eb60002c1a1ad1c6ceae1e0ed38235549 passed Governance 35815116912 + Build 35815116949 GREEN, PR was mergeable and review threads were clear. Lead should verify the final state-only checkpoint CI remains GREEN before merge. Do not edit PROJECT_STATE, ERP/Data #114, expose secrets, broaden authority, or merge directly."
+  - customer-chat-response-projection
+next_action: "PR #118 / issue #117 is acceptance-complete and ready for Lead review/merge sequencing. Implementation exact HEAD ccab44d2fd73c7cc20a6669fe2139e33a5a794eb passed Governance 35819101394 + Build 35819101404 GREEN, PR is mergeable against authoritative main 34683388c1ca516d747805b90d24986489e478e4 and review threads are clear. Lead should verify final state-checkpoint CI remains GREEN before merge. Do not edit PROJECT_STATE, ERP/Data #114, expose secrets, broaden authority, or merge directly."
