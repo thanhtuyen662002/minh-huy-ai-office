@@ -4,11 +4,11 @@ status: active
 current_issue: 152
 current_pr: 153
 current_branch: runtime/152-ai-credit-settlement
-head: 6c9409f48301e77b6649158a157e4d568a5bebf0
-state: ready_for_review
+head: c1626965c4df1dfc35268ef9455408b9a359b8dc
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T19:19:00Z"
-last_checkpoint_at: "2026-09-23T19:19:00Z"
+lease_heartbeat_at: "2026-09-23T19:34:00Z"
+last_checkpoint_at: "2026-09-23T19:34:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -36,4 +36,4 @@ scope:
   - customer-ai-credit-admission
   - customer-ai-credit-reservation
   - customer-ai-credit-settlement
-next_action: "PR #153 / issue #152 is acceptance-complete and ready for Lead review/integration. Reconciled checkpoint 6c9409f48301e77b6649158a157e4d568a5bebf0 passed exact-head Governance 35903749232 and Build 35903749246 GREEN; branch was ahead-only/behind=0 against authoritative main c58b11617aa85a050d005ff013583715ee156b0c, PR mergeable=true and review threads clear. Lead should verify final exact-head gates on this ready-state metadata checkpoint before merge. Runtime must re-enter this SAME lease if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
+next_action: "PR #153 / issue #152 reconciled authoritative main 54074a43d4fdf06e33595410702f88541433064c on the SAME lease at merge checkpoint c1626965c4df1dfc35268ef9455408b9a359b8dc, preserving authority-bound settlement/idempotency/persistence-before-release invariants and all current-main changes. Exact-head workflows had not emitted at first re-query. Runtime owns CI closure: capture workflow run IDs for the resulting state checkpoint, fix actionable RED on this SAME branch, and return ready_for_review only after exact-head Governance/Build GREEN, behind=0, mergeable=true and review threads clear. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
