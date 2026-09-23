@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 0b73ac2998652775595c35772f130f98ea433fd1
+last_verified_commit: b6a0960f973b04598ffa0986f9b7b9d2ed2ee404
 
 critical_paths:
   backend:
@@ -22,9 +22,9 @@ critical_paths:
     issue: 101
     pr: 102
     branch: frontend/101-customer-portal-shell
-    head: 725d586dd808b66e9cb0314da6bf0f3db3d1925f
+    head: 9eee72cc7e59289eb8fa1419070030b76e624dcd
     state: in_progress
-    next: "PR #102 is the authoritative Frontend lease. Actual head 725d586dd808b66e9cb0314da6bf0f3db3d1925f has exact-head Governance 35796005711 + Build 35796005717 GREEN, but main advanced after Runtime #108 merged and live GitHub reports non-mergeable. Frontend immediate re-entry requested to reconcile SAME lease, rerun exact-head gates and close final acceptance."
+    next: "PR #102 remains the authoritative Frontend lease. Exact-head Governance 35801122450 + Build 35801122413 are GREEN and acceptance is at final review, but main advanced after Runtime #110 merged and live GitHub now reports non-mergeable. Frontend immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and close final acceptance."
 
   runtime_ai:
     issue: null
@@ -32,17 +32,18 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #108 / issue #107 multi-server worker dispatch fencing merged at 0b73ac2998652775595c35772f130f98ea433fd1 after exact-head Governance 35796773772 + Build 35796773785 GREEN. Runtime immediate re-entry requested to reconcile specialist state and claim the next highest-priority unblocked non-overlapping Runtime/AI slice."
+    next: "PR #110 / issue #109 disaster-recovery checkpoint restore fencing merged at b6a0960f973b04598ffa0986f9b7b9d2ed2ee404 after exact-head Governance 35798566523 + Build 35798566524 GREEN. Runtime immediate re-entry requested to reconcile specialist state and claim the next highest-priority unblocked non-overlapping Runtime/AI slice."
 
   erp_data:
     issue: 103
     pr: 104
     branch: erp/103-bulk-deterministic-execution
-    head: b7ccd9eb8e4e30f4bd6f4540a2d8b0f393a49ec6
+    head: f02485eda93c0d9eabb56fef87d3e1d1d8ffdd9f
     state: in_progress
-    next: "PR #104 is the authoritative ERP/Data lease. Actual head b7ccd9eb8e4e30f4bd6f4540a2d8b0f393a49ec6 has exact-head Build 35793408155 + Governance 35793408165 GREEN and acceptance reports only final review remaining, but main advanced after Runtime #108 merged and live GitHub reports non-mergeable. ERP/Data immediate re-entry requested to reconcile SAME lease, rerun gates and finish ready_for_review."
+    next: "PR #104 remains the authoritative ERP/Data lease. Exact-head Governance 35798594759 + Build 35798594749 are GREEN and acceptance is at final review, but main advanced after Runtime #110 merged and live GitHub now reports non-mergeable. ERP/Data immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and finish ready_for_review."
 
 recent_authoritative_merges:
+  - "PR #110 / issue #109 disaster-recovery checkpoint restore fencing: MERGED at b6a0960f973b04598ffa0986f9b7b9d2ed2ee404"
   - "PR #108 / issue #107 multi-server worker dispatch fencing: MERGED at 0b73ac2998652775595c35772f130f98ea433fd1"
   - "PR #106 / issue #105 company-scoped SLA and priority scheduling: MERGED at 8b2aa9e634094cfdaafd040846653956b3863624"
   - "PR #100 / issue #99 exception queue and specialist escalation: MERGED at 0d230bae20be0321315cf69d63efd8b9d8e2e615"
@@ -52,15 +53,14 @@ recent_authoritative_merges:
   - "PR #94 / issue #93 model upgrade candidate gate: MERGED at a848e38556145e35c1b601d4becf5f12e1ce7648"
   - "PR #89 / issue #88 accounting posting preview/execute/reconcile: MERGED at dc82c0669e751000b731e1a84ac13cf46c6ff0f8"
   - "PR #90 / issue #33 emergency capability kill switch and security hotfix path: MERGED at a372a2caecc9df436ceb373f36e757df3d424cc8"
-  - "PR #87 / issue #32 Release Catalog and rollout controller: MERGED at b275a1b095eeb3c5fe39d30d1160f36f55dee1b5"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting investigation, posting/reconcile, tax/invoice, order/inventory and exception queue/specialist escalation are authoritative."
   - "P5 bulk deterministic execution #103 remains actively owned by ERP/Data PR #104 pending current-main reconciliation/final review."
-  - "P6 company-scoped billing foundation, SLA/priority scheduling #105 and multi-server dispatch fencing #107 are authoritative; customer portal authority-bound shell #101 remains actively owned by Frontend PR #102."
+  - "P6 company-scoped billing foundation, SLA/priority scheduling #105, multi-server dispatch fencing #107 and DR checkpoint restore fencing #109 are authoritative; customer portal authority-bound shell #101 remains actively owned by Frontend PR #102."
 
-next_action: "Frontend immediately reconciles PR #102 with current main and closes exact-head acceptance. ERP/Data immediately reconciles PR #104 with current main and closes exact-head final review. Runtime immediately re-evaluates and claims its next safe slice after #108 merge. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Frontend immediately reconciles PR #102 with current main and closes exact-head acceptance. ERP/Data immediately reconciles PR #104 with current main and closes exact-head final review. Runtime immediately re-evaluates and claims its next safe slice after #110 merge. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
