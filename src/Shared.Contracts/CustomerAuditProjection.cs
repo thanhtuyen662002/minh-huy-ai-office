@@ -28,7 +28,7 @@ public sealed record CustomerAuditRow(
     string Resource,
     string EvidenceReference);
 
-public sealed record CustomerAuditCursor(CustomerAuditAuthority Authority, long Version, Guid EventId);
+public sealed record CustomerAuditCursor(CustomerAuditAuthority Authority, DateTimeOffset OccurredAt, long Version, Guid EventId);
 
 public static class CustomerAuditProjection
 {
@@ -44,7 +44,7 @@ public static class CustomerAuditProjection
         if (after is not null)
         {
             RequireSameAuthority(authority, after.Authority);
-            if (after.Version < 0) throw new InvalidOperationException("Audit cursor version cannot be negative.");
+            ValidateCursor(after);
         }
 
         var unique = new Dictionary<Guid, CustomerAuditEvent>();
@@ -61,7 +61,7 @@ public static class CustomerAuditProjection
         }
 
         return unique.Values
-            .Where(e => after is null || e.Version > after.Version || (e.Version == after.Version && e.EventId.CompareTo(after.EventId) > 0))
+            .Where(e => after is null || ComparePosition(e.OccurredAt, e.Version, e.EventId, after.OccurredAt, after.Version, after.EventId) > 0)
             .OrderBy(e => e.OccurredAt)
             .ThenBy(e => e.Version)
             .ThenBy(e => e.EventId)
@@ -72,13 +72,18 @@ public static class CustomerAuditProjection
     public static CustomerAuditCursor NextCursor(CustomerAuditAuthority authority, IReadOnlyList<CustomerAuditRow> rows, CustomerAuditCursor? current = null)
     {
         authority.Validate();
-        if (current is not null) RequireSameAuthority(authority, current.Authority);
-        if (rows.Count == 0) return current ?? new CustomerAuditCursor(authority, 0, Guid.Empty);
+        if (rows is null) throw new ArgumentNullException(nameof(rows));
+        if (current is not null)
+        {
+            RequireSameAuthority(authority, current.Authority);
+            ValidateCursor(current);
+        }
+        if (rows.Count == 0) return current ?? new CustomerAuditCursor(authority, DateTimeOffset.MinValue, 0, Guid.Empty);
 
-        var max = rows.OrderBy(r => r.Version).ThenBy(r => r.EventId).Last();
-        if (current is not null && (max.Version < current.Version || (max.Version == current.Version && max.EventId.CompareTo(current.EventId) < 0)))
+        var max = rows.OrderBy(r => r.OccurredAt).ThenBy(r => r.Version).ThenBy(r => r.EventId).Last();
+        if (current is not null && ComparePosition(max.OccurredAt, max.Version, max.EventId, current.OccurredAt, current.Version, current.EventId) < 0)
             throw new InvalidOperationException("Audit cursor cannot move backward.");
-        return new CustomerAuditCursor(authority, max.Version, max.EventId);
+        return new CustomerAuditCursor(authority, max.OccurredAt, max.Version, max.EventId);
     }
 
     public static void AuthorizeRead(CustomerAuditAuthority authority, CustomerAuditAuthority grantedAuthority, IEnumerable<string> capabilities)
@@ -100,6 +105,20 @@ public static class CustomerAuditProjection
             auditEvent.EvidenceReference.Contains("connection string", StringComparison.OrdinalIgnoreCase) ||
             auditEvent.EvidenceReference.Contains("secret=", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Audit projection cannot expose secret-bearing evidence.");
+    }
+
+    private static void ValidateCursor(CustomerAuditCursor cursor)
+    {
+        if (cursor.Version < 0 || (cursor.Version == 0 && (cursor.OccurredAt != DateTimeOffset.MinValue || cursor.EventId != Guid.Empty)) || (cursor.Version > 0 && cursor.EventId == Guid.Empty))
+            throw new InvalidOperationException("Audit cursor position is malformed.");
+    }
+
+    private static int ComparePosition(DateTimeOffset occurredAt, long version, Guid eventId, DateTimeOffset otherOccurredAt, long otherVersion, Guid otherEventId)
+    {
+        var occurredAtComparison = occurredAt.CompareTo(otherOccurredAt);
+        if (occurredAtComparison != 0) return occurredAtComparison;
+        var versionComparison = version.CompareTo(otherVersion);
+        return versionComparison != 0 ? versionComparison : eventId.CompareTo(otherEventId);
     }
 
     private static void RequireSameAuthority(CustomerAuditAuthority expected, CustomerAuditAuthority actual)
