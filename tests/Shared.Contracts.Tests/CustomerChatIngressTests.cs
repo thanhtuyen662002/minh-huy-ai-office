@@ -7,7 +7,9 @@ public sealed class CustomerChatIngressTests
 {
     private const long AuthorityVersion = 7;
     private readonly CustomerChatAuthority authority = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
     private CustomerChatIngressRequest Request(params CustomerChatAttachment[] attachments) => new(authority, Guid.NewGuid(), AuthorityVersion, "hello", attachments, "erp", "strong-model", "provider-a");
+
     private CustomerChatCheckpoint Prepare(CustomerChatIngressRequest? request = null) => CustomerChatIngress.Prepare(authority, AuthorityVersion, request ?? Request());
 
     [Fact]
