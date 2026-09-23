@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: in_progress
+status: waiting_ci
 current_issue: 138
 current_pr: 139
 current_branch: backend/138-data-source-no-store
-head: fa118e6804475dcb3737dddd1a701698ea70e57d
+head: cab9bf5f970f68a46ad6efbae5fad9795fdbceb5
 lease_owner: backend
-lease_heartbeat_at: "2026-09-23T18:39:00+07:00"
-last_checkpoint_at: "2026-09-23T18:39:00+07:00"
+lease_heartbeat_at: "2026-09-23T18:41:00+07:00"
+last_checkpoint_at: "2026-09-23T18:41:00+07:00"
 last_completed_issue: 127
 last_merged_pr: 128
 scope:
@@ -20,11 +20,12 @@ verification:
   prior_head: 8d1afa597435752fa8642b8ea37d6370cd77074a
   governance_run: null
   build_run: null
-  result: "Claimed P6 Backend issue #138 after #127/#128 merged. Extended sensitive response cache fencing to segment-aware /api/data-sources paths and added focused middleware path/control tests. Endpoint-level integration assertions and exact-head CI closure remain."
+  result: "Issue #138 acceptance implementation complete: segment-aware /api/data-sources no-store fencing, focused middleware path/control tests, and endpoint integration coverage for authentication-unavailable, authorized list, forbidden response, plus unfenced /health control. Exact-head CI must close on the checkpoint head after this state commit."
 known_risks:
   - "Data-source cache fencing must remain segment-aware and must not affect unrelated public endpoints."
   - "Tenant/company/user authority remains server-derived; caller-controlled identifiers must not select scope."
   - "Credential references remain opaque; do not expose connection-string material."
   - "Do not edit docs/PROJECT_STATE.yaml or broaden migrations/pricing/shared contracts."
-blocked_by: []
-next_action: "Add endpoint-level integration no-store assertions for authentication-unavailable, authorized list and forbidden data-source responses on PR #139, then close exact-head Governance/Build and fix any actionable RED on this SAME branch."
+blocked_by:
+  - "Exact-head Governance/Build for current Backend checkpoint."
+next_action: "Resolve actual branch HEAD after this checkpoint, close exact-head Governance and Build on PR #139, fix any actionable RED on this SAME branch, then mark ready_for_review only when CI is GREEN, mergeability is true, acceptance remains complete and review threads are clear."
