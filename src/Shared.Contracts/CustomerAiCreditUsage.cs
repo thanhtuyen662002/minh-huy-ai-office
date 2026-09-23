@@ -4,6 +4,8 @@ public sealed record CustomerBillingAuthority(string TenantId, string CompanyId,
 
 public sealed record CustomerCreditPricing(string PolicyId, long PolicyVersion, long TokenEquivalentPerCredit);
 
+public sealed record CustomerUsageEvidence(long AuthorityVersion, AiUsageEntry Entry);
+
 public sealed record CustomerAiCreditProjection(
     CustomerBillingAuthority Authority,
     string PricingPolicyId,
@@ -17,16 +19,20 @@ public static class CustomerAiCreditUsage
     public static CustomerAiCreditProjection Project(
         CustomerBillingAuthority authority,
         CustomerCreditPricing pricing,
-        IEnumerable<AiUsageEntry> entries)
+        IEnumerable<CustomerUsageEvidence> evidence)
     {
         ValidateAuthority(authority);
         ValidatePricing(pricing);
-        ArgumentNullException.ThrowIfNull(entries);
+        ArgumentNullException.ThrowIfNull(evidence);
 
         var byId = new Dictionary<string, AiUsageEntry>(StringComparer.Ordinal);
-        foreach (var entry in entries)
+        foreach (var item in evidence)
         {
-            var validated = AiUsageLedger.Validate(entry);
+            ArgumentNullException.ThrowIfNull(item);
+            if (item.AuthorityVersion != authority.AuthorityVersion)
+                throw new UnauthorizedAccessException("Usage evidence authority version is stale or mismatched.");
+
+            var validated = AiUsageLedger.Validate(item.Entry);
             if (!string.Equals(validated.Scope.TenantId, authority.TenantId, StringComparison.Ordinal) ||
                 !string.Equals(validated.Scope.CompanyId, authority.CompanyId, StringComparison.Ordinal))
             {
