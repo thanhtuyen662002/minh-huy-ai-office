@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 101
 current_pr: 102
 current_branch: "frontend/101-customer-portal-shell"
-head: "623eed1f12a7125b12a7428622b1d89a4f6c30bc"
+head: "8198a0e65838d570bf2422ff338bf16e387e6c3f"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-23T07:12:00+07:00"
-last_checkpoint_at: "2026-09-23T07:12:00+07:00"
+lease_heartbeat_at: "2026-09-23T07:38:00+07:00"
+last_checkpoint_at: "2026-09-23T07:38:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Resume PR #102 / issue #101. Reconciliation audit against authoritative main eb424b725b2759f1b63b40a8f6f4216a953ca419 found stale cross-lane drift in the Frontend branch: lead-owned docs/PROJECT_STATE.yaml and runtime-owned state/dispatch contract/tests differed from main. Those paths were restored byte-for-byte to main, leaving the PR diff scoped to Frontend implementation/tests plus this Frontend state. Exact implementation checkpoint 623eed1f12a7125b12a7428622b1d89a4f6c30bc is ahead of main with no behind commits. Own exact-head Governance/Build after this durable-state checkpoint; fix actionable RED on this SAME PR, verify mergeability, then mark ready_for_review when GREEN and acceptance-complete. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "Resume PR #102 / issue #101. Authoritative main b2dc6137bc08bd3d749a1ef94041dd00ca773f00 is now an ancestor of this SAME lease after reconciliation. Cross-lane main content is preserved; compare is ahead-only and scoped to five Frontend implementation/test paths plus this Frontend state. Re-resolve the actual HEAD after this state checkpoint, own exact-head Governance/Build to terminal status, fix actionable RED on this SAME PR, and keep/mark ready_for_review when GREEN and mergeable. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
