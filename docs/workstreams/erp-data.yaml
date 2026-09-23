@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 123
 current_pr: 124
 current_branch: erp/123-datasource-health-evidence
-head: 0319d529c36fff88b774f205feadf61958d8e27a
+head: 85255f884aa9567ba40ccb21e06d8d677263302a
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T06:42:00Z"
-last_checkpoint_at: "2026-09-23T06:42:00Z"
+lease_heartbeat_at: "2026-09-23T07:34:31Z"
+last_checkpoint_at: "2026-09-23T07:34:31Z"
 last_merged_pr: 114
 last_merge_commit: ccf386c96f4f5602712e217eb2af95a38831ed2e
 preferred_next_issue: 123
@@ -26,4 +26,4 @@ scope:
   - bulk-deterministic-execution
   - datasource-failover
   - datasource-health-evidence
-next_action: "Issue #123 is the authoritative ERP/Data lease after merged #114. Implementation replaces unqualified candidate health with authority/version/freshness-bound evidence and focused tests. Resolve actual PR #124 HEAD after durable checkpoint; own exact-head Governance/Build, inspect/fix actionable RED on this SAME branch, and continue acceptance hardening until complete. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+next_action: "PR #124 remains the authoritative ERP/Data lease for issue #123. Current main 97022929311339a5d879ea921f375a65cff9b93f was reconciled into this SAME lease by two-parent merge 85255f884aa9567ba40ccb21e06d8d677263302a while preserving main-owned PROJECT_STATE/runtime context changes and ERP/Data health-evidence implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
