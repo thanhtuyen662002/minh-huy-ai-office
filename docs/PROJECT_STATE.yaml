@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 55956b22514092f74325dd548c98ef491970c2c2
+last_verified_commit: 772e8a31aa12d02533e52a872f2bfe5da2781938
 
 critical_paths:
   backend:
@@ -16,33 +16,34 @@ critical_paths:
     branch: backend/127-sensitive-response-no-store
     head: f70c427b1b9047ec8cba30422ad155466c36e65d
     state: ready_for_review
-    next: "PR #128 was acceptance-complete with exact-head Governance/Build GREEN before ERP/Data #124 merged. Main advanced at 55956b22514092f74325dd548c98ef491970c2c2 and live GitHub now reports #128 non-mergeable; Backend has been requested to run immediately and reconcile the SAME lease with current main, rerun exact-head gates, and return ready_for_review."
+    next: "PR #128 is acceptance-complete and its exact head previously passed Governance 35832697855 and Build 35832697740. Runtime #126 merge advanced main to 772e8a31aa12d02533e52a872f2bfe5da2781938; live comparison is now behind current main, so Backend has been requested to run immediately and reconcile this SAME lease before integration."
 
   frontend:
     issue: 121
     pr: 122
     branch: frontend/121-customer-chat-presentation
-    head: 8750b775a4547fb4af82eb9a313368d55d630665
+    head: 289856ffd60a6b9c923e66b5806414405a162d1c
     state: waiting_ci
-    next: "PR #122 is the authoritative Frontend lease. Actual HEAD 8750b775a4547fb4af82eb9a313368d55d630665 has exact-head Governance 35835661119 and Build 35835661076 GREEN, but the PR is draft/non-mergeable after main advances. Frontend has been requested to run immediately to reconcile SAME lease with current main, verify executable acceptance tests, clear draft only when acceptance is complete, and rerun exact-head gates."
+    next: "PR #122 exact head 289856ffd60a6b9c923e66b5806414405a162d1c has Governance 35841709228 and Build 35841709215 GREEN, but Runtime #126 merge advanced main and live PR is draft/non-mergeable. Frontend has been requested to run immediately to reconcile this SAME lease, preserve authority-bound acceptance, and return ready_for_review after exact-head gates."
 
   runtime_ai:
-    issue: 125
-    pr: 126
-    branch: runtime/125-customer-ai-credit-usage
-    head: 15185555a0da56c1422314e775462bab593b9c83
-    state: ready_for_review
-    next: "PR #126 state-checkpoint HEAD has exact-head Governance 35836474021 and Build 35836474032 GREEN. ERP/Data #124 merge advanced main and live GitHub now reports #126 non-mergeable; Runtime has been requested to run immediately to reconcile SAME lease with current main, rerun exact-head gates, and return ready_for_review."
-
-  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: done
-    next: "PR #124 / issue #123 authority-bound data-source health evidence fencing merged at 55956b22514092f74325dd548c98ef491970c2c2 after exact-head Governance 35832537689 and Build 35832537591 GREEN with clear review threads. ERP/Data has been requested to run immediately and claim/re-evaluate the next safe non-overlapping slice."
+    next: "PR #126 / issue #125 authority-bound customer AI credit usage projection merged at 772e8a31aa12d02533e52a872f2bfe5da2781938 after final exact-head Governance 35842611198 and Build 35842611276 GREEN with clear review threads. Runtime has been requested to run immediately and discover/claim the next safe non-overlapping slice."
+
+  erp_data:
+    issue: 129
+    pr: 130
+    branch: erp/129-health-evidence-replay-fencing
+    head: 7712ac0d4bc152a70a8f43f2c058ac2a8a86c187
+    state: ready_for_review
+    next: "PR #130 is acceptance-complete and previously exact-head GREEN, but Runtime #126 merge advanced main to 772e8a31aa12d02533e52a872f2bfe5da2781938 and live comparison is now behind=1/non-mergeable. ERP/Data has been requested to run immediately and reconcile this SAME lease, rerun exact-head gates, and return ready_for_review."
 
 recent_authoritative_merges:
+  - "PR #126 / issue #125 authority-bound customer AI credit usage projection: MERGED at 772e8a31aa12d02533e52a872f2bfe5da2781938"
   - "PR #124 / issue #123 authority-bound data-source health evidence fencing: MERGED at 55956b22514092f74325dd548c98ef491970c2c2"
   - "PR #120 / issue #119 authority-bound customer conversation context assembly: MERGED at 31040775122cb979f82566ed06cee7be37058ec4"
   - "PR #114 / issue #113 authority-bound data-source failover: MERGED at ccf386c96f4f5602712e217eb2af95a38831ed2e"
@@ -55,15 +56,14 @@ recent_authoritative_merges:
   - "PR #108 / issue #107 multi-server worker dispatch fencing: MERGED at 0b73ac2998652775595c35772f130f98ea433fd1"
   - "PR #106 / issue #105 company-scoped SLA and priority scheduling: MERGED at 8b2aa9e634094cfdaafd040846653956b3863624"
   - "PR #100 / issue #99 exception queue and specialist escalation: MERGED at 0d230bae20be0321315cf69d63efd8b9d8e2e615"
-  - "PR #98 / issue #97 order/inventory deterministic workflow contracts: MERGED at d17ac882cbb42edb4db1c4cfad7902afb627d5a5"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting investigation, posting/reconcile, tax/invoice, order/inventory, exception queue/specialist escalation and bulk deterministic execution are authoritative."
-  - "P6 billing foundation, SLA/priority scheduling, multi-server dispatch fencing, DR checkpoint restore fencing, customer audit/reporting, customer portal shell, authority-bound chat ingress/response projection, conversation context assembly, authority-bound data-source failover and data-source health evidence fencing are authoritative."
-  - "Backend #128, Runtime #126 and Frontend #122 are active P6 leases that must reconcile current main after ERP/Data #124 merge before integration."
+  - "P6 billing foundation, SLA/priority scheduling, multi-server dispatch fencing, DR checkpoint restore fencing, customer audit/reporting, customer portal shell, authority-bound chat ingress/response projection, conversation context assembly, data-source failover/health fencing, and authority-bound customer AI credit usage projection are authoritative."
+  - "Backend #128, Frontend #122 and ERP/Data #130 are active P6 leases that must reconcile current main after Runtime #126 merge before integration. Runtime is free to claim the next safe slice."
 
-next_action: "Backend owns SAME-lease current-main reconciliation on #128. Runtime owns SAME-lease current-main reconciliation on #126. Frontend owns SAME-lease reconciliation/exact-head acceptance closure on #122. ERP/Data has been requested to immediately discover/claim the next safe slice. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Backend, Frontend and ERP/Data own SAME-lease current-main reconciliation on #128, #122 and #130 respectively. Runtime has been requested to immediately discover/claim the next safe non-overlapping slice. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
