@@ -74,6 +74,8 @@ if (authenticationConfigured)
 
 var app = builder.Build();
 
+app.UseMiddleware<SensitiveResponseCacheMiddleware>();
+
 var correlationLogger = app.Services
     .GetRequiredService<ILoggerFactory>()
     .CreateLogger("MinhHuy.AIOffice.RequestCorrelation");

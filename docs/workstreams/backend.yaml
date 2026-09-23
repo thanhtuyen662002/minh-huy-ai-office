@@ -1,17 +1,15 @@
 workstream: backend
 role: "Backend Platform"
 status: waiting_ci
-current_issue: 35
-current_pr: 83
-current_branch: backend/35-customer-billing-foundation
-head: be611cf895e1d4624ba730d927d565de5bba11f3
+current_issue: 127
+current_pr: 128
+current_branch: backend/127-sensitive-response-no-store
+head: e329007f41076763052a5f510c7a5d1af40be577
 lease_owner: backend
-lease_heartbeat_at: "2026-09-22T18:02:00+07:00"
-last_checkpoint_at: "2026-09-22T18:02:00+07:00"
-last_completed_issue: 22
-last_merged_pr: 73
-last_merge_commit: 72aab4092e1238d70885185e5f8d43cc719dbdaf
-preferred_next_issue: 35
+lease_heartbeat_at: "2026-09-23T17:43:00+07:00"
+last_checkpoint_at: "2026-09-23T17:43:00+07:00"
+last_completed_issue: 35
+last_merged_pr: 83
 scope:
   - aspnet-core
   - identity
@@ -19,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 4594650a0c475a7e6a0dbcabba66767ad587f446
-  governance_run: 35717229231
-  build_run: 35717228891
-  result: "Prior exact-head Governance and Build GREEN. Current head adds a fail-closed unavailable billing source plus deterministic tests; exact-head CI pending publication."
+  prior_head: f70c427b1b9047ec8cba30422ad155466c36e65d
+  governance_run: 35832697855
+  build_run: 35832697740
+  result: "Prior acceptance-complete exact head was GREEN. SAME lease reconciled authoritative main 94590926d7182231bc1cc3de8d0d89a46646fe28 via two-parent merge e329007f41076763052a5f510c7a5d1af40be577 while preserving main-owned PROJECT_STATE/runtime/ERP contracts and Backend no-store implementation; exact-head CI must close on the checkpoint head after this state commit."
 known_risks:
-  - "Billing tenant/company authority must remain server-derived from IRequestAuthorizationContextAccessor."
-  - "Caller-controlled route/header/body identifiers must never select billing scope."
-  - "Do not invent persistence schema or pricing policy while wiring the initial billing read surface."
-  - "Cross-tenant/company source data must be rejected before exposure."
-blocked_by: []
-next_action: "Close exact-head CI for be611cf895e1d4624ba730d927d565de5bba11f3 on PR #83. If GREEN, wire the smallest authenticated /api/billing/plan read surface using CompanyBillingReader and the fail-closed source registration, then add endpoint acceptance coverage; do not edit docs/PROJECT_STATE.yaml."
+  - "Authority and billing response cache fencing must remain exact-path scoped and fail closed."
+  - "Tenant/company/user authority remains server-derived; caller-controlled identifiers must not select scope."
+  - "Do not edit docs/PROJECT_STATE.yaml or broaden persistence/pricing/secret contracts."
+blocked_by:
+  - "Exact-head Governance/Build for reconciled current-main checkpoint."
+next_action: "Resolve actual branch HEAD after this checkpoint, close exact-head Governance and Build on PR #128, fix any actionable RED on this SAME branch, then return ready_for_review only when CI is GREEN, mergeability is true, acceptance remains complete and review threads are clear."
