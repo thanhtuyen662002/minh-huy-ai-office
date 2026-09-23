@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 129
 current_pr: 130
 current_branch: erp/129-health-evidence-replay-fencing
-head: f937471668dba586de340d0c3551c26ffe448d9d
+head: 11423d46644339b2f8fca91724b0e0742f15c53a
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T10:39:30Z"
-last_checkpoint_at: "2026-09-23T10:39:30Z"
+lease_heartbeat_at: "2026-09-23T11:37:08Z"
+last_checkpoint_at: "2026-09-23T11:37:08Z"
 last_merged_pr: 124
 last_merge_commit: 55956b22514092f74325dd548c98ef491970c2c2
 preferred_next_issue: 129
@@ -27,4 +27,4 @@ scope:
   - datasource-failover
   - datasource-health-evidence
   - datasource-health-evidence-replay
-next_action: "PR #130 remains the authoritative ERP/Data lease for issue #129. Authoritative main 94590926d7182231bc1cc3de8d0d89a46646fe28 was reconciled into this SAME branch via mechanical helper PR #136 / merge commit f937471668dba586de340d0c3551c26ffe448d9d, preserving main-owned PROJECT_STATE and Runtime #133 AI-credit admission changes plus ERP/Data replay-fencing implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect and fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+next_action: "PR #130 remains the authoritative ERP/Data lease for issue #129. Reconciled authoritative main 8d1afa597435752fa8642b8ea37d6370cd77074a into this SAME branch via two-parent merge 11423d46644339b2f8fca91724b0e0742f15c53a, preserving main-owned PROJECT_STATE/backend cache-hardening changes and ERP/Data replay-fencing implementation/tests. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; inspect/fix actionable RED on this SAME branch. If GREEN, mergeable and review threads clear, return ready_for_review. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
