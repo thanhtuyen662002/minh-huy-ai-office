@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 113
 current_pr: 114
 current_branch: erp/113-datasource-failover
-head: 3279dcbf5e2c65d79ec137359bfb5a2b63dd1c37
+head: 12f3415979d1b8394125047549e4cb822fcd8ac6
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T02:36:00Z"
-last_checkpoint_at: "2026-09-23T02:36:00Z"
+lease_heartbeat_at: "2026-09-23T03:37:00Z"
+last_checkpoint_at: "2026-09-23T03:37:00Z"
 last_merged_pr: 104
 last_merge_commit: 39d5f95187b27224b00630f34418febdab5305ba
 preferred_next_issue: 113
@@ -25,4 +25,4 @@ scope:
   - order-inventory
   - bulk-deterministic-execution
   - datasource-failover
-next_action: "PR #114 remains the authoritative ERP/Data lease for issue #113. Acceptance-hardening HEAD c3ee5aafdfb290a3db2b1a1437267c1e762dcb88 passed Governance 35810836485 and Build 35810836472. Authoritative main 2ba68d5f088dd95ccc38d715df3d4dec7b9b4896 was reconciled into this SAME lease at two-parent merge 3279dcbf5e2c65d79ec137359bfb5a2b63dd1c37 while preserving main-owned PROJECT_STATE/runtime changes and ERP/Data implementation/test blobs. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; fix actionable RED on this SAME branch. If GREEN, mergeable, and review threads remain clear, mark ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
+next_action: "PR #114 remains the authoritative ERP/Data lease for issue #113. Exact-head Governance 35811093476 and Build 35811093363 were GREEN on pre-reconciliation HEAD 3bedef61051b98242ba78f646db18ea3d59335f0. Authoritative main b37fee356ed5e40776f6ff27dab56f8d5b165eeb was reconciled into this SAME lease at two-parent merge 12f3415979d1b8394125047549e4cb822fcd8ac6 while preserving main-owned PROJECT_STATE/frontend changes and ERP/Data implementation/test blobs. Resolve actual HEAD after this durable checkpoint and own exact-head Governance/Build; fix actionable RED on this SAME branch. If GREEN, mergeable, and review threads remain clear, mark ready_for_review. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
