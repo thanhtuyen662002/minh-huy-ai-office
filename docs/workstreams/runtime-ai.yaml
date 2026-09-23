@@ -4,11 +4,11 @@ status: active
 current_issue: 119
 current_pr: 120
 current_branch: runtime/119-customer-conversation-context
-head: a3bfb5b112322fdddc07ba021d6fc508a37ea0f1
-state: in_progress
+head: 8e255cf4f3e22c1dd6f8eafcd1555797e92be971
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T05:43:00Z"
-last_checkpoint_at: "2026-09-23T05:43:00Z"
+lease_heartbeat_at: "2026-09-23T05:46:00Z"
+last_checkpoint_at: "2026-09-23T05:46:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -32,4 +32,4 @@ scope:
   - customer-chat-ingress
   - customer-chat-response-projection
   - customer-conversation-context
-next_action: "Issue #119 is the active Runtime lease on runtime/119-customer-conversation-context. Initial authority-bound deterministic context assembly contract and focused tests are committed. Open Draft PR #120, capture its actual exact HEAD and CI, then own CI closure on the SAME branch; inspect/fix actionable RED and continue acceptance hardening before ready_for_review. Do not edit PROJECT_STATE, ERP/Data #114, expose secrets, broaden authority, or merge directly."
+next_action: "PR #120 / issue #119 is the active Runtime lease. Acceptance review hardened deterministic truncation so future turns cannot leak into context and reply ancestry must strictly precede descendants. Implementation HEAD 8e255cf4f3e22c1dd6f8eafcd1555797e92be971 has Governance 35823502653 queued and Build 35823502666 pending. Re-query exact current HEAD CI, inspect/fix actionable RED on this SAME branch, then complete acceptance review. Do not edit PROJECT_STATE, ERP/Data #114, expose secrets, broaden authority, or merge directly."
