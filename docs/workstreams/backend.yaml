@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: in_progress
+status: waiting_ci
 current_issue: 149
-current_pr: pending
+current_pr: 151
 current_branch: backend/149-customer-audit-projection
-head: claim_checkpoint
+head: reconcile_pending
 lease_owner: backend
-lease_heartbeat_at: "2026-09-23T22:37:00+07:00"
-last_checkpoint_at: "2026-09-23T22:37:00+07:00"
+lease_heartbeat_at: "2026-09-24T01:35:00+07:00"
+last_checkpoint_at: "2026-09-24T01:35:00+07:00"
 last_completed_issue: 138
 last_merged_pr: 139
 scope:
@@ -17,13 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 80f634668b93c7f5f5cbeaf40626ce44e63dfa7d
-  governance_run: pending
-  build_run: pending
-  result: "PR #139 is merged and authoritative. Claimed the next safe non-overlapping P6 Backend slice for authority-bound customer audit/reporting projection from live main."
+  prior_head: acfa93cac19fdd37b0cb528de5542d1ad86aef23
+  governance_run: 35899382991
+  build_run: 35899383016
+  result: "Prior exact HEAD was GREEN. Authoritative main advanced to c58b11617aa85a050d005ff013583715ee156b0c after ERP/Data integration and PR #151 became non-mergeable; SAME Backend lease is reconciled onto current main preserving server-derived tenant/company/user audit authority and current-main changes."
 known_risks:
   - "Tenant/company/user authority must remain server-derived; caller-controlled identifiers must never select audit scope."
   - "Audit projection must not expose secrets, connection strings, credential material, or cross-tenant evidence."
   - "Do not edit docs/PROJECT_STATE.yaml, migrations/shared contracts, or other specialist leases."
-blocked_by: []
-next_action: "Inspect existing durable audit/tool-execution persistence and authority patterns; implement the smallest read-only customer audit projection/API with fail-closed isolation, cache fencing, deterministic ordering/pagination and focused tests; then own exact-head Governance/Build through closure."
+blocked_by:
+  - "Exact-head Governance/Build for reconciled current-main checkpoint."
+next_action: "Resolve reconciled exact HEAD, close exact-head Governance and Build on PR #151, fix any actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review."

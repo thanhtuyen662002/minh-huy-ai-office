@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 132
-current_pr: 133
-current_branch: runtime/132-ai-credit-admission
-head: dead299a263db70e72145f762b752dfc5acf1427
-state: waiting_ci
+current_issue: 135
+current_pr: 137
+current_branch: runtime/135-ai-credit-reservation
+head: bab722ee1eec5ae8e0db8601bd162a57757511c3
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T09:37:00Z"
-last_checkpoint_at: "2026-09-23T09:37:00Z"
+lease_heartbeat_at: "2026-09-23T17:22:00Z"
+last_checkpoint_at: "2026-09-23T17:22:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -34,4 +34,5 @@ scope:
   - customer-conversation-context
   - customer-ai-credit-usage
   - customer-ai-credit-admission
-next_action: "PR #133 / issue #132 implements authority-bound provider-neutral AI credit admission. Implementation HEAD dead299a263db70e72145f762b752dfc5acf1427 includes focused boundary, stale-authority, cross-company, pricing mismatch, zero-budget, rounding, overflow and provider-neutral tests. Re-query exact-head Governance/Build on the current checkpoint, fix actionable RED on this SAME branch, and mark ready_for_review only after GREEN, mergeability and clear review threads. Do not edit PROJECT_STATE or other specialist leases."
+  - customer-ai-credit-reservation
+next_action: "PR #137 / issue #135 is acceptance-complete and ready for Lead review/integration. Exact checkpoint HEAD bab722ee1eec5ae8e0db8601bd162a57757511c3 passed Governance 35890122671 and Build 35890122665 GREEN; PR is mergeable=true against authoritative main eb00bdfcee4f17a539a1958752aa7cc00fafd42e and review threads are clear. Lead should verify final exact-head gates on this ready-state checkpoint before merge. Runtime must re-enter this SAME lease if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
