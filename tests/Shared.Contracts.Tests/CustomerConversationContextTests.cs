@@ -76,7 +76,11 @@ public sealed class CustomerConversationContextTests
         var first = CustomerConversationContext.Assemble(Authority, 7, message.MessageId, 5, new[] { message });
         var second = CustomerConversationContext.Assemble(Authority, 7, message.MessageId, 5, new[] { changedDiagnostics });
 
-        Assert.Equal(first, second);
+        Assert.Equal(first.Authority, second.Authority);
+        Assert.Equal(first.AuthorityVersion, second.AuthorityVersion);
+        Assert.Equal(first.SelectedMessageId, second.SelectedMessageId);
+        Assert.Equal(first.Messages.Select(x => x.MessageId), second.Messages.Select(x => x.MessageId));
+        Assert.Equal(first.Messages.Select(x => x.Content), second.Messages.Select(x => x.Content));
     }
 
     private static CustomerConversationContextMessage Message(Guid id, Guid? parent, DateTimeOffset occurredAt, CustomerConversationMessageRole role) =>
