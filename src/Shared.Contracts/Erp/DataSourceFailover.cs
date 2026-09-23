@@ -95,6 +95,29 @@ public static class DataSourceFailoverContract
             selected.Candidate.Role == DataSourceFailoverRole.Primary ? "primary-healthy" : "primary-unavailable-fallback-selected");
     }
 
+    public static void ValidateDecision(
+        DataSourceFailoverAuthority authority,
+        DataSourceOperationKind operation,
+        DataSourceFailoverDecision decision)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        ArgumentNullException.ThrowIfNull(decision);
+        ValidateAuthority(authority);
+        if (!Enum.IsDefined(operation)) throw new ArgumentOutOfRangeException(nameof(operation));
+        if (!Enum.IsDefined(decision.Operation)) throw new ArgumentOutOfRangeException(nameof(decision.Operation));
+        RequireCanonical(decision.EndpointId, nameof(decision.EndpointId));
+        RequireOpaqueReference(decision.EvidenceReference, nameof(decision.EvidenceReference));
+
+        if (decision.TenantId != authority.TenantId || decision.CompanyId != authority.CompanyId || decision.DataSourceId != authority.DataSourceId)
+            throw new UnauthorizedAccessException("Failover decision authority does not match the requested data source.");
+        if (decision.Operation != operation)
+            throw new UnauthorizedAccessException("Failover decision operation does not authorize the requested operation.");
+        if (!StringComparer.Ordinal.Equals(decision.RegistryVersion, authority.RegistryVersion) ||
+            !StringComparer.Ordinal.Equals(decision.SchemaVersion, authority.SchemaVersion) ||
+            !StringComparer.Ordinal.Equals(decision.CatalogVersion, authority.CatalogVersion))
+            throw new InvalidOperationException("Failover decision is outside the required registry/schema/catalog version fence.");
+    }
+
     private static void ValidateAuthority(DataSourceFailoverAuthority authority)
     {
         if (authority.TenantId == Guid.Empty || authority.CompanyId == Guid.Empty || authority.DataSourceId == Guid.Empty)

@@ -126,6 +126,37 @@ public sealed class DataSourceFailoverTests
         Assert.Throws<ArgumentOutOfRangeException>(() => Select(new[] { first with { AccessMode = (DataSourceAccessMode)99 } }, new[] { Evidence("primary") }));
     }
 
+    [Fact]
+    public void ValidateDecision_AcceptsExactAuthorityAndOperation()
+    {
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { Evidence("primary") });
+        DataSourceFailoverContract.ValidateDecision(Authority(), DataSourceOperationKind.Read, decision);
+    }
+
+    [Fact]
+    public void ValidateDecision_RejectsOperationReplay()
+    {
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { Evidence("primary") });
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecision(Authority(), DataSourceOperationKind.Write, decision));
+    }
+
+    [Fact]
+    public void ValidateDecision_RejectsCrossCompanyAndDataSource()
+    {
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { Evidence("primary") });
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { CompanyId = Guid.NewGuid() }, DataSourceOperationKind.Read, decision));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { DataSourceId = Guid.NewGuid() }, DataSourceOperationKind.Read, decision));
+    }
+
+    [Fact]
+    public void ValidateDecision_RejectsAuthorityVersionDrift()
+    {
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { Evidence("primary") });
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { RegistryVersion = "registry-8" }, DataSourceOperationKind.Read, decision));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { SchemaVersion = "schema-44" }, DataSourceOperationKind.Read, decision));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision));
+    }
+
     private static DataSourceFailoverDecision Select(DataSourceFailoverCandidate[] candidates, DataSourceHealthEvidence[] evidence, DataSourceOperationKind operation = DataSourceOperationKind.Read)
         => DataSourceFailoverContract.Select(Authority(), operation, candidates, evidence, Now);
 
