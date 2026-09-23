@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
 status: waiting_ci
-current_issue: 127
-current_pr: 128
-current_branch: backend/127-sensitive-response-no-store
-head: e329007f41076763052a5f510c7a5d1af40be577
+current_issue: 138
+current_pr: 139
+current_branch: backend/138-data-source-no-store
+head: d1255fe3816afce36e69ee9b97107e11a2cc0e2e
 lease_owner: backend
-lease_heartbeat_at: "2026-09-23T17:43:00+07:00"
-last_checkpoint_at: "2026-09-23T17:43:00+07:00"
-last_completed_issue: 35
-last_merged_pr: 83
+lease_heartbeat_at: "2026-09-23T20:34:00+07:00"
+last_checkpoint_at: "2026-09-23T20:34:00+07:00"
+last_completed_issue: 127
+last_merged_pr: 128
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,15 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: f70c427b1b9047ec8cba30422ad155466c36e65d
-  governance_run: 35832697855
-  build_run: 35832697740
-  result: "Prior acceptance-complete exact head was GREEN. SAME lease reconciled authoritative main 94590926d7182231bc1cc3de8d0d89a46646fe28 via two-parent merge e329007f41076763052a5f510c7a5d1af40be577 while preserving main-owned PROJECT_STATE/runtime/ERP contracts and Backend no-store implementation; exact-head CI must close on the checkpoint head after this state commit."
+  prior_head: 017a71bd81cfabd5c2c54cbeb43de73bb0b1f556
+  governance_run: 35864497726
+  build_run: 35864497636
+  result: "Prior reconciled head was GREEN. SAME lease reconciled authoritative main 91bf7a6f33ed72108bb4a27ef7ab07dc7c0d8741 via two-parent merge d1255fe3816afce36e69ee9b97107e11a2cc0e2e, using current main as the base tree and overlaying only the three Backend implementation/test files; Lead-owned PROJECT_STATE and other specialist changes are preserved. Exact-head CI must close on the state-checkpoint head produced by this update."
 known_risks:
-  - "Authority and billing response cache fencing must remain exact-path scoped and fail closed."
+  - "Data-source cache fencing must remain segment-aware so /api/data-sources-other is not fenced."
   - "Tenant/company/user authority remains server-derived; caller-controlled identifiers must not select scope."
-  - "Do not edit docs/PROJECT_STATE.yaml or broaden persistence/pricing/secret contracts."
+  - "Credential references remain opaque; do not expose connection strings or secret material."
+  - "Do not edit docs/PROJECT_STATE.yaml or broaden migrations/pricing/shared contracts."
 blocked_by:
   - "Exact-head Governance/Build for reconciled current-main checkpoint."
-next_action: "Resolve actual branch HEAD after this checkpoint, close exact-head Governance and Build on PR #128, fix any actionable RED on this SAME branch, then return ready_for_review only when CI is GREEN, mergeability is true, acceptance remains complete and review threads are clear."
+next_action: "Resolve actual branch HEAD after this checkpoint, close exact-head Governance and Build on PR #139, inspect/fix any actionable RED on this SAME branch, then return ready_for_review only when CI is GREEN, mergeability is true, acceptance remains complete and review threads are clear."
