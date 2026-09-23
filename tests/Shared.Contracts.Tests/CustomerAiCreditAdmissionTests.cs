@@ -11,9 +11,7 @@ public sealed class CustomerAiCreditAdmissionTests
     [Fact]
     public void Decide_AllowsExactCreditBoundary()
     {
-        var usage = Projection(2);
-        var decision = CustomerAiCreditAdmission.Decide(Request(3, 1_000_000), usage);
-
+        var decision = CustomerAiCreditAdmission.Decide(Request(3, 1_000_000), Projection(2));
         Assert.True(decision.Allowed);
         Assert.Equal(1, decision.RequestedAiCredits);
         Assert.Equal(3, decision.ProjectedAiCredits);
@@ -23,7 +21,6 @@ public sealed class CustomerAiCreditAdmissionTests
     public void Decide_DeniesWhenProjectedCreditsExceedLimit()
     {
         var decision = CustomerAiCreditAdmission.Decide(Request(2, 1), Projection(2));
-
         Assert.False(decision.Allowed);
         Assert.Equal(1, decision.RequestedAiCredits);
         Assert.Equal(3, decision.ProjectedAiCredits);
@@ -33,7 +30,6 @@ public sealed class CustomerAiCreditAdmissionTests
     public void Decide_ZeroRequestConsumesNoAdditionalCredits()
     {
         var decision = CustomerAiCreditAdmission.Decide(Request(2, 0), Projection(2));
-
         Assert.True(decision.Allowed);
         Assert.Equal(0, decision.RequestedAiCredits);
         Assert.Equal(2, decision.ProjectedAiCredits);
@@ -73,8 +69,17 @@ public sealed class CustomerAiCreditAdmissionTests
     [Fact]
     public void Decide_FailsClosedOnProjectedCreditOverflow()
     {
-        Assert.Throws<OverflowException>(() =>
-            CustomerAiCreditAdmission.Decide(Request(long.MaxValue, 1), Projection(long.MaxValue)));
+        var usage = new CustomerAiCreditProjection(
+            Authority, Pricing.PolicyId, Pricing.PolicyVersion, 0, long.MaxValue, []);
+
+        Assert.Throws<OverflowException>(() => CustomerAiCreditAdmission.Decide(Request(long.MaxValue, 1), usage));
+    }
+
+    [Fact]
+    public void Decide_RejectsNegativeRequestedBudgetAndLimit()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => CustomerAiCreditAdmission.Decide(Request(1, -1), Projection(0)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CustomerAiCreditAdmission.Decide(Request(-1, 0), Projection(0)));
     }
 
     [Fact]
@@ -99,7 +104,7 @@ public sealed class CustomerAiCreditAdmissionTests
         new(Authority, Pricing, new CustomerAiCreditAllowance(limit), requestedTokens);
 
     private static CustomerAiCreditProjection Projection(long usedCredits) =>
-        new(Authority, Pricing.PolicyId, Pricing.PolicyVersion, usedCredits * Pricing.TokenEquivalentPerCredit, usedCredits, []);
+        new(Authority, Pricing.PolicyId, Pricing.PolicyVersion, checked(usedCredits * Pricing.TokenEquivalentPerCredit), usedCredits, []);
 
     private static AiUsageEntry Usage(string id, long tokens, string provider, string model, decimal cost) =>
         new(
