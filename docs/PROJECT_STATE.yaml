@@ -7,16 +7,16 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: d234665d04602a2905a684288ff1022d3983da23
+last_verified_commit: a42b8fdd3a04f8f316c70167fc07c5b313a77744
 
 critical_paths:
   backend:
-    issue: 156
-    pr: 157
-    branch: backend/156-sla-priority-admission
-    head: 063b005b3a1f22a89fbc03adb2362383c02d5d76
-    state: ready_for_review
-    next: "PR #157 acceptance and exact-head gates were GREEN and review-ready before Runtime #153 merged. Runtime integration advanced authoritative main, so Backend must reconcile current main on the SAME lease, preserve server-derived SLA priority authority and re-close exact-head gates."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #157 / issue #156 authority-bound SLA priority admission merged at a42b8fdd3a04f8f316c70167fc07c5b313a77744 after exact-head Governance 35917371346 and Build 35917371366 GREEN, ahead-only/behind=0, mergeable=true and review threads clear. Backend should discover/claim the next safe unblocked Backend slice."
 
   frontend:
     issue: null
@@ -27,22 +27,23 @@ critical_paths:
     next: "Frontend has no live PR after #122 merged. Frontend should discover/claim the next safe unblocked non-overlapping slice against authoritative main."
 
   runtime_ai:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: done
-    next: "PR #153 / issue #152 authority-bound AI credit reservation settlement merged at d234665d04602a2905a684288ff1022d3983da23 after exact-head Governance 35915011462 and Build 35915011461 GREEN, ahead-only/behind=0, mergeable=true and review threads clear. Runtime must discover/claim the next safe unblocked Runtime slice."
+    issue: 158
+    pr: 159
+    branch: runtime/158-ai-credit-active-reservations
+    head: 5865ac664c1b63900e19c7158641b3272b3555fe
+    state: ready_for_review
+    next: "PR #159 acceptance and exact-head Governance 35921624058 / Build 35921624078 are GREEN, but Backend #157 integration advanced authoritative main. Runtime must reconcile current main on the SAME lease, preserve billing authority/pricing-policy reservation reconciliation fences, and re-close exact-head gates before integration."
 
   erp_data:
     issue: 154
     pr: 155
     branch: erp/154-failover-decision-validation
-    head: 0f58495143c4b4cd829283e2981c769bb2a9b5bf
+    head: 950fdd4065170aa1e770a87ec3ad9762ae41f4b0
     state: ready_for_review
-    next: "PR #155 acceptance was complete and review-ready before Runtime #153 merged. Runtime integration advanced authoritative main, so ERP/Data must reconcile current main on the SAME lease, preserve tenant/company/data-source/operation/version authority fences and re-close exact-head gates."
+    next: "PR #155 exact-head Governance 35917354315 and Build 35917354446 are GREEN, but Backend #157 integration advanced authoritative main and the branch is now behind by one commit. ERP/Data must reconcile current main on the SAME lease, preserve tenant/company/data-source/operation/version authority fences and re-close exact-head gates."
 
 recent_authoritative_merges:
+  - "PR #157 / issue #156 authority-bound SLA priority admission: MERGED at a42b8fdd3a04f8f316c70167fc07c5b313a77744"
   - "PR #153 / issue #152 authority-bound AI credit reservation settlement: MERGED at d234665d04602a2905a684288ff1022d3983da23"
   - "PR #151 / issue #149 authority-bound customer audit projection: MERGED at cb3a6316125df5929bb146bb338daed4d8be81bf"
   - "PR #147 / issue #146 bind failover decisions to operation authority: MERGED at e63225069e73b95efbdc24e181525182a25b31d9"
@@ -58,10 +59,10 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 customer audit and AI credit admission/reservation/settlement are authoritative on main; SLA priority admission and failover decision validation remain live specialist leases."
-  - "Backend #157 and ERP/Data #155 must reconcile authoritative main after Runtime #153 integration. Runtime and Frontend are free to claim next safe non-overlapping slices."
+  - "P6 customer audit, AI credit admission/reservation/settlement and SLA priority admission are authoritative on main; active reservation reconciliation and failover decision validation remain live specialist leases."
+  - "Runtime #159 and ERP/Data #155 must reconcile authoritative main after Backend #157 integration. Backend and Frontend are free to claim next safe non-overlapping slices."
 
-next_action: "Backend #157 and ERP/Data #155 reconcile authoritative main on their SAME leases and re-close exact-head gates; Runtime and Frontend discover/claim next safe slices. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Runtime #159 and ERP/Data #155 reconcile authoritative main on their SAME leases and re-close exact-head gates; Backend and Frontend discover/claim next safe slices. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
