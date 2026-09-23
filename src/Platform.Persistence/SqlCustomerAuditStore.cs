@@ -1,5 +1,7 @@
 using System.Data;
 using System.Data.Common;
+using Microsoft.EntityFrameworkCore;
+using Platform.Persistence;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
