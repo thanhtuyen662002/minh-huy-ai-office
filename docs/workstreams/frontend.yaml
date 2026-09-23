@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: waiting_ci
+status: ready_for_review
 current_issue: 162
 current_pr: 163
 current_branch: "frontend/162-customer-audit-presentation"
-head: "cd427344bf00ebaf844b8f0595074383e059dba9"
-state: waiting_ci
+head: "d4a3c4afabc13cce9a9b56776b0f81f8e1af80f7"
+state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T04:40:00+07:00"
-last_checkpoint_at: "2026-09-24T04:40:00+07:00"
+lease_heartbeat_at: "2026-09-24T05:11:51+07:00"
+last_checkpoint_at: "2026-09-24T05:11:51+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #163 / issue #162 is the active Frontend lease. Implementation and focused Vitest coverage are pushed with fail-closed audit payload validation, bounded collection size, exact duplicate idempotency/conflicting replay rejection, deterministic newest-first ordering, and no browser-selected tenant/company/user authority or fabricated presentation identity. Resolve actual HEAD after this metadata checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME branch, and continue acceptance until ready_for_review. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #163 / issue #162 is acceptance-complete on the SAME Frontend lease. Acceptance HEAD d4a3c4afabc13cce9a9b56776b0f81f8e1af80f7 is ahead-only/behind=0 and mergeable=true with exact-head Governance 35923734900 GREEN and Build 35923734872 GREEN and no unresolved review threads. Customer audit presentation fails closed on malformed/conflicting evidence, bounds the API page, orders deterministically, and never treats browser-selected tenant/company/user metadata or fabricated company/user names as authority. This metadata checkpoint must also receive exact-head Governance/Build GREEN before Lead integration. If review, mergeability, base, or CI drifts, resume this SAME lease. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
