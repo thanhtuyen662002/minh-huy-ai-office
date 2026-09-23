@@ -1,5 +1,6 @@
 using MinhHuy.AIOffice.Platform.Persistence;
 using Platform.Persistence;
+using Xunit;
 
 namespace Platform.Persistence.Tests;
 
