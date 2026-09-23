@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: b6a0960f973b04598ffa0986f9b7b9d2ed2ee404
+last_verified_commit: 39d5f95187b27224b00630f34418febdab5305ba
 
 critical_paths:
   backend:
@@ -22,27 +22,28 @@ critical_paths:
     issue: 101
     pr: 102
     branch: frontend/101-customer-portal-shell
-    head: 9eee72cc7e59289eb8fa1419070030b76e624dcd
+    head: 38430e1b33586236cb5315c715314e7b1472939a
     state: in_progress
-    next: "PR #102 remains the authoritative Frontend lease. Exact-head Governance 35801122450 + Build 35801122413 are GREEN and acceptance is at final review, but main advanced after Runtime #110 merged and live GitHub now reports non-mergeable. Frontend immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and close final acceptance."
+    next: "PR #102 is the authoritative Frontend lease. Exact-head Governance 35805088088 + Build 35805088093 are GREEN and acceptance was ready_for_review, but main advanced after ERP/Data #104 merged and live GitHub now reports non-mergeable. Frontend immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and return ready_for_review."
 
   runtime_ai:
+    issue: 111
+    pr: 112
+    branch: runtime/111-customer-audit-projection
+    head: 9dc9c846e6f3c0dde3ae37f227fdd0476d62fef2
+    state: in_progress
+    next: "PR #112 is the authoritative Runtime lease. Exact-head Governance 35806132102 + Build 35806132173 are GREEN and no review threads are open, but main advanced after ERP/Data #104 merged and live GitHub now reports non-mergeable. Runtime immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and finish ready_for_review."
+
+  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: done
-    next: "PR #110 / issue #109 disaster-recovery checkpoint restore fencing merged at b6a0960f973b04598ffa0986f9b7b9d2ed2ee404 after exact-head Governance 35798566523 + Build 35798566524 GREEN. Runtime immediate re-entry requested to reconcile specialist state and claim the next highest-priority unblocked non-overlapping Runtime/AI slice."
-
-  erp_data:
-    issue: 103
-    pr: 104
-    branch: erp/103-bulk-deterministic-execution
-    head: f02485eda93c0d9eabb56fef87d3e1d1d8ffdd9f
-    state: in_progress
-    next: "PR #104 remains the authoritative ERP/Data lease. Exact-head Governance 35798594759 + Build 35798594749 are GREEN and acceptance is at final review, but main advanced after Runtime #110 merged and live GitHub now reports non-mergeable. ERP/Data immediate re-entry requested to reconcile SAME lease with current main, rerun exact-head gates and finish ready_for_review."
+    next: "PR #104 / issue #103 bulk deterministic execution merged at 39d5f95187b27224b00630f34418febdab5305ba after exact-head Governance 35802865533 + Build 35802865563 GREEN. ERP/Data immediate re-entry requested to reconcile specialist state and claim the next highest-priority unblocked non-overlapping ERP/Data slice."
 
 recent_authoritative_merges:
+  - "PR #104 / issue #103 bulk deterministic execution: MERGED at 39d5f95187b27224b00630f34418febdab5305ba"
   - "PR #110 / issue #109 disaster-recovery checkpoint restore fencing: MERGED at b6a0960f973b04598ffa0986f9b7b9d2ed2ee404"
   - "PR #108 / issue #107 multi-server worker dispatch fencing: MERGED at 0b73ac2998652775595c35772f130f98ea433fd1"
   - "PR #106 / issue #105 company-scoped SLA and priority scheduling: MERGED at 8b2aa9e634094cfdaafd040846653956b3863624"
@@ -56,11 +57,12 @@ recent_authoritative_merges:
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
-  - "P5 accounting investigation, posting/reconcile, tax/invoice, order/inventory and exception queue/specialist escalation are authoritative."
-  - "P5 bulk deterministic execution #103 remains actively owned by ERP/Data PR #104 pending current-main reconciliation/final review."
-  - "P6 company-scoped billing foundation, SLA/priority scheduling #105, multi-server dispatch fencing #107 and DR checkpoint restore fencing #109 are authoritative; customer portal authority-bound shell #101 remains actively owned by Frontend PR #102."
+  - "P5 accounting investigation, posting/reconcile, tax/invoice, order/inventory, exception queue/specialist escalation and bulk deterministic execution are authoritative."
+  - "P6 company-scoped billing foundation, SLA/priority scheduling, multi-server dispatch fencing and DR checkpoint restore fencing are authoritative."
+  - "P6 customer portal #101 remains actively owned by Frontend PR #102 pending current-main reconciliation."
+  - "P6 customer audit/reporting #111 remains actively owned by Runtime PR #112 pending current-main reconciliation."
 
-next_action: "Frontend immediately reconciles PR #102 with current main and closes exact-head acceptance. ERP/Data immediately reconciles PR #104 with current main and closes exact-head final review. Runtime immediately re-evaluates and claims its next safe slice after #110 merge. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Frontend immediately reconciles PR #102 with current main and closes exact-head acceptance. Runtime immediately reconciles PR #112 with current main and closes exact-head acceptance. ERP/Data immediately reconciles its merged lease and claims the next safe roadmap slice. Backend re-evaluates live GitHub for safe non-overlapping work. Lead merges acceptance-complete work promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
