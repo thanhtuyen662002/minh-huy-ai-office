@@ -4,11 +4,11 @@ status: active
 current_issue: 125
 current_pr: 126
 current_branch: runtime/125-customer-ai-credit-usage
-head: 775c345a524db5e2b1a626985560aa26a1f726d2
-state: ready_for_review
+head: 98f0a2697be078f76ed834641f99d03fe254e6a7
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T08:18:56Z"
-last_checkpoint_at: "2026-09-23T08:18:56Z"
+lease_heartbeat_at: "2026-09-23T08:38:00Z"
+last_checkpoint_at: "2026-09-23T08:38:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -33,4 +33,4 @@ scope:
   - customer-chat-response-projection
   - customer-conversation-context
   - customer-ai-credit-usage
-next_action: "PR #126 / issue #125 is acceptance-complete on implementation HEAD 775c345a524db5e2b1a626985560aa26a1f726d2: Governance 35832577619 and Build 35832577564 GREEN, PR mergeable, review threads clear, and comparison against authoritative main 97022929311339a5d879ea921f375a65cff9b93f is ahead-only with behind=0. Runtime acceptance is complete; Lead should verify the final state-checkpoint exact-head CI remains GREEN and merge in sequence. Do not edit PROJECT_STATE, other specialist leases, expose provider cost as customer authority, or merge directly."
+next_action: "PR #126 / issue #125 was reconciled on the SAME lease with authoritative main c0e536b303c32e4b37d53191e5276ab7fd52b66c. Reconciliation HEAD 98f0a2697be078f76ed834641f99d03fe254e6a7 is ahead-only with behind=0 and preserves the accepted customer AI credit projection plus ERP/Data/main changes. Exact-head workflows had not emitted at the first re-query. Re-query Governance/Build for the current branch HEAD; fix actionable RED on this SAME branch, then return ready_for_review only after exact-head gates are GREEN and review threads remain clear. Do not edit PROJECT_STATE, other specialist leases, expose provider cost as customer authority, or merge directly."
