@@ -7,16 +7,16 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: e63225069e73b95efbdc24e181525182a25b31d9
+last_verified_commit: cb3a6316125df5929bb146bb338daed4d8be81bf
 
 critical_paths:
   backend:
-    issue: 149
-    pr: 151
-    branch: backend/149-customer-audit-projection
-    head: acfa93cac19fdd37b0cb528de5542d1ad86aef23
-    state: waiting_ci
-    next: "PR #151 exact-head Governance 35899382991 and Build 35899383016 are GREEN and review threads are clear, but ERP/Data #147 merge advanced authoritative main and the PR is now non-mergeable. Backend was immediately re-entered on the SAME lease to reconcile current main, preserve server-derived tenant/company/user audit authority and re-close exact-head gates."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #151 / issue #149 authority-bound customer audit projection merged at cb3a6316125df5929bb146bb338daed4d8be81bf after exact-head Governance 35903784606 and Build 35903784544 GREEN, mergeable=true and review threads clear. Backend must discover/claim the next safe unblocked Backend slice."
 
   frontend:
     issue: null
@@ -24,25 +24,26 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "Frontend has no live PR after #122 merged. Frontend was immediately re-entered to discover/claim the next safe unblocked non-overlapping slice against current authoritative main."
+    next: "Frontend has no live PR after #122 merged. Frontend should discover/claim the next safe unblocked non-overlapping slice against authoritative main."
 
   runtime_ai:
     issue: 152
     pr: 153
     branch: runtime/152-ai-credit-settlement
-    head: 9694bd9957c12c566eb4202e48dc739e155ad788
+    head: e72168e93c252f199506ec12d859bfebe54b7095
     state: ready_for_review
-    next: "PR #153 exact-head Governance 35902032730 and Build 35902032603 are GREEN and review threads are clear, but ERP/Data #147 merge advanced authoritative main and the PR is now non-mergeable. Runtime was immediately re-entered on the SAME lease to reconcile current main, preserve authority-bound settlement/idempotency/persistence-before-release invariants and re-close exact-head gates."
+    next: "PR #153 exact-head Governance 35908567276 and Build 35908567273 are GREEN and review threads are clear, but Backend #151 merge advanced authoritative main and the PR is now non-mergeable. Runtime must reconcile current main on the SAME lease, preserve authority-bound settlement/idempotency/persistence-before-release invariants and re-close exact-head gates."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: done
-    next: "PR #147 / issue #146 operation-authority failover decision fencing merged at e63225069e73b95efbdc24e181525182a25b31d9 after exact-head Governance 35903224745 and Build 35903224710 GREEN, mergeable=true and review threads clear. ERP/Data was immediately re-entered to claim the next safe slice."
+    issue: 154
+    pr: 155
+    branch: erp/154-failover-decision-validation
+    head: 1d2e5f8f8675a730f0691cacdd225e325acc6ed6
+    state: waiting_ci
+    next: "PR #155 exact-head Governance 35909580001 and Build 35909580156 are GREEN and review threads are clear, but Backend #151 merge advanced authoritative main and the PR is now non-mergeable. ERP/Data must reconcile current main on the SAME lease and re-close exact-head gates before Lead integration."
 
 recent_authoritative_merges:
+  - "PR #151 / issue #149 authority-bound customer audit projection: MERGED at cb3a6316125df5929bb146bb338daed4d8be81bf"
   - "PR #147 / issue #146 bind failover decisions to operation authority: MERGED at e63225069e73b95efbdc24e181525182a25b31d9"
   - "PR #137 / issue #135 authority-bound AI credit reservation fencing: MERGED at 38c01e3becd40fb62a66e6f05370a4be1345bd54"
   - "PR #122 / issue #121 authority-bound customer chat presentation adapter: MERGED at 127d0f4e78de51de09f87d4b188c8d9af2e0e95e"
@@ -53,15 +54,14 @@ recent_authoritative_merges:
   - "PR #128 / issue #127 sensitive authority/billing response no-store fencing: MERGED at 06bfdd843d1fed364dc3141c241f8031b01d2ead"
   - "PR #133 / issue #132 authority-bound AI credit admission: MERGED at 52abf1b3e0cffa4836f7a1f13cb9ed76cd15959c"
   - "PR #126 / issue #125 authority-bound customer AI credit usage projection: MERGED at 772e8a31aa12d02533e52a872f2bfe5da2781938"
-  - "PR #124 / issue #123 authority-bound data-source health evidence fencing: MERGED at 55956b22514092f74325dd548c98ef491970c2c2"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 billing, scheduling, multi-server/DR, customer portal/chat/context/presentation, data-source failover/health/replay/freshness/operation authority, AI credit usage/admission/reservation and sensitive response fencing are advancing on authoritative main."
-  - "ERP/Data #147 operation-authority fencing is authoritative. Backend #151 and Runtime #153 must reconcile current authoritative main before integration. Frontend and ERP/Data are free to claim next safe non-overlapping slices."
+  - "P6 billing, scheduling, multi-server/DR, customer portal/chat/context/presentation/audit, data-source failover/health/replay/freshness/operation authority, AI credit usage/admission/reservation and sensitive response fencing are advancing on authoritative main."
+  - "Backend #151 customer audit projection is authoritative. Runtime #153 and ERP/Data #155 must reconcile current authoritative main before integration. Backend and Frontend are free to claim next safe non-overlapping slices."
 
-next_action: "Backend #151 and Runtime #153 reconcile current authoritative main on their SAME leases and re-close exact-head gates; ERP/Data and Frontend discover/claim next safe slices. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Runtime #153 and ERP/Data #155 reconcile current authoritative main on their SAME leases and re-close exact-head gates; Backend and Frontend discover/claim next safe slices. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
