@@ -4,11 +4,11 @@ status: active
 current_issue: 111
 current_pr: 112
 current_branch: runtime/111-customer-audit-projection
-head: c948579d7bebc913dd405d87e7b97211d10e47e9
-state: in_progress
+head: 92af4f93315121faa7a5de2f58d0557ca70edd35
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T00:38:00Z"
-last_checkpoint_at: "2026-09-23T00:38:00Z"
+lease_heartbeat_at: "2026-09-23T01:22:00Z"
+last_checkpoint_at: "2026-09-23T01:22:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -29,4 +29,4 @@ scope:
   - multi-server-dispatch-fencing
   - disaster-recovery-checkpoint-fencing
   - customer-audit-reporting
-next_action: "PR #112 / issue #111 is the authoritative Runtime lease. Initial authority-bound customer audit projection contract and focused tests are implemented. Own exact-head CI on this SAME branch, harden acceptance while pending, fix actionable failures, and only then mark ready_for_review. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
+next_action: "PR #112 / issue #111 remains the authoritative Runtime lease. Acceptance review found and fixed a pagination mismatch: cursor position now uses the same OccurredAt + Version + EventId order as projection, preventing skipped rows when durable versions and event timestamps differ. Re-query exact-head CI for the latest checkpoint, fix actionable RED on this SAME branch, then mark ready_for_review only when Governance + Build are GREEN and mergeability remains true. Do not edit PROJECT_STATE, Frontend #102, ERP/Data #104, expose secrets, or merge directly."
