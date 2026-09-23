@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 103
-current_pr: 104
-current_branch: erp/103-bulk-deterministic-execution
-head: 45130dc18cc3cc45a758df140314f16c15794470
-state: waiting_ci
+current_issue: 113
+current_pr: null
+current_branch: erp/113-datasource-failover
+head: 36b5c31b3c81ce2a4afdf5e1ba284f70db0d4867
+state: in_progress
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T00:38:00Z"
-last_checkpoint_at: "2026-09-23T00:38:00Z"
-last_merged_pr: 98
-last_merge_commit: d17ac882cbb42edb4db1c4cfad7902afb627d5a5
-preferred_next_issue: 103
+lease_heartbeat_at: "2026-09-23T01:44:00Z"
+last_checkpoint_at: "2026-09-23T01:44:00Z"
+last_merged_pr: 104
+last_merge_commit: 39d5f95187b27224b00630f34418febdab5305ba
+preferred_next_issue: 113
 blocked_by: []
 scope:
   - datasource-registry
@@ -24,4 +24,5 @@ scope:
   - tax-invoice
   - order-inventory
   - bulk-deterministic-execution
-next_action: "PR #104 remains the authoritative ERP/Data lease for issue #103. Acceptance implementation is complete. Current authoritative main b2dc6137bc08bd3d749a1ef94041dd00ca773f00 was reconciled into this SAME lease at two-parent merge checkpoint 45130dc18cc3cc45a758df140314f16c15794470, preserving main-owned PROJECT_STATE and Runtime recovery fencing while retaining all ERP/Data implementation/test blobs. Own exact-head Governance/Build for the current checkpoint; fix actionable RED on this SAME branch. If GREEN and mergeable, keep PR ready_for_review for Lead sequencing. Do not edit PROJECT_STATE, modify Frontend/Runtime leases, expose secrets, broaden tenant/company/data-source authority, or merge directly."
+  - datasource-failover
+next_action: "Issue #113 is the authoritative ERP/Data lease. Initial authority-bound data-source failover contract and focused tests are implemented on erp/113-datasource-failover. Open the Draft PR, resolve exact branch HEAD, own Governance/Build closure, and fix actionable RED on this SAME branch. Continue acceptance hardening for deterministic failover evidence and fail-closed write/version fencing. Do not edit PROJECT_STATE or modify Frontend/Runtime leases."
