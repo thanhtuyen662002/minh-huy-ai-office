@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
 status: waiting_ci
-current_issue: 138
-current_pr: 139
-current_branch: backend/138-data-source-no-store
-head: pending_merge_checkpoint
+current_issue: 149
+current_pr: 151
+current_branch: backend/149-customer-audit-projection
+head: reconcile_pending
 lease_owner: backend
-lease_heartbeat_at: "2026-09-23T21:34:00+07:00"
-last_checkpoint_at: "2026-09-23T21:34:00+07:00"
-last_completed_issue: 127
-last_merged_pr: 128
+lease_heartbeat_at: "2026-09-24T01:35:00+07:00"
+last_checkpoint_at: "2026-09-24T01:35:00+07:00"
+last_completed_issue: 138
+last_merged_pr: 139
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: fb623fce0b71b0d4d0a8037236c2afff224928c0
-  governance_run: 35868160307
-  build_run: 35868160370
-  result: "Prior acceptance-complete exact head was GREEN. Live main advanced to 8af4d48056183ddfc260950c908744194a66437d and PR #139 became non-mergeable; SAME lease is being reconciled while preserving authoritative main and Backend cache-fence changes."
+  prior_head: acfa93cac19fdd37b0cb528de5542d1ad86aef23
+  governance_run: 35899382991
+  build_run: 35899383016
+  result: "Prior exact HEAD was GREEN. Authoritative main advanced to c58b11617aa85a050d005ff013583715ee156b0c after ERP/Data integration and PR #151 became non-mergeable; SAME Backend lease is reconciled onto current main preserving server-derived tenant/company/user audit authority and current-main changes."
 known_risks:
-  - "Prefix matching must remain segment-aware so unrelated paths are not fenced."
-  - "Tenant/company/user authority remains server-derived; caller-controlled identifiers must not select scope."
-  - "Do not edit docs/PROJECT_STATE.yaml, migrations/pricing/shared contracts, or other specialist leases."
+  - "Tenant/company/user authority must remain server-derived; caller-controlled identifiers must never select audit scope."
+  - "Audit projection must not expose secrets, connection strings, credential material, or cross-tenant evidence."
+  - "Do not edit docs/PROJECT_STATE.yaml, migrations/shared contracts, or other specialist leases."
 blocked_by:
   - "Exact-head Governance/Build for reconciled current-main checkpoint."
-next_action: "Resolve actual branch HEAD after reconciliation, close exact-head Governance and Build on PR #139, fix any actionable RED on this SAME branch, then return ready_for_review only when CI is GREEN, mergeability is true, acceptance remains complete and review threads are clear."
+next_action: "Resolve reconciled exact HEAD, close exact-head Governance and Build on PR #151, fix any actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review."
