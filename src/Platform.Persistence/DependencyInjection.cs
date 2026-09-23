@@ -23,6 +23,8 @@ public static class DependencyInjection
             services.AddScoped<IAuthorizationDirectory, EfAuthorizationDirectory>();
             services.AddScoped<IAuthenticatedAuthorizationDirectory, EfAuthenticatedAuthorizationDirectory>();
             services.AddScoped<IToolExecutionAuditSink, SqlToolExecutionAuditSink>();
+            services.AddScoped<ICustomerAuditStore, SqlCustomerAuditStore>();
+            services.AddScoped<CustomerAuditProjection>();
             services.AddScoped<ToolExecutionAuditService>();
             services.AddScoped<AuthorizedToolExecutionGate>();
         }
