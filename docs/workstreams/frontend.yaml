@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: blocked
-current_issue: null
-current_pr: null
-current_branch: null
-head: null
-state: blocked
+status: waiting_ci
+current_issue: 101
+current_pr: 102
+current_branch: "frontend/101-customer-portal-shell"
+head: "1f91014e807848c93a74aea4c42f475a5aa5599b"
+state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-22T13:34:20+07:00"
-last_checkpoint_at: "2026-09-22T13:34:20+07:00"
+lease_heartbeat_at: "2026-09-23T09:08:25+07:00"
+last_checkpoint_at: "2026-09-23T09:08:25+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #64 / issue #62 is merged (merge commit 36a9a63f6d2ef53476b7e984e542f724a52b774f). No Frontend live PR remains. Issue #22 is actively owned by Backend PR #73 and must not be duplicated. The remaining open implementation issues are dependency-blocked or owned by other lanes: #29 has ERP/Data PR #82; #30 depends on #29; #31 depends on #30; #32 depends on #31; #33 depends on #32; #34 requires the P1-P3 minimum viable foundation; #35 requires validated internal Phase 1. Re-resolve live GitHub state next run and claim the highest-priority newly-unblocked non-overlapping Frontend issue or a Lead-approved frontend slice. Do not create heartbeat-only commits."
+next_action: "PR #102 / issue #101 has been reconciled on the SAME lease with authoritative main 1bccf2861f03243d5da74c5c95c26ae139f86d79. Reconciliation head 1f91014e807848c93a74aea4c42f475a5aa5599b is ahead-only/behind=0 and preserves main-owned PROJECT_STATE; compare remains scoped to five Frontend implementation/test paths plus this Frontend state. Re-resolve actual HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on this SAME PR, and return ready_for_review when GREEN/mergeable with no unresolved review threads. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations; browser selection remains untrusted and company/user presentation must never be fabricated."
