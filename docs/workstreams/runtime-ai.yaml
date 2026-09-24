@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: def89205b487b05cd931fe36d14467b7b465fef4
-state: ready_for_review
+head: 2a907f32b357fffc22fa4c2fff09e2b21bfefd25
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T13:21:40+07:00"
-last_checkpoint_at: "2026-09-24T13:21:40+07:00"
+lease_heartbeat_at: "2026-09-24T13:40:00+07:00"
+last_checkpoint_at: "2026-09-24T13:40:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-reservation-active-holds
-next_action: "PR #177 / issue #175 is acceptance-complete on reconciled implementation HEAD def89205b487b05cd931fe36d14467b7b465fef4: exact-head Governance 35960931095 and Build 35960931107 are terminal GREEN; authoritative main remains c7abd84789b2038ac651c86dd5d1deada2e78566; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains exactly Runtime state plus reservation contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 was reconciled on SAME lease with authoritative main 4ba736c175bfc5dd632ebb163c8cb034a6028ae3 at implementation merge checkpoint 2a907f32b357fffc22fa4c2fff09e2b21bfefd25. Compare is ahead-only/behind=0 and diff remains exactly Runtime state plus reservation contract/tests. Preserve active-hold/admission/replay/pricing/overflow fences. Own exact-head Governance/Build for the durable checkpoint created by this state update; inspect actionable RED and fix on SAME branch. If GREEN, verify live main, mergeability and review threads, then restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, expose provider/model/cost metadata as authority, or merge directly."
