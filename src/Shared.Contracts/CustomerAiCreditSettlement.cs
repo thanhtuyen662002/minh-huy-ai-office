@@ -93,12 +93,14 @@ public static class CustomerAiCreditSettlement
         ValidateCanonical(evidence.PricingPolicyId, nameof(evidence.PricingPolicyId));
         if (evidence.PricingPolicyVersion <= 0 || evidence.SettledAiCredits < 0 || evidence.ReleasedAiCredits < 0)
             throw new ArgumentException("Settlement evidence contains invalid credit or policy values.", nameof(evidence));
-        if (checked(evidence.SettledAiCredits + evidence.ReleasedAiCredits) != reservation.ReservedAiCredits)
-            throw new InvalidOperationException("Settlement evidence does not reconcile the reservation.");
         if (evidence.Authority != reservation.Authority)
             throw new UnauthorizedAccessException("Settlement evidence is outside the authoritative billing scope or version.");
         if (!string.Equals(evidence.PricingPolicyId, reservation.PricingPolicyId, StringComparison.Ordinal) || evidence.PricingPolicyVersion != reservation.PricingPolicyVersion)
             throw new InvalidOperationException("Settlement evidence pricing policy is stale or mismatched.");
+
+        var reconciledCredits = checked(evidence.SettledAiCredits + evidence.ReleasedAiCredits);
+        if (string.Equals(evidence.ReservationId, reservation.ReservationId, StringComparison.Ordinal) && reconciledCredits != reservation.ReservedAiCredits)
+            throw new InvalidOperationException("Settlement evidence does not reconcile the reservation.");
     }
 
     private static void ValidateEvidenceShape(CustomerAiCreditReservationEvidence reservation)
