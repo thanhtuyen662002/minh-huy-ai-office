@@ -6,11 +6,13 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 /// <summary>
 /// Durable-boundary abstraction for SLA priority admission evidence. Implementations must
 /// commit evidence before returning; scheduler enqueue is deliberately a separate callback.
+/// Reads are authority-scoped so AdmissionId alone never grants cross-tenant evidence access.
 /// </summary>
 public interface ICustomerSlaPriorityAdmissionStore
 {
     Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
         string admissionId,
+        CustomerSlaAuthority authority,
         CancellationToken cancellationToken = default);
 
     Task<CustomerSlaPriorityAdmissionEvidence> PersistAsync(
@@ -38,7 +40,7 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceService(
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(enqueue);
 
-        var existing = await store.FindAsync(request.AdmissionId, cancellationToken);
+        var existing = await store.FindAsync(request.AdmissionId, request.Authority, cancellationToken);
         var decided = CustomerSlaPriorityAdmission.Decide(request, existing);
         var persisted = await store.PersistAsync(decided, cancellationToken);
 
@@ -64,11 +66,13 @@ public sealed class InMemoryCustomerSlaPriorityAdmissionStore : ICustomerSlaPrio
 
     public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
         string admissionId,
+        CustomerSlaAuthority authority,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(authority);
         cancellationToken.ThrowIfCancellationRequested();
         evidence.TryGetValue(admissionId, out var existing);
-        return Task.FromResult(existing);
+        return Task.FromResult(existing is not null && existing.Authority == authority ? existing : null);
     }
 
     public Task<CustomerSlaPriorityAdmissionEvidence> PersistAsync(

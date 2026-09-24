@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
 status: waiting_ci
-current_issue: 184
-current_pr: 185
-current_branch: backend/184-sla-priority-ceiling-evidence
-head: 57d2910dcab03714cbb0dd86c84bde6862f4934a
+current_issue: 186
+current_pr: 187
+current_branch: backend/186-sla-authority-scoped-lookup
+head: f96b00864f1e8a2c732044add60378c8f651fa01
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T14:45:00+07:00"
-last_checkpoint_at: "2026-09-24T14:45:00+07:00"
-last_completed_issue: 167
-last_merged_pr: 168
+lease_heartbeat_at: "2026-09-24T15:39:00+07:00"
+last_checkpoint_at: "2026-09-24T15:39:00+07:00"
+last_completed_issue: 184
+last_merged_pr: 185
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 8d521b9786a737b2b02c1fcf4e33cc5ec642a574
+  prior_head: c545984942762237726e1e90f9e6559ff65b01b4
   governance_run: null
   build_run: null
-  result: "Claimed #184 after #168 merged and opened Draft PR #185. Bound authoritative PriorityCeiling into SLA admission evidence, SQL persistence and a versioned migration with conservative backfill; added focused replay/ceiling tests. Exact-head CI pending after this durable checkpoint."
+  result: "Claimed #186 after #185 merged. SLA admission reads now require server-derived authority; SQL predicates tenant/company/user/authority-version and in-memory behavior matches. Focused isolation/replay tests added; exact-head CI pending after durable checkpoint."
 known_risks:
-  - "Tenant/company/user authority and SLA policy/version/ceiling remain server-derived; caller-controlled numeric priority never becomes scheduler authority."
-  - "Migrated historical rows conservatively set PriorityCeiling=SchedulerPriority because the original wider ceiling was not durably available."
-  - "Schema migration integrity is mandatory; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
+  - "AdmissionId remains globally unique for serialized persistence conflict detection, while reads are authority-scoped and fail closed."
+  - "Tenant/company/user/version authority remains server-derived; scheduler priority and ceiling remain policy-derived."
+  - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
 blocked_by:
   - "Exact-head Governance/Build for the durable PR checkpoint are non-terminal or not yet discovered."
-next_action: "Resolve actual PR #185 HEAD after this checkpoint; close exact-head Governance/Build, fix actionable RED on SAME branch, then verify current main, reviews and mergeability before ready_for_review."
+next_action: "Resolve actual PR #187 HEAD after this checkpoint; close exact-head Governance/Build, fix actionable RED on SAME branch, then verify current main, reviews and mergeability before ready_for_review."
