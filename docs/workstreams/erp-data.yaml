@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 180
-current_pr: 181
-current_branch: erp/180-failover-operation-time-freshness
-head: e4995d673e4c6f678920a9cdf116790cf806a624
+current_issue: 197
+current_pr: 198
+current_branch: erp/197-failover-policy-authority-scope
+head: f49528ce58fe060e99f3c6e91824b93d524dc673
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T05:42:00Z"
-last_checkpoint_at: "2026-09-24T05:42:00Z"
-last_merged_pr: 179
-last_merge_commit: 4c54675884f7c1ada9a712e18995aedd2303d0e3
-preferred_next_issue: 180
+lease_heartbeat_at: "2026-09-24T13:39:00Z"
+last_checkpoint_at: "2026-09-24T13:39:00Z"
+last_merged_pr: 183
+last_merge_commit: b5892d92144472fe53de8df35de5544090038db9
+preferred_next_issue: 197
 blocked_by: []
 scope:
   - datasource-registry
@@ -35,4 +35,6 @@ scope:
   - datasource-failover-execution-evidence
   - datasource-failover-execution-authorization
   - datasource-failover-operation-time-freshness
-next_action: "PR #181 / issue #180 is the primary ERP/Data lease. Operation-time freshness validation and focused tests are implemented from authoritative main c7abd84789b2038ac651c86dd5d1deada2e78566. Resolve actual PR HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+  - datasource-failover-operation-policy-version
+  - datasource-failover-operation-policy-authority-scope
+next_action: "PR #198 / issue #197 is the primary ERP/Data lease from authoritative main affca5fbfb44bfcb15a58d0cbf46da92a48cfed5. Operation policy binds TenantId/CompanyId/DataSourceId plus Version; focused tests cover same-authority success, cross-scope denial, invalid identity/version, freshness and tamper fences. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and acceptance before ready_for_review. Never edit PROJECT_STATE or other specialist leases."
