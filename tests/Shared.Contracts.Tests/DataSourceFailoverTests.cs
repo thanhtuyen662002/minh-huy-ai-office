@@ -157,6 +157,108 @@ public sealed class DataSourceFailoverTests
         Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision));
     }
 
+    [Fact]
+    public void ValidateDecisionForExecution_AcceptsExactBoundHealthyEvidence()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence, Now.AddSeconds(10));
+    }
+
+    [Fact]
+    public void ValidateDecisionForExecution_RejectsStaleExpiredAndUnhealthyEvidence()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(TimeSpan.FromSeconds(20)), DataSourceOperationKind.Read, decision, evidence, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { ExpiresAt = Now.AddSeconds(5) }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { State = DataSourceHealthState.Unhealthy }, Now.AddSeconds(10)));
+    }
+
+    [Fact]
+    public void ValidateDecisionForExecution_RejectsSubstitutedEvidenceAndObservation()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { EvidenceReference = "health-ref:primary:new" }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { ObservedAt = evidence.ObservedAt.AddSeconds(1) }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { EndpointId = "fallback" }, Now.AddSeconds(10)));
+    }
+
+    [Fact]
+    public void ValidateDecisionForExecution_RejectsCrossAuthorityVersionAndOperationReplay()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { CompanyId = Guid.NewGuid() }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { SchemaVersion = "schema-44" }, Now.AddSeconds(10)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Write, decision, evidence, Now.AddSeconds(10)));
+    }
+
+    [Fact]
+    public void ExecutionEvidence_Authorized_IsAuthorityBoundOpaqueAndDeterministic()
+    {
+        var health = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { health });
+        var first = DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, health, Now.AddSeconds(10));
+        var replay = DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, health, Now.AddSeconds(10));
+
+        Assert.Equal(DataSourceFailoverExecutionOutcome.Authorized, first.Outcome);
+        Assert.Equal("execution-authorized", first.Reason);
+        Assert.Equal(health.EvidenceReference, first.HealthEvidenceReference);
+        Assert.StartsWith("decision-sha256:", first.DecisionIdentity);
+        Assert.StartsWith("execution-sha256:", first.ExecutionEvidenceId);
+        Assert.Equal(first, replay);
+        DataSourceFailoverContract.ValidateExecutionEvidenceReplay(first, replay);
+    }
+
+    [Theory]
+    [InlineData(DataSourceHealthState.Unhealthy, "health-evidence-unhealthy")]
+    public void ExecutionEvidence_DeniedHealth_IsDeterministic(DataSourceHealthState state, string reason)
+    {
+        var selectedHealth = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { selectedHealth });
+        var currentHealth = selectedHealth with { State = state };
+        var evidence = DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, currentHealth, Now.AddSeconds(10));
+        Assert.Equal(DataSourceFailoverExecutionOutcome.Denied, evidence.Outcome);
+        Assert.Equal(reason, evidence.Reason);
+    }
+
+    [Fact]
+    public void ExecutionEvidence_DeniedStaleAndExpired_AreAuditSafe()
+    {
+        var health = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { health });
+        var stale = DataSourceFailoverContract.CreateExecutionEvidence(Authority(TimeSpan.FromSeconds(20)), DataSourceOperationKind.Read, decision, health, Now.AddSeconds(10));
+        var expired = DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, health with { ExpiresAt = Now.AddSeconds(5) }, Now.AddSeconds(10));
+        Assert.Equal("health-evidence-stale", stale.Reason);
+        Assert.Equal("health-evidence-expired", expired.Reason);
+        Assert.Equal(DataSourceFailoverExecutionOutcome.Denied, stale.Outcome);
+        Assert.Equal(DataSourceFailoverExecutionOutcome.Denied, expired.Outcome);
+    }
+
+    [Fact]
+    public void ExecutionEvidence_RejectsAuthorityVersionOperationAndEvidenceSubstitution()
+    {
+        var health = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { health });
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.CreateExecutionEvidence(Authority() with { CompanyId = Guid.NewGuid() }, DataSourceOperationKind.Read, decision, health, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.CreateExecutionEvidence(Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision, health, Now.AddSeconds(10)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Write, decision, health, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, health with { EvidenceReference = "health-ref:substituted" }, Now.AddSeconds(10)));
+    }
+
+    [Fact]
+    public void ExecutionEvidence_ConflictingReplayFailsClosed()
+    {
+        var health = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { health });
+        var persisted = DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, health, Now.AddSeconds(10));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateExecutionEvidenceReplay(persisted, persisted with { Reason = "tampered" }));
+        var differentAttempt = DataSourceFailoverContract.CreateExecutionEvidence(Authority(), DataSourceOperationKind.Read, decision, health, Now.AddSeconds(11));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateExecutionEvidenceReplay(persisted, differentAttempt));
+    }
+
     private static DataSourceFailoverDecision Select(DataSourceFailoverCandidate[] candidates, DataSourceHealthEvidence[] evidence, DataSourceOperationKind operation = DataSourceOperationKind.Read)
         => DataSourceFailoverContract.Select(Authority(), operation, candidates, evidence, Now);
 

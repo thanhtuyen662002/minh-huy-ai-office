@@ -1,9 +1,13 @@
+using System.Security.Cryptography;
+using System.Text;
+
 namespace MinhHuy.AIOffice.Shared.Contracts.Erp;
 
 public enum DataSourceFailoverRole { Primary = 0, Fallback = 1 }
 public enum DataSourceAccessMode { ReadOnly = 0, ReadWrite = 1 }
 public enum DataSourceOperationKind { Read = 0, Write = 1 }
 public enum DataSourceHealthState { Unhealthy = 0, Healthy = 1 }
+public enum DataSourceFailoverExecutionOutcome { Denied = 0, Authorized = 1 }
 
 public sealed record DataSourceFailoverAuthority(Guid TenantId, Guid CompanyId, Guid DataSourceId, string RegistryVersion, string SchemaVersion, string CatalogVersion, TimeSpan MaxHealthEvidenceAge);
 
@@ -22,6 +26,23 @@ public sealed record DataSourceFailoverDecision(
     Guid TenantId, Guid CompanyId, Guid DataSourceId, string EndpointId,
     string RegistryVersion, string SchemaVersion, string CatalogVersion,
     DataSourceOperationKind Operation, string EvidenceReference, DateTimeOffset ObservedAt, string Reason);
+
+public sealed record DataSourceFailoverExecutionEvidence(
+    string ExecutionEvidenceId,
+    string DecisionIdentity,
+    Guid TenantId,
+    Guid CompanyId,
+    Guid DataSourceId,
+    string EndpointId,
+    string RegistryVersion,
+    string SchemaVersion,
+    string CatalogVersion,
+    DataSourceOperationKind Operation,
+    string HealthEvidenceReference,
+    DateTimeOffset HealthObservedAt,
+    DateTimeOffset RevalidatedAt,
+    DataSourceFailoverExecutionOutcome Outcome,
+    string Reason);
 
 public static class DataSourceFailoverContract
 {
@@ -118,6 +139,91 @@ public static class DataSourceFailoverContract
             throw new InvalidOperationException("Failover decision is outside the required registry/schema/catalog version fence.");
     }
 
+    public static void ValidateDecisionForExecution(
+        DataSourceFailoverAuthority authority,
+        DataSourceOperationKind operation,
+        DataSourceFailoverDecision decision,
+        DataSourceHealthEvidence authoritativeEvidence,
+        DateTimeOffset executionAt)
+    {
+        ArgumentNullException.ThrowIfNull(authoritativeEvidence);
+        ValidateDecision(authority, operation, decision);
+        ValidateEvidence(authoritativeEvidence, authority, executionAt);
+
+        if (authoritativeEvidence.State != DataSourceHealthState.Healthy)
+            throw new InvalidOperationException("Failover decision health evidence is not healthy at execution time.");
+        ValidateBoundObservation(decision, authoritativeEvidence);
+    }
+
+    public static DataSourceFailoverExecutionEvidence CreateExecutionEvidence(
+        DataSourceFailoverAuthority authority,
+        DataSourceOperationKind operation,
+        DataSourceFailoverDecision decision,
+        DataSourceHealthEvidence authoritativeEvidence,
+        DateTimeOffset executionAt)
+    {
+        ArgumentNullException.ThrowIfNull(authoritativeEvidence);
+        ValidateDecision(authority, operation, decision);
+        ValidateEvidenceAuthority(authoritativeEvidence, authority);
+        ValidateBoundObservation(decision, authoritativeEvidence);
+
+        var denialReason = GetExecutionDenialReason(authority, authoritativeEvidence, executionAt);
+        var outcome = denialReason is null ? DataSourceFailoverExecutionOutcome.Authorized : DataSourceFailoverExecutionOutcome.Denied;
+        var reason = denialReason ?? "execution-authorized";
+        var decisionIdentity = ComputeOpaqueIdentity("decision", decision.TenantId, decision.CompanyId, decision.DataSourceId,
+            decision.EndpointId, decision.RegistryVersion, decision.SchemaVersion, decision.CatalogVersion,
+            decision.Operation, decision.EvidenceReference, decision.ObservedAt);
+        var executionEvidenceId = ComputeOpaqueIdentity("execution", decisionIdentity, authoritativeEvidence.EvidenceReference,
+            authoritativeEvidence.ObservedAt, executionAt);
+
+        return new DataSourceFailoverExecutionEvidence(
+            executionEvidenceId, decisionIdentity,
+            authority.TenantId, authority.CompanyId, authority.DataSourceId, decision.EndpointId,
+            authority.RegistryVersion, authority.SchemaVersion, authority.CatalogVersion, operation,
+            authoritativeEvidence.EvidenceReference, authoritativeEvidence.ObservedAt, executionAt, outcome, reason);
+    }
+
+    public static void ValidateExecutionEvidenceReplay(
+        DataSourceFailoverExecutionEvidence persisted,
+        DataSourceFailoverExecutionEvidence replay)
+    {
+        ArgumentNullException.ThrowIfNull(persisted);
+        ArgumentNullException.ThrowIfNull(replay);
+        RequireOpaqueReference(persisted.ExecutionEvidenceId, nameof(persisted.ExecutionEvidenceId));
+        RequireOpaqueReference(replay.ExecutionEvidenceId, nameof(replay.ExecutionEvidenceId));
+        if (!StringComparer.Ordinal.Equals(persisted.ExecutionEvidenceId, replay.ExecutionEvidenceId) || persisted != replay)
+            throw new InvalidOperationException("Failover execution evidence replay conflicts with persisted evidence.");
+    }
+
+    private static string? GetExecutionDenialReason(DataSourceFailoverAuthority authority, DataSourceHealthEvidence evidence, DateTimeOffset executionAt)
+    {
+        if (evidence.ObservedAt > executionAt) return "health-evidence-future";
+        if (evidence.ExpiresAt <= evidence.ObservedAt || evidence.ExpiresAt <= executionAt) return "health-evidence-expired";
+        if (executionAt - evidence.ObservedAt > authority.MaxHealthEvidenceAge) return "health-evidence-stale";
+        if (evidence.State != DataSourceHealthState.Healthy) return "health-evidence-unhealthy";
+        return null;
+    }
+
+    private static void ValidateBoundObservation(DataSourceFailoverDecision decision, DataSourceHealthEvidence evidence)
+    {
+        if (!StringComparer.Ordinal.Equals(evidence.EndpointId, decision.EndpointId))
+            throw new InvalidOperationException("Failover decision endpoint does not match the authoritative health evidence.");
+        if (!StringComparer.Ordinal.Equals(evidence.EvidenceReference, decision.EvidenceReference) || evidence.ObservedAt != decision.ObservedAt)
+            throw new InvalidOperationException("Failover decision is not bound to the authoritative health observation used for execution.");
+    }
+
+    private static string ComputeOpaqueIdentity(string prefix, params object[] values)
+    {
+        var canonical = string.Join("\u001f", values.Select(value => value switch
+        {
+            DateTimeOffset timestamp => timestamp.ToUniversalTime().ToString("O"),
+            Enum enumeration => Convert.ToInt64(enumeration).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            _ => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty
+        }));
+        var digest = SHA256.HashData(Encoding.UTF8.GetBytes(canonical));
+        return $"{prefix}-sha256:{Convert.ToHexString(digest).ToLowerInvariant()}";
+    }
+
     private static void ValidateAuthority(DataSourceFailoverAuthority authority)
     {
         if (authority.TenantId == Guid.Empty || authority.CompanyId == Guid.Empty || authority.DataSourceId == Guid.Empty)
@@ -155,6 +261,17 @@ public static class DataSourceFailoverContract
 
     private static void ValidateEvidence(DataSourceHealthEvidence evidence, DataSourceFailoverAuthority authority, DateTimeOffset decisionAt)
     {
+        ValidateEvidenceAuthority(evidence, authority);
+        if (evidence.ObservedAt > decisionAt)
+            throw new InvalidOperationException("Health evidence cannot be observed in the future.");
+        if (evidence.ExpiresAt <= evidence.ObservedAt || evidence.ExpiresAt <= decisionAt)
+            throw new InvalidOperationException("Health evidence is malformed or expired.");
+        if (decisionAt - evidence.ObservedAt > authority.MaxHealthEvidenceAge)
+            throw new InvalidOperationException("Health evidence exceeds the authority freshness policy.");
+    }
+
+    private static void ValidateEvidenceAuthority(DataSourceHealthEvidence evidence, DataSourceFailoverAuthority authority)
+    {
         if (evidence.TenantId == Guid.Empty || evidence.CompanyId == Guid.Empty || evidence.DataSourceId == Guid.Empty)
             throw new ArgumentException("Health evidence authority identifiers must be non-empty.");
         RequireCanonical(evidence.EndpointId, nameof(evidence.EndpointId));
@@ -169,12 +286,6 @@ public static class DataSourceFailoverContract
             !StringComparer.Ordinal.Equals(evidence.SchemaVersion, authority.SchemaVersion) ||
             !StringComparer.Ordinal.Equals(evidence.CatalogVersion, authority.CatalogVersion))
             throw new InvalidOperationException("Health evidence is outside the required registry/schema/catalog version fence.");
-        if (evidence.ObservedAt > decisionAt)
-            throw new InvalidOperationException("Health evidence cannot be observed in the future.");
-        if (evidence.ExpiresAt <= evidence.ObservedAt || evidence.ExpiresAt <= decisionAt)
-            throw new InvalidOperationException("Health evidence is malformed or expired.");
-        if (decisionAt - evidence.ObservedAt > authority.MaxHealthEvidenceAge)
-            throw new InvalidOperationException("Health evidence exceeds the authority freshness policy.");
     }
 
     private static void RequireOpaqueReference(string value, string name)
