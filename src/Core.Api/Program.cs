@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Core.Api.Billing;
 using MinhHuy.AIOffice.Core.Api.Realtime;
+using MinhHuy.AIOffice.Core.Api.Sla;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Platform.Observability;
@@ -33,6 +34,8 @@ if (!string.IsNullOrWhiteSpace(platformConnectionString))
 builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
 builder.Services.AddScoped<CompanyBillingReader>();
 builder.Services.AddSingleton<ICompanyBillingPlanSource, UnavailableCompanyBillingPlanSource>();
+builder.Services.AddScoped<CustomerSlaStatusProjection>();
+builder.Services.AddSingleton<ICustomerSlaStatusSource, UnavailableCustomerSlaStatusSource>();
 
 var authority = builder.Configuration["AIOffice:Authentication:Authority"];
 var audience = builder.Configuration["AIOffice:Authentication:Audience"];
@@ -97,6 +100,11 @@ if (authenticationConfigured)
         try { var plan = await reader.GetCurrentAsync(accessor, cancellationToken); return plan is null ? Results.NotFound() : Results.Ok(plan); }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
     }).RequireAuthorization();
+    app.MapGet("/api/sla/status", async (IRequestAuthorizationContextAccessor accessor, [FromServices] CustomerSlaStatusProjection projection, CancellationToken cancellationToken) =>
+    {
+        try { var status = await projection.GetCurrentAsync(accessor, cancellationToken); return status is null ? Results.NotFound() : Results.Ok(status); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+    }).RequireAuthorization();
     app.MapGet("/api/audit", async (IRequestAuthorizationContextAccessor accessor, [FromServices] CustomerAuditProjection projection, [FromQuery] int offset, [FromQuery] int limit, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor);
@@ -115,6 +123,7 @@ else
 {
     app.MapGet("/api/auth/context", () => Results.Json(new { error = "Authentication is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapGet("/api/billing/plan", AuthenticationUnavailable);
+    app.MapGet("/api/sla/status", AuthenticationUnavailable);
     app.MapGet("/api/audit", AuthenticationUnavailable);
 }
 
