@@ -1,72 +1,66 @@
-using MinhHuy.AIOffice.Shared.Contracts;
+using MinhHuyAiOffice.Shared.Contracts;
+using Xunit;
 
-namespace MinhHuy.AIOffice.Shared.Contracts.Tests;
+namespace MinhHuyAiOffice.Shared.Contracts.Tests;
 
 public sealed class CustomerAiCreditReservationTests
 {
-    private static readonly CustomerBillingAuthority Authority = new("tenant-a", "company-a", "user-a", 7);
+    private static readonly CustomerBillingAuthority Authority = new("tenant-a", "company-a", 7);
 
     [Fact]
-    public void Decide_AllowsReservationWithinAdmission()
+    public void Decide_AllowsReservationWithinRemainingCapacity()
     {
-        var decision = CustomerAiCreditReservation.Decide("res-c", Admission(10, 2, 3), []);
-
+        var decision = CustomerAiCreditReservation.Decide("res-b", Admission(10, 2, 3), [Evidence("res-a", 4)]);
         Assert.True(decision.Allowed);
-        Assert.Equal(3, decision.ReservedAiCredits);
+        Assert.False(decision.IsReplay);
+        Assert.Equal(9, decision.ProjectedAiCredits);
     }
 
     [Fact]
-    public void Decide_FailsClosedWhenAdmissionDenied()
+    public void Decide_DeniesConcurrentReservationThatWouldOversubscribeCapacity()
     {
-        Assert.Throws<InvalidOperationException>(() =>
-            CustomerAiCreditReservation.Decide("res-c", Admission(4, 2, 3), []));
+        var decision = CustomerAiCreditReservation.Decide("res-b", Admission(10, 4, 3), [Evidence("res-a", 4)]);
+        Assert.False(decision.Allowed);
+        Assert.Equal(11, decision.ProjectedAiCredits);
     }
 
     [Fact]
-    public void Decide_FailsClosedOnAuthorityMismatch()
+    public void Decide_ExactReplayIsIdempotent()
     {
-        var foreign = new CustomerAiCreditReservationEvidence(
-            "res-a",
-            new CustomerBillingAuthority("tenant-a", "company-b", "user-a", 7),
-            "credits-v1",
-            3,
-            1);
-
-        Assert.Throws<InvalidOperationException>(() =>
-            CustomerAiCreditReservation.Decide("res-c", Admission(10, 1, 2), [foreign]));
-    }
-
-    [Fact]
-    public void Decide_FailsClosedOnPricingMismatch()
-    {
-        var stale = new CustomerAiCreditReservationEvidence("res-a", Authority, "credits-v1", 2, 1);
-
-        Assert.Throws<InvalidOperationException>(() =>
-            CustomerAiCreditReservation.Decide("res-c", Admission(10, 1, 2), [stale]));
-    }
-
-    [Fact]
-    public void Decide_FailsClosedOnConflictingDuplicateReservation()
-    {
-        var a = Evidence("res-a", 1);
-        var conflict = Evidence("res-a", 2);
-
-        Assert.Throws<InvalidOperationException>(() =>
-            CustomerAiCreditReservation.Decide("res-c", Admission(10, 1, 2), [a, conflict]));
-    }
-
-    [Fact]
-    public void Decide_TreatsExactDuplicateReservationAsIdempotent()
-    {
-        var a = Evidence("res-a", 1);
-        var decision = CustomerAiCreditReservation.Decide("res-c", Admission(10, 1, 2), [a, a]);
-
+        var existing = Evidence("res-a", 3);
+        var decision = CustomerAiCreditReservation.Decide("res-a", Admission(10, 2, 3), [existing, existing]);
         Assert.True(decision.Allowed);
-        Assert.Equal(2, decision.ReservedAiCredits);
+        Assert.True(decision.IsReplay);
+        Assert.Equal(5, decision.ProjectedAiCredits);
     }
 
     [Fact]
-    public void Decide_IsOrderIndependent()
+    public void Decide_RejectsConflictingReservationReplay()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            CustomerAiCreditReservation.Decide("res-a", Admission(10, 2, 3), [Evidence("res-a", 2)]));
+    }
+
+    [Fact]
+    public void Decide_RejectsStaleAndCrossCompanyEvidence()
+    {
+        var stale = Evidence("res-a", 1) with { Authority = Authority with { AuthorityVersion = 6 } };
+        var foreign = Evidence("res-a", 1) with { Authority = Authority with { CompanyId = "company-b" } };
+        Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditReservation.Decide("res-b", Admission(10, 1, 1), [stale]));
+        Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditReservation.Decide("res-b", Admission(10, 1, 1), [foreign]));
+    }
+
+    [Fact]
+    public void Decide_RejectsDeniedOrInconsistentAdmission()
+    {
+        var denied = Admission(2, 2, 1) with { Allowed = false };
+        var inconsistent = Admission(10, 2, 1) with { ProjectedAiCredits = 9 };
+        Assert.Throws<InvalidOperationException>(() => CustomerAiCreditReservation.Decide("res-a", denied, []));
+        Assert.Throws<InvalidOperationException>(() => CustomerAiCreditReservation.Decide("res-a", inconsistent, []));
+    }
+
+    [Fact]
+    public void Decide_IsDeterministicAcrossEvidenceOrder()
     {
         var a = Evidence("res-a", 2);
         var b = Evidence("res-b", 1);
