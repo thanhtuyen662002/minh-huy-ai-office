@@ -4,11 +4,11 @@ status: active
 current_issue: 193
 current_pr: 195
 current_branch: runtime/193-settlement-unrelated-reservation-isolation
-head: 6b1afe35f4bdd264aed557675aea69967d7f9b4c
-state: in_progress
+head: 883e10d0200bbba5573e5f9327413b8b0a502f35
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T19:40:00+07:00"
-last_checkpoint_at: "2026-09-24T19:40:00+07:00"
+lease_heartbeat_at: "2026-09-24T20:18:00+07:00"
+last_checkpoint_at: "2026-09-24T20:18:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #195 / issue #193 isolates target-reservation credit reconciliation from unrelated same-authority/same-policy settlement evidence while preserving canonical identity, tenant/company/billing-authority, pricing-policy, idempotency and checked-arithmetic fences. Implementation/tests are on branch runtime/193-settlement-unrelated-reservation-isolation from authoritative main 456796b3b11f164eeb294d0176a9853d91e1130f. Own exact-head Build/Governance for the durable state checkpoint created by this update; inspect/fix actionable RED on SAME branch. If GREEN and live main/reviews/mergeability remain clean, mark #195 ready for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing/idempotency fences, expose provider/model/cost metadata as billing authority, or merge directly."
+next_action: "PR #195 / issue #193 acceptance is complete on implementation HEAD 883e10d0200bbba5573e5f9327413b8b0a502f35: exact-head Build 36000481467 and Governance 36000481524 are GREEN; authoritative main remains 456796b3b11f164eeb294d0176a9853d91e1130f; compare is ahead-only/behind=0, mergeable=true, review threads clear, and diff is exactly 3 Runtime files. This durable ready-state checkpoint creates a new exact HEAD; own its Build/Governance through closure. If GREEN and live main/reviews/mergeability remain clean, keep #195 ready for Lead integration. Re-enter SAME lease on base drift, review feedback, mergeability regression or CI regression. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing/idempotency fences, expose provider/model/cost metadata as billing authority, or merge directly."
