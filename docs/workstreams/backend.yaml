@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
-current_issue: 160
-current_pr: 161
-current_branch: backend/160-sla-admission-persistence
-head: f3673e9166a69fee3e4564746763c9e8405906f0
+status: claimed
+current_issue: 167
+current_pr: null
+current_branch: backend/167-sla-admission-sql-store
+head: 1458ffc8ee3ca316ff54dc02e9e0d37623b75870
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T05:05:00+07:00"
-last_checkpoint_at: "2026-09-24T05:05:00+07:00"
-last_completed_issue: 156
-last_merged_pr: 157
+lease_heartbeat_at: "2026-09-24T07:03:00+07:00"
+last_checkpoint_at: "2026-09-24T07:03:00+07:00"
+last_completed_issue: 160
+last_merged_pr: 161
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,13 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 6830f3d9571bd1dd3dcababf0e72790a20863898
-  governance_run: 35926203129
-  build_run: 35926203121
-  result: "Implemented persistence-before-enqueue SLA admission bridge and focused tests on PR #161. Governance 35926203129 GREEN; Build 35926203121 pending at implementation HEAD f3673e9166a69fee3e4564746763c9e8405906f0."
+  prior_head: 9b5a5af7748259e6f7592cb0083a1da4d1a194d5
+  governance_run: null
+  build_run: null
+  result: "PR #161 / issue #160 is merged and authoritative. Claimed #167 from live main 1458ffc8ee3ca316ff54dc02e9e0d37623b75870 for durable SQL Server SLA admission evidence; implementation pending."
 known_risks:
   - "Tenant/company/user authority and SLA policy/version must remain server-derived; caller-controlled numeric priority must never become scheduler authority."
-  - "Admission evidence persistence must complete before enqueue; conflicting replay fails closed."
-  - "Do not edit docs/PROJECT_STATE.yaml, migrations, or other specialist leases."
-blocked_by:
-  - "Exact-head Build 35926203121 is non-terminal; durable state checkpoint itself will emit a newer exact HEAD that must also be closed."
-next_action: "Resolve actual PR #161 HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on SAME branch, then verify mergeable=true and review threads clear before ready_for_review."
+  - "Admission evidence must survive process/node restart and persist before enqueue; conflicting replay must fail closed under concurrency."
+  - "Schema changes require versioned migrations and migration integrity; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
+blocked_by: []
+next_action: "Open Draft PR for #167 after this claim checkpoint, inspect existing EF/persistence/migration patterns, implement SQL-backed SLA admission store + DI + focused tests, then own exact-head Governance/Build through closure."
