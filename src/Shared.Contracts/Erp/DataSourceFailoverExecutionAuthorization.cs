@@ -59,6 +59,21 @@ public static class DataSourceFailoverExecutionAuthorization
             throw new InvalidOperationException("Failover execution evidence identity is invalid.");
     }
 
+    public static void ValidateAtOperationTime(
+        DataSourceFailoverAuthority authority,
+        DataSourceOperationKind operation,
+        DataSourceFailoverDecision decision,
+        DataSourceFailoverExecutionEvidence evidence,
+        DateTimeOffset operationAt)
+    {
+        Validate(authority, operation, decision, evidence);
+
+        if (operationAt < evidence.RevalidatedAt)
+            throw new InvalidOperationException("ERP operation time cannot precede failover execution revalidation.");
+        if (operationAt - evidence.HealthObservedAt > authority.MaxHealthEvidenceAge)
+            throw new UnauthorizedAccessException("Failover execution evidence is stale at ERP operation time.");
+    }
+
     private static string ComputeIdentity(string prefix, params object[] values)
     {
         var canonical = string.Join("\u001f", values.Select(value => value switch
