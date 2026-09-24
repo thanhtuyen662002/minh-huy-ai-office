@@ -4,11 +4,11 @@ status: active
 current_issue: 170
 current_pr: 171
 current_branch: runtime/170-ai-credit-admission-active-holds
-head: cbc4960bdc9cbac14dfc781cd6472268d6c30d4c
+head: 936fe667411dbe653597afe7c7a1c3a49b148645
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T09:19:00+07:00"
-last_checkpoint_at: "2026-09-24T09:19:00+07:00"
+lease_heartbeat_at: "2026-09-24T09:35:00+07:00"
+last_checkpoint_at: "2026-09-24T09:35:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #171 / issue #170 remains the SAME Runtime lease. Exact-head Governance 35943718034 and Build 35943718050 are GREEN on pre-reconcile HEAD 5fd882ba734dfa2b28d664eb793e02525c71ca69. Authoritative main 2c9ae609aeee3532bcfd017698c619118ad01883 was reconciled via merge commit cbc4960bdc9cbac14dfc781cd6472268d6c30d4c; compare is ahead-only/behind=0 and Runtime changes are preserved. Resolve the actual durable HEAD after this checkpoint, own its exact-head Governance/Build through terminal closure, fix any actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing fences, or merge directly."
+next_action: "PR #171 / issue #170 remains the SAME Runtime lease. Exact-head Governance 35946839235 and Build 35946839179 were GREEN at a02d2edb66372e0a0b7fbd83cb51338b8298ca90. Authoritative main advanced to 27d4962f40b601485643dfc62bc5f95df63730d4 after ERP/Data #166/state integration and was reconciled via merge commit 936fe667411dbe653597afe7c7a1c3a49b148645 without dropping Runtime changes. Compare is now ahead-only/behind=0 and diff remains limited to Runtime state plus AI-credit admission contract/tests. Resolve the durable HEAD after this checkpoint, own exact-head Governance/Build through terminal closure, fix actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing/overflow fences, or merge directly."
