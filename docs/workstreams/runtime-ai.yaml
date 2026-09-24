@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 175
-current_pr: 177
-current_branch: runtime/175-credit-reservation-active-holds
-head: 2fba32308556e675b7b9734f6e6d756deef5c597
-state: waiting_ci
+current_issue: 193
+current_pr: 195
+current_branch: runtime/193-settlement-unrelated-reservation-isolation
+head: 6b1afe35f4bdd264aed557675aea69967d7f9b4c
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T18:36:00+07:00"
-last_checkpoint_at: "2026-09-24T18:36:00+07:00"
+lease_heartbeat_at: "2026-09-24T19:40:00+07:00"
+last_checkpoint_at: "2026-09-24T19:40:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,5 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #177 / issue #175 reconciled authoritative main 684d4e6fee4bf8fee6060f67e5d12039e3be125c on SAME lease via two-parent commit 2fba32308556e675b7b9734f6e6d756deef5c597 without force-reset. Compare is ahead-only/behind=0, PR mergeable=true, and diff remains exactly 3 Runtime files. Prior durable HEAD 41b0dd6f826eca47437c67682f9e7258d807ad6f closed Governance 35992733610 and Build 35992733525 GREEN. Own fresh exact-head Governance/Build for the durable state checkpoint created by this update; inspect/fix actionable RED on SAME branch. If GREEN and live main/reviews/mergeability remain clean, mark #177 ready for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+  - customer-ai-credit-settlement-isolation
+next_action: "PR #195 / issue #193 isolates target-reservation credit reconciliation from unrelated same-authority/same-policy settlement evidence while preserving canonical identity, tenant/company/billing-authority, pricing-policy, idempotency and checked-arithmetic fences. Implementation/tests are on branch runtime/193-settlement-unrelated-reservation-isolation from authoritative main 456796b3b11f164eeb294d0176a9853d91e1130f. Own exact-head Build/Governance for the durable state checkpoint created by this update; inspect/fix actionable RED on SAME branch. If GREEN and live main/reviews/mergeability remain clean, mark #195 ready for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing/idempotency fences, expose provider/model/cost metadata as billing authority, or merge directly."
