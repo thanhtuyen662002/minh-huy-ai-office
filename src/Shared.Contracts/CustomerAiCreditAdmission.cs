@@ -14,6 +14,7 @@ public sealed record CustomerAiCreditAdmissionDecision(
     long PricingPolicyVersion,
     long CreditLimit,
     long UsedAiCredits,
+    long ActiveReservedAiCredits,
     long RequestedAiCredits,
     long ProjectedAiCredits,
     bool Allowed);
@@ -22,10 +23,12 @@ public static class CustomerAiCreditAdmission
 {
     public static CustomerAiCreditAdmissionDecision Decide(
         CustomerAiCreditAdmissionRequest request,
-        CustomerAiCreditProjection usage)
+        CustomerAiCreditProjection usage,
+        CustomerAiCreditActiveReservationProjection activeReservations)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(usage);
+        ArgumentNullException.ThrowIfNull(activeReservations);
         ValidateAuthority(request.Authority);
         ValidatePricing(request.Pricing);
         ArgumentNullException.ThrowIfNull(request.Allowance);
@@ -36,17 +39,15 @@ public static class CustomerAiCreditAdmission
             throw new ArgumentOutOfRangeException(nameof(request.RequestedMaxTokenEquivalent));
         if (usage.UsedAiCredits < 0 || usage.TotalTokenEquivalent < 0)
             throw new ArgumentException("Usage projection cannot contain negative usage.", nameof(usage));
+        if (activeReservations.ActiveReservedAiCredits < 0)
+            throw new ArgumentException("Active reservation projection cannot contain negative reserved credits.", nameof(activeReservations));
 
-        if (usage.Authority != request.Authority)
-            throw new UnauthorizedAccessException("Usage projection is outside the authoritative billing scope or version.");
-        if (!string.Equals(usage.PricingPolicyId, request.Pricing.PolicyId, StringComparison.Ordinal) ||
-            usage.PricingPolicyVersion != request.Pricing.PolicyVersion)
-        {
-            throw new InvalidOperationException("Usage projection pricing policy is stale or mismatched.");
-        }
+        ValidateProjectionScope(usage.Authority, usage.PricingPolicyId, usage.PricingPolicyVersion, request, "Usage");
+        ValidateProjectionScope(activeReservations.Authority, activeReservations.PricingPolicyId, activeReservations.PricingPolicyVersion, request, "Active reservation");
 
         var requestedCredits = CreditsFor(request.RequestedMaxTokenEquivalent, request.Pricing.TokenEquivalentPerCredit);
-        var projectedCredits = checked(usage.UsedAiCredits + requestedCredits);
+        var committedCredits = checked(usage.UsedAiCredits + activeReservations.ActiveReservedAiCredits);
+        var projectedCredits = checked(committedCredits + requestedCredits);
 
         return new CustomerAiCreditAdmissionDecision(
             request.Authority,
@@ -54,9 +55,26 @@ public static class CustomerAiCreditAdmission
             request.Pricing.PolicyVersion,
             request.Allowance.CreditLimit,
             usage.UsedAiCredits,
+            activeReservations.ActiveReservedAiCredits,
             requestedCredits,
             projectedCredits,
             projectedCredits <= request.Allowance.CreditLimit);
+    }
+
+    private static void ValidateProjectionScope(
+        CustomerBillingAuthority authority,
+        string pricingPolicyId,
+        long pricingPolicyVersion,
+        CustomerAiCreditAdmissionRequest request,
+        string projectionKind)
+    {
+        if (authority != request.Authority)
+            throw new UnauthorizedAccessException($"{projectionKind} projection is outside the authoritative billing scope or version.");
+        if (!string.Equals(pricingPolicyId, request.Pricing.PolicyId, StringComparison.Ordinal) ||
+            pricingPolicyVersion != request.Pricing.PolicyVersion)
+        {
+            throw new InvalidOperationException($"{projectionKind} projection pricing policy is stale or mismatched.");
+        }
     }
 
     private static long CreditsFor(long tokens, long tokensPerCredit)
