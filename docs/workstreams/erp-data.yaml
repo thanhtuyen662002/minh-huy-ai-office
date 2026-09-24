@@ -2,13 +2,13 @@ workstream: erp-data
 role: "ERP / Data"
 status: in_progress
 current_issue: 172
-current_pr: null
+current_pr: 173
 current_branch: erp/172-failover-execution-evidence
-head: null
-state: in_progress
+head: 51be1ee9215f60b3b345a1e00b20134ed725cac0
+state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T02:35:00Z"
-last_checkpoint_at: "2026-09-24T02:35:00Z"
+lease_heartbeat_at: "2026-09-24T03:31:00Z"
+last_checkpoint_at: "2026-09-24T03:31:00Z"
 last_merged_pr: 166
 last_merge_commit: c29f72d92c5b4b4acc20598078ff6031d8b05f4e
 preferred_next_issue: 172
@@ -33,4 +33,4 @@ scope:
   - datasource-failover-decision-validation
   - datasource-failover-execution-revalidation
   - datasource-failover-execution-evidence
-next_action: "Issue #172 claimed from authoritative main after #166 merged. Create Draft PR on erp/172-failover-execution-evidence, then implement authority-bound failover execution evidence for audit/replay with focused tests. Preserve server-derived tenant/company/source/endpoint/version/operation authority, opaque evidence/secret references, fail-closed denial and replay conflict semantics. Never edit PROJECT_STATE or other specialist leases."
+next_action: "PR #173 now implements authority-bound failover execution evidence and focused authorized/denied/substitution/replay tests. Implementation checkpoint 51be1ee9215f60b3b345a1e00b20134ed725cac0; own exact-head Governance/Build after durable state checkpoint, fix actionable RED on this SAME branch, then reconcile main if needed and mark ready_for_review only after acceptance, mergeability and reviews are clean. Never edit PROJECT_STATE or other specialist leases."
