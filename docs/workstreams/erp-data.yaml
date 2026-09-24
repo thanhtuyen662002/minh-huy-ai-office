@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 172
 current_pr: 173
 current_branch: erp/172-failover-execution-evidence
-head: 51be1ee9215f60b3b345a1e00b20134ed725cac0
+head: 6fb37550b8c19d07b4650842915f9a2ce00f65b0
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T03:31:00Z"
-last_checkpoint_at: "2026-09-24T03:31:00Z"
+lease_heartbeat_at: "2026-09-24T04:27:00Z"
+last_checkpoint_at: "2026-09-24T04:27:00Z"
 last_merged_pr: 166
 last_merge_commit: c29f72d92c5b4b4acc20598078ff6031d8b05f4e
 preferred_next_issue: 172
@@ -33,4 +33,4 @@ scope:
   - datasource-failover-decision-validation
   - datasource-failover-execution-revalidation
   - datasource-failover-execution-evidence
-next_action: "PR #173 now implements authority-bound failover execution evidence and focused authorized/denied/substitution/replay tests. Implementation checkpoint 51be1ee9215f60b3b345a1e00b20134ed725cac0; own exact-head Governance/Build after durable state checkpoint, fix actionable RED on this SAME branch, then reconcile main if needed and mark ready_for_review only after acceptance, mergeability and reviews are clean. Never edit PROJECT_STATE or other specialist leases."
+next_action: "PR #173 was reconciled with authoritative main 0cc80909deebcb5a41200b5a5de8da116e17c194 on the SAME lease at merge checkpoint 6fb37550b8c19d07b4650842915f9a2ce00f65b0; compare is ahead-only/behind=0 and changed scope remains exactly ERP/Data state + DataSourceFailover contract/tests. Own the newly emitted exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
