@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 154
-current_pr: 155
-current_branch: erp/154-failover-decision-validation
-head: 6db5c1d7699fd01748e5098f97c24775eaf381e1
-state: ready_for_review
+current_issue: 165
+current_pr: 166
+current_branch: erp/165-failover-execution-revalidation
+head: df937281a9e1c7a2f4f3c6c756f2e0830154645b
+state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-23T20:29:00Z"
-last_checkpoint_at: "2026-09-23T20:29:00Z"
-last_merged_pr: 147
-last_merge_commit: c58b11617aa85a050d005ff013583715ee156b0c
-preferred_next_issue: 154
+lease_heartbeat_at: "2026-09-24T01:36:00Z"
+last_checkpoint_at: "2026-09-24T01:36:00Z"
+last_merged_pr: 155
+last_merge_commit: f021d7e1b0cd0b90333044925eaf2a5c950faa5e
+preferred_next_issue: 165
 blocked_by: []
 scope:
   - datasource-registry
@@ -31,4 +31,5 @@ scope:
   - datasource-failover-decision-evidence
   - datasource-failover-operation-authority
   - datasource-failover-decision-validation
-next_action: "PR #155 acceptance is complete at exact implementation HEAD 6db5c1d7699fd01748e5098f97c24775eaf381e1 with Governance 35910305507 and Build 35910305530 GREEN, mergeable=true and review threads clear. PR is Ready for review. ERP/Data retains this SAME lease until Lead integration and must re-enter it for review feedback, CI drift or mergeability drift. Never edit PROJECT_STATE or modify Backend/Runtime/Frontend leases."
+  - datasource-failover-execution-revalidation
+next_action: "PR #166 acceptance implementation is complete. Previous exact-head Governance 35943246830 and Build 35943246686 were GREEN at 984f2fddc88c157b9e10e176ed873be2d5aaf880. Reconciled authoritative main 2c9ae609aeee3532bcfd017698c619118ad01883 on this SAME lease at df937281a9e1c7a2f4f3c6c756f2e0830154645b; branch is ahead-only/behind=0 and diff remains only ERP/Data files. Own new exact-head Governance/Build to terminal GREEN; fix actionable RED here, then verify mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
