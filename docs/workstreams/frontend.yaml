@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
 status: waiting_ci
-current_issue: 174
-current_pr: 176
-current_branch: "frontend/174-audit-filtering"
-head: "4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6"
+current_issue: 191
+current_pr: 192
+current_branch: "frontend/191-sla-status-presentation"
+head: "351651ce5a69f87414979519b0c2fa1902e54774"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T16:40:30+07:00"
-last_checkpoint_at: "2026-09-24T16:40:30+07:00"
+lease_heartbeat_at: "2026-09-24T21:36:35+07:00"
+last_checkpoint_at: "2026-09-24T21:36:35+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #176 / issue #174 remains the SAME Frontend lease. Reconciled authoritative main 0f2db02007a0e4f9d55d9723058205448f48ab19 into the branch through same-lease reconciliation merge 4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6; compare is ahead-only/behind=0. Authority-safe audit filtering stays presentation-only and never derives TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Exact-head CI for prior durable checkpoint 17444b3072a2fba01cfb078041c4641904b9d4e8 closed GREEN (Governance 36011016208; Build 36011016353), but authoritative main advanced to 8db4e117130491a543afa0f084803b01cbeb733a and the PR diverged. Reconciled authoritative main on the SAME lease via merge commit 351651ce5a69f87414979519b0c2fa1902e54774 while preserving only the SLA presentation component/tests over current main. Re-query exact-head Governance/Build for the durable checkpoint, fix actionable RED on SAME PR, then verify mergeability/reviews and return ready_for_review after GREEN. Preserve server-derived TenantId/UserId/company authority; browser identity metadata is untrusted presentation input. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
