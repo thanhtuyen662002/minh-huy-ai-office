@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 174
 current_pr: 176
 current_branch: "frontend/174-audit-filtering"
-head: "c05836574443d05b1c4b977aa6ddb91db604b62d"
+head: "4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T15:38:06+07:00"
-last_checkpoint_at: "2026-09-24T15:38:06+07:00"
+lease_heartbeat_at: "2026-09-24T16:40:30+07:00"
+last_checkpoint_at: "2026-09-24T16:40:30+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #176 / issue #174 remains the SAME Frontend lease. Reconciled authoritative main c545984942762237726e1e90f9e6559ff65b01b4 into the branch at implementation HEAD c05836574443d05b1c4b977aa6ddb91db604b62d; compare is ahead-only/behind=0 and PR mergeable=true. Authority-safe audit filtering stays presentation-only and never derives TenantId/CompanyId/UserId/companyName/userName authority from browser state. This durable-state checkpoint must receive exact-head Governance/Build closure; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #176 / issue #174 remains the SAME Frontend lease. Reconciled authoritative main 0f2db02007a0e4f9d55d9723058205448f48ab19 into the branch through same-lease reconciliation merge 4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6; compare is ahead-only/behind=0. Authority-safe audit filtering stays presentation-only and never derives TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
