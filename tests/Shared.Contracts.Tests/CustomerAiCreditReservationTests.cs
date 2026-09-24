@@ -77,7 +77,7 @@ public sealed class CustomerAiCreditReservationTests
     }
 
     private static CustomerAiCreditAdmissionDecision Admission(long limit, long used, long requested) =>
-        new(Authority, "credits-v1", 3, limit, used, requested, checked(used + requested), used + requested <= limit);
+        new(Authority, "credits-v1", 3, limit, used, 0, requested, checked(used + requested), used + requested <= limit);
 
     private static CustomerAiCreditReservationEvidence Evidence(string id, long credits) =>
         new(id, Authority, "credits-v1", 3, credits);
