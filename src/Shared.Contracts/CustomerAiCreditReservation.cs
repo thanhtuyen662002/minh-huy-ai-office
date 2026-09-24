@@ -30,22 +30,16 @@ public static class CustomerAiCreditReservation
         ValidateCanonical(admission.PricingPolicyId, nameof(admission.PricingPolicyId));
         if (admission.PricingPolicyVersion <= 0)
             throw new ArgumentOutOfRangeException(nameof(admission.PricingPolicyVersion));
-        if (admission.CreditLimit < 0 || admission.UsedAiCredits < 0 || admission.RequestedAiCredits < 0 || admission.ProjectedAiCredits < 0)
+        if (admission.CreditLimit < 0 || admission.UsedAiCredits < 0 || admission.ActiveReservedAiCredits < 0 || admission.RequestedAiCredits < 0 || admission.ProjectedAiCredits < 0)
             throw new ArgumentException("Admission contains negative credit values.", nameof(admission));
-        if (checked(admission.UsedAiCredits + admission.RequestedAiCredits) != admission.ProjectedAiCredits)
+        if (checked(checked(admission.UsedAiCredits + admission.ActiveReservedAiCredits) + admission.RequestedAiCredits) != admission.ProjectedAiCredits)
             throw new InvalidOperationException("Admission projection is inconsistent.");
         if (admission.Allowed != (admission.ProjectedAiCredits <= admission.CreditLimit))
             throw new InvalidOperationException("Admission decision is inconsistent.");
         if (!admission.Allowed)
             throw new InvalidOperationException("A denied admission cannot reserve credits.");
 
-        var requested = new CustomerAiCreditReservationEvidence(
-            reservationId,
-            admission.Authority,
-            admission.PricingPolicyId,
-            admission.PricingPolicyVersion,
-            admission.RequestedAiCredits);
-
+        var requested = new CustomerAiCreditReservationEvidence(reservationId, admission.Authority, admission.PricingPolicyId, admission.PricingPolicyVersion, admission.RequestedAiCredits);
         var unique = new Dictionary<string, CustomerAiCreditReservationEvidence>(StringComparer.Ordinal);
         foreach (var evidence in activeReservations)
         {
@@ -53,32 +47,26 @@ public static class CustomerAiCreditReservation
             ValidateEvidence(evidence, admission);
             if (unique.TryGetValue(evidence.ReservationId, out var existing))
             {
-                if (existing != evidence)
-                    throw new InvalidOperationException("Conflicting reservation replay evidence.");
+                if (existing != evidence) throw new InvalidOperationException("Conflicting reservation replay evidence.");
                 continue;
             }
             unique.Add(evidence.ReservationId, evidence);
         }
 
-        if (unique.TryGetValue(reservationId, out var replay))
-        {
-            if (replay != requested)
-                throw new InvalidOperationException("Reservation identity was reused with conflicting evidence.");
-            var existingReserved = SumReserved(unique.Values.Where(x => x.ReservationId != reservationId));
-            var replayProjected = checked(admission.UsedAiCredits + existingReserved + requested.ReservedAiCredits);
-            return new(requested, admission.UsedAiCredits, existingReserved, replayProjected, admission.CreditLimit, replayProjected <= admission.CreditLimit, true);
-        }
+        var isReplay = unique.TryGetValue(reservationId, out var replay);
+        if (isReplay && replay != requested) throw new InvalidOperationException("Reservation identity was reused with conflicting evidence.");
+        var snapshotEvidence = isReplay ? unique.Values.Where(x => x.ReservationId != reservationId) : unique.Values;
+        var observedActiveReserved = SumReserved(snapshotEvidence);
+        if (observedActiveReserved != admission.ActiveReservedAiCredits)
+            throw new InvalidOperationException("Active reservation evidence does not match the authoritative admission snapshot.");
 
-        var activeReserved = SumReserved(unique.Values);
-        var projected = checked(admission.UsedAiCredits + activeReserved + requested.ReservedAiCredits);
-        return new(requested, admission.UsedAiCredits, activeReserved, projected, admission.CreditLimit, projected <= admission.CreditLimit, false);
+        return new(requested, admission.UsedAiCredits, admission.ActiveReservedAiCredits, admission.ProjectedAiCredits, admission.CreditLimit, admission.Allowed, isReplay);
     }
 
     private static long SumReserved(IEnumerable<CustomerAiCreditReservationEvidence> evidence)
     {
         long total = 0;
-        foreach (var item in evidence.OrderBy(x => x.ReservationId, StringComparer.Ordinal))
-            total = checked(total + item.ReservedAiCredits);
+        foreach (var item in evidence.OrderBy(x => x.ReservationId, StringComparer.Ordinal)) total = checked(total + item.ReservedAiCredits);
         return total;
     }
 
@@ -87,10 +75,8 @@ public static class CustomerAiCreditReservation
         ValidateCanonical(evidence.ReservationId, nameof(evidence.ReservationId));
         ValidateAuthority(evidence.Authority);
         ValidateCanonical(evidence.PricingPolicyId, nameof(evidence.PricingPolicyId));
-        if (evidence.PricingPolicyVersion <= 0 || evidence.ReservedAiCredits < 0)
-            throw new ArgumentException("Reservation evidence contains invalid credit or policy values.", nameof(evidence));
-        if (evidence.Authority != admission.Authority)
-            throw new UnauthorizedAccessException("Reservation evidence is outside the authoritative billing scope or version.");
+        if (evidence.PricingPolicyVersion <= 0 || evidence.ReservedAiCredits < 0) throw new ArgumentException("Reservation evidence contains invalid credit or policy values.", nameof(evidence));
+        if (evidence.Authority != admission.Authority) throw new UnauthorizedAccessException("Reservation evidence is outside the authoritative billing scope or version.");
         if (!string.Equals(evidence.PricingPolicyId, admission.PricingPolicyId, StringComparison.Ordinal) || evidence.PricingPolicyVersion != admission.PricingPolicyVersion)
             throw new InvalidOperationException("Reservation evidence pricing policy is stale or mismatched.");
     }
@@ -100,13 +86,11 @@ public static class CustomerAiCreditReservation
         ArgumentNullException.ThrowIfNull(authority);
         ValidateCanonical(authority.TenantId, nameof(authority.TenantId));
         ValidateCanonical(authority.CompanyId, nameof(authority.CompanyId));
-        if (authority.AuthorityVersion <= 0)
-            throw new ArgumentOutOfRangeException(nameof(authority.AuthorityVersion));
+        if (authority.AuthorityVersion <= 0) throw new ArgumentOutOfRangeException(nameof(authority.AuthorityVersion));
     }
 
     private static void ValidateCanonical(string value, string name)
     {
-        if (string.IsNullOrWhiteSpace(value) || !string.Equals(value, value.Trim(), StringComparison.Ordinal))
-            throw new ArgumentException($"{name} must be a canonical non-empty identifier.", name);
+        if (string.IsNullOrWhiteSpace(value) || !string.Equals(value, value.Trim(), StringComparison.Ordinal)) throw new ArgumentException($"{name} must be a canonical non-empty identifier.", name);
     }
 }
