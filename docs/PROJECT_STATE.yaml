@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: c29f72d92c5b4b4acc20598078ff6031d8b05f4e
+last_verified_commit: fc37f5ac7c9b451357fec4e8228e6f7838768a03
 
 critical_paths:
   backend:
@@ -16,7 +16,7 @@ critical_paths:
     branch: backend/167-sla-admission-sql-store
     head: ee12c08e7981415a93d41567daa44cd555e5af5f
     state: blocked
-    next: "Backend durable SQL Server SLA admission store had exact-head Governance 35945516557 and Build 35945516490 GREEN, but ERP/Data #166 advanced authoritative main. Immediate SAME-lease re-entry requested: reconcile current main c29f72d92c5b4b4acc20598078ff6031d8b05f4e, preserve persistence-before-enqueue, migration integrity and tenant/authority fences, then re-close exact-head gates."
+    next: "Backend durable SQL Server SLA admission store previously closed exact-head Governance 35945516557 and Build 35945516490 GREEN, but authoritative main advanced through Runtime #171 to fc37f5ac7c9b451357fec4e8228e6f7838768a03. Immediate SAME-lease re-entry requested: reconcile current main, preserve persistence-before-enqueue, serializable replay fencing, migration integrity and tenant/authority fences, then re-close exact-head gates."
 
   frontend:
     issue: null
@@ -24,25 +24,26 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "No live Frontend PR. Frontend automation remains enabled and immediate run requested to discover/claim the next safe unblocked slice without duplicating specialist leases."
+    next: "No live Frontend PR. Frontend automation is enabled and an immediate run was requested to discover/claim the next safe unblocked slice without duplicating specialist leases."
 
   runtime_ai:
-    issue: 170
-    pr: 171
-    branch: runtime/170-ai-credit-admission-active-holds
-    head: a02d2edb66372e0a0b7fbd83cb51338b8298ca90
-    state: blocked
-    next: "Runtime active-reservation credit admission exact HEAD has Build 35946839179 and Governance 35946839235 GREEN, but ERP/Data #166 advanced authoritative main and live PR is non-mergeable. Immediate SAME-lease re-entry requested: reconcile current main, preserve authority/pricing/overflow fences, re-close exact-head gates and restore mergeability."
-
-  erp_data:
     issue: null
     pr: null
     branch: null
     head: null
     state: done
-    next: "PR #166 / issue #165 execution-time failover health revalidation merged at c29f72d92c5b4b4acc20598078ff6031d8b05f4e after exact-head Governance 35943758190 and Build 35943758213 GREEN, mergeable=true and review threads clear. ERP/Data automation remains enabled and immediate run requested to discover/claim the next safe slice."
+    next: "PR #171 / issue #170 active-reservation-aware AI credit admission merged at fc37f5ac7c9b451357fec4e8228e6f7838768a03 after durable exact-head Governance 35951058607 and Build 35951058614 GREEN, ahead-only/behind=0, mergeable=true and review threads clear. Runtime automation remains enabled and an immediate run was requested to discover/claim the next safe slice."
+
+  erp_data:
+    issue: 172
+    pr: 173
+    branch: erp/172-failover-execution-evidence
+    head: 6fefd0cf8b8122cc145827dadf115be7cc9756d8
+    state: blocked
+    next: "ERP/Data failover execution evidence closed exact-head Governance 35951922409 and Build 35951922410 GREEN, but Runtime #171 advanced authoritative main to fc37f5ac7c9b451357fec4e8228e6f7838768a03. Immediate SAME-lease re-entry requested: reconcile current main, preserve opaque authority-bound evidence and fail-closed replay invariants, then re-close exact-head gates and restore mergeability."
 
 recent_authoritative_merges:
+  - "PR #171 / issue #170 active-reservation-aware AI credit admission: MERGED at fc37f5ac7c9b451357fec4e8228e6f7838768a03"
   - "PR #166 / issue #165 execution-time failover health revalidation: MERGED at c29f72d92c5b4b4acc20598078ff6031d8b05f4e"
   - "PR #163 / issue #162 authority-safe customer audit presentation: MERGED at c0e51037840cf7913156ec152a242f71daec91ce"
   - "PR #159 / issue #158 active AI credit reservation reconciliation: MERGED at a39d27985c7d72288bb6bafb67e0875367c5dff4"
@@ -50,15 +51,14 @@ recent_authoritative_merges:
   - "PR #155 / issue #154 failover decision authority validation: MERGED at f021d7e1b0cd0b90333044925eaf2a5c950faa5e"
   - "PR #157 / issue #156 authority-bound SLA priority admission: MERGED at a42b8fdd3a04f8f316c70167fc07c5b313a77744"
   - "PR #153 / issue #152 authority-bound AI credit reservation settlement: MERGED at d234665d04602a2905a684288ff1022d3983da23"
-  - "PR #151 / issue #149 authority-bound customer audit projection: MERGED at cb3a6316125df5929bb146bb338daed4d8be81bf"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 now includes authoritative customer audit presentation, AI-credit active-reservation reconciliation, SLA admission foundations, and execution-time failover health revalidation."
-  - "Backend #168 and Runtime #171 must reconcile authoritative main after ERP/Data #166 integration. Frontend and ERP/Data are free to claim safe non-overlapping slices."
+  - "P6 now includes customer audit presentation, active-reservation-aware AI-credit admission, SLA admission foundations, and execution-time failover health revalidation."
+  - "Backend #168 and ERP/Data #173 must reconcile authoritative main after Runtime #171 integration. Frontend and Runtime are free to claim safe non-overlapping slices."
 
-next_action: "Backend #168 and Runtime #171 reconcile current main on SAME leases and re-close exact-head gates; Frontend and ERP/Data discover/claim the next safe slices. Lead merges the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Backend #168 and ERP/Data #173 reconcile current main on SAME leases and re-close exact-head gates; Runtime and Frontend discover/claim next safe slices. Lead integrates the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
