@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 165
 current_pr: 166
 current_branch: erp/165-failover-execution-revalidation
-head: 7cc84c78f2592b8380c11667e8d932b781a113af
+head: 746c0ef3287239ad26cd5ad74d777de2e7bb4c80
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T00:40:00Z"
-last_checkpoint_at: "2026-09-24T00:40:00Z"
+lease_heartbeat_at: "2026-09-24T01:30:00Z"
+last_checkpoint_at: "2026-09-24T01:30:00Z"
 last_merged_pr: 155
 last_merge_commit: f021d7e1b0cd0b90333044925eaf2a5c950faa5e
 preferred_next_issue: 165
@@ -32,4 +32,4 @@ scope:
   - datasource-failover-operation-authority
   - datasource-failover-decision-validation
   - datasource-failover-execution-revalidation
-next_action: "PR #166 implements execution-time revalidation of the exact health observation bound to the persisted decision and has been reconciled with authoritative main. Own exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME branch. When GREEN, verify acceptance/mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+next_action: "PR #166 acceptance implementation is complete and reconciled with authoritative main at merge checkpoint 746c0ef3287239ad26cd5ad74d777de2e7bb4c80. Own exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME branch. On GREEN verify mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
