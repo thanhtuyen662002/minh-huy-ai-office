@@ -2,14 +2,15 @@ namespace MinhHuy.AIOffice.Shared.Contracts.Erp;
 
 /// <summary>
 /// Server-derived operation policy fence applied immediately before an ERP operation executes.
-/// Policy scope, operation and versions are authority metadata; callers must not derive or override them.
+/// Policy scope, operation, versions and effective time are authority metadata; callers must not derive or override them.
 /// </summary>
 public sealed record DataSourceFailoverOperationPolicy(
     Guid TenantId,
     Guid CompanyId,
     Guid DataSourceId,
     DataSourceOperationKind Operation,
-    long Version)
+    long Version,
+    DateTimeOffset EffectiveAt)
 {
     public DataSourceFailoverOperationPolicy Validate()
     {
@@ -23,6 +24,8 @@ public sealed record DataSourceFailoverOperationPolicy(
             throw new ArgumentOutOfRangeException(nameof(Operation), "Failover operation policy operation must be defined.");
         if (Version <= 0)
             throw new ArgumentOutOfRangeException(nameof(Version), "Failover operation policy version must be positive.");
+        if (EffectiveAt == default)
+            throw new ArgumentException("Failover operation policy effective timestamp is required.", nameof(EffectiveAt));
         return this;
     }
 }
@@ -54,6 +57,8 @@ public static class DataSourceFailoverOperationPolicyContract
             throw new UnauthorizedAccessException("Failover operation policy is outside the server-derived authority scope.");
         if (authoritativePolicy.Operation != operation)
             throw new UnauthorizedAccessException("Failover operation policy does not authorize the requested operation.");
+        if (operationAt < authoritativePolicy.EffectiveAt)
+            throw new UnauthorizedAccessException("Failover operation policy is not yet effective for the requested operation time.");
 
         if (authorization.OperationPolicyVersion <= 0)
             throw new InvalidOperationException("Persisted failover authorization has an invalid operation policy version.");
