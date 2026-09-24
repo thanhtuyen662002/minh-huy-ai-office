@@ -4,11 +4,11 @@ status: active
 current_issue: 170
 current_pr: 171
 current_branch: runtime/170-ai-credit-admission-active-holds
-head: ad2a0bdda736de2b4920c759934072ab957824fa
+head: 485876952dfaea07cf09b187a32daa0bfac0081e
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T07:40:00+07:00"
-last_checkpoint_at: "2026-09-24T07:40:00+07:00"
+lease_heartbeat_at: "2026-09-24T08:20:00+07:00"
+last_checkpoint_at: "2026-09-24T08:20:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #171 / issue #170 owns active-hold-aware AI credit admission. Implementation and focused tests are pushed; durable lease is now bound to Draft PR #171. Resolve actual new HEAD after this checkpoint, own exact-head Governance/Build through closure, fix actionable RED on this SAME branch, then verify acceptance/behind=0/mergeable/review-clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
+next_action: "PR #171 / issue #170 remains the SAME Runtime lease. Exact-head Build 35939171595 failed compilation because CustomerAiCreditReservationTests used the pre-active-holds CustomerAiCreditAdmissionDecision constructor. Fixed that actionable RED on this branch in commit 485876952dfaea07cf09b187a32daa0bfac0081e by supplying ActiveReservedAiCredits=0 in the reservation fixture. Resolve the actual durable HEAD after this checkpoint, own exact-head Governance/Build through terminal closure, fix further actionable RED here, then verify behind=0/mergeable/review-clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken authority fences, or merge directly."
