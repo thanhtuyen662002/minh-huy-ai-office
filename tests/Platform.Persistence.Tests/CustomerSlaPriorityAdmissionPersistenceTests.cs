@@ -78,14 +78,29 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceTests
     }
 
     [Fact]
-    public async Task AdmitAndEnqueue_RejectsConflictingReplayBeforeEnqueue()
+    public async Task FindAsync_DoesNotReturnEvidenceAcrossAuthorityBoundary()
+    {
+        var store = new InMemoryCustomerSlaPriorityAdmissionStore();
+        var evidence = CustomerSlaPriorityAdmission.Decide(
+            new CustomerSlaPriorityAdmissionRequest("admission-isolated", Authority, Policy, "standard"));
+        await store.PersistAsync(evidence);
+
+        Assert.Equal(evidence, await store.FindAsync(evidence.AdmissionId, Authority));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { TenantId = "tenant-b" }));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { CompanyId = "company-b" }));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { UserId = "user-b" }));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { AuthorityVersion = Authority.AuthorityVersion + 1 }));
+    }
+
+    [Fact]
+    public async Task AdmitAndEnqueue_RejectsCrossAuthorityAdmissionIdReplayBeforeEnqueue()
     {
         var store = new InMemoryCustomerSlaPriorityAdmissionStore();
         var service = new CustomerSlaPriorityAdmissionPersistenceService(store);
         var original = new CustomerSlaPriorityAdmissionRequest("admission-4", Authority, Policy, "standard");
         await service.AdmitAndEnqueueAsync(original, (_, _) => Task.CompletedTask);
         var enqueued = false;
-        var conflicting = original with { RequestedServiceClass = "urgent" };
+        var conflicting = original with { Authority = Authority with { TenantId = "tenant-b" } };
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.AdmitAndEnqueueAsync(
             conflicting,
@@ -100,7 +115,10 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceTests
 
     private sealed class RecordingStore(List<string> events) : ICustomerSlaPriorityAdmissionStore
     {
-        public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(string admissionId, CancellationToken cancellationToken = default) =>
+        public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
+            string admissionId,
+            CustomerSlaAuthority authority,
+            CancellationToken cancellationToken = default) =>
             Task.FromResult<CustomerSlaPriorityAdmissionEvidence?>(null);
 
         public Task<CustomerSlaPriorityAdmissionEvidence> PersistAsync(
@@ -114,7 +132,10 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceTests
 
     private sealed class FailingStore : ICustomerSlaPriorityAdmissionStore
     {
-        public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(string admissionId, CancellationToken cancellationToken = default) =>
+        public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
+            string admissionId,
+            CustomerSlaAuthority authority,
+            CancellationToken cancellationToken = default) =>
             Task.FromResult<CustomerSlaPriorityAdmissionEvidence?>(null);
 
         public Task<CustomerSlaPriorityAdmissionEvidence> PersistAsync(
