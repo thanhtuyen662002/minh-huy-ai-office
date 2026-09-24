@@ -72,10 +72,10 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
             insert.CommandText = """
                 INSERT INTO [aioffice].[CustomerSlaPriorityAdmissions]
                     ([AdmissionId], [TenantId], [CompanyId], [UserId], [AuthorityVersion],
-                     [PolicyId], [PolicyVersion], [ServiceClass], [SchedulerPriority])
+                     [PolicyId], [PolicyVersion], [ServiceClass], [SchedulerPriority], [PriorityCeiling])
                 VALUES
                     (@admissionId, @tenantId, @companyId, @userId, @authorityVersion,
-                     @policyId, @policyVersion, @serviceClass, @schedulerPriority);
+                     @policyId, @policyVersion, @serviceClass, @schedulerPriority, @priorityCeiling);
                 """;
             Add(insert, "@admissionId", evidence.AdmissionId);
             Add(insert, "@tenantId", evidence.Authority.TenantId);
@@ -86,6 +86,7 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
             Add(insert, "@policyVersion", evidence.PolicyVersion);
             Add(insert, "@serviceClass", evidence.ServiceClass);
             Add(insert, "@schedulerPriority", evidence.SchedulerPriority);
+            Add(insert, "@priorityCeiling", evidence.PriorityCeiling);
             await insert.ExecuteNonQueryAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return evidence;
@@ -113,7 +114,7 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
         var lockHint = lockRow ? " WITH (UPDLOCK, HOLDLOCK)" : string.Empty;
         command.CommandText = $"""
             SELECT [AdmissionId], [TenantId], [CompanyId], [UserId], [AuthorityVersion],
-                   [PolicyId], [PolicyVersion], [ServiceClass], [SchedulerPriority]
+                   [PolicyId], [PolicyVersion], [ServiceClass], [SchedulerPriority], [PriorityCeiling]
             FROM [aioffice].[CustomerSlaPriorityAdmissions]{lockHint}
             WHERE [AdmissionId] = @admissionId;
             """;
@@ -127,7 +128,10 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
         reader.GetString(5),
         reader.GetInt64(6),
         reader.GetString(7),
-        reader.GetInt32(8));
+        reader.GetInt32(8))
+    {
+        PriorityCeiling = reader.GetInt32(9),
+    };
 
     private static void Validate(CustomerSlaPriorityAdmissionEvidence evidence)
     {
@@ -146,8 +150,10 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
         Canonical(evidence.Authority.UserId, nameof(evidence.Authority.UserId));
         Canonical(evidence.PolicyId, nameof(evidence.PolicyId));
         Canonical(evidence.ServiceClass, nameof(evidence.ServiceClass));
-        if (evidence.Authority.AuthorityVersion <= 0 || evidence.PolicyVersion <= 0 || evidence.SchedulerPriority < 0)
-            throw new InvalidOperationException("SLA admission evidence contains invalid authority, policy, or priority values.");
+        if (evidence.Authority.AuthorityVersion <= 0 || evidence.PolicyVersion <= 0 ||
+            evidence.SchedulerPriority < 0 || evidence.PriorityCeiling < 0 ||
+            evidence.SchedulerPriority > evidence.PriorityCeiling)
+            throw new InvalidOperationException("SLA admission evidence contains invalid authority, policy, priority, or ceiling values.");
     }
 
     private static void Add(DbCommand command, string name, object value)
