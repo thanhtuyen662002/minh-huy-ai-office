@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: in_progress
+status: waiting_ci
 current_issue: 174
-current_pr: null
+current_pr: 176
 current_branch: "frontend/174-audit-filtering"
-head: "92097d695dfc904707ecbba880e79709365870ee"
-state: in_progress
+head: "db9d7bf0f2fde62f37503e7c7cf740070d8bc674"
+state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T10:45:00+07:00"
-last_checkpoint_at: "2026-09-24T10:45:00+07:00"
+lease_heartbeat_at: "2026-09-24T10:47:00+07:00"
+last_checkpoint_at: "2026-09-24T10:47:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "Issue #174 is the primary Frontend lease. Authority-safe customer audit filtering and accessible result summary are implemented with focused Vitest coverage. Open the SAME branch as a Draft PR, resolve actual HEAD, then own exact-head Governance/Build closure and fix actionable RED here. Browser filter text remains presentation-only and must never become TenantId/UserId/company authority or fabricate companyName/userName. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #176 / issue #174 is the primary Frontend lease. Authority-safe customer audit filtering and accessible result summary are implemented with focused Vitest coverage. Resolve the actual post-checkpoint HEAD, own exact-head Governance/Build closure, and fix actionable RED on this SAME PR. Browser filter text remains presentation-only and must never become TenantId/UserId/company authority or fabricate companyName/userName. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
