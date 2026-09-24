@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: f84b96fc1667ded252ac0c7f016b9b440257ffb0
-state: ready_for_review
+head: de70c4ae588fc894d3f928ea835db4e9e471f5f7
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T16:24:00+07:00"
-last_checkpoint_at: "2026-09-24T16:24:00+07:00"
+lease_heartbeat_at: "2026-09-24T16:39:00+07:00"
+last_checkpoint_at: "2026-09-24T16:39:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #177 / issue #175 is acceptance-complete at reconciled implementation checkpoint f84b96fc1667ded252ac0c7f016b9b440257ffb0: Governance 35976431476 and Build 35976431450 are terminal GREEN; authoritative main remains c545984942762237726e1e90f9e6559ff65b01b4; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains limited to Runtime state plus reservation contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 reconciled authoritative main cd00766a98eef471771fc4c7ee25f1a88bf616cc on SAME lease without force-reset. Close fresh exact-head Governance/Build for the reconciled checkpoint; fix actionable RED on SAME branch. If GREEN and live main/mergeability/reviews remain clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
