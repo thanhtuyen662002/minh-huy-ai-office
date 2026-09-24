@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: ready_for_review
-current_issue: 162
-current_pr: 163
-current_branch: "frontend/162-customer-audit-presentation"
-head: "d4a3c4afabc13cce9a9b56776b0f81f8e1af80f7"
-state: ready_for_review
+status: in_progress
+current_issue: 174
+current_pr: null
+current_branch: "frontend/174-audit-filtering"
+head: "92097d695dfc904707ecbba880e79709365870ee"
+state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T05:11:51+07:00"
-last_checkpoint_at: "2026-09-24T05:11:51+07:00"
+lease_heartbeat_at: "2026-09-24T10:45:00+07:00"
+last_checkpoint_at: "2026-09-24T10:45:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #163 / issue #162 is acceptance-complete on the SAME Frontend lease. Acceptance HEAD d4a3c4afabc13cce9a9b56776b0f81f8e1af80f7 is ahead-only/behind=0 and mergeable=true with exact-head Governance 35923734900 GREEN and Build 35923734872 GREEN and no unresolved review threads. Customer audit presentation fails closed on malformed/conflicting evidence, bounds the API page, orders deterministically, and never treats browser-selected tenant/company/user metadata or fabricated company/user names as authority. This metadata checkpoint must also receive exact-head Governance/Build GREEN before Lead integration. If review, mergeability, base, or CI drifts, resume this SAME lease. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "Issue #174 is the primary Frontend lease. Authority-safe customer audit filtering and accessible result summary are implemented with focused Vitest coverage. Open the SAME branch as a Draft PR, resolve actual HEAD, then own exact-head Governance/Build closure and fix actionable RED here. Browser filter text remains presentation-only and must never become TenantId/UserId/company authority or fabricate companyName/userName. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
