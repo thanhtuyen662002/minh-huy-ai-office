@@ -23,11 +23,13 @@ public static class DataSourceFailoverOperationPolicyContract
     public static void ValidateForExecution(
         DataSourceFailoverAuthority authority,
         DataSourceOperationKind operation,
+        DataSourceFailoverDecision decision,
         DataSourceFailoverOperationPolicy authoritativePolicy,
         DataSourceFailoverOperationAuthorization authorization,
         DateTimeOffset operationAt)
     {
         ArgumentNullException.ThrowIfNull(authority);
+        ArgumentNullException.ThrowIfNull(decision);
         ArgumentNullException.ThrowIfNull(authoritativePolicy);
         ArgumentNullException.ThrowIfNull(authorization);
         ArgumentNullException.ThrowIfNull(authorization.Evidence);
@@ -38,9 +40,10 @@ public static class DataSourceFailoverOperationPolicyContract
         if (authorization.OperationPolicyVersion != authoritativePolicy.Version)
             throw new UnauthorizedAccessException("Persisted failover authorization is outside the authoritative operation policy version fence.");
 
-        DataSourceFailoverExecutionAuthorizationContract.ValidateForOperation(
+        DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
             authority,
             operation,
+            decision,
             authorization.Evidence,
             operationAt);
     }
