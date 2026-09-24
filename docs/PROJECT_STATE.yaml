@@ -7,32 +7,32 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 4c54675884f7c1ada9a712e18995aedd2303d0e3
+last_verified_commit: 772eb81185f67bf6ddc88acce1694a642d7f48ef
 
 critical_paths:
   backend:
     issue: 167
     pr: 168
     branch: backend/167-sla-admission-sql-store
-    head: ad624eb4293f707fb2719cdf333153f7f506ca92
+    head: cbc8c7f70cfb18a1999a80dab4b7b9f519f8a9c6
     state: blocked
-    next: "Backend durable SQL Server SLA admission store had exact-head Governance 35956442241 and Build 35956442240 GREEN against prior main, but ERP/Data #179 advanced authoritative main to 4c54675884f7c1ada9a712e18995aedd2303d0e3 and live PR is now non-mergeable. Immediate SAME-lease run requested: reconcile current main, preserve persistence-before-enqueue, serializable replay fencing, migration integrity and tenant/authority fences, then re-close exact-head gates."
+    next: "Backend durable SQL Server SLA admission store is acceptance-complete and had exact-head Governance 35960947511 and Build 35960947501 GREEN against prior main, but ERP/Data #181 advanced authoritative main to 772eb81185f67bf6ddc88acce1694a642d7f48ef and live PR is now non-mergeable. Immediate SAME-lease run required: reconcile current main, preserve persistence-before-enqueue, serializable replay fencing, migration integrity and tenant/authority fences, then re-close exact-head gates."
 
   frontend:
     issue: 174
     pr: 176
     branch: frontend/174-audit-filtering
-    head: a09c34bbf123f4e1ef582bfde01de31c5dc5dd57
+    head: d58226ed1456d7eb58607775d91fa36667a0fba5
     state: blocked
-    next: "Frontend authority-safe audit filtering advanced beyond stale HANDOFF to live HEAD a09c34bbf123f4e1ef582bfde01de31c5dc5dd57. ERP/Data #179 advanced authoritative main to 4c54675884f7c1ada9a712e18995aedd2303d0e3 and PR is non-mergeable. Immediate SAME-lease run requested: reconcile current main, keep browser filtering presentation-only and preserve fail-closed parsing/bounds/ordering, then close exact-head Governance/Build and restore mergeability."
+    next: "Frontend authority-safe audit filtering is acceptance-complete and had exact-head Governance 35960901974 and Build 35960901973 GREEN against prior main, but ERP/Data #181 advanced authoritative main to 772eb81185f67bf6ddc88acce1694a642d7f48ef and live PR is now non-mergeable. Immediate SAME-lease run required: reconcile current main, keep browser filtering presentation-only and preserve fail-closed parsing/bounds/ordering, then re-close exact-head gates."
 
   runtime_ai:
     issue: 175
     pr: 177
     branch: runtime/175-credit-reservation-active-holds
-    head: 0472d848e832c359bc96c5cab35609b67e8812c3
+    head: ddfa0208aeb1faac30066a353d6150e838f79f3a
     state: blocked
-    next: "Runtime active-hold reservation alignment is acceptance-complete on live HEAD 0472d848e832c359bc96c5cab35609b67e8812c3, but ERP/Data #179 advanced authoritative main to 4c54675884f7c1ada9a712e18995aedd2303d0e3 and PR is now non-mergeable. Immediate SAME-lease run requested: reconcile current main, preserve active-hold/admission/replay/pricing/overflow fences, then close exact-head gates and restore mergeability."
+    next: "Runtime active-hold reservation alignment is acceptance-complete and durable ready-state HEAD ddfa0208aeb1faac30066a353d6150e838f79f3a has exact-head Governance 35964168613 and Build 35964168449 GREEN, but ERP/Data #181 advanced authoritative main to 772eb81185f67bf6ddc88acce1694a642d7f48ef and live PR is now non-mergeable. Immediate SAME-lease run required: reconcile current main, preserve active-hold/admission/replay/pricing/overflow fences, then re-close exact-head gates."
 
   erp_data:
     issue: null
@@ -40,9 +40,10 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #179 / issue #178 fail-closed validation of persisted failover execution evidence before ERP operation use merged at 4c54675884f7c1ada9a712e18995aedd2303d0e3 after exact-head Governance 35956510388 and Build 35956510491 GREEN, mergeable=true and review threads clear. ERP/Data automation remains enabled and an immediate run was requested to discover/claim the next safe non-overlapping slice."
+    next: "PR #181 / issue #180 operation-time freshness for failover execution authorization merged at 772eb81185f67bf6ddc88acce1694a642d7f48ef after exact-head Governance 35960981618 and Build 35960981673 GREEN, mergeable=true and review threads clear. ERP/Data automation remains enabled and should discover/claim the next safe non-overlapping slice."
 
 recent_authoritative_merges:
+  - "PR #181 / issue #180 operation-time failover authorization freshness: MERGED at 772eb81185f67bf6ddc88acce1694a642d7f48ef"
   - "PR #179 / issue #178 failover execution evidence authorization before ERP operation: MERGED at 4c54675884f7c1ada9a712e18995aedd2303d0e3"
   - "PR #173 / issue #172 authority-bound failover execution evidence: MERGED at e9078c78e5a0376b5ee304a9fe2e64f0a3c5d759"
   - "PR #171 / issue #170 active-reservation-aware AI credit admission: MERGED at fc37f5ac7c9b451357fec4e8228e6f7838768a03"
@@ -50,15 +51,14 @@ recent_authoritative_merges:
   - "PR #163 / issue #162 authority-safe customer audit presentation: MERGED at c0e51037840cf7913156ec152a242f71daec91ce"
   - "PR #159 / issue #158 active AI credit reservation reconciliation: MERGED at a39d27985c7d72288bb6bafb67e0875367c5dff4"
   - "PR #161 / issue #160 authority-bound SLA admission persistence-before-enqueue: MERGED at 9b5a5af7748259e6f7592cb0083a1da4d1a194d5"
-  - "PR #155 / issue #154 failover decision authority validation: MERGED at f021d7e1b0cd0b90333044925eaf2a5c950faa5e"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 now includes customer audit presentation, active-reservation-aware AI-credit admission, SLA admission foundations, execution-time failover health revalidation, authority-bound failover execution evidence, and fail-closed validation of persisted failover execution evidence before ERP operation use."
-  - "Backend #168, Frontend #176 and Runtime #177 must reconcile authoritative main after ERP/Data #179 integration. ERP/Data is free to claim the next safe non-overlapping slice."
+  - "P6 now includes customer audit presentation, active-reservation-aware AI-credit admission, SLA admission foundations, execution-time failover health revalidation/evidence/authorization, and operation-time freshness enforcement."
+  - "Backend #168, Frontend #176 and Runtime #177 must reconcile authoritative main after ERP/Data #181 integration. ERP/Data is free to claim the next safe non-overlapping slice."
 
-next_action: "Backend #168, Frontend #176 and Runtime #177 reconcile current main on SAME leases and re-close exact-head gates; ERP/Data discovers/claims the next safe slice. Immediate runs were requested for all four specialist loops. Lead integrates the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Backend #168, Frontend #176 and Runtime #177 reconcile current main on SAME leases and re-close exact-head gates; ERP/Data discovers/claims the next safe slice. Request immediate runs for all four specialist loops. Lead integrates the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 

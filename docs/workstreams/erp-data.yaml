@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 178
-current_pr: 179
-current_branch: erp/178-failover-execution-authorization
-head: b11bd7b5a9eb9ebbf2b4009ffdf9e1b7e9de935c
+current_issue: 180
+current_pr: 181
+current_branch: erp/180-failover-operation-time-freshness
+head: e4995d673e4c6f678920a9cdf116790cf806a624
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T04:38:00Z"
-last_checkpoint_at: "2026-09-24T04:38:00Z"
-last_merged_pr: 173
-last_merge_commit: e9078c78e5a0376b5ee304a9fe2e64f0a3c5d759
-preferred_next_issue: 178
+lease_heartbeat_at: "2026-09-24T05:42:00Z"
+last_checkpoint_at: "2026-09-24T05:42:00Z"
+last_merged_pr: 179
+last_merge_commit: 4c54675884f7c1ada9a712e18995aedd2303d0e3
+preferred_next_issue: 180
 blocked_by: []
 scope:
   - datasource-registry
@@ -34,4 +34,5 @@ scope:
   - datasource-failover-execution-revalidation
   - datasource-failover-execution-evidence
   - datasource-failover-execution-authorization
-next_action: "PR #179 / issue #178 is the primary ERP/Data lease. Fail-closed execution-evidence authorization and focused tests are implemented from authoritative main 46173c93dfc2e722c5e7c88e98f62b42becf9798. Resolve actual PR HEAD after this state checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+  - datasource-failover-operation-time-freshness
+next_action: "PR #181 / issue #180 is the primary ERP/Data lease. Operation-time freshness validation and focused tests are implemented from authoritative main c7abd84789b2038ac651c86dd5d1deada2e78566. Resolve actual PR HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
