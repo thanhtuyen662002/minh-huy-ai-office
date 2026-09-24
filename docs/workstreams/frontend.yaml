@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 191
 current_pr: 192
 current_branch: "frontend/191-sla-status-presentation"
-head: "351651ce5a69f87414979519b0c2fa1902e54774"
+head: "PENDING_RECONCILIATION_COMMIT"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T21:36:35+07:00"
-last_checkpoint_at: "2026-09-24T21:36:35+07:00"
+lease_heartbeat_at: "2026-09-24T22:39:36+07:00"
+last_checkpoint_at: "2026-09-24T22:39:36+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Exact-head CI for prior durable checkpoint 17444b3072a2fba01cfb078041c4641904b9d4e8 closed GREEN (Governance 36011016208; Build 36011016353), but authoritative main advanced to 8db4e117130491a543afa0f084803b01cbeb733a and the PR diverged. Reconciled authoritative main on the SAME lease via merge commit 351651ce5a69f87414979519b0c2fa1902e54774 while preserving only the SLA presentation component/tests over current main. Re-query exact-head Governance/Build for the durable checkpoint, fix actionable RED on SAME PR, then verify mergeability/reviews and return ready_for_review after GREEN. Preserve server-derived TenantId/UserId/company authority; browser identity metadata is untrusted presentation input. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main 88b05b18641efca5d4a938e2e426531f0ac46c40 while preserving the server-authoritative SLA presentation component/tests and without introducing browser TenantId/CompanyId/UserId/companyName/userName authority. Close exact-head Governance/Build for the reconciliation checkpoint; fix actionable RED on this SAME PR. If GREEN and live compare/reviews/mergeability remain clean, return ready_for_review for Lead integration. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
