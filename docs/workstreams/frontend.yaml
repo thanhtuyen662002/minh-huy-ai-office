@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: waiting_ci
-current_issue: 174
-current_pr: 176
-current_branch: "frontend/174-audit-filtering"
-head: "4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6"
-state: waiting_ci
+status: in_progress
+current_issue: 191
+current_pr: null
+current_branch: "frontend/191-sla-status-presentation"
+head: "eea0cffafa5ce0f81bda2b26f7c0974a68ef8d5b"
+state: in_progress
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T16:40:30+07:00"
-last_checkpoint_at: "2026-09-24T16:40:30+07:00"
+lease_heartbeat_at: "2026-09-24T18:39:00+07:00"
+last_checkpoint_at: "2026-09-24T18:39:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #176 / issue #174 remains the SAME Frontend lease. Reconciled authoritative main 0f2db02007a0e4f9d55d9723058205448f48ab19 into the branch through same-lease reconciliation merge 4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6; compare is ahead-only/behind=0. Authority-safe audit filtering stays presentation-only and never derives TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "Issue #191 is the primary Frontend lease. Authority-safe SLA presentation component and focused tests are implemented on frontend/191-sla-status-presentation. Open the Draft PR, capture actual HEAD, and own exact-head CI closure. Preserve server-derived TenantId/UserId/company authority; browser metadata remains untrusted and must never fabricate company/user/SLA authority. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
