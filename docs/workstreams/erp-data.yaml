@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 182
 current_pr: 183
 current_branch: erp/182-failover-operation-policy-version
-head: 191635ffd88e81a7bd8ee91fd60a3f3a23ae0b64
+head: aea5a1787a5dc54ccb70ca7d698dacc26dc29056
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T07:38:53Z"
-last_checkpoint_at: "2026-09-24T07:38:53Z"
+lease_heartbeat_at: "2026-09-24T08:37:26Z"
+last_checkpoint_at: "2026-09-24T08:37:26Z"
 last_merged_pr: 181
 last_merge_commit: 4ba736c175bfc5dd632ebb163c8cb034a6028ae3
 preferred_next_issue: 182
@@ -36,4 +36,4 @@ scope:
   - datasource-failover-execution-authorization
   - datasource-failover-operation-time-freshness
   - datasource-failover-operation-policy-version
-next_action: "PR #183 / issue #182 remains the primary ERP/Data lease. Prior exact-head Governance 35970211135 and Build 35970211479 were GREEN on implementation HEAD 9a50c0db6dae227594de2a2ab18c60d661af2498. Reconciled authoritative main 8d521b9786a737b2b02c1fcf4e33cc5ec642a574 on SAME lease via merge commit 191635ffd88e81a7bd8ee91fd60a3f3a23ae0b64 while preserving only ERP/Data policy implementation/tests over main. Resolve actual HEAD after this durable state checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify current main/reviews/mergeability and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+next_action: "PR #183 / issue #182 remains the primary ERP/Data lease. Reconciled authoritative main c545984942762237726e1e90f9e6559ff65b01b4 on SAME lease via safe two-parent merge aea5a1787a5dc54ccb70ca7d698dacc26dc29056 using authoritative main tree plus only the three ERP/Data lease files; compare is ahead-only / behind=0 and docs/PROJECT_STATE.yaml remains main-owned. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and return ready_for_review. Never edit PROJECT_STATE or other specialist leases."
