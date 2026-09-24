@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: 1d3bd0f5d15e26fc29a973627176f8e478a2228d
-state: waiting_ci
+head: 3c198f9f89bca24d3afc00549d24d128566014f8
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T17:34:00+07:00"
-last_checkpoint_at: "2026-09-24T17:34:00+07:00"
+lease_heartbeat_at: "2026-09-24T18:22:00+07:00"
+last_checkpoint_at: "2026-09-24T18:22:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #177 / issue #175 reconciled authoritative main 10407ca5c42d4c39eb4307e86037db552a8d5b7a on SAME lease via merge implementation checkpoint 1d3bd0f5d15e26fc29a973627176f8e478a2228d, preserving Runtime active-hold admission/reservation authority, pricing, replay and overflow fences plus authoritative Frontend/main changes. Close fresh exact-head Governance/Build for the durable state checkpoint; fix actionable RED on SAME branch. If GREEN and live main/mergeability/reviews remain clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 is acceptance-complete at reconciled implementation checkpoint 3c198f9f89bca24d3afc00549d24d128566014f8 against authoritative main 10407ca5c42d4c39eb4307e86037db552a8d5b7a: Governance 35988061214 and Build 35988061143 are terminal GREEN; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains exactly 3 Runtime files. Lead should review/integrate after verifying exact-head gates for this durable ready-state checkpoint. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
