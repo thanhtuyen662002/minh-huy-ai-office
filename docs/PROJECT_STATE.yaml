@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: bf2a1ae23fd710a691704857dbeac3f6dc29bb33
+last_verified_commit: cd00766a98eef471771fc4c7ee25f1a88bf616cc
 
 critical_paths:
   backend:
@@ -16,33 +16,34 @@ critical_paths:
     branch: null
     head: null
     state: done
-    next: "PR #185 / issue #184 authoritative SLA priority ceiling evidence merged at bf2a1ae23fd710a691704857dbeac3f6dc29bb33 after exact-head Governance 35970961384 and Build 35970961353 GREEN, mergeable=true and review threads clear. Backend automation remains enabled and should discover/claim the next safe non-overlapping slice."
+    next: "PR #187 / issue #186 authority-scoped SLA admission lookup merged at cd00766a98eef471771fc4c7ee25f1a88bf616cc after exact-head Governance 35976477776 and Build 35976477576 GREEN, mergeable=true and review threads clear. Backend automation remains enabled and should discover/claim the next safe non-overlapping slice."
 
   frontend:
     issue: 174
     pr: 176
     branch: frontend/174-audit-filtering
-    head: 9f41cd4b4af6c023e5abf592c66cdfa0438b0a4d
+    head: 4e8b5918d7e9e69eb153b8758aff465b14e350d9
     state: blocked
-    next: "Frontend authority-safe audit filtering was acceptance-complete with exact-head Governance 35970856908 and Build 35970856910 GREEN against prior main 8d521b9786a737b2b02c1fcf4e33cc5ec642a574. Backend #185 advanced authoritative main to bf2a1ae23fd710a691704857dbeac3f6dc29bb33; immediate SAME-lease re-entry is required to reconcile current main and re-close exact-head gates."
+    next: "Frontend #176 was acceptance-complete with exact-head Governance 35976419969 and Build 35976419979 GREEN against prior main c545984942762237726e1e90f9e6559ff65b01b4. Backend #187 advanced authoritative main to cd00766a98eef471771fc4c7ee25f1a88bf616cc; immediate SAME-lease re-entry is required to reconcile current main and re-close exact-head gates."
 
   runtime_ai:
     issue: 175
     pr: 177
     branch: runtime/175-credit-reservation-active-holds
-    head: a6559a62bb8f1db274798598fbcc52ffe0bf4adc
+    head: 143c0cb63a7fc11658f6d1c80dd6f12bc96b1eb5
     state: blocked
-    next: "Runtime active-hold reservation alignment was acceptance-complete; reconciled implementation HEAD fc3ee0c937b3d89d145e7e287ba758f4aafedef8 had Governance 35970932230 and Build 35970932229 GREEN, with durable ready-state HEAD a6559a62bb8f1db274798598fbcc52ffe0bf4adc. Backend #185 advanced authoritative main to bf2a1ae23fd710a691704857dbeac3f6dc29bb33; immediate SAME-lease re-entry is required and exact-head gates must be re-closed."
+    next: "Runtime #177 is acceptance-complete but live mergeability is false after Backend #187 integration. Immediate SAME-lease re-entry is required to reconcile authoritative main cd00766a98eef471771fc4c7ee25f1a88bf616cc and close fresh exact-head gates before integration."
 
   erp_data:
     issue: 182
     pr: 183
     branch: erp/182-failover-operation-policy-version
-    head: 28d57de1201912b04477d23f7efe824f0faa8d1a
+    head: 7dc83ae403c95bdb49f5c9cb86576b18e6fc3153
     state: blocked
-    next: "ERP/Data operation-policy-version authorization was acceptance-complete with exact-head Governance 35970839675 and Build 35970839721 GREEN against prior main 8d521b9786a737b2b02c1fcf4e33cc5ec642a574. Backend #185 advanced authoritative main to bf2a1ae23fd710a691704857dbeac3f6dc29bb33; immediate SAME-lease re-entry is required to reconcile current main and re-close exact-head gates."
+    next: "ERP/Data #183 was acceptance-complete with exact-head Governance 35976415021 and Build 35976415066 GREEN against prior main c545984942762237726e1e90f9e6559ff65b01b4. Backend #187 advanced authoritative main to cd00766a98eef471771fc4c7ee25f1a88bf616cc; immediate SAME-lease re-entry is required to reconcile current main and re-close exact-head gates."
 
 recent_authoritative_merges:
+  - "PR #187 / issue #186 authority-scoped SLA admission lookup: MERGED at cd00766a98eef471771fc4c7ee25f1a88bf616cc"
   - "PR #185 / issue #184 authoritative SLA priority ceiling evidence: MERGED at bf2a1ae23fd710a691704857dbeac3f6dc29bb33"
   - "PR #168 / issue #167 durable SQL Server SLA admission evidence store: MERGED at 3f0a0e775780dff52b97e55cda94ac5ccc46346e"
   - "PR #181 / issue #180 operation-time failover authorization freshness: MERGED at 772eb81185f67bf6ddc88acce1694a642d7f48ef"
@@ -50,15 +51,14 @@ recent_authoritative_merges:
   - "PR #173 / issue #172 authority-bound failover execution evidence: MERGED at e9078c78e5a0376b5ee304a9fe2e64f0a3c5d759"
   - "PR #171 / issue #170 active-reservation-aware AI credit admission: MERGED at fc37f5ac7c9b451357fec4e8228e6f7838768a03"
   - "PR #166 / issue #165 execution-time failover health revalidation: MERGED at c29f72d92c5b4b4acc20598078ff6031d8b05f4e"
-  - "PR #163 / issue #162 authority-safe customer audit presentation: MERGED at c0e51037840cf7913156ec152a242f71daec91ce"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 now includes durable SQL Server SLA admission evidence plus authoritative priority ceiling, customer audit presentation/filtering, active-reservation-aware AI-credit admission/reservation, and failover execution freshness/evidence/authorization foundations."
-  - "Frontend #176, Runtime #177 and ERP/Data #183 must reconcile authoritative main after Backend #185 integration. Backend is free to claim the next safe non-overlapping slice."
+  - "P6 now includes durable SQL Server SLA admission evidence, authoritative priority ceiling and authority-scoped lookup, customer audit presentation/filtering, active-reservation-aware AI-credit admission/reservation, and failover execution freshness/evidence/authorization foundations."
+  - "Frontend #176, Runtime #177 and ERP/Data #183 must reconcile authoritative main after Backend #187 integration. Backend is free to claim the next safe non-overlapping slice."
 
-next_action: "Frontend #176, Runtime #177 and ERP/Data #183 reconcile current main on SAME leases and re-close exact-head gates; Backend discovers/claims the next safe slice. Immediate runs requested for all four specialist loops. Lead integrates the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Frontend #176, Runtime #177 and ERP/Data #183 reconcile current main on SAME leases and re-close exact-head gates; Backend discovers/claims the next safe slice. Request immediate runs for all four specialist loops. Lead integrates the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
 
 blocked_by: []
 
