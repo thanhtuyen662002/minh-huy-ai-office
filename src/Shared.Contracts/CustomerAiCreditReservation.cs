@@ -30,9 +30,9 @@ public static class CustomerAiCreditReservation
         ValidateCanonical(admission.PricingPolicyId, nameof(admission.PricingPolicyId));
         if (admission.PricingPolicyVersion <= 0)
             throw new ArgumentOutOfRangeException(nameof(admission.PricingPolicyVersion));
-        if (admission.CreditLimit < 0 || admission.UsedAiCredits < 0 || admission.RequestedAiCredits < 0 || admission.ProjectedAiCredits < 0)
+        if (admission.CreditLimit < 0 || admission.UsedAiCredits < 0 || admission.ActiveReservedAiCredits < 0 || admission.RequestedAiCredits < 0 || admission.ProjectedAiCredits < 0)
             throw new ArgumentException("Admission contains negative credit values.", nameof(admission));
-        if (checked(admission.UsedAiCredits + admission.RequestedAiCredits) != admission.ProjectedAiCredits)
+        if (checked(checked(admission.UsedAiCredits + admission.ActiveReservedAiCredits) + admission.RequestedAiCredits) != admission.ProjectedAiCredits)
             throw new InvalidOperationException("Admission projection is inconsistent.");
         if (admission.Allowed != (admission.ProjectedAiCredits <= admission.CreditLimit))
             throw new InvalidOperationException("Admission decision is inconsistent.");
@@ -60,18 +60,25 @@ public static class CustomerAiCreditReservation
             unique.Add(evidence.ReservationId, evidence);
         }
 
-        if (unique.TryGetValue(reservationId, out var replay))
-        {
-            if (replay != requested)
-                throw new InvalidOperationException("Reservation identity was reused with conflicting evidence.");
-            var existingReserved = SumReserved(unique.Values.Where(x => x.ReservationId != reservationId));
-            var replayProjected = checked(admission.UsedAiCredits + existingReserved + requested.ReservedAiCredits);
-            return new(requested, admission.UsedAiCredits, existingReserved, replayProjected, admission.CreditLimit, replayProjected <= admission.CreditLimit, true);
-        }
+        var isReplay = unique.TryGetValue(reservationId, out var replay);
+        if (isReplay && replay != requested)
+            throw new InvalidOperationException("Reservation identity was reused with conflicting evidence.");
 
-        var activeReserved = SumReserved(unique.Values);
-        var projected = checked(admission.UsedAiCredits + activeReserved + requested.ReservedAiCredits);
-        return new(requested, admission.UsedAiCredits, activeReserved, projected, admission.CreditLimit, projected <= admission.CreditLimit, false);
+        var snapshotEvidence = isReplay
+            ? unique.Values.Where(x => x.ReservationId != reservationId)
+            : unique.Values;
+        var observedActiveReserved = SumReserved(snapshotEvidence);
+        if (observedActiveReserved != admission.ActiveReservedAiCredits)
+            throw new InvalidOperationException("Active reservation evidence does not match the authoritative admission snapshot.");
+
+        return new(
+            requested,
+            admission.UsedAiCredits,
+            admission.ActiveReservedAiCredits,
+            admission.ProjectedAiCredits,
+            admission.CreditLimit,
+            admission.Allowed,
+            isReplay);
     }
 
     private static long SumReserved(IEnumerable<CustomerAiCreditReservationEvidence> evidence)
