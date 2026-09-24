@@ -4,11 +4,11 @@ status: active
 current_issue: 170
 current_pr: 171
 current_branch: runtime/170-ai-credit-admission-active-holds
-head: 936fe667411dbe653597afe7c7a1c3a49b148645
-state: waiting_ci
+head: 85325b27f5c705ed1c98ffe4928fcaaa63b85d1f
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T09:35:00+07:00"
-last_checkpoint_at: "2026-09-24T09:35:00+07:00"
+lease_heartbeat_at: "2026-09-24T10:20:00+07:00"
+last_checkpoint_at: "2026-09-24T10:20:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #171 / issue #170 remains the SAME Runtime lease. Exact-head Governance 35946839235 and Build 35946839179 were GREEN at a02d2edb66372e0a0b7fbd83cb51338b8298ca90. Authoritative main advanced to 27d4962f40b601485643dfc62bc5f95df63730d4 after ERP/Data #166/state integration and was reconciled via merge commit 936fe667411dbe653597afe7c7a1c3a49b148645 without dropping Runtime changes. Compare is now ahead-only/behind=0 and diff remains limited to Runtime state plus AI-credit admission contract/tests. Resolve the durable HEAD after this checkpoint, own exact-head Governance/Build through terminal closure, fix actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing/overflow fences, or merge directly."
+next_action: "PR #171 / issue #170 is acceptance-complete at exact implementation checkpoint 85325b27f5c705ed1c98ffe4928fcaaa63b85d1f: Governance 35947965516 and Build 35947965417 are terminal GREEN; authoritative main is 27d4962f40b601485643dfc62bc5f95df63730d4; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains limited to Runtime state plus AI-credit admission contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
