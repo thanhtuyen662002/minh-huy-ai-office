@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: de70c4ae588fc894d3f928ea835db4e9e471f5f7
+head: 2c8159e0dbaa962643b84303da5ed935d44dbab2
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T16:39:00+07:00"
-last_checkpoint_at: "2026-09-24T16:39:00+07:00"
+lease_heartbeat_at: "2026-09-24T17:22:00+07:00"
+last_checkpoint_at: "2026-09-24T17:22:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #177 / issue #175 reconciled authoritative main cd00766a98eef471771fc4c7ee25f1a88bf616cc on SAME lease without force-reset. Close fresh exact-head Governance/Build for the reconciled checkpoint; fix actionable RED on SAME branch. If GREEN and live main/mergeability/reviews remain clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 reconciled authoritative main 0f2db02007a0e4f9d55d9723058205448f48ab19 on SAME lease at implementation checkpoint 2c8159e0dbaa962643b84303da5ed935d44dbab2. Close fresh exact-head Governance/Build for the durable state checkpoint; fix actionable RED on SAME branch. If GREEN and live main/mergeability/reviews remain clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
