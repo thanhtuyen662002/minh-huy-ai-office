@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 158
-current_pr: 159
-current_branch: runtime/158-ai-credit-active-reservations
-head: 205f17632775f39fec849bd7525ce7c9b985b410
-state: ready_for_review
+current_issue: 170
+current_pr: null
+current_branch: runtime/170-ai-credit-admission-active-holds
+head: b6a3b12696c8eee6ae94e1ce0dcd88ef44694f2e
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T07:20:00+07:00"
-last_checkpoint_at: "2026-09-24T07:20:00+07:00"
+lease_heartbeat_at: "2026-09-24T07:39:00+07:00"
+last_checkpoint_at: "2026-09-24T07:39:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -37,4 +37,5 @@ scope:
   - customer-ai-credit-reservation
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
-next_action: "PR #159 / issue #158 is acceptance-complete on reconciled checkpoint 205f17632775f39fec849bd7525ce7c9b985b410: exact-head Governance 35934511485 and Build 35934511504 GREEN; authoritative main is 1458ffc8ee3ca316ff54dc02e9e0d37623b75870; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains limited to Runtime state plus active-reservation contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
+  - customer-ai-credit-admission-active-holds
+next_action: "Issue #170 claimed after #159 merged authoritative. Implementation now requires admission to account for exact-authority active reservation holds alongside settled usage, exposes active reserved credits in decision evidence, and fails closed on scope/policy/overflow mismatches. Open Draft PR on this SAME branch, run exact-head Governance/Build through closure, fix actionable RED here, then verify acceptance/behind=0/review-clear. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
