@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
 type CustomerAuditItem = Readonly<{
   auditId: string;
   taskId: string;
@@ -62,14 +66,30 @@ function readItems(value: unknown): CustomerAuditItem[] | null {
   return items.sort((left, right) => right.occurredAtUtc.localeCompare(left.occurredAtUtc) || left.auditId.localeCompare(right.auditId));
 }
 
+const normalizeFilter = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleLowerCase("vi-VN");
+
 export function CustomerAuditPresentation({ items: input }: { items: unknown }) {
-  const items = readItems(input);
-  if (!items) {
+  const [filter, setFilter] = useState("");
+  const items = useMemo(() => readItems(input), [input]);
+  const normalizedFilter = normalizeFilter(filter);
+  const visibleItems = useMemo(() => {
+    if (!items || !normalizedFilter) return items;
+    return items.filter((item) => normalizeFilter(`${item.action} ${item.resource}`).includes(normalizedFilter));
+  }, [items, normalizedFilter]);
+
+  if (!items || !visibleItems) {
     return <section role="alert"><h2>Không thể mở nhật ký hoạt động</h2><p>Dữ liệu nhật ký không hợp lệ hoặc không còn nằm trong phạm vi máy chủ đã xác thực.</p></section>;
   }
   if (items.length === 0) {
     return <section aria-label="Nhật ký hoạt động"><h2>Nhật ký hoạt động</h2><p>Chưa có hoạt động nào.</p></section>;
   }
 
-  return <section aria-label="Nhật ký hoạt động"><h2>Nhật ký hoạt động</h2><ol>{items.map((item) => <li key={item.auditId}><p>{item.action} · {item.resource}</p><p>{item.authorized ? "Được phép" : "Bị từ chối"} · {item.risk}</p><p>{item.decisionReason}</p><time dateTime={item.occurredAtUtc}>{item.occurredAtUtc}</time>{item.executionId ? <p>Mã thực thi: {item.executionId}</p> : null}</li>)}</ol></section>;
+  return <section aria-label="Nhật ký hoạt động">
+    <h2>Nhật ký hoạt động</h2>
+    <label htmlFor="customer-audit-filter">Lọc theo hành động hoặc tài nguyên</label>
+    <input id="customer-audit-filter" type="search" value={filter} onChange={(event) => setFilter(event.currentTarget.value)} autoComplete="off" />
+    {filter ? <button type="button" onClick={() => setFilter("")}>Xóa bộ lọc</button> : null}
+    <p role="status" aria-live="polite">Hiển thị {visibleItems.length} / {items.length} hoạt động</p>
+    {visibleItems.length === 0 ? <p>Không có hoạt động phù hợp với bộ lọc.</p> : <ol>{visibleItems.map((item) => <li key={item.auditId}><p>{item.action} · {item.resource}</p><p>{item.authorized ? "Được phép" : "Bị từ chối"} · {item.risk}</p><p>{item.decisionReason}</p><time dateTime={item.occurredAtUtc}>{item.occurredAtUtc}</time>{item.executionId ? <p>Mã thực thi: {item.executionId}</p> : null}</li>)}</ol>}
+  </section>;
 }
