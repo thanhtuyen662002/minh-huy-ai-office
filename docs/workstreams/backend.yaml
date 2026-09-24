@@ -4,10 +4,10 @@ status: waiting_ci
 current_issue: 194
 current_pr: 196
 current_branch: backend/194-sla-status-projection
-head: 8c3e005a64a5c9af5c4d599da9a6b243a7e8b075
+head: 282be1cbbe384de9c39ee11022ffdff03ff9c8b1
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T20:06:00+07:00"
-last_checkpoint_at: "2026-09-24T20:06:00+07:00"
+lease_heartbeat_at: "2026-09-24T21:37:00+07:00"
+last_checkpoint_at: "2026-09-24T21:37:00+07:00"
 last_completed_issue: 189
 last_merged_pr: 190
 scope:
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 8c3e005a64a5c9af5c4d599da9a6b243a7e8b075
-  governance_run: 36003123708
-  build_run: 36003123529
-  result: "Implemented authenticated server-authoritative SLA status projection/source boundary and /api/sla/status route with explicit presentation allowlist, authority/policy-version fail-closed validation, authentication-unavailable 503, and focused same/cross-authority, stale/invalid/no-leak tests. Governance 36003123708 GREEN; Build 36003123529 queued at checkpoint."
+  prior_head: 663b9e0ee50284c670ac92d2f6910a7dc65cd415
+  governance_run: 36006758700
+  build_run: 36006758912
+  result: "Acceptance implementation previously closed exact-head Governance 36006758700 and Build 36006758912 GREEN. Reconciled authoritative main 8db4e117130491a543afa0f084803b01cbeb733a on SAME lease via merge commit 282be1cbbe384de9c39ee11022ffdff03ff9c8b1; compare is ahead-only/behind=0 and preserves server-derived SLA authority/policy fences. Fresh exact-head CI required for this durable checkpoint."
 known_risks:
   - "Production composition defaults the SLA status source to unavailable rather than guessing current policy revision from historical admission evidence; a concrete authoritative current-policy source must preserve this boundary."
   - "Tenant/company/user authority comes only from IRequestAuthorizationContextAccessor; source results are rejected on authority mismatch or non-positive authority/policy versions."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
 blocked_by:
-  - "Exact-head Build remains non-terminal; final checkpoint commit requires fresh exact-head Governance/Build discovery and closure."
-next_action: "Resolve actual PR #196 HEAD after this checkpoint; own fresh exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify main drift/reviews/mergeability and mark ready only when acceptance remains complete."
+  - "Fresh exact-head Governance/Build for the post-main-reconciliation checkpoint are pending discovery/closure."
+next_action: "Resolve actual PR #196 HEAD after this checkpoint; own fresh exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main drift/reviews/mergeability and return ready_for_review only when acceptance remains complete."
