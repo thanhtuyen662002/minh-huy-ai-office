@@ -4,11 +4,11 @@ status: active
 current_issue: 193
 current_pr: 195
 current_branch: runtime/193-settlement-unrelated-reservation-isolation
-head: 522d64fe85f2458846435387dec50dfc7dd35a00
-state: waiting_ci
+head: f8a701fbbdf4ebe1b9057fcadeacbf2db8eb0018
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T21:36:00+07:00"
-last_checkpoint_at: "2026-09-24T21:36:00+07:00"
+lease_heartbeat_at: "2026-09-24T22:19:00+07:00"
+last_checkpoint_at: "2026-09-24T22:19:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #195 / issue #193 reconciled authoritative main 8db4e117130491a543afa0f084803b01cbeb733a on SAME lease via two-parent commit 522d64fe85f2458846435387dec50dfc7dd35a00 without force-reset. Preserve ERP/Data #198 authority-scoped operation policy and Lead state while retaining Runtime settlement-isolation implementation. Own fresh exact-head Governance/Build for the durable checkpoint created by this update; inspect/fix actionable RED on SAME branch. If GREEN and live main/reviews/mergeability remain clean, return #195 to ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/billing-authority/pricing/idempotency/overflow fences, expose provider/model/cost metadata as billing authority, or merge directly."
+next_action: "PR #195 / issue #193 exact implementation HEAD f8a701fbbdf4ebe1b9057fcadeacbf2db8eb0018 closed Governance 36014248164 and Build 36014248165 GREEN after reconciling authoritative main 8db4e117130491a543afa0f084803b01cbeb733a. Live compare is ahead-only/behind=0, PR mergeable=true, changed files remain exactly 3 Runtime files, and review threads are clear. Acceptance is complete; Lead review/integration only. Runtime retains this SAME lease until merge and must re-enter on review feedback, main drift, mergeability regression, or CI regression. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/billing-authority/pricing/idempotency/overflow fences, expose provider/model/cost metadata as billing authority, or merge directly."
