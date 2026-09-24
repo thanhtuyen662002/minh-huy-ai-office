@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: claimed
+status: waiting_ci
 current_issue: 167
-current_pr: null
+current_pr: 168
 current_branch: backend/167-sla-admission-sql-store
-head: 1458ffc8ee3ca316ff54dc02e9e0d37623b75870
+head: 6193dab23d04375ef5b9a78f70fed4dfb3cad9d4
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T07:03:00+07:00"
-last_checkpoint_at: "2026-09-24T07:03:00+07:00"
+lease_heartbeat_at: "2026-09-24T07:42:00+07:00"
+last_checkpoint_at: "2026-09-24T07:42:00+07:00"
 last_completed_issue: 160
 last_merged_pr: 161
 scope:
@@ -17,13 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 9b5a5af7748259e6f7592cb0083a1da4d1a194d5
+  prior_head: bcd6eb1149477fec61d43b844a5c25d7760258e7
   governance_run: null
   build_run: null
-  result: "PR #161 / issue #160 is merged and authoritative. Claimed #167 from live main 1458ffc8ee3ca316ff54dc02e9e0d37623b75870 for durable SQL Server SLA admission evidence; implementation pending."
+  result: "Implemented SQL Server SLA admission evidence store, versioned migration and DI wiring; reconciled authoritative main 310a70e6a3fec747a6aa483a3f38223ede9e2fba on SAME #167/#168 lease. Exact-head CI pending after durable checkpoint."
 known_risks:
-  - "Tenant/company/user authority and SLA policy/version must remain server-derived; caller-controlled numeric priority must never become scheduler authority."
-  - "Admission evidence must survive process/node restart and persist before enqueue; conflicting replay must fail closed under concurrency."
-  - "Schema changes require versioned migrations and migration integrity; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
-blocked_by: []
-next_action: "Open Draft PR for #167 after this claim checkpoint, inspect existing EF/persistence/migration patterns, implement SQL-backed SLA admission store + DI + focused tests, then own exact-head Governance/Build through closure."
+  - "Tenant/company/user authority and SLA policy/version remain server-derived; caller-controlled numeric priority never becomes scheduler authority."
+  - "Serializable UPDLOCK/HOLDLOCK persistence must preserve exact replay idempotency and reject conflicting AdmissionId replay before enqueue."
+  - "Schema migration integrity is mandatory; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
+blocked_by:
+  - "Exact-head Governance/Build closure pending after implementation checkpoint."
+next_action: "Resolve actual PR #168 HEAD after this checkpoint; own exact-head Governance/Build to terminal GREEN, inspect/fix actionable RED on SAME branch, then verify acceptance, mergeable=true and review threads clear before ready_for_review."
