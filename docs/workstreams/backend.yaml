@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
 status: waiting_ci
-current_issue: 160
-current_pr: 161
-current_branch: backend/160-sla-admission-persistence
-head: f3673e9166a69fee3e4564746763c9e8405906f0
+current_issue: 167
+current_pr: 168
+current_branch: backend/167-sla-admission-sql-store
+head: 982bfb2d5818c218cd32c7d3292dafad2c59a768
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T05:05:00+07:00"
-last_checkpoint_at: "2026-09-24T05:05:00+07:00"
-last_completed_issue: 156
-last_merged_pr: 157
+lease_heartbeat_at: "2026-09-24T13:39:00+07:00"
+last_checkpoint_at: "2026-09-24T13:39:00+07:00"
+last_completed_issue: 160
+last_merged_pr: 161
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 6830f3d9571bd1dd3dcababf0e72790a20863898
-  governance_run: 35926203129
-  build_run: 35926203121
-  result: "Implemented persistence-before-enqueue SLA admission bridge and focused tests on PR #161. Governance 35926203129 GREEN; Build 35926203121 pending at implementation HEAD f3673e9166a69fee3e4564746763c9e8405906f0."
+  prior_head: cbc8c7f70cfb18a1999a80dab4b7b9f519f8a9c6
+  governance_run: null
+  build_run: null
+  result: "Reconciled authoritative main 4ba736c175bfc5dd632ebb163c8cb034a6028ae3 into SAME PR #168 while preserving the SQL Server SLA admission store, versioned migration, DI wiring, persistence-before-enqueue and tenant/authority fences. Exact-head CI pending on the durable checkpoint."
 known_risks:
-  - "Tenant/company/user authority and SLA policy/version must remain server-derived; caller-controlled numeric priority must never become scheduler authority."
-  - "Admission evidence persistence must complete before enqueue; conflicting replay fails closed."
-  - "Do not edit docs/PROJECT_STATE.yaml, migrations, or other specialist leases."
+  - "Tenant/company/user authority and SLA policy/version remain server-derived; caller-controlled numeric priority never becomes scheduler authority."
+  - "Serializable UPDLOCK/HOLDLOCK persistence preserves exact replay idempotency and rejects conflicting AdmissionId replay before enqueue."
+  - "Schema migration integrity is mandatory; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
 blocked_by:
-  - "Exact-head Build 35926203121 is non-terminal; durable state checkpoint itself will emit a newer exact HEAD that must also be closed."
-next_action: "Resolve actual PR #161 HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on SAME branch, then verify mergeable=true and review threads clear before ready_for_review."
+  - "Exact-head Governance/Build for the durable reconciliation checkpoint are non-terminal or not yet discovered."
+next_action: "Resolve actual PR #168 HEAD after this checkpoint; close exact-head Governance/Build, fix actionable RED on SAME branch, then verify current main, mergeable=true and review threads clear before ready_for_review."

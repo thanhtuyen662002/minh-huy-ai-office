@@ -19,6 +19,38 @@ public sealed class DataSourceFailoverExecutionAuthorizationTests
     }
 
     [Fact]
+    public void ValidateAtOperationTime_AcceptsFreshAuthorizedEvidence()
+    {
+        var (decision, evidence) = Authorized();
+        DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority(), DataSourceOperationKind.Read, decision, evidence, Now.AddMinutes(4));
+    }
+
+    [Fact]
+    public void ValidateAtOperationTime_RejectsStaleEvidenceAndOperationBeforeRevalidation()
+    {
+        var (decision, evidence) = Authorized();
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority(), DataSourceOperationKind.Read, decision, evidence, Now.AddMinutes(5)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority(), DataSourceOperationKind.Read, decision, evidence, Now.AddTicks(-1)));
+    }
+
+    [Fact]
+    public void ValidateAtOperationTime_PreservesAuthorityOperationAndIdentityFences()
+    {
+        var (decision, evidence) = Authorized();
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority() with { CompanyId = Guid.NewGuid() }, DataSourceOperationKind.Read, decision, evidence, Now.AddMinutes(1)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision, evidence, Now.AddMinutes(1)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority(), DataSourceOperationKind.Write, decision, evidence, Now.AddMinutes(1)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.ValidateAtOperationTime(
+            Authority(), DataSourceOperationKind.Read, decision, evidence with { ExecutionEvidenceId = "execution-sha256:tampered" }, Now.AddMinutes(1)));
+    }
+
+    [Fact]
     public void Validate_RejectsDeniedEvidence()
     {
         var health = Health();
