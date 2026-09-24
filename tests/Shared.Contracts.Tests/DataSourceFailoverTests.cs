@@ -157,6 +157,44 @@ public sealed class DataSourceFailoverTests
         Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecision(Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision));
     }
 
+    [Fact]
+    public void ValidateDecisionForExecution_AcceptsExactBoundHealthyEvidence()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence, Now.AddSeconds(10));
+    }
+
+    [Fact]
+    public void ValidateDecisionForExecution_RejectsStaleExpiredAndUnhealthyEvidence()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(TimeSpan.FromSeconds(20)), DataSourceOperationKind.Read, decision, evidence, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { ExpiresAt = Now.AddSeconds(5) }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { State = DataSourceHealthState.Unhealthy }, Now.AddSeconds(10)));
+    }
+
+    [Fact]
+    public void ValidateDecisionForExecution_RejectsSubstitutedEvidenceAndObservation()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { EvidenceReference = "health-ref:primary:new" }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { ObservedAt = evidence.ObservedAt.AddSeconds(1) }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { EndpointId = "fallback" }, Now.AddSeconds(10)));
+    }
+
+    [Fact]
+    public void ValidateDecisionForExecution_RejectsCrossAuthorityVersionAndOperationReplay()
+    {
+        var evidence = Evidence("primary");
+        var decision = Select(new[] { Candidate("primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0) }, new[] { evidence });
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { CompanyId = Guid.NewGuid() }, Now.AddSeconds(10)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Read, decision, evidence with { SchemaVersion = "schema-44" }, Now.AddSeconds(10)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverContract.ValidateDecisionForExecution(Authority(), DataSourceOperationKind.Write, decision, evidence, Now.AddSeconds(10)));
+    }
+
     private static DataSourceFailoverDecision Select(DataSourceFailoverCandidate[] candidates, DataSourceHealthEvidence[] evidence, DataSourceOperationKind operation = DataSourceOperationKind.Read)
         => DataSourceFailoverContract.Select(Authority(), operation, candidates, evidence, Now);
 
