@@ -4,10 +4,10 @@ status: waiting_ci
 current_issue: 167
 current_pr: 168
 current_branch: backend/167-sla-admission-sql-store
-head: 6193dab23d04375ef5b9a78f70fed4dfb3cad9d4
+head: 176764861e429af64ab85e243bc4d66904686f0e
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T07:42:00+07:00"
-last_checkpoint_at: "2026-09-24T07:42:00+07:00"
+lease_heartbeat_at: "2026-09-24T07:43:00+07:00"
+last_checkpoint_at: "2026-09-24T07:43:00+07:00"
 last_completed_issue: 160
 last_merged_pr: 161
 scope:
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: bcd6eb1149477fec61d43b844a5c25d7760258e7
-  governance_run: null
-  build_run: null
-  result: "Implemented SQL Server SLA admission evidence store, versioned migration and DI wiring; reconciled authoritative main 310a70e6a3fec747a6aa483a3f38223ede9e2fba on SAME #167/#168 lease. Exact-head CI pending after durable checkpoint."
+  prior_head: 6193dab23d04375ef5b9a78f70fed4dfb3cad9d4
+  governance_run: 35939196811
+  build_run: 35939196809
+  result: "SQL Server SLA admission store + migration + DI implemented and main reconciled. Exact-head Governance 35939196811 GREEN; Build 35939196809 queued at HEAD 176764861e429af64ab85e243bc4d66904686f0e."
 known_risks:
   - "Tenant/company/user authority and SLA policy/version remain server-derived; caller-controlled numeric priority never becomes scheduler authority."
-  - "Serializable UPDLOCK/HOLDLOCK persistence must preserve exact replay idempotency and reject conflicting AdmissionId replay before enqueue."
+  - "Serializable UPDLOCK/HOLDLOCK persistence preserves exact replay idempotency and rejects conflicting AdmissionId replay before enqueue."
   - "Schema migration integrity is mandatory; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
 blocked_by:
-  - "Exact-head Governance/Build closure pending after implementation checkpoint."
-next_action: "Resolve actual PR #168 HEAD after this checkpoint; own exact-head Governance/Build to terminal GREEN, inspect/fix actionable RED on SAME branch, then verify acceptance, mergeable=true and review threads clear before ready_for_review."
+  - "Exact-head Build 35939196809 is non-terminal; this durable evidence checkpoint will emit a newer exact HEAD that must also be closed."
+next_action: "Resolve actual PR #168 HEAD after this evidence checkpoint; own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify acceptance, mergeable=true and review threads clear before ready_for_review."
