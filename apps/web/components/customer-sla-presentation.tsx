@@ -30,8 +30,14 @@ function readPresentation(value: unknown): CustomerSlaPresentationData | null {
   if (!Number.isSafeInteger(policyVersion) || (policyVersion as number) <= 0) return null;
   if (!hasCanonicalText(effectiveAt)) return null;
 
+  // Presentation timestamps must use the server contract's canonical UTC instant
+  // shape. Date.parse also accepts locale/offset forms, which would let browser
+  // data widen the presentation contract.
+  const canonicalUtcInstant = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+  if (!canonicalUtcInstant.test(effectiveAt)) return null;
+
   const effectiveInstant = Date.parse(effectiveAt);
-  if (!Number.isFinite(effectiveInstant)) return null;
+  if (!Number.isFinite(effectiveInstant) || new Date(effectiveInstant).toISOString() !== effectiveAt.replace(/Z$/, effectiveAt.includes(".") ? "Z" : ".000Z")) return null;
 
   return { tierLabel, priorityLabel, policyVersion: policyVersion as number, effectiveAt };
 }
