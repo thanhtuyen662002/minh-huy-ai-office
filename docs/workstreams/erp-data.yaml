@@ -4,11 +4,11 @@ status: in_progress
 current_issue: 182
 current_pr: 183
 current_branch: erp/182-failover-operation-policy-version
-head: 5f3ca0830ff1380f84ed72e2c43b9b96af85327c
+head: 46c5e49e797251b1c5d154825cd9392d57f1eb46
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T09:40:00Z"
-last_checkpoint_at: "2026-09-24T09:40:00Z"
+lease_heartbeat_at: "2026-09-24T10:34:00Z"
+last_checkpoint_at: "2026-09-24T10:34:00Z"
 last_merged_pr: 181
 last_merge_commit: 4ba736c175bfc5dd632ebb163c8cb034a6028ae3
 preferred_next_issue: 182
@@ -36,4 +36,4 @@ scope:
   - datasource-failover-execution-authorization
   - datasource-failover-operation-time-freshness
   - datasource-failover-operation-policy-version
-next_action: "PR #183 / issue #182 remains the primary ERP/Data lease. Reconciled authoritative main 0f2db02007a0e4f9d55d9723058205448f48ab19 on SAME lease via safe two-parent merge 5f3ca0830ff1380f84ed72e2c43b9b96af85327c using authoritative main tree plus only the three ERP/Data lease files; compare is ahead-only / behind=0 and docs/PROJECT_STATE.yaml remains main-owned. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and return ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+next_action: "PR #183 / issue #182 remains the primary ERP/Data lease. Reconciled authoritative main 10407ca5c42d4c39eb4307e86037db552a8d5b7a on SAME lease via safe two-parent merge 46c5e49e797251b1c5d154825cd9392d57f1eb46 using authoritative main tree plus only the three ERP/Data lease files; compare is ahead-only / behind=0 and docs/PROJECT_STATE.yaml remains main-owned. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and return ready_for_review. Never edit PROJECT_STATE or other specialist leases."
