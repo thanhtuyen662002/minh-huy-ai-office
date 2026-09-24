@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: in_progress
+status: waiting_ci
 current_issue: 194
 current_pr: 196
 current_branch: backend/194-sla-status-projection
-head: 5d8e1f202033789f905b13e5cf29d0e5cbc52127
+head: 8c3e005a64a5c9af5c4d599da9a6b243a7e8b075
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T19:40:00+07:00"
-last_checkpoint_at: "2026-09-24T19:40:00+07:00"
+lease_heartbeat_at: "2026-09-24T20:06:00+07:00"
+last_checkpoint_at: "2026-09-24T20:06:00+07:00"
 last_completed_issue: 189
 last_merged_pr: 190
 scope:
@@ -17,13 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 456796b3b11f164eeb294d0176a9853d91e1130f
-  governance_run: null
-  build_run: null
-  result: "Claimed #194 / Draft PR #196 from authoritative main after #190 merged; live open specialist PRs are Frontend #192 and ERP/Data #183, with no competing Backend lease. Core.Api has no server-authoritative customer SLA status route while merged SLA evidence reads are authority + positive policy-revision scoped."
+  prior_head: 8c3e005a64a5c9af5c4d599da9a6b243a7e8b075
+  governance_run: 36003123708
+  build_run: 36003123529
+  result: "Implemented authenticated server-authoritative SLA status projection/source boundary and /api/sla/status route with explicit presentation allowlist, authority/policy-version fail-closed validation, authentication-unavailable 503, and focused same/cross-authority, stale/invalid/no-leak tests. Governance 36003123708 GREEN; Build 36003123529 queued at checkpoint."
 known_risks:
-  - "Current admission lookup requires AdmissionId plus authority plus positive policy revision; current-status presentation must not guess a policy revision or broaden historical evidence into authority."
-  - "Tenant/company/user authority must come only from IRequestAuthorizationContextAccessor and presentation must not leak identity or secrets."
+  - "Production composition defaults the SLA status source to unavailable rather than guessing current policy revision from historical admission evidence; a concrete authoritative current-policy source must preserve this boundary."
+  - "Tenant/company/user authority comes only from IRequestAuthorizationContextAccessor; source results are rejected on authority mismatch or non-positive authority/policy versions."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
-blocked_by: []
-next_action: "Implement the smallest fail-closed server-derived current SLA status projection/source, API route and focused same-authority/cross-authority/stale/no-leak tests on SAME PR #196; then close exact-head CI before review."
+blocked_by:
+  - "Exact-head Build remains non-terminal; final checkpoint commit requires fresh exact-head Governance/Build discovery and closure."
+next_action: "Resolve actual PR #196 HEAD after this checkpoint; own fresh exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify main drift/reviews/mergeability and mark ready only when acceptance remains complete."
