@@ -36,6 +36,18 @@ public sealed class DataSourceFailoverOperationPolicyTests
     }
 
     [Fact]
+    public void ValidateForExecution_RejectsCrossOperationPolicyAndUndefinedOperation()
+    {
+        var (decision, evidence) = Authorized();
+        var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
+
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { Operation = DataSourceOperationKind.Write }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { Operation = (DataSourceOperationKind)999 }, authorization, Now.AddMinutes(1)));
+    }
+
+    [Fact]
     public void ValidateForExecution_RejectsInvalidPolicyIdentityAndVersions()
     {
         var (decision, evidence) = Authorized();
@@ -87,5 +99,5 @@ public sealed class DataSourceFailoverOperationPolicyTests
         => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12", TimeSpan.FromMinutes(5));
 
     private static DataSourceFailoverOperationPolicy Policy()
-        => new(Tenant, Company, Source, 7);
+        => new(Tenant, Company, Source, DataSourceOperationKind.Read, 7);
 }

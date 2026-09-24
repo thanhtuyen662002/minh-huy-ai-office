@@ -2,12 +2,13 @@ namespace MinhHuy.AIOffice.Shared.Contracts.Erp;
 
 /// <summary>
 /// Server-derived operation policy fence applied immediately before an ERP operation executes.
-/// Policy scope and versions are authority metadata; callers must not derive or override them.
+/// Policy scope, operation and versions are authority metadata; callers must not derive or override them.
 /// </summary>
 public sealed record DataSourceFailoverOperationPolicy(
     Guid TenantId,
     Guid CompanyId,
     Guid DataSourceId,
+    DataSourceOperationKind Operation,
     long Version)
 {
     public DataSourceFailoverOperationPolicy Validate()
@@ -18,6 +19,8 @@ public sealed record DataSourceFailoverOperationPolicy(
             throw new ArgumentException("Failover operation policy company scope is required.", nameof(CompanyId));
         if (DataSourceId == Guid.Empty)
             throw new ArgumentException("Failover operation policy data-source scope is required.", nameof(DataSourceId));
+        if (!Enum.IsDefined(Operation))
+            throw new ArgumentOutOfRangeException(nameof(Operation), "Failover operation policy operation must be defined.");
         if (Version <= 0)
             throw new ArgumentOutOfRangeException(nameof(Version), "Failover operation policy version must be positive.");
         return this;
@@ -49,6 +52,8 @@ public static class DataSourceFailoverOperationPolicyContract
             authoritativePolicy.CompanyId != authority.CompanyId ||
             authoritativePolicy.DataSourceId != authority.DataSourceId)
             throw new UnauthorizedAccessException("Failover operation policy is outside the server-derived authority scope.");
+        if (authoritativePolicy.Operation != operation)
+            throw new UnauthorizedAccessException("Failover operation policy does not authorize the requested operation.");
 
         if (authorization.OperationPolicyVersion <= 0)
             throw new InvalidOperationException("Persisted failover authorization has an invalid operation policy version.");
