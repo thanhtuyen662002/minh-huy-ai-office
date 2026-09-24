@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: 8fd177ef69d6536756562f4045dfe028ee1af4d9
-state: ready_for_review
+head: 0472d848e832c359bc96c5cab35609b67e8812c3
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T12:19:00+07:00"
-last_checkpoint_at: "2026-09-24T12:19:00+07:00"
+lease_heartbeat_at: "2026-09-24T12:38:56+07:00"
+last_checkpoint_at: "2026-09-24T12:38:56+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-reservation-active-holds
-next_action: "PR #177 / issue #175 is acceptance-complete at exact reconciled checkpoint 8fd177ef69d6536756562f4045dfe028ee1af4d9: Governance 35956448216 and Build 35956448210 are terminal GREEN; authoritative main is 46173c93dfc2e722c5e7c88e98f62b42becf9798; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains Runtime state plus reservation contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 detected authoritative main drift to c7abd84789b2038ac651c86dd5d1deada2e78566 and live PR became non-mergeable. SAME lease is reconciling current main while preserving active-hold/admission/replay/pricing/overflow fences. After reconciliation, capture actual HEAD and exact-head Governance/Build run IDs, fix actionable RED on SAME branch, then verify ahead-only/behind=0, mergeability and review threads before restoring ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."

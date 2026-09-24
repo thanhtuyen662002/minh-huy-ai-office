@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 172
-current_pr: 173
-current_branch: erp/172-failover-execution-evidence
-head: 6fb37550b8c19d07b4650842915f9a2ce00f65b0
+current_issue: 178
+current_pr: 179
+current_branch: erp/178-failover-execution-authorization
+head: b11bd7b5a9eb9ebbf2b4009ffdf9e1b7e9de935c
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T04:27:00Z"
-last_checkpoint_at: "2026-09-24T04:27:00Z"
-last_merged_pr: 166
-last_merge_commit: c29f72d92c5b4b4acc20598078ff6031d8b05f4e
-preferred_next_issue: 172
+lease_heartbeat_at: "2026-09-24T04:38:00Z"
+last_checkpoint_at: "2026-09-24T04:38:00Z"
+last_merged_pr: 173
+last_merge_commit: e9078c78e5a0376b5ee304a9fe2e64f0a3c5d759
+preferred_next_issue: 178
 blocked_by: []
 scope:
   - datasource-registry
@@ -33,4 +33,5 @@ scope:
   - datasource-failover-decision-validation
   - datasource-failover-execution-revalidation
   - datasource-failover-execution-evidence
-next_action: "PR #173 was reconciled with authoritative main 0cc80909deebcb5a41200b5a5de8da116e17c194 on the SAME lease at merge checkpoint 6fb37550b8c19d07b4650842915f9a2ce00f65b0; compare is ahead-only/behind=0 and changed scope remains exactly ERP/Data state + DataSourceFailover contract/tests. Own the newly emitted exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+  - datasource-failover-execution-authorization
+next_action: "PR #179 / issue #178 is the primary ERP/Data lease. Fail-closed execution-evidence authorization and focused tests are implemented from authoritative main 46173c93dfc2e722c5e7c88e98f62b42becf9798. Resolve actual PR HEAD after this state checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
