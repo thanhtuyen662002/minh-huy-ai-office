@@ -42,6 +42,14 @@ public sealed class CustomerAiCreditSettlementTests
     }
 
     [Fact]
+    public void Decide_RejectsSettlementIdentityReuseByUnrelatedReservation()
+    {
+        var unrelated = Evidence("set-a", "res-other", 7, 4);
+        Assert.Throws<InvalidOperationException>(() =>
+            CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [unrelated]));
+    }
+
+    [Fact]
     public void Decide_RejectsSecondSettlementForReservation()
     {
         var existing = Evidence("set-old", "res-a", 2, 3);
@@ -50,14 +58,34 @@ public sealed class CustomerAiCreditSettlementTests
     }
 
     [Fact]
+    public void Decide_AllowsUnrelatedSettlementWithDifferentReservationSize()
+    {
+        var unrelated = Evidence("set-other", "res-other", 7, 4);
+        var decision = CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [unrelated]);
+
+        Assert.False(decision.IsReplay);
+        Assert.Equal("res-a", decision.Settlement.ReservationId);
+        Assert.Equal(2, decision.Settlement.SettledAiCredits);
+        Assert.Equal(3, decision.Settlement.ReleasedAiCredits);
+    }
+
+    [Fact]
     public void Decide_RejectsStaleCrossCompanyAndPolicyEvidence()
     {
-        var stale = Evidence("set-old", "res-b", 1, 4) with { Authority = Authority with { AuthorityVersion = 6 } };
-        var foreign = Evidence("set-old", "res-b", 1, 4) with { Authority = Authority with { CompanyId = "company-b" } };
-        var policy = Evidence("set-old", "res-b", 1, 4) with { PricingPolicyVersion = 2 };
+        var stale = Evidence("set-old", "res-b", 7, 4) with { Authority = Authority with { AuthorityVersion = 6 } };
+        var foreign = Evidence("set-old", "res-b", 7, 4) with { Authority = Authority with { CompanyId = "company-b" } };
+        var policy = Evidence("set-old", "res-b", 7, 4) with { PricingPolicyVersion = 2 };
         Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [stale]));
         Assert.Throws<UnauthorizedAccessException>(() => CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [foreign]));
         Assert.Throws<InvalidOperationException>(() => CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [policy]));
+    }
+
+    [Fact]
+    public void Decide_RejectsUnrelatedSettlementCreditOverflow()
+    {
+        var unrelated = Evidence("set-other", "res-other", long.MaxValue, 1);
+        Assert.Throws<OverflowException>(() =>
+            CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [unrelated]));
     }
 
     [Fact]
@@ -71,7 +99,7 @@ public sealed class CustomerAiCreditSettlementTests
     public void Decide_IsDeterministicAcrossUnrelatedEvidenceOrder()
     {
         var a = Evidence("set-x", "res-x", 1, 4);
-        var b = Evidence("set-y", "res-y", 2, 3);
+        var b = Evidence("set-y", "res-y", 7, 4);
         var first = CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [a, b]);
         var second = CustomerAiCreditSettlement.Decide("set-a", Reservation(5), 2, [b, a]);
         Assert.Equal(first, second);
