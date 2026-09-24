@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 180
-current_pr: 181
-current_branch: erp/180-failover-operation-time-freshness
-head: e4995d673e4c6f678920a9cdf116790cf806a624
+current_issue: 182
+current_pr: 183
+current_branch: erp/182-failover-operation-policy-version
+head: 191635ffd88e81a7bd8ee91fd60a3f3a23ae0b64
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T05:42:00Z"
-last_checkpoint_at: "2026-09-24T05:42:00Z"
-last_merged_pr: 179
-last_merge_commit: 4c54675884f7c1ada9a712e18995aedd2303d0e3
-preferred_next_issue: 180
+lease_heartbeat_at: "2026-09-24T07:38:53Z"
+last_checkpoint_at: "2026-09-24T07:38:53Z"
+last_merged_pr: 181
+last_merge_commit: 4ba736c175bfc5dd632ebb163c8cb034a6028ae3
+preferred_next_issue: 182
 blocked_by: []
 scope:
   - datasource-registry
@@ -35,4 +35,5 @@ scope:
   - datasource-failover-execution-evidence
   - datasource-failover-execution-authorization
   - datasource-failover-operation-time-freshness
-next_action: "PR #181 / issue #180 is the primary ERP/Data lease. Operation-time freshness validation and focused tests are implemented from authoritative main c7abd84789b2038ac651c86dd5d1deada2e78566. Resolve actual PR HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on this SAME branch, then verify current main drift, mergeability/reviews and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+  - datasource-failover-operation-policy-version
+next_action: "PR #183 / issue #182 remains the primary ERP/Data lease. Prior exact-head Governance 35970211135 and Build 35970211479 were GREEN on implementation HEAD 9a50c0db6dae227594de2a2ab18c60d661af2498. Reconciled authoritative main 8d521b9786a737b2b02c1fcf4e33cc5ec642a574 on SAME lease via merge commit 191635ffd88e81a7bd8ee91fd60a3f3a23ae0b64 while preserving only ERP/Data policy implementation/tests over main. Resolve actual HEAD after this durable state checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify current main/reviews/mergeability and mark ready_for_review. Never edit PROJECT_STATE or other specialist leases."
