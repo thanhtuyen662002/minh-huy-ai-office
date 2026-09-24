@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: 1e7ca8fc03687c529f8d5494dbf9c95426eda37d
-state: waiting_ci
+head: 99d655b87df5e4e7544ae73738236e0527db46db
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T10:40:00+07:00"
-last_checkpoint_at: "2026-09-24T10:40:00+07:00"
+lease_heartbeat_at: "2026-09-24T11:20:00+07:00"
+last_checkpoint_at: "2026-09-24T11:20:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-reservation-active-holds
-next_action: "Draft PR #177 owns issue #175. Reservation validation now consumes the full active-hold-aware admission invariant and requires supplied active evidence to match the authoritative admission snapshot without double-counting replay evidence. Capture exact HEAD after this checkpoint, close exact-head Governance/Build, fix actionable RED on SAME branch, then reconcile main/review/mergeability before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 is acceptance-complete at implementation checkpoint 99d655b87df5e4e7544ae73738236e0527db46db: exact-head Governance 35952445897 and Build 35952445896 are terminal GREEN; authoritative main is 0cc80909deebcb5a41200b5a5de8da116e17c194; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff is limited to Runtime state plus AI-credit reservation contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
