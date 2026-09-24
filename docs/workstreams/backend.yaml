@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
-current_issue: 186
-current_pr: 187
-current_branch: backend/186-sla-authority-scoped-lookup
-head: f96b00864f1e8a2c732044add60378c8f651fa01
+status: in_progress
+current_issue: 189
+current_pr: null
+current_branch: backend/189-sla-policy-revision
+head: 0f2db02007a0e4f9d55d9723058205448f48ab19
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T15:39:00+07:00"
-last_checkpoint_at: "2026-09-24T15:39:00+07:00"
-last_completed_issue: 184
-last_merged_pr: 185
+lease_heartbeat_at: "2026-09-24T16:40:00+07:00"
+last_checkpoint_at: "2026-09-24T16:40:00+07:00"
+last_completed_issue: 186
+last_merged_pr: 187
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,13 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: c545984942762237726e1e90f9e6559ff65b01b4
+  prior_head: 0f2db02007a0e4f9d55d9723058205448f48ab19
   governance_run: null
   build_run: null
-  result: "Claimed #186 after #185 merged. SLA admission reads now require server-derived authority; SQL predicates tenant/company/user/authority-version and in-memory behavior matches. Focused isolation/replay tests added; exact-head CI pending after durable checkpoint."
+  result: "PR #187 merged. Claimed #189 from authoritative main to bind SLA admission evidence/replay to an immutable positive server-derived policy revision."
 known_risks:
-  - "AdmissionId remains globally unique for serialized persistence conflict detection, while reads are authority-scoped and fail closed."
-  - "Tenant/company/user/version authority remains server-derived; scheduler priority and ceiling remain policy-derived."
+  - "SLA policy revision must remain server-derived and positive; legacy persisted evidence must not silently become current authority."
+  - "AdmissionId global conflict detection and tenant/company/user/authority-version fences remain fail closed."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
-blocked_by:
-  - "Exact-head Governance/Build for the durable PR checkpoint are non-terminal or not yet discovered."
-next_action: "Resolve actual PR #187 HEAD after this checkpoint; close exact-head Governance/Build, fix actionable RED on SAME branch, then verify current main, reviews and mergeability before ready_for_review."
+blocked_by: []
+next_action: "Implement policy revision through admission evidence, authority-scoped lookup/replay and SQL persistence with a versioned migration; add focused stale/invalid/cross-authority/exact-replay tests; then own exact-head CI through closure."
