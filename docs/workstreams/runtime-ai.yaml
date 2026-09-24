@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: 0d3ea945b033f383878f66f08267b249a7a4e2a2
-state: ready_for_review
+head: a2c7bc632ffbb5ef506dc319e38f199951da0547
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T14:22:44+07:00"
-last_checkpoint_at: "2026-09-24T14:22:44+07:00"
+lease_heartbeat_at: "2026-09-24T14:39:00+07:00"
+last_checkpoint_at: "2026-09-24T14:39:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,5 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-  - customer-ai-credit-reservation-active-holds
-next_action: "PR #177 / issue #175 is acceptance-complete at exact reconciled checkpoint 0d3ea945b033f383878f66f08267b249a7a4e2a2: Governance 35965562037 and Build 35965562033 are terminal GREEN; authoritative main is 4ba736c175bfc5dd632ebb163c8cb034a6028ae3; PR mergeable=true; review threads clear; active-hold/admission/replay/pricing/overflow fences remain intact. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider/model/cost metadata as authority, weaken tenant/company/authority/pricing/overflow fences, or merge directly."
+next_action: "PR #177 / issue #175 is acceptance-complete but authoritative main advanced to 8d521b9786a737b2b02c1fcf4e33cc5ec642a574 after Backend #168 integration/state reconciliation, making the prior ready-state head non-mergeable. Reconcile main on this SAME lease while preserving the three-file Runtime diff and active-hold/admission/replay/pricing/overflow fences, then own exact-head Governance/Build to terminal GREEN. If actionable RED appears, fix on SAME branch; if GREEN and mergeability/reviews remain clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
