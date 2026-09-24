@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 152
-current_pr: 153
-current_branch: runtime/152-ai-credit-settlement
-head: 0fc2e1856b45d1cf650d28d171719e4f322fba65
+current_issue: 158
+current_pr: 159
+current_branch: runtime/158-ai-credit-active-reservations
+head: 205f17632775f39fec849bd7525ce7c9b985b410
 state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-23T20:17:00Z"
-last_checkpoint_at: "2026-09-23T20:17:00Z"
+lease_heartbeat_at: "2026-09-24T07:20:00+07:00"
+last_checkpoint_at: "2026-09-24T07:20:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -36,4 +36,5 @@ scope:
   - customer-ai-credit-admission
   - customer-ai-credit-reservation
   - customer-ai-credit-settlement
-next_action: "PR #153 / issue #152 is acceptance-complete on reconciled checkpoint 0fc2e1856b45d1cf650d28d171719e4f322fba65: exact-head Governance 35910339295 and Build 35910339424 GREEN, compare ahead-only/behind=0, mergeable=true, review threads clear, and diff remains limited to Runtime settlement contract/tests plus this workstream state. Lead should review/integrate after verifying exact-head gates for this ready-state checkpoint. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
+  - customer-ai-credit-active-reservations
+next_action: "PR #159 / issue #158 is acceptance-complete on reconciled checkpoint 205f17632775f39fec849bd7525ce7c9b985b410: exact-head Governance 35934511485 and Build 35934511504 GREEN; authoritative main is 1458ffc8ee3ca316ff54dc02e9e0d37623b75870; compare is ahead-only/behind=0; PR mergeable=true; review threads clear; diff remains limited to Runtime state plus active-reservation contract/tests. Lead should review/integrate after verifying exact-head gates for the durable ready-state checkpoint created by this state update. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, expose provider cost as customer authority, or merge directly."
