@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: in_progress
+status: waiting_ci
 current_issue: 189
 current_pr: 190
 current_branch: backend/189-sla-policy-revision
-head: 9f325c963eeaa9ceb13999bcf635539a712d3e96
+head: b554b64da382a11a0e17d1ab7c527cefa8ccad5d
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T16:41:00+07:00"
-last_checkpoint_at: "2026-09-24T16:41:00+07:00"
+lease_heartbeat_at: "2026-09-24T17:15:00+07:00"
+last_checkpoint_at: "2026-09-24T17:15:00+07:00"
 last_completed_issue: 186
 last_merged_pr: 187
 scope:
@@ -17,13 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 0f2db02007a0e4f9d55d9723058205448f48ab19
+  prior_head: 9c7cca092c9da3db32e2fff7110bf0d7df97a00c
   governance_run: null
   build_run: null
-  result: "PR #187 merged. Claimed #189/#190 from authoritative main to bind SLA admission evidence/replay to an immutable positive server-derived policy revision."
+  result: "Implemented policy-revision-scoped SLA admission lookup using existing positive durable PolicyVersion, validated revision before durable reads, preserved global AdmissionId conflict detection, added authority+revision SQL access-path migration and focused stale/invalid/exact/cross-authority tests. Exact-head CI pending after durable checkpoint."
 known_risks:
-  - "SLA policy revision must remain server-derived and positive; legacy persisted evidence must not silently become current authority."
+  - "SLA PolicyVersion is the immutable server-derived policy revision; original migration already enforces PolicyVersion > 0, so no permissive legacy backfill is introduced."
   - "AdmissionId global conflict detection and tenant/company/user/authority-version fences remain fail closed."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
-blocked_by: []
-next_action: "Implement policy revision through admission evidence, authority-scoped lookup/replay and SQL persistence with a versioned migration; add focused stale/invalid/cross-authority/exact-replay tests; then own exact-head CI through closure."
+blocked_by:
+  - "Exact-head Governance/Build for the durable checkpoint are pending discovery/closure."
+next_action: "Resolve actual PR #190 HEAD after this checkpoint; close exact-head Governance/Build, inspect and fix actionable RED on SAME branch, then verify acceptance/main/reviews/mergeability before ready_for_review."
