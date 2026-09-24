@@ -23,13 +23,14 @@ describe("CustomerAuditPresentation filtering", () => {
 
   it("shows an explicit no-match state and can reset the presentation filter", () => {
     render(<CustomerAuditPresentation items={items} />);
-    fireEvent.change(screen.getByLabelText("Lọc theo hành động hoặc tài nguyên"), { target: { value: "browser-company browser-user" } });
+    const filter = screen.getByLabelText("Lọc theo hành động hoặc tài nguyên") as HTMLInputElement;
+    fireEvent.change(filter, { target: { value: "browser-company browser-user" } });
     expect(screen.getByText("Không có hoạt động phù hợp với bộ lọc.")).toBeTruthy();
     expect(screen.queryByRole("listitem")).toBeNull();
     expect(screen.getByRole("status").textContent).toBe("Hiển thị 0 / 2 hoạt động");
 
     fireEvent.click(screen.getByRole("button", { name: "Xóa bộ lọc" }));
-    expect(screen.getByLabelText("Lọc theo hành động hoặc tài nguyên")).toHaveValue("");
+    expect(filter.value).toBe("");
     expect(screen.getByRole("status").textContent).toBe("Hiển thị 2 / 2 hoạt động");
     expect(screen.queryByRole("button", { name: "Xóa bộ lọc" })).toBeNull();
   });
