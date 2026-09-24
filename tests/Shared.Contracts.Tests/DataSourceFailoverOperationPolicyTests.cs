@@ -15,33 +15,51 @@ public sealed class DataSourceFailoverOperationPolicyTests
     {
         var (decision, evidence) = Authorized();
         var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
-        var policy = new DataSourceFailoverOperationPolicy(7);
+        var policy = Policy();
 
         DataSourceFailoverOperationPolicyContract.ValidateForExecution(Authority(), DataSourceOperationKind.Read, decision, policy, authorization, Now.AddMinutes(1));
         DataSourceFailoverOperationPolicyContract.ValidateForExecution(Authority(), DataSourceOperationKind.Read, decision, policy, authorization, Now.AddMinutes(1));
     }
 
     [Fact]
-    public void ValidateForExecution_RejectsStaleAndInvalidPolicyVersions()
+    public void ValidateForExecution_RejectsCrossAuthorityPolicyScopeEvenWhenVersionMatches()
     {
         var (decision, evidence) = Authorized();
+        var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
 
         Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
-            Authority(), DataSourceOperationKind.Read, decision, new DataSourceFailoverOperationPolicy(8),
-            new DataSourceFailoverOperationAuthorization(evidence, 7), Now.AddMinutes(1)));
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
-            Authority(), DataSourceOperationKind.Read, decision, new DataSourceFailoverOperationPolicy(7),
-            new DataSourceFailoverOperationAuthorization(evidence, 0), Now.AddMinutes(1)));
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { TenantId = Guid.NewGuid() }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { CompanyId = Guid.NewGuid() }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { DataSourceId = Guid.NewGuid() }, authorization, Now.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void ValidateForExecution_RejectsInvalidPolicyIdentityAndVersions()
+    {
+        var (decision, evidence) = Authorized();
+        var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
+
+        Assert.Throws<ArgumentException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { TenantId = Guid.Empty }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<ArgumentException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { CompanyId = Guid.Empty }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<ArgumentException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { DataSourceId = Guid.Empty }, authorization, Now.AddMinutes(1)));
         Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
-            Authority(), DataSourceOperationKind.Read, decision, new DataSourceFailoverOperationPolicy(0),
-            new DataSourceFailoverOperationAuthorization(evidence, 7), Now.AddMinutes(1)));
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { Version = 0 }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { Version = 8 }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy(), new DataSourceFailoverOperationAuthorization(evidence, 0), Now.AddMinutes(1)));
     }
 
     [Fact]
     public void ValidateForExecution_PreservesAuthorityOperationFreshnessAndTamperFences()
     {
         var (decision, evidence) = Authorized();
-        var policy = new DataSourceFailoverOperationPolicy(7);
+        var policy = Policy();
         var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
 
         Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
@@ -67,4 +85,7 @@ public sealed class DataSourceFailoverOperationPolicyTests
 
     private static DataSourceFailoverAuthority Authority()
         => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12", TimeSpan.FromMinutes(5));
+
+    private static DataSourceFailoverOperationPolicy Policy()
+        => new(Tenant, Company, Source, 7);
 }
