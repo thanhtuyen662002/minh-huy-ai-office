@@ -8,7 +8,8 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 /// <summary>
 /// SQL Server authority store for SLA admission evidence. AdmissionId is globally unique and
 /// persistence is serialized so concurrent exact replay is idempotent while conflicting replay
-/// fails closed before scheduler enqueue. Read lookup is always scoped to server-derived authority.
+/// fails closed before scheduler enqueue. Read lookup is always scoped to server-derived authority
+/// and the immutable SLA policy revision used for the decision.
 /// </summary>
 public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbContext)
     : ICustomerSlaPriorityAdmissionStore
@@ -16,11 +17,14 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
     public async Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
         string admissionId,
         CustomerSlaAuthority authority,
+        long policyVersion,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(admissionId) || admissionId != admissionId.Trim())
             throw new ArgumentException("AdmissionId must be canonical.", nameof(admissionId));
         ValidateAuthority(authority);
+        if (policyVersion <= 0)
+            throw new ArgumentOutOfRangeException(nameof(policyVersion));
 
         var connection = dbContext.Database.GetDbConnection();
         var openedHere = connection.State != ConnectionState.Open;
@@ -29,7 +33,13 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
 
         try
         {
-            await using var command = CreateSelectCommand(connection, null, admissionId, authority, lockRow: false);
+            await using var command = CreateSelectCommand(
+                connection,
+                null,
+                admissionId,
+                authority,
+                policyVersion,
+                lockRow: false);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             return await reader.ReadAsync(cancellationToken) ? Read(reader) : null;
         }
@@ -56,7 +66,13 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
         try
         {
             CustomerSlaPriorityAdmissionEvidence? existing;
-            await using (var select = CreateSelectCommand(connection, transaction, evidence.AdmissionId, null, lockRow: true))
+            await using (var select = CreateSelectCommand(
+                connection,
+                transaction,
+                evidence.AdmissionId,
+                null,
+                null,
+                lockRow: true))
             await using (var reader = await select.ExecuteReaderAsync(cancellationToken))
                 existing = await reader.ReadAsync(cancellationToken) ? Read(reader) : null;
 
@@ -110,6 +126,7 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
         DbTransaction? transaction,
         string admissionId,
         CustomerSlaAuthority? authority,
+        long? policyVersion,
         bool lockRow)
     {
         var command = connection.CreateCommand();
@@ -117,7 +134,7 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
         var lockHint = lockRow ? " WITH (UPDLOCK, HOLDLOCK)" : string.Empty;
         var authorityPredicate = authority is null
             ? string.Empty
-            : " AND [TenantId] = @tenantId AND [CompanyId] = @companyId AND [UserId] = @userId AND [AuthorityVersion] = @authorityVersion";
+            : " AND [TenantId] = @tenantId AND [CompanyId] = @companyId AND [UserId] = @userId AND [AuthorityVersion] = @authorityVersion AND [PolicyVersion] = @policyVersion";
         command.CommandText = $"""
             SELECT [AdmissionId], [TenantId], [CompanyId], [UserId], [AuthorityVersion],
                    [PolicyId], [PolicyVersion], [ServiceClass], [SchedulerPriority], [PriorityCeiling]
@@ -131,6 +148,7 @@ public sealed class SqlCustomerSlaPriorityAdmissionStore(PlatformDbContext dbCon
             Add(command, "@companyId", authority.CompanyId);
             Add(command, "@userId", authority.UserId);
             Add(command, "@authorityVersion", authority.AuthorityVersion);
+            Add(command, "@policyVersion", policyVersion!.Value);
         }
         return command;
     }
