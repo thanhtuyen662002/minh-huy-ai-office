@@ -1,13 +1,13 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
+status: ready_for_review
 current_issue: 194
 current_pr: 196
 current_branch: backend/194-sla-status-projection
-head: 282be1cbbe384de9c39ee11022ffdff03ff9c8b1
+head: a676c063081f6f5567c29186b32434223716c089
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T21:37:00+07:00"
-last_checkpoint_at: "2026-09-24T21:37:00+07:00"
+lease_heartbeat_at: "2026-09-24T22:00:00+07:00"
+last_checkpoint_at: "2026-09-24T22:00:00+07:00"
 last_completed_issue: 189
 last_merged_pr: 190
 scope:
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 663b9e0ee50284c670ac92d2f6910a7dc65cd415
-  governance_run: 36006758700
-  build_run: 36006758912
-  result: "Acceptance implementation previously closed exact-head Governance 36006758700 and Build 36006758912 GREEN. Reconciled authoritative main 8db4e117130491a543afa0f084803b01cbeb733a on SAME lease via merge commit 282be1cbbe384de9c39ee11022ffdff03ff9c8b1; compare is ahead-only/behind=0 and preserves server-derived SLA authority/policy fences. Fresh exact-head CI required for this durable checkpoint."
+  prior_head: a676c063081f6f5567c29186b32434223716c089
+  governance_run: 36014335086
+  build_run: 36014335123
+  result: "Exact-head Governance 36014335086 and Build 36014335123 are terminal GREEN at a676c063081f6f5567c29186b32434223716c089. PR #196 is mergeable, main compare is ahead-only/behind=0, no unresolved review threads remain, and issue #194 acceptance remains complete."
 known_risks:
   - "Production composition defaults the SLA status source to unavailable rather than guessing current policy revision from historical admission evidence; a concrete authoritative current-policy source must preserve this boundary."
   - "Tenant/company/user authority comes only from IRequestAuthorizationContextAccessor; source results are rejected on authority mismatch or non-positive authority/policy versions."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
 blocked_by:
-  - "Fresh exact-head Governance/Build for the post-main-reconciliation checkpoint are pending discovery/closure."
-next_action: "Resolve actual PR #196 HEAD after this checkpoint; own fresh exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main drift/reviews/mergeability and return ready_for_review only when acceptance remains complete."
+  - "Lead review/integration only."
+next_action: "Keep #194/#196 as the Backend primary lease until merge. Re-enter SAME PR for review feedback, main drift, mergeability regression or exact-head CI regression; otherwise Lead may integrate."
