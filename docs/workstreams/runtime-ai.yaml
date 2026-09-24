@@ -4,11 +4,11 @@ status: active
 current_issue: 170
 current_pr: 171
 current_branch: runtime/170-ai-credit-admission-active-holds
-head: 485876952dfaea07cf09b187a32daa0bfac0081e
+head: cbc4960bdc9cbac14dfc781cd6472268d6c30d4c
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T08:20:00+07:00"
-last_checkpoint_at: "2026-09-24T08:20:00+07:00"
+lease_heartbeat_at: "2026-09-24T09:19:00+07:00"
+last_checkpoint_at: "2026-09-24T09:19:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #171 / issue #170 remains the SAME Runtime lease. Exact-head Build 35939171595 failed compilation because CustomerAiCreditReservationTests used the pre-active-holds CustomerAiCreditAdmissionDecision constructor. Fixed that actionable RED on this branch in commit 485876952dfaea07cf09b187a32daa0bfac0081e by supplying ActiveReservedAiCredits=0 in the reservation fixture. Resolve the actual durable HEAD after this checkpoint, own exact-head Governance/Build through terminal closure, fix further actionable RED here, then verify behind=0/mergeable/review-clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken authority fences, or merge directly."
+next_action: "PR #171 / issue #170 remains the SAME Runtime lease. Exact-head Governance 35943718034 and Build 35943718050 are GREEN on pre-reconcile HEAD 5fd882ba734dfa2b28d664eb793e02525c71ca69. Authoritative main 2c9ae609aeee3532bcfd017698c619118ad01883 was reconciled via merge commit cbc4960bdc9cbac14dfc781cd6472268d6c30d4c; compare is ahead-only/behind=0 and Runtime changes are preserved. Resolve the actual durable HEAD after this checkpoint, own its exact-head Governance/Build through terminal closure, fix any actionable RED on this SAME branch, then verify mergeable=true and review threads clear before ready_for_review. Do not edit PROJECT_STATE or other specialist leases, weaken authority/pricing fences, or merge directly."
