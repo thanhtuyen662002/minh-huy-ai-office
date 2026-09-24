@@ -78,18 +78,19 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceTests
     }
 
     [Fact]
-    public async Task FindAsync_DoesNotReturnEvidenceAcrossAuthorityBoundary()
+    public async Task FindAsync_DoesNotReturnEvidenceAcrossAuthorityOrPolicyRevisionBoundary()
     {
         var store = new InMemoryCustomerSlaPriorityAdmissionStore();
         var evidence = CustomerSlaPriorityAdmission.Decide(
             new CustomerSlaPriorityAdmissionRequest("admission-isolated", Authority, Policy, "standard"));
         await store.PersistAsync(evidence);
 
-        Assert.Equal(evidence, await store.FindAsync(evidence.AdmissionId, Authority));
-        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { TenantId = "tenant-b" }));
-        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { CompanyId = "company-b" }));
-        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { UserId = "user-b" }));
-        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { AuthorityVersion = Authority.AuthorityVersion + 1 }));
+        Assert.Equal(evidence, await store.FindAsync(evidence.AdmissionId, Authority, Policy.PolicyVersion));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { TenantId = "tenant-b" }, Policy.PolicyVersion));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { CompanyId = "company-b" }, Policy.PolicyVersion));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { UserId = "user-b" }, Policy.PolicyVersion));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority with { AuthorityVersion = Authority.AuthorityVersion + 1 }, Policy.PolicyVersion));
+        Assert.Null(await store.FindAsync(evidence.AdmissionId, Authority, Policy.PolicyVersion + 1));
     }
 
     [Fact]
@@ -113,11 +114,53 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceTests
         Assert.False(enqueued);
     }
 
+    [Fact]
+    public async Task AdmitAndEnqueue_RejectsStalePolicyRevisionBeforeEnqueue()
+    {
+        var store = new InMemoryCustomerSlaPriorityAdmissionStore();
+        var service = new CustomerSlaPriorityAdmissionPersistenceService(store);
+        var original = new CustomerSlaPriorityAdmissionRequest("admission-policy", Authority, Policy, "standard");
+        await service.AdmitAndEnqueueAsync(original, (_, _) => Task.CompletedTask);
+        var enqueued = false;
+        var revisedPolicy = Policy with { PolicyVersion = Policy.PolicyVersion + 1 };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AdmitAndEnqueueAsync(
+            original with { Policy = revisedPolicy },
+            (_, _) =>
+            {
+                enqueued = true;
+                return Task.CompletedTask;
+            }));
+
+        Assert.False(enqueued);
+    }
+
+    [Fact]
+    public async Task AdmitAndEnqueue_RejectsInvalidPolicyRevisionBeforeStoreOrEnqueue()
+    {
+        var events = new List<string>();
+        var service = new CustomerSlaPriorityAdmissionPersistenceService(new RecordingStore(events));
+        var enqueued = false;
+        var invalidPolicy = Policy with { PolicyVersion = 0 };
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.AdmitAndEnqueueAsync(
+            new CustomerSlaPriorityAdmissionRequest("admission-invalid-policy", Authority, invalidPolicy, "standard"),
+            (_, _) =>
+            {
+                enqueued = true;
+                return Task.CompletedTask;
+            }));
+
+        Assert.Empty(events);
+        Assert.False(enqueued);
+    }
+
     private sealed class RecordingStore(List<string> events) : ICustomerSlaPriorityAdmissionStore
     {
         public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
             string admissionId,
             CustomerSlaAuthority authority,
+            long policyVersion,
             CancellationToken cancellationToken = default) =>
             Task.FromResult<CustomerSlaPriorityAdmissionEvidence?>(null);
 
@@ -135,6 +178,7 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceTests
         public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
             string admissionId,
             CustomerSlaAuthority authority,
+            long policyVersion,
             CancellationToken cancellationToken = default) =>
             Task.FromResult<CustomerSlaPriorityAdmissionEvidence?>(null);
 
