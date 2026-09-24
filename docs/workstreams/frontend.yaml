@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: in_progress
+status: waiting_ci
 current_issue: 191
 current_pr: 192
 current_branch: "frontend/191-sla-status-presentation"
-head: "2ec167992f388d7fe696d436dad0944779780dbe"
-state: in_progress
+head: "PENDING_RECONCILE_HEAD"
+state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T18:42:00+07:00"
-last_checkpoint_at: "2026-09-24T18:42:00+07:00"
+lease_heartbeat_at: "2026-09-24T20:34:02+07:00"
+last_checkpoint_at: "2026-09-24T20:34:02+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #192 / issue #191 is the primary Frontend lease. Authority-safe SLA presentation component and focused hostile-input tests are implemented. Resolve actual HEAD and own exact-head Governance/Build closure; if workflow emission remains absent, continue safe acceptance work rather than releasing the lease. Preserve server-derived TenantId/UserId/company authority; browser metadata remains untrusted and must never fabricate company/user/SLA authority. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconcile authoritative main affca5fbfb44bfcb15a58d0cbf46da92a48cfed5 into this branch, preserving server-authoritative SLA presentation and never deriving TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the reconciled checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
