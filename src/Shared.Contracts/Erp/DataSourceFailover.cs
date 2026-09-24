@@ -118,6 +118,26 @@ public static class DataSourceFailoverContract
             throw new InvalidOperationException("Failover decision is outside the required registry/schema/catalog version fence.");
     }
 
+    public static void ValidateDecisionForExecution(
+        DataSourceFailoverAuthority authority,
+        DataSourceOperationKind operation,
+        DataSourceFailoverDecision decision,
+        DataSourceHealthEvidence authoritativeEvidence,
+        DateTimeOffset executionAt)
+    {
+        ArgumentNullException.ThrowIfNull(authoritativeEvidence);
+        ValidateDecision(authority, operation, decision);
+        ValidateEvidence(authoritativeEvidence, authority, executionAt);
+
+        if (authoritativeEvidence.State != DataSourceHealthState.Healthy)
+            throw new InvalidOperationException("Failover decision health evidence is not healthy at execution time.");
+        if (!StringComparer.Ordinal.Equals(authoritativeEvidence.EndpointId, decision.EndpointId))
+            throw new InvalidOperationException("Failover decision endpoint does not match the authoritative health evidence.");
+        if (!StringComparer.Ordinal.Equals(authoritativeEvidence.EvidenceReference, decision.EvidenceReference) ||
+            authoritativeEvidence.ObservedAt != decision.ObservedAt)
+            throw new InvalidOperationException("Failover decision is not bound to the authoritative health observation used for execution.");
+    }
+
     private static void ValidateAuthority(DataSourceFailoverAuthority authority)
     {
         if (authority.TenantId == Guid.Empty || authority.CompanyId == Guid.Empty || authority.DataSourceId == Guid.Empty)
