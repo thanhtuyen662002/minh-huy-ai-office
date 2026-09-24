@@ -4,7 +4,7 @@ status: waiting_ci
 current_issue: 191
 current_pr: 192
 current_branch: "frontend/191-sla-status-presentation"
-head: "PENDING_RECONCILE_HEAD"
+head: "95082c675acec7353aa546fb3544625e9711daec"
 state: waiting_ci
 lease_owner: frontend
 lease_heartbeat_at: "2026-09-24T20:34:02+07:00"
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconcile authoritative main affca5fbfb44bfcb15a58d0cbf46da92a48cfed5 into this branch, preserving server-authoritative SLA presentation and never deriving TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the reconciled checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main affca5fbfb44bfcb15a58d0cbf46da92a48cfed5 through merge checkpoint 95082c675acec7353aa546fb3544625e9711daec, preserving server-authoritative SLA presentation and never deriving TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
