@@ -23,47 +23,36 @@ public sealed class DataSourceFailoverExecutionAuthorizationTests
     {
         var health = Health();
         var decision = Decision(health);
-        var denied = DataSourceFailoverContract.CreateExecutionEvidence(
-            Authority(TimeSpan.FromSeconds(5)), DataSourceOperationKind.Read, decision, health, Now);
+        var denied = DataSourceFailoverContract.CreateExecutionEvidence(Authority(TimeSpan.FromSeconds(5)), DataSourceOperationKind.Read, decision, health, Now);
         Assert.Equal(DataSourceFailoverExecutionOutcome.Denied, denied.Outcome);
-        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(TimeSpan.FromSeconds(5)), DataSourceOperationKind.Read, decision, denied));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(TimeSpan.FromSeconds(5)), DataSourceOperationKind.Read, decision, denied));
     }
 
     [Fact]
     public void Validate_RejectsCrossAuthorityVersionAndOperation()
     {
         var (decision, evidence) = Authorized();
-        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority() with { CompanyId = Guid.NewGuid() }, DataSourceOperationKind.Read, decision, evidence));
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision, evidence));
-        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Write, decision, evidence));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority() with { CompanyId = Guid.NewGuid() }, DataSourceOperationKind.Read, decision, evidence));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority() with { CatalogVersion = "catalog-13" }, DataSourceOperationKind.Read, decision, evidence));
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Write, decision, evidence));
     }
 
     [Fact]
     public void Validate_RejectsDecisionAndEvidenceSubstitution()
     {
         var (decision, evidence) = Authorized();
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Read, decision with { EndpointId = "fallback" }, evidence));
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Read, decision, evidence with { HealthEvidenceReference = "health-ref:substituted" }));
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Read, decision, evidence with { DecisionIdentity = "decision-sha256:tampered" }));
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Read, decision, evidence with { ExecutionEvidenceId = "execution-sha256:tampered" }));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Read, decision with { EndpointId = "fallback" }, evidence));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Read, decision, evidence with { HealthEvidenceReference = "health-ref:substituted" }));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Read, decision, evidence with { DecisionIdentity = "decision-sha256:tampered" }));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Read, decision, evidence with { ExecutionEvidenceId = "execution-sha256:tampered" }));
     }
 
     [Fact]
     public void Validate_RejectsSecretMaterialAndInvalidAuthorizedReason()
     {
         var (decision, evidence) = Authorized();
-        Assert.Throws<ArgumentException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Read, decision, evidence with { HealthEvidenceReference = "Server=db;Password=secret" }));
-        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(
-            Authority(), DataSourceOperationKind.Read, decision, evidence with { Reason = "health-evidence-unhealthy" }));
+        Assert.Throws<ArgumentException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Read, decision, evidence with { HealthEvidenceReference = "Server=db;Password=secret" }));
+        Assert.Throws<InvalidOperationException>(() => DataSourceFailoverExecutionAuthorization.Validate(Authority(), DataSourceOperationKind.Read, decision, evidence with { Reason = "health-evidence-unhealthy" }));
     }
 
     private static (DataSourceFailoverDecision Decision, DataSourceFailoverExecutionEvidence Evidence) Authorized()
@@ -79,11 +68,8 @@ public sealed class DataSourceFailoverExecutionAuthorizationTests
             new[] { new DataSourceFailoverCandidate(Tenant, Company, Source, "primary", "secret-ref:primary", DataSourceFailoverRole.Primary, DataSourceAccessMode.ReadWrite, 0, "registry-7", "schema-43", "catalog-12") },
             new[] { health }, Now.AddSeconds(-10));
 
-    private static DataSourceFailoverHealthEvidencePlaceholder Placeholder() => throw new NotSupportedException();
-
     private static DataSourceHealthEvidence Health()
-        => new(Tenant, Company, Source, "primary", "registry-7", "schema-43", "catalog-12", DataSourceHealthState.Healthy,
-            Now.AddSeconds(-30), Now.AddMinutes(1), "health-ref:primary:v9");
+        => new(Tenant, Company, Source, "primary", "registry-7", "schema-43", "catalog-12", DataSourceHealthState.Healthy, Now.AddSeconds(-30), Now.AddMinutes(1), "health-ref:primary:v9");
 
     private static DataSourceFailoverAuthority Authority(TimeSpan? maxAge = null)
         => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12", maxAge ?? TimeSpan.FromMinutes(5));
