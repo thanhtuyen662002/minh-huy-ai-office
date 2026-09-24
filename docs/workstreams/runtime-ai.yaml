@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: fc3ee0c937b3d89d145e7e287ba758f4aafedef8
-state: ready_for_review
+head: a6559a62bb8f1db274798598fbcc52ffe0bf4adc
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T15:22:00+07:00"
-last_checkpoint_at: "2026-09-24T15:22:00+07:00"
+lease_heartbeat_at: "2026-09-24T15:37:00+07:00"
+last_checkpoint_at: "2026-09-24T15:37:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #177 / issue #175 is acceptance-complete at exact reconciled checkpoint fc3ee0c937b3d89d145e7e287ba758f4aafedef8: Governance 35970932230 and Build 35970932229 are terminal GREEN; authoritative main remains 8d521b9786a737b2b02c1fcf4e33cc5ec642a574; PR mergeable=true; review threads clear; diff remains limited to Runtime state plus reservation contract/tests. Lead should review/integrate. Runtime retains this SAME lease until merge and must re-enter if CI turns actionable RED, review feedback arrives, or main/mergeability drifts. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 is acceptance-complete but authoritative main advanced to c545984942762237726e1e90f9e6559ff65b01b4 after Backend #185 integration. Reconcile current main on this SAME lease without force-reset, preserve the active-hold reservation contract/tests, then own exact-head Governance/Build to terminal GREEN. If GREEN and compare is ahead-only/behind=0 with mergeability/reviews clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."

@@ -24,7 +24,10 @@ public sealed record CustomerSlaPriorityAdmissionEvidence(
     string PolicyId,
     long PolicyVersion,
     string ServiceClass,
-    int SchedulerPriority);
+    int SchedulerPriority)
+{
+    public int PriorityCeiling { get; init; }
+}
 
 public static class CustomerSlaPriorityAdmission
 {
@@ -49,10 +52,13 @@ public static class CustomerSlaPriorityAdmission
             request.Policy.PolicyId,
             request.Policy.PolicyVersion,
             request.RequestedServiceClass,
-            configuredPriority);
+            configuredPriority)
+        {
+            PriorityCeiling = request.Policy.PriorityCeiling,
+        };
 
         if (existing is not null && existing != decision)
-            throw new InvalidOperationException("Admission identity already has conflicting authority, policy, service class, or priority evidence.");
+            throw new InvalidOperationException("Admission identity already has conflicting authority, policy, service class, priority, or ceiling evidence.");
 
         return existing ?? decision;
     }
