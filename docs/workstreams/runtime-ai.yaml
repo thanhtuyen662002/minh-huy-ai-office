@@ -4,11 +4,11 @@ status: active
 current_issue: 175
 current_pr: 177
 current_branch: runtime/175-credit-reservation-active-holds
-head: a6559a62bb8f1db274798598fbcc52ffe0bf4adc
+head: 3438d8c86a78334afcf312b69d0ae5d1c4af06fb
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T15:37:00+07:00"
-last_checkpoint_at: "2026-09-24T15:37:00+07:00"
+lease_heartbeat_at: "2026-09-24T15:39:00+07:00"
+last_checkpoint_at: "2026-09-24T15:39:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -38,4 +38,4 @@ scope:
   - customer-ai-credit-settlement
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
-next_action: "PR #177 / issue #175 is acceptance-complete but authoritative main advanced to c545984942762237726e1e90f9e6559ff65b01b4 after Backend #185 integration. Reconcile current main on this SAME lease without force-reset, preserve the active-hold reservation contract/tests, then own exact-head Governance/Build to terminal GREEN. If GREEN and compare is ahead-only/behind=0 with mergeability/reviews clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
+next_action: "PR #177 / issue #175 reconciled authoritative main c545984942762237726e1e90f9e6559ff65b01b4 on SAME lease at implementation checkpoint 3438d8c86a78334afcf312b69d0ae5d1c4af06fb without force-reset. Compare is ahead-only/behind=0 and PR mergeable=true. Exact-head Governance 35976395445 is in_progress and Build 35976395457 is queued. Own both to terminal GREEN; inspect/fix actionable RED on SAME branch. If GREEN and main/mergeability/reviews remain clean, restore ready_for_review for Lead integration. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/authority/pricing/overflow fences, expose provider/model/cost metadata as authority, or merge directly."
