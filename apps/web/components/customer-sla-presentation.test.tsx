@@ -21,6 +21,8 @@ describe("CustomerSlaPresentation", () => {
     { tierLabel: " Business", priorityLabel: "Cao", policyVersion: 7, effectiveAt: "2026-09-24T10:00:00Z" },
     { tierLabel: "Business", priorityLabel: "Cao", policyVersion: 0, effectiveAt: "2026-09-24T10:00:00Z" },
     { tierLabel: "Business", priorityLabel: "Cao", policyVersion: 7, effectiveAt: "not-a-date" },
+    { tierLabel: "Business", priorityLabel: "Cao", policyVersion: 7, effectiveAt: "2026-09-24" },
+    { tierLabel: "Business", priorityLabel: "Cao", policyVersion: 7, effectiveAt: "2026-09-24T17:00:00+07:00" },
   ])("fails closed for malformed presentation data %#", (data) => {
     render(<CustomerSlaPresentation data={data} />);
     expect(screen.getByText("Trạng thái SLA hiện chưa khả dụng từ máy chủ.")).toBeTruthy();
