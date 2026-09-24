@@ -2,12 +2,12 @@ workstream: backend
 role: "Backend Platform"
 status: in_progress
 current_issue: 189
-current_pr: null
+current_pr: 190
 current_branch: backend/189-sla-policy-revision
-head: 0f2db02007a0e4f9d55d9723058205448f48ab19
+head: 9f325c963eeaa9ceb13999bcf635539a712d3e96
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T16:40:00+07:00"
-last_checkpoint_at: "2026-09-24T16:40:00+07:00"
+lease_heartbeat_at: "2026-09-24T16:41:00+07:00"
+last_checkpoint_at: "2026-09-24T16:41:00+07:00"
 last_completed_issue: 186
 last_merged_pr: 187
 scope:
@@ -20,7 +20,7 @@ verification:
   prior_head: 0f2db02007a0e4f9d55d9723058205448f48ab19
   governance_run: null
   build_run: null
-  result: "PR #187 merged. Claimed #189 from authoritative main to bind SLA admission evidence/replay to an immutable positive server-derived policy revision."
+  result: "PR #187 merged. Claimed #189/#190 from authoritative main to bind SLA admission evidence/replay to an immutable positive server-derived policy revision."
 known_risks:
   - "SLA policy revision must remain server-derived and positive; legacy persisted evidence must not silently become current authority."
   - "AdmissionId global conflict detection and tenant/company/user/authority-version fences remain fail closed."
