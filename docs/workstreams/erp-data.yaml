@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 199
-current_pr: 200
-current_branch: erp/199-failover-policy-operation-kind
-head: b96b272aa706f0f984be8d4429a1ad52b3d9fc3d
+current_issue: 201
+current_pr: 202
+current_branch: erp/201-failover-policy-effective-time
+head: 43471439a43ee5523053fe64e374cc84563e25d6
 state: waiting_ci
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T14:38:00Z"
-last_checkpoint_at: "2026-09-24T14:38:00Z"
-last_merged_pr: 198
-last_merge_commit: 1a99b9778ff44528128910bad6dd060999ad6531
-preferred_next_issue: 199
+lease_heartbeat_at: "2026-09-24T15:42:00Z"
+last_checkpoint_at: "2026-09-24T15:42:00Z"
+last_merged_pr: 200
+last_merge_commit: 69ea5c52f69d573ae8c69af2ae631f56078fbe88
+preferred_next_issue: 201
 blocked_by: []
 scope:
   - datasource-registry
@@ -38,4 +38,5 @@ scope:
   - datasource-failover-operation-policy-version
   - datasource-failover-operation-policy-authority-scope
   - datasource-failover-operation-policy-operation-kind
-next_action: "PR #200 / issue #199 is the primary ERP/Data lease from authoritative main 8db4e117130491a543afa0f084803b01cbeb733a. Operation policy now binds DataSourceOperationKind in addition to TenantId/CompanyId/DataSourceId and Version; focused tests cover matching operation, cross-operation denial, undefined operation, scope/version, freshness and tamper fences. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and acceptance before ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+  - datasource-failover-operation-policy-effective-time
+next_action: "PR #202 / issue #201 is the primary ERP/Data lease from authoritative main 69ea5c52f69d573ae8c69af2ae631f56078fbe88. Operation policy now carries server-derived EffectiveAt and rejects default/future policy activation while preserving authority scope, operation kind, version, execution-evidence freshness and tamper fences. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and acceptance before ready_for_review. Never edit PROJECT_STATE or other specialist leases."
