@@ -24,6 +24,7 @@ public sealed class CustomerSlaPriorityAdmissionTests
         var result = CustomerSlaPriorityAdmission.Decide(request);
 
         Assert.Equal(80, result.SchedulerPriority);
+        Assert.Equal(80, result.PriorityCeiling);
         Assert.Equal(Authority, result.Authority);
         Assert.Equal("sla-standard", result.PolicyId);
         Assert.Equal(3, result.PolicyVersion);
@@ -62,7 +63,10 @@ public sealed class CustomerSlaPriorityAdmissionTests
             Policy,
             "standard");
         var existing = new CustomerSlaPriorityAdmissionEvidence(
-            "admission-4", Authority, Policy.PolicyId, Policy.PolicyVersion, "standard", 20);
+            "admission-4", Authority, Policy.PolicyId, Policy.PolicyVersion, "standard", 20)
+        {
+            PriorityCeiling = Policy.PriorityCeiling,
+        };
 
         Assert.ThrowsAny<Exception>(() => CustomerSlaPriorityAdmission.Decide(request, existing));
     }
@@ -83,8 +87,22 @@ public sealed class CustomerSlaPriorityAdmissionTests
     {
         var request = new CustomerSlaPriorityAdmissionRequest("admission-6", Authority, Policy, "standard");
         var stale = new CustomerSlaPriorityAdmissionEvidence(
-            "admission-6", Authority, Policy.PolicyId, Policy.PolicyVersion - 1, "standard", 20);
+            "admission-6", Authority, Policy.PolicyId, Policy.PolicyVersion - 1, "standard", 20)
+        {
+            PriorityCeiling = Policy.PriorityCeiling,
+        };
 
         Assert.Throws<InvalidOperationException>(() => CustomerSlaPriorityAdmission.Decide(request, stale));
+    }
+
+    [Fact]
+    public void Decide_RejectsReplayWhenAuthoritativeCeilingChanged()
+    {
+        var request = new CustomerSlaPriorityAdmissionRequest("admission-7", Authority, Policy, "standard");
+        var existing = CustomerSlaPriorityAdmission.Decide(request);
+        var changedPolicy = Policy with { PriorityCeiling = 90 };
+        var changedRequest = request with { Policy = changedPolicy };
+
+        Assert.Throws<InvalidOperationException>(() => CustomerSlaPriorityAdmission.Decide(changedRequest, existing));
     }
 }
