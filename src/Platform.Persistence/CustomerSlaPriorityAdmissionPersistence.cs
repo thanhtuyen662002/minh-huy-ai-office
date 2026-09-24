@@ -6,13 +6,15 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 /// <summary>
 /// Durable-boundary abstraction for SLA priority admission evidence. Implementations must
 /// commit evidence before returning; scheduler enqueue is deliberately a separate callback.
-/// Reads are authority-scoped so AdmissionId alone never grants cross-tenant evidence access.
+/// Reads are authority- and policy-revision-scoped so AdmissionId alone never grants stale or
+/// cross-tenant evidence access.
 /// </summary>
 public interface ICustomerSlaPriorityAdmissionStore
 {
     Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
         string admissionId,
         CustomerSlaAuthority authority,
+        long policyVersion,
         CancellationToken cancellationToken = default);
 
     Task<CustomerSlaPriorityAdmissionEvidence> PersistAsync(
@@ -40,7 +42,15 @@ public sealed class CustomerSlaPriorityAdmissionPersistenceService(
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(enqueue);
 
-        var existing = await store.FindAsync(request.AdmissionId, request.Authority, cancellationToken);
+        // Validate all server-derived authority/policy inputs before consulting durable state.
+        // This also prevents invalid/non-positive policy revisions from becoming lookup authority.
+        _ = CustomerSlaPriorityAdmission.Decide(request);
+
+        var existing = await store.FindAsync(
+            request.AdmissionId,
+            request.Authority,
+            request.Policy.PolicyVersion,
+            cancellationToken);
         var decided = CustomerSlaPriorityAdmission.Decide(request, existing);
         var persisted = await store.PersistAsync(decided, cancellationToken);
 
@@ -67,12 +77,18 @@ public sealed class InMemoryCustomerSlaPriorityAdmissionStore : ICustomerSlaPrio
     public Task<CustomerSlaPriorityAdmissionEvidence?> FindAsync(
         string admissionId,
         CustomerSlaAuthority authority,
+        long policyVersion,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(authority);
+        if (policyVersion <= 0)
+            throw new ArgumentOutOfRangeException(nameof(policyVersion));
         cancellationToken.ThrowIfCancellationRequested();
         evidence.TryGetValue(admissionId, out var existing);
-        return Task.FromResult(existing is not null && existing.Authority == authority ? existing : null);
+        return Task.FromResult(
+            existing is not null && existing.Authority == authority && existing.PolicyVersion == policyVersion
+                ? existing
+                : null);
     }
 
     public Task<CustomerSlaPriorityAdmissionEvidence> PersistAsync(
