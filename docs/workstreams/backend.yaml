@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
-current_issue: 167
-current_pr: 168
-current_branch: backend/167-sla-admission-sql-store
-head: 982bfb2d5818c218cd32c7d3292dafad2c59a768
+status: in_progress
+current_issue: 184
+current_pr: null
+current_branch: backend/184-sla-priority-ceiling-evidence
+head: c97543bfba61a0f48b434044bcbad84ac0fea085
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T13:39:00+07:00"
-last_checkpoint_at: "2026-09-24T13:39:00+07:00"
-last_completed_issue: 160
-last_merged_pr: 161
+lease_heartbeat_at: "2026-09-24T14:44:00+07:00"
+last_checkpoint_at: "2026-09-24T14:44:00+07:00"
+last_completed_issue: 167
+last_merged_pr: 168
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,13 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: cbc8c7f70cfb18a1999a80dab4b7b9f519f8a9c6
+  prior_head: 8d521b9786a737b2b02c1fcf4e33cc5ec642a574
   governance_run: null
   build_run: null
-  result: "Reconciled authoritative main 4ba736c175bfc5dd632ebb163c8cb034a6028ae3 into SAME PR #168 while preserving the SQL Server SLA admission store, versioned migration, DI wiring, persistence-before-enqueue and tenant/authority fences. Exact-head CI pending on the durable checkpoint."
+  result: "Claimed #184 after #168 merged. Bound authoritative PriorityCeiling into SLA admission evidence, SQL persistence and a versioned migration with conservative backfill; added focused replay/ceiling tests. PR/CI pending after durable lease checkpoint."
 known_risks:
-  - "Tenant/company/user authority and SLA policy/version remain server-derived; caller-controlled numeric priority never becomes scheduler authority."
-  - "Serializable UPDLOCK/HOLDLOCK persistence preserves exact replay idempotency and rejects conflicting AdmissionId replay before enqueue."
+  - "Tenant/company/user authority and SLA policy/version/ceiling remain server-derived; caller-controlled numeric priority never becomes scheduler authority."
+  - "Migrated historical rows conservatively set PriorityCeiling=SchedulerPriority because the original wider ceiling was not durably available."
   - "Schema migration integrity is mandatory; do not edit docs/PROJECT_STATE.yaml or other specialist leases."
-blocked_by:
-  - "Exact-head Governance/Build for the durable reconciliation checkpoint are non-terminal or not yet discovered."
-next_action: "Resolve actual PR #168 HEAD after this checkpoint; close exact-head Governance/Build, fix actionable RED on SAME branch, then verify current main, mergeable=true and review threads clear before ready_for_review."
+blocked_by: []
+next_action: "Open Draft PR for #184, resolve actual branch HEAD, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify current main/reviews/mergeability before ready_for_review."
