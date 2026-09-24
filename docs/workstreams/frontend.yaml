@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: waiting_ci
+status: ready_for_review
 current_issue: 191
 current_pr: 192
 current_branch: "frontend/191-sla-status-presentation"
-head: "95082c675acec7353aa546fb3544625e9711daec"
-state: waiting_ci
+head: "8c958dfbdcc2653d001ab97316f7aebbdb540dda"
+state: ready_for_review
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T20:34:02+07:00"
-last_checkpoint_at: "2026-09-24T20:34:02+07:00"
+lease_heartbeat_at: "2026-09-24T21:11:00+07:00"
+last_checkpoint_at: "2026-09-24T21:11:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main affca5fbfb44bfcb15a58d0cbf46da92a48cfed5 through merge checkpoint 95082c675acec7353aa546fb3544625e9711daec, preserving server-authoritative SLA presentation and never deriving TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease and is acceptance-complete. Exact implementation/reconciliation HEAD 8c958dfbdcc2653d001ab97316f7aebbdb540dda closed Governance 36006668599 and Build 36006668233 GREEN; live compare against authoritative main affca5fbfb44bfcb15a58d0cbf46da92a48cfed5 was ahead-only (8/0), mergeable=true, with no unresolved review threads. Lead review/integration is next. Frontend retains this lease until merge and must re-enter SAME PR on base drift, review feedback, mergeability regression or exact-head CI regression. Preserve server-derived TenantId/UserId/company authority; browser metadata remains untrusted presentation input. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
