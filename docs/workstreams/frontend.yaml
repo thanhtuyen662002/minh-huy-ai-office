@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
 status: waiting_ci
-current_issue: 174
-current_pr: 176
-current_branch: "frontend/174-audit-filtering"
-head: "4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6"
+current_issue: 191
+current_pr: 192
+current_branch: "frontend/191-sla-status-presentation"
+head: "0f5c090129d960502de5cec1f75b181982a3f454"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T16:40:30+07:00"
-last_checkpoint_at: "2026-09-24T16:40:30+07:00"
+lease_heartbeat_at: "2026-09-25T11:14:00+07:00"
+last_checkpoint_at: "2026-09-25T11:14:00+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #176 / issue #174 remains the SAME Frontend lease. Reconciled authoritative main 0f2db02007a0e4f9d55d9723058205448f48ab19 into the branch through same-lease reconciliation merge 4c0fb4a973f94bca2cbd7bd9b33b5bf91fe112a6; compare is ahead-only/behind=0. Authority-safe audit filtering stays presentation-only and never derives TenantId/CompanyId/UserId/companyName/userName authority from browser state. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR, otherwise return ready_for_review after GREEN. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main d1b234f97735cf52f957d42cc7f567a738105bef through merge 0f5c090129d960502de5cec1f75b181982a3f454 while preserving main-owned docs/PROJECT_STATE.yaml and the server-authoritative SLA presentation component/tests. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR. If GREEN and live compare/reviews/mergeability remain clean, return ready_for_review for Lead integration. Never derive TenantId/CompanyId/UserId/companyName/userName or SLA/priority authority from browser state. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
