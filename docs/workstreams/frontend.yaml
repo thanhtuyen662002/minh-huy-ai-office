@@ -4,11 +4,11 @@ status: waiting_ci
 current_issue: 191
 current_pr: 192
 current_branch: "frontend/191-sla-status-presentation"
-head: "f768c3ac344c98f288cb312e24c2cef3302af16a"
+head: "5dae05ea48638b77776902063def4ea2b6aee12a"
 state: waiting_ci
 lease_owner: frontend
-lease_heartbeat_at: "2026-09-24T22:39:36+07:00"
-last_checkpoint_at: "2026-09-24T22:39:36+07:00"
+lease_heartbeat_at: "2026-09-25T08:08:48+07:00"
+last_checkpoint_at: "2026-09-25T08:08:48+07:00"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,4 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main 88b05b18641efca5d4a938e2e426531f0ac46c40 at implementation merge f768c3ac344c98f288cb312e24c2cef3302af16a while preserving the server-authoritative SLA presentation component/tests and without introducing browser TenantId/CompanyId/UserId/companyName/userName authority. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR. If GREEN and live compare/reviews/mergeability remain clean, return ready_for_review for Lead integration. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main 797f1c8fe25cb0e18666a690b69c71abaadb4ed7 through merge 5dae05ea48638b77776902063def4ea2b6aee12a while preserving the server-authoritative SLA presentation component/tests and authoritative docs/PROJECT_STATE.yaml from main. Re-query exact-head Governance/Build for the resulting durable checkpoint; fix actionable RED on this SAME PR. If GREEN and live compare/reviews/mergeability remain clean, return ready_for_review for Lead integration. Never derive TenantId/CompanyId/UserId/companyName/userName authority from browser state. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
