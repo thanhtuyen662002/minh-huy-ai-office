@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
-status: ready_for_review
-current_issue: 194
-current_pr: 196
-current_branch: backend/194-sla-status-projection
-head: b99e2461fbafd7d36e59c13e6006b8c445bf9ebc
+status: claimed
+current_issue: 203
+current_pr: null
+current_branch: backend/203-sql-sla-status-source
+head: 6f613cbd8fe82b1df73e1cf6b01fb73f78b8d61c
 lease_owner: backend
-lease_heartbeat_at: "2026-09-25T09:00:00+07:00"
-last_checkpoint_at: "2026-09-25T09:00:00+07:00"
-last_completed_issue: 189
-last_merged_pr: 190
+lease_heartbeat_at: "2026-09-26T03:00:00+07:00"
+last_checkpoint_at: "2026-09-26T03:00:00+07:00"
+last_completed_issue: 194
+last_merged_pr: 196
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,10 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: b99e2461fbafd7d36e59c13e6006b8c445bf9ebc
-  governance_run: 36080349737
-  build_run: 36080349660
-  result: "Live exact-head Governance 36080349737 and Build 36080349660 are GREEN at actual HEAD b99e2461fbafd7d36e59c13e6006b8c445bf9ebc. PR #196 is mergeable=true, compare main...HEAD is ahead-only/behind=0, review threads are clear, and issue #194 acceptance remains complete."
+  result: "Live GitHub confirms issue #203 is the highest-priority unblocked Backend slice; no open Backend PR competes. Branch fast-forwarded to authoritative main before claim."
 known_risks:
-  - "Production composition defaults the SLA status source to unavailable rather than guessing current policy revision from historical admission evidence; a concrete authoritative current-policy source must preserve this boundary."
-  - "Tenant/company/user authority comes only from IRequestAuthorizationContextAccessor; source results are rejected on authority mismatch or non-positive authority/policy versions."
+  - "Current SLA policy must come from a durable authoritative current-policy source, never historical admission evidence."
+  - "Tenant/company/user authority remains server-derived and fail-closed; response must not expose authority or secret fields."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
-blocked_by:
-  - "Lead review/integration only."
-next_action: "Lead may integrate #196 with expected-head guard after confirming exact-head gates. Backend retains #194/#196 as primary lease until merge and must re-enter SAME PR on review feedback, main drift, mergeability regression, or CI regression."
+blocked_by: []
+next_action: "Open Draft PR lease for #203, implement SQL-backed current SLA status source with configured/unconfigured composition and deterministic authority/current-revision tests, then own exact-head CI to closure."
