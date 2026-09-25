@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: d624f994fa11c1a5bd19c620bd5762bce61bd180
+last_verified_commit: 1578ee808228d9715894c3da8bcf1d1971a12efb
 
 critical_paths:
   backend:
@@ -16,7 +16,7 @@ critical_paths:
     branch: null
     head: null
     state: queued
-    next: "Claim issue #203: wire SQL-backed current SLA status source from server-derived authority; open one bounded Draft PR and own exact-head CI."
+    next: "Issue #203 remains unclaimed on live GitHub. Backend automation was unexpectedly disabled and was re-enabled by Watchdog; claim #203 next."
 
   frontend:
     issue: 204
@@ -30,17 +30,17 @@ critical_paths:
     issue: 205
     pr: 207
     branch: runtime/205-durable-credit-settlement
-    head: 031aa3e07f30199b1d096225d862c541dcb5b21e
+    head: 0e0f14ab740ca5943b772cf4365b268fa2bed225
     state: in_progress
-    next: "PR #207 exact-head Governance 36153642937 and Build 36153642929 are GREEN, but the PR contains only Runtime workstream-state changes and acceptance implementation remains outstanding. Resume SAME lease and implement durable settlement persistence/release ordering before review."
+    next: "PR #207 remains metadata-only versus main. Exact-head Governance 36172655331 GREEN; Build 36172655332 CANCELLED. Acceptance implementation is still outstanding; Runtime must resume SAME lease and implement durable settlement-before-release."
 
   erp_data:
     issue: 206
     pr: 208
     branch: erp/206-persist-effective-failover-policy
     head: a550415f30708ca546f2e8ddc5d9ed3c7c9c9020
-    state: waiting_ci
-    next: "PR #208 has substantive persistence/store/migration/tests and exact-head Governance 36161200252 + Build 36161200269 GREEN. ERP/Data must reconcile HANDOFF/acceptance and migration-model integrity, then return ready_for_review when complete."
+    state: in_progress
+    next: "PR #208 implementation HEAD a550415f30708ca546f2e8ddc5d9ed3c7c9c9020 has GREEN Governance 36161200252 and Build 36161200269, but PlatformDbContextModelSnapshot lacks DataSourceFailoverOperationPolicy while DbContext includes it. ERP/Data must fix EF snapshot/migration integrity on SAME lease before review."
 
 recent_authoritative_merges:
   - "PR #202 / issue #201 failover operation-policy effective-time fence: MERGED at bbda62293a79eef777c5c2f159c5bb3a6020e4b1"
@@ -61,7 +61,7 @@ dependency_chain:
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
   - "P6 concrete queue is seeded independently as Backend #203, Frontend #204, Runtime/AI #205, and ERP/Data #206; all depend only on already-merged authoritative main."
 
-next_action: "Runtime #205/#207 and ERP/Data #206/#208 are live leases; Backend #203 and Frontend #204 remain queued. Continue acceptance on #207, close #208 acceptance/review readiness, and have Backend/Frontend claim their queued issues without duplication. Lead/QA continues #65 only when it does not delay P6."
+next_action: "Backend #203 and Frontend #204 remain queued; Runtime #205/#207 must implement acceptance after metadata-only checkpoints; ERP/Data #206/#208 must repair EF model snapshot integrity before review. All intended loops must remain enabled."
 
 blocked_by: [] []
 
