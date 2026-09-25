@@ -7,42 +7,46 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: ab9d00edebbb0e1f3ffeb3509cf359069b88e1e2
+last_verified_commit: bbda62293a79eef777c5c2f159c5bb3a6020e4b1
 
 critical_paths:
   backend:
-    issue: 194
-    pr: 196
-    branch: backend/194-sla-status-projection
-    head: 95c438991018fb0c299bd4c749ba0a934369242b
-    state: ready_for_review
-    next: "Live exact-head Build 36084469262 and Governance 36084469239 are GREEN at actual HEAD 95c438991018fb0c299bd4c749ba0a934369242b; mergeable=true and review threads clear. Lead integration is ready; merge mutation remains blocked by connector safety."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #196 / issue #194 merged to main as 238c83204f6030ff66b9623200b85715c8b63aeb. Specialist loop remains enabled and should claim the next unblocked Backend slice on its next execution."
 
   frontend:
-    issue: 191
-    pr: 192
-    branch: frontend/191-sla-status-presentation
-    head: 93a4e998da99c7e61de8fe0d0612aaafd7121341
-    state: ready_for_review
-    next: "Live exact-head Build 36080797353 and Governance 36080797405 are GREEN; behind=0, mergeable=true, review threads clear. Ready for Lead integration."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #192 / issue #191 merged to main as 259c49773f1e632305b44d44fff8800d42600fa8. Specialist loop remains enabled and should claim the next unblocked Frontend slice on its next execution."
 
   runtime_ai:
-    issue: 193
-    pr: 195
-    branch: runtime/193-settlement-unrelated-reservation-isolation
-    head: 77a227de0740d592cc96ea8c104b8e06e382d295
-    state: ready_for_review
-    next: "Live exact-head Build 36081787009 and Governance 36081787006 are GREEN; behind=0, mergeable=true, review threads clear. Ready for Lead integration."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #195 / issue #193 merged to main as 8102f54443e7a53a6271f27dec2f2b357ede695a. Specialist loop remains enabled and should claim the next unblocked Runtime/AI slice on its next execution."
 
   erp_data:
-    issue: 201
-    pr: 202
-    branch: erp-data/201-failover-policy-effective-time
-    head: a1a65d4e4d88532ec83f27badce8778e96bce3d2
-    state: ready_for_review
-    next: "Live exact-head Build 36082378658 and Governance 36082378661 are GREEN; behind=0, mergeable=true, review threads clear. PR remains Draft; owning specialist should mark ready when acceptance/HANDOFF are complete."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: done
+    next: "PR #202 / issue #201 merged to main as bbda62293a79eef777c5c2f159c5bb3a6020e4b1. Specialist loop remains enabled and should claim the next unblocked ERP/Data slice on its next execution."
 
 recent_authoritative_merges:
+  - "PR #202 / issue #201 failover operation-policy effective-time fence: MERGED at bbda62293a79eef777c5c2f159c5bb3a6020e4b1"
+  - "PR #195 / issue #193 settlement validation reservation isolation: MERGED at 8102f54443e7a53a6271f27dec2f2b357ede695a"
+  - "PR #192 / issue #191 server-authoritative SLA presentation: MERGED at 259c49773f1e632305b44d44fff8800d42600fa8"
+  - "PR #196 / issue #194 server-authoritative SLA status projection: MERGED at 238c83204f6030ff66b9623200b85715c8b63aeb"
   - "PR #200 / issue #199 operation-kind-bound failover policy: MERGED at 69ea5c52f69d573ae8c69af2ae631f56078fbe88"
   - "PR #198 / issue #197 authority-scoped failover operation policy: MERGED at 1a99b9778ff44528128910bad6dd060999ad6531"
   - "PR #183 / issue #182 operation-policy-version failover authorization: MERGED at b5892d92144472fe53de8df35de5544090038db9"
@@ -55,9 +59,9 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 has four reconciled specialist leases on authoritative main 88b05b18641efca5d4a938e2e426531f0ac46c40 with exact-head gates green."
+  - "The previous four P6 specialist leases are all merged on main; no implementation PR is currently open."
 
-next_action: "Integrate acceptance-complete non-draft leases promptly with expected-head guards; ERP/Data #202 must leave Draft only after owning specialist confirms acceptance/HANDOFF. GitHub merge mutation is currently blocked by connector safety, so preserve truthful live evidence and retry only on a future execution rather than fabricating integration."
+next_action: "All four specialist loops are enabled and no implementation PR is open. Each specialist should re-evaluate live main and claim its highest-priority unblocked roadmap slice without duplicating ownership. Lead/QA should advance cross-cutting CI-efficiency issue #65 when safe."
 
 blocked_by: []
 
