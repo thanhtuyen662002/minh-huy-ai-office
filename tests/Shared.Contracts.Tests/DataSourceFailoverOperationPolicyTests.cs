@@ -11,7 +11,7 @@ public sealed class DataSourceFailoverOperationPolicyTests
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-09-24T04:00:00Z");
 
     [Fact]
-    public void ValidateForExecution_AcceptsMatchingPolicyAndExactReplay()
+    public void ValidateForExecution_AcceptsMatchingEffectivePolicyAndExactReplay()
     {
         var (decision, evidence) = Authorized();
         var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
@@ -19,6 +19,18 @@ public sealed class DataSourceFailoverOperationPolicyTests
 
         DataSourceFailoverOperationPolicyContract.ValidateForExecution(Authority(), DataSourceOperationKind.Read, decision, policy, authorization, Now.AddMinutes(1));
         DataSourceFailoverOperationPolicyContract.ValidateForExecution(Authority(), DataSourceOperationKind.Read, decision, policy, authorization, Now.AddMinutes(1));
+    }
+
+    [Fact]
+    public void ValidateForExecution_RejectsPolicyBeforeEffectiveTimeAndInvalidTimestamp()
+    {
+        var (decision, evidence) = Authorized();
+        var authorization = new DataSourceFailoverOperationAuthorization(evidence, 7);
+
+        Assert.Throws<UnauthorizedAccessException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { EffectiveAt = Now.AddMinutes(2) }, authorization, Now.AddMinutes(1)));
+        Assert.Throws<ArgumentException>(() => DataSourceFailoverOperationPolicyContract.ValidateForExecution(
+            Authority(), DataSourceOperationKind.Read, decision, Policy() with { EffectiveAt = default }, authorization, Now.AddMinutes(1)));
     }
 
     [Fact]
@@ -99,5 +111,5 @@ public sealed class DataSourceFailoverOperationPolicyTests
         => new(Tenant, Company, Source, "registry-7", "schema-43", "catalog-12", TimeSpan.FromMinutes(5));
 
     private static DataSourceFailoverOperationPolicy Policy()
-        => new(Tenant, Company, Source, DataSourceOperationKind.Read, 7);
+        => new(Tenant, Company, Source, DataSourceOperationKind.Read, 7, Now.AddMinutes(-1));
 }
