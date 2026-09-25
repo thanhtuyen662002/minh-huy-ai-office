@@ -26,7 +26,13 @@ public partial class AddDataSourceFailoverOperationPolicies : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_DataSourceFailoverOperationPolicies", x => new { x.TenantId, x.CompanyId, x.DataSourceId, x.Operation, x.Version });
-                table.ForeignKey("FK_DataSourceFailoverOperationPolicies_DataSources", x => new { x.TenantId, x.CompanyId, x.DataSourceId }, PlatformDbContext.DefaultSchema, "DataSources", new[] { "TenantId", "CompanyId", "Id" }, onDelete: ReferentialAction.Restrict);
+                table.ForeignKey(
+                    name: "FK_DataSourceFailoverOperationPolicies_DataSources",
+                    columns: x => new { x.TenantId, x.CompanyId, x.DataSourceId },
+                    principalSchema: PlatformDbContext.DefaultSchema,
+                    principalTable: "DataSources",
+                    principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                    onDelete: ReferentialAction.Restrict);
                 table.CheckConstraint("CK_DataSourceFailoverOperationPolicies_Version", "[Version] > 0");
             });
         migrationBuilder.CreateIndex(
