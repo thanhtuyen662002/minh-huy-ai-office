@@ -4,11 +4,11 @@ status: active
 current_issue: 205
 current_pr: 207
 current_branch: runtime/205-durable-credit-settlement
-head: 3ca49b6b29c62eccee39215e92d7457712ca0c76
-state: waiting_ci
+head: 0e0f14ab740ca5943b772cf4365b268fa2bed225
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-25T22:20:00+07:00"
-last_checkpoint_at: "2026-09-25T22:20:00+07:00"
+lease_heartbeat_at: "2026-09-26T01:18:00+07:00"
+last_checkpoint_at: "2026-09-26T01:18:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #207 / issue #205 is reconciled with authoritative main at exact HEAD 3ca49b6b29c62eccee39215e92d7457712ca0c76. Governance run 36153521459 is GREEN; Build run 36153521451 is in_progress. Code-file mutation is currently blocked by connector safety checks. Re-enter SAME lease: close exact-head CI, then implement durable settlement store/service + migration + crash/retry/replay/authority/policy/overflow tests as soon as code mutation is available. Do not release/ack before durable persistence or broaden billing authority."
+next_action: "PR #207 / issue #205 reconciled current authoritative main 1578ee808228d9715894c3da8bcf1d1971a12efb at exact HEAD 0e0f14ab740ca5943b772cf4365b268fa2bed225. Governance 36172655331 GREEN; Build 36172655332 in_progress. Runtime implementation is designed (durable settlement store/service, SQL migration, crash/retry/replay/authority/policy/overflow tests), but code-file mutation remains blocked by connector safety checks. Re-enter SAME lease, close exact-head CI, retry code mutation, then implement acceptance before review."
