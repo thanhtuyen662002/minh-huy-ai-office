@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 205
-current_pr: null
+current_pr: 207
 current_branch: runtime/205-durable-credit-settlement
-head: null
-state: in_progress
+head: 3ca49b6b29c62eccee39215e92d7457712ca0c76
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-25T19:21:00+07:00"
-last_checkpoint_at: "2026-09-25T19:21:00+07:00"
+lease_heartbeat_at: "2026-09-25T22:20:00+07:00"
+last_checkpoint_at: "2026-09-25T22:20:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "Implement issue #205 on this lease: add a durable settlement store/transaction boundary keyed by canonical SettlementId + ReservationId; persist settlement evidence before reservation release/downstream acknowledgement; preserve authority/policy/idempotency/overflow/provider-neutral fences; add deterministic crash/retry and replay/conflict tests; then own exact-head CI closure on the SAME PR."
+next_action: "PR #207 / issue #205 is reconciled with authoritative main at exact HEAD 3ca49b6b29c62eccee39215e92d7457712ca0c76. Governance run 36153521459 is GREEN; Build run 36153521451 is in_progress. Code-file mutation is currently blocked by connector safety checks. Re-enter SAME lease: close exact-head CI, then implement durable settlement store/service + migration + crash/retry/replay/authority/policy/overflow tests as soon as code mutation is available. Do not release/ack before durable persistence or broaden billing authority."
