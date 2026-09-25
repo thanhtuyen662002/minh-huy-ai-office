@@ -7,16 +7,16 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 88b05b18641efca5d4a938e2e426531f0ac46c40
+last_verified_commit: ab9d00edebbb0e1f3ffeb3509cf359069b88e1e2
 
 critical_paths:
   backend:
     issue: 194
     pr: 196
     branch: backend/194-sla-status-projection
-    head: e3330ef1d34d38cc07fe38374b8a61410cab250b
+    head: 2c02dba10440d5017dca0026ad006de02e54ade7
     state: ready_for_review
-    next: "Live exact-head Build 36021906631 and Governance 36021906320 are GREEN; behind=0, mergeable=true, review threads clear. Lead integration is ready but GitHub merge mutation is currently blocked by connector safety."
+    next: "Live exact-head Build 36075541482 and Governance 36075541466 are GREEN at actual HEAD 2c02dba10440d5017dca0026ad006de02e54ade7; mergeable=true and review threads clear. Lead integration is ready; merge mutation remains blocked by connector safety."
 
   frontend:
     issue: 191
