@@ -1,15 +1,15 @@
 workstream: backend
 role: "Backend Platform"
-status: waiting_ci
-current_issue: 189
-current_pr: 190
-current_branch: backend/189-sla-policy-revision
-head: b554b64da382a11a0e17d1ab7c527cefa8ccad5d
+status: ready_for_review
+current_issue: 194
+current_pr: 196
+current_branch: backend/194-sla-status-projection
+head: b99e2461fbafd7d36e59c13e6006b8c445bf9ebc
 lease_owner: backend
-lease_heartbeat_at: "2026-09-24T17:15:00+07:00"
-last_checkpoint_at: "2026-09-24T17:15:00+07:00"
-last_completed_issue: 186
-last_merged_pr: 187
+lease_heartbeat_at: "2026-09-25T09:00:00+07:00"
+last_checkpoint_at: "2026-09-25T09:00:00+07:00"
+last_completed_issue: 189
+last_merged_pr: 190
 scope:
   - aspnet-core
   - identity
@@ -17,14 +17,14 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  prior_head: 9c7cca092c9da3db32e2fff7110bf0d7df97a00c
-  governance_run: null
-  build_run: null
-  result: "Implemented policy-revision-scoped SLA admission lookup using existing positive durable PolicyVersion, validated revision before durable reads, preserved global AdmissionId conflict detection, added authority+revision SQL access-path migration and focused stale/invalid/exact/cross-authority tests. Exact-head CI pending after durable checkpoint."
+  prior_head: b99e2461fbafd7d36e59c13e6006b8c445bf9ebc
+  governance_run: 36080349737
+  build_run: 36080349660
+  result: "Live exact-head Governance 36080349737 and Build 36080349660 are GREEN at actual HEAD b99e2461fbafd7d36e59c13e6006b8c445bf9ebc. PR #196 is mergeable=true, compare main...HEAD is ahead-only/behind=0, review threads are clear, and issue #194 acceptance remains complete."
 known_risks:
-  - "SLA PolicyVersion is the immutable server-derived policy revision; original migration already enforces PolicyVersion > 0, so no permissive legacy backfill is introduced."
-  - "AdmissionId global conflict detection and tenant/company/user/authority-version fences remain fail closed."
+  - "Production composition defaults the SLA status source to unavailable rather than guessing current policy revision from historical admission evidence; a concrete authoritative current-policy source must preserve this boundary."
+  - "Tenant/company/user authority comes only from IRequestAuthorizationContextAccessor; source results are rejected on authority mismatch or non-positive authority/policy versions."
   - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
 blocked_by:
-  - "Exact-head Governance/Build for the durable checkpoint are pending discovery/closure."
-next_action: "Resolve actual PR #190 HEAD after this checkpoint; close exact-head Governance/Build, inspect and fix actionable RED on SAME branch, then verify acceptance/main/reviews/mergeability before ready_for_review."
+  - "Lead review/integration only."
+next_action: "Lead may integrate #196 with expected-head guard after confirming exact-head gates. Backend retains #194/#196 as primary lease until merge and must re-enter SAME PR on review feedback, main drift, mergeability regression, or CI regression."
