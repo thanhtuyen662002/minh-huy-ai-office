@@ -7,40 +7,40 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 69ea5c52f69d573ae8c69af2ae631f56078fbe88
+last_verified_commit: 88b05b18641efca5d4a938e2e426531f0ac46c40
 
 critical_paths:
   backend:
     issue: 194
     pr: 196
     branch: backend/194-sla-status-projection
-    head: 88100709a4a911d5f3546aa8a5a91b9f521aa1d8
-    state: blocked
-    next: "Backend #196 is acceptance-complete but live PR became non-mergeable after ERP/Data #200 advanced authoritative main. Immediate SAME-lease re-entry requested to reconcile current main, preserve server-derived SLA authority/policy fences, and re-close exact-head gates."
+    head: e3330ef1d34d38cc07fe38374b8a61410cab250b
+    state: ready_for_review
+    next: "Live exact-head Build 36021906631 and Governance 36021906320 are GREEN; behind=0, mergeable=true, review threads clear. Lead integration is ready but GitHub merge mutation is currently blocked by connector safety."
 
   frontend:
     issue: 191
     pr: 192
     branch: frontend/191-sla-status-presentation
-    head: aeff86bd2d189fc83f90251f8870b77405caa26e
-    state: blocked
-    next: "Frontend #192 exact-head Governance 36014130477 and Build 36014131204 were GREEN, but live PR became non-mergeable after ERP/Data #200 advanced authoritative main. Immediate SAME-lease re-entry requested to reconcile current main and re-close exact-head gates without introducing browser authority."
+    head: 4c6f7c4a4ad3744e777d371db665103b2f69ff00
+    state: ready_for_review
+    next: "Live exact-head Build 36071600848 and Governance 36071600836 are GREEN; behind=0, mergeable=true, review threads clear. Ready for Lead integration."
 
   runtime_ai:
     issue: 193
     pr: 195
     branch: runtime/193-settlement-unrelated-reservation-isolation
-    head: e6b621f2b3f6c35bf46cefe6db44230b82b32ad3
-    state: blocked
-    next: "Runtime #195 implementation acceptance was GREEN on its implementation checkpoint and durable state HEAD is e6b621f2b3f6c35bf46cefe6db44230b82b32ad3, but live PR became non-mergeable after ERP/Data #200 advanced authoritative main. Immediate SAME-lease re-entry requested to reconcile current main and own fresh exact-head gates."
+    head: d5083f18ee018350ac930174b2cb4a1e1ff4ce7f
+    state: ready_for_review
+    next: "Live exact-head Build 36026712443 and Governance 36026712439 are GREEN; behind=0, mergeable=true, review threads clear. Ready for Lead integration."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: done
-    next: "ERP/Data PR #200 / issue #199 operation-kind-bound failover policy merged at 69ea5c52f69d573ae8c69af2ae631f56078fbe88 after exact-head Governance 36014195898 and Build 36014195875 GREEN, mergeable=true and review threads clear. ERP/Data automation remains enabled and has been requested immediately to discover/claim the next safe non-overlapping slice."
+    issue: 201
+    pr: 202
+    branch: erp-data/201-failover-policy-effective-time
+    head: 4821439c991fd0e71a3545e844ba19eb5db4cc63
+    state: ready_for_review
+    next: "Live exact-head Build 36021969991 and Governance 36021970134 are GREEN; behind=0, mergeable=true, review threads clear. PR remains Draft; owning specialist should mark ready when acceptance/HANDOFF are complete."
 
 recent_authoritative_merges:
   - "PR #200 / issue #199 operation-kind-bound failover policy: MERGED at 69ea5c52f69d573ae8c69af2ae631f56078fbe88"
@@ -55,10 +55,9 @@ recent_authoritative_merges:
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 now includes durable SLA admission/policy fencing, authority-safe customer audit presentation, active-reservation-aware AI-credit admission/reservation, and failover operation policy fenced by authority scope, version and operation kind."
-  - "Backend #196, Frontend #192 and Runtime #195 must reconcile authoritative main after ERP/Data #200 integration. ERP/Data is free to claim the next safe non-overlapping slice."
+  - "P6 has four reconciled specialist leases on authoritative main 88b05b18641efca5d4a938e2e426531f0ac46c40 with exact-head gates green."
 
-next_action: "Backend #196, Frontend #192 and Runtime #195 reconcile current main on SAME leases and re-close exact-head gates; ERP/Data discovers/claims its next safe slice. Immediate runs requested for all four specialist loops. Lead integrates the next acceptance-complete reconciled lease promptly and keeps issue #65 CI-efficiency secondary to critical-path integration."
+next_action: "Integrate acceptance-complete non-draft leases promptly with expected-head guards; ERP/Data #202 must leave Draft only after owning specialist confirms acceptance/HANDOFF. GitHub merge mutation is currently blocked by connector safety, so preserve truthful live evidence and retry only on a future execution rather than fabricating integration."
 
 blocked_by: []
 
