@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 25a316e3fa0c39088ba91ccafe768d5e541f1c28
+last_verified_commit: d624f994fa11c1a5bd19c620bd5762bce61bd180
 
 critical_paths:
   backend:
@@ -28,19 +28,19 @@ critical_paths:
 
   runtime_ai:
     issue: 205
-    pr: null
-    branch: null
-    head: null
-    state: queued
-    next: "Claim issue #205: persist AI credit settlement before releasing reservation/downstream completion; open one bounded Draft PR and own exact-head CI."
+    pr: 207
+    branch: runtime/205-durable-credit-settlement
+    head: 031aa3e07f30199b1d096225d862c541dcb5b21e
+    state: in_progress
+    next: "PR #207 exact-head Governance 36153642937 and Build 36153642929 are GREEN, but the PR contains only Runtime workstream-state changes and acceptance implementation remains outstanding. Resume SAME lease and implement durable settlement persistence/release ordering before review."
 
   erp_data:
     issue: 206
-    pr: null
-    branch: null
-    head: null
-    state: queued
-    next: "Claim issue #206: persist/version and deterministically resolve effective failover operation policy; open one bounded Draft PR and own exact-head CI."
+    pr: 208
+    branch: erp/206-persist-effective-failover-policy
+    head: a550415f30708ca546f2e8ddc5d9ed3c7c9c9020
+    state: waiting_ci
+    next: "PR #208 has substantive persistence/store/migration/tests and exact-head Governance 36161200252 + Build 36161200269 GREEN. ERP/Data must reconcile HANDOFF/acceptance and migration-model integrity, then return ready_for_review when complete."
 
 recent_authoritative_merges:
   - "PR #202 / issue #201 failover operation-policy effective-time fence: MERGED at bbda62293a79eef777c5c2f159c5bb3a6020e4b1"
@@ -61,7 +61,7 @@ dependency_chain:
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
   - "P6 concrete queue is seeded independently as Backend #203, Frontend #204, Runtime/AI #205, and ERP/Data #206; all depend only on already-merged authoritative main."
 
-next_action: "Dispatch/claim #203-#206 in their owning specialist lanes without duplication. Lead/QA continues #65 only when it does not delay these P6 critical-path slices. Audit P0-P5 EPIC closure from live main evidence after specialist claims are established."
+next_action: "Runtime #205/#207 and ERP/Data #206/#208 are live leases; Backend #203 and Frontend #204 remain queued. Continue acceptance on #207, close #208 acceptance/review readiness, and have Backend/Frontend claim their queued issues without duplication. Lead/QA continues #65 only when it does not delay P6."
 
 blocked_by: [] []
 
