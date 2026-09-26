@@ -47,6 +47,6 @@ describe("fetchCustomerSlaStatus", () => {
 
   it("fails closed on transport and JSON failures", async () => {
     await expect(fetchCustomerSlaStatus(async () => { throw new Error("network"); })).resolves.toEqual({ state: "unavailable" });
-    await expect(fetchCustomerSlaStatus(async () => ({ status: 200, ok: true, json: async () => { throw new Error("json"); } }) as Response)).resolves.toEqual({ state: "unavailable" });
+    await expect(fetchCustomerSlaStatus(async () => ({ status: 200, ok: true, json: async () => { throw new Error("json"); } }) as unknown as Response)).resolves.toEqual({ state: "unavailable" });
   });
 });
