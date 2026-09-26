@@ -88,6 +88,59 @@ public sealed class CustomerAiCreditSettlementPersistenceTests
         Assert.Equal(0, releases);
     }
 
+    [Theory]
+    [InlineData(0, 5)]
+    [InlineData(2, 3)]
+    [InlineData(5, 0)]
+    public async Task SettleAndRelease_CoversZeroPartialAndFullSettlement(long settled, long released)
+    {
+        var store = new FakeStore([]);
+        var service = new CustomerAiCreditSettlementPersistenceService(store);
+
+        var result = await service.SettleAndReleaseAsync("set-a", Reservation(5), settled, (_, _) => Task.CompletedTask);
+
+        Assert.Equal(settled, result.Evidence.SettledAiCredits);
+        Assert.Equal(released, result.Evidence.ReleasedAiCredits);
+    }
+
+    [Fact]
+    public async Task SettleAndRelease_ExactReplayIsIdempotent()
+    {
+        var store = new FakeStore([]);
+        var service = new CustomerAiCreditSettlementPersistenceService(store);
+        await service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) => Task.CompletedTask);
+
+        var replay = await service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) => Task.CompletedTask);
+
+        Assert.True(replay.IsReplay);
+        Assert.Equal(2, replay.Evidence.SettledAiCredits);
+        Assert.Equal(3, replay.Evidence.ReleasedAiCredits);
+    }
+
+    [Fact]
+    public async Task SettleAndRelease_RejectsCrossPolicyEvidence()
+    {
+        var store = new FakeStore([]);
+        store.Seed(new CustomerAiCreditSettlementEvidence(
+            "set-a", "res-other", Authority, "credits-v2", 4, 1, 1));
+        var service = new CustomerAiCreditSettlementPersistenceService(store);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) => Task.CompletedTask));
+    }
+
+    [Fact]
+    public async Task SettleAndRelease_RejectsOverflowingExistingEvidence()
+    {
+        var store = new FakeStore([]);
+        store.Seed(new CustomerAiCreditSettlementEvidence(
+            "set-a", "res-other", Authority, "credits-v1", 3, long.MaxValue, 1));
+        var service = new CustomerAiCreditSettlementPersistenceService(store);
+
+        await Assert.ThrowsAsync<OverflowException>(() =>
+            service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) => Task.CompletedTask));
+    }
+
     [Fact]
     public async Task SettleAndRelease_RejectsCrossAuthorityEvidence()
     {
