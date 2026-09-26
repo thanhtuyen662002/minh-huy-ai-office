@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 193
-current_pr: 195
-current_branch: runtime/193-settlement-unrelated-reservation-isolation
-head: e6b621f2b3f6c35bf46cefe6db44230b82b32ad3
-state: waiting_ci
+current_issue: 205
+current_pr: 207
+current_branch: runtime/205-durable-credit-settlement
+head: 0e0f14ab740ca5943b772cf4365b268fa2bed225
+state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-24T23:19:00+07:00"
-last_checkpoint_at: "2026-09-24T23:19:00+07:00"
+lease_heartbeat_at: "2026-09-26T01:18:00+07:00"
+last_checkpoint_at: "2026-09-26T01:18:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #195 / issue #193 is reconciling authoritative main 88b05b18641efca5d4a938e2e426531f0ac46c40 on SAME lease after ERP/Data #200 integration. Preserve Runtime settlement-isolation plus authoritative main via a two-parent merge; then own fresh exact-head Governance/Build, inspect/fix actionable RED on SAME branch, and return ready_for_review only when CI, reviews, compare and mergeability are clean. Do not edit PROJECT_STATE or other specialist leases, weaken tenant/company/billing-authority/pricing/idempotency/overflow fences, expose provider/model/cost metadata as billing authority, or merge directly."
+next_action: "PR #207 / issue #205 reconciled current authoritative main 1578ee808228d9715894c3da8bcf1d1971a12efb at exact HEAD 0e0f14ab740ca5943b772cf4365b268fa2bed225. Governance 36172655331 GREEN; Build 36172655332 in_progress. Runtime implementation is designed (durable settlement store/service, SQL migration, crash/retry/replay/authority/policy/overflow tests), but code-file mutation remains blocked by connector safety checks. Re-enter SAME lease, close exact-head CI, retry code mutation, then implement acceptance before review."
