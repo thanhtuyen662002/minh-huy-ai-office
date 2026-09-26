@@ -3,12 +3,12 @@ role: "Runtime / AI Platform"
 status: active
 current_issue: 205
 current_pr: null
-current_branch: runtime/205-durable-credit-settlement-v2
-head: null
-state: in_progress
+current_branch: runtime/205-durable-credit-settlement-v2-v2
+head: 566f4083172782f6b53a119a987bd5ec85bb9845
+state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-26T22:20:00+07:00"
-last_checkpoint_at: "2026-09-26T22:20:00+07:00"
+lease_heartbeat_at: "2026-09-27T00:53:00+07:00"
+last_checkpoint_at: "2026-09-27T00:53:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "Recovered stale merged PR #207 lease for open issue #205 onto runtime/205-durable-credit-settlement-v2. Open a fresh Draft PR, implement durable settlement persistence-before-release, deterministic replay/conflict/authority/overflow tests, then own exact-head CI."
+next_action: "PR #211 / issue #205 now contains durable SQL settlement persistence, unique SettlementId/ReservationId fences, persistence-before-release orchestration, and crash/retry/replay/conflict/authority tests. Reconciled authoritative main at 566f4083172782f6b53a119a987bd5ec85bb9845. Own fresh exact-head Build/Governance; fix actionable RED on SAME PR; then verify acceptance and mark ready_for_review only if changed files and CI prove implementation."
