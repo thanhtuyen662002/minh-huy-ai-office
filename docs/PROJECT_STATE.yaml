@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
+last_verified_commit: 4c97a7f83f27186ac21ecfa58f819af1ef87ee80
 
 critical_paths:
   backend:
@@ -31,16 +31,16 @@ critical_paths:
     pr: 211
     branch: runtime/205-durable-credit-settlement-v2
     head: c4e9080c7a687af0c157324f748f1e36b31ac82f
-    state: in_progress
-    next: "PR #211 is the recovered live Runtime implementation lease at c4e9080c7a687af0c157324f748f1e36b31ac82f. Live diff now contains an initial CustomerAiCreditSettlementPersistence implementation, but #205 acceptance remains incomplete; branch is diverged/behind current main and must reconcile main, complete durable settlement/release ordering plus replay/conflict/authority/overflow tests, then own fresh exact-head CI."
+    state: in_progress_behind_main
+    next: "PR #211 now contains a first runtime persistence service code slice, so it is no longer metadata-only, and exact-head Build/Governance are GREEN. Acceptance is still incomplete: changed files contain no durable SQL store/migration or deterministic crash/retry/replay/conflict/authority/overflow tests. The branch is 3 commits behind current main and mergeable=false; Runtime must reconcile main and complete #205 on this SAME Draft PR before review."
 
   erp_data:
     issue: 206
     pr: 208
     branch: erp/206-persist-effective-failover-policy
     head: 8a2a41651edd3e5e176e7922fa7302aad193c7d9
-    state: in_progress
-    next: "PR #208 remains the live ERP/Data lease at 8a2a41651edd3e5e176e7922fa7302aad193c7d9. Exact-head Build/Governance are GREEN, but branch is diverged and 6 commits behind current main; its EF migration changes PlatformDbContext without PlatformDbContextModelSnapshot in the PR diff. ERP/Data must reconcile current main, repair/verify model snapshot and migration integrity, then own fresh exact-head CI."
+    state: blocked_by_main_drift
+    next: "PR #208 contains durable record/store/migration/tests and prior exact-head Build/Governance are GREEN, but it is 7 commits behind current main. Changed files do not include PlatformDbContextModelSnapshot. ERP/Data must reconcile current main, preserve concurrent PlatformDbContext changes, prove/repair EF model-snapshot and migration integrity, then own fresh exact-head CI before review."
 
 recent_authoritative_merges:
   - "PR #210 / issue #203 SQL-backed current SLA status source: MERGED at a462ebd6a0b54a57af257dcc3d3f66472c635d73"
@@ -54,7 +54,7 @@ dependency_chain:
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
   - "Remaining concrete implementation critical path is Runtime #205/#211 plus ERP/Data #206/#208, followed by Lead release/pilot closure."
 
-next_action: "Runtime must reconcile #211 with current main and finish #205 acceptance/tests beyond the initial persistence seam. ERP/Data must reconcile #208 with current main, repair/verify EF snapshot/migration integrity, and close fresh CI. Lead must merge each when acceptance is proven, then run release/pilot closure audit."
+next_action: "Runtime must reconcile current main and complete actual #205 persistence/tests on PR #211. ERP/Data must reconcile #208 with current main, repair/prove EF snapshot/migration integrity and close fresh exact-head CI. Lead integrates only after acceptance and exact-head gates are proven, then audits Runtime/ERP retirement and P6 release/pilot closure."
 
 blocked_by: []
 
