@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 205
-current_pr: 207
-current_branch: runtime/205-durable-credit-settlement
-head: 0e0f14ab740ca5943b772cf4365b268fa2bed225
+current_pr: null
+current_branch: runtime/205-durable-credit-settlement-v2
+head: null
 state: in_progress
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-26T01:18:00+07:00"
-last_checkpoint_at: "2026-09-26T01:18:00+07:00"
+lease_heartbeat_at: "2026-09-26T22:20:00+07:00"
+last_checkpoint_at: "2026-09-26T22:20:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #207 / issue #205 reconciled current authoritative main 1578ee808228d9715894c3da8bcf1d1971a12efb at exact HEAD 0e0f14ab740ca5943b772cf4365b268fa2bed225. Governance 36172655331 GREEN; Build 36172655332 in_progress. Runtime implementation is designed (durable settlement store/service, SQL migration, crash/retry/replay/authority/policy/overflow tests), but code-file mutation remains blocked by connector safety checks. Re-enter SAME lease, close exact-head CI, retry code mutation, then implement acceptance before review."
+next_action: "Recovered stale merged PR #207 lease for open issue #205 onto runtime/205-durable-credit-settlement-v2. Open a fresh Draft PR, implement durable settlement persistence-before-release, deterministic replay/conflict/authority/overflow tests, then own exact-head CI."
