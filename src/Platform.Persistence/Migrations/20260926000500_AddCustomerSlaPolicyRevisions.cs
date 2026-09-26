@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+
 #nullable disable
+
 namespace MinhHuy.AIOffice.Platform.Persistence.Migrations;
+
 [DbContext(typeof(PlatformDbContext))]
 [Migration("20260926000500_AddCustomerSlaPolicyRevisions")]
 public partial class AddCustomerSlaPolicyRevisions : Migration
@@ -25,6 +28,7 @@ public partial class AddCustomerSlaPolicyRevisions : Migration
         migrationBuilder.CreateIndex(name: "IX_CustomerSlaPolicyRevisions_Current", schema: PlatformDbContext.DefaultSchema,
             table: "CustomerSlaPolicyRevisions", columns: new[] { "TenantId", "CompanyId", "UserId", "EffectiveAtUtc" });
     }
+
     protected override void Down(MigrationBuilder migrationBuilder) =>
         migrationBuilder.DropTable(name: "CustomerSlaPolicyRevisions", schema: PlatformDbContext.DefaultSchema);
 }

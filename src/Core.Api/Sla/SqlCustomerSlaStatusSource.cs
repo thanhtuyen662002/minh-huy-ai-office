@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Platform.Persistence;
+using MinhHuy.AIOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Core.Api.Sla;
 
