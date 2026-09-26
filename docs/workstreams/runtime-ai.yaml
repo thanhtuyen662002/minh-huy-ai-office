@@ -3,12 +3,12 @@ role: "Runtime / AI Platform"
 status: active
 current_issue: 205
 current_pr: null
-current_branch: runtime/205-durable-credit-settlement-v2-v2
-head: 4d543718967d88f22797bddb3d04062611d81cb6
+current_branch: runtime/205-durable-credit-settlement-v2-v2-v2
+head: b91770e52833d501d86271423c380a160fb8fdef
 state: waiting_ci
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-27T00:53:00+07:00"
-last_checkpoint_at: "2026-09-27T00:53:00+07:00"
+lease_heartbeat_at: "2026-09-27T01:09:00+07:00"
+last_checkpoint_at: "2026-09-27T01:09:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "Exact-head Build 36260775935 on prior HEAD failed one actionable Runtime test: cross-authority fixture did not share the requested SettlementId, so no conflict was expected. Fixed fixture on SAME PR at 4d543718967d88f22797bddb3d04062611d81cb6. Await fresh exact-head Build/Governance; inspect/fix any RED; after GREEN verify full/partial, replay/conflict, authority/policy, overflow acceptance before ready_for_review."
+next_action: "Recovered stale #207 YAML against live PR #211. Reconciled authoritative main 357622e5f500f487830385287d56947c3eadf9bc after ERP #208 merge; branch is ahead-only/mergeable. Added explicit persistence-layer acceptance tests for zero/partial/full settlement, exact replay, policy mismatch and checked overflow in addition to crash/retry/conflict/authority ordering tests. Own fresh exact-head Build/Governance for current HEAD; fix actionable RED on SAME PR; if GREEN and review clear, mark ready_for_review."
