@@ -1,73 +1,66 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P5-P6-parallel
-status: parallel-critical-path
-priority_rule: "security-critical > production-blocker > active-issue > roadmap-order"
+phase: P6-closure
+status: closure-critical-path
+priority_rule: "security-critical > production-blocker > active-issue > release/pilot-closure"
 current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: 1578ee808228d9715894c3da8bcf1d1971a12efb
+last_verified_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
 
 critical_paths:
   backend:
-    issue: 203
+    issue: null
     pr: null
     branch: null
     head: null
-    state: queued
-    next: "Issue #203 remains unclaimed on live GitHub. Backend automation was unexpectedly disabled and was re-enabled by Watchdog; claim #203 next."
+    state: retired
+    next: "PR #210 / issue #203 merged to main as a462ebd6a0b54a57af257dcc3d3f66472c635d73 with exact-head Build and Governance GREEN. No open concrete Backend issue remains; Backend automation may stay intentionally retired unless a new verified blocker requires it."
 
   frontend:
-    issue: 204
+    issue: null
     pr: null
     branch: null
     head: null
-    state: queued
-    next: "Claim issue #204: wire authenticated /api/sla/status transport into the authority-safe presentation; open one bounded Draft PR and own exact-head CI."
+    state: retired
+    next: "PR #209 / issue #204 merged to main as 45680c7badbc38e45f9f071267abf7d4bac40770. Frontend automation is intentionally retired unless a new verified blocker requires it."
 
   runtime_ai:
     issue: 205
-    pr: 207
-    branch: runtime/205-durable-credit-settlement
-    head: 0e0f14ab740ca5943b772cf4365b268fa2bed225
+    pr: 211
+    branch: runtime/205-durable-credit-settlement-v2
+    head: 2fd874157add1eb10b4e4e38b0732f24a53c2364
     state: in_progress
-    next: "PR #207 remains metadata-only versus main. Exact-head Governance 36172655331 GREEN; Build 36172655332 CANCELLED. Acceptance implementation is still outstanding; Runtime must resume SAME lease and implement durable settlement-before-release."
+    next: "PR #211 is the recovered live Runtime implementation lease. Current head is metadata-only and does NOT satisfy #205. Runtime must add durable settlement persistence-before-release plus deterministic replay/conflict/authority/overflow tests before review."
 
   erp_data:
     issue: 206
     pr: 208
     branch: erp/206-persist-effective-failover-policy
-    head: a550415f30708ca546f2e8ddc5d9ed3c7c9c9020
-    state: in_progress
-    next: "PR #208 implementation HEAD a550415f30708ca546f2e8ddc5d9ed3c7c9c9020 has GREEN Governance 36161200252 and Build 36161200269, but PlatformDbContextModelSnapshot lacks DataSourceFailoverOperationPolicy while DbContext includes it. ERP/Data must fix EF snapshot/migration integrity on SAME lease before review."
+    head: 8a2a41651edd3e5e176e7922fa7302aad193c7d9
+    state: blocked_by_main_conflict
+    next: "PR #208 has prior exact-head Build/Governance GREEN but is now behind current main and mergeable=false after Backend #210 merged. ERP/Data must reconcile current main, preserve both PlatformDbContext changes, repair/verify EF model snapshot and migration integrity, then own fresh exact-head CI."
 
 recent_authoritative_merges:
+  - "PR #210 / issue #203 SQL-backed current SLA status source: MERGED at a462ebd6a0b54a57af257dcc3d3f66472c635d73"
+  - "PR #209 / issue #204 customer SLA status frontend wiring: MERGED at 45680c7badbc38e45f9f071267abf7d4bac40770"
+  - "PR #207 was merged as ebed543ef4a3954e3caf77e95ff0d17732e87896 but verified metadata-only; issue #205 remains open and is recovered by PR #211"
   - "PR #202 / issue #201 failover operation-policy effective-time fence: MERGED at bbda62293a79eef777c5c2f159c5bb3a6020e4b1"
   - "PR #195 / issue #193 settlement validation reservation isolation: MERGED at 8102f54443e7a53a6271f27dec2f2b357ede695a"
-  - "PR #192 / issue #191 server-authoritative SLA presentation: MERGED at 259c49773f1e632305b44d44fff8800d42600fa8"
-  - "PR #196 / issue #194 server-authoritative SLA status projection: MERGED at 238c83204f6030ff66b9623200b85715c8b63aeb"
-  - "PR #200 / issue #199 operation-kind-bound failover policy: MERGED at 69ea5c52f69d573ae8c69af2ae631f56078fbe88"
-  - "PR #198 / issue #197 authority-scoped failover operation policy: MERGED at 1a99b9778ff44528128910bad6dd060999ad6531"
-  - "PR #183 / issue #182 operation-policy-version failover authorization: MERGED at b5892d92144472fe53de8df35de5544090038db9"
-  - "PR #177 / issue #175 active-hold-aware credit reservation: MERGED at a8f69c61c418561d282062c9c1eb9f861d60a359"
-  - "PR #190 / issue #189 immutable SLA policy-revision fencing: MERGED at 0858c1546a20f0104ec3b0d62631178539faefd5"
-  - "PR #176 / issue #174 authority-safe customer audit filtering: MERGED at ed740f9a7a0e2f6bfdde59fa748737c83596f58f"
-  - "PR #187 / issue #186 authority-scoped SLA admission lookup: MERGED at cd00766a98eef471771fc4c7ee25f1a88bf616cc"
-  - "PR #185 / issue #184 authoritative SLA priority ceiling evidence: MERGED at bf2a1ae23fd710a691704857dbeac3f6dc29bb33"
 
 dependency_chain:
   - "P1-P4 foundations are authoritative through controlled release/self-healing gates."
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
-  - "P6 concrete queue is seeded independently as Backend #203, Frontend #204, Runtime/AI #205, and ERP/Data #206; all depend only on already-merged authoritative main."
+  - "Remaining concrete implementation critical path is Runtime #205/#211 plus ERP/Data #206/#208, followed by Lead release/pilot closure."
 
-next_action: "Backend #203 and Frontend #204 remain queued; Runtime #205/#207 must implement acceptance after metadata-only checkpoints; ERP/Data #206/#208 must repair EF model snapshot integrity before review. All intended loops must remain enabled."
+next_action: "Runtime must implement actual #205 code/tests on PR #211. ERP/Data must reconcile #208 with current main and close fresh CI. Lead must merge each when acceptance is proven, then run release/pilot closure audit."
 
-blocked_by: [] []
+blocked_by: []
 
 automation_liveness:
-  backend: enabled
-  frontend: enabled
+  backend: retired_intentionally
+  frontend: retired_intentionally
   runtime_ai: enabled
   erp_data: enabled
   lead_watchdog: enabled
