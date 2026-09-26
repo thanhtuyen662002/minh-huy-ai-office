@@ -94,7 +94,7 @@ public sealed class CustomerAiCreditSettlementPersistenceTests
         var events = new List<string>();
         var store = new FakeStore(events);
         store.Seed(new CustomerAiCreditSettlementEvidence(
-            "set-other", "res-other", Authority with { CompanyId = "company-b" }, "credits-v1", 3, 1, 1));
+            "set-a", "res-other", Authority with { CompanyId = "company-b" }, "credits-v1", 3, 1, 1));
         var service = new CustomerAiCreditSettlementPersistenceService(store);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
