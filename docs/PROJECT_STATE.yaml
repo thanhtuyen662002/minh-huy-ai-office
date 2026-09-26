@@ -30,17 +30,17 @@ critical_paths:
     issue: 205
     pr: 211
     branch: runtime/205-durable-credit-settlement-v2
-    head: 2fd874157add1eb10b4e4e38b0732f24a53c2364
+    head: c4e9080c7a687af0c157324f748f1e36b31ac82f
     state: in_progress
-    next: "PR #211 is the recovered live Runtime implementation lease. Current head is metadata-only and does NOT satisfy #205. Runtime must add durable settlement persistence-before-release plus deterministic replay/conflict/authority/overflow tests before review."
+    next: "PR #211 is the recovered live Runtime implementation lease at c4e9080c7a687af0c157324f748f1e36b31ac82f. Live diff now contains an initial CustomerAiCreditSettlementPersistence implementation, but #205 acceptance remains incomplete; branch is diverged/behind current main and must reconcile main, complete durable settlement/release ordering plus replay/conflict/authority/overflow tests, then own fresh exact-head CI."
 
   erp_data:
     issue: 206
     pr: 208
     branch: erp/206-persist-effective-failover-policy
     head: 8a2a41651edd3e5e176e7922fa7302aad193c7d9
-    state: blocked_by_main_conflict
-    next: "PR #208 has prior exact-head Build/Governance GREEN but is now behind current main and mergeable=false after Backend #210 merged. ERP/Data must reconcile current main, preserve both PlatformDbContext changes, repair/verify EF model snapshot and migration integrity, then own fresh exact-head CI."
+    state: in_progress
+    next: "PR #208 remains the live ERP/Data lease at 8a2a41651edd3e5e176e7922fa7302aad193c7d9. Exact-head Build/Governance are GREEN, but branch is diverged and 6 commits behind current main; its EF migration changes PlatformDbContext without PlatformDbContextModelSnapshot in the PR diff. ERP/Data must reconcile current main, repair/verify model snapshot and migration integrity, then own fresh exact-head CI."
 
 recent_authoritative_merges:
   - "PR #210 / issue #203 SQL-backed current SLA status source: MERGED at a462ebd6a0b54a57af257dcc3d3f66472c635d73"
@@ -54,7 +54,7 @@ dependency_chain:
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
   - "Remaining concrete implementation critical path is Runtime #205/#211 plus ERP/Data #206/#208, followed by Lead release/pilot closure."
 
-next_action: "Runtime must implement actual #205 code/tests on PR #211. ERP/Data must reconcile #208 with current main and close fresh CI. Lead must merge each when acceptance is proven, then run release/pilot closure audit."
+next_action: "Runtime must reconcile #211 with current main and finish #205 acceptance/tests beyond the initial persistence seam. ERP/Data must reconcile #208 with current main, repair/verify EF snapshot/migration integrity, and close fresh CI. Lead must merge each when acceptance is proven, then run release/pilot closure audit."
 
 blocked_by: []
 
