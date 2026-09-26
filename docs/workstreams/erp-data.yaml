@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
 status: in_progress
-current_issue: 201
-current_pr: 202
-current_branch: erp/201-failover-policy-effective-time
-head: 43471439a43ee5523053fe64e374cc84563e25d6
-state: waiting_ci
+current_issue: 206
+current_pr: 208
+current_branch: erp/206-persist-effective-failover-policy
+head: a550415f30708ca546f2e8ddc5d9ed3c7c9c9020
+state: ready_for_review
 lease_owner: erp-data
-lease_heartbeat_at: "2026-09-24T15:42:00Z"
-last_checkpoint_at: "2026-09-24T15:42:00Z"
-last_merged_pr: 200
-last_merge_commit: 69ea5c52f69d573ae8c69af2ae631f56078fbe88
-preferred_next_issue: 201
+lease_heartbeat_at: "2026-09-25T17:32:00Z"
+last_checkpoint_at: "2026-09-25T17:32:00Z"
+last_merged_pr: 202
+last_merge_commit: bbda62293a79eef777c5c2f159c5bb3a6020e4b1
+preferred_next_issue: 206
 blocked_by: []
 scope:
   - datasource-registry
@@ -25,18 +25,5 @@ scope:
   - order-inventory
   - bulk-deterministic-execution
   - datasource-failover
-  - datasource-health-evidence
-  - datasource-health-evidence-replay
-  - datasource-health-evidence-freshness
-  - datasource-failover-decision-evidence
-  - datasource-failover-operation-authority
-  - datasource-failover-decision-validation
-  - datasource-failover-execution-revalidation
-  - datasource-failover-execution-evidence
-  - datasource-failover-execution-authorization
-  - datasource-failover-operation-time-freshness
-  - datasource-failover-operation-policy-version
-  - datasource-failover-operation-policy-authority-scope
-  - datasource-failover-operation-policy-operation-kind
-  - datasource-failover-operation-policy-effective-time
-next_action: "PR #202 / issue #201 is the primary ERP/Data lease from authoritative main 69ea5c52f69d573ae8c69af2ae631f56078fbe88. Operation policy now carries server-derived EffectiveAt and rejects default/future policy activation while preserving authority scope, operation kind, version, execution-evidence freshness and tamper fences. Resolve actual HEAD after this checkpoint, own exact-head Governance/Build to terminal GREEN, fix actionable RED on SAME branch, then verify live main/reviews/mergeability and acceptance before ready_for_review. Never edit PROJECT_STATE or other specialist leases."
+  - datasource-failover-operation-policy-persistence
+next_action: "PR #208 / issue #206 acceptance implementation is complete at implementation HEAD a550415f30708ca546f2e8ddc5d9ed3c7c9c9020 with exact-head Governance 36161200252 and Build 36161200269 GREEN. This state checkpoint records review readiness; resolve the new exact HEAD and own its CI to terminal GREEN, then mark PR ready for review if no actionable regression or review blocker appears. Never edit PROJECT_STATE or other specialist leases."
