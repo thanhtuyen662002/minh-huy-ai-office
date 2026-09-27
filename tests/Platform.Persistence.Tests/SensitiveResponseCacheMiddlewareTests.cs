@@ -11,7 +11,10 @@ public sealed class SensitiveResponseCacheMiddlewareTests
     [InlineData("/api/data-sources/")]
     [InlineData("/api/data-sources/00000000-0000-0000-0000-000000000001")]
     [InlineData("/api/data-sources/00000000-0000-0000-0000-000000000001/connection-test")]
-    public async Task Data_source_paths_are_marked_no_store(string path)
+    [InlineData("/api/sla/status")]
+    [InlineData("/api/tasks")]
+    [InlineData("/api/tasks/00000000-0000-0000-0000-000000000001")]
+    public async Task Sensitive_authorized_paths_are_marked_no_store(string path)
     {
         var middleware = new SensitiveResponseCacheMiddleware(async context =>
         {
@@ -30,6 +33,7 @@ public sealed class SensitiveResponseCacheMiddlewareTests
     [InlineData("/")]
     [InlineData("/health")]
     [InlineData("/api/data-sources-other")]
+    [InlineData("/api/tasks-other")]
     public async Task Unrelated_paths_are_not_cache_fenced(string path)
     {
         var middleware = new SensitiveResponseCacheMiddleware(async context =>
