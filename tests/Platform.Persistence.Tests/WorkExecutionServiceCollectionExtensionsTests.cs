@@ -28,6 +28,8 @@ public sealed class WorkExecutionServiceCollectionExtensionsTests
 
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IWorkStepExecutor) && descriptor.ImplementationType == typeof(AuthorizedWorkStepExecutor) && descriptor.Lifetime == ServiceLifetime.Scoped);
         Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IWorkStepExecutor) && descriptor.ImplementationType == typeof(TestExecutor));
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(ICustomerAiCreditSettlementStore) && descriptor.ImplementationType == typeof(SqlCustomerAiCreditSettlementStore) && descriptor.Lifetime == ServiceLifetime.Scoped);
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(CustomerAiCreditSettlementPersistenceService) && descriptor.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IRawWorkStepExecutor) && descriptor.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IToolExecutionAuditSink) && descriptor.ImplementationType == typeof(SqlToolExecutionAuditSink) && descriptor.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IWorkDeliveryHandler) && descriptor.ImplementationType == typeof(PersistentWorkDeliveryHandler) && descriptor.Lifetime == ServiceLifetime.Scoped);

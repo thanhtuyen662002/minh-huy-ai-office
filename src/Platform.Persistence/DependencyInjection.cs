@@ -26,6 +26,8 @@ public static class DependencyInjection
             services.AddScoped<ICustomerAuditStore, SqlCustomerAuditStore>();
             services.AddScoped<ICustomerSlaPriorityAdmissionStore, SqlCustomerSlaPriorityAdmissionStore>();
             services.AddScoped<CustomerSlaPriorityAdmissionPersistenceService>();
+            services.AddScoped<ICustomerAiCreditSettlementStore, SqlCustomerAiCreditSettlementStore>();
+            services.AddScoped<CustomerAiCreditSettlementPersistenceService>();
             services.AddScoped<CustomerAuditProjection>();
             services.AddScoped<ToolExecutionAuditService>();
             services.AddScoped<AuthorizedToolExecutionGate>();

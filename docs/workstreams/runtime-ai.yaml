@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 205
-current_pr: 207
-current_branch: runtime/205-durable-credit-settlement
-head: 0e0f14ab740ca5943b772cf4365b268fa2bed225
-state: in_progress
+current_pr: 211
+current_branch: runtime/205-durable-credit-settlement-v2
+head: 4a9b895
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-26T01:18:00+07:00"
-last_checkpoint_at: "2026-09-26T01:18:00+07:00"
+lease_heartbeat_at: "2026-09-27T04:30:00+07:00"
+last_checkpoint_at: "2026-09-27T04:30:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #207 / issue #205 reconciled current authoritative main 1578ee808228d9715894c3da8bcf1d1971a12efb at exact HEAD 0e0f14ab740ca5943b772cf4365b268fa2bed225. Governance 36172655331 GREEN; Build 36172655332 in_progress. Runtime implementation is designed (durable settlement store/service, SQL migration, crash/retry/replay/authority/policy/overflow tests), but code-file mutation remains blocked by connector safety checks. Re-enter SAME lease, close exact-head CI, retry code mutation, then implement acceptance before review."
+next_action: "PR #211 contains the durable SQL settlement store, EF migration discovery metadata, production DI registration, exact/concurrent replay fencing, and the worker completion gate that settles before durable acknowledgement. Push exact HEAD 4a9b895, verify fresh exact-head Build/Governance, then merge and retire this workstream after issue #205 is closed."
