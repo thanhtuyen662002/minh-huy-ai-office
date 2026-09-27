@@ -7,7 +7,7 @@ current_issue: null
 current_branch: null
 current_pr: null
 current_target_head: null
-last_verified_commit: f61cddee2a4e45b1efe5100161056d8f77e73b80
+last_verified_commit: 357622e5f500f487830385287d56947c3eadf9bc
 
 critical_paths:
   backend:
@@ -30,9 +30,9 @@ critical_paths:
     issue: 205
     pr: 211
     branch: runtime/205-durable-credit-settlement-v2
-    head: 70f1be19ac1420ea9e6fba7849d4b8bb644a01e1
-    state: reconcile_after_erp_merge
-    next: "PR #211 now contains durable SQL settlement persistence, migration and deterministic persistence tests; exact-head Build/Governance were GREEN before ERP #208 merged. Main advanced to f61cddee2a4e45b1efe5100161056d8f77e73b80, so Runtime is now behind by one commit and must reconcile current main, preserve both migration/model changes, close fresh exact-head CI and verify remaining #205 full/partial/replay/authority-policy/overflow acceptance before review."
+    head: 9f477be13cd8dbda6f49fc5e240635cbc8ed9e8b
+    state: ready_for_integration
+    next: "PR #211 is acceptance-complete at exact HEAD 9f477be13cd8dbda6f49fc5e240635cbc8ed9e8b: ahead-only/behind=0, mergeable, review threads clear, Build 36261475170 GREEN and Governance 36261475172 GREEN. Changed files contain durable SQL settlement persistence, migration and deterministic tests covering zero/partial/full settlement, exact/conflicting replay, crash/retry, cross-authority/policy and overflow. Lead should integrate when GitHub mutation is available, then audit Runtime retirement."
 
   erp_data:
     issue: null
@@ -55,7 +55,7 @@ dependency_chain:
   - "P5 accounting/operations automation foundations are authoritative through bulk deterministic execution."
   - "Remaining concrete implementation critical path is Runtime #205/#211 plus ERP/Data #206/#208, followed by Lead release/pilot closure."
 
-next_action: "Runtime must reconcile PR #211 with ERP/Data merge f61cddee2a4e45b1efe5100161056d8f77e73b80, close fresh exact-head CI and prove remaining #205 acceptance. Lead then integrates Runtime if complete, audits Runtime retirement, and proceeds to release/pilot closure; issue #65 remains secondary."
+next_action: "Integrate acceptance-complete Runtime PR #211 when GitHub mutation is available; then close #205 if needed, audit Runtime retirement, and proceed to release/pilot closure. Issue #65 remains secondary."
 
 blocked_by: []
 
