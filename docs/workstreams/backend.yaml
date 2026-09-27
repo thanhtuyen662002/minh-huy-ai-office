@@ -1,15 +1,17 @@
 workstream: backend
 role: "Backend Platform"
-status: claimed
-current_issue: 203
+status: retired
+current_issue: null
 current_pr: null
-current_branch: backend/203-sql-sla-status-source
-head: 6f613cbd8fe82b1df73e1cf6b01fb73f78b8d61c
-lease_owner: backend
-lease_heartbeat_at: "2026-09-26T03:00:00+07:00"
-last_checkpoint_at: "2026-09-26T03:00:00+07:00"
-last_completed_issue: 194
-last_merged_pr: 196
+current_branch: null
+head: null
+state: retired
+lease_owner: null
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-09-27T06:20:00Z"
+last_completed_issue: 203
+last_merged_pr: 210
+last_merge_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
 scope:
   - aspnet-core
   - identity
@@ -17,10 +19,9 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  result: "Live GitHub confirms issue #203 is the highest-priority unblocked Backend slice; no open Backend PR competes. Branch fast-forwarded to authoritative main before claim."
+  result: "PR #210 / issue #203 is merged and the SQL-backed current SLA source is composed into the pilot API. Authorization remains server-derived and fail-closed; no open Backend blocker remains."
 known_risks:
-  - "Current SLA policy must come from a durable authoritative current-policy source, never historical admission evidence."
-  - "Tenant/company/user authority remains server-derived and fail-closed; response must not expose authority or secret fields."
-  - "Do not edit docs/PROJECT_STATE.yaml or other specialist leases."
+  - "Pilot deployment still requires an approved OIDC issuer/audience and first-company membership bootstrap."
+  - "Tenant/company/user authority remains server-derived and fail-closed; responses must not expose authority or secret fields."
 blocked_by: []
-next_action: "Open Draft PR lease for #203, implement SQL-backed current SLA status source with configured/unconfigured composition and deterministic authority/current-revision tests, then own exact-head CI to closure."
+next_action: "Keep the Backend lease retired. The next action is operator deployment and authenticated smoke verification; open a new issue only for a newly observed backend blocker."

@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: active
-current_issue: 205
-current_pr: 211
-current_branch: runtime/205-durable-credit-settlement-v2
-head: 4a9b895
-state: ready_for_review
-lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-27T04:30:00+07:00"
-last_checkpoint_at: "2026-09-27T04:30:00+07:00"
+status: retired
+current_issue: null
+current_pr: null
+current_branch: null
+head: null
+state: retired
+lease_owner: null
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-09-27T06:20:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,6 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "PR #211 contains the durable SQL settlement store, EF migration discovery metadata, production DI registration, exact/concurrent replay fencing, and the worker completion gate that settles before durable acknowledgement. Push exact HEAD 4a9b895, verify fresh exact-head Build/Governance, then merge and retire this workstream after issue #205 is closed."
+last_merged_pr: 211
+last_merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
+next_action: "Runtime #205 is closed and PR #211 is merged. Settlement persistence is wired into the worker completion boundary before durable acknowledgement. Keep this lease retired; open a new issue and lease only for a verified runtime blocker."

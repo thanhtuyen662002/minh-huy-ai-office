@@ -1,17 +1,17 @@
 workstream: erp-data
 role: "ERP / Data"
-status: in_progress
-current_issue: 206
-current_pr: 208
-current_branch: erp/206-persist-effective-failover-policy
-head: a550415f30708ca546f2e8ddc5d9ed3c7c9c9020
-state: ready_for_review
-lease_owner: erp-data
-lease_heartbeat_at: "2026-09-25T17:32:00Z"
-last_checkpoint_at: "2026-09-25T17:32:00Z"
-last_merged_pr: 202
-last_merge_commit: bbda62293a79eef777c5c2f159c5bb3a6020e4b1
-preferred_next_issue: 206
+status: retired
+current_issue: null
+current_pr: null
+current_branch: null
+head: null
+state: retired
+lease_owner: null
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-09-27T06:20:00Z"
+last_merged_pr: 208
+last_merge_commit: f61cddee2a4e45b1efe5100161056d8f77e73b80
+preferred_next_issue: null
 blocked_by: []
 scope:
   - datasource-registry
@@ -26,4 +26,6 @@ scope:
   - bulk-deterministic-execution
   - datasource-failover
   - datasource-failover-operation-policy-persistence
-next_action: "PR #208 / issue #206 acceptance implementation is complete at implementation HEAD a550415f30708ca546f2e8ddc5d9ed3c7c9c9020 with exact-head Governance 36161200252 and Build 36161200269 GREEN. This state checkpoint records review readiness; resolve the new exact HEAD and own its CI to terminal GREEN, then mark PR ready for review if no actionable regression or review blocker appears. Never edit PROJECT_STATE or other specialist leases."
+verification:
+  result: "PR #208 / issue #206 is merged at f61cddee2a4e45b1efe5100161056d8f77e73b80. The bounded pilot uses the server-authorized read-only data-source contract; broader adapters and schema observers remain future scope."
+next_action: "Keep the ERP/Data lease retired. The next action is operator provisioning of a read-only pilot data source and authenticated smoke verification; open a new issue only for a newly observed data blocker."

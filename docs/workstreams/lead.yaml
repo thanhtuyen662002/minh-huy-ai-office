@@ -1,13 +1,14 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
-current_issue: 20
-current_pr: 55
+status: release/pilot-closure
+current_issue: null
+current_pr: null
 current_branch: main
-head: 81ab64d10625d4f31b9d723dc27110150f7a63b8
-state: in_progress
+head: 0e67a0ffe03454cd0b2fffc12163a608bf0bd804
+state: release/pilot-closure
 lease_owner: lead
-lease_heartbeat_at: "2026-09-20T23:13:00+07:00"
-last_checkpoint_at: "2026-09-20T23:13:00+07:00"
+lease_heartbeat_at: "2026-09-27T06:20:00Z"
+last_checkpoint_at: "2026-09-27T06:20:00Z"
 scope:
   - integration
   - roadmap-priority
@@ -24,29 +25,37 @@ scope:
   - release-gates
   - cross-workstream-pr-quality-review
 integration:
-  current_target:
-    pr: 55
-    current_head: 82a2f51a69ffaa0b522cc3fefac663795b9ae7e0
-    owner: runtime-ai
-    state: in_progress
-    required_action: "Zero-step CI remains infrastructure noise; Runtime must continue safe host registration on SAME live lease and then obtain executable exact-head gates."
-  parallel_backend:
-    issue: 58
-    pr: 60
-    head: b5c734d466d3b29c3d255d5f1168a372e3679d18
-    owner: backend
-    state: waiting_ci
-    required_action: "Acceptance implementation is present and PR mergeable. Exact-head rerun again has all Build jobs zero-step/runner_id=0; merge immediately after executable exact-head green CI."
-  parallel_erp:
-    issue: 18
-    pr: 63
-    head: 9c3c339c0c7385e7628c67c814bac7ac655b0b54
-    state: in_progress
-    required_action: "No exact-head workflow visible; Lead explicitly instructed ERP/Data to continue endpoint security regressions instead of idling in waiting_ci."
-  parallel_frontend:
-    issue: 62
-    pr: 64
-    head: 49ac415024ac64bce1384dd7086f91c11dfdf3e0
-    state: in_progress
-    required_action: "Frontend is actively advancing fail-closed stale-state/accessibility hardening despite absent workflow emission; reconcile live transport after #60 merges."
-next_action: "Maintain all four lanes. Merge #60 immediately on executable exact-head green; then reconcile/sequence #63. Activate #21 after #18/#19 authoritative and #22 after #20 authoritative."
+  runtime:
+    issue: 205
+    pr: 211
+    merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
+    state: merged_and_retired
+  backend:
+    issue: 203
+    pr: 210
+    merge_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
+    state: merged_and_retired
+  frontend:
+    issue: 204
+    pr: 209
+    merge_commit: 45680c7badbc38e45f9f071267abf7d4bac40770
+    state: merged_and_retired
+  erp_data:
+    issue: 206
+    pr: 208
+    merge_commit: f61cddee2a4e45b1efe5100161056d8f77e73b80
+    state: merged_and_retired
+  pilot:
+    issue: 212
+    state: completed_on_main
+    implementation_commits:
+      - 3d5a05b
+      - f33e8eb
+      - efc4117
+      - 0e67a0f
+    exact_head_build: 36298741274
+    exact_head_governance: 36298741295
+next_action: "No code-side critical path remains. The operator must provision the approved private pilot environment, run the migration/deployment runbook, execute the authenticated task smoke, and record durable completion plus redacted audit evidence."
+blocked_by:
+  - "Approved OIDC issuer/audience and token/client flow"
+  - "Private SQL Server with backup, RabbitMQ/private worker host, first company/membership bootstrap, and read-only ERP secret"

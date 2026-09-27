@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: waiting_ci
-current_issue: 191
-current_pr: 192
-current_branch: "frontend/191-sla-status-presentation"
-head: "0f5c090129d960502de5cec1f75b181982a3f454"
-state: waiting_ci
-lease_owner: frontend
-lease_heartbeat_at: "2026-09-25T11:14:00+07:00"
-last_checkpoint_at: "2026-09-25T11:14:00+07:00"
+status: retired
+current_issue: null
+current_pr: null
+current_branch: null
+head: null
+state: retired
+lease_owner: null
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-09-27T06:20:00Z"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -16,4 +16,6 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
-next_action: "PR #192 / issue #191 remains the SAME Frontend lease. Reconciled authoritative main d1b234f97735cf52f957d42cc7f567a738105bef through merge 0f5c090129d960502de5cec1f75b181982a3f454 while preserving main-owned docs/PROJECT_STATE.yaml and the server-authoritative SLA presentation component/tests. Close exact-head Governance/Build for the durable checkpoint; fix actionable RED on this SAME PR. If GREEN and live compare/reviews/mergeability remain clean, return ready_for_review for Lead integration. Never derive TenantId/CompanyId/UserId/companyName/userName or SLA/priority authority from browser state. Do not edit docs/PROJECT_STATE.yaml or Backend auth/EF/migrations."
+verification:
+  result: "PR #209 / issue #204 is merged at 45680c7badbc38e45f9f071267abf7d4bac40770. Web tests, typecheck and build are green; the bounded pilot does not require an additional frontend lease."
+next_action: "Keep the Frontend lease retired. The next action is operator deployment and authenticated smoke verification; open a new issue only for a newly observed frontend blocker."
