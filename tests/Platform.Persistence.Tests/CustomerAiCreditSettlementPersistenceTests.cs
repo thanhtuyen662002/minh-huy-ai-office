@@ -1,4 +1,8 @@
+using System.Reflection;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using MinhHuy.AIOffice.Platform.Persistence;
+using MinhHuy.AIOffice.Platform.Persistence.Migrations;
 using MinhHuyAiOffice.Shared.Contracts;
 using Xunit;
 
@@ -7,6 +11,17 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class CustomerAiCreditSettlementPersistenceTests
 {
     private static readonly CustomerBillingAuthority Authority = new("tenant-a", "company-a", 7);
+
+    [Fact]
+    public void SettlementMigration_IsDiscoverableByEfCore()
+    {
+        var migration = typeof(AddCustomerAiCreditSettlements);
+        var context = migration.GetCustomAttribute<DbContextAttribute>();
+        var id = migration.GetCustomAttribute<MigrationAttribute>();
+
+        Assert.Equal(typeof(PlatformDbContext), context?.ContextType);
+        Assert.Equal("20260926190000_AddCustomerAiCreditSettlements", id?.Id);
+    }
 
     [Fact]
     public async Task SettleAndRelease_PersistsBeforeRelease()
@@ -108,13 +123,53 @@ public sealed class CustomerAiCreditSettlementPersistenceTests
     {
         var store = new FakeStore([]);
         var service = new CustomerAiCreditSettlementPersistenceService(store);
-        await service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) => Task.CompletedTask);
+        var releases = 0;
+        await service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) =>
+        {
+            releases++;
+            return Task.CompletedTask;
+        });
 
-        var replay = await service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) => Task.CompletedTask);
+        var replay = await service.SettleAndReleaseAsync("set-a", Reservation(5), 2, (_, _) =>
+        {
+            releases++;
+            return Task.CompletedTask;
+        });
 
         Assert.True(replay.IsReplay);
+        Assert.Equal(1, releases);
         Assert.Equal(2, replay.Evidence.SettledAiCredits);
         Assert.Equal(3, replay.Evidence.ReleasedAiCredits);
+    }
+
+    [Fact]
+    public async Task SettleAndRelease_ConcurrentExactReplayInvokesReleaseOnce()
+    {
+        var store = new FakeStore([]);
+        var service = new CustomerAiCreditSettlementPersistenceService(store);
+        var releaseEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releases = 0;
+
+        var first = service.SettleAndReleaseAsync("set-concurrent", Reservation(5), 2, async (_, _) =>
+        {
+            Interlocked.Increment(ref releases);
+            releaseEntered.SetResult();
+            await releaseGate.Task;
+        });
+        await releaseEntered.Task;
+
+        var replay = service.SettleAndReleaseAsync("set-concurrent", Reservation(5), 2, (_, _) =>
+        {
+            Interlocked.Increment(ref releases);
+            return Task.CompletedTask;
+        });
+        releaseGate.SetResult();
+
+        var results = await Task.WhenAll(first, replay);
+        Assert.Equal(1, releases);
+        Assert.All(results, result => Assert.True(result.Released));
+        Assert.Contains(results, result => result.IsReplay);
     }
 
     [Fact]

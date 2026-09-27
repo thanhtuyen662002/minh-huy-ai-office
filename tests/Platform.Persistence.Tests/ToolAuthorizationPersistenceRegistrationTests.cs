@@ -18,6 +18,8 @@ public sealed class ToolAuthorizationPersistenceRegistrationTests
         Assert.Contains(services, x => x.ServiceType == typeof(IToolExecutionAuditSink) && x.ImplementationType == typeof(SqlToolExecutionAuditSink));
         Assert.Contains(services, x => x.ServiceType == typeof(ToolExecutionAuditService));
         Assert.Contains(services, x => x.ServiceType == typeof(AuthorizedToolExecutionGate));
+        Assert.Contains(services, x => x.ServiceType == typeof(ICustomerAiCreditSettlementStore) && x.ImplementationType == typeof(SqlCustomerAiCreditSettlementStore));
+        Assert.Contains(services, x => x.ServiceType == typeof(CustomerAiCreditSettlementPersistenceService));
     }
 
     [Fact]
@@ -30,5 +32,7 @@ public sealed class ToolAuthorizationPersistenceRegistrationTests
         Assert.DoesNotContain(services, x => x.ServiceType == typeof(IToolExecutionAuditSink));
         Assert.DoesNotContain(services, x => x.ServiceType == typeof(ToolExecutionAuditService));
         Assert.DoesNotContain(services, x => x.ServiceType == typeof(AuthorizedToolExecutionGate));
+        Assert.DoesNotContain(services, x => x.ServiceType == typeof(ICustomerAiCreditSettlementStore));
+        Assert.DoesNotContain(services, x => x.ServiceType == typeof(CustomerAiCreditSettlementPersistenceService));
     }
 }

@@ -25,6 +25,8 @@ public static class WorkExecutionServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configureRabbitMq);
 
         services.AddDbContext<PlatformDbContext>(configureDatabase);
+        services.AddScoped<ICustomerAiCreditSettlementStore, SqlCustomerAiCreditSettlementStore>();
+        services.AddScoped<CustomerAiCreditSettlementPersistenceService>();
 
         // Keep the side-effecting executor behind an internal marker. All worker delivery resolves
         // IWorkStepExecutor to the authorization/audit decorator, so prompts and broker payloads
