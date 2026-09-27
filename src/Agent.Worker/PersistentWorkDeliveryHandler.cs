@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
+using MinhHuyAiOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Agent.Worker;
 
@@ -9,7 +10,19 @@ public sealed record WorkStepExecutionResult(
     WorkFailureClass? FailureClass,
     int MaxAttempts,
     long? DurableCheckpointVersion = null,
-    string? CheckpointPayloadJson = null);
+    string? CheckpointPayloadJson = null,
+    CustomerAiCreditSettlementRequest? CreditSettlement = null);
+
+/// <summary>
+/// Trusted runtime evidence produced by an authorized worker when a task consumes
+/// reserved AI credits. The release callback must perform an idempotent, durable
+/// reservation release keyed by <see cref="SettlementId"/>.
+/// </summary>
+public sealed record CustomerAiCreditSettlementRequest(
+    string SettlementId,
+    CustomerAiCreditReservationDecision Reservation,
+    long SettledAiCredits,
+    Func<CustomerAiCreditSettlementEvidence, CancellationToken, Task> ReleaseReservation);
 
 public interface IWorkStepExecutor
 {
@@ -21,7 +34,8 @@ public interface IWorkStepExecutor
 
 public sealed class PersistentWorkDeliveryHandler(
     PlatformDbContext dbContext,
-    IWorkStepExecutor executor) : IWorkDeliveryHandler
+    IWorkStepExecutor executor,
+    CustomerAiCreditSettlementPersistenceService? settlementPersistence = null) : IWorkDeliveryHandler
 {
     private static readonly TimeSpan LeaseDuration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
@@ -110,6 +124,25 @@ public sealed class PersistentWorkDeliveryHandler(
         WorkDispatchEnvelope? retryEnvelope = null;
         if (result.Outcome is WorkDeliveryOutcome.Completed or WorkDeliveryOutcome.AlreadyCompleted)
         {
+            // Settlement is deliberately completed before the durable task completion
+            // transition. RabbitMQ acknowledgement happens only after this handler
+            // returns, so a persistence/release failure leaves the delivery retryable.
+            if (result.CreditSettlement is not null)
+            {
+                if (settlementPersistence is null)
+                {
+                    throw new InvalidOperationException(
+                        "AI credit settlement was returned by the executor, but durable settlement persistence is not configured.");
+                }
+
+                await settlementPersistence.SettleAndReleaseAsync(
+                    result.CreditSettlement.SettlementId,
+                    result.CreditSettlement.Reservation,
+                    result.CreditSettlement.SettledAiCredits,
+                    result.CreditSettlement.ReleaseReservation,
+                    cancellationToken);
+            }
+
             WorkerExecutionStateMachine.CompleteLease(execution, lease, nowUtc);
             WorkerExecutionStateMachine.TransitionDispatch(dispatch, WorkDispatchState.Acknowledged, nowUtc);
             await PersistCheckpointAsync(envelope, result, nowUtc, cancellationToken);
@@ -218,6 +251,12 @@ public sealed class PersistentWorkDeliveryHandler(
         if (result.MaxAttempts < envelope.Attempt)
         {
             throw new InvalidOperationException("Executor retry budget cannot be below the current attempt.");
+        }
+
+        if (result.CreditSettlement is not null
+            && result.Outcome is not (WorkDeliveryOutcome.Completed or WorkDeliveryOutcome.AlreadyCompleted))
+        {
+            throw new InvalidOperationException("AI credit settlement evidence is only valid for a successful execution outcome.");
         }
 
         _ = WorkDeliverySettlement.Resolve(result.Outcome, result.FailureClass, envelope.Attempt, result.MaxAttempts);

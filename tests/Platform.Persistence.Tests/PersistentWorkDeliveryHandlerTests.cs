@@ -3,12 +3,53 @@ extern alias RuntimeWorker;
 using Microsoft.EntityFrameworkCore;
 using RuntimeWorker::MinhHuy.AIOffice.Agent.Worker;
 using MinhHuy.AIOffice.Shared.Contracts;
+using MinhHuyAiOffice.Shared.Contracts;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class PersistentWorkDeliveryHandlerTests
 {
+    [Fact]
+    public async Task SuccessfulSettlement_IsDurableAndReleasedBeforeTaskAcknowledgement()
+    {
+        await using var db = NewDb();
+        var (execution, dispatch, envelope) = SeedPublishedDispatch(db);
+        var events = new List<string>();
+        var store = new RecordingSettlementStore(events);
+        var settlement = new CustomerAiCreditSettlementPersistenceService(store);
+        var request = new CustomerAiCreditSettlementRequest(
+            "settlement-a",
+            Reservation(5),
+            2,
+            (e, _) =>
+            {
+                Assert.True(store.Contains(e.SettlementId));
+                Assert.Equal(WorkDispatchState.Published, dispatch.State);
+                events.Add("release");
+                return Task.CompletedTask;
+            });
+
+        var handler = new PersistentWorkDeliveryHandler(
+            db,
+            new StubExecutor(new WorkStepExecutionResult(
+                WorkDeliveryOutcome.Completed,
+                null,
+                3,
+                7,
+                "{\"cursor\":7}",
+                request)),
+            settlement);
+
+        var result = await handler.HandleAsync(envelope, CancellationToken.None);
+
+        Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
+        Assert.Equal(["persist", "release"], events);
+        Assert.Equal(WorkDispatchState.Acknowledged, dispatch.State);
+        Assert.NotNull(dispatch.AcknowledgedAtUtc);
+        Assert.Null(execution.LeaseId);
+    }
+
     [Fact]
     public async Task CompletedDelivery_PersistsAcknowledgementAndCheckpointBeforeReturning()
     {
@@ -81,6 +122,13 @@ public sealed class PersistentWorkDeliveryHandlerTests
         return new PlatformDbContext(options);
     }
 
+    private static CustomerAiCreditReservationDecision Reservation(long reserved)
+    {
+        var authority = new CustomerBillingAuthority("tenant-a", "company-a", 7);
+        var evidence = new CustomerAiCreditReservationEvidence("reservation-a", authority, "credits-v1", 3, reserved);
+        return new(evidence, 2, 1, checked(3 + reserved), 20, true, false);
+    }
+
     private static (TaskStepExecutionRecord Execution, TaskDispatchRecord Dispatch, WorkDispatchEnvelope Envelope) SeedPublishedDispatch(PlatformDbContext db)
     {
         var now = DateTimeOffset.UtcNow;
@@ -106,6 +154,32 @@ public sealed class PersistentWorkDeliveryHandlerTests
         {
             CallCount++;
             return Task.FromResult(result);
+        }
+    }
+
+    private sealed class RecordingSettlementStore(List<string> events) : ICustomerAiCreditSettlementStore
+    {
+        private readonly Dictionary<string, CustomerAiCreditSettlementEvidence> bySettlement = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, CustomerAiCreditSettlementEvidence> byReservation = new(StringComparer.Ordinal);
+
+        public bool Contains(string settlementId) => bySettlement.ContainsKey(settlementId);
+
+        public Task<CustomerAiCreditSettlementEvidence?> FindBySettlementIdAsync(string settlementId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(bySettlement.GetValueOrDefault(settlementId));
+
+        public Task<CustomerAiCreditSettlementEvidence?> FindByReservationIdAsync(string reservationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(byReservation.GetValueOrDefault(reservationId));
+
+        public Task<CustomerAiCreditSettlementEvidence> PersistAsync(CustomerAiCreditSettlementEvidence evidence, CancellationToken cancellationToken = default)
+        {
+            events.Add("persist");
+            if (bySettlement.TryGetValue(evidence.SettlementId, out var existingBySettlement) && existingBySettlement != evidence)
+                throw new InvalidOperationException("conflicting settlement");
+            if (byReservation.TryGetValue(evidence.ReservationId, out var existingByReservation) && existingByReservation != evidence)
+                throw new InvalidOperationException("conflicting reservation");
+            bySettlement[evidence.SettlementId] = evidence;
+            byReservation[evidence.ReservationId] = evidence;
+            return Task.FromResult(evidence);
         }
     }
 }
