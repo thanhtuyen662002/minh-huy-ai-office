@@ -44,9 +44,8 @@ public interface IWorkDeliveryHandler
     Task<WorkDeliveryResult> HandleAsync(WorkDispatchEnvelope envelope, CancellationToken cancellationToken);
 }
 
-public interface IWorkPublisher
+public interface IWorkPublisher : IWorkEnvelopePublisher
 {
-    Task PublishAsync(WorkDispatchEnvelope envelope, CancellationToken cancellationToken);
 }
 
 public sealed class RabbitMqWorkPublisher(IOptions<RabbitMqWorkOptions> options) : IWorkPublisher

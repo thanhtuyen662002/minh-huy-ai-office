@@ -258,12 +258,14 @@ public sealed class PilotTaskSubmissionService
             throw new UnauthorizedAccessException("The durable task owner does not match the authenticated authority.");
         }
 
+        var expectedStepId = PilotTaskIdentity.ForStep(task.Id);
         var durableEvent = await dbContext.TaskEvents
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 item => item.TenantId == authority.TenantId
                     && item.CompanyId == authority.CompanyId
                     && item.TaskId == task.Id
+                    && item.StepId == expectedStepId
                     && item.Sequence == 1
                     && item.EventType == PilotTaskRequestEvent.EventType,
                 cancellationToken)
@@ -290,13 +292,12 @@ public sealed class PilotTaskSubmissionService
             throw new InvalidOperationException("The idempotency key was reused with conflicting pilot task input.");
         }
 
-        var stepId = PilotTaskIdentity.ForStep(task.Id);
         var dispatch = await dbContext.TaskDispatches
             .AsNoTracking()
             .Where(item => item.TenantId == authority.TenantId
                 && item.CompanyId == authority.CompanyId
                 && item.TaskId == task.Id
-                && item.StepId == stepId)
+                && item.StepId == expectedStepId)
             .OrderByDescending(item => item.Attempt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
@@ -304,7 +305,7 @@ public sealed class PilotTaskSubmissionService
 
         return new PilotTaskSubmissionAccepted(
             task.Id,
-            stepId,
+            expectedStepId,
             persisted.IdempotencyKey,
             task.Status,
             dispatch.State,

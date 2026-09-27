@@ -57,7 +57,10 @@ foreach ($line in Get-Content -LiteralPath $EnvironmentFile) {
 $requiredValues = @(
     "RABBITMQ_DEFAULT_USER",
     "RABBITMQ_DEFAULT_PASS",
-    "AIOFFICE_DB_CONNECTION"
+    "AIOFFICE_DB_CONNECTION",
+    "AIOFFICE_AUTHORITY",
+    "AIOFFICE_AUDIENCE",
+    "PILOT_ERP_CONNECTION"
 )
 
 foreach ($name in $requiredValues) {
@@ -67,7 +70,7 @@ foreach ($name in $requiredValues) {
 
     $value = $values[$name]
 
-    if ($value -match "(?i)replace-with-") {
+    if ($value -match "(?i)replace-with-" -or $value -match "(?i)identity\.example\.invalid") {
         throw "$name still contains a tracked placeholder value."
     }
 }

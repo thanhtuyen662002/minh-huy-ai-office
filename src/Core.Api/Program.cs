@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using MinhHuy.AIOffice.Agent.Worker;
+using MinhHuy.AIOffice.Core.Api;
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Core.Api.Billing;
 using MinhHuy.AIOffice.Core.Api.Realtime;
@@ -25,17 +27,23 @@ if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
 builder.Services.AddHealthChecks();
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
+builder.Services.AddOptions<RabbitMqWorkOptions>()
+    .Configure(options => builder.Configuration
+        .GetSection(RabbitMqWorkOptions.SectionName)
+        .Bind(options));
+builder.Services.AddSingleton<IWorkEnvelopePublisher, RabbitMqWorkPublisher>();
 if (!string.IsNullOrWhiteSpace(platformConnectionString))
 {
     builder.Services.AddScoped<DataSourceRegistryService>();
     builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
     builder.Services.AddScoped<DataSourceConnectionTestService>();
+    builder.Services.AddHostedService<PilotTaskDispatchOutboxHostedService>();
 }
 builder.Services.AddScoped<IRequestAuthorizationContextAccessor, RequestAuthorizationContextAccessor>();
 builder.Services.AddScoped<CompanyBillingReader>();
 builder.Services.AddSingleton<ICompanyBillingPlanSource, UnavailableCompanyBillingPlanSource>();
 builder.Services.AddScoped<CustomerSlaStatusProjection>();
-builder.Services.AddSingleton<ICustomerSlaStatusSource, UnavailableCustomerSlaStatusSource>();
+builder.Services.AddCustomerSlaStatusSource(!string.IsNullOrWhiteSpace(platformConnectionString));
 
 var authority = builder.Configuration["AIOffice:Authentication:Authority"];
 var audience = builder.Configuration["AIOffice:Authentication:Audience"];
@@ -125,6 +133,62 @@ else
     app.MapGet("/api/billing/plan", AuthenticationUnavailable);
     app.MapGet("/api/sla/status", AuthenticationUnavailable);
     app.MapGet("/api/audit", AuthenticationUnavailable);
+}
+
+if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString))
+{
+    app.MapPost("/api/tasks", async (
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] PilotTaskSubmissionService submission,
+        CustomerPilotTaskRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(idempotencyKey))
+            {
+                return Results.BadRequest(new { error = "Idempotency-Key header is required." });
+            }
+
+            var accepted = await submission.SubmitAsync(context, request, idempotencyKey, cancellationToken: cancellationToken);
+            return Results.Accepted($"/api/tasks/{accepted.TaskId}", accepted);
+        }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
+        catch (InvalidOperationException exception) when (exception.Message.Contains("idempotency key", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Conflict(new { error = exception.Message });
+        }
+    }).RequireAuthorization();
+
+    app.MapGet("/api/tasks/{taskId:guid}", async (
+        Guid taskId,
+        IRequestAuthorizationContextAccessor accessor,
+        [FromServices] PilotTaskResultService projection,
+        CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+
+        try
+        {
+            var snapshot = await projection.GetAsync(context, taskId, cancellationToken);
+            return snapshot is null ? Results.NotFound() : Results.Ok(snapshot);
+        }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+    }).RequireAuthorization();
+}
+else
+{
+    static IResult PilotTaskUnavailable() => Results.Problem(
+        statusCode: StatusCodes.Status503ServiceUnavailable,
+        title: "Pilot task execution is not configured.");
+    app.MapPost("/api/tasks", PilotTaskUnavailable);
+    app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
 }
 
 var dataSources = app.MapGroup("/api/data-sources");

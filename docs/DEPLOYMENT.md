@@ -40,10 +40,11 @@ Do not place database credentials, tunnel tokens, provider keys or other secrets
 Prerequisites on the 24/7 host:
 
 1. Docker Engine/Desktop with Compose v2.
-2. Git and PowerShell 7.
-3. Network reachability to SQL Server through LAN/VPN/private routing.
-4. An approved secure-tunnel/private-network client configured outside this repository.
-5. A clean checkout at the exact Git commit to deploy.
+2. .NET SDK 10.0.401 (or a compatible .NET 10 patch) for the versioned migration script.
+3. Git and PowerShell 7.
+4. Network reachability to SQL Server through LAN/VPN/private routing.
+5. An approved secure-tunnel/private-network client configured outside this repository.
+6. A clean checkout at the exact Git commit to deploy.
 
 Create the ignored runtime environment file:
 
@@ -51,7 +52,169 @@ Create the ignored runtime environment file:
 Copy-Item .env.production.example .env.production
 ```
 
-Populate `.env.production` from approved secret sources. At minimum, set the RabbitMQ production identity/password and `AIOFFICE_DB_CONNECTION`. The application configuration stores only `secretref://env/AIOFFICE_DB_CONNECTION`; the resolved connection string exists only at the Core.Api runtime boundary.
+Populate `.env.production` from approved secret sources. Set the RabbitMQ production identity/password, OIDC issuer/audience, `AIOFFICE_DB_CONNECTION`, and the read-only pilot ERP connection. The application configuration stores only `secretref://env/AIOFFICE_DB_CONNECTION`; the resolved connection string exists only at the Core.Api runtime boundary. The worker resolves the pilot source through `secretref://env/PILOT_ERP_CONNECTION`.
+
+Use the configured Core.Api host port for the smoke commands below (the production example defaults to `8080`):
+
+```powershell
+$apiPort = if ([string]::IsNullOrWhiteSpace($env:CORE_API_PORT)) { "8080" } else { $env:CORE_API_PORT }
+```
+
+The production Compose file starts Core.Api and Agent.Worker with the same release tag. With the database, RabbitMQ, OIDC and pilot secret configured, the worker runs the bounded read-only data-source connectivity probe behind the trusted tool metadata, permission and audit gates. If any prerequisite is absent, startup or task execution fails closed; a running container alone is not proof that the pilot path has completed a task.
+
+## Operator path
+
+Run these steps from a clean checkout of the release SHA on the private backend host. The commands assume PowerShell 7 and Docker Compose v2.
+
+### 1. Prepare SQL Server and a backup
+
+Use a private LAN/VPN route. Do not publish TCP 1433 through the tunnel or Compose. Before the first migration, take a full backup of the target SQL Server database and record where the backup and restore verification will be retained. The rollback procedure is only safe while the release remains inside the schema compatibility window.
+
+Create the empty platform database and a dedicated login using the organization's DBA process. The password is generated and stored in the approved secret manager; it must never appear in this repository, shell history, a ticket, or a data-source record. A typical DBA sequence is:
+
+```sql
+CREATE DATABASE [AIOffice_Pilot];
+-- Create the login and database user through the approved password/secret workflow.
+-- Grant the migration identity the DDL rights required for the release window.
+-- After migration, reduce the long-running application identity to the minimum
+-- read/write permissions required by the application and its append-only audit tables.
+```
+
+Set the resulting private connection string only in the ignored `.env.production` file (or inject the same name into the migration process environment):
+
+```text
+AIOFFICE_DB_CONNECTION=<resolved-by-secret-manager-on-the-private-host>
+```
+
+Apply the versioned migrations with the repository script. It reads the connection string into the child process environment and does not put it on the command line or in a generated file:
+
+```powershell
+dotnet tool restore
+pwsh ./infra/migrate-platform-database.ps1 -EnvironmentFile .env.production
+```
+
+To move to a specific compatibility point, pass the exact migration name with `-TargetMigration`; do not edit migration history manually.
+
+### 2. Validate and start infrastructure
+
+Run the same checks used by CI before changing traffic:
+
+```powershell
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml config --quiet
+$rendered = Join-Path $env:TEMP "aioffice-deployment-compose.json"
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml config --format json | Set-Content -LiteralPath $rendered
+python scripts/validate-deployment.py $rendered
+```
+
+Start the durable infrastructure and wait for health checks:
+
+```powershell
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d rabbitmq redis otel-collector jaeger
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml ps
+```
+
+RabbitMQ AMQP, Redis, OpenTelemetry and Jaeger remain loopback/private services. Only the Core.Api loopback endpoint is eligible for the approved identity-aware tunnel.
+
+### 3. Start API and worker
+
+After the database migration succeeds, deploy the release images and check that Core.Api is serving its process health endpoint:
+
+```powershell
+pwsh ./infra/deploy-backend.ps1 -EnvironmentFile .env.production
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml ps
+Invoke-WebRequest http://127.0.0.1:$apiPort/health -UseBasicParsing
+```
+
+Inspect both application logs before routing traffic:
+
+```powershell
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml logs --since 5m core-api agent-worker
+```
+
+`/health` is an HTTP/process check; it does not prove that SQL Server or RabbitMQ is reachable. The dependency checks are the healthy Compose services, startup logs, and the authenticated task smoke test in the pilot gate.
+
+The deployment script does not create an identity provider, a first company, a task executor, or a public route. Those are explicit pilot prerequisites below.
+
+### 4. Configure identity and the first company
+
+Configure an OIDC issuer and audience in the approved secret/configuration store. Core.Api accepts an authenticated request only when the JWT is valid and the server can resolve the `(identity provider, subject, company id)` tuple to active rows in `aioffice.Users`, `aioffice.Companies`, `aioffice.CompanyMemberships` and `aioffice.RoleAssignments`. Browser-supplied tenant and user headers are ignored; `X-AIOffice-Company-Id` is only a company selector and is verified against the membership directory.
+
+There is no bootstrap-admin HTTP endpoint in this release. A designated administrator/DBA must provision the first IdP subject, company, membership and role through the approved versioned bootstrap procedure, then verify the server-derived context:
+
+```powershell
+$headers = @{ Authorization = "Bearer <short-lived-pilot-token>"; "X-AIOffice-Company-Id" = "<company-guid>" }
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/auth/context -Headers $headers
+```
+
+Do not insert real credentials or copy a production token into Git or this document.
+
+### 5. Register the first data source
+
+Create a secret-manager reference, never a connection string, and use the authenticated company context:
+
+```powershell
+$body = @{
+  logicalName = "erp.pilot"
+  kind = "sqlserver"
+  environment = "pilot"
+  purpose = "approved internal pilot"
+  connectionSecretReference = "secretref://env/PILOT_ERP_CONNECTION"
+  allowRead = $true
+  allowWrite = $false
+  maxConcurrency = 1
+  isEnabled = $true
+} | ConvertTo-Json
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/data-sources/ -Method Post -Headers $headers -Body $body -ContentType "application/json"
+```
+
+List the registry and run its connection test. Responses intentionally omit secret references and connection strings:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/data-sources/ -Headers $headers
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/data-sources/<data-source-guid>/connection-test -Method Post -Headers $headers
+```
+
+### 6. Frontend and smoke test
+
+Run the web checks from the repository root, then deploy the `apps/web` directory to the production Vercel project:
+
+```powershell
+npm install --no-audit --no-fund
+npm run web:test
+npm run web:typecheck
+npm run web:build
+```
+
+Set only the public HTTPS API base URL in Vercel. Keep OIDC client secrets, SQL credentials, RabbitMQ credentials, tunnel tokens and data-source secret references server-side. The browser must obtain company context from the authenticated API response and must never become an authority source.
+
+The minimum smoke test is:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:$apiPort/ -UseBasicParsing
+Invoke-WebRequest http://127.0.0.1:$apiPort/health -UseBasicParsing
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/auth/context -Headers $headers
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/data-sources/ -Headers $headers
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/audit?offset=0`&limit=50 -Headers $headers
+```
+
+An unauthenticated request to `/api/auth/context`, `/api/data-sources/`, `/api/audit` or `/api/sla/status` must return `503` when authentication is not configured; an authenticated identity without an active company membership must return `403`.
+
+## Pilot activation gate
+
+This checkout now contains one bounded, read-only pilot path: authenticated `POST /api/tasks` accepts a `CustomerPilotTaskRequest` plus an `Idempotency-Key`, derives company/user authority on the server, persists the task graph and pending dispatch, and the outbox publishes it to RabbitMQ. Agent.Worker composes the authorized executor, probes the selected `secretref://` data source, persists a redacted checkpoint and task status, and the existing audit/settlement boundary remains before broker acknowledgement. `GET /api/tasks/{taskId}` and `/api/audit` provide the durable result and evidence projections.
+
+The path is enabled only when the pilot supplies the external OIDC issuer/audience, SQL Server connection, RabbitMQ credentials, and a valid read-only data-source secret. If any of those are absent, startup or the request fails closed; starting containers alone is not a successful task smoke test. Exercise the path with the authenticated request below only after the identity/company bootstrap and data-source registration steps have succeeded.
+
+```powershell
+$task = @{ dataSourceId = "<data-source-guid>"; question = "read the current customer balance" } | ConvertTo-Json
+$taskHeaders = $headers.Clone()
+$taskHeaders["Idempotency-Key"] = "pilot-$(Get-Date -Format yyyyMMddHHmmss)"
+$accepted = Invoke-RestMethod http://127.0.0.1:$apiPort/api/tasks -Method Post -Headers $taskHeaders -Body $task -ContentType "application/json"
+Invoke-RestMethod "http://127.0.0.1:$apiPort/api/tasks/$($accepted.taskId)" -Headers $headers
+Invoke-RestMethod http://127.0.0.1:$apiPort/api/audit?offset=0`&limit=50 -Headers $headers
+```
+
+The bounded implementation and its remaining external prerequisites are tracked in [pilot issue #212](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/212). Do not route customer traffic until the smoke test returns a completed task and a matching audit record.
 
 ## Validate before deployment
 
@@ -91,7 +254,7 @@ It does **not** expose the API publicly, change tunnel configuration, or apply d
 
 Approved patterns include an identity-aware outbound tunnel or a private VPN/tailnet. Configure the provider to reach only the loopback Core.Api endpoint.
 
-For any Internet-reachable hostname, require provider-side access control before traffic reaches Core.Api. P0 does not yet include customer authentication/authorization, so an unauthenticated public route is not an acceptable production configuration.
+For any Internet-reachable hostname, require provider-side access control before traffic reaches Core.Api. Core.Api validates the OIDC token and server-side company membership for customer routes, but an unauthenticated public route is still not an acceptable production configuration.
 
 The access boundary must never route:
 

@@ -1,6 +1,7 @@
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Core.Api.Sla;
 using MinhHuy.AIOffice.Shared.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
@@ -10,6 +11,23 @@ public sealed class CustomerSlaStatusProjectionTests
     private static readonly Guid TenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid CompanyId = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid UserId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+
+    [Theory]
+    [InlineData(true, typeof(SqlCustomerSlaStatusSource))]
+    [InlineData(false, typeof(UnavailableCustomerSlaStatusSource))]
+    public void Composition_selects_the_persistence_backed_source_only_when_database_is_configured(
+        bool persistenceConfigured,
+        Type expectedImplementation)
+    {
+        var services = new ServiceCollection();
+
+        services.AddCustomerSlaStatusSource(persistenceConfigured);
+
+        var descriptor = Assert.Single(
+            services,
+            item => item.ServiceType == typeof(ICustomerSlaStatusSource));
+        Assert.Equal(expectedImplementation, descriptor.ImplementationType);
+    }
 
     [Fact]
     public async Task GetCurrentAsync_ReturnsOnlyPresentationAllowlistForAuthenticatedAuthority()

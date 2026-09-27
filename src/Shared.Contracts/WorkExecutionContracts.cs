@@ -179,6 +179,16 @@ public sealed record WorkDispatchEnvelope(
     }
 }
 
+/// <summary>
+/// Durable work publication boundary shared by the API outbox and the worker transport.
+/// Implementations must use publisher confirms and preserve the envelope MessageId when a
+/// pending dispatch is retried after a process interruption.
+/// </summary>
+public interface IWorkEnvelopePublisher
+{
+    Task PublishAsync(WorkDispatchEnvelope envelope, CancellationToken cancellationToken = default);
+}
+
 public static class WorkIdempotencyKey
 {
     public static string ForStep(

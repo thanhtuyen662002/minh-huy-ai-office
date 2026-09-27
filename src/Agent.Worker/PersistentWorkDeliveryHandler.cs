@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
@@ -115,6 +116,7 @@ public sealed class PersistentWorkDeliveryHandler(
             $"rabbitmq:{envelope.MessageId:N}",
             nowUtc,
             LeaseDuration);
+        await MarkRunningAsync(envelope, nowUtc, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var result = await executor.ExecuteAsync(envelope, lease, cancellationToken);
@@ -146,6 +148,7 @@ public sealed class PersistentWorkDeliveryHandler(
             WorkerExecutionStateMachine.CompleteLease(execution, lease, nowUtc);
             WorkerExecutionStateMachine.TransitionDispatch(dispatch, WorkDispatchState.Acknowledged, nowUtc);
             await PersistCheckpointAsync(envelope, result, nowUtc, cancellationToken);
+            await MarkTerminalAsync(envelope, success: true, result.FailureClass, nowUtc, cancellationToken);
         }
         else
         {
@@ -183,6 +186,13 @@ public sealed class PersistentWorkDeliveryHandler(
             {
                 WorkerExecutionStateMachine.TransitionDispatch(dispatch, WorkDispatchState.DeadLettered, nowUtc);
             }
+
+            await MarkTerminalAsync(
+                envelope,
+                success: false,
+                result.FailureClass,
+                nowUtc,
+                cancellationToken);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -230,6 +240,150 @@ public sealed class PersistentWorkDeliveryHandler(
                 CreatedAtUtc = nowUtc
             });
         }
+    }
+
+    private async Task MarkRunningAsync(
+        WorkDispatchEnvelope envelope,
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken)
+    {
+        var task = await dbContext.Tasks.SingleOrDefaultAsync(
+            item => item.TenantId == envelope.TenantId
+                && item.CompanyId == envelope.CompanyId
+                && item.Id == envelope.TaskId,
+            cancellationToken);
+        var step = await dbContext.TaskSteps.SingleOrDefaultAsync(
+            item => item.TenantId == envelope.TenantId
+                && item.CompanyId == envelope.CompanyId
+                && item.TaskId == envelope.TaskId
+                && item.Id == envelope.StepId,
+            cancellationToken);
+
+        if (task is null || step is null)
+        {
+            throw new InvalidOperationException("Durable task projection is missing for the worker dispatch.");
+        }
+
+        if (task.Status == TaskExecutionStatus.Pending)
+        {
+            task.Status = TaskExecutionStatus.Running;
+        }
+        else if (task.Status is TaskExecutionStatus.Failed or TaskExecutionStatus.Completed)
+        {
+            throw new InvalidOperationException("A terminal task cannot acquire a worker lease.");
+        }
+
+        if (step.Status is TaskStepStatus.Pending or TaskStepStatus.Ready)
+        {
+            step.Status = TaskStepStatus.Running;
+        }
+
+        task.UpdatedAtUtc = nowUtc;
+        step.Attempt = envelope.Attempt;
+        step.UpdatedAtUtc = nowUtc;
+    }
+
+    private async Task MarkTerminalAsync(
+        WorkDispatchEnvelope envelope,
+        bool success,
+        WorkFailureClass? failureClass,
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken)
+    {
+        var task = await dbContext.Tasks.SingleOrDefaultAsync(
+            item => item.TenantId == envelope.TenantId
+                && item.CompanyId == envelope.CompanyId
+                && item.Id == envelope.TaskId,
+            cancellationToken);
+        var step = await dbContext.TaskSteps.SingleOrDefaultAsync(
+            item => item.TenantId == envelope.TenantId
+                && item.CompanyId == envelope.CompanyId
+                && item.TaskId == envelope.TaskId
+                && item.Id == envelope.StepId,
+            cancellationToken);
+
+        if (task is null || step is null)
+        {
+            throw new InvalidOperationException("Durable task projection is missing for the worker dispatch.");
+        }
+
+        var nextTaskStatus = success
+            ? TaskExecutionStatus.Completed
+            : failureClass == WorkFailureClass.Transient
+                ? TaskExecutionStatus.Running
+                : TaskExecutionStatus.Failed;
+        var nextStepStatus = success
+            ? TaskStepStatus.Completed
+            : failureClass == WorkFailureClass.Transient
+                ? TaskStepStatus.Ready
+                : TaskStepStatus.Failed;
+
+        if (task.Status != nextTaskStatus)
+        {
+            if (!TaskExecutionTransitions.CanTransition(task.Status, nextTaskStatus))
+            {
+                throw new InvalidOperationException(
+                    $"Invalid durable task transition from {task.Status} to {nextTaskStatus}.");
+            }
+
+            task.Status = nextTaskStatus;
+        }
+
+        step.Status = nextStepStatus;
+        task.UpdatedAtUtc = nowUtc;
+        step.UpdatedAtUtc = nowUtc;
+        await AppendStatusEventAsync(
+            envelope,
+            step.Id,
+            "step.status.changed",
+            nextStepStatus.ToString(),
+            nowUtc,
+            cancellationToken);
+        await AppendStatusEventAsync(
+            envelope,
+            stepId: null,
+            "task.status.changed",
+            nextTaskStatus.ToString(),
+            nowUtc,
+            cancellationToken);
+    }
+
+    private async Task AppendStatusEventAsync(
+        WorkDispatchEnvelope envelope,
+        Guid? stepId,
+        string eventType,
+        string status,
+        DateTimeOffset occurredAtUtc,
+        CancellationToken cancellationToken)
+    {
+        var latestSequence = await dbContext.TaskEvents
+            .Where(item => item.TenantId == envelope.TenantId
+                && item.CompanyId == envelope.CompanyId
+                && item.TaskId == envelope.TaskId)
+            .Select(item => (long?)item.Sequence)
+            .MaxAsync(cancellationToken) ?? 0;
+        var trackedLatestSequence = dbContext.ChangeTracker
+            .Entries<TaskEventRecord>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .Where(item => item.TenantId == envelope.TenantId
+                && item.CompanyId == envelope.CompanyId
+                && item.TaskId == envelope.TaskId)
+            .Select(item => (long?)item.Sequence)
+            .Max() ?? 0;
+        latestSequence = Math.Max(latestSequence, trackedLatestSequence);
+
+        dbContext.TaskEvents.Add(new TaskEventRecord
+        {
+            TenantId = envelope.TenantId,
+            CompanyId = envelope.CompanyId,
+            TaskId = envelope.TaskId,
+            StepId = stepId,
+            Sequence = checked(latestSequence + 1),
+            EventType = eventType,
+            PayloadJson = JsonSerializer.Serialize(new { status }),
+            OccurredAtUtc = occurredAtUtc
+        });
     }
 
     private static void EnsureEnvelopeMatchesDurableState(

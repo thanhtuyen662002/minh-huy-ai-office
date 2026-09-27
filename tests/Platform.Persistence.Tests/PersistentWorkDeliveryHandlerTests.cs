@@ -48,6 +48,14 @@ public sealed class PersistentWorkDeliveryHandlerTests
         Assert.Equal(WorkDispatchState.Acknowledged, dispatch.State);
         Assert.NotNull(dispatch.AcknowledgedAtUtc);
         Assert.Null(execution.LeaseId);
+        var task = await db.Tasks.SingleAsync();
+        var step = await db.TaskSteps.SingleAsync();
+        Assert.Equal(TaskExecutionStatus.Completed, task.Status);
+        Assert.Equal(TaskStepStatus.Completed, step.Status);
+        var statusEvents = await db.TaskEvents.OrderBy(item => item.Sequence).ToArrayAsync();
+        Assert.Equal(2, statusEvents.Length);
+        Assert.Equal("step.status.changed", statusEvents[0].EventType);
+        Assert.Equal("task.status.changed", statusEvents[1].EventType);
     }
 
     [Fact]
@@ -82,6 +90,10 @@ public sealed class PersistentWorkDeliveryHandlerTests
         Assert.Equal(envelope.Attempt + 1, retry.Attempt);
         Assert.Equal(4, retry.CheckpointVersion);
         Assert.Equal(envelope.IdempotencyKey, retry.IdempotencyKey);
+        var task = await db.Tasks.SingleAsync();
+        var step = await db.TaskSteps.SingleAsync();
+        Assert.Equal(TaskExecutionStatus.Running, task.Status);
+        Assert.Equal(TaskStepStatus.Ready, step.Status);
     }
 
     [Fact]
@@ -114,6 +126,8 @@ public sealed class PersistentWorkDeliveryHandlerTests
         Assert.Equal(WorkDispatchState.DeadLettered, dispatch.State);
         Assert.NotNull(execution.DeadLetteredAtUtc);
         Assert.Null(result.DurableRetryEnvelope);
+        Assert.Equal(TaskExecutionStatus.Failed, (await db.Tasks.SingleAsync()).Status);
+        Assert.Equal(TaskStepStatus.Failed, (await db.TaskSteps.SingleAsync()).Status);
     }
 
     private static PlatformDbContext NewDb()
@@ -135,6 +149,28 @@ public sealed class PersistentWorkDeliveryHandlerTests
         var execution = WorkerExecutionStateMachine.Initialize(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), now);
         var dispatch = WorkerExecutionStateMachine.CreateDispatch(execution, Guid.NewGuid(), 2, now, now);
         WorkerExecutionStateMachine.TransitionDispatch(dispatch, WorkDispatchState.Published, now);
+        db.Tasks.Add(new TaskRecord
+        {
+            TenantId = execution.TenantId,
+            CompanyId = execution.CompanyId,
+            Id = execution.TaskId,
+            CreatedByUserId = Guid.NewGuid(),
+            Status = TaskExecutionStatus.Pending,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        });
+        db.TaskSteps.Add(new TaskStepRecord
+        {
+            TenantId = execution.TenantId,
+            CompanyId = execution.CompanyId,
+            TaskId = execution.TaskId,
+            Id = execution.StepId,
+            StepKey = "test-step",
+            Status = TaskStepStatus.Ready,
+            Attempt = 0,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        });
         db.TaskStepExecutions.Add(execution);
         db.TaskDispatches.Add(dispatch);
         db.SaveChanges();

@@ -68,7 +68,10 @@ public sealed class ProductionEnvironmentPreflightTests
             ["RABBITMQ_DEFAULT_USER"] = "aioffice-production",
             ["RABBITMQ_DEFAULT_PASS"] = "unit-test-value",
             ["AIOFFICE_DB_CONNECTION"] =
-                "Server=127.0.0.1,1433;Database=AIOfficeValidation;Integrated Security=true;TrustServerCertificate=true"
+                "Server=127.0.0.1,1433;Database=AIOfficeValidation;Integrated Security=true;TrustServerCertificate=true",
+            ["AIOFFICE_AUTHORITY"] = "https://identity.example.test/",
+            ["AIOFFICE_AUDIENCE"] = "minh-huy-ai-office-tests",
+            ["PILOT_ERP_CONNECTION"] = "Server=127.0.0.1,1433;Database=Pilot;Integrated Security=true"
         };
 
     private static string DoubleQuoted(string value) =>

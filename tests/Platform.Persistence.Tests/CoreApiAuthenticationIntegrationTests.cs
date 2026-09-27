@@ -59,6 +59,26 @@ public sealed class CoreApiAuthenticationIntegrationTests
     }
 
     [Fact]
+    public async Task Pilot_task_endpoint_fails_closed_when_authentication_is_not_configured()
+    {
+        await using var factory = new WebApplicationFactory<CoreApiProgram>()
+            .WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["AIOffice:Authentication:Authority"] = null,
+                    ["AIOffice:Authentication:Audience"] = null
+                })));
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/tasks",
+            new { dataSourceId = Guid.NewGuid(), question = "read the current customer balance" });
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        AssertNoStore(response);
+    }
+
+    [Fact]
     public async Task Authenticated_billing_plan_uses_server_derived_company_and_returns_not_found_when_source_has_no_plan()
     {
         var tenantId = Guid.NewGuid();
