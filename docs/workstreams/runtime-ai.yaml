@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 205
-current_pr: null
-current_branch: runtime/205-durable-credit-settlement-v2-v2-v2
-head: b91770e52833d501d86271423c380a160fb8fdef
-state: waiting_ci
+current_pr: 211
+current_branch: runtime/205-durable-credit-settlement-v2
+head: 4a9b895
+state: ready_for_review
 lease_owner: runtime-ai
-lease_heartbeat_at: "2026-09-27T01:09:00+07:00"
-last_checkpoint_at: "2026-09-27T01:09:00+07:00"
+lease_heartbeat_at: "2026-09-27T04:30:00+07:00"
+last_checkpoint_at: "2026-09-27T04:30:00+07:00"
 stacked_on: null
 scope:
   - task-engine
@@ -39,4 +39,4 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-next_action: "Recovered stale #207 YAML against live PR #211. Reconciled authoritative main 357622e5f500f487830385287d56947c3eadf9bc after ERP #208 merge; branch is ahead-only/mergeable. Added explicit persistence-layer acceptance tests for zero/partial/full settlement, exact replay, policy mismatch and checked overflow in addition to crash/retry/conflict/authority ordering tests. Own fresh exact-head Build/Governance for current HEAD; fix actionable RED on SAME PR; if GREEN and review clear, mark ready_for_review."
+next_action: "PR #211 contains the durable SQL settlement store, EF migration discovery metadata, production DI registration, exact/concurrent replay fencing, and the worker completion gate that settles before durable acknowledgement. Push exact HEAD 4a9b895, verify fresh exact-head Build/Governance, then merge and retire this workstream after issue #205 is closed."
