@@ -32,13 +32,14 @@ foreach ($line in Get-Content -LiteralPath $EnvironmentFile) {
     }
 }
 
-if ([string]::IsNullOrWhiteSpace($databaseConnection)
-    -or $databaseConnection -match "(?i)replace-with-") {
+$missingDatabaseConnection = [string]::IsNullOrWhiteSpace($databaseConnection)
+$placeholderDatabaseConnection = $databaseConnection -match "(?i)replace-with-"
+
+if ($missingDatabaseConnection -or $placeholderDatabaseConnection) {
     throw "AIOFFICE_DB_CONNECTION must be populated in the ignored environment file before migration."
 }
 
-if (($databaseConnection.StartsWith('"') -and $databaseConnection.EndsWith('"'))
-    -or ($databaseConnection.StartsWith("'") -and $databaseConnection.EndsWith("'"))) {
+if ((($databaseConnection.StartsWith('"') -and $databaseConnection.EndsWith('"')) -or ($databaseConnection.StartsWith("'") -and $databaseConnection.EndsWith("'")))) {
     $databaseConnection = $databaseConnection.Substring(1, $databaseConnection.Length - 2)
 }
 
