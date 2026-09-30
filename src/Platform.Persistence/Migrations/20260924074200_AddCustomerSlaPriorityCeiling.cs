@@ -14,14 +14,20 @@ public partial class AddCustomerSlaPriorityCeiling : Migration
         migrationBuilder.Sql("""
             ALTER TABLE [aioffice].[CustomerSlaPriorityAdmissions]
                 ADD [PriorityCeiling] int NULL;
+            """);
 
+        migrationBuilder.Sql("""
             UPDATE [aioffice].[CustomerSlaPriorityAdmissions]
                 SET [PriorityCeiling] = [SchedulerPriority]
                 WHERE [PriorityCeiling] IS NULL;
+            """);
 
+        migrationBuilder.Sql("""
             ALTER TABLE [aioffice].[CustomerSlaPriorityAdmissions]
                 ALTER COLUMN [PriorityCeiling] int NOT NULL;
+            """);
 
+        migrationBuilder.Sql("""
             ALTER TABLE [aioffice].[CustomerSlaPriorityAdmissions]
                 ADD CONSTRAINT [CK_CustomerSlaPriorityAdmissions_PriorityCeiling]
                     CHECK ([PriorityCeiling] >= 0 AND [SchedulerPriority] <= [PriorityCeiling]);
