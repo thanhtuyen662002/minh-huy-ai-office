@@ -133,18 +133,7 @@ jobs:
               fi
               echo "${image} provides required shared framework ${framework}"
             done < <(
-              python3 -c '
-import json, sys
-cfg = json.load(sys.stdin)
-opts = cfg.get("runtimeOptions", {})
-frameworks = opts.get("frameworks")
-if frameworks is None:
-    single = opts.get("framework")
-    frameworks = [single] if single else []
-for framework in frameworks:
-    if framework and framework.get("name"):
-        print(framework["name"])
-' <<< "${config}"
+              python3 -c 'import json,sys; opts=json.load(sys.stdin).get("runtimeOptions",{}); frameworks=opts.get("frameworks"); frameworks=frameworks if frameworks is not None else ([opts.get("framework")] if opts.get("framework") else []); [print(f["name"]) for f in frameworks if f and f.get("name")]' <<< "${config}"
             )
           }
 
