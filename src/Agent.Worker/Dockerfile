@@ -9,7 +9,7 @@ RUN dotnet publish src/Agent.Worker/Agent.Worker.csproj \
     --no-restore \
     /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 ENV DOTNET_EnableDiagnostics=0

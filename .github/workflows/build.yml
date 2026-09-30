@@ -110,6 +110,35 @@ jobs:
 
             echo "${image} runtime user=${configured_user} uid=${runtime_uid}"
           done
+      - name: Verify application runtime framework closure
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          verify_runtime() {
+            local image="$1"
+            local app="$2"
+            local runtimeconfig="/app/${app}.runtimeconfig.json"
+            local config
+            local installed
+
+            config="$(docker run --rm --entrypoint cat "${image}" "${runtimeconfig}")"
+            installed="$(docker run --rm --entrypoint dotnet "${image}" --list-runtimes)"
+
+            while IFS= read -r framework; do
+              [ -n "${framework}" ] || continue
+              if ! grep -Fq "${framework} " <<< "${installed}"; then
+                echo "::error::${image} is missing required shared framework ${framework}"
+                exit 1
+              fi
+              echo "${image} provides required shared framework ${framework}"
+            done < <(
+              python3 -c 'import json,sys; opts=json.load(sys.stdin).get("runtimeOptions",{}); frameworks=opts.get("frameworks"); frameworks=frameworks if frameworks is not None else ([opts.get("framework")] if opts.get("framework") else []); [print(f["name"]) for f in frameworks if f and f.get("name")]' <<< "${config}"
+            )
+          }
+
+          verify_runtime aioffice/core-api:ci MinhHuy.AIOffice.Core.Api
+          verify_runtime aioffice/agent-worker:ci MinhHuy.AIOffice.Agent.Worker
 
   migrations:
     name: EF Core migration integrity
