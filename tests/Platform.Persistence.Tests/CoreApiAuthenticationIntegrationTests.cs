@@ -30,13 +30,17 @@ public sealed class CoreApiAuthenticationIntegrationTests
         string environment,
         bool expectedRequireHttpsMetadata)
     {
+        var authority = string.Equals(environment, "Development", StringComparison.Ordinal)
+            ? "http://local-oidc.invalid/realms/aioffice-local"
+            : "https://identity.example.invalid/realms/aioffice";
+
         using var factory = new WebApplicationFactory<CoreApiProgram>()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment(environment);
                 builder.UseSetting(
                     "AIOffice:Authentication:Authority",
-                    "http://local-oidc.invalid/realms/aioffice-local");
+                    authority);
                 builder.UseSetting(
                     "AIOffice:Authentication:Audience",
                     "minh-huy-ai-office-local");
