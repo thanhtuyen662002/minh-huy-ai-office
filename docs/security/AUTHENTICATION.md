@@ -17,6 +17,8 @@ Observability headers remain telemetry hints only and are never authorization in
 
 ## Local and integration tests
 
-Tests must replace the ASP.NET Core authentication scheme with a deterministic test authentication handler/fixture. The fixture may emit controlled `idp`/`sub` claims for a test principal, but it must live only in test code and must never be registered by production startup. Integration tests must still pass company selection through the normal untrusted selector and membership resolver so spoofed tenant/user headers cannot bypass server-side authorization.
+A local runtime may use a real local OIDC provider over HTTP only when Core.Api is explicitly running in the ASP.NET Core `Development` environment. In every non-Development environment, JWT bearer metadata remains HTTPS-only. This exception is for local metadata discovery only; issuer, audience, lifetime, signing-key, company-membership and role validation remain enabled.
+
+Tests may replace the ASP.NET Core authentication scheme with a deterministic test authentication handler/fixture. The fixture may emit controlled `idp`/`sub` claims for a test principal, but it must live only in test code and must never be registered by production startup. Integration tests must still pass company selection through the normal untrusted selector and membership resolver so spoofed tenant/user headers cannot bypass server-side authorization.
 
 Do not add a development backdoor, static bearer token, fake production user, or header-based trusted identity mode.
