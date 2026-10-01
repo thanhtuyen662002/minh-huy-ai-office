@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,36 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class CoreApiAuthenticationIntegrationTests
 {
+    [Theory]
+    [InlineData("Development", false)]
+    [InlineData("Production", true)]
+    public void Jwt_metadata_https_requirement_is_environment_bounded(
+        string environment,
+        bool expectedRequireHttpsMetadata)
+    {
+        using var factory = new WebApplicationFactory<CoreApiProgram>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment(environment);
+                builder.UseSetting(
+                    "AIOffice:Authentication:Authority",
+                    "http://local-oidc.invalid/realms/aioffice-local");
+                builder.UseSetting(
+                    "AIOffice:Authentication:Audience",
+                    "minh-huy-ai-office-local");
+            });
+
+        var options = factory.Services
+            .GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
+            .Get(JwtBearerDefaults.AuthenticationScheme);
+
+        Assert.Equal(expectedRequireHttpsMetadata, options.RequireHttpsMetadata);
+        Assert.True(options.TokenValidationParameters.ValidateIssuer);
+        Assert.True(options.TokenValidationParameters.ValidateAudience);
+        Assert.True(options.TokenValidationParameters.ValidateLifetime);
+        Assert.True(options.TokenValidationParameters.ValidateIssuerSigningKey);
+    }
+
     [Fact]
     public async Task Protected_context_endpoint_fails_closed_when_authentication_is_not_configured()
     {
