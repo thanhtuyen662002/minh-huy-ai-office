@@ -30,6 +30,38 @@ public sealed class RabbitMqWorkTransportTests
         options.Validate();
     }
 
+    [Theory]
+    [InlineData(1, 2)]
+    [InlineData(2, 4)]
+    [InlineData(3, 8)]
+    [InlineData(4, 16)]
+    [InlineData(5, 30)]
+    [InlineData(20, 30)]
+    public void Consumer_startup_retry_delay_is_bounded(int attempt, int expectedSeconds)
+    {
+        var method = typeof(RabbitMqWorkConsumer).GetMethod(
+            "GetStartupRetryDelay",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("RabbitMQ startup retry delay helper was not found.");
+
+        var delay = Assert.IsType<TimeSpan>(method.Invoke(null, [attempt]));
+
+        Assert.Equal(TimeSpan.FromSeconds(expectedSeconds), delay);
+    }
+
+    [Fact]
+    public void Consumer_startup_retry_delay_rejects_invalid_attempt()
+    {
+        var method = typeof(RabbitMqWorkConsumer).GetMethod(
+            "GetStartupRetryDelay",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("RabbitMQ startup retry delay helper was not found.");
+
+        var exception = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, [0]));
+
+        Assert.IsType<ArgumentOutOfRangeException>(exception.InnerException);
+    }
+
     [Fact]
     public void Consumer_rejects_tampered_idempotency_identity_before_handler()
     {
