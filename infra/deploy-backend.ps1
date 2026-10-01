@@ -79,5 +79,35 @@ if (-not $healthy) {
     throw "Core.Api did not become healthy at $healthUrl. Keep traffic on the previous known-good release and inspect container logs."
 }
 
+$workerReady = $false
+for ($attempt = 1; $attempt -le 30; $attempt++) {
+    $workerId = (& docker @composeBase ps -q agent-worker).Trim()
+    if ($LASTEXITCODE -eq 0 -and $workerId) {
+        $workerRunning = (& docker inspect -f "{{.State.Running}}" $workerId 2>$null).Trim()
+        if ($LASTEXITCODE -eq 0 -and $workerRunning -eq "true") {
+            $queueRows = @(& docker @composeBase exec -T rabbitmq rabbitmqctl list_queues name consumers -q 2>$null)
+            if ($LASTEXITCODE -eq 0) {
+                foreach ($row in $queueRows) {
+                    if ($row -match "^\s*minhhuy\.work\.v1\s+([1-9][0-9]*)\s*$") {
+                        $workerReady = $true
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    if ($workerReady) {
+        break
+    }
+
+    Start-Sleep -Seconds 2
+}
+
+if (-not $workerReady) {
+    throw "Agent.Worker did not establish a RabbitMQ consumer on minhhuy.work.v1. Keep traffic on the previous known-good release and inspect worker/RabbitMQ logs."
+}
+
 Write-Host "Backend release $releaseSha is healthy at $healthUrl"
+Write-Host "Agent.Worker is consuming minhhuy.work.v1"
 Write-Host "Do not expose this loopback endpoint directly. Route only through the approved secure tunnel/private network."

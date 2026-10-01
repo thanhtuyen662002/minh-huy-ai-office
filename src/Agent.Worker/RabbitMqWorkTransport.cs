@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using MinhHuy.AIOffice.Shared.Contracts;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace MinhHuy.AIOffice.Agent.Worker;
 
@@ -97,14 +98,61 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
     {
         _options.Validate();
         var factory = RabbitMqWorkPublisher.CreateFactory(_options);
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync(RabbitMqWorkPublisher.CreateConfirmingChannelOptions(), stoppingToken);
-        await RabbitMqWorkPublisher.DeclareQueueAsync(_channel, _options, stoppingToken);
-        await _channel.BasicQosAsync(0, _options.PrefetchCount, false, stoppingToken);
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.ReceivedAsync += OnReceivedAsync;
-        await _channel.BasicConsumeAsync(_options.QueueName, autoAck: false, consumer, stoppingToken);
-        await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
+        var startupAttempt = 0;
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                _connection = await factory.CreateConnectionAsync(stoppingToken);
+                _channel = await _connection.CreateChannelAsync(
+                    RabbitMqWorkPublisher.CreateConfirmingChannelOptions(),
+                    stoppingToken);
+                await RabbitMqWorkPublisher.DeclareQueueAsync(_channel, _options, stoppingToken);
+                await _channel.BasicQosAsync(0, _options.PrefetchCount, false, stoppingToken);
+
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                consumer.ReceivedAsync += OnReceivedAsync;
+                await _channel.BasicConsumeAsync(
+                    _options.QueueName,
+                    autoAck: false,
+                    consumer,
+                    stoppingToken);
+
+                logger.LogInformation(
+                    "RabbitMQ worker consumer is ready on queue {QueueName} after {AttemptCount} startup attempt(s)",
+                    _options.QueueName,
+                    startupAttempt + 1);
+
+                await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
+                return;
+            }
+            catch (BrokerUnreachableException exception) when (!stoppingToken.IsCancellationRequested)
+            {
+                startupAttempt++;
+                await DisposeBrokerResourcesAsync();
+
+                var delay = GetStartupRetryDelay(startupAttempt);
+                logger.LogWarning(
+                    "RabbitMQ is unavailable during worker startup attempt {AttemptCount}: {Message}. Retrying in {DelaySeconds}s",
+                    startupAttempt,
+                    exception.Message,
+                    delay.TotalSeconds);
+
+                await Task.Delay(delay, stoppingToken);
+            }
+        }
+    }
+
+    private static TimeSpan GetStartupRetryDelay(int attempt)
+    {
+        if (attempt < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(attempt));
+        }
+
+        var seconds = Math.Min(30, 1 << Math.Min(attempt, 5));
+        return TimeSpan.FromSeconds(seconds);
     }
 
     private async Task OnReceivedAsync(object sender, BasicDeliverEventArgs args)
@@ -164,7 +212,21 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         await base.StopAsync(cancellationToken);
-        if (_channel is not null) await _channel.DisposeAsync();
-        if (_connection is not null) await _connection.DisposeAsync();
+        await DisposeBrokerResourcesAsync();
+    }
+
+    private async Task DisposeBrokerResourcesAsync()
+    {
+        if (_channel is not null)
+        {
+            await _channel.DisposeAsync();
+            _channel = null;
+        }
+
+        if (_connection is not null)
+        {
+            await _connection.DisposeAsync();
+            _connection = null;
+        }
     }
 }
