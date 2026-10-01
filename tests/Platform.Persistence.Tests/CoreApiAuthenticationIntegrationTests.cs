@@ -51,6 +51,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
             .Get(JwtBearerDefaults.AuthenticationScheme);
 
         Assert.Equal(expectedRequireHttpsMetadata, options.RequireHttpsMetadata);
+        Assert.False(options.MapInboundClaims);
         Assert.True(options.TokenValidationParameters.ValidateIssuer);
         Assert.True(options.TokenValidationParameters.ValidateAudience);
         Assert.True(options.TokenValidationParameters.ValidateLifetime);

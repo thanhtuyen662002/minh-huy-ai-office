@@ -55,6 +55,7 @@ if (authenticationConfigured)
         options.Authority = authority;
         options.Audience = audience;
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, NameClaimType = AuthenticationClaimTypes.Subject };
     });
     builder.Services.AddAuthorization();
