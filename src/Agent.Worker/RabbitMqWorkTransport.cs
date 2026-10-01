@@ -151,7 +151,7 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
             throw new ArgumentOutOfRangeException(nameof(attempt));
         }
 
-        var seconds = Math.Min(30, 1 << Math.Min(attempt, 4));
+        var seconds = Math.Min(30, 1 << Math.Min(attempt, 5));
         return TimeSpan.FromSeconds(seconds);
     }
 
