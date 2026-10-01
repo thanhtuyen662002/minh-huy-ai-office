@@ -6,8 +6,8 @@ priority_rule: "security-critical > production-blocker > active-issue > release/
 current_issue: null
 current_branch: main
 current_pr: null
-current_target_head: 0e67a0ffe03454cd0b2fffc12163a608bf0bd804
-last_verified_commit: 0e67a0ffe03454cd0b2fffc12163a608bf0bd804
+current_target_head: 8b9564ecc56a66c68431aaa1a95f12e90457c245
+last_verified_commit: 8b9564ecc56a66c68431aaa1a95f12e90457c245
 
 critical_paths:
   backend:
@@ -50,7 +50,7 @@ recent_authoritative_merges:
   - "PR #207 was merged at ebed543ef4a3954e3caf77e95ff0d17732e87896 as metadata-only; it is not Runtime acceptance evidence."
 
 pilot_release:
-  implementation_head: 0e67a0ffe03454cd0b2fffc12163a608bf0bd804
+  implementation_head: 8b9564ecc56a66c68431aaa1a95f12e90457c245
   implementation_commits:
     - "3d5a05b feat(pilot): persist idempotent read-only task submissions"
     - "f33e8eb test(pilot): cover submission to durable worker completion"
@@ -58,7 +58,7 @@ pilot_release:
     - "0e67a0f fix(api): fence pilot task responses from caching"
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
-  result: "Code-side bounded internal pilot is complete and green; live deployment remains operator-gated by external infrastructure and identity prerequisites."
+  result: "Bounded internal pilot is code-complete, CI-green, and verified end-to-end on a local operator environment with real OIDC/JWT, server-derived company authorization, read-only data-source resolution, RabbitMQ worker execution, durable checkpoint completion, and matching audit evidence. Production deployment remains gated by approved company OIDC, private SQL/backup, read-only ERP credentials, and private host/tunnel readiness."
 
 dependency_chain:
   - "P0-P5 foundations are authoritative on main and their EPICs are closed for the bounded release slice."
@@ -67,7 +67,7 @@ dependency_chain:
   - "Remaining release action is external: approved OIDC issuer/audience and bootstrap procedure, private SQL Server with backup, private RabbitMQ/worker host, first company membership, and read-only ERP secret."
   - "Full customer product, provider adapters, destructive accounting workflows, HA/DR and continuing operations remain open EPIC scope and are non-blocking for this bounded pilot."
 
-next_action: "Operator provisions the approved pilot environment, runs the migration and deployment runbook, executes the authenticated POST/GET task smoke, and verifies the durable completion and redacted audit evidence."
+next_action: "Preserve the verified local pilot as a repeatable deployment/smoke procedure, then provision the company pilot host with approved production OIDC, private SQL Server/backup, and a real read-only ERP data source. The current pilot executor proves authorized read-only connectivity and durable execution; it is not yet an AI question-answering/provider execution path."
 
 blocked_by:
   - "Approved pilot OIDC issuer/audience and token/client flow are not available in this repository/session."
