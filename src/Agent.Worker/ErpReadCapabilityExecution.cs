@@ -178,7 +178,7 @@ public sealed record ErpReadCapabilityDefinition(
             statement = statement[..^1].TrimEnd();
         }
 
-        if (statement.Contains(';', StringComparison.Ordinal))
+        if (statement.Contains(';'))
         {
             throw new InvalidOperationException(
                 "ERP read capabilities must contain exactly one SQL statement.");
