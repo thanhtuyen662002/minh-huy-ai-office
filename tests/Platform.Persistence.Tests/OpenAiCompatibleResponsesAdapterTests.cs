@@ -56,8 +56,8 @@ public sealed class OpenAiCompatibleResponsesAdapterTests
         Assert.Equal(9, response.OutputTokens);
         Assert.NotNull(handler.Request);
         Assert.Equal("Bearer test-secret", handler.Request!.Authorization);
-        Assert.Contains(""store":false", handler.Request.Body, StringComparison.Ordinal);
-        Assert.Contains(""max_output_tokens":1024", handler.Request.Body, StringComparison.Ordinal);
+        Assert.Contains("\"store\":false", handler.Request.Body, StringComparison.Ordinal);
+        Assert.Contains("\"max_output_tokens\":1024", handler.Request.Body, StringComparison.Ordinal);
         Assert.Contains("bounded user question", handler.Request.Body, StringComparison.Ordinal);
         Assert.DoesNotContain("test-secret", handler.Request.Body, StringComparison.Ordinal);
     }
