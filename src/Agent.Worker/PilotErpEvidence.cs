@@ -25,7 +25,7 @@ public sealed record PilotErpTableEvidence(
             || value.Length > 128
             || value.Any(char.IsControl))
         {
-            throw new InvalidOperationException(`ERP evidence ${name} is invalid.`);
+            throw new InvalidOperationException($"ERP evidence {name} is invalid.");
         }
     }
 }
