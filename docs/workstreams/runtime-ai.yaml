@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
-current_issue: 223
-current_pr: 224
-current_branch: "runtime/223-grounded-erp-evidence"
-head: "d63084d0bace1038cbcac3e71d66a74ac9f52366"
+current_issue: 225
+current_pr: 226
+current_branch: "runtime/225-erp-read-capabilities"
+head: "4d6ed25b903e59891b34edc0705799d4270ab02e"
 state: ready_for_review
 lease_owner: "chatgpt-runtime-ai"
-lease_heartbeat_at: "2026-10-02T09:35:00Z"
-last_checkpoint_at: "2026-10-02T09:35:00Z"
+lease_heartbeat_at: "2026-10-02T09:58:00Z"
+last_checkpoint_at: "2026-10-02T09:58:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -41,4 +41,4 @@ scope:
   - customer-ai-credit-settlement-isolation
 last_merged_pr: 211
 last_merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
-next_action: "Issue #223 acceptance is proven locally and in CI. Merge PR #224 after exact-head CI for the final documentation checkpoint is green, then retire this lease and open the next business-query capability slice."
+next_action: "Issue #225 acceptance tests and exact-head CI are green. Merge PR #226 after the final workstream-state checkpoint CI is green, then open a customer-specific read capability adapter issue."
