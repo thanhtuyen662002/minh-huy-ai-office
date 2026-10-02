@@ -3,15 +3,18 @@ using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
+using MinhHuyAiOffice.Shared.Contracts;
 using Platform.Persistence;
 
 namespace MinhHuy.AIOffice.Agent.Worker;
 
+public sealed record PilotAiRuntimeDescriptor(string ProviderId, string ModelId);
+
 /// <summary>
-/// Supplies the only tool scope accepted by the first pilot executor. The resource is derived
-/// from the durable request event, never from broker text or a customer question.
+/// Trusted scope for the bounded AI pilot. The operation remains anchored to one server-resolved,
+/// read-only ERP data source; prompt text cannot widen the selected resource or action.
 /// </summary>
-public sealed class PilotDataSourceToolMetadataProvider(PlatformDbContext dbContext)
+public sealed class PilotAiQuestionToolMetadataProvider(PlatformDbContext dbContext)
     : ITrustedToolExecutionMetadataProvider
 {
     public async Task<TrustedToolExecutionMetadata> GetAsync(
@@ -25,17 +28,16 @@ public sealed class PilotDataSourceToolMetadataProvider(PlatformDbContext dbCont
         var request = await PilotDataSourceWorkRequest.LoadAsync(dbContext, envelope, cancellationToken);
         return new TrustedToolExecutionMetadata(
             $"erp-data-source:{request.DataSourceId:N}",
-            "connection-test",
+            "ai-reasoning-readonly",
             ToolRiskLevel.Low);
     }
 }
 
 /// <summary>
-/// Grants the read-only pilot operation only when the durable task's data source is enabled,
-/// company-scoped and explicitly readable. The permission is reconstructed from SQL state for
-/// every attempt; no role or company authority is accepted from the broker payload.
+/// Authorizes only the explicitly bounded AI/read-only pilot operation and only for an active
+/// company-scoped data source that is readable and not writable.
 /// </summary>
-public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbContext)
+public sealed class PilotAiQuestionToolPermissionProvider(PlatformDbContext dbContext)
     : IToolPermissionProvider
 {
     public async Task<IReadOnlyCollection<ToolPermission>> GetAsync(
@@ -44,7 +46,7 @@ public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbCo
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!string.Equals(request.Action, "connection-test", StringComparison.Ordinal)
+        if (!string.Equals(request.Action, "ai-reasoning-readonly", StringComparison.Ordinal)
             || !TryReadDataSourceId(request.Resource, out var dataSourceId))
         {
             return Array.Empty<ToolPermission>();
@@ -58,6 +60,7 @@ public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbCo
                 && item.Id == dataSourceId
                 && item.IsEnabled
                 && item.AllowRead
+                && !item.AllowWrite
                 && item.MaxConcurrency >= 1
                 && item.MaxConcurrency <= 1024,
                 cancellationToken);
@@ -90,15 +93,16 @@ public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbCo
 }
 
 /// <summary>
-/// Executes a deterministic, read-only SQL connectivity probe for the approved pilot data source.
-/// It returns only a redacted checkpoint. A real AI/provider executor can be added later behind the
-/// same authorization and audit boundary without changing task authority.
+/// First real model-backed pilot executor. It preserves the proven read-only SQL connectivity
+/// boundary, then sends only the durable customer question plus explicit no-data instructions to
+/// the AI gateway. ERP rows, connection strings and secret references never enter model context.
 /// </summary>
-public sealed class PilotDataSourceProbeExecutor(
+public sealed class PilotAiQuestionExecutor(
     PlatformDbContext dbContext,
     CompositeSecretResolver secretResolver,
-    IDataSourceConnectionProbe connectionProbe)
-    : IRawWorkStepExecutor
+    IDataSourceConnectionProbe connectionProbe,
+    IAiGateway aiGateway,
+    PilotAiRuntimeDescriptor runtime) : IRawWorkStepExecutor
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -110,10 +114,18 @@ public sealed class PilotDataSourceProbeExecutor(
         ArgumentNullException.ThrowIfNull(envelope);
         ArgumentNullException.ThrowIfNull(lease);
 
+        var probe = new PilotDataSourceProbeExecutor(dbContext, secretResolver, connectionProbe);
+        var probeResult = await probe.ExecuteAsync(envelope, lease, cancellationToken).ConfigureAwait(false);
+        if (probeResult.Outcome is not WorkDeliveryOutcome.Completed)
+        {
+            return probeResult;
+        }
+
         PilotDataSourceWorkRequest request;
         try
         {
-            request = await PilotDataSourceWorkRequest.LoadAsync(dbContext, envelope, cancellationToken);
+            request = await PilotDataSourceWorkRequest.LoadAsync(dbContext, envelope, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or JsonException)
         {
@@ -125,70 +137,63 @@ public sealed class PilotDataSourceProbeExecutor(
 
         var source = await dbContext.DataSources
             .AsNoTracking()
-            .SingleOrDefaultAsync(item =>
+            .SingleAsync(item =>
                 item.TenantId == envelope.TenantId
                 && item.CompanyId == envelope.CompanyId
                 && item.Id == request.DataSourceId,
-                cancellationToken);
+                cancellationToken)
+            .ConfigureAwait(false);
 
-        if (source is null || !source.IsEnabled || !source.AllowRead
-            || source.MaxConcurrency is < 1 or > 1024
-            || !SecretReference.TryParse(source.ConnectionSecretReference, out var reference))
-        {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Authorization,
-                request.MaxAttempts);
-        }
+        var aiRequest = new AiGatewayRequest(
+            envelope.TenantId.ToString("N"),
+            envelope.CompanyId.ToString("N"),
+            envelope.TaskId.ToString("N"),
+            $"pilot-ai:{envelope.TaskId:N}:{envelope.StepId:N}",
+            AiCapability.Reasoning,
+            BuildBoundedInput(request.Question));
 
-        string connectionString;
+        AiGatewayResponse response;
         try
         {
-            connectionString = await secretResolver.ResolveAsync(reference!, cancellationToken);
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return new WorkStepExecutionResult(
-                    WorkDeliveryOutcome.Failed,
-                    WorkFailureClass.Transient,
-                    request.MaxAttempts);
-            }
+            response = await aiGateway.ExecuteAsync(aiRequest, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
-        catch
+        catch (AiProviderExecutionException exception)
         {
             return new WorkStepExecutionResult(
                 WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Transient,
+                exception.IsTransient ? WorkFailureClass.Transient : WorkFailureClass.Permanent,
                 request.MaxAttempts);
         }
-
-        try
-        {
-            await connectionProbe.ProbeAsync(connectionString, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch
+        catch (InvalidOperationException)
         {
             return new WorkStepExecutionResult(
                 WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Transient,
+                WorkFailureClass.Permanent,
                 request.MaxAttempts);
         }
 
+        var totalTokens = checked(response.InputTokens + response.OutputTokens);
         var checkpoint = new
         {
-            status = "connected",
+            status = "completed",
             dataSourceId = source.Id,
             logicalName = source.LogicalName,
             questionLength = request.Question.Length,
-            aiCredits = 0,
-            evidence = "read-only-connection-probe"
+            answer = response.Output,
+            provider = runtime.ProviderId,
+            model = response.Model,
+            usage = new
+            {
+                inputTokens = response.InputTokens,
+                outputTokens = response.OutputTokens,
+                totalTokens
+            },
+            billingStatus = "usage-observed-not-settled",
+            evidence = "ai-provider-reasoning-after-read-only-connection-probe"
         };
 
         return new WorkStepExecutionResult(
@@ -198,39 +203,16 @@ public sealed class PilotDataSourceProbeExecutor(
             1,
             JsonSerializer.Serialize(checkpoint, JsonOptions));
     }
-}
 
-internal sealed record PilotDataSourceWorkRequest(
-    string IdempotencyKey,
-    Guid DataSourceId,
-    string Question,
-    int MaxAttempts)
-{
-    public static async Task<PilotDataSourceWorkRequest> LoadAsync(
-        PlatformDbContext dbContext,
-        WorkDispatchEnvelope envelope,
-        CancellationToken cancellationToken)
-    {
-        var payload = await dbContext.TaskEvents
-            .AsNoTracking()
-            .Where(item => item.TenantId == envelope.TenantId
-                && item.CompanyId == envelope.CompanyId
-                && item.TaskId == envelope.TaskId
-                && item.StepId == envelope.StepId
-                && item.EventType == PilotTaskRequestEvent.EventType)
-            .OrderBy(item => item.Sequence)
-            .Select(item => item.PayloadJson)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new InvalidOperationException("Durable pilot task request event is missing.");
+    private static string BuildBoundedInput(string question) =>
+        $"""
+        You are the bounded reasoning agent for Minh Huy AI Office.
+        The selected ERP data source has been verified as reachable, but no ERP rows or business records
+        have been supplied to you in this execution. Do not invent database values and do not claim that
+        you queried ERP data. Answer the user's question only to the extent possible from the question
+        itself. If live ERP data is required, state clearly what information must be retrieved.
 
-        var request = JsonSerializer.Deserialize<PilotTaskRequestEvent>(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web))
-            ?? throw new InvalidOperationException("Durable pilot task request event is empty.");
-        request.Validate();
-
-        return new PilotDataSourceWorkRequest(
-            request.IdempotencyKey,
-            request.DataSourceId,
-            request.Question,
-            request.MaxAttempts);
-    }
+        User question:
+        {question}
+        """;
 }

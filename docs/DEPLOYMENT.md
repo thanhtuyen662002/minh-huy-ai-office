@@ -199,6 +199,23 @@ Invoke-RestMethod http://127.0.0.1:$apiPort/api/audit?offset=0`&limit=50 -Header
 
 An unauthenticated request to `/api/auth/context`, `/api/data-sources/`, `/api/audit` or `/api/sla/status` must return `503` when authentication is not configured; an authenticated identity without an active company membership must return `403`.
 
+## Optional model-backed pilot runtime
+
+The worker keeps the verified read-only connectivity-probe executor when AI runtime configuration is absent. To enable the first provider-backed reasoning slice, set all of the following values together in the ignored runtime environment file:
+
+```text
+AIOFFICE_AI_BASE_URL=<provider-base-url-ending-in-v1>
+AIOFFICE_AI_MODEL=<approved-model-id>
+AIOFFICE_AI_AUTHORIZATION=<complete-authorization-header-value>
+AIOFFICE_AI_PROVIDER_ID=<stable-provider-id>
+```
+
+`AIOFFICE_AI_AUTHORIZATION` is secret material. Do not commit it, print it in smoke output, persist it in a task/checkpoint, or expose it to the browser. A partial AI configuration is rejected at worker startup. If all three required values are absent, the worker deliberately stays on the previously verified connectivity-probe path.
+
+When enabled, the bounded AI executor still verifies the selected read-only SQL data source first, then sends only the durable customer question plus a fixed instruction explaining that no ERP rows have been supplied. The model is not allowed to claim that it queried live ERP data. The checkpoint stores the answer, provider/model identity and input/output token counts, but no connection string or secret reference.
+
+This slice proves real provider execution only. It does not yet let the model generate or execute SQL, retrieve ERP business rows, or settle customer AI credits. Those remain separate gated work.
+
 ## Pilot activation gate
 
 This checkout now contains one bounded, read-only pilot path: authenticated `POST /api/tasks` accepts a `CustomerPilotTaskRequest` plus an `Idempotency-Key`, derives company/user authority on the server, persists the task graph and pending dispatch, and the outbox publishes it to RabbitMQ. Agent.Worker composes the authorized executor, probes the selected `secretref://` data source, persists a redacted checkpoint and task status, and the existing audit/settlement boundary remains before broker acknowledgement. `GET /api/tasks/{taskId}` and `/api/audit` provide the durable result and evidence projections.
