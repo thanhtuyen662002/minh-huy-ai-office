@@ -36,8 +36,19 @@ Action<RabbitMqWorkOptions> configureRabbitMq = options => builder.Configuration
     .GetSection(RabbitMqWorkOptions.SectionName)
     .Bind(options);
 
-var aiOptions = OpenAiCompatibleResponsesOptions.FromEnvironment();
-if (aiOptions is null)
+var primaryAiOptions =
+    OpenAiCompatibleResponsesOptions.FromEnvironment("AIOFFICE_AI_PRIMARY", "openai-direct")
+    ?? OpenAiCompatibleResponsesOptions.FromEnvironment();
+var backupAiOptions =
+    OpenAiCompatibleResponsesOptions.FromEnvironment("AIOFFICE_AI_BACKUP", "external-backup");
+
+if (primaryAiOptions is null && backupAiOptions is not null)
+{
+    throw new InvalidOperationException(
+        "A backup AI provider cannot be configured without a primary AI provider.");
+}
+
+if (primaryAiOptions is null)
 {
     builder.Services.AddDurableRabbitMqWorkExecution<
         PilotDataSourceProbeExecutor,
@@ -48,15 +59,34 @@ if (aiOptions is null)
 }
 else
 {
-    builder.Services.AddSingleton(aiOptions);
-    builder.Services.AddSingleton(new HttpClient
+    if (backupAiOptions is not null
+        && string.Equals(
+            primaryAiOptions.ProviderId,
+            backupAiOptions.ProviderId,
+            StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException(
+            "Primary and backup AI provider identities must differ.");
+    }
+
+    var aiHttpClient = new HttpClient
     {
         Timeout = TimeSpan.FromSeconds(120)
-    });
-    builder.Services.AddSingleton<IAiProviderAdapter, OpenAiCompatibleResponsesAdapter>();
-    builder.Services.AddSingleton<IAiGateway>(serviceProvider =>
-        new ProviderNeutralAiGateway(serviceProvider.GetServices<IAiProviderAdapter>()));
-    builder.Services.AddSingleton(new PilotAiRuntimeDescriptor(aiOptions.ProviderId, aiOptions.Model));
+    };
+    var primaryAdapter = new OpenAiCompatibleResponsesAdapter(
+        aiHttpClient,
+        primaryAiOptions);
+    var backupAdapter = backupAiOptions is null
+        ? null
+        : new OpenAiCompatibleResponsesAdapter(aiHttpClient, backupAiOptions);
+
+    builder.Services.AddSingleton(aiHttpClient);
+    builder.Services.AddSingleton<IAiGateway>(
+        new OrderedFailoverAiGateway(primaryAdapter, backupAdapter));
+    builder.Services.AddSingleton(
+        new PilotAiRuntimeDescriptor(
+            primaryAiOptions.ProviderId,
+            primaryAiOptions.Model));
     builder.Services.AddDurableRabbitMqWorkExecution<
         PilotAiQuestionExecutor,
         PilotAiQuestionToolMetadataProvider,

@@ -49,6 +49,8 @@ public sealed record AiGatewayResponse(
     long InputTokens,
     long OutputTokens)
 {
+    public string? ProviderId { get; init; }
+
     public void ValidateFor(AiGatewayRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -67,6 +69,13 @@ public sealed record AiGatewayResponse(
         if (string.IsNullOrWhiteSpace(Output) || string.IsNullOrWhiteSpace(Model) || InputTokens < 0 || OutputTokens < 0)
         {
             throw new InvalidOperationException("AI gateway response metadata is invalid.");
+        }
+
+        if (ProviderId is not null
+            && (string.IsNullOrWhiteSpace(ProviderId)
+                || !string.Equals(ProviderId, ProviderId.Trim(), StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException("AI gateway provider identity is invalid.");
         }
     }
 }

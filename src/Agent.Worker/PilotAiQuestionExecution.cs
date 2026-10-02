@@ -184,7 +184,7 @@ public sealed class PilotAiQuestionExecutor(
             logicalName = source.LogicalName,
             questionLength = request.Question.Length,
             answer = response.Output,
-            provider = runtime.ProviderId,
+            provider = response.ProviderId ?? runtime.ProviderId,
             model = response.Model,
             usage = new
             {

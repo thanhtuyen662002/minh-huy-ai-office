@@ -201,18 +201,29 @@ An unauthenticated request to `/api/auth/context`, `/api/data-sources/`, `/api/a
 
 ## Optional model-backed pilot runtime
 
-The worker keeps the verified read-only connectivity-probe executor when AI runtime configuration is absent. To enable the first provider-backed reasoning slice, set all of the following values together in the ignored runtime environment file:
+The worker keeps the verified read-only connectivity-probe executor when AI runtime configuration is absent. For normal testing and real operation, configure the direct API as the PRIMARY provider:
 
 ```text
-AIOFFICE_AI_BASE_URL=<provider-base-url-ending-in-v1>
-AIOFFICE_AI_MODEL=<approved-model-id>
-AIOFFICE_AI_AUTHORIZATION=<complete-authorization-header-value>
-AIOFFICE_AI_PROVIDER_ID=<stable-provider-id>
+AIOFFICE_AI_PRIMARY_BASE_URL=https://api.openai.com/v1
+AIOFFICE_AI_PRIMARY_MODEL=<approved-direct-api-model>
+AIOFFICE_AI_PRIMARY_AUTHORIZATION=Bearer <runtime-secret-api-key>
+AIOFFICE_AI_PRIMARY_PROVIDER_ID=openai-direct
 ```
 
-`AIOFFICE_AI_AUTHORIZATION` is secret material. Do not commit it, print it in smoke output, persist it in a task/checkpoint, or expose it to the browser. A partial AI configuration is rejected at worker startup. If all three required values are absent, the worker deliberately stays on the previously verified connectivity-probe path.
+An external OpenAI-compatible provider may be configured as BACKUP:
 
-When enabled, the bounded AI executor still verifies the selected read-only SQL data source first, then sends only the durable customer question plus a fixed instruction explaining that no ERP rows have been supplied. The model is not allowed to claim that it queried live ERP data. The checkpoint stores the answer, provider/model identity and input/output token counts, but no connection string or secret reference.
+```text
+AIOFFICE_AI_BACKUP_BASE_URL=<backup-provider-base-url-ending-in-v1>
+AIOFFICE_AI_BACKUP_MODEL=<approved-backup-model>
+AIOFFICE_AI_BACKUP_AUTHORIZATION=<complete-authorization-header-value>
+AIOFFICE_AI_BACKUP_PROVIDER_ID=external-backup
+```
+
+The worker always attempts PRIMARY first. BACKUP is used only after a retryable primary failure such as network failure, timeout, HTTP 408, 429 or 5xx. Permanent primary failures such as invalid credentials or malformed requests fail closed instead of being hidden by backup. A BACKUP without PRIMARY is rejected at worker startup.
+
+All authorization values are secret material. Do not commit them, print them in smoke output, persist them in a task/checkpoint, or expose them to the browser. A partial provider configuration is rejected at worker startup. The legacy `AIOFFICE_AI_*` single-provider names remain supported as a backward-compatible primary alias when explicit `AIOFFICE_AI_PRIMARY_*` values are absent.
+
+When enabled, the bounded AI executor still verifies the selected read-only SQL data source first, then sends only the durable customer question plus a fixed instruction explaining that no ERP rows have been supplied. The model is not allowed to claim that it queried live ERP data. The checkpoint stores the answer, the provider actually used after any failover, model identity and input/output token counts, but no connection string or secret reference.
 
 This slice proves real provider execution only. It does not yet let the model generate or execute SQL, retrieve ERP business rows, or settle customer AI credits. Those remain separate gated work.
 

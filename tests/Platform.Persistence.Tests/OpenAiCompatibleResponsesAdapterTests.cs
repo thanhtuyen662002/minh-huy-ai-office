@@ -54,6 +54,7 @@ public sealed class OpenAiCompatibleResponsesAdapterTests
         Assert.Equal("model-test", response.Model);
         Assert.Equal(17, response.InputTokens);
         Assert.Equal(9, response.OutputTokens);
+        Assert.Equal("provider-test", response.ProviderId);
         Assert.NotNull(handler.Request);
         Assert.Equal("Bearer test-secret", handler.Request!.Authorization);
         Assert.Contains("\"store\":false", handler.Request.Body, StringComparison.Ordinal);
@@ -93,6 +94,98 @@ public sealed class OpenAiCompatibleResponsesAdapterTests
             () => adapter.ExecuteAsync(request));
 
         Assert.Equal(expectedTransient, exception.IsTransient);
+    }
+
+    [Fact]
+    public async Task Ordered_gateway_uses_primary_without_calling_backup()
+    {
+        var primary = new RecordingProviderAdapter("direct", responseText: "primary");
+        var backup = new RecordingProviderAdapter("backup", responseText: "backup");
+        var gateway = new OrderedFailoverAiGateway(primary, backup);
+
+        var response = await gateway.ExecuteAsync(Request());
+
+        Assert.Equal("primary", response.Output);
+        Assert.Equal("direct", response.ProviderId);
+        Assert.Equal(1, primary.CallCount);
+        Assert.Equal(0, backup.CallCount);
+    }
+
+    [Fact]
+    public async Task Ordered_gateway_uses_backup_after_transient_primary_failure()
+    {
+        var primary = new RecordingProviderAdapter(
+            "direct",
+            failure: new AiProviderExecutionException("temporary", true));
+        var backup = new RecordingProviderAdapter("backup", responseText: "backup");
+        var gateway = new OrderedFailoverAiGateway(primary, backup);
+
+        var response = await gateway.ExecuteAsync(Request());
+
+        Assert.Equal("backup", response.Output);
+        Assert.Equal("backup", response.ProviderId);
+        Assert.Equal(1, primary.CallCount);
+        Assert.Equal(1, backup.CallCount);
+    }
+
+    [Fact]
+    public async Task Ordered_gateway_does_not_hide_permanent_primary_failure()
+    {
+        var primaryFailure = new AiProviderExecutionException("bad auth", false);
+        var primary = new RecordingProviderAdapter("direct", failure: primaryFailure);
+        var backup = new RecordingProviderAdapter("backup", responseText: "backup");
+        var gateway = new OrderedFailoverAiGateway(primary, backup);
+
+        var exception = await Assert.ThrowsAsync<AiProviderExecutionException>(
+            () => gateway.ExecuteAsync(Request()));
+
+        Assert.Same(primaryFailure, exception);
+        Assert.Equal(1, primary.CallCount);
+        Assert.Equal(0, backup.CallCount);
+    }
+
+    private static AiGatewayRequest Request() => new(
+        "tenant",
+        "company",
+        "task",
+        "request",
+        AiCapability.Reasoning,
+        "question");
+
+    private sealed class RecordingProviderAdapter(
+        string providerId,
+        string? responseText = null,
+        AiProviderExecutionException? failure = null) : IAiProviderAdapter
+    {
+        public string ProviderId => providerId;
+
+        public int CallCount { get; private set; }
+
+        public bool Supports(AiCapability capability) => capability == AiCapability.Reasoning;
+
+        public Task<AiGatewayResponse> ExecuteAsync(
+            AiGatewayRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CallCount++;
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return Task.FromResult(
+                new AiGatewayResponse(
+                    request.RequestId,
+                    request.Capability,
+                    responseText ?? "ok",
+                    $"{providerId}-model",
+                    2,
+                    1)
+                {
+                    ProviderId = providerId
+                });
+        }
     }
 
     private sealed class StubHandler(
