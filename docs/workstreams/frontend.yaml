@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: retired
-current_issue: null
+status: active
+current_issue: 229
 current_pr: null
-current_branch: null
-head: null
-state: retired
-lease_owner: null
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-27T06:20:00Z"
+current_branch: "frontend/229-local-ai-workspace"
+head: "3f7737b844ae07cbedda8b32e46b14613625204b"
+state: in_progress
+lease_owner: "chatgpt-frontend"
+lease_heartbeat_at: "2026-10-02T10:22:00Z"
+last_checkpoint_at: "2026-10-02T10:22:00Z"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -17,5 +17,5 @@ scope:
   - client-contracts
   - realtime-ui
 verification:
-  result: "PR #209 / issue #204 is merged at 45680c7badbc38e45f9f071267abf7d4bac40770. Web tests, typecheck and build are green; the bounded pilot does not require an additional frontend lease."
-next_action: "Keep the Frontend lease retired. The next action is operator deployment and authenticated smoke verification; open a new issue only for a newly observed frontend blocker."
+  result: "Issue #229 replaces the demo root with a real local browser workspace backed by HttpOnly-cookie BFF routes. Exact-head CI pending."
+next_action: "Open Draft PR for #229, close exact-head web/full-repo CI, then perform browser smoke against the already-running local Core.Api/Keycloak/Worker stack."
