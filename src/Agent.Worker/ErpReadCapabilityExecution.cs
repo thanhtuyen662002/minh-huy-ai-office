@@ -260,9 +260,7 @@ public sealed class SqlServerErpReadCapabilityExecutor(
         await connection.OpenAsync(cancellationToken);
 
         await using var command = connection.CreateCommand();
-        command.CommandText = definition.Sql;
-        command.CommandTimeout = definition.Limits.CommandTimeoutSeconds;
-        BindParameters(command, definition, request);
+        ConfigureCommand(command, definition, request);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await MaterializeAsync(
@@ -271,6 +269,24 @@ public sealed class SqlServerErpReadCapabilityExecutor(
                 reader,
                 cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    public static void ConfigureCommand(
+        DbCommand command,
+        ErpReadCapabilityDefinition definition,
+        ErpReadCapabilityRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(definition);
+        ArgumentNullException.ThrowIfNull(request);
+        request.Validate();
+        definition.Validate();
+        ValidateRequestParameters(definition, request);
+
+        command.CommandText = definition.Sql;
+        command.CommandTimeout = definition.Limits.CommandTimeoutSeconds;
+        command.Parameters.Clear();
+        BindParameters(command, definition, request);
     }
 
     public static async ValueTask<ErpReadCapabilityEvidence> MaterializeAsync(
