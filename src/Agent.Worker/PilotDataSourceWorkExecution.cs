@@ -44,7 +44,8 @@ public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbCo
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!TryReadDataSourceId(request.Resource, out var dataSourceId))
+        if (!string.Equals(request.Action, "connection-test", StringComparison.Ordinal)
+            || !TryReadDataSourceId(request.Resource, out var dataSourceId))
         {
             return Array.Empty<ToolPermission>();
         }
