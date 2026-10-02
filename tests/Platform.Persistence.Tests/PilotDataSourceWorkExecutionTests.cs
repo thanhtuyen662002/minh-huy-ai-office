@@ -79,10 +79,12 @@ public sealed class PilotDataSourceWorkExecutionTests
         var seeded = Seed(db);
         var probe = new RecordingProbe();
         var adapter = new RecordingAiAdapter();
+        var evidenceReader = new FixedEvidenceReader();
         var raw = new PilotAiQuestionExecutor(
             db,
             new CompositeSecretResolver(new ISecretResolver[] { new FixedSecretResolver("test-connection") }),
             probe,
+            evidenceReader,
             new ProviderNeutralAiGateway(new IAiProviderAdapter[] { adapter }),
             new PilotAiRuntimeDescriptor("provider-test", "model-test"));
         var auditSink = new RecordingAuditSink();
@@ -103,9 +105,14 @@ public sealed class PilotDataSourceWorkExecutionTests
         Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
         Assert.Single(probe.Connections);
         Assert.Equal("test-connection", probe.Connections[0]);
+        Assert.Single(evidenceReader.Connections);
+        Assert.Equal("test-connection", evidenceReader.Connections[0]);
         Assert.Single(adapter.Requests);
         Assert.Contains("read current balance", adapter.Requests[0].Input, StringComparison.Ordinal);
-        Assert.Contains("no ERP rows", adapter.Requests[0].Input, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("pilot-erp", adapter.Requests[0].Input, StringComparison.Ordinal);
+        Assert.Contains("dbo.Customer", adapter.Requests[0].Input, StringComparison.Ordinal);
+        Assert.Contains("approximateRows=42", adapter.Requests[0].Input, StringComparison.Ordinal);
+        Assert.Contains("business row contents", adapter.Requests[0].Input, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("test-connection", adapter.Requests[0].Input, StringComparison.Ordinal);
 
         using var checkpoint = JsonDocument.Parse(Assert.IsType<string>(result.CheckpointPayloadJson));
@@ -117,6 +124,15 @@ public sealed class PilotDataSourceWorkExecutionTests
         Assert.Equal(13, root.GetProperty("usage").GetProperty("inputTokens").GetInt64());
         Assert.Equal(5, root.GetProperty("usage").GetProperty("outputTokens").GetInt64());
         Assert.Equal(18, root.GetProperty("usage").GetProperty("totalTokens").GetInt64());
+        var erpEvidence = root.GetProperty("erpEvidence");
+        Assert.Equal("pilot-erp", erpEvidence.GetProperty("databaseName").GetString());
+        Assert.Equal(2, erpEvidence.GetProperty("tableCount").GetInt64());
+        Assert.Equal(1, erpEvidence.GetProperty("sampledTableCount").GetInt32());
+        Assert.Equal("dbo", erpEvidence.GetProperty("topTables")[0].GetProperty("schema").GetString());
+        Assert.Equal("Customer", erpEvidence.GetProperty("topTables")[0].GetProperty("table").GetString());
+        Assert.Equal(
+            "ai-provider-reasoning-after-bounded-read-only-erp-catalog",
+            root.GetProperty("evidence").GetString());
         Assert.DoesNotContain("test-connection", result.CheckpointPayloadJson, StringComparison.Ordinal);
 
         var audit = Assert.Single(auditSink.Entries);
@@ -141,6 +157,7 @@ public sealed class PilotDataSourceWorkExecutionTests
             db,
             new CompositeSecretResolver(new ISecretResolver[] { new FixedSecretResolver("test-connection") }),
             probe,
+            new FixedEvidenceReader(),
             new OrderedFailoverAiGateway(primary, backup),
             new PilotAiRuntimeDescriptor("direct", "direct-model"));
 
@@ -156,6 +173,17 @@ public sealed class PilotDataSourceWorkExecutionTests
         Assert.Equal("backup processed question", checkpoint.RootElement.GetProperty("answer").GetString());
         Assert.Equal(1, primary.CallCount);
         Assert.Equal(1, backup.CallCount);
+    }
+
+    [Fact]
+    public void Erp_evidence_rejects_more_than_the_bounded_table_limit()
+    {
+        var tables = Enumerable.Range(0, PilotErpEvidence.MaximumTables + 1)
+            .Select(index => new PilotErpTableEvidence("dbo", $"Table{index}", index))
+            .ToArray();
+        var evidence = new PilotErpEvidence("pilot-erp", tables.Length, tables);
+
+        Assert.Throws<InvalidOperationException>(evidence.Validate);
     }
 
     [Fact]
@@ -318,6 +346,23 @@ public sealed class PilotDataSourceWorkExecutionTests
             cancellationToken.ThrowIfCancellationRequested();
             Connections.Add(connectionString);
             return ValueTask.CompletedTask;
+        }
+    }
+
+    private sealed class FixedEvidenceReader : IPilotErpEvidenceReader
+    {
+        public List<string> Connections { get; } = [];
+
+        public ValueTask<PilotErpEvidence> ReadAsync(
+            string connectionString,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Connections.Add(connectionString);
+            return ValueTask.FromResult(new PilotErpEvidence(
+                "pilot-erp",
+                2,
+                [new PilotErpTableEvidence("dbo", "Customer", 42)]));
         }
     }
 
