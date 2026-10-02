@@ -26,6 +26,7 @@ builder.Services.AddSingleton(new CompositeSecretResolver(
     new ISecretResolver[] { new EnvironmentVariableSecretResolver() }));
 builder.Services.AddSingleton<ISqlConnectionFactory, SqlServerConnectionFactory>();
 builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
+builder.Services.AddScoped<IPilotErpEvidenceReader, SqlServerPilotErpEvidenceReader>();
 
 Action<DbContextOptionsBuilder> configureDatabase = options => options.UseSqlServer(
     platformConnectionString,
