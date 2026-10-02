@@ -1,13 +1,13 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P6-pilot-closure
-status: release/pilot-closure
-priority_rule: "security-critical > production-blocker > active-issue > release/pilot-closure"
+phase: P3-P5-business-read-enablement
+status: active-development
+priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: null
 current_branch: main
 current_pr: null
-current_target_head: 8b9564ecc56a66c68431aaa1a95f12e90457c245
-last_verified_commit: 8b9564ecc56a66c68431aaa1a95f12e90457c245
+current_target_head: 78a6f112b18afd502622ef16b6c25578c612338b
+last_verified_commit: 303c045e43e92115a35aedbd758dc44e37a1384a
 
 critical_paths:
   backend:
@@ -16,7 +16,7 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "PR #210 / issue #203 is merged at a462ebd6a0b54a57af257dcc3d3f66472c635d73. The SQL-backed SLA source is consumed by the pilot composition; no open Backend blocker remains."
+    next: "PR #210 / issue #203 is merged at a462ebd6a0b54a57af257dcc3d3f66472c635d73. No open Backend blocker exists for the current read-only AI/ERP slice."
 
   frontend:
     issue: null
@@ -24,7 +24,7 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "PR #209 / issue #204 is merged at 45680c7badbc38e45f9f071267abf7d4bac40770. Frontend checks are green and the pilot release does not require an additional frontend lease."
+    next: "PR #209 / issue #204 is merged at 45680c7badbc38e45f9f071267abf7d4bac40770. No frontend change is required until the first business read capability is exposed through a customer workflow."
 
   runtime_ai:
     issue: null
@@ -32,7 +32,7 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "Runtime #205 is closed by merged PR #211 at df39d5bfd188f0f53ba87e5ac0790aed664f1fab. Durable settlement is wired before completion acknowledgement; future runtime work needs a new verified blocker."
+    next: "PR #224 proved bounded ERP-catalog grounding through openai-direct/gpt-6-sol. PR #226 added the capability-bound read-only ERP query framework. Start a new runtime lease only after the first authorized customer business-read capability is selected."
 
   erp_data:
     issue: null
@@ -40,38 +40,42 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "PR #208 / issue #206 is merged at f61cddee2a4e45b1efe5100161056d8f77e73b80. The bounded pilot uses the read-only data-source contract; connector breadth remains future scope."
+    next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
 
 recent_authoritative_merges:
+  - "PR #226 / issue #225 capability-bound read-only ERP query framework: MERGED at 78a6f112b18afd502622ef16b6c25578c612338b"
+  - "PR #224 / issue #223 bounded ERP catalog-grounded AI pilot: MERGED at 4940d973b8fe8f3c67bd05a23ac20a563e359d3e"
   - "PR #211 / issue #205 durable AI-credit settlement: MERGED at df39d5bfd188f0f53ba87e5ac0790aed664f1fab"
   - "PR #210 / issue #203 SQL-backed current SLA status source: MERGED at a462ebd6a0b54a57af257dcc3d3f66472c635d73"
   - "PR #209 / issue #204 customer SLA status frontend wiring: MERGED at 45680c7badbc38e45f9f071267abf7d4bac40770"
   - "PR #208 / issue #206 durable effective failover operation policy: MERGED at f61cddee2a4e45b1efe5100161056d8f77e73b80"
-  - "PR #207 was merged at ebed543ef4a3954e3caf77e95ff0d17732e87896 as metadata-only; it is not Runtime acceptance evidence."
 
 pilot_release:
-  implementation_head: 8b9564ecc56a66c68431aaa1a95f12e90457c245
-  implementation_commits:
-    - "3d5a05b feat(pilot): persist idempotent read-only task submissions"
-    - "f33e8eb test(pilot): cover submission to durable worker completion"
-    - "efc4117 feat(pilot): activate authenticated read-only task execution"
-    - "0e67a0f fix(api): fence pilot task responses from caching"
-  exact_head_build: 36298741274
-  exact_head_governance: 36298741295
-  result: "Bounded internal pilot is code-complete, CI-green, and verified end-to-end on a local operator environment with real OIDC/JWT, server-derived company authorization, read-only data-source resolution, RabbitMQ worker execution, durable checkpoint completion, and matching audit evidence. Production deployment remains gated by approved company OIDC, private SQL/backup, read-only ERP credentials, and private host/tunnel readiness."
+  implementation_head: 4940d973b8fe8f3c67bd05a23ac20a563e359d3e
+  verified_pr_head: 9dee3a6120d8a5c7987a080eae3c183b630955b1
+  exact_head_build: 36991425261
+  exact_head_governance: 36991425211
+  result: "Local authenticated E2E now proves Core.Api -> durable SQL/outbox -> RabbitMQ -> Agent.Worker -> bounded read-only SQL Server catalog evidence -> openai-direct/gpt-6-sol -> durable checkpoint/result. Observed evidence: database AIOffice_Pilot_CleanTest, table_count 19, provider/model openai-direct/gpt-6-sol, token usage 459, secret-leak and answer-grounding checks PASS. This proves catalog grounding, not customer business-row Q&A."
+
+business_read_framework:
+  merge_commit: 78a6f112b18afd502622ef16b6c25578c612338b
+  verified_pr_head: 303c045e43e92115a35aedbd758dc44e37a1384a
+  exact_head_build: 36992802586
+  exact_head_governance: 36992802574
+  result: "Capability-bound read-only ERP execution is merged and CI-green: semantic capability/version requests, typed DbParameter binding, server-owned SQL, single-read-statement defense-in-depth, hard timeout/row/column/cell/evidence bounds, deterministic truncation and prompt-injection fencing. No generic arbitrary SQL or ERP write path exists."
 
 dependency_chain:
-  - "P0-P5 foundations are authoritative on main and their EPICs are closed for the bounded release slice."
-  - "Runtime #205/#211, Backend #203/#210, Frontend #204/#209 and ERP/Data #206/#208 are merged and retired."
-  - "The bounded pilot path is authenticated task ingress, transactional outbox dispatch, authorized read-only probe, durable checkpoint/status/audit and owner-scoped result retrieval."
-  - "Remaining release action is external: approved OIDC issuer/audience and bootstrap procedure, private SQL Server with backup, private RabbitMQ/worker host, first company membership, and read-only ERP secret."
-  - "Full customer product, provider adapters, destructive accounting workflows, HA/DR and continuing operations remain open EPIC scope and are non-blocking for this bounded pilot."
+  - "P0-P6 foundations remain authoritative for the bounded product/runtime baseline."
+  - "The authenticated pilot, direct OpenAI primary, bounded ERP catalog evidence and capability-bound read framework are merged on main."
+  - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
+  - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Preserve the verified local pilot as a repeatable deployment/smoke procedure, then provision the company pilot host with approved production OIDC, private SQL Server/backup, and a real read-only ERP data source. The current pilot executor proves authorized read-only connectivity and durable execution; it is not yet an AI question-answering/provider execution path."
+next_action: "Select the first authorized real ERP data source/customer and first read-only business capability (recommended examples: receivables balance, inventory on-hand, or invoice lookup). Then create an ERP/Data adapter issue that maps that semantic capability to fixed SQL + typed parameters + bounded evidence, followed by runtime AI grounding E2E."
 
 blocked_by:
-  - "Approved pilot OIDC issuer/audience and token/client flow are not available in this repository/session."
-  - "Private SQL Server database/backup, RabbitMQ/private worker host, first company/membership bootstrap, and read-only ERP secret are not available in this repository/session."
+  - "The first real customer ERP/data source and business capability have not yet been selected/authorized for AI Office business-row access."
+  - "A least-privilege read-only credential and schema/version mapping for that selected ERP are required before a real business-value E2E."
+  - "Production deployment still requires approved production OIDC, private platform SQL/backup, private host/tunnel and production bootstrap."
 
 automation_liveness:
   backend: retired_intentionally

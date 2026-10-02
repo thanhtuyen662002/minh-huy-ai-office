@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: active
-current_issue: 225
-current_pr: 226
-current_branch: "runtime/225-erp-read-capabilities"
-head: "4d6ed25b903e59891b34edc0705799d4270ab02e"
-state: ready_for_review
-lease_owner: "chatgpt-runtime-ai"
-lease_heartbeat_at: "2026-10-02T09:58:00Z"
-last_checkpoint_at: "2026-10-02T09:58:00Z"
+status: retired
+current_issue: null
+current_pr: null
+current_branch: null
+head: null
+state: retired
+lease_owner: null
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-10-02T10:00:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -39,6 +39,6 @@ scope:
   - customer-ai-credit-active-reservations
   - customer-ai-credit-admission-active-holds
   - customer-ai-credit-settlement-isolation
-last_merged_pr: 211
-last_merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
-next_action: "Issue #225 acceptance tests and exact-head CI are green. Merge PR #226 after the final workstream-state checkpoint CI is green, then open a customer-specific read capability adapter issue."
+last_merged_pr: 226
+last_merge_commit: 78a6f112b18afd502622ef16b6c25578c612338b
+next_action: "PR #226 / issue #225 is merged and CI-green. Keep runtime-ai retired until the first authorized customer ERP read capability is selected; then open a new issue/lease to ground that bounded business evidence through the AI gateway."
