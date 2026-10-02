@@ -1,14 +1,14 @@
 workstream: frontend
 role: "Frontend Product"
-status: retired
-current_issue: null
-current_pr: null
-current_branch: null
-head: null
-state: retired
-lease_owner: null
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-27T06:20:00Z"
+status: active
+current_issue: 229
+current_pr: 230
+current_branch: "frontend/229-local-ai-workspace"
+head: "3fb163f2f815da12d0ceabf458e467969e64d308"
+state: ready_for_review
+lease_owner: "chatgpt-frontend"
+lease_heartbeat_at: "2026-10-02T10:27:00Z"
+last_checkpoint_at: "2026-10-02T10:27:00Z"
 preferred_next_issue: null
 scope:
   - nextjs
@@ -17,5 +17,5 @@ scope:
   - client-contracts
   - realtime-ui
 verification:
-  result: "PR #209 / issue #204 is merged at 45680c7badbc38e45f9f071267abf7d4bac40770. Web tests, typecheck and build are green; the bounded pilot does not require an additional frontend lease."
-next_action: "Keep the Frontend lease retired. The next action is operator deployment and authenticated smoke verification; open a new issue only for a newly observed frontend blocker."
+  result: "PR #230 implementation head 3fb163f2f815da12d0ceabf458e467969e64d308 passed Governance and full Build, including web tests/typecheck/Next build, .NET, Docker Compose, EF migration integrity, container builds and required quality gates."
+next_action: "Merge PR #230 after final metadata checkpoint CI, then run the browser smoke on main against local Keycloak/Core.Api/Agent.Worker."
