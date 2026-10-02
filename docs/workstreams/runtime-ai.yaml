@@ -2,13 +2,13 @@ workstream: runtime-ai
 role: "Runtime / AI Platform"
 status: active
 current_issue: 225
-current_pr: null
+current_pr: 226
 current_branch: "runtime/225-erp-read-capabilities"
-head: "3c84afe5dd6a4372e038ed5259a8bc0f623abd16"
-state: in_progress
+head: "4d6ed25b903e59891b34edc0705799d4270ab02e"
+state: ready_for_review
 lease_owner: "chatgpt-runtime-ai"
-lease_heartbeat_at: "2026-10-02T09:50:00Z"
-last_checkpoint_at: "2026-10-02T09:50:00Z"
+lease_heartbeat_at: "2026-10-02T09:58:00Z"
+last_checkpoint_at: "2026-10-02T09:58:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -41,4 +41,4 @@ scope:
   - customer-ai-credit-settlement-isolation
 last_merged_pr: 211
 last_merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
-next_action: "Issue #225 implements capability-bound read-only ERP business query execution with typed parameters, server-owned SQL, deterministic evidence bounds and prompt-injection fencing. Open Draft PR, close exact-head CI, then wire the first customer-specific read capability in a follow-up issue."
+next_action: "Issue #225 acceptance tests and exact-head CI are green. Merge PR #226 after the final workstream-state checkpoint CI is green, then open a customer-specific read capability adapter issue."
