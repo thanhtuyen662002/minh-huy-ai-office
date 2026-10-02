@@ -1,14 +1,14 @@
 workstream: runtime-ai
 role: "Runtime / AI Platform"
-status: retired
-current_issue: null
-current_pr: null
-current_branch: null
-head: null
-state: retired
-lease_owner: null
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-27T06:20:00Z"
+status: active
+current_issue: 223
+current_pr: 224
+current_branch: "runtime/223-grounded-erp-evidence"
+head: "2ad2c4ae04516af6c04065697e309921c4db8894"
+state: in_progress
+lease_owner: "chatgpt-runtime-ai"
+lease_heartbeat_at: "2026-10-02T09:25:00Z"
+last_checkpoint_at: "2026-10-02T09:25:00Z"
 stacked_on: null
 scope:
   - task-engine
@@ -41,4 +41,4 @@ scope:
   - customer-ai-credit-settlement-isolation
 last_merged_pr: 211
 last_merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
-next_action: "Runtime #205 is closed and PR #211 is merged. Settlement persistence is wired into the worker completion boundary before durable acknowledgement. Keep this lease retired; open a new issue and lease only for a verified runtime blocker."
+next_action: "Issue #223 / Draft PR #224 grounds the AI pilot in bounded server-authored read-only ERP catalog evidence. Close exact-head CI, then rebuild the local worker and run authenticated E2E against erp.local-pilot using openai-direct/gpt-6-sol."
