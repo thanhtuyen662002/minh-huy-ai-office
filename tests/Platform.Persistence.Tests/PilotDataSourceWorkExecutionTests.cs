@@ -111,7 +111,7 @@ public sealed class PilotDataSourceWorkExecutionTests
         using var checkpoint = JsonDocument.Parse(Assert.IsType<string>(result.CheckpointPayloadJson));
         var root = checkpoint.RootElement;
         Assert.Equal("completed", root.GetProperty("status").GetString());
-        Assert.Equal("model-test", root.GetProperty("model").GetString());
+        Assert.Equal("provider-test-model", root.GetProperty("model").GetString());
         Assert.Equal("provider-test", root.GetProperty("provider").GetString());
         Assert.Equal("model processed question", root.GetProperty("answer").GetString());
         Assert.Equal(13, root.GetProperty("usage").GetProperty("inputTokens").GetInt64());
@@ -123,6 +123,39 @@ public sealed class PilotDataSourceWorkExecutionTests
         Assert.True(audit.Authorized);
         Assert.Equal($"erp-data-source:{seeded.DataSourceId:N}", audit.Resource);
         Assert.Equal("ai-reasoning-readonly", audit.Action);
+    }
+
+    [Fact]
+    public async Task Ai_question_executor_checkpoint_records_backup_provider_after_failover()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var probe = new RecordingProbe();
+        var primary = new RecordingAiAdapter(
+            "direct",
+            failure: new AiProviderExecutionException("temporary", true));
+        var backup = new RecordingAiAdapter(
+            "backup",
+            output: "backup processed question");
+        var raw = new PilotAiQuestionExecutor(
+            db,
+            new CompositeSecretResolver(new ISecretResolver[] { new FixedSecretResolver("test-connection") }),
+            probe,
+            new OrderedFailoverAiGateway(primary, backup),
+            new PilotAiRuntimeDescriptor("direct", "direct-model"));
+
+        var result = await raw.ExecuteAsync(
+            seeded.Envelope,
+            new WorkLeaseSnapshot(Guid.NewGuid(), "worker-1", 1, DateTimeOffset.UtcNow.AddMinutes(1)),
+            CancellationToken.None);
+
+        Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
+        using var checkpoint = JsonDocument.Parse(Assert.IsType<string>(result.CheckpointPayloadJson));
+        Assert.Equal("backup", checkpoint.RootElement.GetProperty("provider").GetString());
+        Assert.Equal("backup-model", checkpoint.RootElement.GetProperty("model").GetString());
+        Assert.Equal("backup processed question", checkpoint.RootElement.GetProperty("answer").GetString());
+        Assert.Equal(1, primary.CallCount);
+        Assert.Equal(1, backup.CallCount);
     }
 
     [Fact]
@@ -288,11 +321,16 @@ public sealed class PilotDataSourceWorkExecutionTests
         }
     }
 
-    private sealed class RecordingAiAdapter : IAiProviderAdapter
+    private sealed class RecordingAiAdapter(
+        string providerId = "provider-test",
+        string output = "model processed question",
+        AiProviderExecutionException? failure = null) : IAiProviderAdapter
     {
-        public string ProviderId => "provider-test";
+        public string ProviderId => providerId;
 
         public List<AiGatewayRequest> Requests { get; } = [];
+
+        public int CallCount => Requests.Count;
 
         public bool Supports(AiCapability capability) => capability == AiCapability.Reasoning;
 
@@ -302,13 +340,22 @@ public sealed class PilotDataSourceWorkExecutionTests
         {
             cancellationToken.ThrowIfCancellationRequested();
             Requests.Add(request);
-            return Task.FromResult(new AiGatewayResponse(
-                request.RequestId,
-                request.Capability,
-                "model processed question",
-                "model-test",
-                13,
-                5));
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return Task.FromResult(
+                new AiGatewayResponse(
+                    request.RequestId,
+                    request.Capability,
+                    output,
+                    $"{providerId}-model",
+                    13,
+                    5)
+                {
+                    ProviderId = providerId
+                });
         }
     }
 
