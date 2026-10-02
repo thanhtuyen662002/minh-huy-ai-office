@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
+using MinhHuyAiOffice.Shared.Contracts;
 using Platform.Persistence;
 using RuntimeWorker::MinhHuy.AIOffice.Agent.Worker;
 using Xunit;
@@ -66,6 +67,97 @@ public sealed class PilotDataSourceWorkExecutionTests
             seeded.TaskId,
             $"erp-data-source:{seeded.DataSourceId:N}",
             "connection-test",
+            ToolRiskLevel.Low);
+
+        Assert.Empty(await provider.GetAsync(request, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Ai_question_executor_calls_model_after_probe_and_persists_redacted_answer()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var probe = new RecordingProbe();
+        var adapter = new RecordingAiAdapter();
+        var raw = new PilotAiQuestionExecutor(
+            db,
+            new CompositeSecretResolver(new ISecretResolver[] { new FixedSecretResolver("test-connection") }),
+            probe,
+            new ProviderNeutralAiGateway(new IAiProviderAdapter[] { adapter }),
+            new PilotAiRuntimeDescriptor("provider-test", "model-test"));
+        var auditSink = new RecordingAuditSink();
+        var executor = new AuthorizedWorkStepExecutor(
+            raw,
+            new PilotAiQuestionToolMetadataProvider(db),
+            new PilotAiQuestionToolPermissionProvider(db),
+            new TrustedToolAuthorizationRequestFactory(db),
+            new AuthorizedToolExecutionGate(
+                new ToolAuthorizationPolicy(),
+                new ToolExecutionAuditService(auditSink)));
+
+        var result = await executor.ExecuteAsync(
+            seeded.Envelope,
+            new WorkLeaseSnapshot(Guid.NewGuid(), "worker-1", 1, DateTimeOffset.UtcNow.AddMinutes(1)),
+            CancellationToken.None);
+
+        Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
+        Assert.Single(probe.Connections);
+        Assert.Equal("test-connection", probe.Connections[0]);
+        Assert.Single(adapter.Requests);
+        Assert.Contains("read current balance", adapter.Requests[0].Input, StringComparison.Ordinal);
+        Assert.Contains("no ERP rows", adapter.Requests[0].Input, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("test-connection", adapter.Requests[0].Input, StringComparison.Ordinal);
+
+        using var checkpoint = JsonDocument.Parse(Assert.IsType<string>(result.CheckpointPayloadJson));
+        var root = checkpoint.RootElement;
+        Assert.Equal("completed", root.GetProperty("status").GetString());
+        Assert.Equal("model-test", root.GetProperty("model").GetString());
+        Assert.Equal("provider-test", root.GetProperty("provider").GetString());
+        Assert.Equal("model processed question", root.GetProperty("answer").GetString());
+        Assert.Equal(13, root.GetProperty("usage").GetProperty("inputTokens").GetInt64());
+        Assert.Equal(5, root.GetProperty("usage").GetProperty("outputTokens").GetInt64());
+        Assert.Equal(18, root.GetProperty("usage").GetProperty("totalTokens").GetInt64());
+        Assert.DoesNotContain("test-connection", result.CheckpointPayloadJson, StringComparison.Ordinal);
+
+        var audit = Assert.Single(auditSink.Entries);
+        Assert.True(audit.Authorized);
+        Assert.Equal($"erp-data-source:{seeded.DataSourceId:N}", audit.Resource);
+        Assert.Equal("ai-reasoning-readonly", audit.Action);
+    }
+
+    [Fact]
+    public async Task Ai_question_permission_requires_non_writable_source()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        seeded.Source.AllowWrite = true;
+        await db.SaveChangesAsync();
+        var provider = new PilotAiQuestionToolPermissionProvider(db);
+        var request = new ToolAuthorizationRequest(
+            seeded.Authority.TenantId,
+            seeded.Authority.CompanyId,
+            seeded.Authority.UserId,
+            seeded.TaskId,
+            $"erp-data-source:{seeded.DataSourceId:N}",
+            "ai-reasoning-readonly",
+            ToolRiskLevel.Low);
+
+        Assert.Empty(await provider.GetAsync(request, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Probe_permission_rejects_unexpected_action()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var provider = new PilotDataSourceToolPermissionProvider(db);
+        var request = new ToolAuthorizationRequest(
+            seeded.Authority.TenantId,
+            seeded.Authority.CompanyId,
+            seeded.Authority.UserId,
+            seeded.TaskId,
+            $"erp-data-source:{seeded.DataSourceId:N}",
+            "unexpected-action",
             ToolRiskLevel.Low);
 
         Assert.Empty(await provider.GetAsync(request, CancellationToken.None));
@@ -193,6 +285,30 @@ public sealed class PilotDataSourceWorkExecutionTests
             cancellationToken.ThrowIfCancellationRequested();
             Connections.Add(connectionString);
             return ValueTask.CompletedTask;
+        }
+    }
+
+    private sealed class RecordingAiAdapter : IAiProviderAdapter
+    {
+        public string ProviderId => "provider-test";
+
+        public List<AiGatewayRequest> Requests { get; } = [];
+
+        public bool Supports(AiCapability capability) => capability == AiCapability.Reasoning;
+
+        public Task<AiGatewayResponse> ExecuteAsync(
+            AiGatewayRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requests.Add(request);
+            return Task.FromResult(new AiGatewayResponse(
+                request.RequestId,
+                request.Capability,
+                "model processed question",
+                "model-test",
+                13,
+                5));
         }
     }
 
