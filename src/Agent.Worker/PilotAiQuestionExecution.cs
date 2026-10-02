@@ -93,14 +93,15 @@ public sealed class PilotAiQuestionToolPermissionProvider(PlatformDbContext dbCo
 }
 
 /// <summary>
-/// First real model-backed pilot executor. It preserves the proven read-only SQL connectivity
-/// boundary, then sends only the durable customer question plus explicit no-data instructions to
-/// the AI gateway. ERP rows, connection strings and secret references never enter model context.
+/// Model-backed pilot executor grounded by bounded, server-authored read-only ERP catalog evidence.
+/// Customer text never becomes SQL. Connection strings and secret references never enter model context,
+/// and business row contents remain outside this first grounded slice.
 /// </summary>
 public sealed class PilotAiQuestionExecutor(
     PlatformDbContext dbContext,
     CompositeSecretResolver secretResolver,
     IDataSourceConnectionProbe connectionProbe,
+    IPilotErpEvidenceReader evidenceReader,
     IAiGateway aiGateway,
     PilotAiRuntimeDescriptor runtime) : IRawWorkStepExecutor
 {
@@ -144,13 +145,51 @@ public sealed class PilotAiQuestionExecutor(
                 cancellationToken)
             .ConfigureAwait(false);
 
+        if (!SecretReference.TryParse(source.ConnectionSecretReference, out var secretReference))
+        {
+            return new WorkStepExecutionResult(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Authorization,
+                request.MaxAttempts);
+        }
+
+        PilotErpEvidence erpEvidence;
+        try
+        {
+            var connectionString = await secretResolver
+                .ResolveAsync(secretReference!, cancellationToken)
+                .ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return new WorkStepExecutionResult(
+                    WorkDeliveryOutcome.Failed,
+                    WorkFailureClass.Transient,
+                    request.MaxAttempts);
+            }
+
+            erpEvidence = await evidenceReader
+                .ReadAsync(connectionString, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return new WorkStepExecutionResult(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Transient,
+                request.MaxAttempts);
+        }
+
         var aiRequest = new AiGatewayRequest(
             envelope.TenantId.ToString("N"),
             envelope.CompanyId.ToString("N"),
             envelope.TaskId.ToString("N"),
             $"pilot-ai:{envelope.TaskId:N}:{envelope.StepId:N}",
             AiCapability.Reasoning,
-            BuildBoundedInput(request.Question));
+            BuildBoundedInput(request.Question, erpEvidence));
 
         AiGatewayResponse response;
         try
@@ -193,7 +232,19 @@ public sealed class PilotAiQuestionExecutor(
                 totalTokens
             },
             billingStatus = "usage-observed-not-settled",
-            evidence = "ai-provider-reasoning-after-read-only-connection-probe"
+            erpEvidence = new
+            {
+                databaseName = erpEvidence.DatabaseName,
+                tableCount = erpEvidence.TableCount,
+                sampledTableCount = erpEvidence.TopTables.Count,
+                topTables = erpEvidence.TopTables.Select(table => new
+                {
+                    schema = table.SchemaName,
+                    table = table.TableName,
+                    approximateRowCount = table.ApproximateRowCount
+                })
+            },
+            evidence = "ai-provider-reasoning-after-bounded-read-only-erp-catalog"
         };
 
         return new WorkStepExecutionResult(
@@ -204,15 +255,33 @@ public sealed class PilotAiQuestionExecutor(
             JsonSerializer.Serialize(checkpoint, JsonOptions));
     }
 
-    private static string BuildBoundedInput(string question) =>
-        $"""
+    private static string BuildBoundedInput(string question, PilotErpEvidence evidence)
+    {
+        evidence.Validate();
+        var tableEvidence = evidence.TopTables.Count == 0
+            ? "(no non-system tables returned)"
+            : string.Join(
+                Environment.NewLine,
+                evidence.TopTables.Select(table =>
+                    $"- {table.SchemaName}.{table.TableName}: approximateRows={table.ApproximateRowCount}"));
+
+        return $"""
         You are the bounded reasoning agent for Minh Huy AI Office.
-        The selected ERP data source has been verified as reachable, but no ERP rows or business records
-        have been supplied to you in this execution. Do not invent database values and do not claim that
-        you queried ERP data. Answer the user's question only to the extent possible from the question
-        itself. If live ERP data is required, state clearly what information must be retrieved.
+        The following evidence was retrieved from the authorized ERP SQL Server by a fixed,
+        server-authored read-only catalog query. Customer text and model output were not used as SQL.
+
+        Database: {evidence.DatabaseName}
+        Non-system table count: {evidence.TableCount}
+        Top tables by approximate row count (maximum {PilotErpEvidence.MaximumTables}):
+        {tableEvidence}
+
+        Use only this evidence and the user's question. Do not invent database values. Do not claim
+        that business row contents were read: this slice exposes catalog names and approximate row
+        counts only. If the question requires balances, invoices, inventory quantities, customer data
+        or other business values, say that a separately authorized business-query capability is needed.
 
         User question:
         {question}
         """;
+    }
 }
