@@ -4,7 +4,7 @@ status: active
 current_issue: 223
 current_pr: 224
 current_branch: "runtime/223-grounded-erp-evidence"
-head: "PENDING_FINAL_DOC_COMMIT"
+head: "d63084d0bace1038cbcac3e71d66a74ac9f52366"
 state: ready_for_review
 lease_owner: "chatgpt-runtime-ai"
 lease_heartbeat_at: "2026-10-02T09:35:00Z"
