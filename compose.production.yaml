@@ -57,6 +57,10 @@ services:
       DOTNET_ENVIRONMENT: Production
       AIOFFICE_DB_CONNECTION: ${AIOFFICE_DB_CONNECTION:?set AIOFFICE_DB_CONNECTION from the approved runtime secret source}
       PILOT_ERP_CONNECTION: ${PILOT_ERP_CONNECTION:?set PILOT_ERP_CONNECTION from the approved pilot secret source}
+      AIOFFICE_AI_BASE_URL: ${AIOFFICE_AI_BASE_URL:-}
+      AIOFFICE_AI_MODEL: ${AIOFFICE_AI_MODEL:-}
+      AIOFFICE_AI_AUTHORIZATION: ${AIOFFICE_AI_AUTHORIZATION:-}
+      AIOFFICE_AI_PROVIDER_ID: ${AIOFFICE_AI_PROVIDER_ID:-openai-compatible}
       RabbitMqWork__HostName: rabbitmq
       RabbitMqWork__Port: 5672
       RabbitMqWork__UserName: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in ignored .env.production}
