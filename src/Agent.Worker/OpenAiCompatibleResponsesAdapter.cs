@@ -13,12 +13,17 @@ public sealed record OpenAiCompatibleResponsesOptions(
     string ProviderId,
     int MaxOutputTokens = 1024)
 {
-    public static OpenAiCompatibleResponsesOptions? FromEnvironment()
+    public static OpenAiCompatibleResponsesOptions? FromEnvironment(
+        string prefix = "AIOFFICE_AI",
+        string defaultProviderId = "openai-compatible")
     {
-        var baseUrl = Environment.GetEnvironmentVariable("AIOFFICE_AI_BASE_URL");
-        var model = Environment.GetEnvironmentVariable("AIOFFICE_AI_MODEL");
-        var authorization = Environment.GetEnvironmentVariable("AIOFFICE_AI_AUTHORIZATION");
-        var providerId = Environment.GetEnvironmentVariable("AIOFFICE_AI_PROVIDER_ID");
+        ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
+        ArgumentException.ThrowIfNullOrWhiteSpace(defaultProviderId);
+
+        var baseUrl = Environment.GetEnvironmentVariable($"{prefix}_BASE_URL");
+        var model = Environment.GetEnvironmentVariable($"{prefix}_MODEL");
+        var authorization = Environment.GetEnvironmentVariable($"{prefix}_AUTHORIZATION");
+        var providerId = Environment.GetEnvironmentVariable($"{prefix}_PROVIDER_ID");
 
         var configured = new[] { baseUrl, model, authorization }.Count(value => !string.IsNullOrWhiteSpace(value));
         if (configured == 0)
@@ -29,18 +34,18 @@ public sealed record OpenAiCompatibleResponsesOptions(
         if (configured != 3)
         {
             throw new InvalidOperationException(
-                "AI runtime configuration must provide AIOFFICE_AI_BASE_URL, AIOFFICE_AI_MODEL and AIOFFICE_AI_AUTHORIZATION together.");
+                $"AI runtime configuration must provide {prefix}_BASE_URL, {prefix}_MODEL and {prefix}_AUTHORIZATION together.");
         }
 
         baseUrl = baseUrl!.Trim();
         model = model!.Trim();
         authorization = authorization!.Trim();
-        providerId = string.IsNullOrWhiteSpace(providerId) ? "openai-compatible" : providerId.Trim();
+        providerId = string.IsNullOrWhiteSpace(providerId) ? defaultProviderId : providerId.Trim();
 
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var parsed)
             || (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
         {
-            throw new InvalidOperationException("AIOFFICE_AI_BASE_URL must be an absolute HTTP or HTTPS URL.");
+            throw new InvalidOperationException($"{prefix}_BASE_URL must be an absolute HTTP or HTTPS URL.");
         }
 
         if (string.IsNullOrWhiteSpace(model)
@@ -63,6 +68,80 @@ public sealed class AiProviderExecutionException(
     Exception? innerException = null) : Exception(message, innerException)
 {
     public bool IsTransient { get; } = isTransient;
+}
+
+/// <summary>
+/// Ordered primary/backup gateway. Backup is eligible only after a retryable primary failure.
+/// Permanent primary failures (for example invalid credentials or malformed requests) fail closed
+/// so a configuration error cannot be silently hidden by another provider.
+/// </summary>
+public sealed class OrderedFailoverAiGateway(
+    IAiProviderAdapter primary,
+    IAiProviderAdapter? backup = null) : IAiGateway
+{
+    public async Task<AiGatewayResponse> ExecuteAsync(
+        AiGatewayRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        request.Validate();
+
+        if (!primary.Supports(request.Capability))
+        {
+            throw new InvalidOperationException(
+                $"Primary AI provider does not support capability {request.Capability}.");
+        }
+
+        if (backup is not null)
+        {
+            if (string.Equals(primary.ProviderId, backup.ProviderId, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Primary and backup AI provider identities must differ.");
+            }
+
+            if (!backup.Supports(request.Capability))
+            {
+                throw new InvalidOperationException(
+                    $"Backup AI provider does not support capability {request.Capability}.");
+            }
+        }
+
+        try
+        {
+            return await ExecuteAndValidateAsync(primary, request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (AiProviderExecutionException primaryFailure) when (primaryFailure.IsTransient && backup is not null)
+        {
+            try
+            {
+                return await ExecuteAndValidateAsync(backup, request, cancellationToken).ConfigureAwait(false);
+            }
+            catch (AiProviderExecutionException backupFailure)
+            {
+                throw new AiProviderExecutionException(
+                    "Primary and backup AI providers both failed.",
+                    backupFailure.IsTransient,
+                    new AggregateException(primaryFailure, backupFailure));
+            }
+        }
+    }
+
+    private static async Task<AiGatewayResponse> ExecuteAndValidateAsync(
+        IAiProviderAdapter adapter,
+        AiGatewayRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await adapter.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(response);
+        response.ValidateFor(request);
+
+        if (!string.Equals(response.ProviderId, adapter.ProviderId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("AI provider response identity does not match the selected adapter.");
+        }
+
+        return response;
+    }
 }
 
 /// <summary>
@@ -155,7 +234,10 @@ public sealed class OpenAiCompatibleResponsesAdapter(
                     output,
                     model,
                     inputTokens,
-                    outputTokens);
+                    outputTokens)
+                {
+                    ProviderId = options.ProviderId
+                };
             }
             catch (JsonException exception)
             {
