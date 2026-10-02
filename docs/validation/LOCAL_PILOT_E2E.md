@@ -89,6 +89,48 @@ The model receives only:
 
 The checkpoint records the same bounded catalog evidence plus provider/model/token usage.
 
+## Bounded ERP-grounded AI validation — 2026-10-02
+
+The operator rebuilt Agent.Worker from PR #224 and executed the authenticated local pilot against `erp.local-pilot` with the direct OpenAI primary.
+
+Observed result:
+
+```text
+WORKER_REBUILD: PASS
+WORKER_RUNNING: True
+WORKER_RESTARTS: 0
+OIDC_TOKEN: PASS
+DATASOURCE: PASS
+DATASOURCE_READ: True
+DATASOURCE_WRITE: False
+TASK_SUBMIT_HTTP: 202
+CHECKPOINT: PASS
+AI_PROVIDER: openai-direct
+AI_MODEL: gpt-6-sol
+AI_ANSWER: DATABASE=AIOffice_Pilot_CleanTest; TABLE_COUNT=19
+ERP_DATABASE: AIOffice_Pilot_CleanTest
+ERP_TABLE_COUNT: 19
+ERP_SAMPLED_TABLES: 19
+ERP_LARGEST_TABLE: aioffice.__EFMigrationsHistory
+ERP_LARGEST_TABLE_ROWS: 12
+AI_INPUT_TOKENS: 440
+AI_OUTPUT_TOKENS: 19
+AI_TOTAL_TOKENS: 459
+EVIDENCE_TYPE: ai-provider-reasoning-after-bounded-read-only-erp-catalog
+PROVIDER_CHECK: PASS
+MODEL_CHECK: PASS
+ERP_EVIDENCE_CHECK: PASS
+DATABASE_EVIDENCE_CHECK: PASS
+TABLE_COUNT_CHECK: PASS
+SAMPLE_BOUND_CHECK: PASS
+SECRET_LEAK_CHECK: PASS
+ANSWER_DATABASE_GROUNDED: PASS
+ANSWER_TABLE_COUNT_GROUNDED: PASS
+ERP_GROUNDED_AI_E2E: PASS
+```
+
+This proves that the model response was grounded in bounded catalog evidence retrieved from the authorized SQL Server data source. It does not prove access to business-row values.
+
 ## Current limitation
 
 This slice does **not** expose business-row contents. It can ground answers about the selected database/catalog, but it must not claim to know balances, invoice values, inventory quantities, customer records or other business values.
