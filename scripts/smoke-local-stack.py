@@ -35,6 +35,10 @@ def main():
     def run(*arguments, timeout=900):
         result = subprocess.run([*compose, *arguments], capture_output=True, text=True, timeout=timeout)
         if result.returncode:
+            if arguments and arguments[0] == "up":
+                bootstrap_log = subprocess.run([*compose, "logs", "--no-color", "--tail", "30", "bootstrap"],
+                    capture_output=True, text=True, timeout=20)
+                print(clean(bootstrap_log.stdout[-2000:]))
             # Never dump logs or rendered environments. Include only a bounded sanitized CLI error.
             raise RuntimeError(clean(result.stderr[-1500:]))
         return result.stdout

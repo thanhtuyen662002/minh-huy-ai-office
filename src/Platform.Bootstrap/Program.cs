@@ -77,6 +77,14 @@ try
 }
 catch (Exception error)
 {
-    Console.Error.WriteLine($"Local bootstrap failed ({error.GetType().Name}). Check service readiness and protected installation state.");
+    var message = error.Message;
+    foreach (var name in new[] { "SQL", "RUNTIME", "READER", "IDENTITY_ADMIN", "IDENTITY_DB", "OWNER", "RABBITMQ" })
+    {
+        var secret = Environment.GetEnvironmentVariable($"AIOFFICE_{name}_PASSWORD");
+        if (!string.IsNullOrEmpty(secret)) message = message.Replace(secret, "[REDACTED]", StringComparison.Ordinal);
+    }
+    message = message.Replace('\r', ' ').Replace('\n', ' ');
+    if (message.Length > 500) message = message[..500];
+    Console.Error.WriteLine($"Local bootstrap failed ({error.GetType().Name}): {message}");
     return 1;
 }
