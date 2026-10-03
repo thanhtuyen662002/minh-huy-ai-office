@@ -1,9 +1,9 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
 status: active-development
-current_issue: 236
-current_pr: null
-current_branch: lead/236-local-bootstrap
+current_issue: 238
+current_pr: 239
+current_branch: lead/238-windows-installer
 head: null
 state: full-product-completion
 lease_owner: lead
@@ -55,9 +55,9 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: integrate verified FE runtime #234, provision SQL/OIDC and first-company bootstrap automatically, deliver Windows setup/startup/recovery, then complete every remaining P0-P6 requirement through feature PRs and exact-head CI. Full product completion remains unproven."
+next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: finish Windows #238 / draft #239 and FE test discovery #242, then deliver full company/member/source onboarding and every remaining P0-P6 requirement. PRs #235/#237/#241 are merged with verified main CI. Full product completion remains unproven."
 blocked_by:
-  - "Approved OIDC issuer/audience and token/client flow"
-  - "Private SQL Server with backup, RabbitMQ/private worker host, first company/membership bootstrap, and read-only ERP secret"
+  - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
+  - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
 product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md

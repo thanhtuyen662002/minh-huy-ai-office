@@ -54,7 +54,7 @@ describe("CustomerPortalShell authority boundary", () => {
   it("keeps company switching as a request hint while the portal retains server authority", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership: serverMembership }} surface="customer-portal" companies={[{ companyId: "company-server", companyName: "Công ty từ máy chủ" }, { companyId: "browser-company", companyName: "Browser company hint" }]} onSelectCompany={onSelectCompany} />);
-    fireEvent.change(screen.getByLabelText("Đổi công ty"), { target: { value: "browser-company" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Đổi công ty" }), { target: { value: "browser-company" } });
     expect(onSelectCompany).toHaveBeenCalledWith("browser-company");
     expect(screen.getByRole("heading", { name: serverMembership.companyName })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Browser company hint" })).toBeNull();

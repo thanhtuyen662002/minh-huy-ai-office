@@ -1,14 +1,17 @@
 workstream: frontend
 role: "Frontend Product"
 status: active
-current_issue: 229
-current_pr: 230
-current_branch: "frontend/229-local-ai-workspace"
-head: "3fb163f2f815da12d0ceabf458e467969e64d308"
-state: ready_for_review
-lease_owner: "chatgpt-frontend"
-lease_heartbeat_at: "2026-10-02T10:27:00Z"
-last_checkpoint_at: "2026-10-02T10:27:00Z"
+current_issue: 242
+current_pr: null
+current_branch: "frontend/242-test-discovery"
+head: null
+state: verified_local
+lease_owner: root
+lease_heartbeat_at: "2026-10-03T19:57:49Z"
+last_checkpoint_at: "2026-10-03T19:57:49Z"
+last_completed_issue: 229
+last_merged_pr: 230
+last_merge_commit: af797bf2ac2677dcb77b0b110fca56a3f3c764cf
 preferred_next_issue: null
 scope:
   - nextjs
@@ -17,5 +20,5 @@ scope:
   - client-contracts
   - realtime-ui
 verification:
-  result: "PR #230 implementation head 3fb163f2f815da12d0ceabf458e467969e64d308 passed Governance and full Build, including web tests/typecheck/Next build, .NET, Docker Compose, EF migration integrity, container builds and required quality gates."
-next_action: "Merge PR #230 after final metadata checkpoint CI, then run the browser smoke on main against local Keycloak/Core.Api/Agent.Worker."
+  result: "All 26 app/lib/components files and all 255 tests pass locally with zero skipped/pending cases. Explicit DOM cleanup, fresh membership fixtures, accessible combobox selectors and descriptor-trap denial assertions repair stale harness/fixtures. Production authorization is unchanged. TypeScript and production Next build pass. Exact-head CI and main verification remain required."
+next_action: "Complete #242 and merge only after every exact-head gate succeeds; verify main, then deliver full company/member/source onboarding under #233."
