@@ -82,8 +82,18 @@ def main():
         raise RuntimeError("Local runtime readiness deadline exceeded.")
 
     def ready():
-        assert wait_for(lambda: http("/health", base=api)[0] == 200)
-        assert wait_for(lambda: http("/")[0] == 200)
+        try:
+            assert wait_for(lambda: http("/health", base=api)[0] == 200)
+            assert wait_for(lambda: http("/")[0] == 200)
+        except RuntimeError:
+            states = run("ps", "--all", "--format", "{{.Service}} {{.State}} {{.Health}}")
+            print(clean(states))
+            # Only startup diagnostics, before any login or access token is created.
+            for service in ("core-api", "agent-worker"):
+                result = subprocess.run([*compose, "logs", "--no-color", "--tail", "20", service],
+                    capture_output=True, text=True, timeout=20)
+                print(clean(result.stdout[-2000:]))
+            raise
 
     def login(expected=200):
         status, headers, body = http("/api/local/session/login", {
@@ -97,6 +107,24 @@ def main():
             cookie = headers.get("Set-Cookie", "")
             assert "HttpOnly" in cookie and "SameSite=lax" in cookie
 
+    profile = json.loads(run("config", "--format", "json"))
+    assert profile["name"] == "aioffice-" + uuid.UUID(manifest["AIOFFICE_INSTALLATION_ID"]).hex
+    services = profile["services"]
+    for service in ("core-api", "agent-worker"):
+        environment = services[service]["environment"]
+        assert environment["DOTNET_ENVIRONMENT"] == "Development"
+        assert environment["RabbitMqWork__HostName"] == "rabbitmq"
+        assert environment["RabbitMqWork__UserName"] == "aioffice-local"
+        assert environment["RabbitMqWork__Password"] == manifest["AIOFFICE_RABBITMQ_PASSWORD"]
+        assert "User ID=aioffice_runtime;" in environment["AIOFFICE_DB_CONNECTION"]
+        assert manifest["AIOFFICE_SQL_PASSWORD"] not in json.dumps(environment)
+        assert manifest["AIOFFICE_OWNER_PASSWORD"] not in json.dumps(environment)
+    assert services["core-api"]["environment"]["AIOffice__PlatformDatabase__ConnectionSecretRef"] == "secretref://env/AIOFFICE_DB_CONNECTION"
+    for service in services.values():
+        assert all(port["host_ip"] == "127.0.0.1" for port in service.get("ports", []))
+    for name in ("sql", "identity-db", "rabbitmq", "redis"):
+        assert not services[name].get("ports"), "Internal data service has a host port"
+    print("PASS local service configuration, secret references and isolated loopback profile")
     run("up", "--build", "-d", timeout=1500)
     ready()
     status, _, page = http("/")

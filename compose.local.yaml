@@ -134,6 +134,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_ENVIRONMENT: Development
       AIOFFICE_DB_CONNECTION: "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password=${AIOFFICE_RUNTIME_PASSWORD};Encrypt=true;TrustServerCertificate=true"
+      AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
       PILOT_ERP_CONNECTION: "Server=sql;Database=AIOfficeSample;User ID=aioffice_reader;Password=${AIOFFICE_READER_PASSWORD};Encrypt=true;TrustServerCertificate=true"
       AIOffice__Authentication__Authority: http://identity:8080/realms/aioffice-local
       AIOffice__Authentication__Audience: aioffice-local
