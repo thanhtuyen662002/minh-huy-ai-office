@@ -91,6 +91,41 @@ jobs:
         if: ${{ always() }}
         run: docker compose --env-file "$RUNNER_TEMP/aioffice-local/local.env" -f compose.local.yaml down --volumes --remove-orphans
 
+  windows-installer:
+    name: Windows installer artifact
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Verify installer core
+        run: dotnet test tests/Setup.Core.Tests/Setup.Core.Tests.csproj --configuration Release
+      - name: Build pinned self-contained installer
+        shell: pwsh
+        run: |
+          ./scripts/build-windows-installer.ps1 -BundleDirectory "$env:RUNNER_TEMP/setup-bundle" -OutputDirectory "$env:RUNNER_TEMP/windows-setup"
+      - name: Verify native source formatting
+        shell: pwsh
+        run: |
+          $env:BundleDirectory = "$env:RUNNER_TEMP/setup-bundle"
+          dotnet format src/Setup.Windows/Setup.Windows.csproj --no-restore --verify-no-changes --include src/Setup.Windows --verbosity minimal
+      - name: Verify bundled executable without host developer tools
+        shell: pwsh
+        run: ./scripts/verify-windows-installer.ps1 -Directory "$env:RUNNER_TEMP/windows-setup"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-setup-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/windows-setup/Setup.exe
+            ${{ runner.temp }}/windows-setup/Setup.exe.sha256
+            ${{ runner.temp }}/windows-setup/release-manifest.json
+            ${{ runner.temp }}/windows-setup/bundle-proof.json
+          if-no-files-found: error
+
   infrastructure:
     name: Docker Compose validation
     runs-on: ubuntu-latest
@@ -205,7 +240,7 @@ jobs:
   quality-gates:
     name: Required quality gates
     if: ${{ always() }}
-    needs: [dotnet, web, web-runtime, local-runtime, infrastructure, deployment, migrations]
+    needs: [dotnet, web, web-runtime, local-runtime, windows-installer, infrastructure, deployment, migrations]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -215,13 +250,14 @@ jobs:
           WEB_RESULT: ${{ needs.web.result }}
           WEB_RUNTIME_RESULT: ${{ needs['web-runtime'].result }}
           LOCAL_RUNTIME_RESULT: ${{ needs['local-runtime'].result }}
+          WINDOWS_INSTALLER_RESULT: ${{ needs['windows-installer'].result }}
           INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
           DEPLOYMENT_RESULT: ${{ needs.deployment.result }}
           MIGRATIONS_RESULT: ${{ needs.migrations.result }}
         run: |
           set -euo pipefail
           failed=0
-          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT LOCAL_RUNTIME_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
+          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT LOCAL_RUNTIME_RESULT WINDOWS_INSTALLER_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
             result="${!gate}"
             echo "${gate}=${result}"
             if [ "${result}" != "success" ]; then

@@ -5,7 +5,7 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: lead/238-windows-installer
-current_pr: null
+current_pr: 239
 current_target_head: null
 last_verified_commit: cb43b99b4e9c1efdf7fcacf8a6dd255b8d94d59e
 

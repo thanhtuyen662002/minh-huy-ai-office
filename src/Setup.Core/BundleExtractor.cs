@@ -40,7 +40,15 @@ public sealed partial class BundleExtractor
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 using var input = entry.Open();
                 using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                input.CopyTo(output);
+                var buffer = new byte[81920];
+                int count;
+                long written = 0;
+                while ((count = input.Read(buffer)) != 0)
+                {
+                    written += count;
+                    if (written > entry.Length) throw new InvalidDataException("Application bundle entry exceeds its declared size.");
+                    output.Write(buffer, 0, count);
+                }
                 if (output.Length != entry.Length) throw new InvalidDataException("Incomplete application bundle entry.");
             }
             Directory.Move(staging, target);
@@ -65,7 +73,7 @@ public sealed partial class BundleExtractor
             var name = entry.FullName.Replace('\\', '/');
             var directory = name.EndsWith('/');
             var segments = (directory ? name[..^1] : name).Split('/');
-            if (segments.Any(segment => string.IsNullOrWhiteSpace(segment) || segment is "." or ".." ||
+            if (segments.Any(segment => string.IsNullOrWhiteSpace(segment) || segment.Length > 255 || segment is "." or ".." ||
                 segment.EndsWith(' ') || segment.EndsWith('.') || segment.IndexOfAny([':', '*', '?', '"', '<', '>', '|']) >= 0 ||
                 segment.Any(char.IsControl) || ReservedName().IsMatch(segment)))
                 throw new InvalidDataException("Unsafe application bundle path.");

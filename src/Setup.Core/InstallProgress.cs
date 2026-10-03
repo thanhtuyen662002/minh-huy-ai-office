@@ -7,7 +7,7 @@ namespace Setup.Core;
 public enum InstallPhase { Inspecting, AwaitingReboot, PreparingRuntime, StartingRuntime, Ready, Failed }
 
 // Deliberately excludes credentials, command output and arbitrary exception messages.
-public sealed record InstallProgress(int SchemaVersion, string Revision, InstallPhase Phase);
+public sealed record InstallProgress(int SchemaVersion, string Revision, InstallPhase Phase, bool DockerLicenseAccepted = false);
 
 public sealed partial class ProgressStore
 {
