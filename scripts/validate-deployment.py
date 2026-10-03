@@ -65,6 +65,30 @@ for service_name in ("core-api", "agent-worker"):
     if "no-new-privileges:true" not in security_options:
         fail(f"{service_name} must enable no-new-privileges")
 
+web = services.get("web")
+if web is None:
+    fail("web must be included in the application deployment")
+if web.get("read_only") is not True:
+    fail("web must run with a read-only root filesystem")
+if "ALL" not in {str(cap).upper() for cap in (web.get("cap_drop") or [])}:
+    fail("web must drop all Linux capabilities")
+if "no-new-privileges:true" not in {
+    str(option).lower() for option in (web.get("security_opt") or [])
+}:
+    fail("web must enable no-new-privileges")
+if not any(
+    int(port.get("target", 0)) == 3000
+    and port.get("published") is not None
+    and port.get("host_ip") == "127.0.0.1"
+    for port in (web.get("ports") or [])
+):
+    fail("web must publish container port 3000 on IPv4 loopback only")
+web_environment = web.get("environment") or {}
+if web_environment.get("AIOFFICE_LOCAL_UI_ENABLED") != "false":
+    fail("production web must keep the local-only password grant disabled")
+if web_environment.get("NODE_ENV") != "production":
+    fail("web must use the production standalone runtime")
+
 core_api = services["core-api"]
 api_ports = core_api.get("ports") or []
 if not any(

@@ -1,13 +1,13 @@
 project: Minh Huy AI Office
 repository: thanhtuyen662002/minh-huy-ai-office
-phase: P3-P5-business-read-enablement
+phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
-current_issue: null
+current_issue: 233
 current_branch: main
 current_pr: null
-current_target_head: 78a6f112b18afd502622ef16b6c25578c612338b
-last_verified_commit: 303c045e43e92115a35aedbd758dc44e37a1384a
+current_target_head: null
+last_verified_commit: fd804753ee7ac181f1885b07b5bb673ba927fd58
 
 critical_paths:
   backend:
@@ -70,7 +70,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Select the first authorized real ERP data source/customer and first read-only business capability (recommended examples: receivables balance, inventory on-hand, or invoice lookup). Then create an ERP/Data adapter issue that maps that semantic capability to fixed SQL + typed parameters + bounded evidence, followed by runtime AI grounding E2E."
+next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: integrate verified FE runtime #234, provision SQL/OIDC and first-company bootstrap automatically, deliver Windows setup/startup/recovery, then complete every remaining P0-P6 requirement through feature PRs and exact-head CI. Full product completion remains unproven."
 
 blocked_by:
   - "The first real customer ERP/data source and business capability have not yet been selected/authorized for AI Office business-row access."
@@ -95,3 +95,14 @@ autonomy:
 handoff_contract:
   required: true
   checkpoint_frequency: "after each verified unit of work"
+
+product_completion:
+  tracking_issue: 233
+  requirement_matrix: docs/PRODUCT_COMPLETION.md
+  roadmap_requirements: 47
+  windows_setup_requirements: 12
+  integration_gates: 3
+  first_runtime_feature_issue: 234
+  all_requirements_verified: false
+  windows_setup_ready: false
+  clean_windows_install_verified: false

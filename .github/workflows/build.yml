@@ -52,13 +52,27 @@ jobs:
         with:
           node-version: 24
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Test
         run: npm run web:test
       - name: Type-check
         run: npm run web:typecheck
       - name: Build
         run: npm run web:build
+
+  web-runtime:
+    name: FE container runtime smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build standalone FE image
+        run: docker build --file apps/web/Dockerfile --tag aioffice/web:ci .
+      - name: Verify the running FE and its runtime configuration
+        run: node scripts/smoke-web-container.mjs aioffice/web:ci
 
   infrastructure:
     name: Docker Compose validation
@@ -174,7 +188,7 @@ jobs:
   quality-gates:
     name: Required quality gates
     if: ${{ always() }}
-    needs: [dotnet, web, infrastructure, deployment, migrations]
+    needs: [dotnet, web, web-runtime, infrastructure, deployment, migrations]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -182,13 +196,14 @@ jobs:
         env:
           DOTNET_RESULT: ${{ needs.dotnet.result }}
           WEB_RESULT: ${{ needs.web.result }}
+          WEB_RUNTIME_RESULT: ${{ needs['web-runtime'].result }}
           INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
           DEPLOYMENT_RESULT: ${{ needs.deployment.result }}
           MIGRATIONS_RESULT: ${{ needs.migrations.result }}
         run: |
           set -euo pipefail
           failed=0
-          for gate in DOTNET_RESULT WEB_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
+          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
             result="${!gate}"
             echo "${gate}=${result}"
             if [ "${result}" != "success" ]; then

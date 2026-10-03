@@ -1,5 +1,7 @@
 # Minh Huy AI Office
 
+Full product and one-click Windows setup progress is tracked in [issue #233](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/233) and the [requirement matrix](docs/PRODUCT_COMPLETION.md). Historical pilot/contract milestones are partial evidence; the complete product and Windows installer are not yet delivered.
+
 Production-oriented multi-tenant AI Office for Minh Huy's ERP, accounting, customer support and operational workflows.
 
 The repository is intentionally designed so development can continue across different ChatGPT/Codex/AI sessions without relying on chat history.

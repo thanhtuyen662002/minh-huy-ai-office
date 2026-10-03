@@ -1,5 +1,8 @@
 import { LocalAiWorkspace } from "../components/local-ai-workspace";
 
+// Setup supplies company settings when the container starts, after the image is built.
+export const dynamic = "force-dynamic";
+
 const DEFAULT_LOCAL_COMPANY_ID = "22222222-2222-2222-2222-222222222222";
 
 export default function Home() {

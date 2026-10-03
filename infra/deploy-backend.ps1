@@ -50,7 +50,7 @@ Invoke-Checked -Command "docker" -Arguments ($composeBase + @("config", "--quiet
 Invoke-Checked -Command "docker" -Arguments (
     $composeBase + @(
         "up", "-d", "--build", "--remove-orphans",
-        "rabbitmq", "redis", "otel-collector", "jaeger", "core-api", "agent-worker"
+        "rabbitmq", "redis", "otel-collector", "jaeger", "core-api", "agent-worker", "web"
     )
 )
 
@@ -108,6 +108,31 @@ if (-not $workerReady) {
     throw "Agent.Worker did not establish a RabbitMQ consumer on minhhuy.work.v1. Keep traffic on the previous known-good release and inspect worker/RabbitMQ logs."
 }
 
-Write-Host "Backend release $releaseSha is healthy at $healthUrl"
+$webPortResult = (& docker @composeBase port web 3000).Trim()
+if ($LASTEXITCODE -ne 0 -or -not $webPortResult) {
+    throw "Unable to resolve the FE loopback port after deployment."
+}
+
+$webUrl = "http://$webPortResult/"
+$webReady = $false
+for ($attempt = 1; $attempt -le 30; $attempt++) {
+    try {
+        $response = Invoke-WebRequest -Uri $webUrl -UseBasicParsing -TimeoutSec 3
+        if ($response.StatusCode -eq 200) {
+            $webReady = $true
+            break
+        }
+    }
+    catch {
+        Start-Sleep -Seconds 2
+    }
+}
+
+if (-not $webReady) {
+    throw "FE did not serve the application at $webUrl. Keep traffic on the previous known-good release and inspect web logs."
+}
+
+Write-Host "Application release $releaseSha has a healthy Core.Api at $healthUrl"
+Write-Host "FE is serving at $webUrl"
 Write-Host "Agent.Worker is consuming minhhuy.work.v1"
 Write-Host "Do not expose this loopback endpoint directly. Route only through the approved secure tunnel/private network."
