@@ -40,7 +40,8 @@ def main():
                     capture_output=True, text=True, timeout=20)
                 print(clean(bootstrap_log.stdout[-2000:]))
             # Never dump logs or rendered environments. Include only a bounded sanitized CLI error.
-            raise RuntimeError(clean(result.stderr[-1500:]))
+            diagnostic = result.stderr or result.stdout
+            raise RuntimeError(clean(diagnostic[-1500:]))
         return result.stdout
 
     def sql(query):
@@ -146,13 +147,13 @@ def main():
     foreign_source = str(uuid.uuid4())
     sql(f"""USE AIOfficeLocal;
         INSERT aioffice.Companies (TenantId, Id, Code, Name) VALUES ('{tenant}', '{foreign_company}', N'FOREIGN', N'Foreign company');
-        INSERT aioffice.DataSources (TenantId, CompanyId, Id, LogicalName, Kind, Environment, Purpose, ConnectionSecretReference)
-        VALUES ('{tenant}', '{foreign_company}', '{foreign_source}', N'Foreign source', N'sql-server', N'Development', N'Isolation test', N'secretref://env/PILOT_ERP_CONNECTION');""")
+        INSERT aioffice.DataSources (TenantId, CompanyId, Id, LogicalName, Kind, Environment, Purpose, ConnectionSecretReference, MaxConcurrency)
+        VALUES ('{tenant}', '{foreign_company}', '{foreign_source}', N'Foreign source', N'sql-server', N'Development', N'Isolation test', N'secretref://env/PILOT_ERP_CONNECTION', 1);""")
     wrong = {**auth, "X-AIOffice-Company-Id": foreign_company}
     assert http("/api/auth/context", base=api, headers=wrong)[0] == 403
     assert http("/api/data-sources", base=api, headers=wrong)[0] == 403
     denied_status, _, denied_result = http(f"/api/data-sources/{foreign_source}/connection-test", {}, base=api, headers=auth)
-    assert denied_status == 200 and not denied_result["succeeded"]
+    assert denied_status == 200 and not denied_result["succeeded"] and denied_result["code"] == "not_found"
     assert sql("""USE AIOfficeSample;
         EXECUTE AS LOGIN=N'aioffice_reader';
         BEGIN TRY
