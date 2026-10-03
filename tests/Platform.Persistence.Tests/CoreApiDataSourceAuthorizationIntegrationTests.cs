@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text.Json;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
@@ -109,6 +111,76 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
         Assert.DoesNotContain("connectionString", payload, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("viewer")]
+    [InlineData("ADMIN")]
+    [InlineData("unrecognized-role")]
+    public async Task CallerAdminClaim_DoesNotGrantRegistryManagementWithoutDirectoryAdmin(string? role)
+    {
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        string[] roles = role is null ? [] : [role];
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, roles));
+        var original = DataSource(context.TenantId, context.CompanyId, "original", "secretref://env/original");
+        await SeedDataSourcesAsync(factory, original);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        var request = new DataSourceRegistryWriteRequest(
+            "changed", "changed-kind", "changed-environment", "changed-purpose", "secretref://env/denied-rotation",
+            AllowRead: false, AllowWrite: true, MaxConcurrency: 16, IsEnabled: false);
+
+        var create = await client.PostAsJsonAsync("/api/data-sources/", request);
+        var update = await client.PutAsJsonAsync($"/api/data-sources/{original.Id}", request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, create.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, update.StatusCode);
+        Assert.DoesNotContain("denied-rotation", await create.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.DoesNotContain("denied-rotation", await update.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/data-sources/")).StatusCode);
+        await using var verificationScope = factory.Services.CreateAsyncScope();
+        var persisted = verificationScope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+        Assert.Equal(1, await persisted.DataSources.CountAsync());
+        Assert.Equivalent(original, await persisted.DataSources.AsNoTracking().SingleAsync(), strict: true);
+    }
+
+    [Fact]
+    public async Task DirectoryAdmin_CanCreateAndUpdatePersistedSourceWithoutExposingReference()
+    {
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, ["admin"]));
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        var request = new DataSourceRegistryWriteRequest(
+            "created", "sql-server", "test", "acceptance", "secretref://env/original",
+            AllowRead: true, AllowWrite: false, MaxConcurrency: 2);
+
+        var create = await client.PostAsJsonAsync("/api/data-sources/", request);
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        using var created = JsonDocument.Parse(await create.Content.ReadAsStringAsync());
+        var id = created.RootElement.GetProperty("id").GetGuid();
+        var update = await client.PutAsJsonAsync($"/api/data-sources/{id}", request with
+        {
+            LogicalName = "updated",
+            ConnectionSecretReference = "secretref://env/rotated",
+            AllowRead = false,
+            AllowWrite = true,
+            MaxConcurrency = 8,
+            IsEnabled = false
+        });
+
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+        Assert.DoesNotContain("secretref://", await update.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        await using var verificationScope = factory.Services.CreateAsyncScope();
+        var persisted = await verificationScope.ServiceProvider.GetRequiredService<PlatformDbContext>()
+            .DataSources.AsNoTracking().SingleAsync();
+        Assert.Equal("updated", persisted.LogicalName);
+        Assert.Equal("secretref://env/rotated", persisted.ConnectionSecretReference);
+        Assert.False(persisted.AllowRead);
+        Assert.True(persisted.AllowWrite);
+        Assert.False(persisted.IsEnabled);
+        Assert.Equal(8, persisted.MaxConcurrency);
+    }
+
     private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)
     {
         var databaseName = $"core-api-datasource-{Guid.NewGuid():N}";
@@ -195,7 +267,8 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
         {
             var identity = new ClaimsIdentity([
                 new Claim(AuthenticationClaimTypes.IdentityProvider, "test-oidc"),
-                new Claim(AuthenticationClaimTypes.Subject, "test-subject")
+                new Claim(AuthenticationClaimTypes.Subject, "test-subject"),
+                new Claim(ClaimTypes.Role, "admin")
             ], AuthenticationScheme);
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), AuthenticationScheme)));
         }

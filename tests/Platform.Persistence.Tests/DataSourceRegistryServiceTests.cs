@@ -291,6 +291,14 @@ public sealed class DataSourceRegistryServiceTests
             UserId = userId,
             IsActive = true
         });
+        context.RoleAssignments.Add(new RoleAssignmentRecord
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            UserId = userId,
+            RoleKey = "admin",
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
 
         await context.SaveChangesAsync();
     }

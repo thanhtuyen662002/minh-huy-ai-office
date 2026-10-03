@@ -172,6 +172,77 @@ def main():
         AND IS_SRVROLEMEMBER('dbcreator','aioffice_runtime')=0 THEN N'RESTRICTED' ELSE N'PRIVILEGED' END;""") == "RESTRICTED"
     print("PASS FE login, authoritative context, read-only SQL source and company isolation")
 
+    # Authority must be re-resolved even with the same previously issued JWT and BFF cookie.
+    source_scope = f"TenantId='{tenant}' AND CompanyId='{company}'"
+    role_scope = source_scope + f" AND UserId='{user}'"
+
+    def fingerprint(table, scope, order):
+        result = sql(f"""USE AIOfficeLocal; SELECT CONVERT(varchar(64), HASHBYTES('SHA2_256',
+            (SELECT * FROM aioffice.{table} WHERE {scope} ORDER BY {order}
+             FOR JSON PATH, INCLUDE_NULL_VALUES)), 2);""")
+        assert len(result) == 64, "SQL fixture fingerprint failed"
+        return result
+
+    source_before = fingerprint("DataSources", source_scope, "Id")
+    roles_before = fingerprint("RoleAssignments", role_scope, "RoleKey")
+    backup = "tempdb.dbo.AIOfficeRoleBackup_" + uuid.uuid4().hex
+    sql(f"""USE AIOfficeLocal; SELECT TenantId, CompanyId, UserId, RoleKey, CreatedAtUtc
+        INTO {backup} FROM aioffice.RoleAssignments WHERE {role_scope};""")
+    metadata = {
+        "logicalName": "acceptance-denied-" + uuid.uuid4().hex,
+        "kind": "sql-server", "environment": "Development", "purpose": "Role revocation acceptance",
+        "connectionSecretReference": "secretref://env/ROLE_REVOCATION_DENIED",
+        "allowRead": False, "allowWrite": True, "maxConcurrency": 7, "isEnabled": False,
+    }
+    try:
+        sql(f"USE AIOfficeLocal; DELETE FROM aioffice.RoleAssignments WHERE {role_scope} AND RoleKey COLLATE Latin1_General_100_BIN2=N'admin';")
+        status, _, context = http("/api/auth/context", base=api, headers=auth)
+        assert status == 200 and "admin" not in context["roles"], "Issued token retained revoked authority"
+        assert http("/api/data-sources", base=api, headers=auth)[0] == 200
+        assert http("/api/local/data-sources" + selector)[0] == 200
+        for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{source}", "PUT")):
+            assert http(path, metadata, base=api, headers=auth, method=method)[0] == 403
+        for path, method in (("/api/local/data-sources", "POST"), (f"/api/local/data-sources/{source}", "PUT")):
+            status, headers, body = http(path + selector, metadata, headers={"Origin": web}, method=method)
+            assert status == 403, "BFF did not preserve authoritative source-management denial"
+            assert "no-store" in headers.get("Cache-Control", "")
+            assert all(secret not in json.dumps(body) for secret in [*secrets, token, metadata["connectionSecretReference"]])
+        assert fingerprint("DataSources", source_scope, "Id") == source_before, "Denied mutation changed stored source metadata"
+    finally:
+        # Keep all original roles and timestamps, including custom assignments, even on failure.
+        sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+            DELETE FROM aioffice.RoleAssignments WHERE {role_scope};
+            INSERT aioffice.RoleAssignments (TenantId, CompanyId, UserId, RoleKey, CreatedAtUtc)
+                SELECT TenantId, CompanyId, UserId, RoleKey, CreatedAtUtc FROM {backup};
+            DROP TABLE {backup}; COMMIT TRANSACTION;""")
+        assert fingerprint("RoleAssignments", role_scope, "RoleKey") == roles_before, "Role fixture restoration changed assignments"
+    status, _, context = http("/api/auth/context", base=api, headers=auth)
+    assert status == 200 and "admin" in context["roles"], "Restored admin authority unavailable"
+    for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{foreign_source}", "PUT")):
+        assert http(path, metadata, base=api, headers=wrong, method=method)[0] == 403
+
+    # Exercise successful BFF create/update against the real database, then remove only this fixture.
+    fixture_name = "acceptance-admin-" + uuid.uuid4().hex
+    allowed = {**metadata, "logicalName": fixture_name, "connectionSecretReference": "secretref://env/PILOT_ERP_CONNECTION",
+               "allowRead": True, "allowWrite": False, "isEnabled": True}
+    try:
+        status, headers, created = http("/api/local/data-sources" + selector, allowed, headers={"Origin": web})
+        assert status == 201, "Company admin source create failed"
+        assert "no-store" in headers.get("Cache-Control", "")
+        assert "connectionSecretReference" not in created
+        fixture_id = str(uuid.UUID(created["id"]))
+        updated = {**allowed, "maxConcurrency": 3, "isEnabled": False}
+        status, headers, result = http(f"/api/local/data-sources/{fixture_id}{selector}", updated,
+            headers={"Origin": web}, method="PUT")
+        assert status == 200 and not result["isEnabled"] and result["maxConcurrency"] == 3
+        assert "no-store" in headers.get("Cache-Control", "") and "connectionSecretReference" not in result
+        assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources
+            WHERE {source_scope} AND Id='{fixture_id}' AND IsEnabled=0 AND MaxConcurrency=3;""") == "1"
+    finally:
+        sql(f"USE AIOfficeLocal; DELETE FROM aioffice.DataSources WHERE {source_scope} AND LogicalName=N'{fixture_name}';")
+    assert fingerprint("DataSources", source_scope, "Id") == source_before, "Admin fixture cleanup changed an existing source"
+    print("PASS real SQL admin revoke/restore, issued-session API/BFF denial, unchanged sources and admin CRUD")
+
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
     status, _, accepted = http("/api/local/tasks" + selector,
         {"dataSourceId": source, "question": "Inspect the local sample database metadata"})

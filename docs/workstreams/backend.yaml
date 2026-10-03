@@ -1,14 +1,14 @@
 workstream: backend
 role: "Backend Platform"
-status: retired
-current_issue: null
+status: active
+current_issue: 240
 current_pr: null
-current_branch: null
+current_branch: backend/240-source-management-permission
 head: null
-state: retired
-lease_owner: null
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-27T06:20:00Z"
+state: coding
+lease_owner: root
+lease_heartbeat_at: "2026-10-03T16:50:00Z"
+last_checkpoint_at: "2026-10-03T16:50:00Z"
 last_completed_issue: 203
 last_merged_pr: 210
 last_merge_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
@@ -19,9 +19,9 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  result: "PR #210 / issue #203 is merged and the SQL-backed current SLA source is composed into the pilot API. Authorization remains server-derived and fail-closed; no open Backend blocker remains."
+  result: "Issue #240 source-management authorization: 326 persistence/API tests and 72 collected web tests pass locally; TypeScript and production web build pass. Real SQL role-revocation acceptance is implemented but requires exact-head Compose CI before merge."
 known_risks:
-  - "Pilot deployment still requires an approved OIDC issuer/audience and first-company membership bootstrap."
-  - "Tenant/company/user authority remains server-derived and fail-closed; responses must not expose authority or secret fields."
+  - "Reads remain available to active members; writes require fresh server-resolved company admin. Token claims cannot grant authority."
+  - "This security prerequisite does not complete full company/member/source onboarding or full-product issue #233."
 blocked_by: []
-next_action: "Keep the Backend lease retired. The next action is operator deployment and authenticated smoke verification; open a new issue only for a newly observed backend blocker."
+next_action: "Checkpoint #240 and open a draft PR, close every exact-head CI gate including real SQL revocation with an already issued session, review and merge; then deliver full owner/company/member/source onboarding under #233."
