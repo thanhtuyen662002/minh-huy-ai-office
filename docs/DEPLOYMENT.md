@@ -1,5 +1,24 @@
 # Deployment Baseline
 
+## Standalone FE runtime
+
+Production Compose includes `web` alongside Core.Api and Agent.Worker. `infra/deploy-backend.ps1` builds/starts FE and waits for its loopback HTTP endpoint as well as the API and the worker's RabbitMQ consumer. The FE image runs without a host Node/npm installation, using Next.js standalone output and a non-root, read-only runtime. Cache and temporary files use bounded ephemeral mounts.
+
+`AIOFFICE_WEB_PORT` defaults to 3000 and is bound to `127.0.0.1`. Company settings for a local profile are read at runtime. Never pass provider credentials, SQL connection strings or access tokens through public Next.js environment variables.
+
+Production Compose sets `AIOFFICE_LOCAL_UI_ENABLED=false`: the local password-grant BFF is not a production identity flow. FE HTTP readiness proves that a page is served; identity, DB, broker, AI and business readiness need separate acceptance. Automatic local SQL/OIDC bootstrap and the full production OIDC browser flow remain requirements in [PRODUCT_COMPLETION.md](PRODUCT_COMPLETION.md).
+
+CI builds the real image and runs `node scripts/smoke-web-container.mjs aioffice/web:ci`. It starts one image with two company environments, verifies runtime settings and static assets, enforces the non-root/read-only boundary and checks disabled sessions/login stay fail-closed with no-store responses. This is a mandatory Required quality gates dependency.
+
+For a development/CI image check (Docker and Node are needed only for this verification):
+
+```sh
+docker build --file apps/web/Dockerfile --tag aioffice/web:ci .
+node scripts/smoke-web-container.mjs aioffice/web:ci
+```
+
+The one-click Windows setup artifact is not available yet. Track provisioning, installation, sign-in startup and clean-machine/reboot proof in [issue #233](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/233).
+
 This document defines the P0 deployment contract for Minh Huy AI Office. It is intentionally conservative: production credentials stay outside Git, backend services bind to the host loopback interface, and SQL Server is never published by this stack.
 
 ## Topology

@@ -1,14 +1,14 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
-status: release/pilot-closure
-current_issue: null
+status: active-development
+current_issue: 233
 current_pr: null
 current_branch: main
-head: 0e67a0ffe03454cd0b2fffc12163a608bf0bd804
-state: release/pilot-closure
+head: null
+state: full-product-completion
 lease_owner: lead
-lease_heartbeat_at: "2026-09-27T06:20:00Z"
-last_checkpoint_at: "2026-09-27T06:20:00Z"
+lease_heartbeat_at: null
+last_checkpoint_at: "2026-10-03"
 scope:
   - integration
   - roadmap-priority
@@ -55,7 +55,9 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "No code-side critical path remains. The operator must provision the approved private pilot environment, run the migration/deployment runbook, execute the authenticated task smoke, and record durable completion plus redacted audit evidence."
+next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: integrate verified FE runtime #234, provision SQL/OIDC and first-company bootstrap automatically, deliver Windows setup/startup/recovery, then complete every remaining P0-P6 requirement through feature PRs and exact-head CI. Full product completion remains unproven."
 blocked_by:
   - "Approved OIDC issuer/audience and token/client flow"
   - "Private SQL Server with backup, RabbitMQ/private worker host, first company/membership bootstrap, and read-only ERP secret"
+product_completion_issue: 233
+requirement_matrix: docs/PRODUCT_COMPLETION.md
