@@ -47,7 +47,7 @@ def main():
     def sql(query):
         return run("exec", "-T", "sql", "sh", "-c",
                    'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd '
-                   '-S localhost -U sa -C -b -h -1 -W -Q "$1"', "sql", "SET NOCOUNT ON; " + query, timeout=30).strip()
+                   '-S localhost -U sa -C -I -b -h -1 -W -Q "$1"', "sql", "SET NOCOUNT ON; " + query, timeout=30).strip()
 
     cookies = CookieJar()
     browser = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
