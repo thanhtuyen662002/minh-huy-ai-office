@@ -4,10 +4,10 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: lead/236-local-bootstrap
+current_branch: lead/238-windows-installer
 current_pr: null
 current_target_head: null
-last_verified_commit: 8c1f80db6c8d8fa400345fb60f9b3125d97decea
+last_verified_commit: cb43b99b4e9c1efdf7fcacf8a6dd255b8d94d59e
 
 critical_paths:
   backend:
