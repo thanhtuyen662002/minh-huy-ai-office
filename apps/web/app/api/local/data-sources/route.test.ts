@@ -39,6 +39,35 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe.each(mutations)("local data source $method", ({ method, path, invoke }) => {
+  it("accepts the browser authority when Next.js uses its internal container URL", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ id: sourceId }, { status: method === "POST" ? 201 : 200 }));
+    const response = await invoke(new Request(`http://0.0.0.0:3000/api/local/data-sources?companyId=${companyId}`, {
+      method, body: JSON.stringify(metadata),
+      headers: { "Content-Type": "application/json", Host: "127.0.0.1:3000", Origin: "http://127.0.0.1:3000" },
+    }));
+    expect(response.status).toBe(method === "POST" ? 201 : 200);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls[0][0]).toBe(`http://127.0.0.1:8080${path}`);
+  });
+
+  it("rejects a foreign origin even when its forwarded host matches", async () => {
+    const response = await invoke(new Request(`http://0.0.0.0:3000/api/local/data-sources?companyId=${companyId}`, {
+      method, body: JSON.stringify(metadata),
+      headers: { "Content-Type": "application/json", Host: "127.0.0.1:3000", Origin: "https://foreign.example.invalid", "X-Forwarded-Host": "foreign.example.invalid" },
+    }));
+    expect(response.status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["user@localhost:3000", "localhost:3000/path", "localhost:3000?query=x", "localhost:3000#fragment"])("rejects a malformed authority", async (host) => {
+    const response = await invoke(new Request(`http://0.0.0.0:3000/api/local/data-sources?companyId=${companyId}`, {
+      method, body: JSON.stringify(metadata),
+      headers: { "Content-Type": "application/json", Host: host, Origin: origin },
+    }));
+    expect(response.status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("forwards the issued HttpOnly session and company selector to Core API", async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ id: sourceId }, { status: method === "POST" ? 201 : 200, headers: { "Set-Cookie": "upstream-secret=discard" } }));
     const response = await invoke(request(method));

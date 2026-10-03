@@ -227,7 +227,7 @@ def main():
                "allowRead": True, "allowWrite": False, "isEnabled": True}
     try:
         status, headers, created = http("/api/local/data-sources" + selector, allowed, headers={"Origin": web})
-        assert status == 201, "Company admin source create failed"
+        assert status == 201, f"Company admin source create failed with HTTP {status}"
         assert "no-store" in headers.get("Cache-Control", "")
         assert "connectionSecretReference" not in created
         fixture_id = str(uuid.UUID(created["id"]))
