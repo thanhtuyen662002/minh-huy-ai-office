@@ -1,17 +1,17 @@
 workstream: backend
 role: "Backend Platform"
-status: active
-current_issue: 240
-current_pr: 241
-current_branch: backend/240-source-management-permission
+status: retired
+current_issue: null
+current_pr: null
+current_branch: null
 head: null
-state: coding
+state: merged_and_retired
 lease_owner: root
-lease_heartbeat_at: "2026-10-03T16:50:00Z"
-last_checkpoint_at: "2026-10-03T16:50:00Z"
-last_completed_issue: 203
-last_merged_pr: 210
-last_merge_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
+lease_heartbeat_at: "2026-10-03T19:57:49Z"
+last_checkpoint_at: "2026-10-03T19:57:49Z"
+last_completed_issue: 240
+last_merged_pr: 241
+last_merge_commit: 4275b2c18fc136f26e088d631896875c76cb8653
 scope:
   - aspnet-core
   - identity
@@ -19,9 +19,9 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  result: "Issue #240 source-management authorization: 326 persistence/API tests and 72 collected web tests pass locally; TypeScript and production web build pass. Real SQL role-revocation acceptance is implemented but requires exact-head Compose CI before merge."
+  result: "PR #241 head 24ab09bed0cc12a6d5a21d6095b04f145fae041c passed every required gate, including real SQL role revoke/restore with issued API/BFF sessions and real RabbitMQ/restart retention. Merged at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed. Local verification included 326 persistence/API tests and 84 then-collected app tests."
 known_risks:
   - "Reads remain available to active members; writes require fresh server-resolved company admin. Token claims cannot grant authority."
   - "This security prerequisite does not complete full company/member/source onboarding or full-product issue #233."
 blocked_by: []
-next_action: "Checkpoint #240 and open a draft PR, close every exact-head CI gate including real SQL revocation with an already issued session, review and merge; then deliver full owner/company/member/source onboarding under #233."
+next_action: "Deliver full owner/company/member/source onboarding under #233 with server-resolved authority, protected credentials, real browser/API/SQL acceptance and exact-head CI before merge."

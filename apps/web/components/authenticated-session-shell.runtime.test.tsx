@@ -96,8 +96,16 @@ describe("AuthenticatedSessionShell runtime company-option boundary", () => {
 
   it("fails closed instead of throwing when authoritative company membership is hostile", () => {
     const onSelectCompany = vi.fn();
-    const hostileMembership = new Proxy(membership, { get(target, property, receiver) { if (property === "companyId") throw new Error("hostile authoritative membership"); return Reflect.get(target, property, receiver); } });
+    const descriptorInspection = vi.fn(() => { throw new Error("hostile authoritative membership"); });
+    const hostileMembership = new Proxy(membership, {
+      getOwnPropertyDescriptor(target, property) {
+        if (property === "companyId") return descriptorInspection();
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
     expect(() => render(<AuthenticatedSessionShell state={{ status: "ready", membership: hostileMembership }} companies={[{ companyId: "internal", companyName: "Minh Huy" }, { companyId: "branch-2", companyName: "Chi nhánh 2" }]} onSelectCompany={onSelectCompany} />)).not.toThrow();
+    expect(descriptorInspection).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alert").textContent).toContain("Không thể xác thực phạm vi công ty");
     expect(screen.queryByLabelText("Đổi công ty")).toBeNull();
     expect(onSelectCompany).not.toHaveBeenCalled();
   });
