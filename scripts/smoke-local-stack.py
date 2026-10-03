@@ -47,7 +47,7 @@ def main():
     def sql(query):
         return run("exec", "-T", "sql", "sh", "-c",
                    'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd '
-                   '-S localhost -U sa -C -I -b -h -1 -W -Q "$1"', "sql", "SET NOCOUNT ON; " + query, timeout=30).strip()
+                   '-S localhost -U sa -C -I -b -m 1 -h -1 -W -Q "$1"', "sql", "SET NOCOUNT ON; " + query, timeout=30).strip()
 
     cookies = CookieJar()
     browser = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
@@ -154,7 +154,7 @@ def main():
     assert http("/api/data-sources", base=api, headers=wrong)[0] == 403
     denied_status, _, denied_result = http(f"/api/data-sources/{foreign_source}/connection-test", {}, base=api, headers=auth)
     assert denied_status == 200 and not denied_result["succeeded"] and denied_result["code"] == "not_found"
-    assert sql("""USE AIOfficeSample;
+    permission_result = sql("""USE AIOfficeSample;
         EXECUTE AS LOGIN=N'aioffice_reader';
         BEGIN TRY
             BEGIN TRANSACTION;
@@ -166,7 +166,8 @@ def main():
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             IF ERROR_NUMBER()=229 SELECT N'WRITE_DENIED'; ELSE THROW;
         END CATCH;
-        REVERT;""") == "WRITE_DENIED"
+        REVERT;""")
+    assert permission_result == "WRITE_DENIED", f"Read-only SQL result: {permission_result!r}"
     assert sql("""SELECT CASE WHEN IS_SRVROLEMEMBER('sysadmin','aioffice_runtime')=0
         AND IS_SRVROLEMEMBER('dbcreator','aioffice_runtime')=0 THEN N'RESTRICTED' ELSE N'PRIVILEGED' END;""") == "RESTRICTED"
     print("PASS FE login, authoritative context, read-only SQL source and company isolation")
