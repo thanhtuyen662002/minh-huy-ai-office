@@ -1,7 +1,7 @@
 """Real local SQL/OIDC/broker/API/worker/FE gate. No credentials in output or argv."""
 import argparse
 import hashlib
-import http.cookiejar
+from http.cookiejar import CookieJar
 import json
 import subprocess
 import time
@@ -44,7 +44,7 @@ def main():
                    'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd '
                    '-S localhost -U sa -C -b -h -1 -W -Q "$1"', "sql", query, timeout=30).strip()
 
-    cookies = http.cookiejar.CookieJar()
+    cookies = CookieJar()
     browser = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
     web = "http://127.0.0.1:3000"
     api = "http://127.0.0.1:8080"

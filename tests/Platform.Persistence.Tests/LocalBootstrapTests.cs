@@ -85,8 +85,13 @@ public sealed class LocalBootstrapTests
     {
         await using var db = Database();
         var options = Options();
-        db.Companies.Add(new CompanyRecord { TenantId = options.TenantId, Id = Guid.NewGuid(),
-            Code = "EXISTING", Name = "Existing company" });
+        db.Companies.Add(new CompanyRecord
+        {
+            TenantId = options.TenantId,
+            Id = Guid.NewGuid(),
+            Code = "EXISTING",
+            Name = "Existing company"
+        });
         await db.SaveChangesAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(() => new LocalPlatformSeeder(db)
             .SeedAsync(options, "new-subject"));

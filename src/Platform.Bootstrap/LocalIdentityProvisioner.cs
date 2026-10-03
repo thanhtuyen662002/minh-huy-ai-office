@@ -12,8 +12,10 @@ public sealed class LocalIdentityProvisioner(HttpClient http)
         using var login = await http.PostAsync("realms/master/protocol/openid-connect/token",
             new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["client_id"] = "admin-cli", ["grant_type"] = "password",
-                ["username"] = "bootstrap-admin", ["password"] = options.IdentityAdminPassword
+                ["client_id"] = "admin-cli",
+                ["grant_type"] = "password",
+                ["username"] = "bootstrap-admin",
+                ["password"] = options.IdentityAdminPassword
             }));
         EnsureSuccess(login);
         var token = await login.Content.ReadFromJsonAsync<JsonElement>();
@@ -25,8 +27,11 @@ public sealed class LocalIdentityProvisioner(HttpClient http)
         {
             using var created = await http.PostAsJsonAsync("admin/realms", new
             {
-                realm = BootstrapOptions.Realm, enabled = true, sslRequired = "none",
-                registrationAllowed = false, resetPasswordAllowed = false,
+                realm = BootstrapOptions.Realm,
+                enabled = true,
+                sslRequired = "none",
+                registrationAllowed = false,
+                resetPasswordAllowed = false,
                 clients = new[] { new
                 {
                     clientId = BootstrapOptions.Realm, enabled = true, publicClient = true,
@@ -57,9 +62,12 @@ public sealed class LocalIdentityProvisioner(HttpClient http)
         {
             using var created = await http.PostAsJsonAsync($"{realmUrl}/users", new
             {
-                username = BootstrapOptions.OwnerUsername, enabled = true,
-                email = "owner@aioffice.local", emailVerified = true,
-                firstName = "Local", lastName = "Owner",
+                username = BootstrapOptions.OwnerUsername,
+                enabled = true,
+                email = "owner@aioffice.local",
+                emailVerified = true,
+                firstName = "Local",
+                lastName = "Owner",
                 credentials = new[] { new { type = "password", value = options.OwnerPassword, temporary = false } }
             });
             EnsureSuccess(created);

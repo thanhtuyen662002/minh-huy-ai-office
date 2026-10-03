@@ -8,8 +8,13 @@ try
     var options = BootstrapOptions.Read(Environment.GetEnvironmentVariable);
     string Connection(string database) => new SqlConnectionStringBuilder
     {
-        DataSource = "sql", InitialCatalog = database, UserID = "sa", Password = options.SqlPassword,
-        Encrypt = true, TrustServerCertificate = true, ConnectTimeout = 15
+        DataSource = "sql",
+        InitialCatalog = database,
+        UserID = "sa",
+        Password = options.SqlPassword,
+        Encrypt = true,
+        TrustServerCertificate = true,
+        ConnectTimeout = 15
     }.ConnectionString;
     // A bounded retry is needed for SQL and OIDC cold starts. Never print connection strings.
     async Task WaitAsync(Func<Task> operation)
