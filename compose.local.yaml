@@ -1,0 +1,202 @@
+name: aioffice-local
+
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${AIOFFICE_SQL_PASSWORD:?generate local configuration first}
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test: [CMD-SHELL, 'SQLCMDPASSWORD="$${MSSQL_SA_PASSWORD}" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -Q "SELECT 1" -b -o /dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  identity-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${AIOFFICE_IDENTITY_DB_PASSWORD:?generate local configuration first}
+    volumes:
+      - identity-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U keycloak -d keycloak']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  identity:
+    image: quay.io/keycloak/keycloak:26.8.0
+    restart: unless-stopped
+    command: [start-dev]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://identity-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${AIOFFICE_IDENTITY_DB_PASSWORD:?generate local configuration first}
+      KC_BOOTSTRAP_ADMIN_USERNAME: bootstrap-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${AIOFFICE_IDENTITY_ADMIN_PASSWORD:?generate local configuration first}
+      KC_HOSTNAME: http://identity:8080
+    ports:
+      - "127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}:8080"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: aioffice-local
+      RABBITMQ_DEFAULT_PASS: ${AIOFFICE_RABBITMQ_PASSWORD:?generate local configuration first}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: [redis-server, --appendonly, "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.21.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${AIOFFICE_JAEGER_PORT:-16686}:16686"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.161.0
+    restart: unless-stopped
+    command: [--config=/etc/otelcol-contrib/config.yaml]
+    volumes:
+      - ./infra/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on: [jaeger]
+
+  bootstrap:
+    build:
+      context: .
+      dockerfile: src/Platform.Bootstrap/Dockerfile
+    restart: "no"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      AIOFFICE_LOCAL_BOOTSTRAP: "true"
+      AIOFFICE_INSTALLATION_ID: ${AIOFFICE_INSTALLATION_ID:?generate local configuration first}
+      AIOFFICE_TENANT_ID: ${AIOFFICE_TENANT_ID:?generate local configuration first}
+      AIOFFICE_COMPANY_ID: ${AIOFFICE_COMPANY_ID:?generate local configuration first}
+      AIOFFICE_USER_ID: ${AIOFFICE_USER_ID:?generate local configuration first}
+      AIOFFICE_DATA_SOURCE_ID: ${AIOFFICE_DATA_SOURCE_ID:?generate local configuration first}
+      AIOFFICE_SQL_PASSWORD: ${AIOFFICE_SQL_PASSWORD:?generate local configuration first}
+      AIOFFICE_RUNTIME_PASSWORD: ${AIOFFICE_RUNTIME_PASSWORD:?generate local configuration first}
+      AIOFFICE_READER_PASSWORD: ${AIOFFICE_READER_PASSWORD:?generate local configuration first}
+      AIOFFICE_IDENTITY_ADMIN_PASSWORD: ${AIOFFICE_IDENTITY_ADMIN_PASSWORD:?generate local configuration first}
+      AIOFFICE_OWNER_PASSWORD: ${AIOFFICE_OWNER_PASSWORD:?generate local configuration first}
+    depends_on:
+      sql:
+        condition: service_healthy
+      identity:
+        condition: service_started
+
+  core-api:
+    build:
+      context: .
+      dockerfile: src/Core.Api/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "127.0.0.1:${AIOFFICE_API_PORT:-8080}:8080"
+    environment: &runtime-environment
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
+      AIOFFICE_DB_CONNECTION: "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password=${AIOFFICE_RUNTIME_PASSWORD};Encrypt=true;TrustServerCertificate=true"
+      PILOT_ERP_CONNECTION: "Server=sql;Database=AIOfficeSample;User ID=aioffice_reader;Password=${AIOFFICE_READER_PASSWORD};Encrypt=true;TrustServerCertificate=true"
+      AIOffice__Authentication__Authority: http://identity:8080/realms/aioffice-local
+      AIOffice__Authentication__Audience: aioffice-local
+      RabbitMqWork__HostName: rabbitmq
+      RabbitMqWork__Port: "5672"
+      RabbitMqWork__UserName: aioffice-local
+      RabbitMqWork__Password: ${AIOFFICE_RABBITMQ_PASSWORD:?generate local configuration first}
+      RabbitMqWork__VirtualHost: /
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  agent-worker:
+    build:
+      context: .
+      dockerfile: src/Agent.Worker/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment: *runtime-environment
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /app/apps/web/.next/cache:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "127.0.0.1:${AIOFFICE_WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      AIOFFICE_LOCAL_UI_ENABLED: "true"
+      AIOFFICE_LOCAL_UI_COOKIE_SECURE: "false"
+      AIOFFICE_LOCAL_CORE_API_URL: http://core-api:8080
+      AIOFFICE_LOCAL_OIDC_TOKEN_URL: http://identity:8080/realms/aioffice-local/protocol/openid-connect/token
+      AIOFFICE_LOCAL_OIDC_CLIENT_ID: aioffice-local
+      AIOFFICE_LOCAL_COMPANY_ID: ${AIOFFICE_COMPANY_ID:?generate local configuration first}
+      AIOFFICE_LOCAL_COMPANY_NAME: Minh Huy Local
+    depends_on:
+      core-api:
+        condition: service_started
+
+volumes:
+  sql-data:
+  identity-data:
+  rabbitmq-data:
+  redis-data:

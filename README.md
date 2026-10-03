@@ -4,6 +4,8 @@ Full product and one-click Windows setup progress is tracked in [issue #233](htt
 
 Production-oriented multi-tenant AI Office for Minh Huy's ERP, accounting, customer support and operational workflows.
 
+The local provisioning profile is `compose.local.yaml`, launched by `infra/start-local.ps1` on a host with Docker ready. It generates a protected installation manifest outside the checkout and provisions SQL/OIDC plus API, worker and FE without host Node/.NET or manual environment editing. The downloadable Windows prerequisite installer and startup integration remain in progress under #233. See [local provisioning design and verification](docs/architecture/ADR_LOCAL_BOOTSTRAP.md).
+
 The repository is intentionally designed so development can continue across different ChatGPT/Codex/AI sessions without relying on chat history.
 
 ## Start here

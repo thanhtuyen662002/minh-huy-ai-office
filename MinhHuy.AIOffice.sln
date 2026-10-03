@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -21,6 +21,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Configuration.Tests", "tests\Platform.Configuration.Tests\Platform.Configuration.Tests.csproj", "{B4131C29-5768-4C27-B1CE-2F10A59E1BF5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Observability.Tests", "tests\Platform.Observability.Tests\Platform.Observability.Tests.csproj", "{6DF6C40B-BBA6-453C-966B-0CD585626348}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Bootstrap", "src\Platform.Bootstrap\Platform.Bootstrap.csproj", "{8EDE76D3-1D32-42B0-9F0B-60E34274949B}"
 EndProject
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
