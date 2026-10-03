@@ -74,6 +74,23 @@ jobs:
       - name: Verify the running FE and its runtime configuration
         run: node scripts/smoke-web-container.mjs aioffice/web:ci
 
+  local-runtime:
+    name: Complete local stack integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate protected local installation configuration
+        shell: pwsh
+        run: ./infra/initialize-local-config.ps1 -DataDirectory (Join-Path $env:RUNNER_TEMP 'aioffice-local')
+      - name: Validate local configuration
+        run: docker compose --env-file "$RUNNER_TEMP/aioffice-local/local.env" -f compose.local.yaml config --quiet
+      - name: Verify real SQL, OIDC, broker, API, worker and FE
+        run: python scripts/smoke-local-stack.py "$RUNNER_TEMP/aioffice-local"
+      - name: Remove only this ephemeral CI stack
+        if: ${{ always() }}
+        run: docker compose --env-file "$RUNNER_TEMP/aioffice-local/local.env" -f compose.local.yaml down --volumes --remove-orphans
+
   infrastructure:
     name: Docker Compose validation
     runs-on: ubuntu-latest
@@ -188,7 +205,7 @@ jobs:
   quality-gates:
     name: Required quality gates
     if: ${{ always() }}
-    needs: [dotnet, web, web-runtime, infrastructure, deployment, migrations]
+    needs: [dotnet, web, web-runtime, local-runtime, infrastructure, deployment, migrations]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -197,13 +214,14 @@ jobs:
           DOTNET_RESULT: ${{ needs.dotnet.result }}
           WEB_RESULT: ${{ needs.web.result }}
           WEB_RUNTIME_RESULT: ${{ needs['web-runtime'].result }}
+          LOCAL_RUNTIME_RESULT: ${{ needs['local-runtime'].result }}
           INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
           DEPLOYMENT_RESULT: ${{ needs.deployment.result }}
           MIGRATIONS_RESULT: ${{ needs.migrations.result }}
         run: |
           set -euo pipefail
           failed=0
-          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
+          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT LOCAL_RUNTIME_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
             result="${!gate}"
             echo "${gate}=${result}"
             if [ "${result}" != "success" ]; then

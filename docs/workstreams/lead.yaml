@@ -1,9 +1,9 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
 status: active-development
-current_issue: 233
+current_issue: 236
 current_pr: null
-current_branch: main
+current_branch: lead/236-local-bootstrap
 head: null
 state: full-product-completion
 lease_owner: lead

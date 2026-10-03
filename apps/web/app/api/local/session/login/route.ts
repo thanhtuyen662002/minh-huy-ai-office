@@ -27,6 +27,10 @@ function canonicalCredential(value: unknown, maximumLength: number): value is st
   );
 }
 
+function loginError(message: string, status: number) {
+  return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
+}
+
 export async function POST(request: Request) {
   if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
 
@@ -34,15 +38,17 @@ export async function POST(request: Request) {
   try {
     body = await request.json() as LoginBody;
   } catch {
-    return Response.json({ error: "Invalid login payload." }, { status: 400 });
+    return loginError("Invalid login payload.", 400);
   }
 
   if (
-    !canonicalCredential(body.username, 200)
+    body === null
+    || typeof body !== "object"
+    || !canonicalCredential(body.username, 200)
     || !canonicalCredential(body.password, 1024)
     || !isCanonicalCompanyId(body.companyId)
   ) {
-    return Response.json({ error: "Invalid login payload." }, { status: 400 });
+    return loginError("Invalid login payload.", 400);
   }
 
   const form = new URLSearchParams({
@@ -61,29 +67,29 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
   } catch {
-    return Response.json({ error: "Identity service is unavailable." }, { status: 503 });
+    return loginError("Identity service is unavailable.", 503);
   }
 
   if (!tokenResponse.ok) {
-    return Response.json({ error: "Tên đăng nhập hoặc mật khẩu không đúng." }, { status: 401 });
+    return loginError("Tên đăng nhập hoặc mật khẩu không đúng.", 401);
   }
 
   let tokenPayload: unknown;
   try {
     tokenPayload = await tokenResponse.json();
   } catch {
-    return Response.json({ error: "Identity service returned an invalid response." }, { status: 502 });
+    return loginError("Identity service returned an invalid response.", 502);
   }
 
   if (tokenPayload === null || typeof tokenPayload !== "object") {
-    return Response.json({ error: "Identity service returned an invalid response." }, { status: 502 });
+    return loginError("Identity service returned an invalid response.", 502);
   }
 
   const token = Reflect.get(tokenPayload, "access_token");
   const expiresIn = Reflect.get(tokenPayload, "expires_in");
 
   if (typeof token !== "string" || token.length === 0 || token.length > 16_384) {
-    return Response.json({ error: "Identity service returned an invalid access token." }, { status: 502 });
+    return loginError("Identity service returned an invalid access token.", 502);
   }
 
   let contextResponse: Response;
@@ -97,18 +103,23 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
   } catch {
-    return Response.json({ error: "Core API is unavailable." }, { status: 503 });
+    return loginError("Core API is unavailable.", 503);
   }
 
   if (contextResponse.status === 403) {
-    return Response.json({ error: "Tài khoản không có quyền vào công ty này." }, { status: 403 });
+    return loginError("Tài khoản không có quyền vào công ty này.", 403);
   }
 
   if (!contextResponse.ok) {
-    return Response.json({ error: "Không thể xác thực phạm vi công ty." }, { status: 502 });
+    return loginError("Không thể xác thực phạm vi công ty.", 502);
   }
 
-  const context = await contextResponse.json();
+  let context: unknown;
+  try {
+    context = await contextResponse.json();
+  } catch {
+    return loginError("Core API returned an invalid response.", 502);
+  }
   const maxAge = typeof expiresIn === "number" && Number.isSafeInteger(expiresIn)
     ? Math.min(Math.max(expiresIn, 60), 3600)
     : 900;

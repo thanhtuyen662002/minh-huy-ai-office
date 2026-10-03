@@ -16,6 +16,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Platform.Bootstrap\Platform.Bootstrap.csproj">
+      <Aliases>Bootstrap</Aliases>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\Agent.Worker\Agent.Worker.csproj">
       <Aliases>RuntimeWorker</Aliases>
     </ProjectReference>

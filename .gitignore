@@ -11,6 +11,7 @@ out/
 dist/
 coverage/
 *.tsbuildinfo
+__pycache__/
 
 # Environment / secrets
 .env
