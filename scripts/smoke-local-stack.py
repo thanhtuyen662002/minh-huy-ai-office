@@ -42,7 +42,7 @@ def main():
     def sql(query):
         return run("exec", "-T", "sql", "sh", "-c",
                    'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd '
-                   '-S localhost -U sa -C -b -h -1 -W -Q "$1"', "sql", query, timeout=30).strip()
+                   '-S localhost -U sa -C -b -h -1 -W -Q "$1"', "sql", "SET NOCOUNT ON; " + query, timeout=30).strip()
 
     cookies = CookieJar()
     browser = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
@@ -119,7 +119,23 @@ def main():
     wrong = {**auth, "X-AIOffice-Company-Id": foreign_company}
     assert http("/api/auth/context", base=api, headers=wrong)[0] == 403
     assert http("/api/data-sources", base=api, headers=wrong)[0] == 403
-    assert http(f"/api/data-sources/{foreign_source}/connection-test", {}, base=api, headers=auth)[0] in (403, 404)
+    denied_status, _, denied_result = http(f"/api/data-sources/{foreign_source}/connection-test", {}, base=api, headers=auth)
+    assert denied_status == 200 and not denied_result["succeeded"]
+    assert sql("""USE AIOfficeSample;
+        EXECUTE AS LOGIN=N'aioffice_reader';
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            INSERT dbo.LocalSample VALUES (99, N'Forbidden write');
+            ROLLBACK TRANSACTION;
+            SELECT N'WRITE_ALLOWED';
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            IF ERROR_NUMBER()=229 SELECT N'WRITE_DENIED'; ELSE THROW;
+        END CATCH;
+        REVERT;""") == "WRITE_DENIED"
+    assert sql("""SELECT CASE WHEN IS_SRVROLEMEMBER('sysadmin','aioffice_runtime')=0
+        AND IS_SRVROLEMEMBER('dbcreator','aioffice_runtime')=0 THEN N'RESTRICTED' ELSE N'PRIVILEGED' END;""") == "RESTRICTED"
     print("PASS FE login, authoritative context, read-only SQL source and company isolation")
 
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
