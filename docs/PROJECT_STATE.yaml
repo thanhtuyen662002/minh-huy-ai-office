@@ -7,7 +7,7 @@ current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
 current_target_head: null
-last_verified_commit: cb43b99b4e9c1efdf7fcacf8a6dd255b8d94d59e
+last_verified_commit: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
 
 critical_paths:
   backend:
@@ -16,15 +16,15 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "PR #210 / issue #203 is merged at a462ebd6a0b54a57af257dcc3d3f66472c635d73. No open Backend blocker exists for the current read-only AI/ERP slice."
+    next: "PR #241 / issue #240 merged at 4275b2c18fc136f26e088d631896875c76cb8653. Fresh server-resolved admin enforcement and real SQL issued-session revocation passed exact-head and main CI. Deliver full owner/company/member/source onboarding next under #233."
 
   frontend:
-    issue: null
+    issue: 242
     pr: null
-    branch: null
+    branch: frontend/242-test-discovery
     head: null
-    state: retired
-    next: "PR #209 / issue #204 is merged at 45680c7badbc38e45f9f071267abf7d4bac40770. No frontend change is required until the first business read capability is exposed through a customer workflow."
+    state: coding
+    next: "Collect all app/lib/components tests, isolate DOM and mutable fixtures, preserve authority-denial assertions, then pass exact-head CI and merge #242 before full company/member/source onboarding."
 
   runtime_ai:
     issue: null
@@ -43,6 +43,9 @@ critical_paths:
     next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
 
 recent_authoritative_merges:
+  - "PR #241 / issue #240 fresh source-management administration and real SQL role-revocation proof: MERGED at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed."
+  - "PR #237 / issue #236 automatic local SQL/OIDC bootstrap and real Compose proof: MERGED at cb43b99b4e9c1efdf7fcacf8a6dd255b8d94d59e; main Build 37111971610 and governance 37111971569 passed."
+  - "PR #235 / issue #234 frontend production runtime: MERGED at 8c1f80db6c8d8fa400345fb60f9b3125d97decea."
   - "PR #226 / issue #225 capability-bound read-only ERP query framework: MERGED at 78a6f112b18afd502622ef16b6c25578c612338b"
   - "PR #224 / issue #223 bounded ERP catalog-grounded AI pilot: MERGED at 4940d973b8fe8f3c67bd05a23ac20a563e359d3e"
   - "PR #211 / issue #205 durable AI-credit settlement: MERGED at df39d5bfd188f0f53ba87e5ac0790aed664f1fab"
@@ -70,7 +73,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: integrate verified FE runtime #234, provision SQL/OIDC and first-company bootstrap automatically, deliver Windows setup/startup/recovery, then complete every remaining P0-P6 requirement through feature PRs and exact-head CI. Full product completion remains unproven."
+next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: finish Windows #238 / draft #239 acceptance and complete FE test discovery #242, then deliver owner/company/member/source onboarding and all remaining P0-P6 workflows through feature PRs and exact-head CI. SQL/OIDC bootstrap, FE production runtime, real RabbitMQ execution and fresh source administration are merged. Full product completion remains unproven."
 
 blocked_by:
   - "The first real customer ERP/data source and business capability have not yet been selected/authorized for AI Office business-row access."
@@ -78,8 +81,8 @@ blocked_by:
   - "Production deployment still requires approved production OIDC, private platform SQL/backup, private host/tunnel and production bootstrap."
 
 automation_liveness:
-  backend: retired_intentionally
-  frontend: retired_intentionally
+  backend: retired_after_verified_issue_240
+  frontend: active_issue_242
   runtime_ai: retired_intentionally
   erp_data: retired_intentionally
   qa_release: retired_intentionally_after_green_gates

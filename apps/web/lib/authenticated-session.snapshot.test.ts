@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { bootstrapAuthenticatedSession, COMPANY_SELECTOR_HEADER, type SessionBootstrapTransport } from "./authenticated-session";
 
-const membership = {
+const createMembership = () => ({
   tenantId: "tenant-server",
   companyId: "company-a",
   companyName: "Company A",
   userId: "user-server",
   userName: "Server User",
   roles: ["member"],
-};
+});
 
 describe("authenticated session membership snapshot", () => {
   it("returns a plain snapshot that cannot be changed by later transport-object mutation", async () => {
+    const membership = createMembership();
     const transport = (async () => ({ ok: true, membership })) as SessionBootstrapTransport;
     const state = await bootstrapAuthenticatedSession("company-a", transport);
 
@@ -32,6 +33,7 @@ describe("authenticated session membership snapshot", () => {
   });
 
   it("freezes the accepted authority snapshot so downstream runtime mutation cannot rewrite identity", async () => {
+    const membership = createMembership();
     const transport = (async () => ({ ok: true, membership })) as SessionBootstrapTransport;
     const state = await bootstrapAuthenticatedSession("company-a", transport);
     expect(state.status).toBe("ready");
@@ -50,6 +52,7 @@ describe("authenticated session membership snapshot", () => {
   });
 
   it("freezes the validated selector request before crossing the transport boundary", async () => {
+    const membership = createMembership();
     const transport: SessionBootstrapTransport = async (request) => {
       expect(Object.isFrozen(request)).toBe(true);
       expect(Object.isFrozen(request.headers)).toBe(true);
@@ -68,6 +71,7 @@ describe("authenticated session membership snapshot", () => {
   });
 
   it("rejects accessor-backed authoritative fields without invoking their getters", async () => {
+    const membership = createMembership();
     let getterCalls = 0;
     const accessorMembership = { ...membership } as Record<string, unknown>;
     Object.defineProperty(accessorMembership, "companyName", {

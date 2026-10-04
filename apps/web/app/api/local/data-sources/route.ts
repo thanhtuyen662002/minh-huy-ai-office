@@ -6,6 +6,11 @@ import {
   localUiDisabledResponse,
   unauthenticatedResponse,
 } from "../../../../lib/local-ai-bff";
+import { mutateLocalDataSource } from "../../../../lib/local-data-source-mutation";
+
+export async function POST(request: Request) {
+  return mutateLocalDataSource(request, "POST", "/api/data-sources/");
+}
 
 export async function GET(request: Request) {
   if (!isLocalAiUiEnabled()) return localUiDisabledResponse();

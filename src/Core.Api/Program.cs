@@ -203,12 +203,26 @@ if (authenticationConfigured)
     dataSources.MapPost("/", async (IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
-        var created = await registry.CreateAsync(context, request, cancellationToken); return Results.Created($"/api/data-sources/{created.Id}", created);
+        try
+        {
+            var created = await registry.CreateAsync(context, request, cancellationToken); return Results.Created($"/api/data-sources/{created.Id}", created);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
     });
     dataSources.MapPut("/{dataSourceId:guid}", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, DataSourceRegistryWriteRequest request, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
-        var updated = await registry.UpdateAsync(context, dataSourceId, request, cancellationToken); return updated is null ? Results.NotFound() : Results.Ok(updated);
+        try
+        {
+            var updated = await registry.UpdateAsync(context, dataSourceId, request, cancellationToken); return updated is null ? Results.NotFound() : Results.Ok(updated);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
     });
     dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceConnectionTestService tester, CancellationToken cancellationToken) =>
     {

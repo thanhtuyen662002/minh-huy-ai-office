@@ -5,13 +5,13 @@ current_issue: null
 current_pr: null
 current_branch: null
 head: null
-state: retired
-lease_owner: null
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-27T06:20:00Z"
-last_completed_issue: 203
-last_merged_pr: 210
-last_merge_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
+state: merged_and_retired
+lease_owner: root
+lease_heartbeat_at: "2026-10-03T19:57:49Z"
+last_checkpoint_at: "2026-10-03T19:57:49Z"
+last_completed_issue: 240
+last_merged_pr: 241
+last_merge_commit: 4275b2c18fc136f26e088d631896875c76cb8653
 scope:
   - aspnet-core
   - identity
@@ -19,9 +19,9 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  result: "PR #210 / issue #203 is merged and the SQL-backed current SLA source is composed into the pilot API. Authorization remains server-derived and fail-closed; no open Backend blocker remains."
+  result: "PR #241 head 24ab09bed0cc12a6d5a21d6095b04f145fae041c passed every required gate, including real SQL role revoke/restore with issued API/BFF sessions and real RabbitMQ/restart retention. Merged at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed. Local verification included 326 persistence/API tests and 84 then-collected app tests."
 known_risks:
-  - "Pilot deployment still requires an approved OIDC issuer/audience and first-company membership bootstrap."
-  - "Tenant/company/user authority remains server-derived and fail-closed; responses must not expose authority or secret fields."
+  - "Reads remain available to active members; writes require fresh server-resolved company admin. Token claims cannot grant authority."
+  - "This security prerequisite does not complete full company/member/source onboarding or full-product issue #233."
 blocked_by: []
-next_action: "Keep the Backend lease retired. The next action is operator deployment and authenticated smoke verification; open a new issue only for a newly observed backend blocker."
+next_action: "Deliver full owner/company/member/source onboarding under #233 with server-resolved authority, protected credentials, real browser/API/SQL acceptance and exact-head CI before merge."

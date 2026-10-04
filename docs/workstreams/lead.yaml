@@ -55,9 +55,9 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Continue #233 with Windows installer #238 / draft PR #239: validate diagnostics, prerequisite recovery, owned shortcuts and protected configuration on the exact head, then obtain clean Windows install/reboot acceptance. In parallel, fix authoritative source-management permission under #240 before owner/company/member/source onboarding. Connect the remaining product workflows and collect all existing FE suites; full product completion remains unproven."
+next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: finish Windows #238 / draft #239 with pinned main #243 and mandatory native recovery checks, then deliver company-owned credentials, full company/member/source onboarding and every remaining P0-P6 requirement. PRs #235/#237/#241/#243 are merged with verified main CI. Full product completion remains unproven."
 blocked_by:
-  - "Live customer/provider credentials and production integration approval remain external evidence boundaries; local SQL/OIDC/company bootstrap and real queue execution are merged in #237 with main CI green."
-  - "Clean supported Windows host installation, elevation, reboot and automatic sign-in startup acceptance remains unverified; continue all unblocked BE/FE work."
+  - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
+  - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
 product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md

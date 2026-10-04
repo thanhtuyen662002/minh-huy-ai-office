@@ -36,7 +36,7 @@ describe("AuthenticatedSessionShell", () => {
   it("treats company switching as a selector request rather than identity authority", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
-    const selector = screen.getByLabelText("Đổi công ty") as HTMLSelectElement;
+    const selector = screen.getByRole("combobox", { name: "Đổi công ty" }) as HTMLSelectElement;
     expect(selector.value).toBe("internal");
     fireEvent.change(selector, { target: { value: "branch-2" } });
     expect(onSelectCompany).toHaveBeenCalledWith("branch-2");
@@ -56,7 +56,7 @@ describe("AuthenticatedSessionShell", () => {
   it("only emits company-switch requests for offered alternative scopes", () => {
     const onSelectCompany = vi.fn();
     render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
-    const selector = screen.getByLabelText("Đổi công ty") as HTMLSelectElement;
+    const selector = screen.getByRole("combobox", { name: "Đổi công ty" }) as HTMLSelectElement;
     fireEvent.change(selector, { target: { value: "internal" } });
     fireEvent.change(selector, { target: { value: "spoofed-company" } });
     expect(onSelectCompany).not.toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe("AuthenticatedSessionShell", () => {
     const onSelectCompany = vi.fn();
     const { rerender } = render(<AuthenticatedSessionShell state={{ status: "ready", membership }} companies={companies} onSelectCompany={onSelectCompany} />);
     expect(screen.getByRole("heading", { name: "company.erp.production" })).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Đổi công ty"), { target: { value: "branch-2" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Đổi công ty" }), { target: { value: "branch-2" } });
     expect(onSelectCompany).toHaveBeenCalledWith("branch-2");
     rerender(<AuthenticatedSessionShell state={{ status: "loading", selectedCompanyId: "branch-2" }} companies={companies} onSelectCompany={onSelectCompany} />);
     expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("true");

@@ -45,7 +45,7 @@ public sealed class DataSourceRegistryService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var authorized = await RequireAuthorizationAsync(
+        var authorized = await RequireManagementAuthorizationAsync(
             authorizationContext,
             cancellationToken);
         var id = Guid.NewGuid();
@@ -106,7 +106,7 @@ public sealed class DataSourceRegistryService(
                 nameof(dataSourceId));
         }
 
-        var authorized = await RequireAuthorizationAsync(
+        var authorized = await RequireManagementAuthorizationAsync(
             authorizationContext,
             cancellationToken);
         var record = await dbContext.DataSources
@@ -172,6 +172,21 @@ public sealed class DataSourceRegistryService(
                 cancellationToken)
             ?? throw new UnauthorizedAccessException(
                 "Authorization context is not active for the selected company.");
+    }
+
+    private async ValueTask<AuthorizationDirectoryEntry> RequireManagementAuthorizationAsync(
+        AuthorizationContext authorizationContext,
+        CancellationToken cancellationToken)
+    {
+        var authorized = await RequireAuthorizationAsync(authorizationContext, cancellationToken);
+
+        if (!authorized.Roles.Contains("admin", StringComparer.Ordinal))
+        {
+            throw new UnauthorizedAccessException(
+                "Company administration is required to manage data sources.");
+        }
+
+        return authorized;
     }
 
     private async ValueTask<bool> LogicalNameExistsAsync(
