@@ -8,7 +8,8 @@ public sealed record CommandResult(int ExitCode, string Output, string Error);
 public sealed class CommandRunner
 {
     public async Task<CommandResult> RunAsync(string executable, IEnumerable<string> arguments,
-        TimeSpan timeout, CancellationToken cancellationToken = default)
+        TimeSpan timeout, CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? removeEnvironmentPrefixes = null)
     {
         var info = new ProcessStartInfo(executable)
         {
@@ -18,6 +19,14 @@ public sealed class CommandRunner
             RedirectStandardError = true
         };
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
+        if (removeEnvironmentPrefixes is not null)
+        {
+            if (removeEnvironmentPrefixes.Any(string.IsNullOrWhiteSpace))
+                throw new ArgumentException("Environment prefixes must not be empty.", nameof(removeEnvironmentPrefixes));
+            foreach (var key in info.Environment.Keys.ToArray())
+                if (removeEnvironmentPrefixes.Any(prefix => key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                    info.Environment.Remove(key);
+        }
         using var process = new Process { StartInfo = info };
         if (!process.Start()) throw new IOException("Cannot start a required setup command.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

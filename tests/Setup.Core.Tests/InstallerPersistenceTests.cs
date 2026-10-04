@@ -116,6 +116,25 @@ public sealed class InstallerPersistenceTests : IDisposable
         Assert.Empty(Directory.GetDirectories(root, ".staging-*"));
     }
 
+    [Theory]
+    [InlineData("rogue.cs", false)]
+    [InlineData("infra/rogue.ps1", false)]
+    [InlineData("extra", true)]
+    public void UnexpectedInstalledContentIsRejectedWithoutDeletingData(string relative, bool directory)
+    {
+        using var archive = Archive(("infra/start.ps1", "source"), ("compose.local.yaml", "compose"));
+        var target = Extract(archive);
+        var unexpected = Path.Combine(target, relative.Replace('/', Path.DirectorySeparatorChar));
+        if (directory) Directory.CreateDirectory(unexpected);
+        else File.WriteAllText(unexpected, "unexpected executable source");
+        var identity = Path.Combine(root, "installation.json");
+        File.WriteAllText(identity, "retain identity");
+        Assert.Throws<InvalidDataException>(() => Extract(archive));
+        Assert.Equal("retain identity", File.ReadAllText(identity));
+        Assert.True(Path.Exists(unexpected));
+        Assert.Empty(Directory.GetDirectories(root, ".staging-*"));
+    }
+
     private string Extract(MemoryStream archive)
     {
         archive.Position = 0;

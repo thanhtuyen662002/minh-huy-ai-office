@@ -14,10 +14,10 @@ Repair quarantines damaged source and extracts the verified bundle again. Identi
 
 ## Evidence and remaining acceptance
 
-Portable core has 42 passing tests for extraction, traversal, Windows reserved names, case collisions, links, hash mismatch, repeat extraction, retained identity, atomic progress, corruption and complete service readiness. Native code builds with zero warnings.
+Portable core tests cover extraction, traversal, Windows reserved names, case collisions, links, hash mismatch, repeat extraction, unexpected installed content, retained identity, atomic progress and complete service readiness. Recovery retains malformed progress only under explicit repair and refuses unknown progress protocols. Typed diagnostics export only known service states, a bounded machine summary and failure codes; raw commands, configuration and credentials are excluded. Child-process tests verify removal of inherited Compose and application configuration overrides without modifying the parent environment.
 
 Windows artifact CI publishes a pinned self-contained executable and validates its bundle from a path with spaces and Unicode, with host runtime variables disabled. It does not prepare WSL/Docker on the runner. Linux integration CI separately proves authentication, tenant isolation, read-only SQL, real RabbitMQ work and retained-volume restart.
 
-Clean Windows installation, elevation, reboot continuation, retained owner/data, Start Menu and sign-in startup remain unverified. The development host has HypervisorPresent=false and no ready Docker Linux engine; firmware virtualization is enabled. Signing, resource tuning, diagnostic/rollback UX and interruption recovery require further verification. Do not close #238 or claim full product completion on artifact build alone.
+Clean Windows installation, elevation, reboot continuation, retained owner/data and sign-in startup remain unverified. The development host has HypervisorPresent=false and no ready Docker Linux engine; firmware virtualization is enabled. Isolated temporary-directory shortcut/ACL checks and simulated UI previews are separate evidence and cannot establish clean installation. Signing, resource tuning and complete interruption/rollback recovery require further verification. Do not close #238 or claim full product completion on artifact build alone.
 
 Primary references: [Docker Windows installation](https://docs.docker.com/desktop/setup/install/windows-install/) and [Microsoft WSL commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands).

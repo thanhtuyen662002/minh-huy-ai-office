@@ -27,34 +27,45 @@ public sealed partial class ProgressStore
     {
         if (!File.Exists(path)) return null;
         PathSafety.RejectLinks(path);
-        if (new FileInfo(path).Length > 4096) throw new InvalidDataException("Invalid installation progress.");
-        var progress = JsonSerializer.Deserialize<InstallProgress>(File.ReadAllText(path), Options)
-            ?? throw new InvalidDataException("Invalid installation progress.");
-        Validate(progress);
-        return progress;
+        if (new FileInfo(path).Length > 4096) throw new CorruptProgressException();
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path));
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("SchemaVersion", out var schema) ||
+                schema.ValueKind != JsonValueKind.Number || !schema.TryGetInt32(out var version))
+                throw new CorruptProgressException();
+            if (version != 1) throw new UnsupportedProgressException();
+            if (!root.TryGetProperty("Phase", out var phase) || phase.ValueKind != JsonValueKind.String)
+                throw new CorruptProgressException();
+            if (!Enum.TryParse<InstallPhase>(phase.GetString(), out var parsed) || !Enum.IsDefined(parsed))
+                throw new UnsupportedProgressException();
+            var progress = root.Deserialize<InstallProgress>(Options) ?? throw new CorruptProgressException();
+            Validate(progress);
+            return progress;
+        }
+        catch (Exception error) when (error is JsonException or InvalidDataException)
+        {
+            throw new CorruptProgressException();
+        }
+    }
+
+    public InstallProgress? LoadOrRepair(bool repair)
+    {
+        try { return Load(); }
+        catch (CorruptProgressException) when (repair)
+        {
+            PathSafety.RejectLinks(path);
+            var retained = Path.Combine(Path.GetDirectoryName(path)!, $".progress-retained-{Guid.NewGuid():N}.json");
+            File.Move(path, retained, overwrite: false);
+            return null;
+        }
     }
 
     public void Save(InstallProgress progress)
     {
         Validate(progress);
-        var directory = Path.GetDirectoryName(path)!;
-        Directory.CreateDirectory(directory);
-        PathSafety.RejectLinks(directory);
-        PathSafety.RejectLinks(path);
-        var temporary = Path.Combine(directory, $".progress-{Guid.NewGuid():N}.tmp");
-        try
-        {
-            using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-            {
-                JsonSerializer.Serialize(file, progress, Options);
-                file.Flush(flushToDisk: true);
-            }
-            File.Move(temporary, path, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporary)) File.Delete(temporary);
-        }
+        AtomicArtifact.Write(path, JsonSerializer.SerializeToUtf8Bytes(progress, Options));
     }
 
     public static void ValidateRevision(string revision)
@@ -67,9 +78,12 @@ public sealed partial class ProgressStore
     {
         ValidateRevision(progress.Revision);
         if (progress.SchemaVersion != 1 || !Enum.IsDefined(progress.Phase))
-            throw new InvalidDataException("Unsupported installation progress. Existing data is retained.");
+            throw new UnsupportedProgressException();
     }
 
     [GeneratedRegex("\\A[a-f0-9]{40}\\z", RegexOptions.CultureInvariant)]
     private static partial Regex RevisionPattern();
 }
+
+public sealed class CorruptProgressException() : IOException("Installation progress is damaged. Existing data is retained.");
+public sealed class UnsupportedProgressException() : IOException("Installation progress requires a supported installer version. Existing data is retained.");

@@ -124,6 +124,9 @@ jobs:
             ${{ runner.temp }}/windows-setup/Setup.exe.sha256
             ${{ runner.temp }}/windows-setup/release-manifest.json
             ${{ runner.temp }}/windows-setup/bundle-proof.json
+            ${{ runner.temp }}/windows-setup/windows-integration-proof.json
+            ${{ runner.temp }}/windows-setup/ui-preview/*.png
+            ${{ runner.temp }}/windows-setup/ui-preview/preview-proof.json
           if-no-files-found: error
 
   infrastructure:

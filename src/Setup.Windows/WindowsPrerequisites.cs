@@ -17,7 +17,7 @@ internal sealed partial class WindowsPrerequisites
     public static string Docker => Path.Combine(DockerDirectory, "resources", "bin", "docker.exe");
     public static string DockerDesktop => Path.Combine(DockerDirectory, "Docker Desktop.exe");
 
-    public async Task<MachineState> InspectAsync()
+    public async Task<MachineState> InspectAsync(Action<MachineState>? observe = null)
     {
         if (!Environment.Is64BitOperatingSystem || System.Runtime.InteropServices.RuntimeInformation.OSArchitecture != System.Runtime.InteropServices.Architecture.X64)
             throw new SetupFailure("Windows 11 x64 là môi trường được hỗ trợ bởi bộ cài này.");
@@ -26,6 +26,7 @@ internal sealed partial class WindowsPrerequisites
         if (result.ExitCode != 0) throw new SetupFailure("Không đọc được thông tin môi trường Windows.");
         var machine = JsonSerializer.Deserialize<MachineState>(result.Output, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new SetupFailure("Thông tin môi trường Windows không hợp lệ.");
+        observe?.Invoke(machine);
         if (machine.Build < 22631) throw new SetupFailure("Cần Windows 11 23H2 trở lên. Bộ cài giữ nguyên dữ liệu hiện có.");
         if (!machine.Virtualization) throw new SetupFailure("Máy chưa bật ảo hóa trong firmware. Cần bật trước khi Docker/WSL có thể chạy.");
         if (machine.Memory < 8UL * 1024 * 1024 * 1024) throw new SetupFailure("Cần ít nhất 8 GB RAM để chạy Docker và các dịch vụ.");
@@ -46,7 +47,9 @@ internal sealed partial class WindowsPrerequisites
     {
         var info = new ProcessStartInfo(installer)
         {
-            UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden
+            UseShellExecute = true,
+            Verb = "runas",
+            WindowStyle = ProcessWindowStyle.Hidden
         };
         info.ArgumentList.Add("--install-prerequisites");
         info.ArgumentList.Add("--docker-license-accepted");
@@ -136,7 +139,10 @@ internal sealed partial class WindowsPrerequisites
         }
         var info = new ProcessStartInfo(PowerShell)
         {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
         info.Environment["AIOFFICE_PREREQUISITE_PATH"] = path;
         foreach (var argument in new[] { "-NoProfile", "-NonInteractive", "-Command",
@@ -160,4 +166,7 @@ internal sealed partial class WindowsPrerequisites
     private static partial Regex WslVersion();
 }
 
-internal sealed class SetupFailure(string message) : Exception(message);
+internal sealed class SetupFailure(string message, SetupFailureCode code = SetupFailureCode.Unexpected) : Exception(message)
+{
+    public SetupFailureCode Code { get; } = code;
+}

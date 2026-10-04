@@ -97,6 +97,30 @@ public sealed partial class BundleExtractor
     private static void VerifyExisting(string target, List<(ZipArchiveEntry Entry, string Relative, bool Directory)> entries)
     {
         PathSafety.RejectLinks(target);
+        var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (_, relative, isDirectory) in entries)
+        {
+            if (isDirectory) directories.Add(relative);
+            else files.Add(relative);
+            for (var parent = Path.GetDirectoryName(relative); !string.IsNullOrEmpty(parent); parent = Path.GetDirectoryName(parent))
+                directories.Add(parent);
+        }
+        var pending = new Stack<string>();
+        pending.Push(target);
+        while (pending.TryPop(out var directory))
+            foreach (var path in System.IO.Directory.EnumerateFileSystemEntries(directory))
+            {
+                PathSafety.RejectLinks(path);
+                var relative = Path.GetRelativePath(target, path);
+                if (System.IO.Directory.Exists(path))
+                {
+                    if (!directories.Contains(relative)) throw new InvalidDataException("Installed bundle contains unexpected content. Repair is required.");
+                    pending.Push(path);
+                }
+                else if (!files.Contains(relative))
+                    throw new InvalidDataException("Installed bundle contains unexpected content. Repair is required.");
+            }
         foreach (var (entry, relative, isDirectory) in entries)
         {
             var path = PathSafety.Child(target, relative);
