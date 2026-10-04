@@ -6,11 +6,17 @@ public static class RuntimeDiagnostics
 {
     private static readonly Dictionary<string, RuntimeService> Known = new(StringComparer.Ordinal)
     {
-        ["sql"] = RuntimeService.Sql, ["identity-db"] = RuntimeService.IdentityDatabase,
-        ["identity"] = RuntimeService.Identity, ["rabbitmq"] = RuntimeService.RabbitMq, ["redis"] = RuntimeService.Redis,
-        ["jaeger"] = RuntimeService.Jaeger, ["otel-collector"] = RuntimeService.Telemetry,
-        ["core-api"] = RuntimeService.CoreApi, ["agent-worker"] = RuntimeService.AgentWorker,
-        ["web"] = RuntimeService.Web, ["bootstrap"] = RuntimeService.Bootstrap
+        ["sql"] = RuntimeService.Sql,
+        ["identity-db"] = RuntimeService.IdentityDatabase,
+        ["identity"] = RuntimeService.Identity,
+        ["rabbitmq"] = RuntimeService.RabbitMq,
+        ["redis"] = RuntimeService.Redis,
+        ["jaeger"] = RuntimeService.Jaeger,
+        ["otel-collector"] = RuntimeService.Telemetry,
+        ["core-api"] = RuntimeService.CoreApi,
+        ["agent-worker"] = RuntimeService.AgentWorker,
+        ["web"] = RuntimeService.Web,
+        ["bootstrap"] = RuntimeService.Bootstrap
     };
 
     public static IReadOnlyList<ServiceDiagnostic> Parse(string output)
@@ -44,14 +50,22 @@ public static class RuntimeDiagnostics
         if (name is null || !Known.TryGetValue(name, out var service)) return;
         var state = entry.GetProperty("State").GetString() switch
         {
-            "created" => ServiceState.Created, "running" => ServiceState.Running, "exited" => ServiceState.Exited,
-            "restarting" => ServiceState.Restarting, "paused" => ServiceState.Paused,
-            "dead" => ServiceState.Dead, "removing" => ServiceState.Removing, _ => ServiceState.Unknown
+            "created" => ServiceState.Created,
+            "running" => ServiceState.Running,
+            "exited" => ServiceState.Exited,
+            "restarting" => ServiceState.Restarting,
+            "paused" => ServiceState.Paused,
+            "dead" => ServiceState.Dead,
+            "removing" => ServiceState.Removing,
+            _ => ServiceState.Unknown
         };
         var health = (entry.TryGetProperty("Health", out var property) ? property.GetString() : "") switch
         {
-            "" => ServiceHealth.None, "starting" => ServiceHealth.Starting,
-            "healthy" => ServiceHealth.Healthy, "unhealthy" => ServiceHealth.Unhealthy, _ => ServiceHealth.Unknown
+            "" => ServiceHealth.None,
+            "starting" => ServiceHealth.Starting,
+            "healthy" => ServiceHealth.Healthy,
+            "unhealthy" => ServiceHealth.Unhealthy,
+            _ => ServiceHealth.Unknown
         };
         var exit = entry.GetProperty("ExitCode").GetInt32();
         if (exit is < 0 or > 255 || !values.TryAdd(service, new ServiceDiagnostic(service, state, health, exit)))
