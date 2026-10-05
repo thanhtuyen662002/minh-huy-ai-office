@@ -4,11 +4,11 @@ status: active
 current_issue: 246
 current_pr: 247
 current_branch: "frontend/246-source-management"
-head: 9ee8c1bba246cb8e203f0be9a7552730a7534822
-state: ready_for_review
+head: 4cf3f0571e145411ab02d65faa7ec512edd73a55
+state: waiting_ci
 lease_owner: "frontend-246-task-2"
-lease_heartbeat_at: "2026-10-05T06:04:00Z"
-last_checkpoint_at: "2026-10-05T06:04:00Z"
+lease_heartbeat_at: "2026-10-05T06:26:00Z"
+last_checkpoint_at: "2026-10-05T06:26:00Z"
 last_completed_issue: 244
 last_merged_pr: 245
 last_merge_commit: c193d151a848d728fa3688fd6f793faf5614bb25
@@ -23,22 +23,25 @@ scope:
 verification:
   inspected_main: c193d151a848d728fa3688fd6f793faf5614bb25
   previous_leaf: "Issue244 merged and exact-main nine checks passed; real-browser QA remains separate evidence."
-  current_implementation: verified_local_metadata_only_candidate
+  current_implementation: independently_reviewed_metadata_only_candidate
+  local_candidate: 62344e10b322c47a8797afe8fe4eefbc7bb1400c
+  reviewed_tree: 5c3800890c7225ede1eb8697152340a2c77da711
+  published_implementation_head: 4cf3f0571e145411ab02d65faa7ec512edd73a55
   admission: f46a9b5df97608e68184d04b162b65f2fee74570
   verified_code_commit: 9ee8c1bba246cb8e203f0be9a7552730a7534822
   verified_code_tree: fa829ec011033b43687dbdb6e008ff5206880552
   rejected_candidate: 2d24402bfe2aba85e0c48b06a260fcf5fe6eb998
-  review: "Original full-PUT candidate remains rejected; new metadata-only candidate awaits independent exact-code review."
+  review: "PASS independent exact-candidate review: 341 frontend tests, 350 Persistence tests, TypeScript and independent protected-field race reproduction. Original full-PUT candidate remains rejected."
   result: "Strict four-field endpoint/BFF/editor; property-only EF persistence and fresh scoped response preserve concurrent protected policy and credential rotation. Existing full PUT unchanged."
   frontend_tests: "PASS341 tests/31 files, including33 editor and9 metadata-BFF cases; tsc and production build PASS."
   dotnet_tests: "PASS751 tests across four solution test projects; Release build zero warnings/errors."
   formatting: "PASS five admitted C# files. Full-solution local verification blocked by existing Windows checkout CRLF outside admitted paths; hosted LF CI required."
   browser: "PASS6 actual Chrome/production Next/BFF flows with synthetic HTTP Core/OIDC and JSON-file registry; no real SQL/OIDC/ERP acceptance claimed."
   disposable_sql: "Existing local-runtime CI smoke extended with strict payload/revoked/foreign denial and gated protected-column rotation after server load. Python syntax PASS; Docker local Linux engine unavailable, execution pending hosted CI."
-  exact_head_ci: pending_parent_only_publication
-next_action: "Independent review frozen code/tree, then parent alone publishes to247 and closes exact-head CI including real SQL race plus merged-main CI. Keep246 and full233 open pending acceptance."
+  exact_head_ci: pending_current_metadata_head
+next_action: "Close exact published-head CI including real SQL race and canonical-LF formatting, then parent serial integration and merged-main verification. Keep246 and full233 open pending acceptance."
 blocked_by:
-  - "Independent review and parent-only publication."
+  - "Exact published-head CI and parent integration remain outstanding."
   - "Hosted CI required for real SQL/stack execution and full-solution canonical-LF formatting."
   - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
 handoff: |
