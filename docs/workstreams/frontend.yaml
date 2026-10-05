@@ -2,9 +2,9 @@ workstream: frontend
 role: "Frontend Product"
 status: active
 current_issue: 244
-current_pr: null
+current_pr: 245
 current_branch: "frontend/244-session-isolation"
-head: null
+head: e8df06cca2b825cb9087099be08ed4bc0fdf3e2e
 state: claimed
 lease_owner: "frontend-244-task-2"
 lease_heartbeat_at: "2026-10-05T00:58:45Z"
