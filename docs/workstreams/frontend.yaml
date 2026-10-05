@@ -1,17 +1,17 @@
 workstream: frontend
 role: "Frontend Product"
 status: active
-current_issue: 242
-current_pr: null
-current_branch: "frontend/242-test-discovery"
-head: null
-state: verified_local
-lease_owner: root
-lease_heartbeat_at: "2026-10-03T19:57:49Z"
-last_checkpoint_at: "2026-10-03T19:57:49Z"
-last_completed_issue: 229
-last_merged_pr: 230
-last_merge_commit: af797bf2ac2677dcb77b0b110fca56a3f3c764cf
+current_issue: 244
+current_pr: 245
+current_branch: "frontend/244-session-isolation"
+head: d9358358cb785bc66a66b847c6aa4e0a808b75dd
+state: waiting_ci
+lease_owner: "frontend-244-task-2"
+lease_heartbeat_at: "2026-10-05T02:31:20Z"
+last_checkpoint_at: "2026-10-05T02:31:20Z"
+last_completed_issue: 242
+last_merged_pr: 243
+last_merge_commit: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
 preferred_next_issue: null
 scope:
   - nextjs
@@ -19,6 +19,36 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
+  - frontend-session-isolation
 verification:
-  result: "All 26 app/lib/components files and all 255 tests pass locally with zero skipped/pending cases. Explicit DOM cleanup, fresh membership fixtures, accessible combobox selectors and descriptor-trap denial assertions repair stale harness/fixtures. Production authorization is unchanged. TypeScript and production Next build pass. Exact-head CI and main verification remain required."
-next_action: "Complete #242 and merge only after every exact-head gate succeeds; verify main, then deliver full company/member/source onboarding under #233."
+  inspected_main: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
+  admission_head: 82c28de48e79d6f99806eedd31dec748ccecbfb6
+  local_candidate: 2ef9439c6c38376b7c447afb53ae4fd327d7a5d4
+  reviewed_tree: 14e1126ed4caf3f8d575d2fbc1c6bdf9dae83206
+  local_candidate_published: true
+  published_implementation_head: d9358358cb785bc66a66b847c6aa4e0a808b75dd
+  independent_review: "PASS: 104 focused tests, two independent race repros, negative controls, typecheck and publication privacy scan"
+  previous_candidate: ebf9e1e8ec8d2912e34ec4e16a222eea0bec5400
+  previous_candidate_review: "REQUEST_CHANGES preserved; post-validation generation race fixed at all eight continuations"
+  frontend_tests: "298 passed across 29 files, including 43 privacy/lifecycle/race regressions"
+  typecheck: passed
+  production_build: passed
+  windows_http_smoke: "passed; synthetic standalone loopback, not real OIDC"
+  implementation_ci: "All nine checks passed on d9358358: Build37255387467 and Governance37255387485; 727 .NET tests, frontend tests/build, containers, migrations and complete local-stack integration passed"
+  tested_merge: 91ddc8e7
+  exact_head_ci: "This metadata-only checkpoint requires fresh exact-head checks; implementation evidence above belongs to d9358358"
+next_action: "Drain CI for this metadata checkpoint, refresh exact head/base/review status and let parent decide integration. Preserve the lease until integration and main verification."
+blocked_by:
+  - "Final metadata-head CI and parent integration decision remain outstanding."
+  - "Real-browser cookie/OIDC atomicity and stronger server session revision guarantees are outside this frontend leaf and remain unproved."
+handoff: |
+  HANDOFF
+  Issue: #244; Draft PR #245; goal #233.
+  Branch: frontend/244-session-isolation; owner frontend-244-task-2; parent sole publisher.
+  HEAD records the verified published implementation predecessor to avoid a self-referential hash.
+  Completed: clear private state at logout start; invalidate authenticated401; cancel/fence requests and polling on unmount; authoritative cross-tab revalidation; generation rechecks after all eight awaited validations.
+  Review: independent PASS for exact local2ef9439c and equivalent published tree14e1126e. Earlier failed candidates and negative controls retained.
+  CI: implementation d9358358 has nine successful checks. This metadata-only checkpoint needs its own fresh CI.
+  Known limits: no atomic server session revision or rollback of late Set-Cookie; frontend fixtures and existing local-stack integration do not establish production acceptance.
+  NEXT ACTION: close fresh CI, refresh live base/head/reviews, parent-controlled integration only when authorized and verified.
+  DO NOT: change installer, credentials, server, SQL, API contracts, other workstreams or projects.
