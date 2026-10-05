@@ -2,13 +2,13 @@ workstream: backend
 role: "Backend Platform"
 status: active
 current_issue: 248
-current_pr: null
+current_pr: 249
 current_branch: backend/248-scoped-secret-grants
-head: null
-state: admission_checkpoint
+head: 9a0ee8e5d7f40762bfc738da0cb28d6549cc7e65
+state: frozen_for_parent_independent_rereview
 lease_owner: root
-lease_heartbeat_at: "2026-10-05T08:39:00Z"
-last_checkpoint_at: "2026-10-05T08:39:00Z"
+lease_heartbeat_at: "2026-10-05T11:19:10Z"
+last_checkpoint_at: "2026-10-05T11:19:10Z"
 last_completed_issue: 240
 last_merged_pr: 241
 last_merge_commit: 4275b2c18fc136f26e088d631896875c76cb8653
@@ -19,13 +19,20 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  result: "PR #241 head 24ab09bed0cc12a6d5a21d6095b04f145fae041c passed every required gate, including real SQL role revoke/restore with issued API/BFF sessions and real RabbitMQ/restart retention. Merged at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed. Local verification included 326 persistence/API tests and 84 then-collected app tests."
+  result: "Review-fix implementation 9a0ee8e preserves candidate 926a9e4 and all prior evidence. P1 scoped registration now precedes Build; configured startup verifies synthetic SQL-provider permission proof 1 and refuses proof 0. P2 infrastructure exclusion compares canonical references with Windows env case semantics, while customer grants remain ordinal/BIN2 and other providers retain ordinal comparison. All 851 synthetic solution tests passed: 450 persistence/API/worker, 370 contracts, 25 configuration, 6 observability, zero skips, including 32 new review regressions. Release solution build passed with zero warnings/errors; admitted-path format, Python AST syntax, pending-model and offline idempotent migration checks passed. Smoke barriers are unchanged from 926a9e4; offline migration SHA is unchanged. Hosted SQL/stack remains NOT_RUN; Linux controls require Linux CI. Final metadata-only freeze HEAD/tree and hashes are recorded in the new parent handoff manifest."
 known_risks:
-  - "Reads remain available to active members; writes require fresh server-resolved company admin. Token claims cannot grant authority."
-  - "This security prerequisite does not complete full company/member/source onboarding or full-product issue #233."
-blocked_by: []
-next_action: "Deliver full owner/company/member/source onboarding under #233 with server-resolved authority, protected credentials, real browser/API/SQL acceptance and exact-head CI before merge."
+  - "P1/P2 were reproduced and fixed locally; parent-owned independent re-review must assess the new frozen candidate before publication."
+  - "Windows env alias controls ran locally; Linux case-sensitive controls are present but still need Linux CI execution. Ordinary source/grant case matching remains strict on all OSes."
+  - "Authorization denial now persists truthful Failed/DeadLettered before settlement; storage failure propagates for infrastructure recovery under the established bounded lease, never a false acknowledgement."
+  - "Actual SQL permission behavior and PR247 positive/negative blocked-UPDATE controls require parent-owned disposable hosted execution on the frozen candidate."
+  - "Installer239 must rebuild secured-main bundles and prove clean install/reboot/repair/data retention. CI is not production acceptance."
+  - "Secured upgrade must drain old binaries and explicitly review legacy bindings; no automatic legacy grants and no pre-guard binary security rollback."
+blocked_by:
+  - "Parent-owned independent re-review, publication, disposable hosted SQL and exact-head/main CI remain outstanding."
+next_action: "Parent independently re-reviews the new frozen SHA/tree and P1/P2 regression evidence, then publishes only an accepted candidate to Draft249. Execute disposable SQL/stack gates and exact-head CI including Linux case controls; re-enter this same branch on review or CI failure. After merge require green secured-main CI and installer239 secured-bundle/lifecycle acceptance. No transfer, upload or publication occurred in this executor."
 
 implementation_base: 481d814c6d66c62084544e3bd889dcad7f64a254
 admission_issue: 248
-admission_state: "Metadata-only reservation; implementation and tests not run. Parent creates Draft lease before coding."
+admission_state: "Draft249 lease verified at a7c36f9. Parent explicitly admitted PersistentWorkDeliveryHandler.cs; P1/P2 fixes remain within the same 35 paths, with no scope expansion or remote write. Implementation remains local and frozen for independent re-review."
+hosted_sql_evidence: NOT_RUN
+previous_frozen_candidate: 926a9e4d7fae3e7814c45d88262d91f00b3a9925

@@ -13,6 +13,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<CompanyMembershipRecord> CompanyMemberships => Set<CompanyMembershipRecord>();
     public DbSet<RoleAssignmentRecord> RoleAssignments => Set<RoleAssignmentRecord>();
     public DbSet<DataSourceRecord> DataSources => Set<DataSourceRecord>();
+    public DbSet<DataSourceSecretBindingRecord> DataSourceSecretBindings => Set<DataSourceSecretBindingRecord>();
     public DbSet<DataSourceFailoverOperationPolicyRecord> DataSourceFailoverOperationPolicies => Set<DataSourceFailoverOperationPolicyRecord>();
     public DbSet<TaskRecord> Tasks => Set<TaskRecord>();
     public DbSet<TaskStepRecord> TaskSteps => Set<TaskStepRecord>();
@@ -26,6 +27,18 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
+        modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
+        {
+            entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));
+            entity.HasKey(row => new { row.TenantId, row.CompanyId, row.Id });
+            entity.Property(row => row.CanonicalReference).HasMaxLength(512).UseCollation("Latin1_General_100_BIN2");
+            entity.Property(row => row.Label).HasMaxLength(128);
+            entity.Property(row => row.IsEnabled).HasDefaultValue(false);
+            entity.Property(row => row.Version).HasDefaultValue(1L);
+            entity.Property(row => row.CreatedAtUtc).HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            entity.HasIndex(row => new { row.TenantId, row.CompanyId, row.CanonicalReference }).IsUnique();
+            entity.HasOne<CompanyRecord>().WithMany().HasForeignKey(row => new { row.TenantId, row.CompanyId }).OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.Entity<PlatformMetadataRecord>(entity => { entity.ToTable("PlatformMetadata"); entity.HasKey(x => x.Key); entity.Property(x => x.Key).HasMaxLength(200); entity.Property(x => x.Value).HasMaxLength(4000); entity.Property(x => x.UpdatedAtUtc).HasDefaultValueSql("SYSDATETIMEOFFSET()"); });
         modelBuilder.Entity<PlatformUserRecord>(entity => { entity.ToTable("Users"); entity.HasKey(x => new { x.TenantId, x.Id }); entity.Property(x => x.IdentityProvider).HasMaxLength(100); entity.Property(x => x.Subject).HasMaxLength(200); entity.Property(x => x.DisplayName).HasMaxLength(200); entity.Property(x => x.IsActive).HasDefaultValue(true); entity.Property(x => x.CreatedAtUtc).HasDefaultValueSql("SYSDATETIMEOFFSET()"); entity.HasIndex(x => new { x.TenantId, x.IdentityProvider, x.Subject }).IsUnique(); });
         modelBuilder.Entity<CompanyRecord>(entity => { entity.ToTable("Companies"); entity.HasKey(x => new { x.TenantId, x.Id }); entity.Property(x => x.Code).HasMaxLength(100); entity.Property(x => x.Name).HasMaxLength(200); entity.Property(x => x.IsActive).HasDefaultValue(true); entity.Property(x => x.CreatedAtUtc).HasDefaultValueSql("SYSDATETIMEOFFSET()"); entity.HasIndex(x => new { x.TenantId, x.Code }).IsUnique(); });

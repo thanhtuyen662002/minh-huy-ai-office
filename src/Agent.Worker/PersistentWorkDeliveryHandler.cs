@@ -77,6 +77,16 @@ public sealed class PersistentWorkDeliveryHandler(
             throw new InvalidOperationException("Only durably published dispatches may be consumed.");
         }
 
+        // An older transient attempt can be redelivered after a later attempt has
+        // durably denied authorization. Fence that original message too, without
+        // seeking another retry or invoking any resolver/executor again.
+        if (execution.DeadLetteredAtUtc is not null && execution.LastFailureClass == WorkFailureClass.Authorization)
+        {
+            WorkerExecutionStateMachine.TransitionDispatch(dispatch, WorkDispatchState.DeadLettered, DateTimeOffset.UtcNow);
+            await SaveChangesAsync(cancellationToken);
+            return new WorkDeliveryResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, Math.Max(1, envelope.Attempt));
+        }
+
         // A transient failure is committed before the retry is published. If publisher confirm fails,
         // RabbitMQ redelivers the original message. Recover the already-durable retry instead of
         // executing the original attempt again and risking duplicate side effects.
@@ -117,9 +127,20 @@ public sealed class PersistentWorkDeliveryHandler(
             nowUtc,
             LeaseDuration);
         await MarkRunningAsync(envelope, nowUtc, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SaveChangesAsync(cancellationToken);
 
-        var result = await executor.ExecuteAsync(envelope, lease, cancellationToken);
+        WorkStepExecutionResult result;
+        try
+        {
+            result = await executor.ExecuteAsync(envelope, lease, cancellationToken);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Persist denial before broker settlement. Authorization failures never retry;
+            // the original provider/SQL diagnostic is not included in durable evidence.
+            result = new WorkStepExecutionResult(
+                WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, Math.Max(1, envelope.Attempt));
+        }
         ValidateExecutorResult(result, envelope);
 
         nowUtc = DateTimeOffset.UtcNow;
@@ -195,13 +216,28 @@ public sealed class PersistentWorkDeliveryHandler(
                 cancellationToken);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SaveChangesAsync(cancellationToken);
         return new WorkDeliveryResult(
             result.Outcome,
             result.FailureClass,
             result.MaxAttempts,
             result.DurableCheckpointVersion,
             retryEnvelope);
+    }
+
+    private async Task SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            // A failed SQL save must not leave tracked Failed/DeadLettered values
+            // that a repeated delivery could mistake for a durable settlement.
+            dbContext.ChangeTracker.Clear();
+            throw;
+        }
     }
 
     private async Task PersistCheckpointAsync(

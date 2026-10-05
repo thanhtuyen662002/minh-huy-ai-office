@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
+using BindingFixture = MinhHuy.AIOffice.Platform.Persistence.Tests.BindingFixture;
 
 namespace Platform.Persistence.Tests;
 
@@ -112,6 +113,7 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         await SeedAsync(options, authorization, "viewer");
         await using (var directory = new PlatformDbContext(options))
         {
+            BindingFixture.Grant(directory, authorization.TenantId, otherCompanyId, "secretref://env/original");
             directory.Companies.Add(new CompanyRecord
             {
                 TenantId = authorization.TenantId,
@@ -164,6 +166,7 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         string? role = "admin")
     {
         await using var context = new PlatformDbContext(options);
+        BindingFixture.Grant(context, authorization, "secretref://env/original");
         context.Users.Add(new PlatformUserRecord
         {
             TenantId = authorization.TenantId,

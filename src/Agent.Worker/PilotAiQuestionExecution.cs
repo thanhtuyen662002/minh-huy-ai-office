@@ -37,9 +37,11 @@ public sealed class PilotAiQuestionToolMetadataProvider(PlatformDbContext dbCont
 /// Authorizes only the explicitly bounded AI/read-only pilot operation and only for an active
 /// company-scoped data source that is readable and not writable.
 /// </summary>
-public sealed class PilotAiQuestionToolPermissionProvider(PlatformDbContext dbContext)
+public sealed class PilotAiQuestionToolPermissionProvider(PlatformDbContext dbContext,
+    DataSourceSecretBindingService? bindingService = null)
     : IToolPermissionProvider
 {
+    private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
     public async Task<IReadOnlyCollection<ToolPermission>> GetAsync(
         ToolAuthorizationRequest request,
         CancellationToken cancellationToken)
@@ -69,6 +71,14 @@ public sealed class PilotAiQuestionToolPermissionProvider(PlatformDbContext dbCo
         {
             return Array.Empty<ToolPermission>();
         }
+
+        try
+        {
+            var authority = await bindings.TaskAuthorityAsync(request.TenantId, request.CompanyId, request.TaskId, cancellationToken);
+            if (authority.UserId != request.UserId) return Array.Empty<ToolPermission>();
+            await bindings.RequireSourceAsync(authority, dataSourceId, readOnly: true, cancellationToken);
+        }
+        catch (UnauthorizedAccessException) { return Array.Empty<ToolPermission>(); }
 
         return new[]
         {
@@ -103,8 +113,10 @@ public sealed class PilotAiQuestionExecutor(
     IDataSourceConnectionProbe connectionProbe,
     IPilotErpEvidenceReader evidenceReader,
     IAiGateway aiGateway,
-    PilotAiRuntimeDescriptor runtime) : IRawWorkStepExecutor
+    PilotAiRuntimeDescriptor runtime,
+    DataSourceSecretBindingService? bindingService = null) : IRawWorkStepExecutor
 {
+    private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<WorkStepExecutionResult> ExecuteAsync(
@@ -114,13 +126,6 @@ public sealed class PilotAiQuestionExecutor(
     {
         ArgumentNullException.ThrowIfNull(envelope);
         ArgumentNullException.ThrowIfNull(lease);
-
-        var probe = new PilotDataSourceProbeExecutor(dbContext, secretResolver, connectionProbe);
-        var probeResult = await probe.ExecuteAsync(envelope, lease, cancellationToken).ConfigureAwait(false);
-        if (probeResult.Outcome is not WorkDeliveryOutcome.Completed)
-        {
-            return probeResult;
-        }
 
         PilotDataSourceWorkRequest request;
         try
@@ -134,6 +139,23 @@ public sealed class PilotAiQuestionExecutor(
                 WorkDeliveryOutcome.Failed,
                 WorkFailureClass.Validation,
                 1);
+        }
+
+        AuthorizedDataSourceBinding initialBinding;
+        try
+        {
+            var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
+            initialBinding = await bindings.RequireSourceAsync(authority, request.DataSourceId, readOnly: true, cancellationToken);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
+        }
+        var probe = new PilotDataSourceProbeExecutor(dbContext, secretResolver, connectionProbe, bindings);
+        var probeResult = await probe.ExecuteAsync(envelope, lease, cancellationToken).ConfigureAwait(false);
+        if (probeResult.Outcome is not WorkDeliveryOutcome.Completed)
+        {
+            return probeResult;
         }
 
         var source = await dbContext.DataSources
@@ -156,20 +178,16 @@ public sealed class PilotAiQuestionExecutor(
         PilotErpEvidence erpEvidence;
         try
         {
-            var connectionString = await secretResolver
-                .ResolveAsync(secretReference!, cancellationToken)
-                .ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return new WorkStepExecutionResult(
-                    WorkDeliveryOutcome.Failed,
-                    WorkFailureClass.Transient,
-                    request.MaxAttempts);
-            }
-
-            erpEvidence = await evidenceReader
-                .ReadAsync(connectionString, cancellationToken)
-                .ConfigureAwait(false);
+            var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
+            if (authority.UserId != initialBinding.Authority.UserId) throw DataSourceSecretBindingService.Unavailable();
+            await bindings.RevalidateAsync(initialBinding, readOnly: true, cancellationToken);
+            erpEvidence = await new ScopedDataSourceSecretResolver(bindings, secretResolver).UseAsync(
+                authority, request.DataSourceId, readOnly: true,
+                async (connectionString, token) => await evidenceReader.ReadAsync(connectionString, token), cancellationToken, taskId: envelope.TaskId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

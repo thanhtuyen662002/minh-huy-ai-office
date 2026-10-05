@@ -2,6 +2,7 @@ extern alias RuntimeWorker;
 
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
@@ -14,6 +15,185 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class PilotDataSourceWorkExecutionTests
 {
+    [Theory]
+    [InlineData(false, "reserved-exact")]
+    [InlineData(true, "reserved-exact")]
+    [InlineData(false, "reserved-alias")]
+    [InlineData(true, "reserved-alias")]
+    [InlineData(false, "reserved-encoded-alias")]
+    [InlineData(true, "reserved-encoded-alias")]
+    [InlineData(false, "custom-exact")]
+    [InlineData(true, "custom-exact")]
+    [InlineData(false, "custom-alias")]
+    [InlineData(true, "custom-alias")]
+    [InlineData(false, "customer")]
+    [InlineData(true, "customer")]
+    [InlineData(false, "customer-grant-case")]
+    [InlineData(true, "customer-grant-case")]
+    public async Task Worker_DI_branches_exclude_protected_aliases_and_keep_exact_customer_grants(bool ai, string scenario)
+    {
+        var databaseName = $"worker-di-secret-{Guid.NewGuid():N}";
+        var services = new ServiceCollection();
+        if (ai)
+            services.AddDurableRabbitMqWorkExecution<PilotAiQuestionExecutor,
+                PilotAiQuestionToolMetadataProvider, PilotAiQuestionToolPermissionProvider>(
+                options => options.UseInMemoryDatabase(databaseName), _ => { });
+        else
+            services.AddDurableRabbitMqWorkExecution<PilotDataSourceProbeExecutor,
+                PilotDataSourceToolMetadataProvider, PilotDataSourceToolPermissionProvider>(
+                options => options.UseInMemoryDatabase(databaseName), _ => { });
+        if (scenario.StartsWith("custom", StringComparison.Ordinal))
+            services.AddScoped<DataSourceSecretBindingService>(provider => new(
+                provider.GetRequiredService<PlatformDbContext>(), provider.GetRequiredService<IAuthorizationDirectory>(),
+                provider.GetRequiredService<BindingStorePermissionVerifier>(), "secretref://env/CUSTOM_PLATFORM_KEY"));
+        var resolver = new SyntheticEnvironmentResolver();
+        var probe = new RecordingProbe();
+        var evidence = new FixedEvidenceReader();
+        var model = new RecordingAiAdapter();
+        services.AddSingleton(new CompositeSecretResolver([resolver]));
+        services.AddSingleton<IDataSourceConnectionProbe>(probe);
+        services.AddSingleton<IPilotErpEvidenceReader>(evidence);
+        services.AddSingleton<IAiGateway>(new ProviderNeutralAiGateway([model]));
+        services.AddSingleton(new PilotAiRuntimeDescriptor("provider-test", "model-test"));
+        // Resolving the execution scope never starts a SQL connection or broker hosted service.
+        await using var root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        await using var scope = root.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+        Assert.False(db.Database.IsRelational());
+        var seeded = Seed(db);
+        var reference = scenario switch
+        {
+            "reserved-exact" => "secretref://env/AIOFFICE_DB_CONNECTION",
+            "reserved-alias" => "secretref://env/aioffice_db_connection",
+            "reserved-encoded-alias" => "secretref://ENV/%61ioffice_db_connection",
+            "custom-exact" => "secretref://env/CUSTOM_PLATFORM_KEY",
+            "custom-alias" => "secretref://env/custom_platform_key",
+            _ => "secretref://env/CUSTOMER_KEY"
+        };
+        seeded.Source.ConnectionSecretReference = reference;
+        (await db.DataSourceSecretBindings.SingleAsync()).CanonicalReference = scenario == "customer-grant-case"
+            ? reference.ToLowerInvariant() : SecretReference.Parse(reference).Value;
+        await db.SaveChangesAsync();
+        var denied = scenario is "reserved-exact" or "custom-exact" or "customer-grant-case"
+            || (OperatingSystem.IsWindows() && scenario is "reserved-alias" or "reserved-encoded-alias" or "custom-alias");
+        var request = new ToolAuthorizationRequest(seeded.Authority.TenantId, seeded.Authority.CompanyId,
+            seeded.Authority.UserId, seeded.TaskId, $"erp-data-source:{seeded.DataSourceId:N}",
+            ai ? "ai-reasoning-readonly" : "connection-test", ToolRiskLevel.Low);
+        var permissions = await scope.ServiceProvider.GetRequiredService<IToolPermissionProvider>()
+            .GetAsync(request, CancellationToken.None);
+        Assert.Equal(denied ? 0 : 1, permissions.Count);
+        var result = await scope.ServiceProvider.GetRequiredService<IRawWorkStepExecutor>()
+            .ExecuteAsync(seeded.Envelope, new(Guid.NewGuid(), "worker-di-fixture", 1,
+                DateTimeOffset.UtcNow.AddMinutes(1)), CancellationToken.None);
+        Assert.Equal(denied ? WorkDeliveryOutcome.Failed : WorkDeliveryOutcome.Completed, result.Outcome);
+        if (denied) Assert.Equal(WorkFailureClass.Authorization, result.FailureClass);
+        Assert.Equal(denied ? 0 : ai ? 2 : 1, resolver.Calls);
+        Assert.Equal(denied ? 0 : 1, probe.Connections.Count);
+        Assert.Equal(!denied && ai ? 1 : 0, evidence.Connections.Count);
+        Assert.Equal(!denied && ai ? 1 : 0, model.CallCount);
+    }
+
+    [Theory]
+    [InlineData(false, "grant")]
+    [InlineData(true, "grant")]
+    [InlineData(false, "membership")]
+    [InlineData(true, "membership")]
+    [InlineData(false, "user")]
+    [InlineData(true, "user")]
+    [InlineData(false, "company")]
+    [InlineData(true, "company")]
+    public async Task Revocation_after_permission_check_denies_every_queued_attempt_before_resolver(bool ai, string revoked)
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        IToolPermissionProvider provider = ai ? new PilotAiQuestionToolPermissionProvider(db) : new PilotDataSourceToolPermissionProvider(db);
+        var request = new ToolAuthorizationRequest(seeded.Authority.TenantId, seeded.Authority.CompanyId,
+            seeded.Authority.UserId, seeded.TaskId, $"erp-data-source:{seeded.DataSourceId:N}",
+            ai ? "ai-reasoning-readonly" : "connection-test", ToolRiskLevel.Low);
+        Assert.Single(await provider.GetAsync(request, CancellationToken.None));
+        if (revoked == "grant") (await db.DataSourceSecretBindings.SingleAsync()).IsEnabled = false;
+        if (revoked == "membership") (await db.CompanyMemberships.SingleAsync()).IsActive = false;
+        if (revoked == "user") (await db.Users.SingleAsync()).IsActive = false;
+        if (revoked == "company") (await db.Companies.SingleAsync()).IsActive = false;
+        await db.SaveChangesAsync();
+        var resolver = new FixedSecretResolver("synthetic-only");
+        var secrets = new CompositeSecretResolver([resolver]);
+        var probe = new RecordingProbe();
+        var evidence = new FixedEvidenceReader();
+        var model = new RecordingAiAdapter();
+        IRawWorkStepExecutor executor = ai ? new PilotAiQuestionExecutor(db, secrets, probe, evidence,
+            new ProviderNeutralAiGateway([model]), new("provider-test", "model-test")) : new PilotDataSourceProbeExecutor(db, secrets, probe);
+        for (var attempt = 1; attempt <= 2; attempt++)
+        {
+            Assert.Empty(await provider.GetAsync(request, CancellationToken.None));
+            var result = await executor.ExecuteAsync(seeded.Envelope,
+                new(Guid.NewGuid(), "worker-fixture", attempt, DateTimeOffset.UtcNow.AddMinutes(1)), CancellationToken.None);
+            Assert.Equal(WorkFailureClass.Authorization, result.FailureClass);
+            Assert.Equal(WorkDeliveryOutcome.Failed, result.Outcome);
+        }
+        Assert.Equal(0, resolver.Calls);
+        Assert.Empty(probe.Connections);
+        Assert.Empty(evidence.Connections);
+        Assert.Empty(model.Requests);
+    }
+
+    [Theory]
+    [InlineData("grant")]
+    [InlineData("enabled")]
+    [InlineData("writable")]
+    [InlineData("membership")]
+    [InlineData("version")]
+    [InlineData("recreate")]
+    public async Task Change_after_AI_probe_denies_evidence_before_second_resolution(string change)
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var resolver = new FixedSecretResolver("synthetic-only");
+        var probe = new RecordingProbe(async () =>
+        {
+            if (change == "grant") (await db.DataSourceSecretBindings.SingleAsync()).IsEnabled = false;
+            if (change == "enabled") seeded.Source.IsEnabled = false;
+            if (change == "writable") seeded.Source.AllowWrite = true;
+            if (change == "membership") (await db.CompanyMemberships.SingleAsync()).IsActive = false;
+            if (change == "version") (await db.DataSourceSecretBindings.SingleAsync()).Version++;
+            if (change == "recreate")
+            {
+                db.Remove(await db.DataSourceSecretBindings.SingleAsync());
+                await db.SaveChangesAsync();
+                BindingFixture.Grant(db, seeded.Authority, "secretref://test/PILOT_CONNECTION");
+            }
+            await db.SaveChangesAsync();
+        });
+        var evidence = new FixedEvidenceReader();
+        var model = new RecordingAiAdapter();
+        var executor = new PilotAiQuestionExecutor(db, new CompositeSecretResolver([resolver]), probe,
+            evidence, new ProviderNeutralAiGateway([model]), new("provider-test", "model-test"));
+        var result = await executor.ExecuteAsync(seeded.Envelope,
+            new(Guid.NewGuid(), "worker-fixture", 1, DateTimeOffset.UtcNow.AddMinutes(1)), CancellationToken.None);
+        Assert.Equal(WorkFailureClass.Authorization, result.FailureClass);
+        Assert.Equal(1, resolver.Calls);
+        Assert.Single(probe.Connections);
+        Assert.Empty(evidence.Connections);
+        Assert.Empty(model.Requests);
+    }
+
+    [Fact]
+    public async Task Permission_request_cannot_replace_durable_task_owner()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var task = await db.Tasks.SingleAsync();
+        task.CreatedByUserId = Guid.NewGuid();
+        await db.SaveChangesAsync();
+        foreach (var ai in new[] { false, true })
+        {
+            IToolPermissionProvider provider = ai ? new PilotAiQuestionToolPermissionProvider(db) : new PilotDataSourceToolPermissionProvider(db);
+            var request = new ToolAuthorizationRequest(seeded.Authority.TenantId, seeded.Authority.CompanyId,
+                seeded.Authority.UserId, seeded.TaskId, $"erp-data-source:{seeded.DataSourceId:N}",
+                ai ? "ai-reasoning-readonly" : "connection-test", ToolRiskLevel.Low);
+            Assert.Empty(await provider.GetAsync(request, CancellationToken.None));
+        }
+    }
     [Fact]
     public async Task Authorized_probe_is_audited_before_read_only_data_source_execution()
     {
@@ -316,6 +496,32 @@ public sealed class PilotDataSourceWorkExecutionTests
                 OccurredAtUtc = now
             });
         db.SaveChanges();
+        db.Add(new PlatformUserRecord
+        {
+            TenantId = authority.TenantId,
+            Id = authority.UserId,
+            IdentityProvider = "test",
+            Subject = "worker-fixture",
+            DisplayName = "Worker fixture",
+            IsActive = true
+        });
+        db.Add(new CompanyRecord
+        {
+            TenantId = authority.TenantId,
+            Id = authority.CompanyId,
+            Code = "WORKER",
+            Name = "Worker fixture",
+            IsActive = true
+        });
+        db.Add(new CompanyMembershipRecord
+        {
+            TenantId = authority.TenantId,
+            CompanyId = authority.CompanyId,
+            UserId = authority.UserId,
+            IsActive = true
+        });
+        BindingFixture.Grant(db, authority, "secretref://test/PILOT_CONNECTION");
+        db.SaveChanges();
         return new(authority, taskId, dataSourceId, source, envelope);
     }
 
@@ -329,23 +535,36 @@ public sealed class PilotDataSourceWorkExecutionTests
     private sealed class FixedSecretResolver(string value) : ISecretResolver
     {
         public string Provider => "test";
+        public int Calls { get; private set; }
 
         public ValueTask<string> ResolveAsync(SecretReference reference, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            Calls++;
             return ValueTask.FromResult(value);
         }
     }
 
-    private sealed class RecordingProbe : IDataSourceConnectionProbe
+    private sealed class SyntheticEnvironmentResolver : ISecretResolver
+    {
+        public string Provider => "env";
+        public int Calls { get; private set; }
+        public ValueTask<string> ResolveAsync(SecretReference reference, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            return ValueTask.FromResult("synthetic-only-value");
+        }
+    }
+
+    private sealed class RecordingProbe(Func<Task>? after = null) : IDataSourceConnectionProbe
     {
         public List<string> Connections { get; } = [];
 
-        public ValueTask ProbeAsync(string connectionString, CancellationToken cancellationToken = default)
+        public async ValueTask ProbeAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             Connections.Add(connectionString);
-            return ValueTask.CompletedTask;
+            if (after is not null) await after();
         }
     }
 

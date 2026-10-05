@@ -25,8 +25,10 @@ public sealed record DataSourceMetadataWriteRequest(
 
 public sealed class DataSourceRegistryService(
     PlatformDbContext dbContext,
-    IAuthorizationDirectory authorizationDirectory)
+    IAuthorizationDirectory authorizationDirectory,
+    DataSourceSecretBindingService? bindingService = null)
 {
+    private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, authorizationDirectory);
     public async ValueTask<IReadOnlyList<DataSourceDescriptor>> ListAsync(
         AuthorizationContext authorizationContext,
         CancellationToken cancellationToken = default)
@@ -63,6 +65,7 @@ public sealed class DataSourceRegistryService(
             id,
             request);
         var secretReference = SecretReference.Parse(request.ConnectionSecretReference);
+        await bindings.RequireReferenceAsync(authorized.Context, secretReference.Value, cancellationToken);
 
         if (await LogicalNameExistsAsync(
                 authorized.Context,
@@ -138,6 +141,12 @@ public sealed class DataSourceRegistryService(
         var secretReference = request.ConnectionSecretReference is null
             ? null
             : SecretReference.Parse(request.ConnectionSecretReference);
+        await bindings.RequireStoreAsync(cancellationToken);
+        if (secretReference is not null || validated.IsEnabled)
+        {
+            await bindings.RequireReferenceAsync(authorized.Context,
+                secretReference?.Value ?? record.ConnectionSecretReference, cancellationToken);
+        }
 
         if (await LogicalNameExistsAsync(
                 authorized.Context,
@@ -195,6 +204,11 @@ public sealed class DataSourceRegistryService(
             record.TenantId, record.CompanyId, record.Id,
             request.LogicalName, record.Kind, record.Environment, request.Purpose,
             record.AllowRead, record.AllowWrite, request.MaxConcurrency, request.IsEnabled);
+        await bindings.RequireStoreAsync(cancellationToken);
+        if (request.IsEnabled)
+        {
+            await bindings.RequireReferenceAsync(authorized.Context, record.ConnectionSecretReference, cancellationToken);
+        }
         if (await LogicalNameExistsAsync(authorized.Context, validated.LogicalName, dataSourceId, cancellationToken))
         {
             throw new InvalidOperationException("Logical data-source name already exists in the authorized company scope.");
