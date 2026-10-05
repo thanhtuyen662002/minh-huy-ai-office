@@ -3,14 +3,13 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   LocalAiCheckpoint,
-  LocalAuthContext,
   LocalDataSource,
   parseAcceptedTask,
   parseAiCheckpoint,
-  parseAuthContext,
   parseDataSources,
   parseTaskSnapshot,
 } from "../lib/local-ai-workspace";
+import { useLocalSession } from "./use-local-session";
 
 type Props = {
   companyId: string;
@@ -25,8 +24,6 @@ type ChatMessage = {
 };
 
 type Surface = "assistant" | "data-sources";
-
-const sleep = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 async function readJson(response: Response): Promise<unknown> {
   try {
@@ -53,8 +50,6 @@ function sourceLabel(source: LocalDataSource) {
 
 export function LocalAiWorkspace({ companyId, companyName }: Props) {
   const [surface, setSurface] = useState<Surface>("assistant");
-  const [sessionState, setSessionState] = useState<"checking" | "signed-out" | "ready">("checking");
-  const [auth, setAuth] = useState<LocalAuthContext | null>(null);
   const [sources, setSources] = useState<readonly LocalDataSource[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const [sourceLoading, setSourceLoading] = useState(false);
@@ -76,20 +71,41 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
   );
   const selectedSource = sources.find((source) => source.id === selectedSourceId) ?? null;
 
+  const clearPrivateState = useCallback(() => {
+    setSources([]);
+    setSelectedSourceId("");
+    setSourceLoading(false);
+    setBusy(false);
+    setConnectionState({});
+    setNotice("");
+    setTaskStage("");
+    setSurface("assistant");
+    setMessages((current) => current.filter((message) => message.id === "welcome"));
+  }, []);
+
+  const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
+    validate, pause, restore, beginMutation, ready } = useLocalSession(companyId, clearPrivateState);
+
+  // Another validation can invalidate this session between validate resolving
+  // and its caller resuming. Recheck the generation after every awaited result.
   const loadSources = useCallback(async () => {
+    if (!ready()) return;
+    const generation = sessionGeneration.current;
     setSourceLoading(true);
     setNotice("");
     try {
-      const response = await fetch(`/api/local/data-sources?companyId=${encodeURIComponent(companyId)}`, {
+      if (!await validate(generation) || !isCurrent(generation)) return;
+      const response = await request(generation, `/api/local/data-sources?companyId=${encodeURIComponent(companyId)}`, {
         cache: "no-store",
       });
+      if (!isCurrent(generation)) return;
       if (response.status === 401) {
-        setSessionState("signed-out");
-        setAuth(null);
-        setSources([]);
+        reset("signed-out");
         return;
       }
       const payload = await readJson(response);
+      if (!isCurrent(generation)) return;
+      if (!await validate(generation) || !isCurrent(generation)) return;
       if (!response.ok) {
         setNotice(errorText(payload, "Không tải được nguồn dữ liệu."));
         return;
@@ -104,109 +120,96 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
         ?? parsed.find((source) => source.isEnabled && source.allowRead)
         ?? parsed[0];
       setSelectedSourceId((current) => current || preferred?.id || "");
-    } finally {
-      setSourceLoading(false);
-    }
-  }, [companyId]);
-
-  const restoreSession = useCallback(async () => {
-    setSessionState("checking");
-    try {
-      const response = await fetch(`/api/local/session?companyId=${encodeURIComponent(companyId)}`, {
-        cache: "no-store",
-      });
-      if (!response.ok) {
-        setSessionState("signed-out");
-        setAuth(null);
-        return;
-      }
-      const payload = await readJson(response);
-      const parsed = parseAuthContext(payload);
-      if (!parsed || parsed.companyId !== companyId) {
-        setSessionState("signed-out");
-        setAuth(null);
-        return;
-      }
-      setAuth(parsed);
-      setSessionState("ready");
     } catch {
-      setSessionState("signed-out");
-      setAuth(null);
+      if (isCurrent(generation)) setNotice("Không kết nối được nguồn dữ liệu.");
+    } finally {
+      if (isCurrent(generation)) setSourceLoading(false);
     }
-  }, [companyId]);
-
-  useEffect(() => {
-    void restoreSession();
-  }, [restoreSession]);
+  }, [companyId, isCurrent, request, reset, validate, sessionGeneration, ready]);
 
   useEffect(() => {
     if (sessionState === "ready") void loadSources();
-  }, [sessionState, loadSources]);
+  }, [sessionState, auth, loadSources]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice("");
+    if (sessionState !== "signed-out") return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const username = String(data.get("username") ?? "").trim();
     const password = String(data.get("password") ?? "");
-
     if (!username || !password) {
       setNotice("Nhập tên đăng nhập và mật khẩu.");
       return;
     }
-
+    const finish = beginMutation("signed-out");
+    if (!finish) return;
+    const generation = sessionGeneration.current;
+    setNotice("");
     setBusy(true);
+    let succeeded = false;
     try {
+      // Do not abort cookie-mutating requests: serialize their settlement with
+      // subsequent context reads rather than accepting a replacement early.
       const response = await fetch("/api/local/session/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, companyId }),
       });
       const payload = await readJson(response);
+      if (!isCurrent(generation)) return;
       if (!response.ok) {
         setNotice(errorText(payload, "Đăng nhập thất bại."));
         return;
       }
-      const contextValue = payload && typeof payload === "object"
-        ? Object.getOwnPropertyDescriptor(payload, "context")?.value
-        : null;
-      const context = parseAuthContext(contextValue);
-      if (!context) {
-        setNotice("Phiên đăng nhập không hợp lệ.");
-        return;
-      }
-      setAuth(context);
-      setSessionState("ready");
+      succeeded = true;
       form.reset();
     } catch {
-      setNotice("Không kết nối được dịch vụ đăng nhập.");
+      if (isCurrent(generation)) setNotice("Không kết nối được dịch vụ đăng nhập.");
     } finally {
-      setBusy(false);
+      finish();
+      if (isCurrent(generation)) {
+        setBusy(false);
+        if (succeeded) await restore();
+      }
     }
   }
 
   async function signOut() {
-    setBusy(true);
+    if (!ready()) return;
+    const finish = beginMutation("ready");
+    if (!finish) return;
+    const generation = reset("closing");
+    let failed = false;
     try {
-      await fetch("/api/local/session/logout", { method: "POST" });
+      const response = await fetch("/api/local/session/logout", { method: "POST" });
+      failed = !response.ok;
+    } catch {
+      failed = true;
     } finally {
-      setAuth(null);
-      setSources([]);
-      setSelectedSourceId("");
-      setSessionState("signed-out");
-      setBusy(false);
+      finish();
+      if (isCurrent(generation)) {
+        reset("signed-out");
+        if (failed) setNotice("Không xác nhận được đăng xuất. Hãy thử đăng nhập lại.");
+      }
     }
   }
 
   async function testConnection(source: LocalDataSource) {
+    if (!ready()) return;
+    const generation = sessionGeneration.current;
     setConnectionState((current) => ({ ...current, [source.id]: "Đang kiểm tra…" }));
     try {
-      const response = await fetch(
+      if (!await validate(generation) || !isCurrent(generation)) return;
+      const response = await request(generation,
         `/api/local/data-sources/${encodeURIComponent(source.id)}/connection-test?companyId=${encodeURIComponent(companyId)}`,
         { method: "POST" },
       );
+      if (!isCurrent(generation)) return;
+      if (response.status === 401) { reset("signed-out"); return; }
       const payload = await readJson(response);
+      if (!isCurrent(generation)) return;
+      if (!await validate(generation) || !isCurrent(generation)) return;
       const code = payload && typeof payload === "object"
         ? Object.getOwnPropertyDescriptor(payload, "code")?.value
         : null;
@@ -215,13 +218,15 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
         [source.id]: response.ok && code === "success" ? "Kết nối tốt" : "Kết nối thất bại",
       }));
     } catch {
+      if (!isCurrent(generation)) return;
       setConnectionState((current) => ({ ...current, [source.id]: "Kết nối thất bại" }));
     }
   }
 
   async function askAi(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || !ready()) return;
+    const generation = sessionGeneration.current;
 
     const form = event.currentTarget;
     const data = new FormData(form);
@@ -252,7 +257,8 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
     setTaskStage("Đang gửi công việc…");
 
     try {
-      const submitResponse = await fetch(
+      if (!await validate(generation) || !isCurrent(generation)) return;
+      const submitResponse = await request(generation,
         `/api/local/tasks?companyId=${encodeURIComponent(companyId)}`,
         {
           method: "POST",
@@ -260,7 +266,14 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
           body: JSON.stringify({ dataSourceId: selectedSourceId, question }),
         },
       );
+      if (!isCurrent(generation)) return;
+      if (submitResponse.status === 401) {
+        reset("signed-out");
+        return;
+      }
       const submitPayload = await readJson(submitResponse);
+      if (!isCurrent(generation)) return;
+      if (!await validate(generation) || !isCurrent(generation)) return;
       if (!submitResponse.ok) {
         throw new Error(errorText(submitPayload, "Không gửi được công việc."));
       }
@@ -270,21 +283,22 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
       setTaskStage("Đã vào hàng đợi · AI đang xử lý");
 
       for (let attempt = 0; attempt < 90; attempt += 1) {
-        await sleep(1500);
-        const resultResponse = await fetch(
+        if (!await pause(generation, 1500) || !await validate(generation) || !isCurrent(generation)) return;
+        const resultResponse = await request(generation,
           `/api/local/tasks/${encodeURIComponent(accepted.taskId)}?companyId=${encodeURIComponent(companyId)}`,
           { cache: "no-store" },
         );
-        const resultPayload = await readJson(resultResponse);
+        if (!isCurrent(generation)) return;
         if (!resultResponse.ok) {
           if (resultResponse.status === 401) {
-            setSessionState("signed-out");
-            setAuth(null);
-            throw new Error("Phiên đăng nhập đã hết hạn.");
+            reset("signed-out");
+            return;
           }
           continue;
         }
-
+        const resultPayload = await readJson(resultResponse);
+        if (!isCurrent(generation)) return;
+        if (!await validate(generation) || !isCurrent(generation)) return;
         const snapshot = parseTaskSnapshot(resultPayload);
         if (!snapshot) continue;
 
@@ -311,6 +325,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
 
       throw new Error("Công việc chưa hoàn tất trong thời gian chờ của giao diện.");
     } catch (error) {
+      if (!isCurrent(generation)) return;
       const message = error instanceof Error ? error.message : "AI Office gặp lỗi khi xử lý.";
       setMessages((current) => [
         ...current,
@@ -318,11 +333,11 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
       ]);
       setTaskStage("");
     } finally {
-      setBusy(false);
+      if (isCurrent(generation)) setBusy(false);
     }
   }
 
-  if (sessionState === "checking") {
+  if (sessionState === "checking" || sessionState === "closing" || (auth && auth.companyId !== companyId)) {
     return (
       <main className="min-h-screen bg-[#f5f6f8] text-[#172033] dark:bg-[#0b1020] dark:text-[#edf2ff]">
         <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-6">
@@ -430,7 +445,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
               <span className="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200 sm:inline-flex">
                 Worker online
               </span>
-              <button type="button" onClick={() => void signOut()} disabled={busy} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium dark:border-white/15">
+              <button type="button" onClick={() => void signOut()} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium dark:border-white/15">
                 Đăng xuất
               </button>
             </div>

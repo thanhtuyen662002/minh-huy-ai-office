@@ -4,11 +4,11 @@ status: active
 current_issue: 244
 current_pr: 245
 current_branch: "frontend/244-session-isolation"
-head: e8df06cca2b825cb9087099be08ed4bc0fdf3e2e
-state: claimed
+head: 25784c91a0a4a379363bb4ea0c6752cb05510050
+state: in_progress
 lease_owner: "frontend-244-task-2"
-lease_heartbeat_at: "2026-10-05T00:58:45Z"
-last_checkpoint_at: "2026-10-05T00:58:45Z"
+lease_heartbeat_at: "2026-10-05T02:10:22Z"
+last_checkpoint_at: "2026-10-05T02:10:22Z"
 last_completed_issue: 242
 last_merged_pr: 243
 last_merge_commit: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
@@ -22,11 +22,35 @@ scope:
   - frontend-session-isolation
 verification:
   inspected_main: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
-  local_candidate: ba0bf2fa07463cc049afbe727c5d43c35c0d34f7
+  admission_head: 82c28de48e79d6f99806eedd31dec748ccecbfb6
+  local_candidate: 25784c91a0a4a379363bb4ea0c6752cb05510050
+  code_tree: c8a2cce5c06805be0ebff99fa03ecae24b49bd9f
   local_candidate_published: false
-  independent_review: REQUEST_CHANGES
-  result: "Initial candidate passed 260 frontend tests, typecheck/build, 727 .NET tests and synthetic standalone Windows HTTP smoke. Extra review probes and independent review found unresolved logout blocking/failure/stale completion, connection-test 401, unmount polling and cross-tab isolation cases. These results are not #244 acceptance or production proof."
-  exact_head_ci: not_run
-next_action: "After parent confirms admission and actual branch/Draft refs, continue from ba0bf2f on current main and consolidate every REQUEST_CHANGES fix/regression. Close private controls/drafts on logout start, guard failures/finally, invalidate authenticated 401, fence polling/unmount, and use cross-tab messages only to trigger authoritative context revalidation. Run focused/full frontend checks and independent review before parent publication; then close exact-head CI on the same lease."
+  independent_review: pending_recheck
+  previous_candidate: ebf9e1e8ec8d2912e34ec4e16a222eea0bec5400
+  previous_candidate_review: "REQUEST_CHANGES: P1 concurrent validation could restore A private state after B was accepted"
+  race_regressions: "Two exact reviewer repros and eight validation-caller cases: 6 failed/4 passed before repair; all 10 passed after caller generation rechecks"
+  frontend_tests: "298 passed across 29 files; includes 43 workspace privacy/lifecycle/race regressions"
+  typecheck: passed
+  production_build: "passed; temporary one-CPU resource setting restored"
+  windows_http_smoke: "passed; standalone Next/BFF/static assets, synthetic loopback upstream"
+  result: "Local repair includes generation rechecks immediately after all eight awaited validation results, covering the P1 race where B invalidated A before A's caller resumed. Existing logout/draft, failed/delayed auth, protected 401, unmount/request/poll and server-authoritative cross-tab behavior remains covered; same-session focus and valid errors preserve chat/evidence/draft. Code checkpoint and tree above were verified; the subsequent control checkpoint references its verified predecessor to avoid a self-referential commit hash. Prior commit and reviewer evidence are preserved. Synthetic transport/HTTP fixtures are not real browser cookie/OIDC or production acceptance."
+  exact_head_ci: awaiting_parent_publication
+next_action: "Parent re-reviews this exact new candidate before requesting source payload or publishing. Resolve further REQUEST_CHANGES on the same branch/lease. Parent alone publishes after review, then this owner closes required CI on the actual remote HEAD and rechecks main compatibility. Do not publish ebf9e1e. Keep #244 open until acceptance and exact-head CI are complete."
 blocked_by:
+  - "Independent re-review and parent publication are pending; no push, remote PR handoff update or merge was performed by this worker."
   - "Stronger server-cookie/session guarantees are outside this frontend leaf; fixtures must not be described as real browser/OIDC or production acceptance."
+handoff: |
+  HANDOFF
+  Issue: #244; Draft PR #245; goal #233.
+  Branch: frontend/244-session-isolation; owner frontend-244-task-2.
+  HEAD: verified code 25784c91a0a4a379363bb4ea0c6752cb05510050, followed by this control-only checkpoint.
+  State: in_progress; local implementation verified, independent review and exact-head CI outstanding.
+  Completed: recheck generation after all eight awaited validations; deterministic concurrent A/B validation regressions; synchronous logout close and draft removal; safe failure/finally; auth mutation settlement lock across company changes; all protected 401 boundaries; stale response/unmount cancellation; cross-tab authoritative revalidation; same-session normal flow/errors.
+  Current: ebf9e1e rejected for P1 and preserved; new bounded frontend-only repair on the same confirmed admission and lease.
+  Remaining: independent reviewer recheck, parent publication, exact-head CI, current-main compatibility, applicable real browser/OIDC acceptance.
+  Tests/Evals: 10 concurrent validation regressions passed after 6 pre-repair failures; 298 frontend tests/29 files; typecheck; production build; Windows standalone synthetic HTTP smoke passed.
+  Known risks: additional auth-context GETs around private operations; no atomic server session revision or rollback of delayed Set-Cookie; BroadcastChannel/storage tests are synthetic transport fixtures; HTTP smoke does not execute browser DOM or real SQL/OIDC/worker/provider.
+  Blocked by: independent review and sole-publisher parent; stronger server session guarantees require separately owned API work.
+  NEXT ACTION: independent re-review this exact new candidate before payload/publication; parent sole publisher, owner retains same lease for CI closure on actual remote HEAD.
+  DO NOT: push/merge from this worker, claim production acceptance, edit installer/credentials/server/API contracts, touch Medcom/DubFlow, or alter another workstream.
