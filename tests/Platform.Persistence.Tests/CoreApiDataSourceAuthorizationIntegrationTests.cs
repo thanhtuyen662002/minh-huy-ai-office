@@ -131,9 +131,11 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
 
         var create = await client.PostAsJsonAsync("/api/data-sources/", request);
         var update = await client.PutAsJsonAsync($"/api/data-sources/{original.Id}", request);
+        var metadata = await client.PutAsJsonAsync($"/api/data-sources/{original.Id}/metadata", new DataSourceMetadataWriteRequest("metadata-denied", "denied", 7, false));
 
         Assert.Equal(HttpStatusCode.Forbidden, create.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, update.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, metadata.StatusCode);
         Assert.DoesNotContain("denied-rotation", await create.Content.ReadAsStringAsync(), StringComparison.Ordinal);
         Assert.DoesNotContain("denied-rotation", await update.Content.ReadAsStringAsync(), StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/data-sources/")).StatusCode);
@@ -179,6 +181,140 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
         Assert.True(persisted.AllowWrite);
         Assert.False(persisted.IsEnabled);
         Assert.Equal(8, persisted.MaxConcurrency);
+    }
+
+    [Theory]
+    [InlineData("logicalName")]
+    [InlineData("purpose")]
+    [InlineData("maxConcurrency")]
+    [InlineData("isEnabled")]
+    [InlineData("kind")]
+    [InlineData("environment")]
+    [InlineData("allowRead")]
+    [InlineData("allowWrite")]
+    [InlineData("connectionSecretReference")]
+    [InlineData("tenantId")]
+    [InlineData("companyId")]
+    [InlineData("id")]
+    public async Task MetadataContract_RejectsMissingOrUnknownFieldsWithoutMutation(string field)
+    {
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, ["admin"]));
+        var original = DataSource(context.TenantId, context.CompanyId, "original", "secretref://env/fixture-original");
+        await SeedDataSourcesAsync(factory, original);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        var payload = new Dictionary<string, object?> { ["logicalName"] = "changed", ["purpose"] = "changed", ["maxConcurrency"] = 7, ["isEnabled"] = false };
+        if (!payload.Remove(field)) payload[field] = "FIXTURE-UNTRUSTED";
+        var response = await client.PutAsJsonAsync($"/api/data-sources/{original.Id}/metadata", payload);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.DoesNotContain("FIXTURE-UNTRUSTED", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.Equivalent(original, await scope.ServiceProvider.GetRequiredService<PlatformDbContext>().DataSources.AsNoTracking().SingleAsync(), strict: true);
+    }
+
+    [Fact]
+    public async Task MetadataContract_RetainsConcurrentProtectedValuesAndScopesTheId()
+    {
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, ["admin"]));
+        var original = DataSource(context.TenantId, context.CompanyId, "original", "secretref://env/fixture-original");
+        var foreign = DataSource(context.TenantId, Guid.NewGuid(), "foreign", "secretref://env/fixture-foreign");
+        await SeedDataSourcesAsync(factory, original, foreign);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/data-sources/")).StatusCode);
+        await using (var manager = factory.Services.CreateAsyncScope())
+        {
+            var db = manager.ServiceProvider.GetRequiredService<PlatformDbContext>();
+            var row = await db.DataSources.SingleAsync(source => source.Id == original.Id);
+            row.Kind = "Postgres"; row.Environment = "Production"; row.AllowRead = false; row.AllowWrite = true;
+            row.ConnectionSecretReference = "secretref://env/fixture-rotated";
+            await db.SaveChangesAsync();
+        }
+        var request = new DataSourceMetadataWriteRequest("renamed", "changed purpose", 7, false);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.PutAsJsonAsync($"/api/data-sources/{foreign.Id}/metadata", request)).StatusCode);
+        var response = await client.PutAsJsonAsync($"/api/data-sources/{original.Id}/metadata", request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("secretref", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("connectionSecretReference", body, StringComparison.OrdinalIgnoreCase);
+        using var document = JsonDocument.Parse(body);
+        Assert.Equal("Postgres", document.RootElement.GetProperty("kind").GetString());
+        Assert.False(document.RootElement.GetProperty("allowRead").GetBoolean());
+        await using var verify = factory.Services.CreateAsyncScope();
+        var stored = await verify.ServiceProvider.GetRequiredService<PlatformDbContext>().DataSources.AsNoTracking().SingleAsync(row => row.Id == original.Id);
+        Assert.Equal("renamed", stored.LogicalName);
+        Assert.Equal("secretref://env/fixture-rotated", stored.ConnectionSecretReference);
+    }
+
+    [Theory]
+    [InlineData("logicalName", " ")]
+    [InlineData("purpose", " ")]
+    [InlineData("maxConcurrency", 0)]
+    [InlineData("maxConcurrency", 1025)]
+    [InlineData("maxConcurrency", "7")]
+    public async Task MetadataContract_RejectsInvalidValues(string field, object value)
+    {
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, ["admin"]));
+        var original = DataSource(context.TenantId, context.CompanyId, "original", "secretref://env/fixture-original");
+        await SeedDataSourcesAsync(factory, original);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        var payload = new Dictionary<string, object?> { ["logicalName"] = "changed", ["purpose"] = "changed", ["maxConcurrency"] = 7, ["isEnabled"] = false };
+        payload[field] = value;
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync($"/api/data-sources/{original.Id}/metadata", payload)).StatusCode);
+    }
+
+    [Fact]
+    public async Task MetadataContract_FailsClosedWhenAuthenticationUnavailable()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["AIOffice:Authentication:Authority"] = null, ["AIOffice:Authentication:Audience"] = null })));
+        using var client = factory.CreateClient();
+        var response = await client.PutAsJsonAsync($"/api/data-sources/{Guid.NewGuid()}/metadata", new DataSourceMetadataWriteRequest("name", "purpose", 1, false));
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task MetadataContract_CrossTenantAndMissingIdsReturnNotFoundWithoutMutation()
+    {
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, ["admin"]));
+        var foreign = DataSource(Guid.NewGuid(), context.CompanyId, "foreign-tenant", "secretref://env/foreign-tenant");
+        await SeedDataSourcesAsync(factory, foreign);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        var request = new DataSourceMetadataWriteRequest("denied", "denied", 1, false);
+        foreach (var id in new[] { foreign.Id, Guid.NewGuid() })
+        {
+            Assert.Equal(HttpStatusCode.NotFound, (await client.PutAsJsonAsync($"/api/data-sources/{id}/metadata", request)).StatusCode);
+        }
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.Equivalent(foreign, await scope.ServiceProvider.GetRequiredService<PlatformDbContext>().DataSources.AsNoTracking().SingleAsync(), strict: true);
+    }
+
+    [Fact]
+    public async Task MetadataContract_RequiresActiveDirectoryEntryAndMapsDuplicateNameToConflict()
+    {
+        await using (var deniedFactory = AuthenticatedFactory(null))
+        {
+            using var deniedClient = deniedFactory.CreateClient();
+            deniedClient.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, Guid.NewGuid().ToString());
+            Assert.Equal(HttpStatusCode.Forbidden, (await deniedClient.PutAsJsonAsync($"/api/data-sources/{Guid.NewGuid()}/metadata", new DataSourceMetadataWriteRequest("denied", "denied", 1, false))).StatusCode);
+        }
+        var context = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new AuthenticatedAuthorizationEntry(context, ["admin"]));
+        var first = DataSource(context.TenantId, context.CompanyId, "first", "secretref://env/first");
+        var second = DataSource(context.TenantId, context.CompanyId, "second", "secretref://env/second");
+        await SeedDataSourcesAsync(factory, first, second);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, context.CompanyId.ToString());
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync($"/api/data-sources/{first.Id}/metadata", new DataSourceMetadataWriteRequest("second", "changed", 1, false))).StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var stored = await scope.ServiceProvider.GetRequiredService<PlatformDbContext>().DataSources.AsNoTracking().SingleAsync(row => row.Id == first.Id);
+        Assert.Equivalent(first, stored, strict: true);
     }
 
     private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)

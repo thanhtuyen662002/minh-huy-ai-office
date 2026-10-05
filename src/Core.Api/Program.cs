@@ -224,6 +224,31 @@ if (authenticationConfigured)
             return Results.Forbid();
         }
     });
+    dataSources.MapPut("/{dataSourceId:guid}/metadata", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, DataSourceMetadataWriteRequest request, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
+        try
+        {
+            var updated = await registry.UpdateMetadataAsync(context, dataSourceId, request, cancellationToken);
+            return updated is null ? Results.NotFound() : Results.Ok(updated);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException)
+        {
+            return Results.BadRequest(new { error = "Invalid source metadata." });
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.Conflict(new { error = "Source metadata conflicts with the current registry." });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            return Results.Conflict(new { error = "Source metadata could not be saved. Refresh the registry before retrying." });
+        }
+    });
     dataSources.MapPost("/{dataSourceId:guid}/connection-test", async (Guid dataSourceId, IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceConnectionTestService tester, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
@@ -235,6 +260,7 @@ else
     dataSources.MapGet("/", AuthenticationUnavailable);
     dataSources.MapPost("/", AuthenticationUnavailable);
     dataSources.MapPut("/{dataSourceId:guid}", AuthenticationUnavailable);
+    dataSources.MapPut("/{dataSourceId:guid}/metadata", AuthenticationUnavailable);
     dataSources.MapPost("/{dataSourceId:guid}/connection-test", AuthenticationUnavailable);
 }
 

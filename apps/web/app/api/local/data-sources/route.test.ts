@@ -38,6 +38,17 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
+it("existing-source PUT retains the stored secret reference via null and preserves protected fields", async () => {
+  const edit = { ...metadata, logicalName: "company.erp.renamed", purpose: "updated purpose", connectionSecretReference: null, isEnabled: false };
+  fetchMock.mockResolvedValueOnce(Response.json({ id: sourceId, ...edit }));
+  const response = await PUT(request("PUT", JSON.stringify(edit)), { params: Promise.resolve({ dataSourceId: sourceId }) });
+  expect(response.status).toBe(200);
+  const [url, options] = fetchMock.mock.calls[0];
+  expect(url).toBe(`http://127.0.0.1:8080/api/data-sources/${sourceId}`);
+  expect(JSON.parse(options.body)).toEqual(edit);
+  expect(JSON.parse(options.body).connectionSecretReference).toBeNull();
+});
+
 describe.each(mutations)("local data source $method", ({ method, path, invoke }) => {
   it("accepts the browser authority when Next.js uses its internal container URL", async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ id: sourceId }, { status: method === "POST" ? 201 : 200 }));
