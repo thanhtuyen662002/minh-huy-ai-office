@@ -1,5 +1,6 @@
 """Real local SQL/OIDC/broker/API/worker/FE gate. No credentials in output or argv."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 from http.cookiejar import CookieJar
 import json
@@ -194,6 +195,7 @@ def main():
         "connectionSecretReference": "secretref://env/ROLE_REVOCATION_DENIED",
         "allowRead": False, "allowWrite": True, "maxConcurrency": 7, "isEnabled": False,
     }
+    narrow = {key: metadata[key] for key in ("logicalName", "purpose", "maxConcurrency", "isEnabled")}
     try:
         sql(f"USE AIOfficeLocal; DELETE FROM aioffice.RoleAssignments WHERE {role_scope} AND RoleKey COLLATE Latin1_General_100_BIN2=N'admin';")
         status, _, context = http("/api/auth/context", base=api, headers=auth)
@@ -202,6 +204,9 @@ def main():
         assert http("/api/local/data-sources" + selector)[0] == 200
         for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{source}", "PUT")):
             assert http(path, metadata, base=api, headers=auth, method=method)[0] == 403
+        assert http(f"/api/data-sources/{source}/metadata", narrow, base=api, headers=auth, method="PUT")[0] == 403
+        assert http(f"/api/local/data-sources/{source}/metadata{selector}", narrow,
+                    headers={"Origin": web}, method="PUT")[0] == 403
         for path, method in (("/api/local/data-sources", "POST"), (f"/api/local/data-sources/{source}", "PUT")):
             status, headers, body = http(path + selector, metadata, headers={"Origin": web}, method=method)
             assert status == 403, "BFF did not preserve authoritative source-management denial"
@@ -220,11 +225,17 @@ def main():
     assert status == 200 and "admin" in context["roles"], "Restored admin authority unavailable"
     for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{foreign_source}", "PUT")):
         assert http(path, metadata, base=api, headers=wrong, method=method)[0] == 403
+    assert http(f"/api/data-sources/{foreign_source}/metadata", narrow, base=api, headers=wrong, method="PUT")[0] == 403
+    assert http(f"/api/data-sources/{foreign_source}/metadata", narrow, base=api, headers=auth, method="PUT")[0] == 404
 
     # Exercise successful BFF create/update against the real database, then remove only this fixture.
     fixture_name = "acceptance-admin-" + uuid.uuid4().hex
     allowed = {**metadata, "logicalName": fixture_name, "connectionSecretReference": "secretref://env/PILOT_ERP_CONNECTION",
                "allowRead": True, "allowWrite": False, "isEnabled": True}
+    fixture_id = guard_id = None
+    gate = "tempdb.dbo.AIOfficeMetadataGate_" + uuid.uuid4().hex
+    gate_created = False
+    locker = executor = pending = None
     try:
         status, headers, created = http("/api/local/data-sources" + selector, allowed, headers={"Origin": web})
         assert status == 201, f"Company admin source create failed with HTTP {status}"
@@ -238,10 +249,107 @@ def main():
         assert "no-store" in headers.get("Cache-Control", "") and "connectionSecretReference" not in result
         assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources
             WHERE {source_scope} AND Id='{fixture_id}' AND IsEnabled=0 AND MaxConcurrency=3;""") == "1"
+
+        # The strict endpoint cannot accept client-controlled authority or protected fields.
+        before_invalid = fingerprint("DataSources", source_scope, "Id")
+        for bad in ({key: value for key, value in narrow.items() if key != "purpose"},
+                    {**narrow, "allowWrite": True}, {**narrow, "connectionSecretReference": "secretref://env/UNTRUSTED"}):
+            assert http(f"/api/data-sources/{fixture_id}/metadata", bad, base=api, headers=auth, method="PUT")[0] == 400
+            assert http(f"/api/local/data-sources/{fixture_id}/metadata{selector}", bad,
+                        headers={"Origin": web}, method="PUT")[0] == 400
+        assert fingerprint("DataSources", source_scope, "Id") == before_invalid
+
+        # Hold the uniqueness probe after Core has loaded the target row. A second SQL
+        # session then rotates its protected columns before EF saves the four metadata fields.
+        race_name = "acceptance-metadata-" + uuid.uuid4().hex
+        guard_name = "acceptance-guard-" + uuid.uuid4().hex
+        status, _, guard = http("/api/local/data-sources" + selector,
+            {**allowed, "logicalName": race_name}, headers={"Origin": web})
+        assert status == 201
+        guard_id = str(uuid.UUID(guard["id"]))
+        created_at = sql(f"USE AIOfficeLocal; SELECT CONVERT(varchar(33),CreatedAtUtc,126) FROM aioffice.DataSources WHERE {source_scope} AND Id='{fixture_id}';")
+        sql(f"CREATE TABLE {gate} (Phase int NOT NULL); INSERT {gate} VALUES (0);")
+        gate_created = True
+        lock_query = f"""SET NOCOUNT ON; SET XACT_ABORT ON; USE AIOfficeLocal;
+            BEGIN TRANSACTION;
+            UPDATE aioffice.DataSources SET LogicalName=N'{guard_name}' WHERE {source_scope} AND Id='{guard_id}';
+            DECLARE @deadline datetime2=DATEADD(second,12,SYSUTCDATETIME());
+            WHILE (SELECT Phase FROM {gate})=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.100';
+            IF (SELECT Phase FROM {gate})<>1 BEGIN ROLLBACK; THROW 51000,'Metadata race gate timeout',1; END;
+            UPDATE aioffice.DataSources SET Kind=N'Postgres', Environment=N'Production', AllowRead=0, AllowWrite=1,
+                ConnectionSecretReference=N'secretref://env/SOURCE246_ROTATED'
+                WHERE {source_scope} AND Id='{fixture_id}';
+            COMMIT;"""
+        locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
+            'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd '
+            '-S localhost -U sa -C -I -b -m 1 -h -1 -W -Q "$1"', "sql", lock_query],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        def wait_for_lock(blocked=False):
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                assert locker.poll() is None, "Owned SQL race session ended before the gate"
+                if blocked:
+                    probe = f"""SELECT COUNT(*) FROM sys.dm_exec_requests r
+                        JOIN sys.dm_exec_requests b ON r.blocking_session_id=b.session_id
+                        CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+                        CROSS APPLY sys.dm_exec_sql_text(b.sql_handle) bt
+                        WHERE t.text LIKE N'%EXISTS%' AND t.text LIKE N'%LogicalName%'
+                          AND bt.text LIKE N'%{gate}%';"""
+                else:
+                    probe = f"""SELECT COUNT(*) FROM sys.dm_exec_requests r
+                        CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+                        WHERE r.wait_type=N'WAITFOR' AND t.text LIKE N'%{gate}%';"""
+                if int(sql(probe)) > 0:
+                    return
+                time.sleep(0.1)
+            raise RuntimeError("Real SQL metadata race did not reach the required server-load interleaving")
+
+        wait_for_lock()
+        race_metadata = {"logicalName": race_name, "purpose": "Metadata-only concurrency acceptance",
+                         "maxConcurrency": 7, "isEnabled": False}
+        executor = ThreadPoolExecutor(max_workers=1)
+        pending = executor.submit(http, f"/api/local/data-sources/{fixture_id}/metadata{selector}", race_metadata,
+                                  headers={"Origin": web}, method="PUT")
+        wait_for_lock(blocked=True)
+        sql(f"UPDATE {gate} SET Phase=1;")
+        _, lock_error = locker.communicate(timeout=15)
+        assert locker.returncode == 0, clean(lock_error[-1500:])
+        status, headers, result = pending.result(timeout=15)
+        assert status == 200 and "no-store" in headers.get("Cache-Control", "")
+        assert result["logicalName"] == race_name and result["maxConcurrency"] == 7 and not result["isEnabled"]
+        assert result["kind"] == "Postgres" and result["environment"] == "Production"
+        assert not result["allowRead"] and result["allowWrite"] and "connectionSecretReference" not in result
+        assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources
+            WHERE {source_scope} AND Id='{fixture_id}' AND LogicalName=N'{race_name}'
+              AND Purpose=N'Metadata-only concurrency acceptance' AND MaxConcurrency=7 AND IsEnabled=0
+              AND Kind=N'Postgres' AND Environment=N'Production' AND AllowRead=0 AND AllowWrite=1
+              AND ConnectionSecretReference=N'secretref://env/SOURCE246_ROTATED'
+              AND CONVERT(varchar(33),CreatedAtUtc,126)='{created_at}';""") == "1"
+        status, _, fresh_sources = http("/api/local/data-sources" + selector)
+        assert status == 200
+        fresh = next(item for item in fresh_sources if item["id"] == fixture_id)
+        assert fresh["logicalName"] == race_name and fresh["kind"] == "Postgres" and not fresh["allowRead"]
     finally:
-        sql(f"USE AIOfficeLocal; DELETE FROM aioffice.DataSources WHERE {source_scope} AND LogicalName=N'{fixture_name}';")
+        # Only this gate/process and these two owned rows are eligible for cleanup.
+        if locker is not None and locker.poll() is None:
+            if gate_created:
+                sql(f"UPDATE {gate} SET Phase=2;")
+            try:
+                locker.communicate(timeout=15)
+            except subprocess.TimeoutExpired:
+                locker.kill()
+                locker.communicate(timeout=5)
+        if executor is not None:
+            executor.shutdown(wait=True, cancel_futures=True)
+        if gate_created:
+            sql(f"DROP TABLE {gate};")
+        for owned_id in (fixture_id, guard_id):
+            if owned_id is not None:
+                sql(f"USE AIOfficeLocal; DELETE FROM aioffice.DataSources WHERE {source_scope} AND Id='{owned_id}';")
     assert fingerprint("DataSources", source_scope, "Id") == source_before, "Admin fixture cleanup changed an existing source"
     print("PASS real SQL admin revoke/restore, issued-session API/BFF denial, unchanged sources and admin CRUD")
+    print("PASS real SQL metadata-only strict contract and protected-column rotation after server load")
 
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
     status, _, accepted = http("/api/local/tasks" + selector,

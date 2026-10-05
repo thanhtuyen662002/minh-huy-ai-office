@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   LocalAiCheckpoint,
   LocalDataSource,
@@ -10,6 +10,8 @@ import {
   parseTaskSnapshot,
 } from "../lib/local-ai-workspace";
 import { useLocalSession } from "./use-local-session";
+import { SourceMetadataEditor } from "./source-metadata-editor";
+import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 
 type Props = {
   companyId: string;
@@ -57,6 +59,10 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [taskStage, setTaskStage] = useState("");
+  const [editingSource, setEditingSource] = useState<LocalDataSource | null>(null);
+  const [sourceSaving, setSourceSaving] = useState(false);
+  const [editorError, setEditorError] = useState("");
+  const sourceSave = useRef<object | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -79,6 +85,10 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
     setConnectionState({});
     setNotice("");
     setTaskStage("");
+    setEditingSource(null);
+    setSourceSaving(false);
+    setEditorError("");
+    sourceSave.current = null;
     setSurface("assistant");
     setMessages((current) => current.filter((message) => message.id === "welcome"));
   }, []);
@@ -93,6 +103,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
     const generation = sessionGeneration.current;
     setSourceLoading(true);
     setNotice("");
+    setEditorError("");
     try {
       if (!await validate(generation) || !isCurrent(generation)) return;
       const response = await request(generation, `/api/local/data-sources?companyId=${encodeURIComponent(companyId)}`, {
@@ -116,10 +127,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
         return;
       }
       setSources(parsed);
-      const preferred = parsed.find((source) => source.isEnabled && source.allowRead && !source.allowWrite)
-        ?? parsed.find((source) => source.isEnabled && source.allowRead)
-        ?? parsed[0];
-      setSelectedSourceId((current) => current || preferred?.id || "");
+      setSelectedSourceId((current) => taskSourceSelection(parsed, current));
     } catch {
       if (isCurrent(generation)) setNotice("Không kết nối được nguồn dữ liệu.");
     } finally {
@@ -130,6 +138,90 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
   useEffect(() => {
     if (sessionState === "ready") void loadSources();
   }, [sessionState, auth, loadSources]);
+
+  async function editSource(source: LocalDataSource) {
+    if (!ready() || sourceLoading || sourceSave.current || !auth?.roles.includes("admin")) return;
+    const generation = sessionGeneration.current;
+    if (!await validate(generation) || !isCurrent(generation)) return;
+    setNotice("");
+    setEditorError("");
+    setEditingSource(source);
+  }
+
+  async function saveSource(draft: SourceMetadataDraft) {
+    if (!ready() || sourceLoading || sourceSave.current || !editingSource || !auth?.roles.includes("admin")) return;
+    const source = editingSource;
+    const generation = sessionGeneration.current;
+    const operation = {};
+    sourceSave.current = operation;
+    setSourceSaving(true);
+    setEditorError("");
+    setNotice("");
+    let writeAccepted = false;
+    async function authoritativeSources() {
+      const response = await request(generation, `/api/local/data-sources?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
+      if (!isCurrent(generation)) return null;
+      if (response.status === 401) { reset("signed-out"); return null; }
+      const payload = await readJson(response);
+      if (!isCurrent(generation) || !await validate(generation) || !isCurrent(generation)) return null;
+      if (!response.ok) throw new Error("Không xác minh được nguồn dữ liệu. Hãy thử lại.");
+      const parsed = parseDataSources(payload);
+      if (!parsed) throw new Error("Danh sách nguồn trả về không hợp lệ. Hãy làm mới.");
+      return parsed;
+    }
+    try {
+      sourceMetadataUpdate(draft);
+      if (!await validate(generation) || !isCurrent(generation)) return;
+      const before = await authoritativeSources();
+      if (!before || !isCurrent(generation)) return;
+      const current = before.find(item => item.id === source.id);
+      if (!current || !sameSourceMetadata(source, current)) {
+        throw new Error("Nguồn đã thay đổi. Hãy hủy, làm mới và mở lại trước khi lưu.");
+      }
+      const update = sourceMetadataUpdate(draft);
+      const response = await request(generation, `/api/local/data-sources/${encodeURIComponent(source.id)}/metadata?companyId=${encodeURIComponent(companyId)}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(update),
+      });
+      if (!isCurrent(generation)) return;
+      if (response.status === 401) { reset("signed-out"); return; }
+      const payload = await readJson(response);
+      if (!isCurrent(generation) || !await validate(generation) || !isCurrent(generation)) return;
+      if (!response.ok) {
+        throw new Error(response.status === 403 ? "Máy chủ từ chối quyền quản trị nguồn. Hãy kiểm tra lại quyền truy cập."
+          : response.status === 400 ? "Máy chủ từ chối thông tin nguồn. Kiểm tra tên, mục đích và số tác vụ rồi thử lại."
+            : response.status === 404 ? "Nguồn không còn khả dụng. Hãy hủy và làm mới."
+              : "Không lưu được nguồn dữ liệu. Hãy thử lại.");
+      }
+      writeAccepted = true;
+      const returned = parseDataSources([payload])?.[0];
+      if (!returned || returned.id !== source.id) throw new Error("Phản hồi cập nhật không hợp lệ.");
+      const after = await authoritativeSources();
+      if (!after || !isCurrent(generation)) return;
+      const saved = after.find(item => item.id === source.id);
+      const expected = { ...current, ...update };
+      if (!saved || !sameSourceMetadata(saved, expected)) throw new Error("Chưa xác nhận được dữ liệu sau cập nhật.");
+      setSources(after);
+      setSelectedSourceId(selected => taskSourceSelection(after, selected));
+      setConnectionState(states => { const next = { ...states }; delete next[source.id]; return next; });
+      setEditingSource(null);
+      setNotice("Đã lưu thay đổi và xác nhận lại nguồn dữ liệu.");
+    } catch (error) {
+      if (!isCurrent(generation)) return;
+      if (writeAccepted) {
+        // The write may have disabled this source. Discard cached eligibility
+        // until a fresh registry read succeeds instead of offering stale tasks.
+        setSources([]);
+        setSelectedSourceId("");
+        setConnectionState({});
+        setEditingSource(null);
+      }
+      setEditorError(writeAccepted ? "Máy chủ đã nhận cập nhật nhưng chưa xác nhận lại được dữ liệu. Hãy làm mới trước khi tiếp tục."
+        : error instanceof Error ? error.message : "Không kết nối được dịch vụ. Hãy thử lại.");
+    } finally {
+      if (sourceSave.current === operation) sourceSave.current = null;
+      if (isCurrent(generation)) setSourceSaving(false);
+    }
+  }
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -559,10 +651,12 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
                     <h2 className="mt-2 text-2xl font-semibold">Nguồn dữ liệu</h2>
                     <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Danh sách thật từ Core API, không còn demoDataSources.</p>
                   </div>
-                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium dark:border-white/15">
+                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium dark:border-white/15">
                     {sourceLoading ? "Đang tải…" : "Làm mới"}
                   </button>
                 </div>
+                {notice ? <p role="status" className="mt-4 text-sm text-indigo-700 dark:text-indigo-300">{notice}</p> : null}
+                {!editingSource && editorError ? <p role="alert" className="mt-4 text-sm text-rose-600 dark:text-rose-300">{editorError}</p> : null}
                 <div className="mt-6 grid gap-4 xl:grid-cols-2">
                   {sources.map((source) => (
                     <article key={source.id} className="rounded-2xl border border-slate-200 p-5 dark:border-white/10">
@@ -586,6 +680,12 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
                           Kiểm tra
                         </button>
                       </div>
+                      {auth?.roles.includes("admin") && editingSource?.id !== source.id ? (
+                        <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => void editSource(source)} className="mt-4 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-50 dark:border-white/15">Chỉnh sửa</button>
+                      ) : null}
+                      {editingSource?.id === source.id ? (
+                        <SourceMetadataEditor source={editingSource} saving={sourceSaving} error={editorError} onSave={draft => void saveSource(draft)} onCancel={() => { setEditingSource(null); setEditorError(""); }} />
+                      ) : null}
                     </article>
                   ))}
                 </div>

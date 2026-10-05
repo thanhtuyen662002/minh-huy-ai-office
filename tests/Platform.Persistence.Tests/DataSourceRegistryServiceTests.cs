@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Storage;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
 
@@ -255,6 +257,109 @@ public sealed class DataSourceRegistryServiceTests
         Assert.Equal(12, updated.MaxConcurrency);
         Assert.Equal("secretref://env/company-erp-production-v2", stored.ConnectionSecretReference);
         Assert.DoesNotContain("secretref://", updated.ToString());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MetadataOnly_TwoContextsPreserveConcurrentPolicyAndRotation(bool afterServerLoad)
+    {
+        var root = new InMemoryDatabaseRoot();
+        var name = $"metadata-race-{Guid.NewGuid():N}";
+        var options = new DbContextOptionsBuilder<PlatformDbContext>().UseInMemoryDatabase(name, root).Options;
+        var authority = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        DataSourceDescriptor initial;
+        await using (var seed = new PlatformDbContext(options))
+        {
+            await SeedAuthorizationAsync(seed, authority.TenantId, authority.CompanyId, authority.UserId);
+            initial = await CreateService(seed).CreateAsync(authority, CreateRequest("original"));
+        }
+
+        var barrier = new MetadataSaveBarrier(() => ChangeProtectedFieldsAsync(options, initial.Id));
+        var metadataOptions = new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseInMemoryDatabase(name, root).AddInterceptors(barrier).Options;
+        await using var metadataContext = new PlatformDbContext(metadataOptions);
+        if (afterServerLoad)
+        {
+            barrier.Enabled = true;
+        }
+        else
+        {
+            await ChangeProtectedFieldsAsync(options, initial.Id);
+        }
+
+        var updated = await CreateService(metadataContext).UpdateMetadataAsync(authority, initial.Id,
+            new DataSourceMetadataWriteRequest(" renamed ", " new purpose ", 7, false));
+        Assert.NotNull(updated);
+        Assert.Equal("renamed", updated.LogicalName);
+        Assert.Equal("new purpose", updated.Purpose);
+        Assert.Equal("Postgres", updated.Kind);
+        Assert.Equal("Production", updated.Environment);
+        Assert.False(updated.AllowRead);
+        Assert.True(updated.AllowWrite);
+        Assert.False(updated.IsEnabled);
+        Assert.Equal(7, updated.MaxConcurrency);
+        Assert.DoesNotContain("secretref", updated.ToString(), StringComparison.OrdinalIgnoreCase);
+        await using var verify = new PlatformDbContext(options);
+        var stored = await verify.DataSources.AsNoTracking().SingleAsync();
+        Assert.Equal("secretref://env/fixture-rotated", stored.ConnectionSecretReference);
+        Assert.Equal(authority.TenantId, stored.TenantId);
+        Assert.Equal(authority.CompanyId, stored.CompanyId);
+        Assert.Equal(initial.Id, stored.Id);
+        Assert.Equal(afterServerLoad, barrier.Executed);
+    }
+
+    [Fact]
+    public async Task MetadataOnly_RejectsDuplicateNameWithoutChangingEitherSource()
+    {
+        await using var context = CreateContext();
+        var authority = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await SeedAuthorizationAsync(context, authority.TenantId, authority.CompanyId, authority.UserId);
+        var service = CreateService(context);
+        var first = await service.CreateAsync(authority, CreateRequest("first"));
+        await service.CreateAsync(authority, CreateRequest("second"));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await service.UpdateMetadataAsync(authority, first.Id, new("second", "changed", 2, false)));
+        Assert.Equal("first", (await context.DataSources.AsNoTracking().SingleAsync(row => row.Id == first.Id)).LogicalName);
+    }
+
+    private static async Task ChangeProtectedFieldsAsync(DbContextOptions<PlatformDbContext> options, Guid id)
+    {
+        await using var concurrent = new PlatformDbContext(options);
+        var source = await concurrent.DataSources.SingleAsync(row => row.Id == id);
+        source.Kind = "Postgres";
+        source.Environment = "Production";
+        source.AllowRead = false;
+        source.AllowWrite = true;
+        source.ConnectionSecretReference = "secretref://env/fixture-rotated";
+        await concurrent.SaveChangesAsync();
+    }
+
+    private sealed class MetadataSaveBarrier(Func<Task> concurrentWrite) : SaveChangesInterceptor
+    {
+        public bool Enabled { get; set; }
+        public bool Executed { get; private set; }
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (Enabled)
+            {
+                Enabled = false;
+                Executed = true;
+                var context = eventData.Context!;
+                context.ChangeTracker.DetectChanges();
+                var entry = Assert.Single(context.ChangeTracker.Entries<DataSourceRecord>());
+                foreach (var field in new[] { nameof(DataSourceRecord.Kind), nameof(DataSourceRecord.Environment),
+                    nameof(DataSourceRecord.AllowRead), nameof(DataSourceRecord.AllowWrite), nameof(DataSourceRecord.ConnectionSecretReference),
+                    nameof(DataSourceRecord.TenantId), nameof(DataSourceRecord.CompanyId), nameof(DataSourceRecord.Id), nameof(DataSourceRecord.CreatedAtUtc) })
+                {
+                    Assert.False(entry.Property(field).IsModified);
+                }
+                await concurrentWrite();
+            }
+            return result;
+        }
     }
 
     private static DataSourceRegistryService CreateService(

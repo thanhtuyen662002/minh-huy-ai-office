@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Shared.Contracts;
 
@@ -14,6 +15,13 @@ public sealed record DataSourceRegistryWriteRequest(
     bool AllowWrite,
     int MaxConcurrency,
     bool IsEnabled = true);
+
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record DataSourceMetadataWriteRequest(
+    [property: JsonRequired] string LogicalName,
+    [property: JsonRequired] string Purpose,
+    [property: JsonRequired, JsonNumberHandling(JsonNumberHandling.Strict)] int MaxConcurrency,
+    [property: JsonRequired] bool IsEnabled);
 
 public sealed class DataSourceRegistryService(
     PlatformDbContext dbContext,
@@ -159,6 +167,56 @@ public sealed class DataSourceRegistryService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return ToDescriptor(record);
+    }
+
+    public async ValueTask<DataSourceDescriptor?> UpdateMetadataAsync(
+        AuthorizationContext authorizationContext,
+        Guid dataSourceId,
+        DataSourceMetadataWriteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (dataSourceId == Guid.Empty)
+        {
+            throw new ArgumentException("Data source id must be non-empty.", nameof(dataSourceId));
+        }
+
+        var authorized = await RequireManagementAuthorizationAsync(authorizationContext, cancellationToken);
+        var record = await dbContext.DataSources.SingleOrDefaultAsync(
+            item => item.TenantId == authorized.Context.TenantId
+                && item.CompanyId == authorized.Context.CompanyId && item.Id == dataSourceId,
+            cancellationToken);
+        if (record is null)
+        {
+            return null;
+        }
+
+        var validated = DataSourceDescriptor.Create(
+            record.TenantId, record.CompanyId, record.Id,
+            request.LogicalName, record.Kind, record.Environment, request.Purpose,
+            record.AllowRead, record.AllowWrite, request.MaxConcurrency, request.IsEnabled);
+        if (await LogicalNameExistsAsync(authorized.Context, validated.LogicalName, dataSourceId, cancellationToken))
+        {
+            throw new InvalidOperationException("Logical data-source name already exists in the authorized company scope.");
+        }
+
+        // Only these properties may be modified. In particular, never Update(record)
+        // or copy a client/full-entity snapshot: concurrent policy/reference changes
+        // must survive even if this tracked entity was loaded before that writer.
+        record.LogicalName = validated.LogicalName;
+        record.Purpose = validated.Purpose;
+        record.MaxConcurrency = validated.MaxConcurrency;
+        record.IsEnabled = validated.IsEnabled;
+        record.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // The tracked entity may still hold a pre-concurrency protected snapshot.
+        // Return a fresh, scoped descriptor rather than publishing that snapshot.
+        var saved = await dbContext.DataSources.AsNoTracking().SingleOrDefaultAsync(
+            item => item.TenantId == authorized.Context.TenantId
+                && item.CompanyId == authorized.Context.CompanyId && item.Id == dataSourceId,
+            cancellationToken);
+        return saved is null ? null : ToDescriptor(saved);
     }
 
     private async ValueTask<AuthorizationDirectoryEntry> RequireAuthorizationAsync(

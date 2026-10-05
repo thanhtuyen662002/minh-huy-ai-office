@@ -4,11 +4,11 @@ status: active
 current_issue: 246
 current_pr: 247
 current_branch: "frontend/246-source-management"
-head: fecfcd2e3bce94809890085f1929b19358def69b
-state: claimed
+head: 9ee8c1bba246cb8e203f0be9a7552730a7534822
+state: ready_for_review
 lease_owner: "frontend-246-task-2"
-lease_heartbeat_at: "2026-10-05T05:31:00Z"
-last_checkpoint_at: "2026-10-05T05:31:00Z"
+lease_heartbeat_at: "2026-10-05T06:04:00Z"
+last_checkpoint_at: "2026-10-05T06:04:00Z"
 last_completed_issue: 244
 last_merged_pr: 245
 last_merge_commit: c193d151a848d728fa3688fd6f793faf5614bb25
@@ -23,19 +23,33 @@ scope:
 verification:
   inspected_main: c193d151a848d728fa3688fd6f793faf5614bb25
   previous_leaf: "Issue244 merged and exact-main nine checks passed; real-browser QA remains separate evidence."
-  current_implementation: blocked_local_candidate
+  current_implementation: verified_local_metadata_only_candidate
+  admission: f46a9b5df97608e68184d04b162b65f2fee74570
+  verified_code_commit: 9ee8c1bba246cb8e203f0be9a7552730a7534822
+  verified_code_tree: fa829ec011033b43687dbdb6e008ff5206880552
   rejected_candidate: 2d24402bfe2aba85e0c48b06a260fcf5fe6eb998
-  review: "P1 protected-field rollback with full PUT; do not publish original candidate."
-  result: "Full PUT cannot safely preserve concurrent protected-field edits. Parent admits only the metadata-only server prerequisite described below."
-  exact_head_ci: pending_admission_publication
-next_action: "Implement the admitted metadata-only server prerequisite and revised editor in a new isolated checkout. Preserve rejected candidate and prove independent race reproduction fixed."
+  review: "Original full-PUT candidate remains rejected; new metadata-only candidate awaits independent exact-code review."
+  result: "Strict four-field endpoint/BFF/editor; property-only EF persistence and fresh scoped response preserve concurrent protected policy and credential rotation. Existing full PUT unchanged."
+  frontend_tests: "PASS341 tests/31 files, including33 editor and9 metadata-BFF cases; tsc and production build PASS."
+  dotnet_tests: "PASS751 tests across four solution test projects; Release build zero warnings/errors."
+  formatting: "PASS five admitted C# files. Full-solution local verification blocked by existing Windows checkout CRLF outside admitted paths; hosted LF CI required."
+  browser: "PASS6 actual Chrome/production Next/BFF flows with synthetic HTTP Core/OIDC and JSON-file registry; no real SQL/OIDC/ERP acceptance claimed."
+  disposable_sql: "Existing local-runtime CI smoke extended with strict payload/revoked/foreign denial and gated protected-column rotation after server load. Python syntax PASS; Docker local Linux engine unavailable, execution pending hosted CI."
+  exact_head_ci: pending_parent_only_publication
+next_action: "Independent review frozen code/tree, then parent alone publishes to247 and closes exact-head CI including real SQL race plus merged-main CI. Keep246 and full233 open pending acceptance."
 blocked_by:
+  - "Independent review and parent-only publication."
+  - "Hosted CI required for real SQL/stack execution and full-solution canonical-LF formatting."
   - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
 handoff: |
   HANDOFF
   Issue246 under full goal233; parent sole publisher.
   Preserve installer239, other workstreams, completed244 and all local checkpoints.
   Parent scope amendment 2026-10-05: permit only metadata-only PUT prerequisite and tests in additional_paths; preserve existing full PUT.
+  New isolated checkout minh-huy-ai-office-246-metadata; code9ee8c1b/treefa829ec verified and frozen. Rejected2d24402 and completed244 evidence preserved.
+  PASS341 frontend, PASS751 .NET, tsc/build, scoped formatting, Python syntax, diff-check and6 real Chrome DOM/BFF flows. All owned QA processes stopped.
+  Two-context tests reproduce protected-field/credential changes before request and after server load; frontend independent P1 interleaving verifies four-field payload and latest task eligibility.
+  SQL gate uses only disposable CI-owned rows/tempdb/process; no local database execution or SQL production acceptance claimed. Full formatting local CRLF normalization beyond scope was auto-review rejected; no broad mutation performed.
   No authorization-policy relaxation, credentials, migrations, production SQL/data/settings, installer239 or unrelated backend changes.
   Fresh metadata and enabled state must come from authoritative server responses; errors/cancel/revocation/late replies remain safe.
   Require frontend tests, typecheck/build, independent review and exact-head/main CI. Do not claim full production acceptance.

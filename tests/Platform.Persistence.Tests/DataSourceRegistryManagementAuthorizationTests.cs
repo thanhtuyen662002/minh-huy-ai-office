@@ -40,6 +40,8 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
             await service.CreateAsync(authorization, deniedRequest));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await service.UpdateAsync(authorization, created.Id, deniedRequest));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+            await service.UpdateMetadataAsync(authorization, created.Id, new("metadata-denied", "denied", 7, false)));
 
         await using var verification = new PlatformDbContext(options);
         Assert.Equal(1, await verification.DataSources.CountAsync());
@@ -71,6 +73,7 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.ListAsync(authorization));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.CreateAsync(authorization, Request("company.erp.denied")));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.UpdateAsync(authorization, created.Id, Request("company.erp.changed")));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.UpdateMetadataAsync(authorization, created.Id, new("metadata-denied", "denied", 7, false)));
         await using var verification = new PlatformDbContext(options);
         Assert.Single(await verification.DataSources.ToArrayAsync());
         Assert.Equivalent(before, await verification.DataSources.AsNoTracking().SingleAsync(), strict: true);
@@ -94,6 +97,8 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         await SetRoleAsync(options, authorization, "viewer");
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await service.UpdateAsync(authorization, created.Id, Request("company.erp.changed")));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+            await service.UpdateMetadataAsync(authorization, created.Id, new("metadata-denied", "denied", 7, false)));
         Assert.Equal(created.Id, Assert.Single(await service.ListAsync(authorization)).Id);
         Assert.Equivalent(before, await ReadStoredSourceAsync(options, created.Id), strict: true);
     }
