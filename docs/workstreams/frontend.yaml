@@ -1,54 +1,37 @@
 workstream: frontend
 role: "Frontend Product"
 status: active
-current_issue: 244
-current_pr: 245
-current_branch: "frontend/244-session-isolation"
-head: d9358358cb785bc66a66b847c6aa4e0a808b75dd
-state: waiting_ci
-lease_owner: "frontend-244-task-2"
-lease_heartbeat_at: "2026-10-05T02:31:20Z"
-last_checkpoint_at: "2026-10-05T02:31:20Z"
-last_completed_issue: 242
-last_merged_pr: 243
-last_merge_commit: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
+current_issue: 246
+current_pr: null
+current_branch: "frontend/246-source-management"
+head: c193d151a848d728fa3688fd6f793faf5614bb25
+state: claimed
+lease_owner: "frontend-246-task-2"
+lease_heartbeat_at: "2026-10-05T04:43:10Z"
+last_checkpoint_at: "2026-10-05T04:43:10Z"
+last_completed_issue: 244
+last_merged_pr: 245
+last_merge_commit: c193d151a848d728fa3688fd6f793faf5614bb25
 preferred_next_issue: null
 scope:
   - nextjs
   - shadcn-ui
   - ux
   - client-contracts
-  - realtime-ui
-  - frontend-session-isolation
+  - frontend-source-metadata
 verification:
-  inspected_main: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
-  admission_head: 82c28de48e79d6f99806eedd31dec748ccecbfb6
-  local_candidate: 2ef9439c6c38376b7c447afb53ae4fd327d7a5d4
-  reviewed_tree: 14e1126ed4caf3f8d575d2fbc1c6bdf9dae83206
-  local_candidate_published: true
-  published_implementation_head: d9358358cb785bc66a66b847c6aa4e0a808b75dd
-  independent_review: "PASS: 104 focused tests, two independent race repros, negative controls, typecheck and publication privacy scan"
-  previous_candidate: ebf9e1e8ec8d2912e34ec4e16a222eea0bec5400
-  previous_candidate_review: "REQUEST_CHANGES preserved; post-validation generation race fixed at all eight continuations"
-  frontend_tests: "298 passed across 29 files, including 43 privacy/lifecycle/race regressions"
-  typecheck: passed
-  production_build: passed
-  windows_http_smoke: "passed; synthetic standalone loopback, not real OIDC"
-  implementation_ci: "All nine checks passed on d9358358: Build37255387467 and Governance37255387485; 727 .NET tests, frontend tests/build, containers, migrations and complete local-stack integration passed"
-  tested_merge: 91ddc8e7
-  exact_head_ci: "This metadata-only checkpoint requires fresh exact-head checks; implementation evidence above belongs to d9358358"
-next_action: "Drain CI for this metadata checkpoint, refresh exact head/base/review status and let parent decide integration. Preserve the lease until integration and main verification."
+  inspected_main: c193d151a848d728fa3688fd6f793faf5614bb25
+  previous_leaf: "Issue244 merged and exact-main nine checks passed; real-browser QA remains separate evidence."
+  current_implementation: not_started
+  result: "Source registry backend/BFF contract already supports authorized metadata and enabled-state updates. This leaf adds the real frontend workflow; no credential creation or permission/kind/environment changes."
+  exact_head_ci: pending_admission_publication
+next_action: "After parent confirms the Draft lease, use an isolated checkout from this admission and implement existing-source metadata/enabled-state editing with current authorization and session fencing, meaningful tests and independent review."
 blocked_by:
-  - "Final metadata-head CI and parent integration decision remain outstanding."
-  - "Real-browser cookie/OIDC atomicity and stronger server session revision guarantees are outside this frontend leaf and remain unproved."
+  - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
 handoff: |
   HANDOFF
-  Issue: #244; Draft PR #245; goal #233.
-  Branch: frontend/244-session-isolation; owner frontend-244-task-2; parent sole publisher.
-  HEAD records the verified published implementation predecessor to avoid a self-referential hash.
-  Completed: clear private state at logout start; invalidate authenticated401; cancel/fence requests and polling on unmount; authoritative cross-tab revalidation; generation rechecks after all eight awaited validations.
-  Review: independent PASS for exact local2ef9439c and equivalent published tree14e1126e. Earlier failed candidates and negative controls retained.
-  CI: implementation d9358358 has nine successful checks. This metadata-only checkpoint needs its own fresh CI.
-  Known limits: no atomic server session revision or rollback of late Set-Cookie; frontend fixtures and existing local-stack integration do not establish production acceptance.
-  NEXT ACTION: close fresh CI, refresh live base/head/reviews, parent-controlled integration only when authorized and verified.
-  DO NOT: change installer, credentials, server, SQL, API contracts, other workstreams or projects.
+  Issue246 under full goal233; parent sole publisher.
+  Preserve installer239, other workstreams, completed244 and all local checkpoints.
+  No backend contract, SQL schema/data, credential, source permission/kind/environment or production setting changes.
+  Fresh metadata and enabled state must come from authoritative server responses; errors/cancel/revocation/late replies remain safe.
+  Require frontend tests, typecheck/build, independent review and exact-head/main CI. Do not claim full production acceptance.
