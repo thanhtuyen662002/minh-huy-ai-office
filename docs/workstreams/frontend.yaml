@@ -4,11 +4,11 @@ status: active
 current_issue: 246
 current_pr: 247
 current_branch: "frontend/246-source-management"
-head: 64128b16cbdcc928a4f2e5fb37ebad50214679be
-state: blocked_diagnostic_observation
+head: ec244c1894419c47afb36cd6adb91e282a4bfe2d
+state: ready_for_review
 lease_owner: "frontend-246-task-2"
-lease_heartbeat_at: "2026-10-05T06:26:00Z"
-last_checkpoint_at: "2026-10-05T06:26:00Z"
+lease_heartbeat_at: "2026-10-05T07:16:25Z"
+last_checkpoint_at: "2026-10-05T07:16:25Z"
 last_completed_issue: 244
 last_merged_pr: 245
 last_merge_commit: c193d151a848d728fa3688fd6f793faf5614bb25
@@ -39,19 +39,29 @@ verification:
   browser: "PASS6 actual Chrome/production Next/BFF flows with synthetic HTTP Core/OIDC and JSON-file registry; no real SQL/OIDC/ERP acceptance claimed."
   disposable_sql: "Existing local-runtime CI smoke extended with strict payload/revoked/foreign denial and gated protected-column rotation after server load. Python syntax PASS; Docker local Linux engine unavailable, execution pending hosted CI."
   exact_head_ci: "RED a7f2889ff457a319c70e34a2bed47f3ec2335e6d: Build37272517476 local-runtime job111642350781 failed required after-server-load SQL interleaving; aggregate111643045523 failed. Other executed gates passed."
-  ci_fix_checkout: minh-huy-ai-office-246-ci-fix
-  ci_fix_branch: fix/246-sql-interleaving
+  ci_fix_checkout: minh-huy-ai-office-246-write-gate
+  ci_fix_branch: fix/246-rcsi-write-gate
   diagnostic_code: 64128b16cbdcc928a4f2e5fb37ebad50214679be
   diagnostic_tree: 5beb13e6769b4d643ffa60395b1d4e5734d546f0
-  diagnostic_status: "Diagnostic-only, not a completed fix. Six offline helper checks and Python syntax PASS; no synchronization/persistence/acceptance change. Parent/native worker must collect actual HTTP outcome and classified waits/locks before changing the gate."
-next_action: "Parent independently reviews diagnostic checkpoint and obtains disposable-stack runtime observation via native worker or purposeful diagnostic publication; then same owner fixes the demonstrated cause. No blind rerun, accepting earlier load locks, red merge or new product work."
+  diagnostic_status: "Executed observation on published3361ab32d589cd420fe388499cdd74fab24cb072: run37274962425/job111649855328 HTTP409, lockerRunning=true, blockedRequests=[], readCommittedSnapshot=true. RCSI reads committed old guard name; duplicate check returns before blocking. Earlier source-load-blocking hypothesis disproved."
+  ci_fix_base: 3361ab32d589cd420fe388499cdd74fab24cb072
+  ci_fix_code: ec244c1894419c47afb36cd6adb91e282a4bfe2d
+  ci_fix_tree: 6fdda73474f20b2e565af7efb935d938bab39bb3
+  ci_fix_contract: "Owned target protected-column rotation holds ROWLOCK/X until exact Core UPDATE is observed waiting on the same granted primary-key resource and owned session. Only then commit; require HTTP200, all metadata, all protected policy/reference, unchanged scoped identity/CreatedAt and authoritative reload. Existing full-PUT negative control must overwrite stale policy and fail the same preservation check."
+  ci_fix_offline: "PASS8 exact-helper offline order/proof/redaction/negative-control checks, Python AST and diff-check. src/apps/tests/.github/compose/infra identical to published3361ab32. Local Docker engine unavailable; actual SQL execution remains pending independent review and parent-only publication."
+next_action: "Parent independently reviews frozen write-gate candidate, alone publishes to247 and closes actual exact-head SQL CI plus aggregate/main CI. Preserve database isolation and diagnostic evidence. No blind rerun, weaker gate, red merge or new product work."
 blocked_by:
-  - "Original job lacks pending-HTTP/alternate-blocker observations. Local Docker Linux engine unavailable; need disposable native/CI runtime evidence before modifying synchronization."
+  - "Write-gate candidate needs independent review and parent-only publication for real SQL proof; local Docker Linux engine unavailable."
   - "Exact published-head CI and parent integration remain outstanding."
   - "Hosted CI required for real SQL/stack execution and full-solution canonical-LF formatting."
   - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
 handoff: |
   HANDOFF
+  RCSI root cause PROVED by diagnostic CI37274962425/job111649855328 on3361ab32: early409, active locker, no blocked requests, snapshot isolation flagtrue. Production isolation preserved.
+  New isolated write-gate checkout/codeec244c1/tree6fdda734 changes only owned smoke synchronization and control handoff. No production/API/testhook/schema/isolation changes.
+  Writer changes only owned target's five protected columns within an uncommitted transaction. Request reads committed baseline under RCSI; proof matches exact UPDATE shape, owned locker session, WAIT/CONVERT KEY request and full lock-resource identity against granted primary-key X. Earlier reads/other resources cannot release gate.
+  After proof commit, metadata path must preserve rotated policy/reference, all four metadata fields and original scoped identity/CreatedAt in SQL and fresh response/list. Full-PUT negative control uses a committed interim policy after client GET to force stale protected assignments EF-modified; null reference still preserves rotation while all four policy fields must roll back, failing preservation.
+  PASS8 offline helper tests, AST/diff-check; these are not SQL execution. Keep all prior test/browser/diagnostic evidence and parent-only publication/review boundaries.
   Re-entered owned CI closure from exact publisheda7f2889. New isolated fix checkout preserves reviewed62344e1 and all prior evidence.
   Failing run37272517476/job111642350781 reached locker WAITFOR but not the required blocked EXISTS/LogicalName observation. This does not prove a persistence defect; earlier source-load blocking or early HTTP return remain unproven candidates.
   Diagnostic checkpoint64128b1 changes only smoke failure observation: status/exception type, classified blocked phase/wait and owned source lock/index summary. Never prints headers/body/SQL text/exception message. Strict required gate and final protected-column assertions unchanged; six offline safety/proof helper tests PASS.
