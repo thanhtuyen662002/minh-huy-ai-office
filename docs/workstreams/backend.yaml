@@ -1,14 +1,14 @@
 workstream: backend
 role: "Backend Platform"
-status: retired
-current_issue: null
+status: active
+current_issue: 248
 current_pr: null
-current_branch: null
+current_branch: backend/248-scoped-secret-grants
 head: null
-state: merged_and_retired
+state: admission_checkpoint
 lease_owner: root
-lease_heartbeat_at: "2026-10-03T19:57:49Z"
-last_checkpoint_at: "2026-10-03T19:57:49Z"
+lease_heartbeat_at: "2026-10-05T08:39:00Z"
+last_checkpoint_at: "2026-10-05T08:39:00Z"
 last_completed_issue: 240
 last_merged_pr: 241
 last_merge_commit: 4275b2c18fc136f26e088d631896875c76cb8653
@@ -25,3 +25,7 @@ known_risks:
   - "This security prerequisite does not complete full company/member/source onboarding or full-product issue #233."
 blocked_by: []
 next_action: "Deliver full owner/company/member/source onboarding under #233 with server-resolved authority, protected credentials, real browser/API/SQL acceptance and exact-head CI before merge."
+
+implementation_base: 481d814c6d66c62084544e3bd889dcad7f64a254
+admission_issue: 248
+admission_state: "Metadata-only reservation; implementation and tests not run. Parent creates Draft lease before coding."
