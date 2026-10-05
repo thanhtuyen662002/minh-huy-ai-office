@@ -285,10 +285,58 @@ def main():
             '-S localhost -U sa -C -I -b -m 1 -h -1 -W -Q "$1"', "sql", lock_query],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
+        def race_diagnostics():
+            # Never output request/SQL text, headers, payloads, connection strings
+            # or exception messages. Classify server phases and expose numeric waits only.
+            diagnostic = {"lockerRunning": locker.poll() is None, "http": "pending"}
+            if pending is not None and pending.done():
+                try:
+                    diagnostic["http"] = {"status": pending.result()[0]}
+                except Exception as error:
+                    diagnostic["http"] = {"exceptionType": type(error).__name__}
+            try:
+                diagnostic["readCommittedSnapshot"] = sql("SELECT is_read_committed_snapshot_on FROM sys.databases WHERE name=N'AIOfficeLocal';") == "1"
+                waits = sql(f"""USE AIOfficeLocal;
+                    SELECT CONCAT(r.session_id,N',',r.blocking_session_id,N',',r.wait_type,N',',
+                        CASE WHEN t.text LIKE N'%EXISTS%' AND t.text LIKE N'%LogicalName%' THEN N'uniqueness'
+                             WHEN t.text LIKE N'%DataSources%' AND t.text LIKE N'%ConnectionSecretReference%' THEN N'source-load'
+                             WHEN t.text LIKE N'%DataSources%' THEN N'source-other' ELSE N'other' END,N',',
+                        CASE WHEN bt.text LIKE N'%{gate}%' THEN 1 ELSE 0 END)
+                    FROM sys.dm_exec_requests r
+                    LEFT JOIN sys.dm_exec_requests b ON b.session_id=r.blocking_session_id
+                    CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+                    OUTER APPLY sys.dm_exec_sql_text(b.sql_handle) bt
+                    WHERE r.database_id=DB_ID() AND r.blocking_session_id>0 AND r.session_id<>@@SPID;""")
+                diagnostic["blockedRequests"] = []
+                for row in waits.splitlines():
+                    session_id, blocker_id, wait_type, phase, owned = row.split(",")
+                    diagnostic["blockedRequests"].append({"sessionId": int(session_id), "blockingSessionId": int(blocker_id),
+                        "waitType": wait_type, "queryPhase": phase, "ownedBlocker": owned == "1"})
+                locks = sql(f"""USE AIOfficeLocal;
+                    SELECT CONCAT(l.resource_type,N',',l.request_mode,N',',l.request_status,N',',ISNULL(p.index_id,-1),N',',COUNT(*))
+                    FROM sys.dm_tran_locks l
+                    JOIN sys.dm_exec_requests r ON r.session_id=l.request_session_id
+                    CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+                    LEFT JOIN sys.partitions p ON p.hobt_id=l.resource_associated_entity_id
+                    WHERE l.resource_database_id=DB_ID() AND t.text LIKE N'%{gate}%'
+                        AND (p.object_id=OBJECT_ID(N'aioffice.DataSources')
+                             OR (l.resource_type=N'OBJECT' AND l.resource_associated_entity_id=OBJECT_ID(N'aioffice.DataSources')))
+                    GROUP BY l.resource_type,l.request_mode,l.request_status,p.index_id;""")
+                diagnostic["ownedSourceLocks"] = []
+                for row in locks.splitlines():
+                    resource, mode, status, index_id, count = row.split(",")
+                    diagnostic["ownedSourceLocks"].append({"resourceType": resource, "lockMode": mode,
+                        "lockStatus": status, "indexId": int(index_id), "lockCount": int(count)})
+            except Exception as error:
+                diagnostic["diagnosticExceptionType"] = type(error).__name__
+            print("Metadata race diagnostics " + json.dumps(diagnostic, sort_keys=True), flush=True)
+
         def wait_for_lock(blocked=False):
             deadline = time.monotonic() + 8
             while time.monotonic() < deadline:
-                assert locker.poll() is None, "Owned SQL race session ended before the gate"
+                if locker.poll() is not None:
+                    race_diagnostics()
+                    raise RuntimeError("Owned SQL race session ended before the gate")
                 if blocked:
                     probe = f"""SELECT COUNT(*) FROM sys.dm_exec_requests r
                         JOIN sys.dm_exec_requests b ON r.blocking_session_id=b.session_id
@@ -302,7 +350,11 @@ def main():
                         WHERE r.wait_type=N'WAITFOR' AND t.text LIKE N'%{gate}%';"""
                 if int(sql(probe)) > 0:
                     return
+                if blocked and pending.done():
+                    race_diagnostics()
+                    raise RuntimeError("Metadata HTTP request completed before the required server-load interleaving")
                 time.sleep(0.1)
+            race_diagnostics()
             raise RuntimeError("Real SQL metadata race did not reach the required server-load interleaving")
 
         wait_for_lock()

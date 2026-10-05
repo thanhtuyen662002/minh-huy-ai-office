@@ -4,8 +4,8 @@ status: active
 current_issue: 246
 current_pr: 247
 current_branch: "frontend/246-source-management"
-head: 4cf3f0571e145411ab02d65faa7ec512edd73a55
-state: waiting_ci
+head: 64128b16cbdcc928a4f2e5fb37ebad50214679be
+state: blocked_diagnostic_observation
 lease_owner: "frontend-246-task-2"
 lease_heartbeat_at: "2026-10-05T06:26:00Z"
 last_checkpoint_at: "2026-10-05T06:26:00Z"
@@ -38,14 +38,23 @@ verification:
   formatting: "PASS five admitted C# files. Full-solution local verification blocked by existing Windows checkout CRLF outside admitted paths; hosted LF CI required."
   browser: "PASS6 actual Chrome/production Next/BFF flows with synthetic HTTP Core/OIDC and JSON-file registry; no real SQL/OIDC/ERP acceptance claimed."
   disposable_sql: "Existing local-runtime CI smoke extended with strict payload/revoked/foreign denial and gated protected-column rotation after server load. Python syntax PASS; Docker local Linux engine unavailable, execution pending hosted CI."
-  exact_head_ci: pending_current_metadata_head
-next_action: "Close exact published-head CI including real SQL race and canonical-LF formatting, then parent serial integration and merged-main verification. Keep246 and full233 open pending acceptance."
+  exact_head_ci: "RED a7f2889ff457a319c70e34a2bed47f3ec2335e6d: Build37272517476 local-runtime job111642350781 failed required after-server-load SQL interleaving; aggregate111643045523 failed. Other executed gates passed."
+  ci_fix_checkout: minh-huy-ai-office-246-ci-fix
+  ci_fix_branch: fix/246-sql-interleaving
+  diagnostic_code: 64128b16cbdcc928a4f2e5fb37ebad50214679be
+  diagnostic_tree: 5beb13e6769b4d643ffa60395b1d4e5734d546f0
+  diagnostic_status: "Diagnostic-only, not a completed fix. Six offline helper checks and Python syntax PASS; no synchronization/persistence/acceptance change. Parent/native worker must collect actual HTTP outcome and classified waits/locks before changing the gate."
+next_action: "Parent independently reviews diagnostic checkpoint and obtains disposable-stack runtime observation via native worker or purposeful diagnostic publication; then same owner fixes the demonstrated cause. No blind rerun, accepting earlier load locks, red merge or new product work."
 blocked_by:
+  - "Original job lacks pending-HTTP/alternate-blocker observations. Local Docker Linux engine unavailable; need disposable native/CI runtime evidence before modifying synchronization."
   - "Exact published-head CI and parent integration remain outstanding."
   - "Hosted CI required for real SQL/stack execution and full-solution canonical-LF formatting."
   - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
 handoff: |
   HANDOFF
+  Re-entered owned CI closure from exact publisheda7f2889. New isolated fix checkout preserves reviewed62344e1 and all prior evidence.
+  Failing run37272517476/job111642350781 reached locker WAITFOR but not the required blocked EXISTS/LogicalName observation. This does not prove a persistence defect; earlier source-load blocking or early HTTP return remain unproven candidates.
+  Diagnostic checkpoint64128b1 changes only smoke failure observation: status/exception type, classified blocked phase/wait and owned source lock/index summary. Never prints headers/body/SQL text/exception message. Strict required gate and final protected-column assertions unchanged; six offline safety/proof helper tests PASS.
   Issue246 under full goal233; parent sole publisher.
   Preserve installer239, other workstreams, completed244 and all local checkpoints.
   Parent scope amendment 2026-10-05: permit only metadata-only PUT prerequisite and tests in additional_paths; preserve existing full PUT.
