@@ -2,9 +2,9 @@ workstream: frontend
 role: "Frontend Product"
 status: active
 current_issue: 246
-current_pr: null
+current_pr: 247
 current_branch: "frontend/246-source-management"
-head: c193d151a848d728fa3688fd6f793faf5614bb25
+head: f5ed12d4f278c305e5d05d941b990de6b4cbfafe
 state: claimed
 lease_owner: "frontend-246-task-2"
 lease_heartbeat_at: "2026-10-05T04:43:10Z"
