@@ -1,17 +1,17 @@
 workstream: frontend
 role: "Frontend Product"
 status: active
-current_issue: 242
+current_issue: 244
 current_pr: null
-current_branch: "frontend/242-test-discovery"
+current_branch: "frontend/244-session-isolation"
 head: null
-state: verified_local
-lease_owner: root
-lease_heartbeat_at: "2026-10-03T19:57:49Z"
-last_checkpoint_at: "2026-10-03T19:57:49Z"
-last_completed_issue: 229
-last_merged_pr: 230
-last_merge_commit: af797bf2ac2677dcb77b0b110fca56a3f3c764cf
+state: claimed
+lease_owner: "frontend-244-task-2"
+lease_heartbeat_at: "2026-10-05T00:58:45Z"
+last_checkpoint_at: "2026-10-05T00:58:45Z"
+last_completed_issue: 242
+last_merged_pr: 243
+last_merge_commit: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
 preferred_next_issue: null
 scope:
   - nextjs
@@ -19,6 +19,14 @@ scope:
   - ux
   - client-contracts
   - realtime-ui
+  - frontend-session-isolation
 verification:
-  result: "All 26 app/lib/components files and all 255 tests pass locally with zero skipped/pending cases. Explicit DOM cleanup, fresh membership fixtures, accessible combobox selectors and descriptor-trap denial assertions repair stale harness/fixtures. Production authorization is unchanged. TypeScript and production Next build pass. Exact-head CI and main verification remain required."
-next_action: "Complete #242 and merge only after every exact-head gate succeeds; verify main, then deliver full company/member/source onboarding under #233."
+  inspected_main: ff330e6e22c1c5a64095b40babd89cca3c9ae2c1
+  local_candidate: ba0bf2fa07463cc049afbe727c5d43c35c0d34f7
+  local_candidate_published: false
+  independent_review: REQUEST_CHANGES
+  result: "Initial candidate passed 260 frontend tests, typecheck/build, 727 .NET tests and synthetic standalone Windows HTTP smoke. Extra review probes and independent review found unresolved logout blocking/failure/stale completion, connection-test 401, unmount polling and cross-tab isolation cases. These results are not #244 acceptance or production proof."
+  exact_head_ci: not_run
+next_action: "After parent confirms admission and actual branch/Draft refs, continue from ba0bf2f on current main and consolidate every REQUEST_CHANGES fix/regression. Close private controls/drafts on logout start, guard failures/finally, invalidate authenticated 401, fence polling/unmount, and use cross-tab messages only to trigger authoritative context revalidation. Run focused/full frontend checks and independent review before parent publication; then close exact-head CI on the same lease."
+blocked_by:
+  - "Stronger server-cookie/session guarantees are outside this frontend leaf; fixtures must not be described as real browser/OIDC or production acceptance."
