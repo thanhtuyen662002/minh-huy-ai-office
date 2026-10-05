@@ -4,11 +4,11 @@ status: active
 current_issue: 246
 current_pr: 247
 current_branch: "frontend/246-source-management"
-head: f5ed12d4f278c305e5d05d941b990de6b4cbfafe
+head: fecfcd2e3bce94809890085f1929b19358def69b
 state: claimed
 lease_owner: "frontend-246-task-2"
-lease_heartbeat_at: "2026-10-05T04:43:10Z"
-last_checkpoint_at: "2026-10-05T04:43:10Z"
+lease_heartbeat_at: "2026-10-05T05:31:00Z"
+last_checkpoint_at: "2026-10-05T05:31:00Z"
 last_completed_issue: 244
 last_merged_pr: 245
 last_merge_commit: c193d151a848d728fa3688fd6f793faf5614bb25
@@ -19,19 +19,41 @@ scope:
   - ux
   - client-contracts
   - frontend-source-metadata
+  - bounded-metadata-only-server-prerequisite
 verification:
   inspected_main: c193d151a848d728fa3688fd6f793faf5614bb25
   previous_leaf: "Issue244 merged and exact-main nine checks passed; real-browser QA remains separate evidence."
-  current_implementation: not_started
-  result: "Source registry backend/BFF contract already supports authorized metadata and enabled-state updates. This leaf adds the real frontend workflow; no credential creation or permission/kind/environment changes."
+  current_implementation: blocked_local_candidate
+  rejected_candidate: 2d24402bfe2aba85e0c48b06a260fcf5fe6eb998
+  review: "P1 protected-field rollback with full PUT; do not publish original candidate."
+  result: "Full PUT cannot safely preserve concurrent protected-field edits. Parent admits only the metadata-only server prerequisite described below."
   exact_head_ci: pending_admission_publication
-next_action: "After parent confirms the Draft lease, use an isolated checkout from this admission and implement existing-source metadata/enabled-state editing with current authorization and session fencing, meaningful tests and independent review."
+next_action: "Implement the admitted metadata-only server prerequisite and revised editor in a new isolated checkout. Preserve rejected candidate and prove independent race reproduction fixed."
 blocked_by:
   - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
 handoff: |
   HANDOFF
   Issue246 under full goal233; parent sole publisher.
   Preserve installer239, other workstreams, completed244 and all local checkpoints.
-  No backend contract, SQL schema/data, credential, source permission/kind/environment or production setting changes.
+  Parent scope amendment 2026-10-05: permit only metadata-only PUT prerequisite and tests in additional_paths; preserve existing full PUT.
+  No authorization-policy relaxation, credentials, migrations, production SQL/data/settings, installer239 or unrelated backend changes.
   Fresh metadata and enabled state must come from authoritative server responses; errors/cancel/revocation/late replies remain safe.
   Require frontend tests, typecheck/build, independent review and exact-head/main CI. Do not claim full production acceptance.
+additional_paths:
+  - src/Platform.Persistence/DataSourceRegistryService.cs
+  - src/Core.Api/Program.cs
+  - apps/web/app/api/local/data-sources/[dataSourceId]/metadata/route.ts
+  - tests/Platform.Persistence.Tests/DataSourceRegistryServiceTests.cs
+  - tests/Platform.Persistence.Tests/DataSourceRegistryManagementAuthorizationTests.cs
+  - tests/Platform.Persistence.Tests/CoreApiDataSourceAuthorizationIntegrationTests.cs
+  - scripts/smoke-local-stack.py
+bounded_server_contract:
+  method: PUT
+  route: /api/data-sources/{id}/metadata
+  required_fields: [logicalName, purpose, maxConcurrency, isEnabled]
+  reject_unknown_fields: true
+  preserve_fields: [kind, environment, allowRead, allowWrite, connectionSecretReference]
+  authorization: "Existing fresh server-resolved company admin and tenant/company/id isolation; no relaxed policy."
+  persistence: "Modify only metadata properties plus UpdatedAtUtc; never mark entire entity modified. No schema migration or production DDL."
+  acceptance: "Prove concurrent protected-field and credential rotation after client GET and after server load survive metadata save; two-context tests plus existing disposable SQL CI. Preserve session/late-response fences."
+  coordination: "Backend workstream retired after241; only installer239 and this247 are open. Parent owns serial cross-stream integration and publication."
