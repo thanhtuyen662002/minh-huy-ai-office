@@ -6,8 +6,8 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 0a5759599cdbc3b40c55af10bd9fc0b2a085c4ac
-last_verified_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
+current_target_head: 580d1162a93947bbf6402c801ca1534980ea0dfc
+last_verified_commit: e2165d8a67644cbfc9672ed373e2062761b3c31c
 
 critical_paths:
   backend:
@@ -75,7 +75,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Close installer239 exact-head CI after test0a57595: local76 tests include actual PS7 rendering; refusal/file/identity/secret assertions remain intact. Independent re-review5836e29 reports no new code blocker.63f80dc Build37527413142 passed native artifact and real stack but failed one wrapped diagnostic substring. Protocol3 preserves routing through reboot/failure. Qualify actual clean Windows lifecycle before merge and continue unblocked source onboarding under233; goal remains active."
+next_action: "Close installer239 integration CI after verified main e2165d8 enters its bundle. Main source251 Build37534355053/Governance37534355102 PASS;250 closed. Installer26a8968 Build37528486023/Governance37528486001 PASS with76 core tests and independent review. Clean Windows qualification/signing remain external; continue source registration with atomic durable audit and frontend under233. Goal remains active."
 
 blocked_by:
   - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. The first semantic capability remains to be mapped."
@@ -83,7 +83,7 @@ blocked_by:
   - "Production deployment still requires approved production OIDC, private platform SQL/backup, private host/tunnel and production bootstrap."
 
 automation_liveness:
-  backend: retired_after_verified_issue_248
+  backend: retired_after_verified_issue_250
   frontend: retired_after_merged_issue_246
   runtime_ai: retired_intentionally
   erp_data: retired_intentionally
@@ -119,3 +119,12 @@ verified_security_249:
   main_build: 37506783690
   main_governance: 37506783677
   result: "PASS actual SQL/stack guards, impersonation/module/trigger, metadata races, broker revocation and replay retention;248 closed. Full product remains incomplete."
+
+verified_onboarding_251:
+  merge: e2165d8a67644cbfc9672ed373e2062761b3c31c
+  pr_head: 5e1a5f047a4c94ba576830fd40036379313ecfd9
+  pr_build: 37533802883
+  pr_governance: 37533802947
+  main_build: 37534355053
+  main_governance: 37534355102
+  result: 'PASS scoped admin choices, exact SQL grant metadata, role revoke/restore, unsafe-store denial, no secret/ref release;250 closed. Registration/audit/UI and actual ERP remain incomplete.'

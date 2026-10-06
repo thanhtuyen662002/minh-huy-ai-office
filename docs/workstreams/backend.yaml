@@ -1,17 +1,17 @@
 workstream: backend
 role: "Backend Platform"
-status: active
-current_issue: 250
-current_pr: 251
-current_branch: backend/250-binding-options
+status: retired
+current_issue: null
+current_pr: null
+current_branch: null
 head: a3c75d7ca6ea9a5fb364be2135ca7553b2ad1a15
-state: ready_for_review
+state: done
 lease_owner: root-backend-250
 lease_heartbeat_at: "2026-10-06T21:12:07.7978712Z"
 last_checkpoint_at: "2026-10-07"
-last_completed_issue: 248
-last_merged_pr: 249
-last_merge_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
+last_completed_issue: 250
+last_merged_pr: 251
+last_merge_commit: e2165d8a67644cbfc9672ed373e2062761b3c31c
 scope:
   - core-api
   - scoped-secret-binding-metadata
@@ -24,3 +24,11 @@ verification:
   result: "PASS469 local Persistence tests including19 new option/API cases; scoped CSharp formatting and diff-check. Exact a3c75d7 Build37532200611/Governance37532200708 PASS, including actual SQL scoped choices, admin revoke/restore, unsafe-store denial and full stack. Independent read-only review approved this code; final docs-head CI and merged-main verification required."
 blocked_by: []
 next_action: "Close final docs-head exact CI, then merge reviewed251 with a matching HEAD and verify merged-main CI before closing250. Next product slice: source registration with atomic durable administration audit, followed by the frontend using binding ID/version. Actual ERP/Windows qualification and full233 remain open."
+
+merged_verification:
+  merge: e2165d8a67644cbfc9672ed373e2062761b3c31c
+  final_pr_build: 37533802883
+  final_pr_governance: 37533802947
+  main_build: 37534355053
+  main_governance: 37534355102
+  result: success
