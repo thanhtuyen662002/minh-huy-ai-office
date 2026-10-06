@@ -664,6 +664,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
                 {addingSource && auth?.roles.includes("admin") ? (
                   <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
                     isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}
+                    onUnauthorized={() => reset("signed-out")}
                     onRegistered={fresh => { setSources(fresh); setSelectedSourceId(current => taskSourceSelection(fresh, current)); setAddingSource(false); setNotice("Đã đăng ký nguồn chỉ đọc và xác nhận lại danh sách."); }} />
                 ) : null}
                 {notice ? <p role="status" className="mt-4 text-sm text-indigo-700 dark:text-indigo-300">{notice}</p> : null}

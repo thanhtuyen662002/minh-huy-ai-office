@@ -11,9 +11,10 @@ type Props = {
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
   onRegistered: (sources: readonly LocalDataSource[]) => void;
   onCancel: () => void;
+  onUnauthorized: () => void;
 };
 
-export function SourceRegistrationPanel({ companyId, generation, isCurrent, validate, request, onRegistered, onCancel }: Props) {
+export function SourceRegistrationPanel({ companyId, generation, isCurrent, validate, request, onRegistered, onCancel, onUnauthorized }: Props) {
   const [options, setOptions] = useState<readonly RegistrationOption[]>([]);
   const [bindingId, setBindingId] = useState("");
   const [logicalName, setLogicalName] = useState("");
@@ -40,6 +41,7 @@ export function SourceRegistrationPanel({ companyId, generation, isCurrent, vali
       while (true) {
         const response = await request(generation, `/api/local/data-sources/registration-options?${selector}&offset=${offset}&limit=100`, { cache: "no-store" });
         if (!current()) return;
+        if (response.status === 401) { onUnauthorized(); return; }
         if (!response.ok) throw new Error("Không tải được nguồn đã cấp quyền. Hãy thử lại.");
         const page = parseRegistrationPage(await response.json());
         if (!current()) return;
@@ -89,6 +91,7 @@ export function SourceRegistrationPanel({ companyId, generation, isCurrent, vali
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       });
       if (!current()) return;
+      if (response.status === 401) { onUnauthorized(); return; }
       if (response.status === 403) {
         await validate(generation);
         if (current()) { setAttempt(null); setOptions([]); setBindingId(""); throw new Error("Quyền hoặc nguồn đã bị thu hồi. Hãy tải lại danh sách."); }
@@ -106,6 +109,7 @@ export function SourceRegistrationPanel({ companyId, generation, isCurrent, vali
       if (!await validate(generation) || !current()) return;
       const refreshed = await request(generation, `/api/local/data-sources?${selector}`, { cache: "no-store" });
       if (!current()) return;
+      if (refreshed.status === 401) { onUnauthorized(); return; }
       const sources = refreshed.ok ? parseDataSources(await refreshed.json()) : null;
       if (!current()) return;
       if (!await validate(generation) || !current()) return;

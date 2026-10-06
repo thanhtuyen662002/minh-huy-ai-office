@@ -89,3 +89,11 @@ it("keeps registration absent for viewers", async () => {
   fireEvent.click(view.container.querySelector("nav button:nth-child(2)")!);
   expect(screen.queryByRole("button", { name: "Thêm nguồn chỉ đọc" })).toBeNull();
 });
+it("clears private choices and draft immediately on registration 401", async () => {
+  backend(url => url.includes("read-only-registration") ? Response.json({}, { status: 401 }) : undefined);
+  await open(); submit();
+  await waitFor(() => expect(screen.queryByRole("form", { name: "Đăng ký nguồn chỉ đọc" })).toBeNull());
+  expect(screen.queryByText("PRIVATE COMPANY A")).toBeNull();
+  expect(screen.queryByDisplayValue("NEW ERP")).toBeNull();
+  expect(await screen.findByLabelText("Tên đăng nhập")).toBeTruthy();
+});
