@@ -4,11 +4,11 @@ status: active
 current_issue: 248
 current_pr: 249
 current_branch: backend/248-scoped-secret-grants
-head: 5961c5029f9bb42d386afa45d0d27f740db0bd66
+head: acb4b9209c78525328dca6a26b5c5ccdf8d66ae9
 state: in_progress
 lease_owner: root
-lease_heartbeat_at: "2026-10-06T17:30:22Z"
-last_checkpoint_at: "2026-10-06T17:30:22Z"
+lease_heartbeat_at: "2026-10-06T17:43:06Z"
+last_checkpoint_at: "2026-10-06T17:43:06Z"
 last_completed_issue: 240
 last_merged_pr: 241
 last_merge_commit: 4275b2c18fc136f26e088d631896875c76cb8653
@@ -19,7 +19,7 @@ scope:
   - domain-application-api
   - platform-persistence
 verification:
-  result: "Review-fix implementation 9a0ee8e preserves candidate 926a9e4 and all prior evidence. P1 scoped registration now precedes Build; configured startup verifies synthetic SQL-provider permission proof 1 and refuses proof 0. P2 infrastructure exclusion compares canonical references with Windows env case semantics, while customer grants remain ordinal/BIN2 and other providers retain ordinal comparison. All 851 synthetic solution tests passed: 450 persistence/API/worker, 370 contracts, 25 configuration, 6 observability, zero skips, including 32 new review regressions. Release solution build passed with zero warnings/errors; admitted-path format, Python AST syntax, pending-model and offline idempotent migration checks passed. Smoke barriers are unchanged from 926a9e4; offline migration SHA is unchanged. Hosted SQL/stack remains NOT_RUN; Linux controls require Linux CI. Final metadata-only freeze HEAD/tree and hashes are recorded in the new parent handoff manifest."
+  result: "Build37504077505 actually passed SQL bootstrap, FE/OIDC login, read-only source and company isolation, runtime binding DML/DDL/escalation denial, both blocked UPDATE barriers, fresh admin revoke/restore and protected-column preservation. It then failed a smoke expectation of200 for an intentional403 Core API NotAuthorized mapping. The shipping catalog assertion passed. Current smoke requires exact403, no-store and no secret/ref leakage. Original851 and39 focused local tests, Python syntax and diff-check passed; complete actual SQL impersonation/worker/replay and final exact-head CI still pending."
 known_risks:
   - "P1/P2 were reproduced and fixed locally; parent-owned independent re-review must assess the new frozen candidate before publication."
   - "Windows env alias controls ran locally; Linux case-sensitive controls are present but still need Linux CI execution. Ordinary source/grant case matching remains strict on all OSes."
@@ -34,7 +34,7 @@ next_action: "Close exact published-head CI on PR249. Diagnostic Build3750284973
 implementation_base: 481d814c6d66c62084544e3bd889dcad7f64a254
 admission_issue: 248
 admission_state: "Draft249 lease verified at a7c36f9. Parent explicitly admitted PersistentWorkDeliveryHandler.cs; P1/P2 fixes remain within the same 35 paths, with no scope expansion or remote write. Implementation remains local and frozen for independent re-review."
-hosted_sql_evidence: NOT_RUN
+hosted_sql_evidence: partial_disposable_runtime_verified
 previous_frozen_candidate: 926a9e4d7fae3e7814c45d88262d91f00b3a9925
 
 ci_closure_20261007:
@@ -48,3 +48,11 @@ ci_closure_20261007:
   independent_review: "Approved three-file correction for publication; merge awaits actual SQL/stack and exact-head CI."
   local_verification: "851 baseline solution tests PASS;39 focused permission/grant tests after fix PASS; Python AST/43 predicate parser, scoped LF formatting and diff-check PASS."
   head_semantics: "head records verified implementation; exact published HEAD and workflow IDs are authoritative in PR249 HANDOFF."
+
+response_contract_correction:
+  failed_head: 21ca73f6db4a7b17ce14e142024162d25aafc7a4
+  build: 37504077505
+  job: 112408170704
+  failure_line: 554
+  expected_contract: "Core.Api maps DataSourceConnectionTestCodes.NotAuthorized to Results.Forbid HTTP403. Smoke must assert403 and no-store, not200 service DTO."
+  corrected_code: acb4b9209c78525328dca6a26b5c5ccdf8d66ae9
