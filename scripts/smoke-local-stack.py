@@ -550,8 +550,10 @@ def main():
         sql("USE AIOfficeLocal; ALTER ROLE aioffice_binding_runtime DROP MEMBER aioffice_runtime;")
         assert permission_proof() == "0"
         runtime_statement("UPDATE aioffice.DataSourceSecretBindings SET Label=N'Unsafe-role fixture'", expected="ALLOWED")
-        status, _, denied = http(f"/api/data-sources/{source}/connection-test", {}, base=api, headers=auth)
-        assert status == 200 and denied["code"] == "not_authorized"
+        status, headers, denied = http(f"/api/data-sources/{source}/connection-test", {}, base=api, headers=auth)
+        assert status == 403, f"Unsafe permission identity must be forbidden, status {status}"
+        assert "no-store" in headers.get("Cache-Control", "")
+        assert all(secret not in json.dumps(denied) for secret in secrets)
     finally:
         sql("USE AIOfficeLocal; ALTER ROLE aioffice_binding_runtime ADD MEMBER aioffice_runtime;")
     assert permission_proof() == "1"
@@ -565,8 +567,10 @@ def main():
     module_created = trigger_created = False
 
     def connection_denied(source_id):
-        status, _, result = http(f"/api/data-sources/{source_id}/connection-test", {}, base=api, headers=auth)
-        assert status == 200 and result["code"] == "not_authorized" and not result["succeeded"]
+        status, headers, result = http(f"/api/data-sources/{source_id}/connection-test", {}, base=api, headers=auth)
+        assert status == 403, f"Unauthorized source must be forbidden, status {status}"
+        assert "no-store" in headers.get("Cache-Control", "")
+        assert all(secret not in json.dumps(result) for secret in secrets)
         assert "secretref" not in json.dumps(result).lower()
 
     try:
