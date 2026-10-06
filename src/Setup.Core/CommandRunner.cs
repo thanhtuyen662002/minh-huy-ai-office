@@ -18,6 +18,10 @@ public sealed class CommandRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
+        // A PowerShell 7 parent may expose Core-only modules to Windows
+        // PowerShell 5. Let that child discover its own compatible modules.
+        if (OperatingSystem.IsWindows() && string.Equals(Path.GetFileName(executable), "powershell.exe", StringComparison.OrdinalIgnoreCase))
+            info.Environment.Remove("PSModulePath");
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
         if (removeEnvironmentPrefixes is not null)
         {

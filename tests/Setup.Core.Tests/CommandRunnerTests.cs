@@ -6,6 +6,38 @@ namespace Setup.Core.Tests;
 public sealed class CommandRunnerTests
 {
     [Fact]
+    public async Task WindowsPowerShellUsesItsOwnModulesAndPreservesParentModulePath()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var original = Environment.GetEnvironmentVariable("PSModulePath");
+        var root = Path.Combine(Path.GetTempPath(), "aioffice-module-test-" + Guid.NewGuid().ToString("N"));
+        var module = Path.Combine(root, "Microsoft.PowerShell.Security", "99.0.0");
+        Directory.CreateDirectory(module);
+        File.WriteAllText(Path.Combine(module, "Microsoft.PowerShell.Security.psd1"),
+            "@{ModuleVersion='99.0.0';PowerShellVersion='99.0';RootModule='incompatible.psm1'}");
+        Environment.SetEnvironmentVariable("PSModulePath", root);
+        try
+        {
+            var executable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe");
+            var result = await new CommandRunner().RunAsync(executable,
+                ["-NoProfile", "-NonInteractive", "-Command", "[Console]::Write((Get-Acl -LiteralPath $env:TEMP).GetType().Name)"],
+                TimeSpan.FromSeconds(15));
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("DirectorySecurity", result.Output);
+            Assert.Equal(root, Environment.GetEnvironmentVariable("PSModulePath"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PSModulePath", original);
+            var absolute = Path.GetFullPath(root);
+            var parent = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (!absolute.StartsWith(parent, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Module fixture cleanup escaped its owned directory.");
+            Directory.Delete(absolute, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task ProtectedConfigurationOverridesAreRemovedOnlyFromChildProcess()
     {
         var suffix = Guid.NewGuid().ToString("N");

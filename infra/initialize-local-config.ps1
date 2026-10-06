@@ -75,9 +75,13 @@ function Write-AtomicFile([string]$Path, [string]$Content, [bool]$Replace) {
 }
 
 $manifestPath = Join-Path $directory 'installation.json'
+$envPath = Join-Path $directory 'local.env'
 $idKeys = @('INSTALLATION', 'TENANT', 'COMPANY', 'USER', 'DATA_SOURCE')
 $secretKeys = @('SQL', 'RUNTIME', 'READER', 'IDENTITY_ADMIN', 'IDENTITY_DB', 'OWNER', 'RABBITMQ')
 if (-not [System.IO.File]::Exists($manifestPath)) {
+    if ([System.IO.File]::Exists($envPath)) {
+        throw 'Installation manifest is missing but retained configuration exists. Restore the original manifest; credentials and identity were not changed.'
+    }
     $newManifest = [ordered]@{ schemaVersion = 1 }
     foreach ($key in $idKeys) { $newManifest["AIOFFICE_${key}_ID"] = [Guid]::NewGuid().ToString() }
     foreach ($key in $secretKeys) { $newManifest["AIOFFICE_${key}_PASSWORD"] = New-LocalSecret }
@@ -103,7 +107,6 @@ foreach ($key in $secretKeys) {
     $lines.Add($name + '=' + $manifest.$name)
 }
 $lines.Add('COMPOSE_PROJECT_NAME=aioffice-' + ([Guid]$manifest.AIOFFICE_INSTALLATION_ID).ToString('N'))
-$envPath = Join-Path $directory 'local.env'
 if ([System.IO.File]::Exists($envPath)) { Protect-LocalFile $envPath }
 Write-AtomicFile $envPath (($lines -join "`n") + "`n") $true
 Protect-LocalFile $envPath
