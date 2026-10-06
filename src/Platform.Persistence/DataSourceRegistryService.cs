@@ -29,6 +29,10 @@ public sealed class DataSourceRegistryService(
     DataSourceSecretBindingService? bindingService = null)
 {
     private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, authorizationDirectory);
+
+    public Task<DataSourceRegistrationOptionsPage> ListRegistrationOptionsAsync(
+        AuthorizationContext authority, int offset = 0, int limit = 50, CancellationToken cancellationToken = default) =>
+        bindings.ListRegistrationOptionsAsync(authority, offset, limit, cancellationToken);
     public async ValueTask<IReadOnlyList<DataSourceDescriptor>> ListAsync(
         AuthorizationContext authorizationContext,
         CancellationToken cancellationToken = default)

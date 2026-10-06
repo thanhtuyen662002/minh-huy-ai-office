@@ -24,6 +24,59 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class CoreApiDataSourceAuthorizationIntegrationTests
 {
+    [Fact]
+    public async Task RegistrationOptionsWithoutAuthenticationConfigurationReturnUnavailableAndNoStore()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("AIOffice:Authentication:Authority", "");
+            builder.UseSetting("AIOffice:Authentication:Audience", "");
+        });
+        using var client = factory.CreateClient();
+        var response = await client.GetAsync("/api/data-sources/registration-options");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+    }
+
+    [Theory]
+    [InlineData("admin", HttpStatusCode.OK)]
+    [InlineData("viewer", HttpStatusCode.Forbidden)]
+    [InlineData("ADMIN", HttpStatusCode.Forbidden)]
+    public async Task RegistrationOptionsUseDirectoryAdministrationAndExposeOnlySafeBindingMetadata(string role, HttpStatusCode expected)
+    {
+        var authority = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new(authority, [role]));
+        Guid bindingId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+            bindingId = BindingFixture.Grant(db, authority, "secretref://env/PRIVATE_REGISTRATION_CHOICE").Id;
+            BindingFixture.Grant(db, authority.TenantId, Guid.NewGuid(), "secretref://env/FOREIGN_CHOICE");
+            await db.SaveChangesAsync();
+        }
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var response = await client.GetAsync("/api/data-sources/registration-options?offset=0&limit=1");
+        Assert.Equal(expected, response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("secretref://", body);
+        Assert.DoesNotContain("PRIVATE_REGISTRATION_CHOICE", body);
+        Assert.DoesNotContain("FOREIGN_CHOICE", body);
+        if (expected == HttpStatusCode.OK)
+        {
+            using var page = JsonDocument.Parse(body);
+            var item = Assert.Single(page.RootElement.GetProperty("items").EnumerateArray());
+            Assert.Equal(bindingId, item.GetProperty("bindingId").GetGuid());
+            Assert.Equal(new[] { "bindingId", "label", "version" }, item.EnumerateObject().Select(property => property.Name));
+            Assert.False(page.RootElement.GetProperty("hasMore").GetBoolean());
+            Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/api/data-sources/registration-options?offset=-1")).StatusCode);
+        }
+        client.DefaultRequestHeaders.Remove(AuthorizationHeaders.CompanyId);
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, Guid.NewGuid().ToString());
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/data-sources/registration-options")).StatusCode);
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(0)]
