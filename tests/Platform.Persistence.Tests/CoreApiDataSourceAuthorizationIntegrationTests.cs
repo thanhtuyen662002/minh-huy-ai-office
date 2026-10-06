@@ -585,8 +585,13 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
         client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
         var request = new Dictionary<string, object>
         {
-            ["bindingId"] = Guid.NewGuid(), ["bindingVersion"] = "1", ["operationId"] = Guid.NewGuid(),
-            ["logicalName"] = "ERP", ["environment"] = "Production", ["purpose"] = "Reporting", ["maxConcurrency"] = 2,
+            ["bindingId"] = Guid.NewGuid(),
+            ["bindingVersion"] = "1",
+            ["operationId"] = Guid.NewGuid(),
+            ["logicalName"] = "ERP",
+            ["environment"] = "Production",
+            ["purpose"] = "Reporting",
+            ["maxConcurrency"] = 2,
             [field] = "caller-value"
         };
         var response = await client.PostAsJsonAsync("/api/data-sources/read-only-registration", request);

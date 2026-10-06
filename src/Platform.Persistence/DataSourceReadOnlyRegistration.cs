@@ -37,8 +37,13 @@ public sealed partial class DataSourceRegistryService
             request.LogicalName, "sql-server", request.Environment, request.Purpose, true, false, request.MaxConcurrency);
         var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
         {
-            authority.UserId, request.BindingId, BindingVersion = version,
-            validated.LogicalName, validated.Environment, validated.Purpose, validated.MaxConcurrency
+            authority.UserId,
+            request.BindingId,
+            BindingVersion = version,
+            validated.LogicalName,
+            validated.Environment,
+            validated.Purpose,
+            validated.MaxConcurrency
         }))));
 
         // Serializable keeps directory/grant and idempotency range locks through
@@ -73,17 +78,32 @@ public sealed partial class DataSourceRegistryService
             var now = DateTimeOffset.UtcNow;
             source = new DataSourceRecord
             {
-                TenantId = authority.TenantId, CompanyId = authority.CompanyId, Id = validated.Id,
-                LogicalName = validated.LogicalName, Kind = "sql-server", Environment = validated.Environment,
-                Purpose = validated.Purpose, ConnectionSecretReference = grant.CanonicalReference,
-                AllowRead = true, AllowWrite = false, MaxConcurrency = validated.MaxConcurrency, IsEnabled = true,
-                CreatedAtUtc = now, UpdatedAtUtc = now
+                TenantId = authority.TenantId,
+                CompanyId = authority.CompanyId,
+                Id = validated.Id,
+                LogicalName = validated.LogicalName,
+                Kind = "sql-server",
+                Environment = validated.Environment,
+                Purpose = validated.Purpose,
+                ConnectionSecretReference = grant.CanonicalReference,
+                AllowRead = true,
+                AllowWrite = false,
+                MaxConcurrency = validated.MaxConcurrency,
+                IsEnabled = true,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now
             };
             audit = new DataSourceRegistrationAuditRecord
             {
-                TenantId = authority.TenantId, CompanyId = authority.CompanyId, Id = Guid.NewGuid(),
-                ActorUserId = authority.UserId, DataSourceId = source.Id, BindingId = grant.Id,
-                BindingVersion = grant.Version, OperationId = request.OperationId, RequestHash = fingerprint,
+                TenantId = authority.TenantId,
+                CompanyId = authority.CompanyId,
+                Id = Guid.NewGuid(),
+                ActorUserId = authority.UserId,
+                DataSourceId = source.Id,
+                BindingId = grant.Id,
+                BindingVersion = grant.Version,
+                OperationId = request.OperationId,
+                RequestHash = fingerprint,
                 OccurredAtUtc = now
             };
             dbContext.DataSources.Add(source);
