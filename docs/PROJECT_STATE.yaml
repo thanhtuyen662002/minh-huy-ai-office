@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 8e59931f36bbb3160f122961e2b94642ff68787e
+current_target_head: 5836e29abf08807b37cad9ab84051f17fcd57d4a
 last_verified_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
 
 critical_paths:
@@ -75,7 +75,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Publish installer #239 configuration-recovery/PowerShell correction and close CI on its exact published HEAD. Local 63 core tests and scoped formatting pass at implementation 8e59931. Historical transition head b4c1ba5 passed Build37510459026/Governance37510458992. Complete independent review and actual clean Windows installation/upgrade/reboot/startup/retained revocations before merge. Continue unblocked #233 onboarding work; the product goal remains active."
+next_action: "Publish installer #239 reviewed recovery correction and close exact-head CI. Local 75 core tests and scoped formatting pass at implementation 5836e29; protocol 3 retains configuration requirements/installation ID across reboot and failure. Signature validation uses the shared PS5 module policy. Historical 45714aa passed Build37526047505/Governance37526047373. Re-review fixes and qualify actual clean Windows lifecycle before merge. Continue unblocked #233 onboarding; product goal remains active."
 
 blocked_by:
   - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. The first semantic capability remains to be mapped."
