@@ -24,5 +24,5 @@ verification:
 blocked_by: []
 next_action: Implement strict binding ID/version registration with serializable source/audit transaction, idempotency, append-only SQL privilege proof, UI/BFF and meaningful local/actual-stack tests. Close exact-head CI and review before merge;233 remains incomplete.
 implementation_checkpoint:
-  result: '506 Persistence tests PASS including strict HTTP no-store and registration/idempotency/authority cases; web type-check PASS. New UI/BFF tests and actual SQL audit/rollback/restart smoke are being verified before push.'
+  result: '506 Persistence tests PASS;362 web tests PASS including21 new onboarding/BFF cases; web type-check, scoped CSharp formatting, smoke AST and diff-check PASS. Backend code4ea429d. Actual SQL audit/rollback/column escalation/restart and frozen review require hosted CI.'
   remaining: 'Complete web verification, exact-head Compose CI, adversarial audit permission proof and independent review. Do not merge253 yet.'

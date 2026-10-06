@@ -11,6 +11,7 @@ import {
 } from "../lib/local-ai-workspace";
 import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
+import { SourceRegistrationPanel } from "./source-registration-panel";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 
 type Props = {
@@ -60,6 +61,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
   const [busy, setBusy] = useState(false);
   const [taskStage, setTaskStage] = useState("");
   const [editingSource, setEditingSource] = useState<LocalDataSource | null>(null);
+  const [addingSource, setAddingSource] = useState(false);
   const [sourceSaving, setSourceSaving] = useState(false);
   const [editorError, setEditorError] = useState("");
   const sourceSave = useRef<object | null>(null);
@@ -86,6 +88,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
     setNotice("");
     setTaskStage("");
     setEditingSource(null);
+    setAddingSource(false);
     setSourceSaving(false);
     setEditorError("");
     sourceSave.current = null;
@@ -649,12 +652,20 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Resource Plane</p>
                     <h2 className="mt-2 text-2xl font-semibold">Nguồn dữ liệu</h2>
-                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Danh sách thật từ Core API, không còn demoDataSources.</p>
+                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Quản lý và kiểm tra các nguồn ERP của công ty.</p>
                   </div>
                   <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium dark:border-white/15">
                     {sourceLoading ? "Đang tải…" : "Làm mới"}
                   </button>
+                  {auth?.roles.includes("admin") && !addingSource ? (
+                    <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white">Thêm nguồn chỉ đọc</button>
+                  ) : null}
                 </div>
+                {addingSource && auth?.roles.includes("admin") ? (
+                  <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
+                    isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}
+                    onRegistered={fresh => { setSources(fresh); setSelectedSourceId(current => taskSourceSelection(fresh, current)); setAddingSource(false); setNotice("Đã đăng ký nguồn chỉ đọc và xác nhận lại danh sách."); }} />
+                ) : null}
                 {notice ? <p role="status" className="mt-4 text-sm text-indigo-700 dark:text-indigo-300">{notice}</p> : null}
                 {!editingSource && editorError ? <p role="alert" className="mt-4 text-sm text-rose-600 dark:text-rose-300">{editorError}</p> : null}
                 <div className="mt-6 grid gap-4 xl:grid-cols-2">
