@@ -20,15 +20,18 @@ public sealed class PilotTaskSubmissionService
     private readonly PlatformDbContext dbContext;
     private readonly IAuthorizationDirectory authorizationDirectory;
     private readonly TimeProvider timeProvider;
+    private readonly DataSourceSecretBindingService bindings;
 
     public PilotTaskSubmissionService(
         PlatformDbContext dbContext,
         IAuthorizationDirectory authorizationDirectory,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        DataSourceSecretBindingService? bindingService = null)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.authorizationDirectory = authorizationDirectory ?? throw new ArgumentNullException(nameof(authorizationDirectory));
         this.timeProvider = timeProvider ?? TimeProvider.System;
+        bindings = bindingService ?? new(dbContext, authorizationDirectory);
     }
 
     /// <summary>
@@ -88,6 +91,7 @@ public sealed class PilotTaskSubmissionService
         var existing = await FindTaskAsync(trustedAuthority, taskId, cancellationToken).ConfigureAwait(false);
         if (existing is not null)
         {
+            await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken);
             return await ReadExistingAsync(trustedAuthority, existing, request, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -164,6 +168,7 @@ public sealed class PilotTaskSubmissionService
             existing = await FindTaskAsync(trustedAuthority, taskId, cancellationToken).ConfigureAwait(false);
             if (existing is not null)
             {
+                await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken);
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
                 return await ReadExistingAsync(trustedAuthority, existing, request, cancellationToken)
                     .ConfigureAwait(false);
@@ -190,6 +195,7 @@ public sealed class PilotTaskSubmissionService
                 .ConfigureAwait(false);
             if (concurrent is not null)
             {
+                await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken);
                 return await ReadExistingAsync(
                         trustedAuthority,
                         concurrent,
@@ -317,6 +323,7 @@ public sealed class PilotTaskSubmissionService
         Guid dataSourceId,
         CancellationToken cancellationToken)
     {
+        await bindings.RequireSourceAsync(authority, dataSourceId, readOnly: true, cancellationToken);
         var dataSource = await dbContext.DataSources
             .AsNoTracking()
             .SingleOrDefaultAsync(

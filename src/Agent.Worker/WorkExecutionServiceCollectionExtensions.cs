@@ -25,6 +25,10 @@ public static class WorkExecutionServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configureRabbitMq);
 
         services.AddDbContext<PlatformDbContext>(configureDatabase);
+        services.AddScoped<IAuthorizationDirectory, EfAuthorizationDirectory>();
+        services.AddScoped<BindingStorePermissionVerifier>();
+        services.AddScoped<DataSourceSecretBindingService>();
+        services.AddScoped<ScopedDataSourceSecretResolver>();
         services.AddScoped<ICustomerAiCreditSettlementStore, SqlCustomerAiCreditSettlementStore>();
         services.AddScoped<CustomerAiCreditSettlementPersistenceService>();
 

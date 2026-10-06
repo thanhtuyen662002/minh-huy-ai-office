@@ -1,10 +1,27 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class PlatformDbContextTests
 {
+    [Fact]
+    public void BindingModel_UsesExactReferenceUniquenessAndExplicitInactiveDefault()
+    {
+        using var context = CreateContext();
+        var entity = context.Model.FindEntityType(typeof(DataSourceSecretBindingRecord))!;
+        Assert.Equal("DataSourceSecretBindings", entity.GetTableName());
+        Assert.Equal(new[] { "TenantId", "CompanyId", "Id" }, entity.FindPrimaryKey()!.Properties.Select(property => property.Name));
+        Assert.Contains(entity.GetIndexes(), index => index.IsUnique && index.Properties.Select(property => property.Name)
+            .SequenceEqual(new[] { "TenantId", "CompanyId", "CanonicalReference" }));
+        var relational = context.GetService<Microsoft.EntityFrameworkCore.Metadata.IDesignTimeModel>().Model;
+        var reference = relational.FindEntityType(typeof(DataSourceSecretBindingRecord))!.FindProperty("CanonicalReference")!;
+        Assert.Equal("Latin1_General_100_BIN2", reference.GetCollation());
+        Assert.Equal(512, reference.GetMaxLength());
+        Assert.Equal(128, entity.FindProperty("Label")!.GetMaxLength());
+        Assert.Equal(false, entity.FindProperty("IsEnabled")!.GetDefaultValue());
+    }
     [Fact]
     public void Model_UsesExpectedSchemaAndTable()
     {

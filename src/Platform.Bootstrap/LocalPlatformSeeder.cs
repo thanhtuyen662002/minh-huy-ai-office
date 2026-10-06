@@ -21,7 +21,8 @@ public sealed class LocalPlatformSeeder(PlatformDbContext database)
             // Do not reactivate accounts, reset roles or replace user data on repeat setup.
             return;
         }
-        if (await database.Users.AnyAsync() || await database.Companies.AnyAsync())
+        if (await database.Users.AnyAsync() || await database.Companies.AnyAsync()
+            || await database.DataSources.AnyAsync() || await database.DataSourceSecretBindings.AnyAsync())
             throw new InvalidOperationException("Local bootstrap refuses an existing unowned installation.");
 
         database.Users.Add(new PlatformUserRecord
@@ -65,6 +66,19 @@ public sealed class LocalPlatformSeeder(PlatformDbContext database)
             AllowRead = true,
             AllowWrite = false,
             MaxConcurrency = 2
+        });
+        // This grant is explicit fresh-install authority, not inferred from rows.
+        // The existing-installation early return above intentionally never repairs,
+        // re-enables or recreates a grant that an operator revoked or removed.
+        database.DataSourceSecretBindings.Add(new DataSourceSecretBindingRecord
+        {
+            TenantId = options.TenantId,
+            CompanyId = options.CompanyId,
+            Id = options.DataSourceId,
+            CanonicalReference = "secretref://env/PILOT_ERP_CONNECTION",
+            Label = "Installation sample ERP",
+            IsEnabled = true,
+            Version = 1
         });
         database.PlatformMetadata.Add(new PlatformMetadataRecord { Key = InstallationKey, Value = identity });
         // EF SaveChanges uses a SQL transaction, including the installation marker.

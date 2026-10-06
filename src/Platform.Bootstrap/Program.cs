@@ -6,12 +6,12 @@ using MinhHuy.AIOffice.Platform.Persistence;
 try
 {
     var options = BootstrapOptions.Read(Environment.GetEnvironmentVariable);
-    string Connection(string database) => new SqlConnectionStringBuilder
+    string Connection(string database, bool runtime = false) => new SqlConnectionStringBuilder
     {
         DataSource = "sql",
         InitialCatalog = database,
-        UserID = "sa",
-        Password = options.SqlPassword,
+        UserID = runtime ? "aioffice_runtime" : "sa",
+        Password = runtime ? options.RuntimePassword : options.SqlPassword,
         Encrypt = true,
         TrustServerCertificate = true,
         ConnectTimeout = 15
@@ -55,8 +55,19 @@ try
             ALTER ROLE db_datareader ADD MEMBER aioffice_runtime;
             ALTER ROLE db_datawriter ADD MEMBER aioffice_runtime;
         END
+        IF NOT EXISTS (SELECT 1 FROM sys.database_role_members m
+            JOIN sys.database_principals r ON r.principal_id=m.role_principal_id
+            JOIN sys.database_principals u ON u.principal_id=m.member_principal_id
+            WHERE r.name=N'aioffice_binding_runtime' AND u.name=N'aioffice_runtime')
+            ALTER ROLE aioffice_binding_runtime ADD MEMBER aioffice_runtime;
         """, platform);
     await grant.ExecuteNonQueryAsync();
+    // Verify as the real runtime login, not as the elevated migration identity.
+    await using (var runtimeDatabase = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
+        .UseSqlServer(Connection("AIOfficeLocal", runtime: true)).Options))
+    {
+        await new BindingStorePermissionVerifier(runtimeDatabase).RequireReadOnlyAsync();
+    }
     await using var sample = new SqlConnection(Connection("AIOfficeSample"));
     await sample.OpenAsync();
     await using var seed = new SqlCommand("""

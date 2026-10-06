@@ -270,6 +270,7 @@ public sealed class DataSourceConnectionTestServiceTests
         Guid userId,
         bool membershipActive = true)
     {
+        BindingFixture.Grant(context, tenantId, companyId, "secretref://env/company-erp-production");
         context.Users.Add(new PlatformUserRecord
         {
             TenantId = tenantId,

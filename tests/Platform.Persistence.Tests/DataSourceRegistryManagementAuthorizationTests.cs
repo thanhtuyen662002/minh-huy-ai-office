@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
+using BindingFixture = MinhHuy.AIOffice.Platform.Persistence.Tests.BindingFixture;
 
 namespace Platform.Persistence.Tests;
 
@@ -40,6 +41,8 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
             await service.CreateAsync(authorization, deniedRequest));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await service.UpdateAsync(authorization, created.Id, deniedRequest));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+            await service.UpdateMetadataAsync(authorization, created.Id, new("metadata-denied", "denied", 7, false)));
 
         await using var verification = new PlatformDbContext(options);
         Assert.Equal(1, await verification.DataSources.CountAsync());
@@ -71,6 +74,7 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.ListAsync(authorization));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.CreateAsync(authorization, Request("company.erp.denied")));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.UpdateAsync(authorization, created.Id, Request("company.erp.changed")));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.UpdateMetadataAsync(authorization, created.Id, new("metadata-denied", "denied", 7, false)));
         await using var verification = new PlatformDbContext(options);
         Assert.Single(await verification.DataSources.ToArrayAsync());
         Assert.Equivalent(before, await verification.DataSources.AsNoTracking().SingleAsync(), strict: true);
@@ -94,6 +98,8 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         await SetRoleAsync(options, authorization, "viewer");
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await service.UpdateAsync(authorization, created.Id, Request("company.erp.changed")));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+            await service.UpdateMetadataAsync(authorization, created.Id, new("metadata-denied", "denied", 7, false)));
         Assert.Equal(created.Id, Assert.Single(await service.ListAsync(authorization)).Id);
         Assert.Equivalent(before, await ReadStoredSourceAsync(options, created.Id), strict: true);
     }
@@ -107,6 +113,7 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         await SeedAsync(options, authorization, "viewer");
         await using (var directory = new PlatformDbContext(options))
         {
+            BindingFixture.Grant(directory, authorization.TenantId, otherCompanyId, "secretref://env/original");
             directory.Companies.Add(new CompanyRecord
             {
                 TenantId = authorization.TenantId,
@@ -159,6 +166,7 @@ public sealed class DataSourceRegistryManagementAuthorizationTests
         string? role = "admin")
     {
         await using var context = new PlatformDbContext(options);
+        BindingFixture.Grant(context, authorization, "secretref://env/original");
         context.Users.Add(new PlatformUserRecord
         {
             TenantId = authorization.TenantId,
