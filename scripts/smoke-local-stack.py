@@ -256,6 +256,17 @@ def main():
         assert "secretref://" not in json.dumps(choice_body)
         assert http("/api/data-sources", base=api, headers=auth)[0] == 200
         assert http("/api/local/data-sources" + selector)[0] == 200
+        revoked_registration = {"bindingId": source, "bindingVersion": "1", "operationId": str(uuid.uuid4()),
+            "logicalName": "revoked-registration-" + uuid.uuid4().hex, "environment": "Development",
+            "purpose": "Fresh admin revocation acceptance", "maxConcurrency": 2}
+        for denied_path, denied_base, denied_headers in (
+            ("/api/data-sources/read-only-registration", api, auth),
+            ("/api/local/data-sources/read-only-registration" + selector, web, {"Origin": web})):
+            denied_status, denied_response_headers, denied_body = http(denied_path, revoked_registration,
+                base=denied_base, headers=denied_headers)
+            assert denied_status == 403 and "no-store" in denied_response_headers.get("Cache-Control", "")
+            assert "secretref://" not in json.dumps(denied_body)
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceRegistrationAudits WHERE {source_scope} AND OperationId='{revoked_registration['operationId']}';") == "0"
         for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{source}", "PUT")):
             assert http(path, metadata, base=api, headers=auth, method=method)[0] == 403
         assert http(f"/api/data-sources/{source}/metadata", narrow, base=api, headers=auth, method="PUT")[0] == 403
