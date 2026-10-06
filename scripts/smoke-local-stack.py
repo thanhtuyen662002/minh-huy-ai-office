@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 from http.cookiejar import CookieJar
 import json
+import re
 import subprocess
 import time
 import urllib.error
@@ -11,6 +12,19 @@ import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
+
+
+def binding_permission_diagnostic_query():
+    """Evaluate the shipping predicates as the fixture login; emit only labels/bits."""
+    verifier = Path("src/Platform.Persistence/BindingStorePermissionVerifier.cs").read_text(encoding="utf-8")
+    query = verifier.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0]
+    query = re.sub(r"--[^\n]*", "", query)
+    expression = query.split("SELECT CASE WHEN", 1)[1].rsplit("THEN 1 ELSE 0 END;", 1)[0].strip()
+    predicates = re.split(r"\n\s{10}AND (?=[A-Z])", expression)
+    checks = [f"SELECT N'permission_check_{index:02d}' AS CheckId, "
+        f"CASE WHEN ({predicate.strip()}) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END AS Result"
+        for index, predicate in enumerate(predicates, 1)]
+    return "USE AIOfficeLocal; EXECUTE AS LOGIN=N'aioffice_runtime'; " + " UNION ALL ".join(checks) + "; REVERT;"
 
 
 def main():
@@ -40,6 +54,15 @@ def main():
                 bootstrap_log = subprocess.run([*compose, "logs", "--no-color", "--tail", "30", "bootstrap"],
                     capture_output=True, text=True, timeout=20)
                 print(clean(bootstrap_log.stdout[-2000:]))
+                # An actual permission failure needs effective-rights evidence.
+                # Never print SQL, principal names, headers, credentials or error details.
+                try:
+                    diagnostic = sql(binding_permission_diagnostic_query())
+                    for line in diagnostic.splitlines():
+                        if re.fullmatch(r"permission_check_\d{2}\s+(?:PASS|FAIL_OR_UNKNOWN)", line.strip()):
+                            print(line.strip())
+                except Exception:
+                    print("Binding permission diagnostics unavailable.")
             # Never dump logs or rendered environments. Include only a bounded sanitized CLI error.
             diagnostic = result.stderr or result.stdout
             raise RuntimeError(clean(diagnostic[-1500:]))
