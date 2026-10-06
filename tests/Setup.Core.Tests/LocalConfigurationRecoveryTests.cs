@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Setup.Core.Tests;
@@ -48,7 +49,7 @@ public sealed class LocalConfigurationRecoveryTests : IDisposable
         File.Delete(manifestPath);
         var rejected = await InitializeAsync();
         Assert.NotEqual(0, rejected.ExitCode);
-        Assert.Contains("Restore the original manifest", rejected.Error);
+        Assert.Contains("Restore the original manifest", NormalizeError(rejected.Error));
         Assert.False(File.Exists(manifestPath));
         Assert.Equal(environment, File.ReadAllBytes(environmentPath));
         RequireNoSecretOutput(manifest, rejected);
@@ -72,7 +73,7 @@ public sealed class LocalConfigurationRecoveryTests : IDisposable
         var retention = ConfigurationRetentionPlan.Create(new ProgressStore(root).Load(), false, false);
         var rejected = await InitializeAsync(retention.RequireExistingInstallation, retention.InstallationId);
         Assert.NotEqual(0, rejected.ExitCode);
-        Assert.Contains("Restore the original manifest", rejected.Error);
+        Assert.Contains("Restore the original manifest", NormalizeError(rejected.Error));
         Assert.False(File.Exists(manifestPath));
         Assert.False(File.Exists(environmentPath));
         File.WriteAllBytes(manifestPath, manifest);
@@ -91,7 +92,7 @@ public sealed class LocalConfigurationRecoveryTests : IDisposable
         var environment = File.ReadAllBytes(Path.Combine(Data, "local.env"));
         var rejected = await InitializeAsync(true, Guid.NewGuid());
         Assert.NotEqual(0, rejected.ExitCode);
-        Assert.Contains("identity does not match retained progress", rejected.Error);
+        Assert.Contains("identity does not match retained progress", NormalizeError(rejected.Error));
         Assert.Equal(manifest, File.ReadAllBytes(Path.Combine(Data, "installation.json")));
         Assert.Equal(environment, File.ReadAllBytes(Path.Combine(Data, "local.env")));
         RequireNoSecretOutput(manifest, rejected);
@@ -108,14 +109,33 @@ public sealed class LocalConfigurationRecoveryTests : IDisposable
         Assert.False(File.Exists(Path.Combine(Data, "local.env")));
     }
 
-    private Task<CommandResult> InitializeAsync(bool requireExisting = false, Guid? expectedId = null)
+    [Fact]
+    public async Task PowerShellSevenRenderingPreservesTheRecoveryHintAndDoesNotCreateIdentity()
+    {
+        var rejected = await InitializeAsync(requireExisting: true, preferPowerShellSeven: true);
+        Assert.NotEqual(0, rejected.ExitCode);
+        Assert.Contains("Restore the original manifest", NormalizeError(rejected.Error));
+        Assert.False(File.Exists(Path.Combine(Data, "installation.json")));
+        Assert.False(File.Exists(Path.Combine(Data, "local.env")));
+    }
+
+    private static string NormalizeError(string error)
+    {
+        // PS7 ConciseView adds ANSI colors and pipe-prefixed wrapped lines.
+        // Preserve the message; file/identity assertions still use actual results.
+        var plain = Regex.Replace(error, @"\x1b\[[0-9;]*[A-Za-z]", "");
+        plain = Regex.Replace(plain, @"\r?\n\s*\|\s*", " ");
+        return Regex.Replace(plain, @"\s+", " ");
+    }
+
+    private Task<CommandResult> InitializeAsync(bool requireExisting = false, Guid? expectedId = null, bool preferPowerShellSeven = false)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "infra", "initialize-local-config.ps1")))
             directory = directory.Parent;
         Assert.NotNull(directory);
         var script = Path.Combine(directory.FullName, "infra", "initialize-local-config.ps1");
-        var executable = OperatingSystem.IsWindows()
+        var executable = OperatingSystem.IsWindows() && !preferPowerShellSeven
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe")
             : "pwsh";
         var arguments = new List<string> { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-DataDirectory", Data };
