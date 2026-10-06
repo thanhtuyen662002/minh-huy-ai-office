@@ -4,11 +4,11 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: null
-state: in_progress
+head: 8e59931f36bbb3160f122961e2b94642ff68787e
+state: waiting_ci
 lease_owner: lead
 lease_heartbeat_at: null
-last_checkpoint_at: "2026-10-04"
+last_checkpoint_at: "2026-10-07"
 scope:
   - integration
   - roadmap-priority
@@ -55,12 +55,22 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Close installer239 exact-head CI after secured-main integration and59-test protocol2/drain fence. Require independent review and actual clean Windows install/upgrade/reboot/startup/retained revocations.249 merged at db2ef9a; main Build37506783690/Governance37506783677 green and248 closed. Continue all product233 requirements and owner/company/member/source onboarding; customer configuration remains private and least-privilege ERP mapping unverified."
+next_action: "Push installer #239 recovery checkpoint and close exact published-head CI. Local 63 core tests, scoped formatting and diff-check pass at code 8e59931; b4c1ba5 transition CI is green. Independent review and actual clean Windows lifecycle qualification remain pending. Keep #238/#233 open and continue unblocked product onboarding."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
 product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
+
+installer_verification:
+  code_head: 8e59931f36bbb3160f122961e2b94642ff68787e
+  local_core_tests: 63
+  local_result: "PASS actual configuration recovery and Windows PowerShell module isolation, scoped C# formatting and diff-check."
+  previous_published_head: b4c1ba508d64e9fef6bf02ed2cd73d242fc54712
+  previous_build: 37510459026
+  previous_governance: 37510458992
+  previous_result: success
+  head_semantics: "head records the verified implementation commit; exact published HEAD and current workflow IDs belong in PR #239 HANDOFF."
 
 verified_security_249:
   merge: db2ef9a141b69b10618b7c74548828753dfd2dd0

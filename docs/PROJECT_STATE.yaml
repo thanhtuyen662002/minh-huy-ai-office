@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: null
+current_target_head: 8e59931f36bbb3160f122961e2b94642ff68787e
 last_verified_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
 
 critical_paths:
@@ -16,15 +16,15 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "PR #241 / issue #240 merged at 4275b2c18fc136f26e088d631896875c76cb8653. Fresh server-resolved admin enforcement and real SQL issued-session revocation passed exact-head and main CI. Deliver full owner/company/member/source onboarding next under #233."
+    next: "PR #249 / issue #248 merged at db2ef9a141b69b10618b7c74548828753dfd2dd0 with exact-head/main CI green. Scoped secret grants, real SQL permission fences, metadata races and queued revocation/replay are verified. Continue owner/company/member/source onboarding under #233."
 
   frontend:
-    issue: 242
+    issue: null
     pr: null
-    branch: frontend/242-test-discovery
+    branch: null
     head: null
-    state: coding
-    next: "Collect all app/lib/components tests, isolate DOM and mutable fixtures, preserve authority-denial assertions, then pass exact-head CI and merge #242 before full company/member/source onboarding."
+    state: retired
+    next: "Issues #242/#244/#246 are closed; PR #247 merged at 481d814c6d66c62084544e3bd889dcad7f64a254. Continue company/member/source onboarding through a new issue and draft PR after lease/dependency checks."
 
   runtime_ai:
     issue: null
@@ -43,6 +43,8 @@ critical_paths:
     next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
 
 recent_authoritative_merges:
+  - "PR #249 / issue #248 scoped secret grants and real SQL/queue authorization: MERGED at db2ef9a141b69b10618b7c74548828753dfd2dd0; main Build 37506783690 and Governance 37506783677 passed."
+  - "PR #247 / issue #246 metadata-only source management: MERGED at 481d814c6d66c62084544e3bd889dcad7f64a254; secured-main integration includes its SQL race regressions."
   - "PR #241 / issue #240 fresh source-management administration and real SQL role-revocation proof: MERGED at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed."
   - "PR #237 / issue #236 automatic local SQL/OIDC bootstrap and real Compose proof: MERGED at cb43b99b4e9c1efdf7fcacf8a6dd255b8d94d59e; main Build 37111971610 and governance 37111971569 passed."
   - "PR #235 / issue #234 frontend production runtime: MERGED at 8c1f80db6c8d8fa400345fb60f9b3125d97decea."
@@ -73,16 +75,16 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Close installer239 exact-head CI after secured-main integration and59-test protocol2/drain fence. Require independent review and actual clean Windows install/upgrade/reboot/startup/retained revocations.249 merged at db2ef9a; main Build37506783690/Governance37506783677 green and248 closed. Continue all product233 requirements and owner/company/member/source onboarding; customer configuration remains private and least-privilege ERP mapping unverified."
+next_action: "Publish installer #239 configuration-recovery/PowerShell correction and close CI on its exact published HEAD. Local 63 core tests and scoped formatting pass at implementation 8e59931. Historical transition head b4c1ba5 passed Build37510459026/Governance37510458992. Complete independent review and actual clean Windows installation/upgrade/reboot/startup/retained revocations before merge. Continue unblocked #233 onboarding work; the product goal remains active."
 
 blocked_by:
-  - "The first real customer ERP/data source and business capability have not yet been selected/authorized for AI Office business-row access."
+  - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. The first semantic capability remains to be mapped."
   - "A least-privilege read-only credential and schema/version mapping for that selected ERP are required before a real business-value E2E."
   - "Production deployment still requires approved production OIDC, private platform SQL/backup, private host/tunnel and production bootstrap."
 
 automation_liveness:
-  backend: retired_after_verified_issue_240
-  frontend: active_issue_242
+  backend: retired_after_verified_issue_248
+  frontend: retired_after_merged_issue_246
   runtime_ai: retired_intentionally
   erp_data: retired_intentionally
   qa_release: retired_intentionally_after_green_gates
