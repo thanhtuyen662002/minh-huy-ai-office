@@ -41,7 +41,9 @@ public sealed class BindingStorePermissionVerifier(PlatformDbContext database)
           AND HAS_PERMS_BY_NAME(DB_NAME(),N'DATABASE',N'CREATE ASSEMBLY')=0
           AND HAS_PERMS_BY_NAME(DB_NAME(),N'DATABASE',N'CREATE VIEW')=0
           AND HAS_PERMS_BY_NAME(DB_NAME(),N'DATABASE',N'CREATE SYNONYM')=0
-          AND HAS_PERMS_BY_NAME(DB_NAME(),N'DATABASE',N'IMPERSONATE ANY USER')=0
+          -- SQL Server has no DATABASE permission named IMPERSONATE ANY USER.
+          -- CONTROL and the effective USER impersonation inventory below cover
+          -- elevation; an invalid permission query returns NULL, not absence.
           AND HAS_PERMS_BY_NAME(N'aioffice_binding_runtime',N'ROLE',N'ALTER')=0
           AND NOT EXISTS (SELECT 1 FROM sys.database_principals p WHERE p.type='R'
             AND ISNULL(HAS_PERMS_BY_NAME(p.name,N'ROLE',N'ALTER'),1)<>0)

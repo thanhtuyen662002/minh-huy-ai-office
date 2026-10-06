@@ -37,7 +37,12 @@ API and worker startup verify their actual SQL connection identity, and every
 source use repeats the proof. Elevated identities, unknown permission results,
 missing metadata visibility, impersonation/role escalation, column privileges and
 unsafe module paths fail closed. This runtime executes ad-hoc EF commands. It
-conservatively rejects executable/selectable user procedures/functions, writable
+checks effective `IMPERSONATE` on each database user. SQL Server has no DATABASE
+permission named `IMPERSONATE ANY USER`; checking that invalid name returns NULL
+and incorrectly rejects every safe runtime identity. The disposable SQL gate
+verifies the engine catalog and grants/revokes impersonation of the dedicated
+binding owner to prove that actual escalation remains denied at runtime and API.
+It conservatively rejects executable/selectable user procedures/functions, writable
 views/synonyms and every enabled user trigger, rather than trying
 to prove arbitrary module bodies safe. Ownership chaining, `EXECUTE AS`, signing
 and encrypted/dynamic SQL can bypass direct table DENY; direct DENY alone is not a

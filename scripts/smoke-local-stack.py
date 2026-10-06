@@ -538,6 +538,10 @@ def main():
     def permission_proof():
         return sql("USE AIOfficeLocal; EXECUTE AS LOGIN=N'aioffice_runtime'; " + permission_sql + " REVERT;")
 
+    # Verify the supported engine's permission catalog rather than interpreting
+    # an invalid HAS_PERMS_BY_NAME query's NULL as an effective denial.
+    assert sql("SELECT COUNT(*) FROM sys.fn_builtin_permissions('DATABASE') "
+               "WHERE permission_name=N'IMPERSONATE ANY USER';") == "0"
     assert permission_proof() == "1", "Runtime binding store permission proof failed"
     # An operator mistake must fail closed while services are already running too.
     # Dropping only this disposable runtime role deliberately restores db_datawriter
@@ -604,6 +608,21 @@ def main():
             INSERT aioffice.DataSourceSecretBindings (TenantId,CompanyId,Id,CanonicalReference,Label,IsEnabled,Version)
             VALUES ('{tenant}','{company}','{owned_grant}',N'secretref://env/{owned_reference}',N'Owned security fixture',1,1);
             UPDATE aioffice.DataSources SET ConnectionSecretReference=N'secretref://env/PILOT_ERP_CONNECTION' WHERE {owned_scope};""")
+
+        # Direct USER impersonation can cross the binding owner's privilege
+        # boundary. Its real effective permission must close the runtime/API
+        # guard even though the nonexistent DATABASE permission was removed.
+        try:
+            sql("USE AIOfficeLocal; GRANT IMPERSONATE ON USER::aioffice_binding_operator_owner TO aioffice_runtime;")
+            assert permission_proof() == "0"
+            runtime_statement("EXECUTE AS USER=N'aioffice_binding_operator_owner'; "
+                f"UPDATE aioffice.DataSourceSecretBindings SET Label=N'Impersonation fixture' WHERE {grant_scope}; REVERT;",
+                expected="ALLOWED")
+            connection_denied(source)
+        finally:
+            sql("USE AIOfficeLocal; REVOKE IMPERSONATE ON USER::aioffice_binding_operator_owner FROM aioffice_runtime;")
+        assert permission_proof() == "1"
+        print("PASS real SQL USER impersonation escalation denied by permission and API fences")
 
         # A dbo-owned ordinary module cannot cross the grant table's distinct owner.
         definition = f"CREATE PROCEDURE {module} AS UPDATE aioffice.DataSourceSecretBindings SET Label=N'Indirect write' WHERE {grant_scope};"
