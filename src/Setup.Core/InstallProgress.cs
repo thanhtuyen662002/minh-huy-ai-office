@@ -7,12 +7,13 @@ namespace Setup.Core;
 public enum InstallPhase { Inspecting, AwaitingReboot, PreparingRuntime, StartingRuntime, Ready, Failed }
 
 // Deliberately excludes credentials, command output and arbitrary exception messages.
-public sealed record InstallProgress(int SchemaVersion, string Revision, InstallPhase Phase, bool DockerLicenseAccepted = false);
+public sealed record InstallProgress(int SchemaVersion, string Revision, InstallPhase Phase, bool DockerLicenseAccepted = false,
+    bool ConfigurationRequired = false, Guid? InstallationId = null);
 
 public sealed partial class ProgressStore
 {
     // Older helpers reject this version before starting pre-guard binaries.
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
     private static readonly JsonSerializerOptions Options = new()
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -37,7 +38,7 @@ public sealed partial class ProgressStore
             if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("SchemaVersion", out var schema) ||
                 schema.ValueKind != JsonValueKind.Number || !schema.TryGetInt32(out var version))
                 throw new CorruptProgressException();
-            if (version is not (1 or CurrentSchemaVersion)) throw new UnsupportedProgressException();
+            if (version is not (1 or 2 or CurrentSchemaVersion)) throw new UnsupportedProgressException();
             if (!root.TryGetProperty("Phase", out var phase) || phase.ValueKind != JsonValueKind.String)
                 throw new CorruptProgressException();
             if (!Enum.TryParse<InstallPhase>(phase.GetString(), out var parsed) || !Enum.IsDefined(parsed))
@@ -79,8 +80,12 @@ public sealed partial class ProgressStore
     private static void Validate(InstallProgress progress)
     {
         ValidateRevision(progress.Revision);
-        if (progress.SchemaVersion is not (1 or CurrentSchemaVersion) || !Enum.IsDefined(progress.Phase))
+        if (progress.SchemaVersion is not (1 or 2 or CurrentSchemaVersion) || !Enum.IsDefined(progress.Phase))
             throw new UnsupportedProgressException();
+        if (progress.InstallationId == Guid.Empty || (progress.InstallationId is not null && !progress.ConfigurationRequired)
+            || (progress.SchemaVersion == CurrentSchemaVersion && progress.Phase is InstallPhase.StartingRuntime or InstallPhase.Ready
+                && (!progress.ConfigurationRequired || progress.InstallationId is null)))
+            throw new CorruptProgressException();
     }
 
     [GeneratedRegex("\\A[a-f0-9]{40}\\z", RegexOptions.CultureInvariant)]

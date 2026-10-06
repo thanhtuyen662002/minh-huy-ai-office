@@ -30,7 +30,7 @@ public sealed class InstallerPersistenceTests : IDisposable
     [InlineData("null")]
     [InlineData("{}")]
     [InlineData("{invalid")]
-    [InlineData("{\"SchemaVersion\":3,\"Revision\":\"1234567890abcdef1234567890abcdef12345678\",\"Phase\":\"Ready\"}")]
+    [InlineData("{\"SchemaVersion\":4,\"Revision\":\"1234567890abcdef1234567890abcdef12345678\",\"Phase\":\"Ready\"}")]
     [InlineData("{\"SchemaVersion\":1,\"Revision\":\"1234567890abcdef1234567890abcdef12345678\",\"Phase\":\"Ready\",\"Password\":\"unsafe\"}")]
     public void CorruptOrUnsupportedProgressFailsClosedAndIsRetained(string content)
     {

@@ -137,13 +137,7 @@ internal sealed partial class WindowsPrerequisites
             }
             break;
         }
-        var info = new ProcessStartInfo(PowerShell)
-        {
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
+        var info = CommandRunner.CreateStartInfo(PowerShell);
         info.Environment["AIOFFICE_PREREQUISITE_PATH"] = path;
         foreach (var argument in new[] { "-NoProfile", "-NonInteractive", "-Command",
             "$signature=Get-AuthenticodeSignature -LiteralPath $env:AIOFFICE_PREREQUISITE_PATH; if ($signature.Status -ne 'Valid') {exit 1}; @{Subject=$signature.SignerCertificate.Subject} | ConvertTo-Json -Compress" })

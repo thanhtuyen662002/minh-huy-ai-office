@@ -33,7 +33,7 @@ internal sealed partial class SetupForm
             form.Hide();
         }
         VerifyInitialProgressFailure(root, progress, "synthetic-invalid-progress", "corrupt");
-        VerifyInitialProgressFailure(root, progress, "{\"SchemaVersion\":3}", "unsupported");
+        VerifyInitialProgressFailure(root, progress, "{\"SchemaVersion\":4}", "unsupported");
     }
 
     private static void VerifyInitialProgressFailure(string root, string progress, string fixture, string name)

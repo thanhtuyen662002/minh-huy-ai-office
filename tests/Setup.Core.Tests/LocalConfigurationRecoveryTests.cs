@@ -54,7 +54,61 @@ public sealed class LocalConfigurationRecoveryTests : IDisposable
         RequireNoSecretOutput(manifest, rejected);
     }
 
-    private Task<CommandResult> InitializeAsync()
+    [Fact]
+    public async Task LostConfigurationAfterReadyAndRebootCannotCreateANewComposeIdentity()
+    {
+        Assert.Equal(0, (await InitializeAsync()).ExitCode);
+        var manifestPath = Path.Combine(Data, "installation.json");
+        var environmentPath = Path.Combine(Data, "local.env");
+        var manifest = File.ReadAllBytes(manifestPath);
+        var environment = File.ReadAllBytes(environmentPath);
+        using var document = JsonDocument.Parse(manifest);
+        var id = document.RootElement.GetProperty("AIOFFICE_INSTALLATION_ID").GetGuid();
+        var store = new ProgressStore(root);
+        var ready = new InstallProgress(3, new string('a', 40), InstallPhase.Ready, true, true, id);
+        store.Save(ready with { Phase = InstallPhase.AwaitingReboot });
+        File.Delete(manifestPath);
+        File.Delete(environmentPath);
+        var retention = ConfigurationRetentionPlan.Create(new ProgressStore(root).Load(), false, false);
+        var rejected = await InitializeAsync(retention.RequireExistingInstallation, retention.InstallationId);
+        Assert.NotEqual(0, rejected.ExitCode);
+        Assert.Contains("Restore the original manifest", rejected.Error);
+        Assert.False(File.Exists(manifestPath));
+        Assert.False(File.Exists(environmentPath));
+        File.WriteAllBytes(manifestPath, manifest);
+        var restored = await InitializeAsync(retention.RequireExistingInstallation, retention.InstallationId);
+        Assert.Equal(0, restored.ExitCode);
+        Assert.Equal(manifest, File.ReadAllBytes(manifestPath));
+        Assert.Equal(environment, File.ReadAllBytes(environmentPath));
+        RequireNoSecretOutput(manifest, rejected, restored);
+    }
+
+    [Fact]
+    public async Task DifferentManifestIdentityCannotRetargetAnExistingInstallation()
+    {
+        Assert.Equal(0, (await InitializeAsync()).ExitCode);
+        var manifest = File.ReadAllBytes(Path.Combine(Data, "installation.json"));
+        var environment = File.ReadAllBytes(Path.Combine(Data, "local.env"));
+        var rejected = await InitializeAsync(true, Guid.NewGuid());
+        Assert.NotEqual(0, rejected.ExitCode);
+        Assert.Contains("identity does not match retained progress", rejected.Error);
+        Assert.Equal(manifest, File.ReadAllBytes(Path.Combine(Data, "installation.json")));
+        Assert.Equal(environment, File.ReadAllBytes(Path.Combine(Data, "local.env")));
+        RequireNoSecretOutput(manifest, rejected);
+    }
+
+    [Fact]
+    public async Task LegacyUnknownInstallationCannotGenerateConfigurationWhenBothFilesAreAbsent()
+    {
+        var previous = new InstallProgress(2, new string('a', 40), InstallPhase.Ready, true);
+        var retention = ConfigurationRetentionPlan.Create(previous, false, false);
+        var rejected = await InitializeAsync(retention.RequireExistingInstallation, retention.InstallationId);
+        Assert.NotEqual(0, rejected.ExitCode);
+        Assert.False(File.Exists(Path.Combine(Data, "installation.json")));
+        Assert.False(File.Exists(Path.Combine(Data, "local.env")));
+    }
+
+    private Task<CommandResult> InitializeAsync(bool requireExisting = false, Guid? expectedId = null)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "infra", "initialize-local-config.ps1")))
@@ -64,9 +118,10 @@ public sealed class LocalConfigurationRecoveryTests : IDisposable
         var executable = OperatingSystem.IsWindows()
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe")
             : "pwsh";
-        return new CommandRunner().RunAsync(executable,
-            ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-DataDirectory", Data],
-            TimeSpan.FromSeconds(30));
+        var arguments = new List<string> { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-DataDirectory", Data };
+        if (requireExisting) arguments.Add("-RequireExistingInstallation");
+        if (expectedId is not null) arguments.AddRange(["-ExpectedInstallationId", expectedId.Value.ToString()]);
+        return new CommandRunner().RunAsync(executable, arguments, TimeSpan.FromSeconds(30));
     }
 
     private static void RequireNoSecretOutput(byte[] manifest, params CommandResult[] results)

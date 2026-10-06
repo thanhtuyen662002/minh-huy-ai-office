@@ -92,13 +92,22 @@ internal sealed class SetupEngine
         var progressWritten = false;
         var resumeRegistered = false;
         string? installer = null;
+        var configurationRequired = true;
+        Guid? installationId = null;
+        void SaveProgress(InstallPhase phase) => progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion,
+            bundle.Revision, phase, licenseAccepted, configurationRequired, installationId));
         try
         {
             RecordStage(InstallPhase.Inspecting, SetupFailureCode.InvalidProgress);
             var previous = progress.LoadOrRepair(repair);
+            var retention = ConfigurationRetentionPlan.Create(previous,
+                Directory.EnumerateFiles(Root, ".progress-retained-*.json").Any(),
+                File.Exists(Path.Combine(RuntimeDirectory, "installation.json")) || File.Exists(Path.Combine(RuntimeDirectory, "local.env")));
+            configurationRequired = retention.RequireExistingInstallation;
+            installationId = retention.InstallationId;
             RecordStage(InstallPhase.Inspecting, SetupFailureCode.BundleIntegrity);
             installer = PreserveInstaller(repair);
-            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.Inspecting, licenseAccepted));
+            SaveProgress(InstallPhase.Inspecting);
             progressWritten = true;
             RecordStage(InstallPhase.Inspecting, SetupFailureCode.PrerequisitePreparation);
             if (await prerequisites.NeedsInstallationAsync(machine))
@@ -106,7 +115,7 @@ internal sealed class SetupEngine
                 RecordStage(InstallPhase.Inspecting, SetupFailureCode.ShortcutConflict);
                 ApplicationLinks.RegisterResume(installer);
                 resumeRegistered = true;
-                progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.AwaitingReboot, licenseAccepted));
+                SaveProgress(InstallPhase.AwaitingReboot);
                 report("Windows sẽ hỏi quyền quản trị để chuẩn bị WSL và Docker. Tiến trình đã được lưu để tiếp tục sau reboot.");
                 RecordStage(InstallPhase.Inspecting, SetupFailureCode.PrerequisitePreparation);
                 var result = await prerequisites.ElevateAsync(installer);
@@ -120,20 +129,28 @@ internal sealed class SetupEngine
                 if (result != 0) throw new SetupFailure("Chưa hoàn tất chuẩn bị môi trường (mã " + result + "). Chạy lại bộ cài để tiếp tục; dữ liệu được giữ nguyên.");
             }
             report("Kiểm tra bundle và chuẩn bị cấu hình riêng cho máy…");
-            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.PreparingRuntime, licenseAccepted));
+            SaveProgress(InstallPhase.PreparingRuntime);
             RecordStage(InstallPhase.PreparingRuntime, SetupFailureCode.BundleIntegrity);
             source = bundle.Extract(Path.Combine(Root, "Versions"), repair);
             RecordStage(InstallPhase.PreparingRuntime, SetupFailureCode.Configuration);
-            var initialize = await runner.RunAsync(WindowsPrerequisites.PowerShell,
-                ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", Path.Combine(source, "infra", "initialize-local-config.ps1"),
-                "-DataDirectory", RuntimeDirectory], TimeSpan.FromMinutes(1));
+            var initializeArguments = new List<string> { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
+                Path.Combine(source, "infra", "initialize-local-config.ps1"), "-DataDirectory", RuntimeDirectory };
+            if (configurationRequired) initializeArguments.Add("-RequireExistingInstallation");
+            if (installationId is not null) initializeArguments.AddRange(["-ExpectedInstallationId", installationId.Value.ToString()]);
+            var initialize = await runner.RunAsync(WindowsPrerequisites.PowerShell, initializeArguments, TimeSpan.FromMinutes(1));
             if (initialize.ExitCode != 0) throw new SetupFailure("Không tạo được cấu hình bảo mật. Cấu hình hiện có được giữ nguyên.");
             environment = Path.Combine(RuntimeDirectory, "local.env");
             if (!File.Exists(environment)) throw new SetupFailure("Cấu hình dịch vụ chưa sẵn sàng.");
+            var manifestPath = Path.Combine(RuntimeDirectory, "installation.json");
+            PathSafety.RejectLinks(manifestPath);
+            using (var manifest = JsonDocument.Parse(File.ReadAllText(manifestPath)))
+                installationId = manifest.RootElement.GetProperty("AIOFFICE_INSTALLATION_ID").GetGuid();
+            configurationRequired = true;
+            SaveProgress(InstallPhase.PreparingRuntime);
             report("Khởi động Docker Desktop…");
             RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.DockerUnavailable);
             await EnsureDockerAsync();
-            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.StartingRuntime, licenseAccepted));
+            SaveProgress(InstallPhase.StartingRuntime);
             report("Tải tài nguyên, chạy FE/BE và áp dụng migration. Lần đầu có thể mất nhiều phút…");
             var plan = RuntimeStartPlan.Create(previous, bundle.Revision, startOnly);
             if (plan.Drain)
@@ -156,7 +173,7 @@ internal sealed class SetupEngine
             await WaitForRuntimeAsync();
             RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.ShortcutConflict);
             ApplicationLinks.RegisterApplication(installer);
-            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.Ready, licenseAccepted));
+            SaveProgress(InstallPhase.Ready);
             RecordStage(InstallPhase.Ready, SetupFailureCode.None);
             report("Ứng dụng đã sẵn sàng. Bạn có thể mở từ Start Menu; FE/BE sẽ tự chạy khi đăng nhập Windows.");
             return true;
@@ -177,7 +194,7 @@ internal sealed class SetupEngine
             try
             {
                 RecordFailure(code);
-                if (progressWritten) progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.Failed, licenseAccepted));
+                if (progressWritten) SaveProgress(InstallPhase.Failed);
             }
             catch (Exception recordingError) when (recordingError is IOException or UnauthorizedAccessException) { }
             throw;

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Setup.Core;
 using Xunit;
 
@@ -24,6 +25,22 @@ public sealed class CommandRunnerTests
                 TimeSpan.FromSeconds(15));
             Assert.Equal(0, result.ExitCode);
             Assert.Equal("DirectorySecurity", result.Output);
+            Assert.Equal(root, Environment.GetEnvironmentVariable("PSModulePath"));
+            // The native prerequisite signature path uses this factory directly.
+            var info = CommandRunner.CreateStartInfo(executable);
+            info.Environment["AIOFFICE_PREREQUISITE_PATH"] = executable;
+            foreach (var argument in new[] { "-NoProfile", "-NonInteractive", "-Command",
+                "[Console]::Write((Get-AuthenticodeSignature -LiteralPath $env:AIOFFICE_PREREQUISITE_PATH).Status)" })
+                info.ArgumentList.Add(argument);
+            using var check = Process.Start(info)!;
+            var output = check.StandardOutput.ReadToEndAsync();
+            var error = check.StandardError.ReadToEndAsync();
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            try { await check.WaitForExitAsync(timeout.Token); }
+            finally { if (!check.HasExited) check.Kill(entireProcessTree: true); }
+            Assert.Equal(0, check.ExitCode);
+            Assert.Equal("Valid", await output);
+            Assert.Equal("", await error);
             Assert.Equal(root, Environment.GetEnvironmentVariable("PSModulePath"));
         }
         finally

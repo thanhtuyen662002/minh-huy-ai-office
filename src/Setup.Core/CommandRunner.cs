@@ -7,9 +7,7 @@ public sealed record CommandResult(int ExitCode, string Output, string Error);
 
 public sealed class CommandRunner
 {
-    public async Task<CommandResult> RunAsync(string executable, IEnumerable<string> arguments,
-        TimeSpan timeout, CancellationToken cancellationToken = default,
-        IReadOnlyCollection<string>? removeEnvironmentPrefixes = null)
+    public static ProcessStartInfo CreateStartInfo(string executable)
     {
         var info = new ProcessStartInfo(executable)
         {
@@ -22,6 +20,14 @@ public sealed class CommandRunner
         // PowerShell 5. Let that child discover its own compatible modules.
         if (OperatingSystem.IsWindows() && string.Equals(Path.GetFileName(executable), "powershell.exe", StringComparison.OrdinalIgnoreCase))
             info.Environment.Remove("PSModulePath");
+        return info;
+    }
+
+    public async Task<CommandResult> RunAsync(string executable, IEnumerable<string> arguments,
+        TimeSpan timeout, CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? removeEnvironmentPrefixes = null)
+    {
+        var info = CreateStartInfo(executable);
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
         if (removeEnvironmentPrefixes is not null)
         {
