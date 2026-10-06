@@ -8,6 +8,9 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed record AuthorizedDataSourceBinding(
     AuthorizationContext Authority, Guid SourceId, SecretReference Reference, Guid GrantId, long GrantVersion);
 
+public sealed record DataSourceRegistrationOption(Guid BindingId, string Label, long Version);
+public sealed record DataSourceRegistrationOptionsPage(IReadOnlyList<DataSourceRegistrationOption> Items, int Offset, int Limit, bool HasMore);
+
 public sealed class DataSourceSecretBindingService(
     PlatformDbContext database,
     IAuthorizationDirectory directory,
@@ -18,6 +21,50 @@ public sealed class DataSourceSecretBindingService(
 
     public static UnauthorizedAccessException Unavailable() => new("Data source is unavailable for authorized use.");
     public Task RequireStoreAsync(CancellationToken cancellationToken = default) => verifier.RequireReadOnlyAsync(cancellationToken);
+
+    public async Task<DataSourceRegistrationOptionsPage> ListRegistrationOptionsAsync(
+        AuthorizationContext authority, int offset = 0, int limit = 50, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        if (offset is < 0 or > 1000 || limit is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(offset), "Invalid registration options page.");
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            await RequireAdministrationAsync(authority, cancellationToken);
+            await verifier.RequireReadOnlyAsync(cancellationToken);
+            // Bound the company snapshot before parsing references. Filtering
+            // before paging makes HasMore describe actual safe choices.
+            var candidates = await database.DataSourceSecretBindings.AsNoTracking()
+                .Where(row => row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId
+                    && row.IsEnabled && row.Version > 0 && row.Id != Guid.Empty)
+                .OrderBy(row => row.Id).Take(1001).ToArrayAsync(cancellationToken);
+            if (candidates.Length > 1000) throw Unavailable();
+            var options = candidates.Where(row =>
+                    !string.IsNullOrWhiteSpace(row.Label) && row.Label.Length <= 128
+                    && !row.Label.Contains("secretref://", StringComparison.OrdinalIgnoreCase)
+                    && SecretReference.TryParse(row.CanonicalReference, out var reference)
+                    && string.Equals(reference!.Value, row.CanonicalReference, StringComparison.Ordinal)
+                    && !IsInfrastructureReference(reference))
+                .Select(row => new DataSourceRegistrationOption(row.Id, row.Label.Trim(), row.Version))
+                .Skip(offset).Take(limit + 1).ToArray();
+            // A query can span a role revocation. Re-resolve before releasing metadata.
+            await RequireAdministrationAsync(authority, cancellationToken);
+            return new(options.Take(limit).ToArray(), offset, limit, options.Length > limit);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception error) when (error is DbException or InvalidOperationException or ArgumentException)
+        {
+            throw Unavailable();
+        }
+    }
+
+    private async Task RequireAdministrationAsync(AuthorizationContext authority, CancellationToken cancellationToken)
+    {
+        var current = await directory.ResolveAsync(authority, cancellationToken);
+        if (current is null || current.Context != authority || !current.Roles.Contains("admin", StringComparer.Ordinal))
+            throw Unavailable();
+    }
 
     public async Task<DataSourceSecretBindingRecord> RequireReferenceAsync(
         AuthorizationContext authority, string? reference, CancellationToken cancellationToken = default)

@@ -251,6 +251,9 @@ def main():
         sql(f"USE AIOfficeLocal; DELETE FROM aioffice.RoleAssignments WHERE {role_scope} AND RoleKey COLLATE Latin1_General_100_BIN2=N'admin';")
         status, _, context = http("/api/auth/context", base=api, headers=auth)
         assert status == 200 and "admin" not in context["roles"], "Issued token retained revoked authority"
+        choice_status, choice_headers, choice_body = http("/api/data-sources/registration-options", base=api, headers=auth)
+        assert choice_status == 403 and "no-store" in choice_headers.get("Cache-Control", ""), "Binding choices retained revoked admin authority"
+        assert "secretref://" not in json.dumps(choice_body)
         assert http("/api/data-sources", base=api, headers=auth)[0] == 200
         assert http("/api/local/data-sources" + selector)[0] == 200
         for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{source}", "PUT")):
@@ -274,6 +277,16 @@ def main():
         assert fingerprint("RoleAssignments", role_scope, "RoleKey") == roles_before, "Role fixture restoration changed assignments"
     status, _, context = http("/api/auth/context", base=api, headers=auth)
     assert status == 200 and "admin" in context["roles"], "Restored admin authority unavailable"
+    choice_status, choice_headers, choices = http("/api/data-sources/registration-options?offset=0&limit=1", base=api, headers=auth)
+    assert choice_status == 200 and "no-store" in choice_headers.get("Cache-Control", "")
+    assert len(choices["items"]) == 1 and choices["offset"] == 0 and choices["limit"] == 1
+    choice = choices["items"][0]
+    assert set(choice) == {"bindingId", "label", "version"} and choice["version"] > 0
+    assert "secretref://" not in json.dumps(choices) and all(secret not in json.dumps(choices) for secret in [*secrets, token])
+    assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{uuid.UUID(choice['bindingId'])}' AND IsEnabled=1 AND Version={int(choice['version'])};") == "1"
+    assert http("/api/data-sources/registration-options", base=api, headers=wrong)[0] == 403
+    assert http("/api/data-sources/registration-options?limit=101", base=api, headers=auth)[0] == 400
+    print("PASS real SQL scoped nonsecret binding choices and fresh admin revoke/restore")
     for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{foreign_source}", "PUT")):
         assert http(path, metadata, base=api, headers=wrong, method=method)[0] == 403
     assert http(f"/api/data-sources/{foreign_source}/metadata", narrow, base=api, headers=wrong, method="PUT")[0] == 403
