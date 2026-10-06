@@ -4,8 +4,8 @@ status: active
 current_issue: 250
 current_pr: 251
 current_branch: backend/250-binding-options
-head: 9f4a9132331c8b19a9328a43500dd55f8bdf356c
-state: waiting_ci
+head: a3c75d7ca6ea9a5fb364be2135ca7553b2ad1a15
+state: ready_for_review
 lease_owner: root-backend-250
 lease_heartbeat_at: "2026-10-06T21:12:07.7978712Z"
 last_checkpoint_at: "2026-10-07"
@@ -21,6 +21,6 @@ scope:
 verification:
   implementation_base: db2ef9a141b69b10618b7c74548828753dfd2dd0
   previous_issue: "249 exact-head/main CI green;248 closed. No open backend implementation lease;239 owns independent Windows setup."
-  result: "PASS469 local Persistence tests including19 new option/API cases; scoped CSharp formatting and diff-check. Actual SQL/CI and independent review remain pending."
+  result: "PASS469 local Persistence tests including19 new option/API cases; scoped CSharp formatting and diff-check. Exact a3c75d7 Build37532200611/Governance37532200708 PASS, including actual SQL scoped choices, admin revoke/restore, unsafe-store denial and full stack. Independent read-only review approved this code; final docs-head CI and merged-main verification required."
 blocked_by: []
-next_action: "Implement bounded admin-only binding choices without secret references. Preserve fresh server authority, store permission fences and scope. Add API/unit/real SQL proof, independent review and exact-head/main CI closure. Registration with atomic administration audit and frontend onboarding remain following slices under233."
+next_action: "Close final docs-head exact CI, then merge reviewed251 with a matching HEAD and verify merged-main CI before closing250. Next product slice: source registration with atomic durable administration audit, followed by the frontend using binding ID/version. Actual ERP/Windows qualification and full233 remain open."
