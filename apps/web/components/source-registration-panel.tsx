@@ -42,6 +42,13 @@ export function SourceRegistrationPanel({ companyId, generation, isCurrent, vali
         const response = await request(generation, `/api/local/data-sources/registration-options?${selector}&offset=${offset}&limit=100`, { cache: "no-store" });
         if (!current()) return;
         if (response.status === 401) { onUnauthorized(); return; }
+        if (response.status === 403) {
+          // Authority may change after the preflight validation while the
+          // choices query is in flight. Reconcile session before showing errors.
+          await validate(generation);
+          if (!current()) return;
+          throw new Error("Không còn quyền dùng danh sách kết nối. Hãy thử lại sau khi quyền được xác nhận.");
+        }
         if (!response.ok) throw new Error("Không tải được nguồn đã cấp quyền. Hãy thử lại.");
         const page = parseRegistrationPage(await response.json());
         if (!current()) return;

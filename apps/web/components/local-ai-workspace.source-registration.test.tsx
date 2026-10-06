@@ -97,3 +97,20 @@ it("clears private choices and draft immediately on registration 401", async () 
   expect(screen.queryByDisplayValue("NEW ERP")).toBeNull();
   expect(await screen.findByLabelText("Tên đăng nhập")).toBeTruthy();
 });
+it("clears existing choices and draft when options 403 observes role loss after preflight", async () => {
+  let revokeDuringOptions = false;
+  const { state } = backend(url => {
+    if (url.includes("registration-options") && revokeDuringOptions) {
+      state.roles = ["viewer"];
+      return Response.json({}, { status: 403 });
+    }
+  });
+  await open();
+  expect(screen.getByDisplayValue("NEW ERP")).toBeTruthy();
+  revokeDuringOptions = true;
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại kết nối" }));
+  await waitFor(() => expect(screen.queryByRole("form", { name: "Đăng ký nguồn chỉ đọc" })).toBeNull());
+  expect(screen.queryByText("PRIVATE COMPANY A")).toBeNull();
+  expect(screen.queryByDisplayValue("NEW ERP")).toBeNull();
+  expect(state.posts).toHaveLength(0);
+});
