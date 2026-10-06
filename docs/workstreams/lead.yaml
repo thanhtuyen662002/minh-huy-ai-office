@@ -4,8 +4,8 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 5836e29abf08807b37cad9ab84051f17fcd57d4a
-state: waiting_ci
+head: 0a5759599cdbc3b40c55af10bd9fc0b2a085c4ac
+state: in_progress
 lease_owner: lead
 lease_heartbeat_at: null
 last_checkpoint_at: "2026-10-07"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Publish #239 correction and close exact published-head CI. Local 75 core tests, scoped formatting and diff-check pass at code 5836e29. Re-review protocol 3 retention/identity and shared PS5 signature fixes. Historical 45714aa CI is green. Actual clean Windows lifecycle qualification remains pending; keep #238/#233 open and continue unblocked product onboarding."
+next_action: "Close exact published-head #239 CI after PowerShell7 rendering correction 0a57595. Local 76 core tests and scoped formatting pass. Independent review of 5836e29 protocol3/identity/PS5 fixes reports no new blocker. Failed Build37527413142 passed actual SQL/stack and native artifact; only a wrapped diagnostic substring assertion failed. Actual clean Windows lifecycle remains pending; keep #238/#233 open and continue unblocked source onboarding."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -63,9 +63,9 @@ product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
 
 installer_verification:
-  code_head: 5836e29abf08807b37cad9ab84051f17fcd57d4a
-  local_core_tests: 75
-  local_result: "PASS actual lost-both-files and manifest identity mismatch refusal, retained-ID reboot recovery, real PS5 Authenticode module validation, scoped C# formatting and diff-check. Independent review identified original defects; re-review fixes before acceptance."
+  code_head: 0a5759599cdbc3b40c55af10bd9fc0b2a085c4ac
+  local_core_tests: 76
+  local_result: "PASS actual lost-both-files and manifest identity mismatch refusal, retained-ID reboot recovery, real PS5 Authenticode and PS7 diagnostic rendering. Error normalization preserves all refusal/file/identity/secret assertions. Re-review5836e29 found no new blocker; native/real-stack passed63f80dc, full current-head CI remains required."
   previous_published_head: 45714aac54c1d4ae1eb9c3f3e4c4e4714c81f3db
   previous_build: 37526047505
   previous_governance: 37526047373

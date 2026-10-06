@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 5836e29abf08807b37cad9ab84051f17fcd57d4a
+current_target_head: 0a5759599cdbc3b40c55af10bd9fc0b2a085c4ac
 last_verified_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
 
 critical_paths:
@@ -75,7 +75,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Publish installer #239 reviewed recovery correction and close exact-head CI. Local 75 core tests and scoped formatting pass at implementation 5836e29; protocol 3 retains configuration requirements/installation ID across reboot and failure. Signature validation uses the shared PS5 module policy. Historical 45714aa passed Build37526047505/Governance37526047373. Re-review fixes and qualify actual clean Windows lifecycle before merge. Continue unblocked #233 onboarding; product goal remains active."
+next_action: "Close installer239 exact-head CI after test0a57595: local76 tests include actual PS7 rendering; refusal/file/identity/secret assertions remain intact. Independent re-review5836e29 reports no new code blocker.63f80dc Build37527413142 passed native artifact and real stack but failed one wrapped diagnostic substring. Protocol3 preserves routing through reboot/failure. Qualify actual clean Windows lifecycle before merge and continue unblocked source onboarding under233; goal remains active."
 
 blocked_by:
   - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. The first semantic capability remains to be mapped."
