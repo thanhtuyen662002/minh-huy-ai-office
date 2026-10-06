@@ -135,6 +135,37 @@ before serving requests. API and both worker DI execution branches cover protect
 env aliases and positive/negative customer grants. The Windows paths were exercised
 locally; OS-aware Linux case controls still require execution on Linux CI.
 
-Hosted SQL/stack evidence for this local candidate: **NOT_RUN**. Parent owns
-publication and exact-head hosted execution; syntax checking the smoke script and
-generating an offline migration script do not constitute SQL acceptance.
+PR #249 subsequently passed actual SQL/stack checks and merged at
+`db2ef9a141b69b10618b7c74548828753dfd2dd0`; merged-main Build 37506783690 and
+Governance 37506783677 passed. New changes still require their own exact-head
+and merged-main evidence. Syntax checks do not establish SQL acceptance.
+
+## Approved choices for source onboarding
+
+`GET /api/data-sources/registration-options?offset=0&limit=50` returns a page
+with `items`, `offset`, `limit` and `hasMore`. Each item contains only `bindingId`,
+`label` and positive integer `version`. Canonical references, credentials and
+infrastructure bindings are excluded. Labels must be bounded human display text
+without a secret-reference marker. Listing does not resolve credentials, create
+grants or create sources.
+
+Both before the query and before releasing metadata, the service resolves active
+company administration from the current server directory. The existing SQL
+binding-store permission proof runs before binding rows are read. Selection is
+restricted to the exact tenant/company and enabled positive-version grants;
+noncanonical, infrastructure or invalid-label records are omitted.
+
+The snapshot reads at most 1001 enabled candidate rows in stable ID order. More
+than 1000 candidates makes the feature unavailable instead of silently truncating
+the approved set. Offset is 0 through 1000; limit is 1 through 100. Safe choices
+are filtered before paging, so `hasMore` refers to actual safe choices. Clients
+must preserve the integer version without rounding. Choices are a snapshot;
+future source registration must re-authorize and revalidate binding ID/version.
+
+Invalid page bounds return 400. Unavailable or unauthorized authority/store
+returns 403; absent authentication configuration returns 503. Responses carry
+`no-store`. No grant authority is inferred from possessing a returned ID.
+
+Issue #250 / PR #251 verifies this prerequisite. Full source registration with
+atomic durable administration audit, frontend onboarding, real ERP privileges
+and schema/capability mapping remain later acceptance work under #233.

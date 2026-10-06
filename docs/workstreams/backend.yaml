@@ -2,12 +2,12 @@ workstream: backend
 role: "Backend Platform"
 status: active
 current_issue: 250
-current_pr: null
+current_pr: 251
 current_branch: backend/250-binding-options
-head: db2ef9a141b69b10618b7c74548828753dfd2dd0
-state: claimed
+head: 9f4a9132331c8b19a9328a43500dd55f8bdf356c
+state: waiting_ci
 lease_owner: root-backend-250
-lease_heartbeat_at: null
+lease_heartbeat_at: "2026-10-06T21:12:07.7978712Z"
 last_checkpoint_at: "2026-10-07"
 last_completed_issue: 248
 last_merged_pr: 249
@@ -21,6 +21,6 @@ scope:
 verification:
   implementation_base: db2ef9a141b69b10618b7c74548828753dfd2dd0
   previous_issue: "249 exact-head/main CI green;248 closed. No open backend implementation lease;239 owns independent Windows setup."
-  result: "Admission only; implementation and current-head CI not yet verified."
+  result: "PASS469 local Persistence tests including19 new option/API cases; scoped CSharp formatting and diff-check. Actual SQL/CI and independent review remain pending."
 blocked_by: []
 next_action: "Implement bounded admin-only binding choices without secret references. Preserve fresh server authority, store permission fences and scope. Add API/unit/real SQL proof, independent review and exact-head/main CI closure. Registration with atomic administration audit and frontend onboarding remain following slices under233."

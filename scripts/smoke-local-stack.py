@@ -567,6 +567,9 @@ def main():
         assert status == 403, f"Unsafe permission identity must be forbidden, status {status}"
         assert "no-store" in headers.get("Cache-Control", "")
         assert all(secret not in json.dumps(denied) for secret in secrets)
+        choice_status, choice_headers, choice_body = http("/api/data-sources/registration-options", base=api, headers=auth)
+        assert choice_status == 403 and "no-store" in choice_headers.get("Cache-Control", ""), "Unsafe binding store released choices"
+        assert "secretref://" not in json.dumps(choice_body) and all(secret not in json.dumps(choice_body) for secret in secrets)
     finally:
         sql("USE AIOfficeLocal; ALTER ROLE aioffice_binding_runtime ADD MEMBER aioffice_runtime;")
     assert permission_proof() == "1"
