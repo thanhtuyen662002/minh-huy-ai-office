@@ -35,9 +35,11 @@ public sealed class PilotDataSourceToolMetadataProvider(PlatformDbContext dbCont
 /// company-scoped and explicitly readable. The permission is reconstructed from SQL state for
 /// every attempt; no role or company authority is accepted from the broker payload.
 /// </summary>
-public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbContext)
+public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbContext,
+    DataSourceSecretBindingService? bindingService = null)
     : IToolPermissionProvider
 {
+    private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
     public async Task<IReadOnlyCollection<ToolPermission>> GetAsync(
         ToolAuthorizationRequest request,
         CancellationToken cancellationToken)
@@ -66,6 +68,14 @@ public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbCo
         {
             return Array.Empty<ToolPermission>();
         }
+
+        try
+        {
+            var authority = await bindings.TaskAuthorityAsync(request.TenantId, request.CompanyId, request.TaskId, cancellationToken);
+            if (authority.UserId != request.UserId) return Array.Empty<ToolPermission>();
+            await bindings.RequireSourceAsync(authority, dataSourceId, readOnly: true, cancellationToken);
+        }
+        catch (UnauthorizedAccessException) { return Array.Empty<ToolPermission>(); }
 
         return new[]
         {
@@ -97,9 +107,11 @@ public sealed class PilotDataSourceToolPermissionProvider(PlatformDbContext dbCo
 public sealed class PilotDataSourceProbeExecutor(
     PlatformDbContext dbContext,
     CompositeSecretResolver secretResolver,
-    IDataSourceConnectionProbe connectionProbe)
+    IDataSourceConnectionProbe connectionProbe,
+    DataSourceSecretBindingService? bindingService = null)
     : IRawWorkStepExecutor
 {
+    private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<WorkStepExecutionResult> ExecuteAsync(
@@ -141,33 +153,19 @@ public sealed class PilotDataSourceProbeExecutor(
                 request.MaxAttempts);
         }
 
-        string connectionString;
         try
         {
-            connectionString = await secretResolver.ResolveAsync(reference!, cancellationToken);
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return new WorkStepExecutionResult(
-                    WorkDeliveryOutcome.Failed,
-                    WorkFailureClass.Transient,
-                    request.MaxAttempts);
-            }
+            var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
+            await new ScopedDataSourceSecretResolver(bindings, secretResolver).UseAsync(authority, request.DataSourceId,
+                readOnly: true, async (connectionString, token) =>
+                {
+                    await connectionProbe.ProbeAsync(connectionString, token);
+                    return true;
+                }, cancellationToken, taskId: envelope.TaskId);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (UnauthorizedAccessException)
         {
-            throw;
-        }
-        catch
-        {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Transient,
-                request.MaxAttempts);
-        }
-
-        try
-        {
-            await connectionProbe.ProbeAsync(connectionString, cancellationToken);
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

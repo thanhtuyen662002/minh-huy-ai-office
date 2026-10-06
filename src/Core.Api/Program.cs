@@ -34,6 +34,9 @@ builder.Services.AddOptions<RabbitMqWorkOptions>()
 builder.Services.AddSingleton<IWorkEnvelopePublisher, RabbitMqWorkPublisher>();
 if (!string.IsNullOrWhiteSpace(platformConnectionString))
 {
+    builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(
+        services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<IAuthorizationDirectory>(),
+        services.GetRequiredService<BindingStorePermissionVerifier>(), platformConnectionSecretReference));
     builder.Services.AddScoped<DataSourceRegistryService>();
     builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
     builder.Services.AddScoped<DataSourceConnectionTestService>();
@@ -65,6 +68,11 @@ if (authenticationConfigured)
 }
 
 var app = builder.Build();
+if (!string.IsNullOrWhiteSpace(platformConnectionString))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<BindingStorePermissionVerifier>().RequireReadOnlyAsync();
+}
 app.UseMiddleware<SensitiveResponseCacheMiddleware>();
 var correlationLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MinhHuy.AIOffice.RequestCorrelation");
 app.Use(async (httpContext, next) =>

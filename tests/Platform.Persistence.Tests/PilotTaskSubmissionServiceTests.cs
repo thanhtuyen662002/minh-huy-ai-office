@@ -84,11 +84,6 @@ public sealed class PilotTaskSubmissionServiceTests
             "read the current customer balance");
 
         var first = await service.SubmitAsync(seeded.Authority, request);
-        seeded.DataSource.IsEnabled = false;
-        await context.SaveChangesAsync();
-
-        // An exact retry is a read of the already accepted request. It must not require the
-        // source to remain enabled after acceptance, and it must not create another graph.
         var replay = await service.SubmitAsync(seeded.Authority, request);
 
         Assert.Equal(first, replay);
@@ -97,6 +92,27 @@ public sealed class PilotTaskSubmissionServiceTests
         Assert.Equal(1, await context.TaskStepExecutions.CountAsync());
         Assert.Equal(1, await context.TaskDispatches.CountAsync());
         Assert.Equal(1, await context.TaskEvents.CountAsync());
+    }
+
+    [Theory]
+    [InlineData("source")]
+    [InlineData("grant")]
+    [InlineData("membership")]
+    public async Task SubmitAsync_Replay_after_revocation_does_not_readmit_or_change_durable_graph(string revoke)
+    {
+        await using var context = CreateContext();
+        var seeded = await SeedIdentityAsync(context);
+        var service = CreateService(context);
+        var request = new PilotTaskSubmissionRequest("replay-after-revoke", seeded.DataSourceId, "synthetic question");
+        await service.SubmitAsync(seeded.Authority, request);
+        if (revoke == "source") seeded.DataSource.IsEnabled = false;
+        if (revoke == "grant") (await context.DataSourceSecretBindings.SingleAsync()).IsEnabled = false;
+        if (revoke == "membership") (await context.CompanyMemberships.SingleAsync()).IsActive = false;
+        await context.SaveChangesAsync();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SubmitAsync(seeded.Authority, request));
+        Assert.Single(context.Tasks);
+        Assert.Single(context.TaskDispatches);
+        Assert.Single(context.TaskEvents);
     }
 
     [Fact]
@@ -323,6 +339,7 @@ public sealed class PilotTaskSubmissionServiceTests
             UpdatedAtUtc = DateTimeOffset.UtcNow
         };
         context.DataSources.Add(dataSource);
+        BindingFixture.Grant(context, tenantId, companyId, "secretref://env/PILOT_ERP_CONNECTION");
         await context.SaveChangesAsync();
 
         return new(

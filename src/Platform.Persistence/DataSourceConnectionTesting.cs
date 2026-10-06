@@ -29,8 +29,11 @@ public sealed class DataSourceConnectionTestService(
     PlatformDbContext dbContext,
     IAuthorizationDirectory authorizationDirectory,
     CompositeSecretResolver secretResolver,
-    IDataSourceConnectionProbe connectionProbe)
+    IDataSourceConnectionProbe connectionProbe,
+    DataSourceSecretBindingService? bindingService = null)
 {
+    private readonly ScopedDataSourceSecretResolver scopedSecrets = new(
+        bindingService ?? new(dbContext, authorizationDirectory), secretResolver);
     public async ValueTask<DataSourceConnectionTestResult> TestAsync(
         AuthorizationContext authorizationContext,
         Guid dataSourceId,
@@ -82,13 +85,18 @@ public sealed class DataSourceConnectionTestService(
             return DataSourceConnectionTestResult.InvalidConfiguration();
         }
 
-        string connectionString;
         try
         {
-            connectionString = await secretResolver.ResolveAsync(
-                secretReference!,
-                cancellationToken);
+            return await scopedSecrets.UseAsync(authorized.Context, dataSourceId, readOnly: false,
+                async (connectionString, token) =>
+                {
+                    try { await connectionProbe.ProbeAsync(connectionString, token); }
+                    catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+                    catch { return DataSourceConnectionTestResult.ConnectionFailed(); }
+                    return DataSourceConnectionTestResult.Success();
+                }, cancellationToken);
         }
+        catch (UnauthorizedAccessException) { return DataSourceConnectionTestResult.NotAuthorized(); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
@@ -98,24 +106,5 @@ public sealed class DataSourceConnectionTestService(
             return DataSourceConnectionTestResult.SecretUnavailable();
         }
 
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            return DataSourceConnectionTestResult.SecretUnavailable();
-        }
-
-        try
-        {
-            await connectionProbe.ProbeAsync(connectionString, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch
-        {
-            return DataSourceConnectionTestResult.ConnectionFailed();
-        }
-
-        return DataSourceConnectionTestResult.Success();
     }
 }

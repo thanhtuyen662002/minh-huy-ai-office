@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 from http.cookiejar import CookieJar
 import json
+import re
 import subprocess
 import time
 import urllib.error
@@ -11,6 +12,19 @@ import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
+
+
+def binding_permission_diagnostic_query():
+    """Evaluate the shipping predicates as the fixture login; emit only labels/bits."""
+    verifier = Path("src/Platform.Persistence/BindingStorePermissionVerifier.cs").read_text(encoding="utf-8")
+    query = verifier.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0]
+    query = re.sub(r"--[^\n]*", "", query)
+    expression = query.split("SELECT CASE WHEN", 1)[1].rsplit("THEN 1 ELSE 0 END;", 1)[0].strip()
+    predicates = re.split(r"\n\s{10}AND (?=[A-Z])", expression)
+    checks = [f"SELECT N'permission_check_{index:02d}' AS CheckId, "
+        f"CASE WHEN ({predicate.strip()}) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END AS Result"
+        for index, predicate in enumerate(predicates, 1)]
+    return "USE AIOfficeLocal; EXECUTE AS LOGIN=N'aioffice_runtime'; " + " UNION ALL ".join(checks) + "; REVERT;"
 
 
 def main():
@@ -40,6 +54,15 @@ def main():
                 bootstrap_log = subprocess.run([*compose, "logs", "--no-color", "--tail", "30", "bootstrap"],
                     capture_output=True, text=True, timeout=20)
                 print(clean(bootstrap_log.stdout[-2000:]))
+                # An actual permission failure needs effective-rights evidence.
+                # Never print SQL, principal names, headers, credentials or error details.
+                try:
+                    diagnostic = sql(binding_permission_diagnostic_query())
+                    for line in diagnostic.splitlines():
+                        if re.fullmatch(r"permission_check_\d{2}\s+(?:PASS|FAIL_OR_UNKNOWN)", line.strip()):
+                            print(line.strip())
+                except Exception:
+                    print("Binding permission diagnostics unavailable.")
             # Never dump logs or rendered environments. Include only a bounded sanitized CLI error.
             diagnostic = result.stderr or result.stdout
             raise RuntimeError(clean(diagnostic[-1500:]))
@@ -185,6 +208,34 @@ def main():
         return result
 
     source_before = fingerprint("DataSources", source_scope, "Id")
+    bindings_before = fingerprint("DataSourceSecretBindings", source_scope, "Id")
+    assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings
+        WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION'
+            COLLATE Latin1_General_100_BIN2 AND IsEnabled=1 AND Version=1;""") == "1"
+
+    def runtime_statement(statement, expected="DENIED"):
+        # Run only in the disposable hosted stack as its actual runtime identity.
+        # Always roll back a successful adversarial statement too.
+        proof = sql(f"""USE AIOfficeLocal; EXECUTE AS LOGIN=N'aioffice_runtime';
+            BEGIN TRY BEGIN TRANSACTION; {statement}; ROLLBACK TRANSACTION; SELECT N'ALLOWED'; END TRY
+            BEGIN CATCH IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+                IF ERROR_NUMBER() IN (229,262,15151,15247,15517,15406,1088,4701) SELECT N'DENIED'; ELSE THROW;
+            END CATCH; REVERT;""")
+        assert proof == expected, "Runtime SQL permission proof mismatch"
+
+    runtime_statement("UPDATE aioffice.DataSourceSecretBindings SET IsEnabled=0")
+    runtime_statement("UPDATE aioffice.DataSourceSecretBindings SET Label=N'Forbidden column write'")
+    runtime_statement("DELETE FROM aioffice.DataSourceSecretBindings")
+    runtime_statement(f"""INSERT aioffice.DataSourceSecretBindings
+        (TenantId,CompanyId,Id,CanonicalReference,Label) VALUES
+        ('{tenant}','{company}','{uuid.uuid4()}',N'secretref://env/FORBIDDEN',N'Forbidden')""")
+    runtime_statement("ALTER TABLE aioffice.DataSourceSecretBindings ADD Forbidden int NULL")
+    runtime_statement("TRUNCATE TABLE aioffice.DataSourceSecretBindings")
+    runtime_statement("ALTER AUTHORIZATION ON OBJECT::aioffice.DataSourceSecretBindings TO aioffice_runtime")
+    runtime_statement("ALTER ROLE db_owner ADD MEMBER aioffice_runtime")
+    runtime_statement("EXECUTE AS USER=N'dbo'; REVERT")
+    assert fingerprint("DataSourceSecretBindings", source_scope, "Id") == bindings_before
+    print("PASS real runtime binding SELECT and INSERT/UPDATE/column/DELETE/ALTER/TRUNCATE/ownership/escalation denial")
     roles_before = fingerprint("RoleAssignments", role_scope, "RoleKey")
     backup = "tempdb.dbo.AIOfficeRoleBackup_" + uuid.uuid4().hex
     sql(f"""USE AIOfficeLocal; SELECT TenantId, CompanyId, UserId, RoleKey, CreatedAtUtc
@@ -233,10 +284,16 @@ def main():
     allowed = {**metadata, "logicalName": fixture_name, "connectionSecretReference": "secretref://env/PILOT_ERP_CONNECTION",
                "allowRead": True, "allowWrite": False, "isEnabled": True}
     fixture_id = None
+    fixture_grants = [(str(uuid.uuid4()), reference) for reference in
+        ("SOURCE246_ROTATED", "SOURCE246_INTERIM", "SOURCE246_CONTROL_ROTATED")]
     gate = "tempdb.dbo.AIOfficeMetadataGate_" + uuid.uuid4().hex
     gate_created = False
     locker = executor = pending = None
     try:
+        for grant_id, reference in fixture_grants:
+            sql(f"""USE AIOfficeLocal; INSERT aioffice.DataSourceSecretBindings
+                (TenantId,CompanyId,Id,CanonicalReference,Label,IsEnabled,Version) VALUES
+                ('{tenant}','{company}','{grant_id}',N'secretref://env/{reference}',N'Owned PR247 SQL barrier fixture',1,1);""")
         status, headers, created = http("/api/local/data-sources" + selector, allowed, headers={"Origin": web})
         assert status == 201, f"Company admin source create failed with HTTP {status}"
         assert "no-store" in headers.get("Cache-Control", "")
@@ -465,10 +522,155 @@ def main():
             sql(f"DROP TABLE {gate};")
         if fixture_id is not None:
             sql(f"USE AIOfficeLocal; DELETE FROM aioffice.DataSources WHERE {source_scope} AND Id='{fixture_id}';")
+        for grant_id, _ in fixture_grants:
+            sql(f"USE AIOfficeLocal; DELETE FROM aioffice.DataSourceSecretBindings WHERE {source_scope} AND Id='{grant_id}';")
     assert fingerprint("DataSources", source_scope, "Id") == source_before, "Admin fixture cleanup changed an existing source"
+    assert fingerprint("DataSourceSecretBindings", source_scope, "Id") == bindings_before, "Barrier cleanup changed an existing grant"
     print("PASS real SQL admin revoke/restore, issued-session API/BFF denial, unchanged sources and admin CRUD")
     print("PASS real SQL metadata-only strict contract and protected-column rotation after server load")
     print("PASS real SQL full-PUT negative control fails protected-policy preservation under the same write gate")
+
+    # Own every adversarial object/row; operator actions here are disposable CI only.
+    # Execute the shipping verifier SQL as the actual runtime principal too.
+    permission_source = Path("src/Platform.Persistence/BindingStorePermissionVerifier.cs").read_text(encoding="utf-8")
+    permission_sql = permission_source.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0]
+
+    def permission_proof():
+        return sql("USE AIOfficeLocal; EXECUTE AS LOGIN=N'aioffice_runtime'; " + permission_sql + " REVERT;")
+
+    # Verify the supported engine's permission catalog rather than interpreting
+    # an invalid HAS_PERMS_BY_NAME query's NULL as an effective denial.
+    assert sql("SELECT COUNT(*) FROM sys.fn_builtin_permissions('DATABASE') "
+               "WHERE permission_name=N'IMPERSONATE ANY USER';") == "0"
+    assert permission_proof() == "1", "Runtime binding store permission proof failed"
+    # An operator mistake must fail closed while services are already running too.
+    # Dropping only this disposable runtime role deliberately restores db_datawriter
+    # rights; the proof and source boundary must reject that unsafe configuration.
+    try:
+        sql("USE AIOfficeLocal; ALTER ROLE aioffice_binding_runtime DROP MEMBER aioffice_runtime;")
+        assert permission_proof() == "0"
+        runtime_statement("UPDATE aioffice.DataSourceSecretBindings SET Label=N'Unsafe-role fixture'", expected="ALLOWED")
+        status, headers, denied = http(f"/api/data-sources/{source}/connection-test", {}, base=api, headers=auth)
+        assert status == 403, f"Unsafe permission identity must be forbidden, status {status}"
+        assert "no-store" in headers.get("Cache-Control", "")
+        assert all(secret not in json.dumps(denied) for secret in secrets)
+    finally:
+        sql("USE AIOfficeLocal; ALTER ROLE aioffice_binding_runtime ADD MEMBER aioffice_runtime;")
+    assert permission_proof() == "1"
+    owned_source = str(uuid.uuid4())
+    owned_grant = str(uuid.uuid4())
+    owned_reference = "SCOPED_CASE_" + uuid.uuid4().hex.upper()
+    module = "aioffice.BindingModuleGate_" + uuid.uuid4().hex
+    trigger = "aioffice.BindingTriggerGate_" + uuid.uuid4().hex
+    owned_scope = source_scope + f" AND Id='{owned_source}'"
+    grant_scope = source_scope + f" AND Id='{owned_grant}'"
+    module_created = trigger_created = False
+
+    def connection_denied(source_id):
+        status, headers, result = http(f"/api/data-sources/{source_id}/connection-test", {}, base=api, headers=auth)
+        assert status == 403, f"Unauthorized source must be forbidden, status {status}"
+        assert "no-store" in headers.get("Cache-Control", "")
+        assert all(secret not in json.dumps(result) for secret in secrets)
+        assert "secretref" not in json.dumps(result).lower()
+
+    try:
+        sql(f"""USE AIOfficeLocal; INSERT aioffice.DataSourceSecretBindings
+            (TenantId,CompanyId,Id,CanonicalReference,Label,IsEnabled,Version)
+            VALUES ('{tenant}','{company}','{owned_grant}',N'secretref://env/{owned_reference}',N'Owned security fixture',1,1);
+            INSERT aioffice.DataSources
+            (TenantId,CompanyId,Id,LogicalName,Kind,Environment,Purpose,ConnectionSecretReference,AllowRead,AllowWrite,MaxConcurrency,IsEnabled)
+            VALUES ('{tenant}','{company}','{owned_source}',N'Owned security source {owned_source}',N'sql-server',N'Test',
+                N'Owned security fixture',N'secretref://env/{owned_reference.lower()}',1,0,1,1);""")
+        connection_denied(owned_source)  # Resource case differs from the reviewed grant.
+        # The unique SQL index treats resource case as exact but rejects the same
+        # scope/reference twice. Keep this proof transaction-owned and rollback.
+        duplicate = sql(f"""USE AIOfficeLocal; BEGIN TRY BEGIN TRANSACTION;
+            INSERT aioffice.DataSourceSecretBindings (TenantId,CompanyId,Id,CanonicalReference,Label)
+            VALUES ('{tenant}','{company}','{uuid.uuid4()}',N'secretref://env/{owned_reference}',N'Duplicate fixture');
+            ROLLBACK TRANSACTION; SELECT N'DUPLICATE_ALLOWED'; END TRY
+            BEGIN CATCH IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+                IF ERROR_NUMBER() IN (2601,2627) SELECT N'DUPLICATE_DENIED'; ELSE THROW; END CATCH;""")
+        assert duplicate == "DUPLICATE_DENIED"
+        denied = {**allowed, "logicalName": "scope-denied-" + uuid.uuid4().hex,
+                  "connectionSecretReference": "secretref://env/" + owned_reference.lower()}
+        assert http("/api/data-sources/", denied, base=api, headers=auth)[0] == 403
+        sql(f"USE AIOfficeLocal; UPDATE aioffice.DataSources SET ConnectionSecretReference=N'secretref://env/{owned_reference}' WHERE {owned_scope};")
+        sql(f"USE AIOfficeLocal; UPDATE aioffice.DataSourceSecretBindings SET IsEnabled=0,Version=Version+1 WHERE {grant_scope};")
+        connection_denied(owned_source)
+        assert http("/api/data-sources/", {**denied, "connectionSecretReference": "secretref://env/" + owned_reference}, base=api, headers=auth)[0] == 403
+        assert http("/api/tasks", {"dataSourceId": owned_source, "question": "revoked grant"},
+                    base=api, headers={**auth, "Idempotency-Key": "revoke-" + uuid.uuid4().hex})[0] == 403
+        # Missing grant and a grant only in another company both deny an existing row.
+        sql(f"USE AIOfficeLocal; DELETE FROM aioffice.DataSourceSecretBindings WHERE {grant_scope};")
+        connection_denied(owned_source)
+        sql(f"""USE AIOfficeLocal; INSERT aioffice.DataSourceSecretBindings
+            (TenantId,CompanyId,Id,CanonicalReference,Label,IsEnabled,Version)
+            VALUES ('{tenant}','{foreign_company}','{owned_grant}',N'secretref://env/{owned_reference}',N'Owned foreign grant',1,1);""")
+        connection_denied(owned_source)
+        sql(f"""USE AIOfficeLocal; DELETE FROM aioffice.DataSourceSecretBindings
+            WHERE TenantId='{tenant}' AND CompanyId='{foreign_company}' AND Id='{owned_grant}';
+            INSERT aioffice.DataSourceSecretBindings (TenantId,CompanyId,Id,CanonicalReference,Label,IsEnabled,Version)
+            VALUES ('{tenant}','{company}','{owned_grant}',N'secretref://env/{owned_reference}',N'Owned security fixture',1,1);
+            UPDATE aioffice.DataSources SET ConnectionSecretReference=N'secretref://env/PILOT_ERP_CONNECTION' WHERE {owned_scope};""")
+
+        # Direct USER impersonation can cross the binding owner's privilege
+        # boundary. Its real effective permission must close the runtime/API
+        # guard even though the nonexistent DATABASE permission was removed.
+        try:
+            sql("USE AIOfficeLocal; GRANT IMPERSONATE ON USER::aioffice_binding_operator_owner TO aioffice_runtime;")
+            assert permission_proof() == "0"
+            runtime_statement("EXECUTE AS USER=N'aioffice_binding_operator_owner'; "
+                f"UPDATE aioffice.DataSourceSecretBindings SET Label=N'Impersonation fixture' WHERE {grant_scope}; REVERT;",
+                expected="ALLOWED")
+            connection_denied(source)
+        finally:
+            sql("USE AIOfficeLocal; REVOKE IMPERSONATE ON USER::aioffice_binding_operator_owner FROM aioffice_runtime;")
+        assert permission_proof() == "1"
+        print("PASS real SQL USER impersonation escalation denied by permission and API fences")
+
+        # A dbo-owned ordinary module cannot cross the grant table's distinct owner.
+        definition = f"CREATE PROCEDURE {module} AS UPDATE aioffice.DataSourceSecretBindings SET Label=N'Indirect write' WHERE {grant_scope};"
+        sql("USE AIOfficeLocal; EXEC(N'" + definition.replace("'", "''") + "'); " + f"GRANT EXECUTE ON OBJECT::{module} TO aioffice_runtime;")
+        module_created = True
+        runtime_statement("EXEC " + module)
+        assert permission_proof() == "0"
+        connection_denied(owned_source)
+        # EXECUTE AS OWNER demonstrates why direct DENY is insufficient for arbitrary
+        # modules. Transaction rollback keeps the fixture state; the guard rejects it.
+        definition = f"ALTER PROCEDURE {module} WITH EXECUTE AS OWNER AS UPDATE aioffice.DataSourceSecretBindings SET Label=N'Elevated indirect write' WHERE {grant_scope};"
+        sql("USE AIOfficeLocal; EXEC(N'" + definition.replace("'", "''") + "');")
+        runtime_statement("EXEC " + module, expected="ALLOWED")
+        assert permission_proof() == "0"
+        connection_denied(owned_source)
+        sql(f"USE AIOfficeLocal; DROP PROCEDURE {module};")
+        module_created = False
+        assert permission_proof() == "1"
+
+        # Trigger execution needs no explicit runtime EXECUTE grant. Verify inventory
+        # denial with an enabled EXECUTE AS OWNER trigger on a runtime-writable table.
+        definition = f"CREATE TRIGGER {trigger} ON aioffice.DataSources WITH EXECUTE AS OWNER AFTER UPDATE AS BEGIN SET NOCOUNT ON; UPDATE aioffice.DataSourceSecretBindings SET Label=N'Trigger write' WHERE {grant_scope}; END;"
+        sql("USE AIOfficeLocal; EXEC(N'" + definition.replace("'", "''") + "');")
+        trigger_created = True
+        runtime_statement(f"UPDATE aioffice.DataSources SET Purpose=N'Trigger fixture' WHERE {owned_scope}", expected="ALLOWED")
+        assert permission_proof() == "0"
+        connection_denied(owned_source)
+        sql(f"USE AIOfficeLocal; DROP TRIGGER {trigger};")
+        trigger_created = False
+        assert permission_proof() == "1"
+        status, _, connection = http(f"/api/data-sources/{owned_source}/connection-test", {}, base=api, headers=auth)
+        assert status == 200 and connection["succeeded"]
+    finally:
+        if trigger_created:
+            sql(f"USE AIOfficeLocal; DROP TRIGGER {trigger};")
+        if module_created:
+            sql(f"USE AIOfficeLocal; DROP PROCEDURE {module};")
+        sql(f"""USE AIOfficeLocal; DELETE FROM aioffice.DataSources WHERE {owned_scope};
+            DELETE FROM aioffice.DataSourceSecretBindings WHERE TenantId='{tenant}'
+                AND CompanyId IN ('{company}','{foreign_company}') AND Id='{owned_grant}';""")
+    assert fingerprint("DataSources", source_scope, "Id") == source_before
+    assert fingerprint("DataSourceSecretBindings", source_scope, "Id") == bindings_before
+    assert permission_proof() == "1"
+    print("PASS exact grant case/scope, legacy missing/revoked grant denial, and indirect procedure/trigger permission fences")
 
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
     status, _, accepted = http("/api/local/tasks" + selector,
@@ -482,8 +684,52 @@ def main():
     wait_for(completed)
     print("PASS real RabbitMQ worker execution and persisted result")
 
+    # Pause the actual consumer before admission, revoke authority after the
+    # message is durably published, then restart it. No sleeps define the race.
+    for revocation in ("grant", "membership"):
+        run("stop", "agent-worker")
+        idempotency = "queued-revocation-" + uuid.uuid4().hex
+        status, _, queued = http("/api/tasks", {"dataSourceId": source, "question": "Queued revocation fixture"},
+            base=api, headers={**auth, "Idempotency-Key": idempotency})
+        assert status == 202
+        queued_id = str(uuid.UUID(queued["taskId"]))
+        task_scope = source_scope + f" AND TaskId='{queued_id}'"
+        wait_for(lambda: sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskDispatches
+            WHERE {task_scope} AND State=N'Published';""") == "1")
+        try:
+            if revocation == "grant":
+                sql(f"""USE AIOfficeLocal; UPDATE aioffice.DataSourceSecretBindings SET IsEnabled=0,Version=Version+1
+                    WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2;""")
+                connection_denied(source)
+            else:
+                sql(f"USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0 WHERE {role_scope};")
+            assert http("/api/tasks", {"dataSourceId": source, "question": "Queued revocation fixture"},
+                base=api, headers={**auth, "Idempotency-Key": idempotency})[0] == 403
+            run("start", "agent-worker")
+            wait_for(lambda: sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.Tasks
+                WHERE {source_scope} AND Id='{queued_id}' AND Status=N'Failed';""") == "1")
+            assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskDispatches
+                WHERE {task_scope} AND State=N'DeadLettered';""") == "1"
+            assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskStepExecutions
+                WHERE {task_scope} AND LastFailureClass=N'Authorization';""") == "1"
+            assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskCheckpoints WHERE {task_scope};") == "0"
+        finally:
+            # Explicit operator restore, never bootstrap replay or implicit upsert.
+            if revocation == "grant":
+                sql(f"""USE AIOfficeLocal; UPDATE aioffice.DataSourceSecretBindings SET IsEnabled=1,Version=Version+1
+                    WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2;""")
+            else:
+                sql(f"USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE {role_scope};")
+            run("start", "agent-worker")
+    print("PASS queued RabbitMQ grant/membership revocation, replay denial and durable authorization dead-letter without checkpoints")
+
     # Data changes and revoked access must survive a full stop/start and a repeated bootstrap.
     sql("USE AIOfficeSample; INSERT dbo.LocalSample VALUES (2, N'Retained data');")
+    retained_grant_version = int(sql(f"""USE AIOfficeLocal; UPDATE aioffice.DataSourceSecretBindings
+        SET IsEnabled=0,Version=Version+1 WHERE {source_scope}
+          AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2;
+        SELECT Version FROM aioffice.DataSourceSecretBindings WHERE {source_scope}
+          AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2;"""))
     sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET IsActive=0 WHERE TenantId='{tenant}' AND Id='{user}';")
     assert http("/api/auth/context", base=api, headers=auth)[0] == 403
     login(expected=403)
@@ -500,10 +746,17 @@ def main():
     login(expected=403)
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.Users WHERE TenantId='{tenant}' AND Id='{user}';") == "1"
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources WHERE Id='{source}';") == "1"
+    assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings WHERE {source_scope}
+        AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2
+        AND IsEnabled=0 AND Version={retained_grant_version};""") == "1", "Repeat bootstrap recreated or reset a revoked grant"
     sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET IsActive=1 WHERE TenantId='{tenant}' AND Id='{user}';")
     login()
+    connection_denied(source)
+    sql(f"""USE AIOfficeLocal; UPDATE aioffice.DataSourceSecretBindings SET IsEnabled=1,Version=Version+1
+        WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2
+          AND Version={retained_grant_version};""")
     assert completed()
-    print("PASS repeat configuration/bootstrap, retained SQL and identity, inactive-user denial and retained task")
+    print("PASS repeat configuration/bootstrap, retained SQL/identity/revoked grant, inactive-user denial and retained task")
     print("PASS complete local stack integration")
 
 

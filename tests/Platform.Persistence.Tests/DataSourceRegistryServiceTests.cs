@@ -372,6 +372,9 @@ public sealed class DataSourceRegistryServiceTests
         Guid companyId,
         Guid userId)
     {
+        BindingFixture.Grant(context, tenantId, companyId, "secretref://env/company-erp-production");
+        BindingFixture.Grant(context, tenantId, companyId, "secretref://env/company-erp-production-v2");
+        BindingFixture.Grant(context, tenantId, companyId, "secretref://env/fixture-rotated");
         context.Users.Add(new PlatformUserRecord
         {
             TenantId = tenantId,

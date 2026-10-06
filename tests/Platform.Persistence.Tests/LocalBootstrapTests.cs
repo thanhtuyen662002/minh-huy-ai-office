@@ -115,6 +115,45 @@ public sealed class LocalBootstrapTests
         Assert.True(source.AllowRead);
         Assert.False(source.AllowWrite);
         Assert.Equal("secretref://env/PILOT_ERP_CONNECTION", source.ConnectionSecretReference);
+        var grant = await db.DataSourceSecretBindings.SingleAsync();
+        Assert.Equal(options.TenantId, grant.TenantId);
+        Assert.Equal(options.CompanyId, grant.CompanyId);
+        Assert.Equal(source.ConnectionSecretReference, grant.CanonicalReference);
+        Assert.True(grant.IsEnabled);
+        Assert.Equal(1, grant.Version);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RepeatSetupNeverRegrantsRevokedOrDeletedBindings(bool delete)
+    {
+        await using var db = Database();
+        var options = Options();
+        var seed = new LocalPlatformSeeder(db);
+        await seed.SeedAsync(options, "fixture-subject");
+        var grant = await db.DataSourceSecretBindings.SingleAsync();
+        if (delete) db.Remove(grant);
+        else { grant.IsEnabled = false; grant.Version = 4; }
+        await db.SaveChangesAsync();
+        await seed.SeedAsync(options, "fixture-subject");
+        if (delete) Assert.Empty(db.DataSourceSecretBindings);
+        else { var kept = await db.DataSourceSecretBindings.SingleAsync(); Assert.False(kept.IsEnabled); Assert.Equal(4, kept.Version); }
+        Assert.Single(db.PlatformMetadata);
+    }
+
+    [Fact]
+    public async Task MissingMarkerDoesNotAuthorizeBootstrapOverResidualRevocationState()
+    {
+        await using var db = Database();
+        var options = Options();
+        var grant = BindingFixture.Grant(db, options.TenantId, options.CompanyId, "secretref://env/PILOT_ERP_CONNECTION");
+        grant.IsEnabled = false;
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => new LocalPlatformSeeder(db).SeedAsync(options, "fixture-subject"));
+        Assert.False((await db.DataSourceSecretBindings.SingleAsync()).IsEnabled);
+        Assert.Empty(db.Users);
+        Assert.Empty(db.PlatformMetadata);
     }
 
     private static PlatformDbContext Database() => new(new DbContextOptionsBuilder<PlatformDbContext>()
