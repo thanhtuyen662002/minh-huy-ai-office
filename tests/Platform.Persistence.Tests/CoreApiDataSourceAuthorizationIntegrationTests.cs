@@ -68,7 +68,7 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
             using var page = JsonDocument.Parse(body);
             var item = Assert.Single(page.RootElement.GetProperty("items").EnumerateArray());
             Assert.Equal(bindingId, item.GetProperty("bindingId").GetGuid());
-            Assert.Equal(new[] { "bindingId", "label", "version" }, item.EnumerateObject().Select(property => property.Name));
+            Assert.Equal(new[] { "bindingId", "label", "version", "versionToken" }, item.EnumerateObject().Select(property => property.Name));
             Assert.False(page.RootElement.GetProperty("hasMore").GetBoolean());
             Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/api/data-sources/registration-options?offset=-1")).StatusCode);
         }
@@ -523,6 +523,93 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
         await using var scope = factory.Services.CreateAsyncScope();
         var stored = await scope.ServiceProvider.GetRequiredService<PlatformDbContext>().DataSources.AsNoTracking().SingleAsync(row => row.Id == first.Id);
         Assert.Equivalent(first, stored, strict: true);
+    }
+
+    [Theory]
+    [InlineData("admin", HttpStatusCode.OK)]
+    [InlineData("viewer", HttpStatusCode.Forbidden)]
+    [InlineData("ADMIN", HttpStatusCode.Forbidden)]
+    public async Task ReadOnlyRegistrationUsesDirectoryAuthorityAndIdempotentSafeDescriptor(string role, HttpStatusCode expected)
+    {
+        var authority = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new(authority, [role]));
+        Guid bindingId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+            var grant = BindingFixture.Grant(db, authority, "secretref://env/PRIVATE_REGISTRATION");
+            grant.Version = long.MaxValue;
+            bindingId = grant.Id;
+            await db.SaveChangesAsync();
+        }
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var request = new DataSourceReadOnlyRegistrationRequest(bindingId, "9223372036854775807", Guid.NewGuid(), "ERP", "Production", "Reporting", 2);
+        var response = await client.PostAsJsonAsync("/api/data-sources/read-only-registration", request);
+        Assert.Equal(expected, response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("secretref://", body);
+        Assert.DoesNotContain("PRIVATE_REGISTRATION", body);
+        if (expected == HttpStatusCode.OK)
+        {
+            using var descriptor = JsonDocument.Parse(body);
+            Assert.True(descriptor.RootElement.GetProperty("allowRead").GetBoolean());
+            Assert.False(descriptor.RootElement.GetProperty("allowWrite").GetBoolean());
+            Assert.Equal("sql-server", descriptor.RootElement.GetProperty("kind").GetString());
+            Assert.Equal(body, await (await client.PostAsJsonAsync("/api/data-sources/read-only-registration", request)).Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/data-sources/read-only-registration", request with { Purpose = "Different" })).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/data-sources/read-only-registration", request with { BindingVersion = "01" })).StatusCode);
+        }
+        await using var check = factory.Services.CreateAsyncScope();
+        var stored = check.ServiceProvider.GetRequiredService<PlatformDbContext>();
+        Assert.Equal(expected == HttpStatusCode.OK ? 1 : 0, await stored.DataSources.CountAsync());
+        Assert.Equal(expected == HttpStatusCode.OK ? 1 : 0, await stored.DataSourceRegistrationAudits.CountAsync());
+    }
+
+    [Theory]
+    [InlineData("tenantId")]
+    [InlineData("companyId")]
+    [InlineData("userId")]
+    [InlineData("connectionSecretReference")]
+    [InlineData("connectionString")]
+    [InlineData("allowRead")]
+    [InlineData("allowWrite")]
+    [InlineData("isEnabled")]
+    [InlineData("kind")]
+    public async Task ReadOnlyRegistrationRejectsCallerAuthorityAndPolicyFields(string field)
+    {
+        var authority = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        await using var factory = AuthenticatedFactory(new(authority, ["admin"]));
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var request = new Dictionary<string, object>
+        {
+            ["bindingId"] = Guid.NewGuid(), ["bindingVersion"] = "1", ["operationId"] = Guid.NewGuid(),
+            ["logicalName"] = "ERP", ["environment"] = "Production", ["purpose"] = "Reporting", ["maxConcurrency"] = 2,
+            [field] = "caller-value"
+        };
+        var response = await client.PostAsJsonAsync("/api/data-sources/read-only-registration", request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        await using var check = factory.Services.CreateAsyncScope();
+        var db = check.ServiceProvider.GetRequiredService<PlatformDbContext>();
+        Assert.Empty(db.DataSources);
+        Assert.Empty(db.DataSourceRegistrationAudits);
+    }
+
+    [Fact]
+    public async Task ReadOnlyRegistrationWithoutAuthenticationConfigurationIsUnavailable()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("AIOffice:Authentication:Authority", "");
+            builder.UseSetting("AIOffice:Authentication:Audience", "");
+        });
+        using var client = factory.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/data-sources/read-only-registration", new { });
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
     }
 
     private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry,

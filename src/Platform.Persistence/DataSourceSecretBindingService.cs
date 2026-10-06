@@ -8,7 +8,12 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed record AuthorizedDataSourceBinding(
     AuthorizationContext Authority, Guid SourceId, SecretReference Reference, Guid GrantId, long GrantVersion);
 
-public sealed record DataSourceRegistrationOption(Guid BindingId, string Label, long Version);
+public sealed record DataSourceRegistrationOption(Guid BindingId, string Label, long Version)
+{
+    // Additive compatibility: existing numeric Version remains, browser clients
+    // must submit this lossless token rather than a rounded JavaScript number.
+    public string VersionToken => Version.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}
 public sealed record DataSourceRegistrationOptionsPage(IReadOnlyList<DataSourceRegistrationOption> Items, int Offset, int Limit, bool HasMore);
 
 public sealed class DataSourceSecretBindingService(
@@ -21,6 +26,21 @@ public sealed class DataSourceSecretBindingService(
 
     public static UnauthorizedAccessException Unavailable() => new("Data source is unavailable for authorized use.");
     public Task RequireStoreAsync(CancellationToken cancellationToken = default) => verifier.RequireReadOnlyAsync(cancellationToken);
+
+    public async Task<DataSourceSecretBindingRecord> RequireBindingAsync(
+        AuthorizationContext authority, Guid bindingId, long version, CancellationToken cancellationToken = default)
+    {
+        await RequireAdministrationAsync(authority, cancellationToken);
+        await verifier.RequireReadOnlyAsync(cancellationToken);
+        var grant = await database.DataSourceSecretBindings.AsNoTracking().SingleOrDefaultAsync(row =>
+            row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId && row.Id == bindingId,
+            cancellationToken);
+        if (grant is null || !grant.IsEnabled || grant.Version != version || version < 1
+            || !SecretReference.TryParse(grant.CanonicalReference, out var reference)
+            || !string.Equals(reference!.Value, grant.CanonicalReference, StringComparison.Ordinal)
+            || IsInfrastructureReference(reference)) throw Unavailable();
+        return grant;
+    }
 
     public async Task<DataSourceRegistrationOptionsPage> ListRegistrationOptionsAsync(
         AuthorizationContext authority, int offset = 0, int limit = 50, CancellationToken cancellationToken = default)

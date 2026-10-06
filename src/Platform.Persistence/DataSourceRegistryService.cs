@@ -23,7 +23,7 @@ public sealed record DataSourceMetadataWriteRequest(
     [property: JsonRequired, JsonNumberHandling(JsonNumberHandling.Strict)] int MaxConcurrency,
     [property: JsonRequired] bool IsEnabled);
 
-public sealed class DataSourceRegistryService(
+public sealed partial class DataSourceRegistryService(
     PlatformDbContext dbContext,
     IAuthorizationDirectory authorizationDirectory,
     DataSourceSecretBindingService? bindingService = null)

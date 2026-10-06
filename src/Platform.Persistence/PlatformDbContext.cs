@@ -14,6 +14,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<RoleAssignmentRecord> RoleAssignments => Set<RoleAssignmentRecord>();
     public DbSet<DataSourceRecord> DataSources => Set<DataSourceRecord>();
     public DbSet<DataSourceSecretBindingRecord> DataSourceSecretBindings => Set<DataSourceSecretBindingRecord>();
+    public DbSet<DataSourceRegistrationAuditRecord> DataSourceRegistrationAudits => Set<DataSourceRegistrationAuditRecord>();
     public DbSet<DataSourceFailoverOperationPolicyRecord> DataSourceFailoverOperationPolicies => Set<DataSourceFailoverOperationPolicyRecord>();
     public DbSet<TaskRecord> Tasks => Set<TaskRecord>();
     public DbSet<TaskStepRecord> TaskSteps => Set<TaskStepRecord>();
@@ -27,6 +28,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
+        modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));

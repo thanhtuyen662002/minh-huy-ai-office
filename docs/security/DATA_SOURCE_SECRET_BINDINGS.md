@@ -144,7 +144,7 @@ and merged-main evidence. Syntax checks do not establish SQL acceptance.
 
 `GET /api/data-sources/registration-options?offset=0&limit=50` returns a page
 with `items`, `offset`, `limit` and `hasMore`. Each item contains only `bindingId`,
-`label` and positive integer `version`. Canonical references, credentials and
+`label`, positive integer `version` and additive decimal string `versionToken`. Canonical references, credentials and
 infrastructure bindings are excluded. Labels must be bounded human display text
 without a secret-reference marker. Listing does not resolve credentials, create
 grants or create sources.
@@ -159,13 +159,59 @@ The snapshot reads at most 1001 enabled candidate rows in stable ID order. More
 than 1000 candidates makes the feature unavailable instead of silently truncating
 the approved set. Offset is 0 through 1000; limit is 1 through 100. Safe choices
 are filtered before paging, so `hasMore` refers to actual safe choices. Clients
-must preserve the integer version without rounding. Choices are a snapshot;
-future source registration must re-authorize and revalidate binding ID/version.
+must use `versionToken` for registration, preserving the full positive Int64
+without JavaScript rounding. Numeric `version` remains for compatibility.
+Choices are a snapshot; registration re-authorizes binding ID/version.
 
 Invalid page bounds return 400. Unavailable or unauthorized authority/store
 returns 403; absent authentication configuration returns 503. Responses carry
 `no-store`. No grant authority is inferred from possessing a returned ID.
 
-Issue #250 / PR #251 verifies this prerequisite. Full source registration with
-atomic durable administration audit, frontend onboarding, real ERP privileges
-and schema/capability mapping remain later acceptance work under #233.
+Issue #250 / PR #251 verified the choices prerequisite. Issue #252 / PR #253
+owns audited read-only registration and its admin frontend. Real ERP privileges,
+schema/capability mapping and full product completion remain under #233.
+
+## Audited read-only registration
+
+`POST /api/data-sources/read-only-registration` requires current server-resolved
+company administration. Its strict JSON body contains only `bindingId`,
+`bindingVersion` (canonical positive decimal Int64 string), `operationId`,
+`logicalName`, `environment`, `purpose` and `maxConcurrency`. Tenant, company,
+actor, SQL kind, enable/read/write policy and secret reference are server-owned.
+Unknown fields and numeric/rounded versions are rejected. The local BFF requires
+same-origin requests, a canonical company selector and an at-most-8192-byte body.
+
+The SQL transaction uses Serializable isolation: fresh directory, grant, operation
+and logical-name reads keep their locks through source/audit commit. A disabled,
+foreign, noncanonical, infrastructure or changed-version binding is unavailable.
+Source and audit insert in one SaveChanges/transaction. The service revalidates
+administration and binding before saving. Failed writes leave no pending tracked
+source/audit entities; SQL transaction disposal rolls back both inserts.
+
+`DataSourceRegistrationAudits` stores scoped actor/source/binding identities,
+binding version, operation ID, UTC occurrence and a SHA256 fingerprint of normalized
+nonsecret registration metadata. No credential or canonical reference is retained.
+The unique tenant/company/operation index supports lost-response retries. Same
+actor and fingerprint return the current source descriptor; mismatches or an
+existing logical name return a generic 409. Retries still require current
+administration and the original enabled binding/version.
+
+The additive migration gives the audit table the separate operator owner, grants
+runtime SELECT/INSERT, and denies UPDATE at both table and every column plus
+DELETE/ALTER/TAKE OWNERSHIP. The global binding-store proof excludes privileged
+roles, impersonation, schema authority, executable ownership chains and triggers.
+Registration additionally proves effective audit SELECT/INSERT and absence of
+UPDATE/DELETE/ALTER/CONTROL/ownership and column UPDATE. No destructive Down
+migration is permitted; corrections use a reviewed forward migration.
+
+The admin UI loads approved choices without references, submits only the strict
+body and confirms a fresh source list before showing success. Every awaited
+response is fenced by the current session/company generation and fresh directory
+validation. An uncertain request freezes its body and operation ID for explicit
+retry. Company/user/role changes clear private choices and pending UI state.
+
+Local synthetic tests prove service/API/UX behavior, not live SQL privileges.
+The disposable SQL/OIDC/Compose smoke must prove effective audit denials, atomic
+rollback after a failing audit INSERT, BFF idempotency and retained history across
+restart on the exact candidate. No result qualifies actual customer ERP business
+data or clean Windows installation.

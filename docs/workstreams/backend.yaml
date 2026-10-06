@@ -2,10 +2,10 @@ workstream: backend
 role: Backend Platform
 status: active-development
 current_issue: 252
-current_pr: null
+current_pr: 253
 current_branch: backend/252-audited-source-registration
 head: e2165d8a67644cbfc9672ed373e2062761b3c31c
-state: claimed
+state: in_progress
 lease_owner: root-backend-252
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
@@ -23,3 +23,6 @@ verification:
   previous_result: '251 exact-head and merged-main CI green;250 closed. Only independent installer239 remains Draft; no competing backend/frontend lease.'
 blocked_by: []
 next_action: Implement strict binding ID/version registration with serializable source/audit transaction, idempotency, append-only SQL privilege proof, UI/BFF and meaningful local/actual-stack tests. Close exact-head CI and review before merge;233 remains incomplete.
+implementation_checkpoint:
+  result: '506 Persistence tests PASS including strict HTTP no-store and registration/idempotency/authority cases; web type-check PASS. New UI/BFF tests and actual SQL audit/rollback/restart smoke are being verified before push.'
+  remaining: 'Complete web verification, exact-head Compose CI, adversarial audit permission proof and independent review. Do not merge253 yet.'
