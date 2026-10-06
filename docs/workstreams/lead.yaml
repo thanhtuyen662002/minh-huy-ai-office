@@ -5,7 +5,7 @@ current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
 head: null
-state: full-product-completion
+state: in_progress
 lease_owner: lead
 lease_heartbeat_at: null
 last_checkpoint_at: "2026-10-04"
@@ -55,9 +55,17 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: finish Windows #238 / draft #239 with pinned main #243 and mandatory native recovery checks, then deliver company-owned credentials, full company/member/source onboarding and every remaining P0-P6 requirement. PRs #235/#237/#241/#243 are merged with verified main CI. Full product completion remains unproven."
+next_action: "Close installer239 exact-head CI after secured-main integration and59-test protocol2/drain fence. Require independent review and actual clean Windows install/upgrade/reboot/startup/retained revocations.249 merged at db2ef9a; main Build37506783690/Governance37506783677 green and248 closed. Continue all product233 requirements and owner/company/member/source onboarding; customer configuration remains private and least-privilege ERP mapping unverified."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
 product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
+
+verified_security_249:
+  merge: db2ef9a141b69b10618b7c74548828753dfd2dd0
+  pr_build: 37505720443
+  pr_governance: 37505720572
+  main_build: 37506783690
+  main_governance: 37506783677
+  result: "PASS actual SQL/stack guards, impersonation/module/trigger, metadata races, broker revocation and replay retention;248 closed. Full product remains incomplete."

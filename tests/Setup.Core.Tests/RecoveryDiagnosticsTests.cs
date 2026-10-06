@@ -34,11 +34,45 @@ public sealed class RecoveryDiagnosticsTests : IDisposable
     {
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, "setup-progress.json");
-        var content = $$"""{"SchemaVersion":2,"Revision":"{{Revision}}","Phase":"Ready"}""";
+        var content = $$"""{"SchemaVersion":3,"Revision":"{{Revision}}","Phase":"Ready"}""";
         File.WriteAllText(path, content);
         Assert.Throws<UnsupportedProgressException>(() => new ProgressStore(directory).LoadOrRepair(true));
         Assert.Equal(content, File.ReadAllText(path));
         Assert.Empty(Directory.GetFiles(directory, ".progress-retained-*.json"));
+    }
+
+    [Fact]
+    public void LegacyProgressUpgradesToSecuredFenceWithoutChangingIdentity()
+    {
+        Directory.CreateDirectory(directory);
+        var identity = Path.Combine(directory, "installation.json");
+        File.WriteAllText(identity, "retained identity");
+        var store = new ProgressStore(directory);
+        store.Save(new InstallProgress(1, Revision, InstallPhase.Ready, true));
+        var legacy = store.Load()!;
+        Assert.Equal(1, legacy.SchemaVersion);
+        Assert.Equal(new RuntimeStartPlan(true, true), RuntimeStartPlan.Create(legacy, Revision, true));
+        store.Save(legacy with { SchemaVersion = ProgressStore.CurrentSchemaVersion, Phase = InstallPhase.StartingRuntime });
+        Assert.Equal(2, store.Load()!.SchemaVersion);
+        Assert.Equal("retained identity", File.ReadAllText(identity));
+        Assert.Equal(new RuntimeStartPlan(true, true), RuntimeStartPlan.Create(store.Load(), Revision, true));
+        store.Save(store.Load()! with { Phase = InstallPhase.Ready });
+        Assert.Equal(new RuntimeStartPlan(false, false), RuntimeStartPlan.Create(store.Load(), Revision, true));
+    }
+
+    [Theory]
+    [InlineData(1, InstallPhase.Ready, true, false)]
+    [InlineData(2, InstallPhase.Ready, false, false)]
+    [InlineData(2, InstallPhase.Failed, true, false)]
+    [InlineData(2, InstallPhase.StartingRuntime, true, false)]
+    [InlineData(2, InstallPhase.Ready, true, true)]
+    public void RuntimeReuseRequiresSecuredReadyMatchingRevision(int version, InstallPhase phase, bool startOnly, bool changeRevision)
+    {
+        var current = changeRevision ? new string('a', 40) : Revision;
+        var plan = RuntimeStartPlan.Create(new InstallProgress(version, Revision, phase), current, startOnly);
+        Assert.True(plan.Drain);
+        Assert.True(plan.Rebuild);
+        Assert.Equal(new RuntimeStartPlan(true, true), RuntimeStartPlan.Create(null, current, startOnly));
     }
 
     [Fact]

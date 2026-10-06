@@ -98,7 +98,7 @@ internal sealed class SetupEngine
             var previous = progress.LoadOrRepair(repair);
             RecordStage(InstallPhase.Inspecting, SetupFailureCode.BundleIntegrity);
             installer = PreserveInstaller(repair);
-            progress.Save(new InstallProgress(1, bundle.Revision, InstallPhase.Inspecting, licenseAccepted));
+            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.Inspecting, licenseAccepted));
             progressWritten = true;
             RecordStage(InstallPhase.Inspecting, SetupFailureCode.PrerequisitePreparation);
             if (await prerequisites.NeedsInstallationAsync(machine))
@@ -106,7 +106,7 @@ internal sealed class SetupEngine
                 RecordStage(InstallPhase.Inspecting, SetupFailureCode.ShortcutConflict);
                 ApplicationLinks.RegisterResume(installer);
                 resumeRegistered = true;
-                progress.Save(new InstallProgress(1, bundle.Revision, InstallPhase.AwaitingReboot, licenseAccepted));
+                progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.AwaitingReboot, licenseAccepted));
                 report("Windows sẽ hỏi quyền quản trị để chuẩn bị WSL và Docker. Tiến trình đã được lưu để tiếp tục sau reboot.");
                 RecordStage(InstallPhase.Inspecting, SetupFailureCode.PrerequisitePreparation);
                 var result = await prerequisites.ElevateAsync(installer);
@@ -120,7 +120,7 @@ internal sealed class SetupEngine
                 if (result != 0) throw new SetupFailure("Chưa hoàn tất chuẩn bị môi trường (mã " + result + "). Chạy lại bộ cài để tiếp tục; dữ liệu được giữ nguyên.");
             }
             report("Kiểm tra bundle và chuẩn bị cấu hình riêng cho máy…");
-            progress.Save(new InstallProgress(1, bundle.Revision, InstallPhase.PreparingRuntime, licenseAccepted));
+            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.PreparingRuntime, licenseAccepted));
             RecordStage(InstallPhase.PreparingRuntime, SetupFailureCode.BundleIntegrity);
             source = bundle.Extract(Path.Combine(Root, "Versions"), repair);
             RecordStage(InstallPhase.PreparingRuntime, SetupFailureCode.Configuration);
@@ -133,18 +133,30 @@ internal sealed class SetupEngine
             report("Khởi động Docker Desktop…");
             RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.DockerUnavailable);
             await EnsureDockerAsync();
-            progress.Save(new InstallProgress(1, bundle.Revision, InstallPhase.StartingRuntime, licenseAccepted));
+            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.StartingRuntime, licenseAccepted));
             report("Tải tài nguyên, chạy FE/BE và áp dụng migration. Lần đầu có thể mất nhiều phút…");
-            var reuse = startOnly && previous?.Phase == InstallPhase.Ready && previous.Revision == bundle.Revision;
+            var plan = RuntimeStartPlan.Create(previous, bundle.Revision, startOnly);
+            if (plan.Drain)
+            {
+                // Select the secured helper before migration; old startup links
+                // must never restart pre-guard services after an interrupted upgrade.
+                RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.ShortcutConflict);
+                ApplicationLinks.RegisterApplication(installer);
+                RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.RuntimeStart);
+                report("Dừng ứng dụng cũ trước khi nâng cấp bảo mật…");
+                var drained = await ComposeAsync(["stop", "web", "core-api", "agent-worker"], TimeSpan.FromMinutes(2));
+                if (drained.ExitCode != 0)
+                    throw new SetupFailure("Chưa dừng được ứng dụng cũ; migration chưa được khởi động.", SetupFailureCode.RuntimeStart);
+            }
             RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.RuntimeStart);
-            var started = await ComposeAsync(reuse ? ["up", "-d"] : ["up", "--build", "-d"], TimeSpan.FromMinutes(45));
+            var started = await ComposeAsync(plan.Rebuild ? ["up", "--build", "-d"] : ["up", "-d"], TimeSpan.FromMinutes(45));
             if (started.ExitCode != 0) throw new SetupFailure("Chưa khởi động được dịch vụ. Kiểm tra kết nối mạng, dung lượng và chạy Sửa chữa để tiếp tục.");
             report("Chờ các dịch vụ, API và giao diện sẵn sàng…");
             RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.RuntimeReadiness);
             await WaitForRuntimeAsync();
             RecordStage(InstallPhase.StartingRuntime, SetupFailureCode.ShortcutConflict);
             ApplicationLinks.RegisterApplication(installer);
-            progress.Save(new InstallProgress(1, bundle.Revision, InstallPhase.Ready, licenseAccepted));
+            progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.Ready, licenseAccepted));
             RecordStage(InstallPhase.Ready, SetupFailureCode.None);
             report("Ứng dụng đã sẵn sàng. Bạn có thể mở từ Start Menu; FE/BE sẽ tự chạy khi đăng nhập Windows.");
             return true;
@@ -165,7 +177,7 @@ internal sealed class SetupEngine
             try
             {
                 RecordFailure(code);
-                if (progressWritten) progress.Save(new InstallProgress(1, bundle.Revision, InstallPhase.Failed, licenseAccepted));
+                if (progressWritten) progress.Save(new InstallProgress(ProgressStore.CurrentSchemaVersion, bundle.Revision, InstallPhase.Failed, licenseAccepted));
             }
             catch (Exception recordingError) when (recordingError is IOException or UnauthorizedAccessException) { }
             throw;

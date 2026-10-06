@@ -11,6 +11,8 @@ public sealed record InstallProgress(int SchemaVersion, string Revision, Install
 
 public sealed partial class ProgressStore
 {
+    // Older helpers reject this version before starting pre-guard binaries.
+    public const int CurrentSchemaVersion = 2;
     private static readonly JsonSerializerOptions Options = new()
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -35,7 +37,7 @@ public sealed partial class ProgressStore
             if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("SchemaVersion", out var schema) ||
                 schema.ValueKind != JsonValueKind.Number || !schema.TryGetInt32(out var version))
                 throw new CorruptProgressException();
-            if (version != 1) throw new UnsupportedProgressException();
+            if (version is not (1 or CurrentSchemaVersion)) throw new UnsupportedProgressException();
             if (!root.TryGetProperty("Phase", out var phase) || phase.ValueKind != JsonValueKind.String)
                 throw new CorruptProgressException();
             if (!Enum.TryParse<InstallPhase>(phase.GetString(), out var parsed) || !Enum.IsDefined(parsed))
@@ -77,7 +79,7 @@ public sealed partial class ProgressStore
     private static void Validate(InstallProgress progress)
     {
         ValidateRevision(progress.Revision);
-        if (progress.SchemaVersion != 1 || !Enum.IsDefined(progress.Phase))
+        if (progress.SchemaVersion is not (1 or CurrentSchemaVersion) || !Enum.IsDefined(progress.Phase))
             throw new UnsupportedProgressException();
     }
 

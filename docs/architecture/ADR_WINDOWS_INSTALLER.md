@@ -21,3 +21,8 @@ Windows artifact CI publishes a pinned self-contained executable and validates i
 Clean Windows installation, elevation, reboot continuation, retained owner/data and sign-in startup remain unverified. The development host has HypervisorPresent=false and no ready Docker Linux engine; firmware virtualization is enabled. Isolated temporary-directory shortcut/ACL checks and simulated UI previews are separate evidence and cannot establish clean installation. Signing, resource tuning and complete interruption/rollback recovery require further verification. Do not close #238 or claim full product completion on artifact build alone.
 
 Primary references: [Docker Windows installation](https://docs.docker.com/desktop/setup/install/windows-install/) and [Microsoft WSL commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands).
+
+
+## Secured upgrade boundary (2026-10-07)
+
+Progress protocol2 is saved before runtime work. The reader accepts legacy1 for upgrade and rejects future3. Pre-guard helpers only understand1 and refuse2. Before bootstrap, the current helper redirects owned startup shortcuts and stops this installation web/API/worker services. A failed drain prevents migration. Only protocol2 Ready at the identical revision permits container reuse; other paths rebuild after draining. Identity, secrets, volumes and revocations are retained. No old binary is selected as automatic rollback; manually deleting progress or running old binaries is outside supported recovery.59 portable tests pass; native CI, independent review and clean Windows upgrade/reboot/startup qualification remain required.
