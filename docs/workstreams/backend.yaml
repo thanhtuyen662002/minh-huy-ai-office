@@ -1,58 +1,26 @@
 workstream: backend
 role: "Backend Platform"
 status: active
-current_issue: 248
-current_pr: 249
-current_branch: backend/248-scoped-secret-grants
-head: acb4b9209c78525328dca6a26b5c5ccdf8d66ae9
-state: in_progress
-lease_owner: root
-lease_heartbeat_at: "2026-10-06T17:43:06Z"
-last_checkpoint_at: "2026-10-06T17:43:06Z"
-last_completed_issue: 240
-last_merged_pr: 241
-last_merge_commit: 4275b2c18fc136f26e088d631896875c76cb8653
+current_issue: 250
+current_pr: 251
+current_branch: backend/250-binding-options
+head: a3c75d7ca6ea9a5fb364be2135ca7553b2ad1a15
+state: ready_for_review
+lease_owner: root-backend-250
+lease_heartbeat_at: "2026-10-06T21:12:07.7978712Z"
+last_checkpoint_at: "2026-10-07"
+last_completed_issue: 248
+last_merged_pr: 249
+last_merge_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
 scope:
-  - aspnet-core
-  - identity
-  - authorization
-  - domain-application-api
-  - platform-persistence
+  - core-api
+  - scoped-secret-binding-metadata
+  - read-only-onboarding-prerequisite
+  - authorization-tests
+  - actual-sql-smoke
 verification:
-  result: "Build37504077505 actually passed SQL bootstrap, FE/OIDC login, read-only source and company isolation, runtime binding DML/DDL/escalation denial, both blocked UPDATE barriers, fresh admin revoke/restore and protected-column preservation. It then failed a smoke expectation of200 for an intentional403 Core API NotAuthorized mapping. The shipping catalog assertion passed. Current smoke requires exact403, no-store and no secret/ref leakage. Original851 and39 focused local tests, Python syntax and diff-check passed; complete actual SQL impersonation/worker/replay and final exact-head CI still pending."
-known_risks:
-  - "P1/P2 were reproduced and fixed locally; parent-owned independent re-review must assess the new frozen candidate before publication."
-  - "Windows env alias controls ran locally; Linux case-sensitive controls are present but still need Linux CI execution. Ordinary source/grant case matching remains strict on all OSes."
-  - "Authorization denial now persists truthful Failed/DeadLettered before settlement; storage failure propagates for infrastructure recovery under the established bounded lease, never a false acknowledgement."
-  - "Actual SQL permission behavior and PR247 positive/negative blocked-UPDATE controls require parent-owned disposable hosted execution on the frozen candidate."
-  - "Installer239 must rebuild secured-main bundles and prove clean install/reboot/repair/data retention. CI is not production acceptance."
-  - "Secured upgrade must drain old binaries and explicitly review legacy bindings; no automatic legacy grants and no pre-guard binary security rollback."
-blocked_by:
-  - "Parent-owned independent re-review, publication, disposable hosted SQL and exact-head/main CI remain outstanding."
-next_action: "Close exact published-head CI on PR249. Diagnostic Build37502849735 proved only invalid DATABASE IMPERSONATE ANY USER predicate28 fails. Reviewed fix preserves CONTROL and USER/LOGIN impersonation checks and adds real SQL catalog/escalation regression. Merge only after actual SQL/stack gates pass, then verify secured-main CI and rebuild installer239 bundle. Continue full product233; do not claim production acceptance."
-
-implementation_base: 481d814c6d66c62084544e3bd889dcad7f64a254
-admission_issue: 248
-admission_state: "Draft249 lease verified at a7c36f9. Parent explicitly admitted PersistentWorkDeliveryHandler.cs; P1/P2 fixes remain within the same 35 paths, with no scope expansion or remote write. Implementation remains local and frozen for independent re-review."
-hosted_sql_evidence: partial_disposable_runtime_verified
-previous_frozen_candidate: 926a9e4d7fae3e7814c45d88262d91f00b3a9925
-
-ci_closure_20261007:
-  resumed_published_head: 5e65b9c746c5509faed47bd6abc79c95fe5795d3
-  original_failed_build: 37328437444
-  diagnostic_head: 1d0e8a212b3427a7da910f4cb052824cc0590d96
-  diagnostic_build: 37502849735
-  diagnostic_job: 112403972333
-  diagnostic_result: "43 valid predicates PASS; invalid DATABASE permission28 FAIL_OR_UNKNOWN; real bootstrap refused."
-  reviewed_fix: 5961c5029f9bb42d386afa45d0d27f740db0bd66
-  independent_review: "Approved three-file correction for publication; merge awaits actual SQL/stack and exact-head CI."
-  local_verification: "851 baseline solution tests PASS;39 focused permission/grant tests after fix PASS; Python AST/43 predicate parser, scoped LF formatting and diff-check PASS."
-  head_semantics: "head records verified implementation; exact published HEAD and workflow IDs are authoritative in PR249 HANDOFF."
-
-response_contract_correction:
-  failed_head: 21ca73f6db4a7b17ce14e142024162d25aafc7a4
-  build: 37504077505
-  job: 112408170704
-  failure_line: 554
-  expected_contract: "Core.Api maps DataSourceConnectionTestCodes.NotAuthorized to Results.Forbid HTTP403. Smoke must assert403 and no-store, not200 service DTO."
-  corrected_code: acb4b9209c78525328dca6a26b5c5ccdf8d66ae9
+  implementation_base: db2ef9a141b69b10618b7c74548828753dfd2dd0
+  previous_issue: "249 exact-head/main CI green;248 closed. No open backend implementation lease;239 owns independent Windows setup."
+  result: "PASS469 local Persistence tests including19 new option/API cases; scoped CSharp formatting and diff-check. Exact a3c75d7 Build37532200611/Governance37532200708 PASS, including actual SQL scoped choices, admin revoke/restore, unsafe-store denial and full stack. Independent read-only review approved this code; final docs-head CI and merged-main verification required."
+blocked_by: []
+next_action: "Close final docs-head exact CI, then merge reviewed251 with a matching HEAD and verify merged-main CI before closing250. Next product slice: source registration with atomic durable administration audit, followed by the frontend using binding ID/version. Actual ERP/Windows qualification and full233 remain open."

@@ -203,6 +203,14 @@ else
 var dataSources = app.MapGroup("/api/data-sources");
 if (authenticationConfigured)
 {
+    dataSources.MapGet("/registration-options", async (IRequestAuthorizationContextAccessor accessor,
+        [FromServices] DataSourceRegistryService registry, [FromQuery] int? offset, [FromQuery] int? limit, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
+        try { return Results.Ok(await registry.ListRegistrationOptionsAsync(context, offset ?? 0, limit ?? 50, cancellationToken)); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid registration options page." }); }
+    });
     dataSources.MapGet("/", async (IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
@@ -265,6 +273,7 @@ if (authenticationConfigured)
 }
 else
 {
+    dataSources.MapGet("/registration-options", AuthenticationUnavailable);
     dataSources.MapGet("/", AuthenticationUnavailable);
     dataSources.MapPost("/", AuthenticationUnavailable);
     dataSources.MapPut("/{dataSourceId:guid}", AuthenticationUnavailable);
