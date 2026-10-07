@@ -1,95 +1,25 @@
 workstream: frontend
-role: "Frontend Product"
-status: active
-current_issue: 246
-current_pr: 247
-current_branch: "frontend/246-source-management"
-head: ec244c1894419c47afb36cd6adb91e282a4bfe2d
-state: ready_for_review
-lease_owner: "frontend-246-task-2"
-lease_heartbeat_at: "2026-10-05T07:16:25Z"
-last_checkpoint_at: "2026-10-05T07:16:25Z"
-last_completed_issue: 244
-last_merged_pr: 245
-last_merge_commit: c193d151a848d728fa3688fd6f793faf5614bb25
-preferred_next_issue: null
+role: Frontend Product
+status: active-development
+current_issue: 258
+current_pr: null
+current_branch: frontend/258-session-origin
+head: 6652940c5a9bfcc424422578d87c2f2851097211
+state: claimed
+lease_owner: root-frontend-258
+lease_heartbeat_at: '2026-10-07'
+last_checkpoint_at: '2026-10-07'
+last_completed_issue: 246
+last_merged_pr: 247
+last_merge_commit: 481d814c6d66c62084544e3bd889dcad7f64a254
 scope:
-  - nextjs
-  - shadcn-ui
-  - ux
-  - client-contracts
-  - frontend-source-metadata
-  - bounded-metadata-only-server-prerequisite
+  - shared-origin-fence-for-session-and-source-mutations
+  - bounded-strict-login-json
+  - real-issued-session-preservation-and-logout-proof
 verification:
-  inspected_main: c193d151a848d728fa3688fd6f793faf5614bb25
-  previous_leaf: "Issue244 merged and exact-main nine checks passed; real-browser QA remains separate evidence."
-  current_implementation: independently_reviewed_metadata_only_candidate
-  local_candidate: 62344e10b322c47a8797afe8fe4eefbc7bb1400c
-  reviewed_tree: 5c3800890c7225ede1eb8697152340a2c77da711
-  published_implementation_head: 4cf3f0571e145411ab02d65faa7ec512edd73a55
-  admission: f46a9b5df97608e68184d04b162b65f2fee74570
-  verified_code_commit: 9ee8c1bba246cb8e203f0be9a7552730a7534822
-  verified_code_tree: fa829ec011033b43687dbdb6e008ff5206880552
-  rejected_candidate: 2d24402bfe2aba85e0c48b06a260fcf5fe6eb998
-  review: "PASS independent exact-candidate review: 341 frontend tests, 350 Persistence tests, TypeScript and independent protected-field race reproduction. Original full-PUT candidate remains rejected."
-  result: "Strict four-field endpoint/BFF/editor; property-only EF persistence and fresh scoped response preserve concurrent protected policy and credential rotation. Existing full PUT unchanged."
-  frontend_tests: "PASS341 tests/31 files, including33 editor and9 metadata-BFF cases; tsc and production build PASS."
-  dotnet_tests: "PASS751 tests across four solution test projects; Release build zero warnings/errors."
-  formatting: "PASS five admitted C# files. Full-solution local verification blocked by existing Windows checkout CRLF outside admitted paths; hosted LF CI required."
-  browser: "PASS6 actual Chrome/production Next/BFF flows with synthetic HTTP Core/OIDC and JSON-file registry; no real SQL/OIDC/ERP acceptance claimed."
-  disposable_sql: "Existing local-runtime CI smoke extended with strict payload/revoked/foreign denial and gated protected-column rotation after server load. Python syntax PASS; Docker local Linux engine unavailable, execution pending hosted CI."
-  exact_head_ci: "RED a7f2889ff457a319c70e34a2bed47f3ec2335e6d: Build37272517476 local-runtime job111642350781 failed required after-server-load SQL interleaving; aggregate111643045523 failed. Other executed gates passed."
-  ci_fix_checkout: minh-huy-ai-office-246-write-gate
-  ci_fix_branch: fix/246-rcsi-write-gate
-  diagnostic_code: 64128b16cbdcc928a4f2e5fb37ebad50214679be
-  diagnostic_tree: 5beb13e6769b4d643ffa60395b1d4e5734d546f0
-  diagnostic_status: "Executed observation on published3361ab32d589cd420fe388499cdd74fab24cb072: run37274962425/job111649855328 HTTP409, lockerRunning=true, blockedRequests=[], readCommittedSnapshot=true. RCSI reads committed old guard name; duplicate check returns before blocking. Earlier source-load-blocking hypothesis disproved."
-  ci_fix_base: 3361ab32d589cd420fe388499cdd74fab24cb072
-  ci_fix_code: ec244c1894419c47afb36cd6adb91e282a4bfe2d
-  ci_fix_tree: 6fdda73474f20b2e565af7efb935d938bab39bb3
-  ci_fix_contract: "Owned target protected-column rotation holds ROWLOCK/X until exact Core UPDATE is observed waiting on the same granted primary-key resource and owned session. Only then commit; require HTTP200, all metadata, all protected policy/reference, unchanged scoped identity/CreatedAt and authoritative reload. Existing full-PUT negative control must overwrite stale policy and fail the same preservation check."
-  ci_fix_offline: "PASS8 exact-helper offline order/proof/redaction/negative-control checks, Python AST and diff-check. src/apps/tests/.github/compose/infra identical to published3361ab32. Local Docker engine unavailable; actual SQL execution remains pending independent review and parent-only publication."
-next_action: "Parent independently reviews frozen write-gate candidate, alone publishes to247 and closes actual exact-head SQL CI plus aggregate/main CI. Preserve database isolation and diagnostic evidence. No blind rerun, weaker gate, red merge or new product work."
-blocked_by:
-  - "Write-gate candidate needs independent review and parent-only publication for real SQL proof; local Docker Linux engine unavailable."
-  - "Exact published-head CI and parent integration remain outstanding."
-  - "Hosted CI required for real SQL/stack execution and full-solution canonical-LF formatting."
-  - "Real ERP/OIDC and deployment qualification are separate; synthetic evidence must be labelled."
-handoff: |
-  HANDOFF
-  RCSI root cause PROVED by diagnostic CI37274962425/job111649855328 on3361ab32: early409, active locker, no blocked requests, snapshot isolation flagtrue. Production isolation preserved.
-  New isolated write-gate checkout/codeec244c1/tree6fdda734 changes only owned smoke synchronization and control handoff. No production/API/testhook/schema/isolation changes.
-  Writer changes only owned target's five protected columns within an uncommitted transaction. Request reads committed baseline under RCSI; proof matches exact UPDATE shape, owned locker session, WAIT/CONVERT KEY request and full lock-resource identity against granted primary-key X. Earlier reads/other resources cannot release gate.
-  After proof commit, metadata path must preserve rotated policy/reference, all four metadata fields and original scoped identity/CreatedAt in SQL and fresh response/list. Full-PUT negative control uses a committed interim policy after client GET to force stale protected assignments EF-modified; null reference still preserves rotation while all four policy fields must roll back, failing preservation.
-  PASS8 offline helper tests, AST/diff-check; these are not SQL execution. Keep all prior test/browser/diagnostic evidence and parent-only publication/review boundaries.
-  Re-entered owned CI closure from exact publisheda7f2889. New isolated fix checkout preserves reviewed62344e1 and all prior evidence.
-  Failing run37272517476/job111642350781 reached locker WAITFOR but not the required blocked EXISTS/LogicalName observation. This does not prove a persistence defect; earlier source-load blocking or early HTTP return remain unproven candidates.
-  Diagnostic checkpoint64128b1 changes only smoke failure observation: status/exception type, classified blocked phase/wait and owned source lock/index summary. Never prints headers/body/SQL text/exception message. Strict required gate and final protected-column assertions unchanged; six offline safety/proof helper tests PASS.
-  Issue246 under full goal233; parent sole publisher.
-  Preserve installer239, other workstreams, completed244 and all local checkpoints.
-  Parent scope amendment 2026-10-05: permit only metadata-only PUT prerequisite and tests in additional_paths; preserve existing full PUT.
-  New isolated checkout minh-huy-ai-office-246-metadata; code9ee8c1b/treefa829ec verified and frozen. Rejected2d24402 and completed244 evidence preserved.
-  PASS341 frontend, PASS751 .NET, tsc/build, scoped formatting, Python syntax, diff-check and6 real Chrome DOM/BFF flows. All owned QA processes stopped.
-  Two-context tests reproduce protected-field/credential changes before request and after server load; frontend independent P1 interleaving verifies four-field payload and latest task eligibility.
-  SQL gate uses only disposable CI-owned rows/tempdb/process; no local database execution or SQL production acceptance claimed. Full formatting local CRLF normalization beyond scope was auto-review rejected; no broad mutation performed.
-  No authorization-policy relaxation, credentials, migrations, production SQL/data/settings, installer239 or unrelated backend changes.
-  Fresh metadata and enabled state must come from authoritative server responses; errors/cancel/revocation/late replies remain safe.
-  Require frontend tests, typecheck/build, independent review and exact-head/main CI. Do not claim full production acceptance.
-additional_paths:
-  - src/Platform.Persistence/DataSourceRegistryService.cs
-  - src/Core.Api/Program.cs
-  - apps/web/app/api/local/data-sources/[dataSourceId]/metadata/route.ts
-  - tests/Platform.Persistence.Tests/DataSourceRegistryServiceTests.cs
-  - tests/Platform.Persistence.Tests/DataSourceRegistryManagementAuthorizationTests.cs
-  - tests/Platform.Persistence.Tests/CoreApiDataSourceAuthorizationIntegrationTests.cs
-  - scripts/smoke-local-stack.py
-bounded_server_contract:
-  method: PUT
-  route: /api/data-sources/{id}/metadata
-  required_fields: [logicalName, purpose, maxConcurrency, isEnabled]
-  reject_unknown_fields: true
-  preserve_fields: [kind, environment, allowRead, allowWrite, connectionSecretReference]
-  authorization: "Existing fresh server-resolved company admin and tenant/company/id isolation; no relaxed policy."
-  persistence: "Modify only metadata properties plus UpdatedAtUtc; never mark entire entity modified. No schema migration or production DDL."
-  acceptance: "Prove concurrent protected-field and credential rotation after client GET and after server load survive metadata save; two-context tests plus existing disposable SQL CI. Preserve session/late-response fences."
-  coordination: "Backend workstream retired after241; only installer239 and this247 are open. Parent owns serial cross-stream integration and publication."
+  base_main: 6652940c5a9bfcc424422578d87c2f2851097211
+  base_build: 37556114743
+  base_governance: 37556114601
+  result: 'Both main workflows PASS. Security256/257 merged; issue256 closed. Prior frontend246/247 merged and authoritative source race gates remain in the current actual-stack smoke.'
+blocked_by: []
+next_action: Open one Draft PR for258, enforce shared Origin checks before any cookie/upstream mutation, bound strict login input, add focused tests and actual SQL/OIDC/BFF session-preservation controls. Close exact-head CI and independent review before matching-head merge and main CI. Production browser OIDC/full233 remain incomplete.
