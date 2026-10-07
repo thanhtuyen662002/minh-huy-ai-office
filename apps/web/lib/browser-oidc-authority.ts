@@ -61,12 +61,13 @@ export async function authorizeBrowserSession(settings: BrowserOidcSettings, tra
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     if (!value || typeof value !== "object" || Array.isArray(value)
-      || Object.keys(value).sort().join(",") !== "companyId,roles,tenantId,userId") throw refused();
+      || Object.keys(value).sort().join(",") !== "companyId,roles,tenantId,userId"
+      || !Array.isArray(value.roles) || value.roles.length > 256) throw refused();
     const context = parseAuthContext(value);
     const after = Math.floor(Date.now() / 1000);
     if (!context || !isCanonicalCompanyId(context.tenantId) || !isCanonicalCompanyId(context.userId)
       || !isCanonicalCompanyId(context.companyId) || context.companyId.toLowerCase() !== transaction.companyId.toLowerCase()
-      || context.roles.length > 32 || context.roles.some((role) => role.length > 100 || /[\r\n\0]/.test(role))
+      || context.roles.some((role) => role.length > 100 || /[\r\n\0]/.test(role))
       || tokens.expiresAt <= after || transaction.expiresAt <= after) throw refused();
     // A GUID's case is a selector spelling, unlike opaque provider/subject IDs.
     // Store the selected spelling only after Core proves the same GUID scope.

@@ -58,6 +58,17 @@ it("compares GUID selector case by GUID value while retaining opaque subject spe
   expect(result.session.companyId).toBe(selected.toUpperCase());
   expect(result.session.subject).toBe("opaque-exact-subject");
 });
+it.each([32, 33, 256])("accepts all%d unique roles supported by the Core/member contract", async (count) => {
+  const roles = Array.from({ length: count }, (_, index) => `Existing role ${index}`);
+  const result = await authorizeBrowserSession(settings, createOidcTransaction(companyId), tokens(),
+    async () => Response.json({ ...context, roles }), coreOrigin);
+  expect(result.context.roles).toEqual(roles);
+});
+it("rejects more than256 roles before accepting Core authority", async () => {
+  await expect(authorizeBrowserSession(settings, createOidcTransaction(companyId), tokens(),
+    async () => Response.json({ ...context, roles: Array.from({ length: 257 }, (_, index) => `Role ${index}`) }), coreOrigin))
+    .rejects.toThrow(/^Browser company access could not be verified\.$/);
+});
 it("refuses expiry reached during Core verification instead of extending relative lifetime", async () => {
   const start = Date.now(), grant = tokens(), transaction = createOidcTransaction(companyId);
   const fetcher = vi.fn(async () => { vi.spyOn(Date, "now").mockReturnValue(start + 301_000); return Response.json(context); });
