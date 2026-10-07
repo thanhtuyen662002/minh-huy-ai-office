@@ -4,7 +4,7 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: ed73d8a45576cb811ca9e0f02aa748cc89821518
+head: 4e1880652cbe398f66f42cb760fd1b60f3b3a387
 state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07T15:18:00Z'
@@ -17,6 +17,13 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  chromium_verified_head: 4e1880652cbe398f66f42cb760fd1b60f3b3a387
+  chromium_verified_build: 37646560686
+  chromium_verified_governance: 37646560635
+  chromium_verified_actual_stack: 112878733833
+  chromium_verified_web_job: 112878734106
+  chromium_verified_artifact: 11494403657
+  chromium_verified_result: 'All exact-head gates PASS;832 hosted web tests/20 actual Redis and full retained SQL/OIDC/member/source/audit/race/broker/restart. Actual Chromium provider Code/S256303/scoped authority/opaque cookie privacy/source-member UI/cross-company denial/local-password disabled/owned metadata mutation-policy preservation-original restore/original-cookie replay-wrong state-input limit/real SQL role revoke-restore-private member clearing/logout-old SID denial-SSO re-login/UI task202-durable scoped read-foreign mutation denial/natural Redis TIME expiry-populated private chat+draft clear-reauthentication PASS. Passing sanitized fixture screenshot inspected; no private customer data. Production enabled/disabled synthetic contract gate PASS. Whole matching-head final independent acceptance review still required; keep261 Draft. Current UI copy removes unsupported static Worker-online claim and local-pilot footer in browser mode; no authority/lifecycle changes, focused UI and actual new-head gates required.'
   chromium_metadata_head: 3ffd831d8d751c06e1cf7a525714459dce1bb2b1
   chromium_metadata_build: 37645536078
   chromium_metadata_governance: 37645536004

@@ -499,7 +499,7 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
                 : "Làm việc với ERP và AI trên một giao diện duy nhất. Phiên local hiện dùng quyền chỉ đọc và OpenAI trực tiếp."}
             </p>
             <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
-              {["ERP chỉ đọc", "Task bền vững", "AI có bằng chứng"].map((item) => (
+              {["ERP chỉ đọc", "Công việc được lưu", "AI có bằng chứng"].map((item) => (
                 <div key={item} className="rounded-2xl border border-black/10 bg-white p-4 text-sm font-medium shadow-sm dark:border-white/10 dark:bg-white/5">
                   {item}
                 </div>
@@ -568,7 +568,7 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
           <div className="mt-auto rounded-2xl bg-slate-50 p-4 text-xs leading-5 text-slate-500 dark:bg-white/5 dark:text-slate-400">
             <p className="font-semibold text-slate-700 dark:text-slate-200">{companyName}</p>
             <p className="mt-1">Vai trò: {auth?.roles.join(", ") || "member"}</p>
-            <p className="mt-1">Local Pilot · Read-only</p>
+            <p className="mt-1">{loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · Read-only"}</p>
           </div>
         </aside>
 
@@ -580,7 +580,7 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200 sm:inline-flex">
-                Worker online
+                Đã đăng nhập
               </span>
               <button type="button" onClick={() => void signOut()} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium dark:border-white/15">
                 Đăng xuất
@@ -655,7 +655,7 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
                         Gửi
                       </button>
                     </div>
-                    <p className="mt-2 px-1 text-xs text-slate-400">AI chỉ được dùng evidence mà runtime đã cấp quyền; không tự viết SQL từ câu hỏi.</p>
+                    <p className="mt-2 px-1 text-xs text-slate-400">Câu trả lời dựa trên nguồn dữ liệu bạn được cấp quyền.</p>
                   </form>
                 </section>
 

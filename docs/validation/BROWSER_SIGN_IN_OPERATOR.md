@@ -18,7 +18,7 @@ Use `.env.production.example` as the name contract. Populate the ignored private
 | `AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY` | Stable cryptographically random32-byte canonical base64url key, shared only by the authorized Web replicas. |
 | `AIOFFICE_BROWSER_CORE_API_ORIGIN` | Exact approved HTTPS Core origin reachable from Web; no path, query or credentials. |
 | `AIOFFICE_BROWSER_SESSION_REDIS_URL` | Private `rediss://` endpoint and approved credentials/database0..15; reachable from Web. |
-| `AIOFFICE_COMPANY_ID`, `AIOFFICE_COMPANY_NAME` | Initial UI company selection/display only. Core resolves actual membership and roles on every authorized operation. |
+| `AIOFFICE_COMPANY_ID`, `AIOFFICE_COMPANY_NAME` | Initial UI company context/display only. Core resolves actual membership and roles on every authorized operation; a user-facing multi-company picker remains separate product work. |
 
 Production Compose pins local HTTP and disposable CI diagnostics to `false`, and keeps password grant disabled. Its ordinary plaintext Redis service cannot be used as production browser session authority. Qualify the configured Redis topology: standalone process restart invalidates prior browser rows; asynchronous HA rollback/promotion still needs separate invalidation/failover evidence. SQL remains the durable business/task store.
 
