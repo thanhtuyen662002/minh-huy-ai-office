@@ -1,26 +1,34 @@
 workstream: backend
-role: "Backend Platform"
-status: active
-current_issue: 250
-current_pr: 251
-current_branch: backend/250-binding-options
-head: a3c75d7ca6ea9a5fb364be2135ca7553b2ad1a15
-state: ready_for_review
-lease_owner: root-backend-250
-lease_heartbeat_at: "2026-10-06T21:12:07.7978712Z"
-last_checkpoint_at: "2026-10-07"
-last_completed_issue: 248
-last_merged_pr: 249
-last_merge_commit: db2ef9a141b69b10618b7c74548828753dfd2dd0
+role: Backend Platform
+status: active-development
+current_issue: 252
+current_pr: 253
+current_branch: backend/252-audited-source-registration
+head: 70a98043d06fc5681ead7727942e98fe00b79c11
+state: waiting_ci
+lease_owner: root-backend-252
+lease_heartbeat_at: '2026-10-07'
+last_checkpoint_at: '2026-10-07'
+last_completed_issue: 250
+last_merged_pr: 251
+last_merge_commit: e2165d8a67644cbfc9672ed373e2062761b3c31c
 scope:
-  - core-api
-  - scoped-secret-binding-metadata
-  - read-only-onboarding-prerequisite
-  - authorization-tests
-  - actual-sql-smoke
+  - strict-read-only-source-registration
+  - atomic-immutable-administration-audit
+  - versioned-sql-migration
+  - cross-stream-admin-onboarding-ui-and-bff
+  - authorization-and-real-sql-tests
 verification:
-  implementation_base: db2ef9a141b69b10618b7c74548828753dfd2dd0
-  previous_issue: "249 exact-head/main CI green;248 closed. No open backend implementation lease;239 owns independent Windows setup."
-  result: "PASS469 local Persistence tests including19 new option/API cases; scoped CSharp formatting and diff-check. Exact a3c75d7 Build37532200611/Governance37532200708 PASS, including actual SQL scoped choices, admin revoke/restore, unsafe-store denial and full stack. Independent read-only review approved this code; final docs-head CI and merged-main verification required."
+  implementation_head: 70a98043d06fc5681ead7727942e98fe00b79c11
+  build_run: 37550450446
+  governance_run: 37550450492
+  actual_stack_job: 112564384092
+  result: 'All exact-head gates PASS, including actual SQL/OIDC/broker/API/worker/FE. Persistence 515 tests and web 364 tests PASS; migration integrity, container builds and runtime checks PASS.'
+  independent_review: 'Read-only reviewer found no remaining cleanup, authorization or atomicity blocker at70a9804. Prior options403 role-reconciliation finding fixed and regression-tested.'
 blocked_by: []
-next_action: "Close final docs-head exact CI, then merge reviewed251 with a matching HEAD and verify merged-main CI before closing250. Next product slice: source registration with atomic durable administration audit, followed by the frontend using binding ID/version. Actual ERP/Windows qualification and full233 remain open."
+next_action: Close CI for this documentation checkpoint, capture its exact HEAD in PR253 HANDOFF, then merge only with matching head and verify merged-main CI. Retire this lease after verified integration; continue next owner/company/member onboarding slice under233.
+implementation_checkpoint:
+  completed: 'Strict approved-binding registration, lossless version tokens, atomic scoped audit, idempotent retries, effective append-only SQL permission proof, admin UI/BFF with fresh session/company/role fencing.'
+  actual_sql: 'Registration/idempotency/scope/audit privilege denial including column-GRANT negative control, atomic failure rollback and retained history after restart PASS. Existing protected-column race positive/full-PUT negative controls and queued revocation proofs remain PASS.'
+  repaired_ci: '6c9ae2c Build37549256849 failed at the existing metadata race with a blocked source load.70a9804 pins transaction connections and restores prior/default isolation before pooling, with cancellation-safe cleanup, poisoned-pool eviction and9 focused tests. New runtime pool-baseline assertion and unchanged metadata race PASS in Build37550450446.'
+  remaining: 'Documentation-head CI and merged-main CI. This source onboarding slice does not qualify customer ERP schemas/credentials/business results or clean Windows installation;233 and238 remain open.'

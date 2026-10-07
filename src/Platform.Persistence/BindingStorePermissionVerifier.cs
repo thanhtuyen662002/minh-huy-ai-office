@@ -85,6 +85,9 @@ public sealed class BindingStorePermissionVerifier(PlatformDbContext database)
         """;
 
     public async Task RequireReadOnlyAsync(CancellationToken cancellationToken = default)
+        => await RequireProofAsync(VerificationSql, cancellationToken);
+
+    internal async Task RequireProofAsync(string sql, CancellationToken cancellationToken)
     {
         // The nonrelational provider is used only by synthetic tests. Shipping
         // DI registers SQL Server; its permission proof is required on every use.
@@ -96,7 +99,7 @@ public sealed class BindingStorePermissionVerifier(PlatformDbContext database)
             if (opened) await connection.OpenAsync(cancellationToken);
             await using var command = connection.CreateCommand();
             command.Transaction = database.Database.CurrentTransaction?.GetDbTransaction();
-            command.CommandText = VerificationSql;
+            command.CommandText = sql;
             command.CommandTimeout = 10;
             if (!Equals(await command.ExecuteScalarAsync(cancellationToken), 1))
                 throw DataSourceSecretBindingService.Unavailable();
