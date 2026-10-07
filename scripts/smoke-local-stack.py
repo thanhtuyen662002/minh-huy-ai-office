@@ -6,6 +6,7 @@ import hmac
 import base64
 from http.cookiejar import CookieJar
 import json
+import os
 import re
 import subprocess
 import time
@@ -43,14 +44,18 @@ def main():
     user = str(uuid.UUID(manifest["AIOFFICE_USER_ID"]))
     source = str(uuid.UUID(manifest["AIOFFICE_DATA_SOURCE_ID"]))
     compose = ["docker", "compose", "--env-file", str(directory / "local.env"), "-f", "compose.local.yaml"]
+    # Retained password-grant compatibility controls opt in explicitly on this
+    # owned smoke fixture. Shipping local setup now defaults to browser PKCE.
+    legacy_environment = {**os.environ, "AIOFFICE_BROWSER_OIDC_ENABLED": "false", "AIOFFICE_LOCAL_UI_ENABLED": "true"}
 
     def clean(message):
         for secret in secrets:
             message = message.replace(secret, "[REDACTED]")
         return message
 
-    def run(*arguments, timeout=900):
-        result = subprocess.run([*compose, *arguments], capture_output=True, text=True, timeout=timeout)
+    def run(*arguments, timeout=900, environment=None):
+        result = subprocess.run([*compose, *arguments], capture_output=True, text=True, timeout=timeout,
+                                env=legacy_environment if environment is None else environment)
         if result.returncode:
             if arguments and arguments[0] == "up":
                 bootstrap_log = subprocess.run([*compose, "logs", "--no-color", "--tail", "30", "bootstrap"],
@@ -135,7 +140,15 @@ def main():
             cookie = headers.get("Set-Cookie", "")
             assert "HttpOnly" in cookie and "SameSite=lax" in cookie
 
+    shipping_environment = {key: value for key, value in os.environ.items()
+                            if key not in {"AIOFFICE_BROWSER_OIDC_ENABLED", "AIOFFICE_LOCAL_UI_ENABLED"}}
+    shipping = json.loads(run("config", "--format", "json", environment=shipping_environment))
+    assert shipping["services"]["web"]["environment"]["AIOFFICE_BROWSER_OIDC_ENABLED"] == "true"
+    assert shipping["services"]["web"]["environment"]["AIOFFICE_LOCAL_UI_ENABLED"] == "false"
+    print("PASS shipping local setup defaults to browser PKCE and disabled password UI")
     profile = json.loads(run("config", "--format", "json"))
+    assert profile["services"]["web"]["environment"]["AIOFFICE_BROWSER_OIDC_ENABLED"] == "false"
+    assert profile["services"]["web"]["environment"]["AIOFFICE_LOCAL_UI_ENABLED"] == "true"
     assert profile["name"] == "aioffice-" + uuid.UUID(manifest["AIOFFICE_INSTALLATION_ID"]).hex
     services = profile["services"]
     for service in ("core-api", "agent-worker"):

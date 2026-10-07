@@ -22,6 +22,8 @@ Use `.env.production.example` as the name contract. Populate the ignored private
 
 Production Compose pins local HTTP and disposable CI diagnostics to `false`, and keeps password grant disabled. Its ordinary plaintext Redis service cannot be used as production browser session authority. Qualify the configured Redis topology: standalone process restart invalidates prior browser rows; asynchronous HA rollback/promotion still needs separate invalidation/failover evidence. SQL remains the durable business/task store.
 
+Local setup now defaults to the provisioned browser PKCE client and disables the password form. The retained local pilot is an explicit compatibility profile: `AIOFFICE_BROWSER_OIDC_ENABLED=false` together with `AIOFFICE_LOCAL_UI_ENABLED=true`. The retained stack smoke uses this opt-in only for its owned disposable fixture, then required Chromium verifies the shipping browser flow. External production providers still require the complete approved configuration above.
+
 Generate the browser key once using the approved cryptographic secret generator. Keep it stable across repairs and Web restarts/replicas. Changing it invalidates pending transactions and encrypted sessions; plan a deliberate reauthentication window. No browser key should be derived from a customer ERP password. Local bootstrap's separate protected installation derivation is for its disposable/local profile only.
 
 ## Provider and ingress contract

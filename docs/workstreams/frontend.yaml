@@ -17,6 +17,7 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. New exact-head full gate and final frozen review required; no customer/config/credential/OS changes.'
   chromium_verified_head: 4e1880652cbe398f66f42cb760fd1b60f3b3a387
   chromium_verified_build: 37646560686
   chromium_verified_governance: 37646560635
