@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "239 published5e427a1 full CI/native artifact and259 main CI PASS. Close this durable state checkpoint gates; keep Draft for actual clean Windows lifecycle/signing.260/Draft261 shared-session exact aaa CI/review PASS; private Core-authority helper c1f30f7 gates/review then routes/bootstrap/UI/Chromium. Continue full233 and selected inventory/stock-movement ERP mapping.115 remote non-ancestor refs audited; no additional eligible PR beyond current239/261 Drafts."
+next_action: "239 publisheda372 full CI/native artifact and259 main CI PASS. Close current durable-state checkpoint gates; keep Draft for actual clean Windows lifecycle/signing.260/Draft261 exacted73 runtime wiring/review PASS; current473 required actual Chromium gate and full acceptance review must close before matching-head merge/main CI. Full233 and selected Medcom/Novo inventory/movement qualification remain; user deferred Santino.115 refs audited and only239/261 Drafts remain, no additional eligible PR."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -66,11 +66,11 @@ installer_verification:
   code_head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
   local_core_tests: 76
   local_result: "76 PASS on exact89ce9cb after reviewed255/257/259 integration. Retained-ID recovery, lost-both-files refusal, real PS5 Authenticode and PS7 diagnostics remain green. No installer transition logic changed. Hosted full gates, actual stack and Windows artifact PASS."
-  verified_published_head: 5e427a1d7d99cf99fab39e383606a69b3df239e0
-  build: 37565765413
-  governance: 37565767872
-  unsigned_artifact: 11458444683
-  artifact_bytes: 47964422
+  verified_published_head: a372dd4c2454a4fbf2af022b6ed63a3ab1669d0d
+  build: 37568694751
+  governance: 37568694745
+  unsigned_artifact: 11459482654
+  artifact_bytes: 47967256
   previous_integrated_head: 89ce9cbd725a593de12d3fb5ec336a6f48eef8ad
   previous_integrated_build: 37564958347
   previous_integrated_governance: 37564958342
@@ -148,11 +148,11 @@ browser_oidc_frontier:
   issue: 260
   pr: 261
   state: in_progress
-  verified_module_head: aaa3e9fd6f2e1f444d172359e920bd86a844b502
-  build: 37568027869
-  governance: 37568027934
-  actual_stack: 112620417758
-  result: 'All gates and independent review PASS;599 web tests include12 actual Redis tests and physically restored pre-logout RDB refusal. Private modules only; no routes/UI/browser bootstrap enabled. Core helper c1f30f7 has41 local tests, existing256-role contract, and pending exact CI/re-review. Follow HANDOFF261.'
+  verified_module_head: ed73d8a45576cb811ca9e0f02aa748cc89821518
+  build: 37605100433
+  governance: 37605100461
+  actual_stack: 112738532113
+  result: 'All exact-head gates PASS;828 web tests/20 actual Redis including physical old-RDB restart, public issuer/internal metadata/owned browser-client/private key replay and retained SQL/OIDC controls. Independent46 .NET/66 UI lifecycle/TypeScript/PS5 and7 review PASS; earlier ingress/proxy/publication/streamed-body/concurrent-disable findings closed. Routes/BFF/UI/runtime settings implemented with browser disabled defaults. Current473 required actual Chromium provider/company/member/source/role/state/logout/expiry UI gate runs; full260 acceptance/merge remains pending. Follow HANDOFF261.'
 
 branch_audit:
   inspected_at: '2026-10-07'

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
+current_target_head: a372dd4c2454a4fbf2af022b6ed63a3ab1669d0d
 last_verified_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
 
 critical_paths:
@@ -22,9 +22,9 @@ critical_paths:
     issue: 260
     pr: 261
     branch: frontend/260-browser-oidc
-    head: aaa3e9fd6f2e1f444d172359e920bd86a844b502
+    head: ed73d8a45576cb811ca9e0f02aa748cc89821518
     state: in_progress
-    next: "260/Draft261 browser OIDC remains active. Reviewed shared Redis generations/one-use callback/opaque encrypted sessions/physical old-RDB restart and signed-token adapter passed exact aaa Build37568027869/Governance37568027934,599 hosted web tests and retained actual stack112620417758. Private Core-authority helper c1f30f7 adds41 local tests and existing256-role compatibility; current head/runs/review in HANDOFF261. Start/callback/BFF/bootstrap/UI/actual Chromium acceptance remains required."
+    next: "260/Draft261 remains active. Exacted73 Build37605100433/Governance37605100461/actual112738532113 PASS:828 web tests/20 actual Redis and physical restart, routes/BFF/logout/owned browser-client/public issuer/internal metadata/private key replay. Independent46 .NET/66 UI lifecycle/TypeScript/PS5 and7 review PASS; concurrent-disable P2 closed. New473fe4f required Chromium provider/company/member/source/cookie/callback/role/logout/relogin/expiry private-clear gate is running; exact current head/runs in HANDOFF261. Full260 acceptance and final matching-head merge/main closure remain required."
 
   runtime_ai:
     issue: null
@@ -79,10 +79,10 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "239 published5e427a1 full CI/native artifact PASS; close the next durable-state checkpoint gates and keep Draft for actual clean Windows lifecycle/signing.260/Draft261 shared-session exact aaa gates/review PASS; close current private Core-authority helper gates/review, then start/callback/BFF/bootstrap/UI/Chromium acceptance. Inventory/stock movements is the selected first ERP business read; private least-privilege schema mapping remains required.115 non-ancestor remote refs were audited:109 merged PR heads,1 closed,3 backups/snapshots and2 active Drafts; no additional eligible PR."
+next_action: "239 publisheda372 full CI/native artifact PASS; keep Draft for actual clean Windows lifecycle/signing and close current durable-state checkpoint gates.260 exacted73 runtime wiring/review PASS; close current473 actual Chromium gate/full acceptance review, fix any actionable red immediately, merge only when260 is complete and exact head matches green gates. Inventory/stock movements is first ERP business read, Medcom/Novo private schema/least-privilege qualification remains; user deferred Santino.115 refs audited and only239/261 Drafts remain open, no additional eligible PR."
 
 blocked_by:
-  - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. User selected inventory/stock movements as the first semantic capability; its schema/version mapping remains required."
+  - "Medcom/Novo existing encrypted ERP configuration locations are selected privately outside public Git; user deferred Santino until later. Credentials are not yet verified for authorized least-privilege business-row access. Inventory/stock movements is the first semantic capability; its schema/version mapping remains required."
   - "A least-privilege read-only credential and schema/version mapping for that selected ERP are required before a real business-value E2E."
   - "Production deployment still requires approved production OIDC, private platform SQL/backup, private host/tunnel and production bootstrap."
 
