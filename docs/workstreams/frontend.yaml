@@ -4,11 +4,11 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: c42ae4be87b7bac29deff85139c9392d2a65ff01
+head: ed73d8a45576cb811ca9e0f02aa748cc89821518
 state: in_progress
 lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07'
-last_checkpoint_at: '2026-10-07'
+lease_heartbeat_at: '2026-10-07T14:52:00Z'
+last_checkpoint_at: '2026-10-07T14:52:00Z'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -47,6 +47,11 @@ verification:
   ui_governance: 37604327489
   ui_actual_stack: 112736036358
   ui_result: 'All exact-head gates PASS; public browser surface/navigation unit controls, retained stack and20 actual Redis. Browser flags remain disabled by default; actual Chromium remains required. Concurrent-disable repair is a separate local checkpoint8de18d6, qualified in the next hosted runtime-wiring head.'
+  issuer_head: ed73d8a45576cb811ca9e0f02aa748cc89821518
+  issuer_build: 37605100433
+  issuer_governance: 37605100461
+  issuer_actual_stack: 112738532113
+  issuer_result: 'All exact-head gates PASS;828 web tests/20 actual Redis, actual public discovery/internal metadata/scoped token authority/client retention/private key immutable replay PASS. Independent frozen46 .NET/66 UI lifecycle/TypeScript/PowerShell5 and7 proof PASS; concurrent-disable old/current control closes P2, no remaining blocker in bounded issuer/key/UI review. Whole260 approval still requires Chromium/full acceptance.'
   adapter_head: e8fdad8cc66a95a5a781665f6b2c3c7d0fc94ab8
   adapter_build: 37566597553
   adapter_governance: 37566597547
@@ -73,7 +78,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close public-issuer/internal-metadata/private-key runtime wiring exact-head CI and frozen review, including concurrent-disable correction. Require retained real SQL/Keycloak/API/BFF stack and20 Redis controls, then actual Chromium provider/company/member/source/role/state/logout/expiry acceptance with local password UI disabled. Keep239 Draft for Windows lifecycle; Santino deferred by user, private Medcom/Novo inventory/movements qualification/full233 remain incomplete.
+next_action: Close required actual Chromium gate on exact new head and inspect any actionable failure immediately. Real provider sign-in, company/member/source/cookie/callback/role/logout/relogin/Redis expiry private-clear proof must pass after retained SQL/OIDC stack, with local password UI disabled. Then independent acceptance review/matching-head merge/main CI if260 complete. Keep239 Draft for Windows lifecycle; Santino deferred by user, private Medcom/Novo inventory/movements qualification/full233 remain incomplete.
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -88,6 +93,7 @@ implementation_checkpoint:
   concurrent_disablement: 'Frozen0fdb detail enabled snapshot could re-enable a concurrent operator disable at PUT. Reconciliation now omits enabled with explicit private null-omitting JSON, creation alone enabled=true. Keycloak preserves current enabled state when omitted. Fixture models live enabled retention and asserts every PUT lacks the field; new after-GET/before-PUT disable regression plus31 bootstrap and23 API-focused tests PASS. Required hosted retention controls unchanged.'
   browser_login_ui: '22 new public-projection/navigation/UI tests,39 retained lifecycle/race/page tests and TypeScript PASS. Browser mode collects no credentials; server serializes only validated public navigation values. Binding settles before selected-company start; generation/unmount fencing and shared mutation settlement preserve existing private-state lifecycle. Exact Code/S256/client/callback/provider destination checks and generic errors. Invalid enabled config never falls back to password UI. Current Compose flags remain disabled/unwired; actual Chromium required.'
   public_issuer_wiring: '23 focused API/issuer tests PASS including real RSA default-metadata-issuer accepted/current-pinned denied, exact issuer positive and alias/signature/audience/expiry negatives. Additive MetadataAddress opt-in pins exact configured public issuer with explicit Development/local loopback/fixed identity backchannel only; Authority-only retained options unchanged. Compose now uses fixed public Keycloak hostname/dynamic internal backchannel and explicit API metadata, complete browser settings with browser disabled/local pilot enabled defaults. Stable32-byte purpose-separated HMAC browser key derives from protected existing random runtime secret+installation ID; manifest/credentials never change and Web gets no raw runtime password. Private replay/HMAC-vector/permissions proof and smoke syntax PASS; hosted public issuer/API/replay evidence and actual Chromium required.'
+  actual_chromium_gate: 'Added pinned Playwright1.63.0 Chromium gate after retained full SQL/Keycloak/API/worker/FE smoke. Guard restricts fixture to exact GitHub CI runner-private installation/project. Recreates only owned CI Web in browser mode with local password disabled; real provider form and signed callback303, scoped member/source/company authority, opaque HttpOnly/privacy, replay/wrong-state/input denial preservation, scoped SQL admin revoke/full original-role restore/private UI clear, old binding/SID after logout, SSO re-login, only owned current Redis-row TIME expiry and private UI clear/recovery. No traces/private errors/tokens/cookies logged; only passing sanitized disposable workspace PNG retained. Syntax/typecheck PASS; actual new-head runtime evidence required.'
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'
   remaining: 'Current BFF/logout/provisional-publication exact-head gates/frozen re-review, retained bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and full260 exact-head/main closure.'
