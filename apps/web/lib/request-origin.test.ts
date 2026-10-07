@@ -12,3 +12,6 @@ it.each(["user@localhost:3000", "localhost:3000/path", "localhost:3000?query=1",
   expect(hasSameOrigin(request({ Host: host, Origin: origin }))).toBe(false);
 });
 it("refuses non HTTP schemes", () => { expect(hasSameOrigin(request({ Origin: "null" }, "file:///tmp/local-session"))).toBe(false); });
+it.each(["localhost:3000/", "localhost:3000/.", "localhost:3000/a/..", "localhost:3000\\", "localhost:3000\\a\\..", "localhost:3000/%2e%2e", "localhost:3000%2f", "localhost:3000\tunexpected"])("refuses raw Host normalization aliases: %s", (host) => {
+  expect(hasSameOrigin(request({ Host: host, Origin: origin }))).toBe(false);
+});

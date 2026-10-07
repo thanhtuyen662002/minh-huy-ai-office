@@ -4,7 +4,7 @@ status: active-development
 current_issue: 258
 current_pr: 259
 current_branch: frontend/258-session-origin
-head: 6652940c5a9bfcc424422578d87c2f2851097211
+head: 6f6b2d790bfac3cf53787abee041b233c1152489
 state: in_progress
 lease_owner: root-frontend-258
 lease_heartbeat_at: '2026-10-07'
@@ -21,10 +21,16 @@ verification:
   base_build: 37556114743
   base_governance: 37556114601
   result: 'Both main workflows PASS. Security256/257 merged; issue256 closed. Prior frontend246/247 merged and authoritative source race gates remain in the current actual-stack smoke.'
+  previous_implementation_head: 6f6b2d790bfac3cf53787abee041b233c1152489
+  previous_build: 37560035627
+  previous_governance: 37560035671
+  previous_actual_stack_job: 112594984703
+  previous_result: 'All exact-head gates PASS including actual issued-session refusal/preservation, valid logout/re-login, identity/member/source/audit/race/broker/restart controls. Peer review found raw Host normalization P2; repaired locally, new-head CI/re-review required.'
+  head_semantics: 'head records the last hosted-verified implementation; current exact published HEAD and runs belong in HANDOFF259.'
 blocked_by: []
-next_action: Draft259 owns258. Close hosted issued-session preservation/logout smoke, independent frozen review and exact-head CI on this lease. Close exact-head CI and independent review before matching-head merge and main CI. Production browser OIDC/full233 remain incomplete.
+next_action: Push raw Host normalization P2 repair and close new exact-head CI plus frozen re-review on Draft259. Then matching-head merge and main CI. Preserve all existing source/identity/member/audit/race controls. Production browser OIDC/full233 remain incomplete.
 
 implementation_checkpoint:
   completed: 'Shared Origin fence for source and session mutations; login8192 UTF8-byte stream bound, strict media/field/credential validation; same-origin logout with unchanged cookie/privacy properties; actual issued-session preservation and logout/sign-in smoke assertions.'
-  local: '434 full web tests PASS including123 focused Origin/session/source cases; TypeScript and optimized production build PASS. Smoke AST and diff-check PASS.'
-  remaining: 'Hosted actual SQL/OIDC/Compose, independent frozen review and exact-head/main CI closure. Production browser OIDC/full233 remain incomplete.'
+  local: '434 full web tests and TypeScript/optimized build PASS before Host repair;137 focused Origin/session/source cases PASS after repair. Frozen6f6 Node Request negative control reproduces4 normalization aliases and repaired helper denies all4. Smoke AST/diff-check PASS. Integrator62eee97 Setup.Core76 PASS.'
+  remaining: 'New-head hosted actual SQL/OIDC/Compose, frozen re-review and exact-head/main CI closure. Production browser OIDC/full233 remain incomplete.'

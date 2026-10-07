@@ -27,6 +27,13 @@ it("does not clear cookies when the local UI is disabled", async () => {
   expect(response.headers.get("set-cookie")).toBeNull();
 });
 
+it.each(["localhost:3000/", "localhost:3000/a/..", "localhost:3000\\a\\.."]) ("cannot clear a cookie through normalized Host aliases: %s", async (host) => {
+  const response = await POST(new Request(`${origin}/api/local/session/logout`, { method: "POST", headers: { Origin: origin, Host: host } }));
+  expect(response.status).toBe(403);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(response.headers.get("set-cookie")).toBeNull();
+});
+
 it.each([false, true])("clears the same-origin HttpOnly cookie with secure=%s", async (secure) => {
   vi.stubEnv("AIOFFICE_LOCAL_UI_COOKIE_SECURE", String(secure));
   const response = await POST(request());

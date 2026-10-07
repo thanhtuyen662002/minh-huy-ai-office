@@ -153,6 +153,11 @@ describe("local sign-in browser and input boundary", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it.each(["localhost:3000/", "localhost:3000/a/..", "localhost:3000\\a\\.."]) ("refuses raw Host normalization before identity or cookie issuance: %s", async (host) => {
+    await failure(await POST(raw(JSON.stringify(credentials), { Host: host })), 403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("accepts the addressed Host when Next uses a container hostname", async () => {
     fetchMock.mockResolvedValueOnce(new Response("", { status: 401 }));
     const addressed = new Request("http://web:3000/api/local/session/login", {
