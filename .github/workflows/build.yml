@@ -149,7 +149,24 @@ jobs:
             -f compose.production.yaml \
             config --format json > "${rendered}"
           python3 scripts/validate-deployment.py "${rendered}"
+          python3 -m unittest discover -s scripts -p test_browser_deployment.py
           python3 -m json.tool apps/web/vercel.json >/dev/null
+      - name: Validate enabled production browser deployment contract
+        env:
+          AIOFFICE_BROWSER_OIDC_ENABLED: "true"
+          AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN: https://office.example.test
+          AIOFFICE_BROWSER_OIDC_AUTHORIZATION_ENDPOINT: https://identity.example.test/authorize
+          AIOFFICE_BROWSER_OIDC_TOKEN_ENDPOINT: https://identity.example.test/token
+          AIOFFICE_BROWSER_OIDC_JWKS_URI: https://identity.example.test/certs
+          AIOFFICE_BROWSER_OIDC_CLIENT_ID: office-browser
+          AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          AIOFFICE_BROWSER_CORE_API_ORIGIN: https://api.example.test
+          AIOFFICE_BROWSER_SESSION_REDIS_URL: rediss://private-cache.example.test:6380/1
+        run: |
+          set -euo pipefail
+          rendered="${RUNNER_TEMP}/browser-deployment-compose.json"
+          docker compose --env-file .env.production.example -f compose.yaml -f compose.production.yaml config --format json > "${rendered}"
+          python3 scripts/validate-deployment.py "${rendered}"
       - name: Build Core.Api container
         run: docker build --file src/Core.Api/Dockerfile --tag aioffice/core-api:ci .
       - name: Build Agent.Worker container

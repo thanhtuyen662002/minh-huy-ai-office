@@ -6,7 +6,7 @@ Production Compose includes `web` alongside Core.Api and Agent.Worker. `infra/de
 
 `AIOFFICE_WEB_PORT` defaults to 3000 and is bound to `127.0.0.1`. Company settings for a local profile are read at runtime. Never pass provider credentials, SQL connection strings or access tokens through public Next.js environment variables.
 
-Production Compose sets `AIOFFICE_LOCAL_UI_ENABLED=false`: the local password-grant BFF is not a production identity flow. FE HTTP readiness proves that a page is served; identity, DB, broker, AI and business readiness need separate acceptance. Automatic local SQL/OIDC bootstrap and the full production OIDC browser flow remain requirements in [PRODUCT_COMPLETION.md](PRODUCT_COMPLETION.md).
+Production Compose sets `AIOFFICE_LOCAL_UI_ENABLED=false`. Browser Code/S256 sign-in can be enabled through the private operator configuration described in [browser sign-in setup](validation/BROWSER_SIGN_IN_OPERATOR.md). Its issuer is the same approved `AIOFFICE_AUTHORITY` as Core. HTTPS endpoints and private TLS Redis are required, and local HTTP/proof diagnostics are fixed off. FE HTTP readiness proves that a page is served; actual approved production identity, DB, broker, AI and customer business readiness need separate acceptance in [PRODUCT_COMPLETION.md](PRODUCT_COMPLETION.md).
 
 CI builds the real image and runs `node scripts/smoke-web-container.mjs aioffice/web:ci`. It starts one image with two company environments, verifies runtime settings and static assets, enforces the non-root/read-only boundary and checks disabled sessions/login stay fail-closed with no-store responses. This is a mandatory Required quality gates dependency.
 
@@ -17,7 +17,7 @@ docker build --file apps/web/Dockerfile --tag aioffice/web:ci .
 node scripts/smoke-web-container.mjs aioffice/web:ci
 ```
 
-The one-click Windows setup artifact is not available yet. Track provisioning, installation, sign-in startup and clean-machine/reboot proof in [issue #233](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/233).
+A native Windows development artifact is published by Draft239 CI. Clean supported Windows installation, reboot/repair/startup and production signing remain unverified; track these gates in [issue #233](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/233).
 
 This document defines the P0 deployment contract for Minh Huy AI Office. It is intentionally conservative: production credentials stay outside Git, backend services bind to the host loopback interface, and SQL Server is never published by this stack.
 

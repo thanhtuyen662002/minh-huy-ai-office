@@ -17,6 +17,7 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  production_browser_wiring: 'Current same260 slice adds explicit opt-in Web OIDC runtime variables to production Compose, same Core issuer, fixed localHTTP/proof false, company default selector, and operator HTTPS/provider/TLS Redis/private key/ingress qualification guide. Disabled and enabled synthetic docker compose rendering locally PASS;3 Python contract tests with unsafe/incomplete/private-value refusal cases PASS. Required CI validates both Compose modes. This is configuration/contract evidence only, not production connectivity or deployment. Current3ffd Chromium runtime remains live; preserve it through terminal before pushing this checkpoint.'
   chromium_selector_head: 2f3bbaba140b6d675d43c894ba18d5b0af5e0a23
   chromium_selector_build: 37643731826
   chromium_selector_governance: 37643732077
