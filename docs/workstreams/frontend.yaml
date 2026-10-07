@@ -2,10 +2,10 @@ workstream: frontend
 role: Frontend Product
 status: active-development
 current_issue: 260
-current_pr: null
+current_pr: 261
 current_branch: frontend/260-browser-oidc
 head: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
-state: claimed
+state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
@@ -22,4 +22,4 @@ verification:
   base_governance: 37564876597
   result: 'Main workflows PASS.259 exact7010f3b gates and frozen66f2f80 review approved;258 closed. Existing actual SQL/OIDC/member/source/audit/race/broker/restart controls remain required.'
 blocked_by: []
-next_action: Open the260 Draft lease, implement trusted configuration and authenticated-encrypted bounded login transactions, then callback/library/API authority, bootstrap/issuer routing and actual Chromium acceptance. Close every meaningful checkpoint through exact-head CI. Keep239 Draft for actual Windows lifecycle; full233 and customer ERP qualification remain incomplete.
+next_action: Verify and checkpoint trusted configuration/authenticated-encrypted bounded login transactions, then implement callback/library/API authority, bootstrap/issuer routing and actual Chromium acceptance on Draft261. Close every meaningful checkpoint through exact-head CI. Keep239 Draft for actual Windows lifecycle; full233 and customer ERP qualification remain incomplete.
