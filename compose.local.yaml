@@ -43,7 +43,8 @@ services:
       KC_DB_PASSWORD: ${AIOFFICE_IDENTITY_DB_PASSWORD:?generate local configuration first}
       KC_BOOTSTRAP_ADMIN_USERNAME: bootstrap-admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${AIOFFICE_IDENTITY_ADMIN_PASSWORD:?generate local configuration first}
-      KC_HOSTNAME: http://identity:8080
+      KC_HOSTNAME: http://127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     ports:
       - "127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}:8080"
     depends_on:
@@ -137,7 +138,9 @@ services:
       AIOFFICE_DB_CONNECTION: "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password=${AIOFFICE_RUNTIME_PASSWORD};Encrypt=true;TrustServerCertificate=true"
       AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
       PILOT_ERP_CONNECTION: "Server=sql;Database=AIOfficeSample;User ID=aioffice_reader;Password=${AIOFFICE_READER_PASSWORD};Encrypt=true;TrustServerCertificate=true"
-      AIOffice__Authentication__Authority: http://identity:8080/realms/aioffice-local
+      AIOffice__Authentication__Authority: http://127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}/realms/aioffice-local
+      AIOffice__Authentication__MetadataAddress: http://identity:8080/realms/aioffice-local/.well-known/openid-configuration
+      AIOffice__Authentication__LocalHttp: "true"
       AIOffice__Authentication__Audience: aioffice-local
       RabbitMqWork__HostName: rabbitmq
       RabbitMqWork__Port: "5672"
@@ -186,13 +189,24 @@ services:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: "3000"
-      AIOFFICE_LOCAL_UI_ENABLED: "true"
+      AIOFFICE_LOCAL_UI_ENABLED: ${AIOFFICE_LOCAL_UI_ENABLED:-true}
       AIOFFICE_LOCAL_UI_COOKIE_SECURE: "false"
       AIOFFICE_LOCAL_CORE_API_URL: http://core-api:8080
       AIOFFICE_LOCAL_OIDC_TOKEN_URL: http://identity:8080/realms/aioffice-local/protocol/openid-connect/token
       AIOFFICE_LOCAL_OIDC_CLIENT_ID: aioffice-local
       AIOFFICE_LOCAL_COMPANY_ID: ${AIOFFICE_COMPANY_ID:?generate local configuration first}
       AIOFFICE_LOCAL_COMPANY_NAME: Minh Huy Local
+      AIOFFICE_BROWSER_OIDC_ENABLED: ${AIOFFICE_BROWSER_OIDC_ENABLED:-false}
+      AIOFFICE_BROWSER_OIDC_LOCAL_HTTP: "true"
+      AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN: http://127.0.0.1:${AIOFFICE_WEB_PORT:-3000}
+      AIOFFICE_BROWSER_OIDC_ISSUER: http://127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}/realms/aioffice-local
+      AIOFFICE_BROWSER_OIDC_AUTHORIZATION_ENDPOINT: http://127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}/realms/aioffice-local/protocol/openid-connect/auth
+      AIOFFICE_BROWSER_OIDC_TOKEN_ENDPOINT: http://identity:8080/realms/aioffice-local/protocol/openid-connect/token
+      AIOFFICE_BROWSER_OIDC_JWKS_URI: http://identity:8080/realms/aioffice-local/protocol/openid-connect/certs
+      AIOFFICE_BROWSER_OIDC_CLIENT_ID: aioffice-browser
+      AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY: ${AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY:?generate local configuration first}
+      AIOFFICE_BROWSER_CORE_API_ORIGIN: http://core-api:8080
+      AIOFFICE_BROWSER_SESSION_REDIS_URL: redis://redis:6379
     depends_on:
       core-api:
         condition: service_started

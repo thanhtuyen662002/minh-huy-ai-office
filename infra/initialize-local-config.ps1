@@ -102,6 +102,21 @@ foreach ($key in $secretKeys) {
     }
     $lines.Add($name + '=' + $manifest.$name)
 }
+# Derive a purpose-separated browser key from existing high-entropy protected
+# state. This adds no manifest field and never rotates retained credentials/IDs.
+$runtimeKeyBytes = [System.Text.Encoding]::UTF8.GetBytes($manifest.AIOFFICE_RUNTIME_PASSWORD)
+$browserKeyBytes = $null
+$browserMac = New-Object System.Security.Cryptography.HMACSHA256
+try {
+    $browserMac.Key = $runtimeKeyBytes
+    $browserKeyBytes = $browserMac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes(
+        'aioffice-local-browser-key-v1|' + ([Guid]$manifest.AIOFFICE_INSTALLATION_ID).ToString('D')))
+    $lines.Add('AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY=' + [Convert]::ToBase64String($browserKeyBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_'))
+} finally {
+    $browserMac.Dispose()
+    [Array]::Clear($runtimeKeyBytes, 0, $runtimeKeyBytes.Length)
+    if ($browserKeyBytes) { [Array]::Clear($browserKeyBytes, 0, $browserKeyBytes.Length) }
+}
 $lines.Add('COMPOSE_PROJECT_NAME=aioffice-' + ([Guid]$manifest.AIOFFICE_INSTALLATION_ID).ToString('N'))
 $envPath = Join-Path $directory 'local.env'
 if ([System.IO.File]::Exists($envPath)) { Protect-LocalFile $envPath }

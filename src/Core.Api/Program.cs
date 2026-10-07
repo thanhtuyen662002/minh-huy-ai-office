@@ -64,6 +64,8 @@ if (authenticationConfigured)
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, NameClaimType = AuthenticationClaimTypes.Subject };
+        BrowserIssuerConfiguration.Apply(options, authority!, builder.Configuration["AIOffice:Authentication:MetadataAddress"],
+            builder.Environment.IsDevelopment(), builder.Configuration["AIOffice:Authentication:LocalHttp"] == "true");
     });
     builder.Services.AddAuthorization();
     builder.Services.AddSignalR();

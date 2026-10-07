@@ -2,6 +2,8 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import hmac
+import base64
 from http.cookiejar import CookieJar
 import json
 import re
@@ -150,10 +152,25 @@ def main():
         assert all(port["host_ip"] == "127.0.0.1" for port in service.get("ports", []))
     for name in ("sql", "identity-db", "rabbitmq", "redis"):
         assert not services[name].get("ports"), "Internal data service has a host port"
+    public_issuer = "http://127.0.0.1:" + str(services["identity"]["ports"][0]["published"]) + "/realms/aioffice-local"
+    assert services["identity"]["environment"]["KC_HOSTNAME"] == public_issuer.removesuffix("/realms/aioffice-local")
+    assert services["identity"]["environment"]["KC_HOSTNAME_BACKCHANNEL_DYNAMIC"] == "true"
+    assert services["core-api"]["environment"]["AIOffice__Authentication__Authority"] == public_issuer
+    assert services["core-api"]["environment"]["AIOffice__Authentication__MetadataAddress"] == "http://identity:8080/realms/aioffice-local/.well-known/openid-configuration"
+    browser_key = services["web"]["environment"]["AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY"]
+    expected_key = base64.urlsafe_b64encode(hmac.digest(manifest["AIOFFICE_RUNTIME_PASSWORD"].encode(),
+        ("aioffice-local-browser-key-v1|" + manifest["AIOFFICE_INSTALLATION_ID"]).encode(), hashlib.sha256)).decode().rstrip("=")
+    assert browser_key == expected_key and re.fullmatch("[A-Za-z0-9_-]{43}", browser_key)
+    assert all(secret not in json.dumps(services["web"]["environment"]) for secret in secrets)
     print("PASS local service configuration, secret references and isolated loopback profile")
     run("up", "--build", "-d", timeout=1500)
     ready()
     identity = "http://127.0.0.1:" + str(services["identity"]["ports"][0]["published"])
+    with urllib.request.urlopen(identity + "/realms/aioffice-local/.well-known/openid-configuration", timeout=15) as discovery:
+        document = json.loads(discovery.read(65537))
+        assert document["issuer"] == public_issuer
+        assert document["authorization_endpoint"] == public_issuer + "/protocol/openid-connect/auth"
+    print("PASS actual public issuer and explicit internal metadata configuration with private purpose-separated browser key")
     browser_redirect = web + "/api/local/session/oidc/callback"
 
     def identity_admin(path, payload=None):

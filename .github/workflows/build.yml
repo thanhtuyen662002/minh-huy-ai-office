@@ -93,6 +93,9 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - name: Verify private configuration replay and browser key
+        shell: pwsh
+        run: ./scripts/test-local-config.ps1
       - name: Generate protected local installation configuration
         shell: pwsh
         run: ./infra/initialize-local-config.ps1 -DataDirectory (Join-Path $env:RUNNER_TEMP 'aioffice-local')
