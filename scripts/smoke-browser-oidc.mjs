@@ -17,7 +17,7 @@ try {
   requireProof(process.env.CI === "true" && process.env.GITHUB_ACTIONS === "true" && process.env.RUNNER_TEMP
     && directory === join(resolve(process.env.RUNNER_TEMP), "aioffice-local"));
   const manifest = JSON.parse(await readFile(join(directory, "installation.json"), "utf8"));
-  for (const key of ["INSTALLATION", "TENANT", "COMPANY", "USER"]) requireProof(guid(manifest[`AIOFFICE_${key}_ID`]));
+  for (const key of ["INSTALLATION", "TENANT", "COMPANY", "USER", "DATA_SOURCE"]) requireProof(guid(manifest[`AIOFFICE_${key}_ID`]));
   const compose = ["compose", "--env-file", join(directory, "local.env"), "-f", "compose.local.yaml"];
   const run = (args, env = process.env) => {
     const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
@@ -56,6 +56,15 @@ try {
   const page = await context.newPage(); page.setDefaultTimeout(15_000); page.setDefaultNavigationTimeout(20_000);
   const company = manifest.AIOFFICE_COMPANY_ID, tenant = manifest.AIOFFICE_TENANT_ID, user = manifest.AIOFFICE_USER_ID;
   const query = `?companyId=${company}`;
+  const waitForSource = async () => {
+    const selector = page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true });
+    await selector.waitFor();
+    // Native select options have no rendered box while the popup is closed.
+    // Require the visible selector and exact owned option in its DOM instead.
+    const option = selector.locator(`option[value="${manifest.AIOFFICE_DATA_SOURCE_ID}"]`);
+    await option.waitFor({ state: "attached" });
+    requireProof((await option.textContent()) === "Local sample ERP");
+  };
   const current = () => page.evaluate(async path => {
     const response = await fetch(path, { cache: "no-store" });
     return { status: response.status, body: await response.json(), cache: response.headers.get("cache-control") };
@@ -114,7 +123,9 @@ try {
   requireProof(source && guid(source.id) && source.allowRead && !source.allowWrite && source.isEnabled);
   requireProof(JSON.parse(members.text).items.some(item => item.userId === user));
   requireProof(!/access_token|accessToken|client_secret|connectionSecretReference|secretref:\/\//.test(sources.text + members.text));
-  await page.getByRole("option", { name: "Local sample ERP", exact: true }).waitFor();
+  stage = "company-source-selector-ready";
+  await waitForSource();
+  stage = "company-member-panel-ready";
   await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
   await page.locator('section[aria-label="Thành viên công ty"] tbody tr').first().waitFor();
   const foreign = randomUUID();
@@ -204,7 +215,7 @@ try {
   console.log("PASS actual logout denies presented old binding/SID and provider SSO re-login issues fresh opaque session");
 
   stage = "owned-session-expiry-private-clear";
-  await page.getByRole("option", { name: "Local sample ERP", exact: true }).waitFor();
+  await waitForSource();
   // Prove browser mutation/SQL persistence and populate private chat before
   // expiry. Provider business-answer qualification is a separate requirement.
   const privateMessage = "Disposable browser task " + randomUUID();
@@ -237,12 +248,12 @@ try {
   requireProof((await current()).status === 401);
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).waitFor();
-  requireProof(await page.getByRole("option", { name: "Local sample ERP", exact: true }).count() === 0
+  requireProof(await page.locator(`option[value="${source.id}"]`).count() === 0
     && await page.locator('section[aria-label="Thành viên công ty"] tbody').count() === 0
     && await page.getByText(privateMessage, { exact: true }).count() === 0
     && !await page.locator('textarea[name="question"]').count());
   stage = "provider-expiry-reauthentication";
-  await signIn(); await page.getByRole("option", { name: "Local sample ERP", exact: true }).waitFor();
+  await signIn(); await waitForSource();
   requireProof((await current()).status === 200);
   requireProof(await page.getByText(privateMessage, { exact: true }).count() === 0
     && (await page.locator('textarea[name="question"]').inputValue()) === "");
