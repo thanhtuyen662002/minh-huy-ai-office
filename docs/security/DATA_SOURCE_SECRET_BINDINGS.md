@@ -188,6 +188,15 @@ Source and audit insert in one SaveChanges/transaction. The service revalidates
 administration and binding before saving. Failed writes leave no pending tracked
 source/audit entities; SQL transaction disposal rolls back both inserts.
 
+Registration pins its connection until transaction disposal and restores SQL
+session isolation before returning it to the pool. Newly rented sessions return
+to ReadCommitted; an explicitly caller-owned open session keeps its original
+isolation. Cancellation cannot skip bounded restoration. A failed restoration
+invalidates the affected SqlClient pool and closes the unsafe session, preventing
+another request from inheriting Serializable. The real SQL smoke checks sleeping
+runtime session isolation after denied registration and preserves the prior
+blocked-UPDATE metadata race and full-PUT negative control.
+
 `DataSourceRegistrationAudits` stores scoped actor/source/binding identities,
 binding version, operation ID, UTC occurrence and a SHA256 fingerprint of normalized
 nonsecret registration metadata. No credential or canonical reference is retained.

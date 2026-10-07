@@ -1,4 +1,3 @@
-using System.Data;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -48,8 +47,7 @@ public sealed partial class DataSourceRegistryService
 
         // Serializable keeps directory/grant and idempotency range locks through
         // the source+audit commit. A concurrent revoker must serialize around it.
-        await using var transaction = dbContext.Database.IsRelational()
-            ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
+        await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(dbContext, cancellationToken);
         DataSourceRecord? source = null;
         DataSourceRegistrationAuditRecord? audit = null;
         try
@@ -70,7 +68,7 @@ public sealed partial class DataSourceRegistryService
                     row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId
                     && row.Id == previous.DataSourceId, cancellationToken);
                 if (saved is null) throw new DataSourceRegistrationConflictException();
-                if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 return ToDescriptor(saved);
             }
             if (await LogicalNameExistsAsync(authority, validated.LogicalName, null, cancellationToken))
@@ -114,7 +112,7 @@ public sealed partial class DataSourceRegistryService
             if (current.Context != authority) throw DataSourceSecretBindingService.Unavailable();
             await bindings.RequireBindingAsync(authority, grant.Id, grant.Version, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
-            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return ToDescriptor(source);
         }
         catch

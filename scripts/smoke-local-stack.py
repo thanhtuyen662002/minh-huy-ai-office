@@ -288,6 +288,9 @@ def main():
         assert fingerprint("RoleAssignments", role_scope, "RoleKey") == roles_before, "Role fixture restoration changed assignments"
     status, _, context = http("/api/auth/context", base=api, headers=auth)
     assert status == 200 and "admin" in context["roles"], "Restored admin authority unavailable"
+    assert sql("""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_sessions
+        WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'
+          AND is_user_process=1 AND transaction_isolation_level<>2;""") == "0", "Registration leaked session isolation into the runtime connection pool"
     choice_status, choice_headers, choices = http("/api/data-sources/registration-options?offset=0&limit=1", base=api, headers=auth)
     assert choice_status == 200 and "no-store" in choice_headers.get("Cache-Control", "")
     assert len(choices["items"]) == 1 and choices["offset"] == 0 and choices["limit"] == 1
