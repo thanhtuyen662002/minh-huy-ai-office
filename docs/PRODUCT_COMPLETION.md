@@ -130,10 +130,11 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 
 ## Next executable work
 
-1. Close #234 only after the two-instance FE image smoke, web checks and all required CI gates pass on the exact PR head and the PR is merged.
-2. Provision SQL Server and local identity automatically, with an idempotent database/first-company bootstrap and a complete local Compose profile.
-3. Implement the versioned Windows setup entry point, dependency download/validation, startup task and interruption/reboot recovery on that stack.
-4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Do not postpone those requirements merely because setup or a pilot works.
+1. Close reviewed session security #258 / Draft #259 through its final exact-head gates, matching-head merge and main CI; preserve existing actual-stack authorization/race controls.
+2. Integrate reviewed member directory #255, exact identity #257 and session security #259 into installer #239. Close exact-head CI/native artifact generation and keep the installer Draft until actual clean Windows/UAC/reboot/sign-in/retained-data/repair/signing acceptance is proven.
+3. Deliver Authorization Code/PKCE browser OIDC, session expiry and supported company/member administration through actual browser/API/database evidence.
+4. Map the user-selected inventory/stock-movement read capability to an authorized real ERP schema/version and least-privilege credential. Private customer configuration and credentials remain outside public Git.
+5. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Goal #233 remains active.
 
 ## Genuine external evidence boundaries
 
@@ -143,4 +144,10 @@ The repository contains placeholders rather than approved live customer ERP cred
 
 PR253 / issue252 merged at `a3a929b58717b4f8e3ffe160699c179512441b07`. Exact-head Build37550999887/Governance37550999879 and merged-main Build37551390004/Governance37551390052 passed. The admin flow registers an operator-approved SQL Server source through UI/BFF with lossless binding versions, atomic immutable scoped audit and idempotent uncertain-response retries. Actual disposable SQL/OIDC/Compose proves scoped grants, fresh role revocation, append-only audit including a column-GRANT exception guard, atomic failure rollback, preserved metadata race controls and retained history after restart.515 Persistence and364 web tests passed.
 
-P1-02/P1-06 remain Partial: this evidence covers source registration and its audit, not every administration/operation audit or actual customer business workflow. P1-01/P6-01 still require full member administration and production browser OIDC; issue254/Draft255 owns the next scoped member inventory. Installer239 has a native development artifact and integration evidence, but clean Windows lifecycle/signing remain unverified. All62 matrix rows remain subject to their actual acceptance;233 stays open.
+P1-02/P1-06 remain Partial: this evidence covers source registration and its audit, not every administration/operation audit or actual customer business workflow. P1-01/P6-01 still require full member administration and production browser OIDC. Installer239 has a native development artifact and integration evidence, but clean Windows lifecycle/signing remain unverified. All62 matrix rows remain subject to their actual acceptance;233 stays open.
+
+## Verified member and identity checkpoints on 2026-10-07
+
+PR255 / issue254 merged at `b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9`; exact-head Build37553427104/Governance37553427057 and main Build37553826140/Governance37553826122 passed. The scoped admin member directory is available through API/BFF/UI, includes inactive membership inventory and excludes provider subjects/secrets.540 Persistence and396 web tests passed; actual SQL proves cross-tenant fixture exclusion and role revoke/restore using the same issued session. Member mutations/invites remain required.
+
+PR257 / issue256 merged at `6652940c5a9bfcc424422578d87c2f2851097211`; exact-head Build37555676743/Governance37555676768 and main Build37556114743/Governance37556114601 passed.550 Persistence tests and real native SQL case/padding negative controls prove exact opaque provider/subject matching before roles/context, with complete restoration of the owned identity row and valid session. Both implementations received independent frozen review. These checkpoints strengthen P1-01/P6-01; they do not complete production browser login or the full matrix.
