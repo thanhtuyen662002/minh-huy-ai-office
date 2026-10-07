@@ -150,6 +150,17 @@ else
 
 if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString))
 {
+    app.MapGet("/api/company/members", async (IRequestAuthorizationContextAccessor accessor,
+        [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+        try { return Results.Ok(await directory.ListAsync(context, offset ?? 0, limit ?? 50, cancellationToken)); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentOutOfRangeException) { return Results.BadRequest(new { error = "Invalid member pagination." }); }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
+        { return Results.Json(new { error = "Company directory is unavailable." }, statusCode: StatusCodes.Status503ServiceUnavailable); }
+    }).RequireAuthorization();
     app.MapPost("/api/tasks", async (
         IRequestAuthorizationContextAccessor accessor,
         [FromServices] PilotTaskSubmissionService submission,
@@ -202,6 +213,7 @@ else
         title: "Pilot task execution is not configured.");
     app.MapPost("/api/tasks", PilotTaskUnavailable);
     app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
+    app.MapGet("/api/company/members", () => Results.Json(new { error = "Company directory is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
 }
 
 var dataSources = app.MapGroup("/api/data-sources");

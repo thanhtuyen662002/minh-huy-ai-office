@@ -12,6 +12,7 @@ import {
 import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
+import { CompanyMemberPanel } from "./company-member-panel";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 
 type Props = {
@@ -26,7 +27,7 @@ type ChatMessage = {
   checkpoint?: LocalAiCheckpoint;
 };
 
-type Surface = "assistant" | "data-sources";
+type Surface = "assistant" | "data-sources" | "members";
 
 async function readJson(response: Response): Promise<unknown> {
   try {
@@ -520,6 +521,7 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
             <button type="button" onClick={() => setSurface("data-sources")} className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium ${surface === "data-sources" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5"}`}>
               Nguồn dữ liệu
             </button>
+            {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Thành viên</button> : null}
             <div className="px-3 py-2.5 text-sm text-slate-400">Công việc · sắp có</div>
             <div className="px-3 py-2.5 text-sm text-slate-400">Nhật ký · sắp có</div>
           </nav>
@@ -550,9 +552,11 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
             <div className="mb-5 flex gap-2 lg:hidden">
               <button type="button" onClick={() => setSurface("assistant")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Trợ lý AI</button>
               <button type="button" onClick={() => setSurface("data-sources")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Nguồn dữ liệu</button>
+              {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Thành viên</button> : null}
             </div>
 
-            {surface === "assistant" ? (
+            {surface === "members" ? (auth?.roles.includes("admin") ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
+              isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} /> : null) : surface === "assistant" ? (
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
                 <section className="flex min-h-[calc(100vh-9rem)] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#11182a]">
                   <div className="border-b border-slate-100 px-5 py-4 dark:border-white/10 sm:px-6">

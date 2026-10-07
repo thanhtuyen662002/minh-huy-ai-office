@@ -200,6 +200,38 @@ def main():
     source_scope = f"TenantId='{tenant}' AND CompanyId='{company}'"
     role_scope = source_scope + f" AND UserId='{user}'"
 
+    # A foreign tenant deliberately reuses the same company/user IDs. Its
+    # member and role must never enter the caller's actual SQL projection.
+    directory_tenant = str(uuid.uuid4())
+    sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+        INSERT aioffice.Companies(TenantId,Id,Code,Name) VALUES('{directory_tenant}','{company}',N'member-fixture',N'FOREIGN_DIRECTORY_COMPANY');
+        INSERT aioffice.Users(TenantId,Id,IdentityProvider,Subject,DisplayName) VALUES
+            ('{directory_tenant}','{user}',N'PRIVATE_DIRECTORY_PROVIDER',N'PRIVATE_DIRECTORY_SUBJECT',N'FOREIGN_DIRECTORY_MEMBER');
+        INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('{directory_tenant}','{company}','{user}');
+        INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES('{directory_tenant}','{company}','{user}',N'FOREIGN_DIRECTORY_ROLE');
+        COMMIT TRANSACTION;""")
+    try:
+        for member_path, member_base, member_headers in (
+            ("/api/company/members?offset=0&limit=25", api, auth),
+            ("/api/local/company/members" + selector + "&offset=0&limit=25", web, {})):
+            member_status, member_headers_out, member_page = http(member_path, base=member_base, headers=member_headers)
+            assert member_status == 200 and "no-store" in member_headers_out.get("Cache-Control", "")
+            assert member_page["companyId"] == company and member_page["offset"] == 0 and member_page["limit"] == 25
+            assert len(member_page["items"]) == 1 and not member_page["hasMore"]
+            member = member_page["items"][0]
+            assert set(member) == {"userId", "displayName", "userActive", "membershipActive", "roles"}
+            assert member["userId"] == user and member["userActive"] and member["membershipActive"] and "admin" in member["roles"]
+            assert all(secret not in json.dumps(member_page) for secret in [*secrets, token]) and "secretref://" not in json.dumps(member_page)
+            assert "FOREIGN_DIRECTORY_" not in json.dumps(member_page) and "PRIVATE_DIRECTORY_" not in json.dumps(member_page)
+    finally:
+        sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+            DELETE aioffice.RoleAssignments WHERE TenantId='{directory_tenant}';
+            DELETE aioffice.CompanyMemberships WHERE TenantId='{directory_tenant}';
+            DELETE aioffice.Users WHERE TenantId='{directory_tenant}';
+            DELETE aioffice.Companies WHERE TenantId='{directory_tenant}'; COMMIT TRANSACTION;""")
+    assert http("/api/company/members", base=api, headers=wrong)[0] == 403
+    assert http("/api/company/members?limit=101", base=api, headers=auth)[0] == 400
+
     def fingerprint(table, scope, order):
         result = sql(f"""USE AIOfficeLocal; SELECT CONVERT(varchar(64), HASHBYTES('SHA2_256',
             (SELECT * FROM aioffice.{table} WHERE {scope} ORDER BY {order}
@@ -208,6 +240,42 @@ def main():
         return result
 
     source_before = fingerprint("DataSources", source_scope, "Id")
+    identity_scope = f"TenantId='{tenant}' AND Id='{user}'"
+    identity_before = fingerprint("Users", identity_scope, "Id")
+    identity_backup = "tempdb.dbo.AIOfficeIdentityBackup_" + uuid.uuid4().hex
+    sql(f"USE AIOfficeLocal; SELECT TenantId,Id,IdentityProvider,Subject INTO {identity_backup} FROM aioffice.Users WHERE {identity_scope};")
+
+    def restore_identity():
+        sql(f"""USE AIOfficeLocal; UPDATE u SET IdentityProvider=b.IdentityProvider,Subject=b.Subject
+            FROM aioffice.Users u JOIN {identity_backup} b ON u.TenantId=b.TenantId AND u.Id=b.Id;""")
+
+    try:
+        for identity_column, identity_expression in (
+            ("IdentityProvider", "UPPER(IdentityProvider)"),
+            ("Subject", "UPPER(Subject)"),
+            ("IdentityProvider", "IdentityProvider+N' '"),
+            ("Subject", "Subject+N' '")):
+            try:
+                sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET {identity_column}={identity_expression} WHERE {identity_scope};")
+                # SQL equality, including binary equality's space padding, is
+                # not the final authority for opaque signed identity strings.
+                assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.Users u
+                    JOIN {identity_backup} b ON u.TenantId=b.TenantId AND u.Id=b.Id
+                    WHERE u.IdentityProvider COLLATE Latin1_General_100_CI_AS=b.IdentityProvider COLLATE Latin1_General_100_CI_AS
+                    AND u.Subject COLLATE Latin1_General_100_CI_AS=b.Subject COLLATE Latin1_General_100_CI_AS;""") == "1", "Native identity alias negative control failed"
+                for identity_path, identity_base, identity_headers in (
+                    ("/api/auth/context", api, auth), ("/api/local/session" + selector, web, {})):
+                    denied_status, denied_headers, denied_body = http(identity_path, base=identity_base, headers=identity_headers)
+                    assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", ""), "Opaque identity alias granted authority"
+                    assert all(secret not in json.dumps(denied_body) for secret in [*secrets, token])
+            finally:
+                restore_identity()
+                assert fingerprint("Users", identity_scope, "Id") == identity_before, "Identity fixture restoration changed stored fields"
+                assert http("/api/auth/context", base=api, headers=auth)[0] == 200
+    finally:
+        restore_identity()
+        sql(f"DROP TABLE {identity_backup};")
+    print("PASS real SQL native identity alias negative controls, exact API/BFF denial and retained identity restoration")
     bindings_before = fingerprint("DataSourceSecretBindings", source_scope, "Id")
     assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings
         WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION'
@@ -251,6 +319,11 @@ def main():
         sql(f"USE AIOfficeLocal; DELETE FROM aioffice.RoleAssignments WHERE {role_scope} AND RoleKey COLLATE Latin1_General_100_BIN2=N'admin';")
         status, _, context = http("/api/auth/context", base=api, headers=auth)
         assert status == 200 and "admin" not in context["roles"], "Issued token retained revoked authority"
+        for member_path, member_base, member_headers in (
+            ("/api/company/members", api, auth), ("/api/local/company/members" + selector, web, {})):
+            denied_status, denied_headers, denied_body = http(member_path, base=member_base, headers=member_headers)
+            assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", "")
+            assert all(secret not in json.dumps(denied_body) for secret in [*secrets, token])
         choice_status, choice_headers, choice_body = http("/api/data-sources/registration-options", base=api, headers=auth)
         assert choice_status == 403 and "no-store" in choice_headers.get("Cache-Control", ""), "Binding choices retained revoked admin authority"
         assert "secretref://" not in json.dumps(choice_body)
@@ -288,6 +361,8 @@ def main():
         assert fingerprint("RoleAssignments", role_scope, "RoleKey") == roles_before, "Role fixture restoration changed assignments"
     status, _, context = http("/api/auth/context", base=api, headers=auth)
     assert status == 200 and "admin" in context["roles"], "Restored admin authority unavailable"
+    assert http("/api/company/members", base=api, headers=auth)[0] == 200
+    print("PASS real SQL scoped admin member directory, safe DTO and issued-session API/BFF revocation")
     assert sql("""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_sessions
         WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'
           AND is_user_process=1 AND transaction_isolation_level<>2;""") == "0", "Registration leaked session isolation into the runtime connection pool"

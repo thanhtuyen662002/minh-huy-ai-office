@@ -1,34 +1,38 @@
 workstream: backend
 role: Backend Platform
 status: active-development
-current_issue: 252
-current_pr: 253
-current_branch: backend/252-audited-source-registration
-head: 70a98043d06fc5681ead7727942e98fe00b79c11
-state: waiting_ci
-lease_owner: root-backend-252
+current_issue: 256
+current_pr: 257
+current_branch: backend/256-exact-identity
+head: 8eefd6ab78af4daa2214480dcf7132050e3054f4
+state: in_progress
+lease_owner: root-backend-256
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
-last_completed_issue: 250
-last_merged_pr: 251
-last_merge_commit: e2165d8a67644cbfc9672ed373e2062761b3c31c
+last_completed_issue: 254
+last_merged_pr: 255
+last_merge_commit: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
 scope:
-  - strict-read-only-source-registration
-  - atomic-immutable-administration-audit
-  - versioned-sql-migration
-  - cross-stream-admin-onboarding-ui-and-bff
-  - authorization-and-real-sql-tests
+  - exact-opaque-authentication-directory-identity
+  - sql-binary-candidate-filter-and-ordinal-fence
+  - actual-sql-issued-session-alias-denial
 verification:
-  implementation_head: 70a98043d06fc5681ead7727942e98fe00b79c11
-  build_run: 37550450446
-  governance_run: 37550450492
-  actual_stack_job: 112564384092
-  result: 'All exact-head gates PASS, including actual SQL/OIDC/broker/API/worker/FE. Persistence 515 tests and web 364 tests PASS; migration integrity, container builds and runtime checks PASS.'
-  independent_review: 'Read-only reviewer found no remaining cleanup, authorization or atomicity blocker at70a9804. Prior options403 role-reconciliation finding fixed and regression-tested.'
+  previous_pr_head: 64e71c469c931ab730e563ab955766f64a7f37f9
+  previous_pr_build: 37553427104
+  previous_pr_governance: 37553427057
+  previous_main_build: 37553826140
+  previous_main_governance: 37553826122
+  previous_result: 'All PASS with independent review;255 merged and254 closed. Installer41ce2a6 full CI PASS, remains Draft for clean Windows qualification.'
+  implementation_head: 8eefd6ab78af4daa2214480dcf7132050e3054f4
+  implementation_build: 37555104776
+  implementation_governance: 37555104782
+  actual_stack_job: 112579406639
+  result: 'All exact implementation-head gates PASS; actual SQL native case/padding aliases denied by issued API/BFF sessions, original full-row identity and valid session restored. Independent frozen review pending.'
+  head_semantics: 'head records the verified implementation; exact published documentation HEAD and current workflow IDs belong in PR257 HANDOFF.'
 blocked_by: []
-next_action: Close CI for this documentation checkpoint, capture its exact HEAD in PR253 HANDOFF, then merge only with matching head and verify merged-main CI. Retire this lease after verified integration; continue next owner/company/member onboarding slice under233.
+next_action: Close documentation checkpoint CI on the exact published HEAD and obtain concrete independent review of8eefd6a. Then matching-head merge257 and close main CI before retirement. Keep239 Draft for actual Windows lifecycle and continue full233 product flows.
+
 implementation_checkpoint:
-  completed: 'Strict approved-binding registration, lossless version tokens, atomic scoped audit, idempotent retries, effective append-only SQL permission proof, admin UI/BFF with fresh session/company/role fencing.'
-  actual_sql: 'Registration/idempotency/scope/audit privilege denial including column-GRANT negative control, atomic failure rollback and retained history after restart PASS. Existing protected-column race positive/full-PUT negative controls and queued revocation proofs remain PASS.'
-  repaired_ci: '6c9ae2c Build37549256849 failed at the existing metadata race with a blocked source load.70a9804 pins transaction connections and restores prior/default isolation before pooling, with cancellation-safe cleanup, poisoned-pool eviction and9 focused tests. New runtime pool-baseline assertion and unchanged metadata race PASS in Build37550450446.'
-  remaining: 'Documentation-head CI and merged-main CI. This source onboarding slice does not qualify customer ERP schemas/credentials/business results or clean Windows installation;233 and238 remain open.'
+  result: '550 Persistence tests PASS after scoped CSharp formatting;10 new identity tests PASS. Smoke AST and diff-check PASS. No frontend or schema change.'
+  completed: 'Binary SQL identity candidate filter, ordinal post-query provider/subject fence including SQL space padding, schema length bounds and unchanged public context/roles DTO. Actual SQL smoke adds native alias negative controls, issued-session API/BFF403 and exact full-row restoration.'
+  remaining: 'Documentation checkpoint exact-head CI, concrete frozen independent review and main CI. Production OIDC/customer ERP/full233 remain incomplete.'
