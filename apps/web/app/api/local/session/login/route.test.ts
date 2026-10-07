@@ -10,7 +10,7 @@ const fetchMock = vi.fn();
 function request(body: unknown = credentials) {
   return new Request("http://localhost:3000/api/local/session/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: "http://localhost:3000" },
     body: JSON.stringify(body),
   });
 }
@@ -49,7 +49,9 @@ describe("local sign-in response privacy", () => {
   });
 
   it("rejects malformed request JSON without contacting the identity service", async () => {
-    const malformed = new Request("http://localhost:3000/api/local/session/login", { method: "POST", body: "{" });
+    const malformed = new Request("http://localhost:3000/api/local/session/login", {
+      method: "POST", headers: { "Content-Type": "application/json", Origin: "http://localhost:3000" }, body: "{",
+    });
     await failure(await POST(malformed), 400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -60,6 +62,9 @@ describe("local sign-in response privacy", () => {
     { ...credentials, username: "" },
     { ...credentials, password: "bad\npassword" },
     { ...credentials, companyId: "00000000-0000-0000-0000-000000000000" },
+    { ...credentials, tenantId: "foreign-authority" },
+    { ...credentials, roles: ["admin"] },
+    [credentials],
   ])("rejects an invalid login payload without caching it", async (body) => {
     await failure(await POST(request(body)), 400);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -126,5 +131,72 @@ describe("local sign-in response privacy", () => {
     expect(options.cache).toBe("no-store");
     expect(options.headers.Authorization).toBe(`Bearer ${token}`);
     expect(options.headers["X-AIOffice-Company-Id"]).toBe(companyId);
+  });
+});
+
+describe("local sign-in browser and input boundary", () => {
+  const url = "http://localhost:3000/api/local/session/login";
+  const origin = "http://localhost:3000";
+  function raw(body: BodyInit, headers: Record<string, string> = {}) {
+    return new Request(url, { method: "POST", headers: { "Content-Type": "application/json", Origin: origin, ...headers }, body });
+  }
+
+  it.each([null, "null", "https://foreign.invalid", "http://localhost:3001", `${origin}/`, `${origin}, https://foreign.invalid`])("refuses untrusted Origin before identity access or cookies: %s", async (value) => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (value !== null) headers.Origin = value;
+    await failure(await POST(new Request(url, { method: "POST", headers, body: JSON.stringify(credentials) })), 403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("ignores attacker forwarded authority", async () => {
+    await failure(await POST(raw(JSON.stringify(credentials), { Host: "localhost:3000", Origin: "https://foreign.invalid", "X-Forwarded-Host": "foreign.invalid", "X-Forwarded-Proto": "https" })), 403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["localhost:3000/", "localhost:3000/a/..", "localhost:3000\\a\\.."]) ("refuses raw Host normalization before identity or cookie issuance: %s", async (host) => {
+    await failure(await POST(raw(JSON.stringify(credentials), { Host: host })), 403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts the addressed Host when Next uses a container hostname", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 401 }));
+    const addressed = new Request("http://web:3000/api/local/session/login", {
+      method: "POST", headers: { Host: "127.0.0.1:3000", Origin: "http://127.0.0.1:3000", "Content-Type": "application/json" }, body: JSON.stringify(credentials),
+    });
+    await failure(await POST(addressed), 401);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["text/plain", "application/x-www-form-urlencoded", ""]) ("requires JSON media type: %s", async (mediaType) => {
+    await failure(await POST(raw(JSON.stringify(credentials), { "Content-Type": mediaType })), 415);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts exactly8192 bytes without changing credential strings", async () => {
+    const json = JSON.stringify(credentials);
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 401 }));
+    await failure(await POST(raw(" ".repeat(8192 - Buffer.byteLength(json)) + json)), 401);
+    const form = fetchMock.mock.calls[0][1].body as URLSearchParams;
+    expect(form.get("username")).toBe(credentials.username);
+    expect(form.get("password")).toBe(credentials.password);
+  });
+
+  it.each([" ".repeat(8193), JSON.stringify({ ...credentials, password: "á".repeat(4096) })])("bounds actual UTF8 bytes before identity access", async (body) => {
+    await failure(await POST(raw(body, { "Content-Length": "1" })), 413);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid UTF8 instead of replacing bytes", async () => {
+    await failure(await POST(raw(new Uint8Array([255]).buffer)), 400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps oversized refusal when stream cancellation throws", async () => {
+    const cancel = vi.fn().mockRejectedValue(new Error("private-upstream-details"));
+    const stream = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new Uint8Array(8193)); }, cancel });
+    const init: RequestInit & { duplex: "half" } = { method: "POST", headers: { Origin: origin, "Content-Type": "application/json" }, body: stream, duplex: "half" };
+    await failure(await POST(new Request(url, init)), 413);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
