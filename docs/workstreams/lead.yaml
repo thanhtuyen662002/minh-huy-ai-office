@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "239 published89ce9cb CI/native artifact and259 main CI PASS. Close this durable state checkpoint exact-head gates; keep Draft pending authorized clean Windows lifecycle/signing.260/Draft261 owns browser OIDC; continue full233 and selected inventory/stock-movement ERP mapping."
+next_action: "239 published5e427a1 full CI/native artifact and259 main CI PASS. Close this durable state checkpoint gates; keep Draft for actual clean Windows lifecycle/signing.260/Draft261 shared-session exact aaa CI/review PASS; private Core-authority helper c1f30f7 gates/review then routes/bootstrap/UI/Chromium. Continue full233 and selected inventory/stock-movement ERP mapping.115 remote non-ancestor refs audited; no additional eligible PR beyond current239/261 Drafts."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -66,13 +66,16 @@ installer_verification:
   code_head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
   local_core_tests: 76
   local_result: "76 PASS on exact89ce9cb after reviewed255/257/259 integration. Retained-ID recovery, lost-both-files refusal, real PS5 Authenticode and PS7 diagnostics remain green. No installer transition logic changed. Hosted full gates, actual stack and Windows artifact PASS."
-  verified_published_head: 89ce9cbd725a593de12d3fb5ec336a6f48eef8ad
-  build: 37564958347
-  governance: 37564958342
-  actual_stack_job: 112610445116
-  native_artifact_job: 112610445188
-  unsigned_artifact: 11458177452
-  artifact_bytes: 47963419
+  verified_published_head: 5e427a1d7d99cf99fab39e383606a69b3df239e0
+  build: 37565765413
+  governance: 37565767872
+  unsigned_artifact: 11458444683
+  artifact_bytes: 47964422
+  previous_integrated_head: 89ce9cbd725a593de12d3fb5ec336a6f48eef8ad
+  previous_integrated_build: 37564958347
+  previous_integrated_governance: 37564958342
+  previous_integrated_actual_stack_job: 112610445116
+  previous_integrated_native_artifact_job: 112610445188
   previous_published_head: 41ce2a6705bd23346a8af15c0f5883926d84d149
   previous_build: 37552582888
   previous_governance: 37552582871
@@ -140,3 +143,22 @@ selected_customer_business_read:
   state: pending-private-least-privilege-schema-mapping
   selected_by_user: '2026-10-07'
   credentials_policy: 'Customer configuration locations and encrypted credentials remain outside public Git; no customer database writes authorized or performed.'
+
+browser_oidc_frontier:
+  issue: 260
+  pr: 261
+  state: in_progress
+  verified_module_head: aaa3e9fd6f2e1f444d172359e920bd86a844b502
+  build: 37568027869
+  governance: 37568027934
+  actual_stack: 112620417758
+  result: 'All gates and independent review PASS;599 web tests include12 actual Redis tests and physically restored pre-logout RDB refusal. Private modules only; no routes/UI/browser bootstrap enabled. Core helper c1f30f7 has41 local tests, existing256-role contract, and pending exact CI/re-review. Follow HANDOFF261.'
+
+branch_audit:
+  inspected_at: '2026-10-07'
+  remote_non_ancestor_refs: 115
+  merged_pr_exact_heads: 109
+  closed_pr_exact_heads: 1
+  backup_snapshot_refs_without_pr: 3
+  active_draft_leases: [239, 261]
+  additional_eligible_prs: 0

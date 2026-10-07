@@ -130,11 +130,13 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 
 ## Next executable work
 
-1. Continue #260 / Draft #261 Authorization Code/PKCE browser OIDC, session expiry and supported company/member administration through actual browser/API/database evidence. Trusted configuration/transaction checkpoint is implemented; callback/bootstrap/Chromium acceptance remains required.
-2. Installer #239 integration882f467 / published89ce9cb includes reviewed member directory #255, exact identity #257 and session security #259; exact-head CI/native artifact PASS. Keep the installer Draft until actual clean Windows/UAC/reboot/sign-in/retained-data/repair/signing acceptance is proven.
+1. Continue #260 / Draft #261 Authorization Code/PKCE browser OIDC. Reviewed shared Redis generations/one-use callbacks/opaque encrypted sessions and signed-token adapter passed exact aaa3e9f Build37568027869/Governance37568027934,599 hosted web tests including12 actual Redis race/restart controls, and retained actual stack112620417758. Private Core-authority helper c1f30f7 has41 local tests and pending gates/re-review. These modules do not enable the routes/UI; start/callback/BFF/bootstrap/Chromium acceptance and full role administration remain required.
+2. Installer #239 integration882f467 / published5e427a1 includes reviewed member directory #255, exact identity #257 and session security #259; exact-head Build37565765413/Governance37565767872 and unsigned artifact11458444683 PASS. Keep the installer Draft until actual clean Windows/UAC/reboot/sign-in/retained-data/repair/signing acceptance is proven.
 3. Preserve all existing actual-stack authorization, Origin, role, identity, audit, metadata-race, broker and restart controls through subsequent features.
 4. Map the user-selected inventory/stock-movement read capability to an authorized real ERP schema/version and least-privilege credential. Private customer configuration and credentials remain outside public Git.
 5. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Goal #233 remains active.
+
+On2026-10-07, all115 remote refs outside main ancestry were compared against exact PR heads:109 correspond to merged PRs,1 to a closed PR,3 to backups/snapshots and2 to active Drafts239/261. Ancestry alone does not authorize merging historical backups. No additional active PR is eligible for merge.
 
 ## Genuine external evidence boundaries
 
