@@ -7,6 +7,7 @@ import {
   localUiDisabledResponse,
   unauthenticatedResponse,
 } from "../../../../lib/local-ai-bff";
+import { readBoundedRequestJson } from "../../../../lib/bounded-request-json";
 
 type TaskBody = { dataSourceId?: unknown; question?: unknown };
 
@@ -21,12 +22,12 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid company selector." }, { status: 400 });
   }
 
-  let body: TaskBody;
-  try {
-    body = await request.json() as TaskBody;
-  } catch {
-    return Response.json({ error: "Invalid task payload." }, { status: 400 });
-  }
+  // 32 KiB preserves the supported 4000 UTF-16 units, even fully JSON-escaped.
+  const input = await readBoundedRequestJson(request, 32 * 1024);
+  if (!input.ok) return Response.json({ error: "Invalid task payload." }, {
+    status: input.status, headers: { "Cache-Control": "no-store" },
+  });
+  const body = input.value as TaskBody;
 
   if (
     !body || typeof body !== "object" || Array.isArray(body)

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: 9d4ad282b385d113fa5a05dd2de6be737a394d84
+head: b38997774538e9a585858ddc6e40c2701af1abe8
 state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
@@ -27,6 +27,11 @@ verification:
   configuration_actual_stack: 112612804988
   configuration_result: 'All hosted gates PASS, including web/type-check/build and retained actual stack. Frozen independent review found no configuration/transaction code blocker. Browser routes and full260 acceptance remain unimplemented.'
   head_semantics: 'head records the last hosted-verified implementation; exact current published HEAD and CI runs belong in HANDOFF261.'
+  browser_bff_head: b38997774538e9a585858ddc6e40c2701af1abe8
+  browser_bff_build: 37601220265
+  browser_bff_governance: 37601220290
+  browser_bff_actual_stack: 112726864086
+  browser_bff_result: 'All exact-head gates PASS;762 hosted web tests including20 actual Redis controls and physical pre-logout RDB restore/restart. Independent294 focused tests PASS; prior proxy, lost-publication and streamed-body findings independently closed. Remaining review P2: task/source mutations used unbounded body readers. Current patch adds actual-byte/strict UTF8/deadline/cancellation before authority; new exact-head gates/re-review required.'
   adapter_head: e8fdad8cc66a95a5a781665f6b2c3c7d0fc94ab8
   adapter_build: 37566597553
   adapter_governance: 37566597547
@@ -53,7 +58,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close opaque BFF/logout/provisional-publication checkpoint exact-head CI and frozen review; require20 actual Redis controls. Then retained browser-client bootstrap/public issuer/internal metadata, UI and actual Chromium acceptance. Keep239 Draft for actual Windows lifecycle; full233/customer inventory/movement qualification remain incomplete.
+next_action: Close mutation-ingress fix exact-head CI and frozen re-review; retain20 actual Redis and SQL stack controls. Then retained browser-client bootstrap/public issuer/internal metadata, UI and actual Chromium acceptance. Keep239 Draft for actual Windows lifecycle. User deferred Santino; qualify selected inventory/movements against private Medcom/Novo configuration. Full233 remains incomplete.
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -63,6 +68,7 @@ implementation_checkpoint:
   ci_correction: 'Exact2119e12 hosted web job112628608942 ran all20 actual Redis controls:18 passed;2 new assertions incorrectly expected boolean HExists results while pinned node-redis6.3.0 returns integer0/1. Assertion correction retains command/control strength; full new-head hosted suite required. Frozen re-review was interrupted by external reviewer usage limit; no review approval claimed.'
   restart_readiness: 'Exact751dfd2 hosted job112721727775 passed753/754 tests including19/20 actual Redis controls. Physical RDB restart control hit raw Socket closed unexpectedly because docker restart returns before snapshot loading/readiness. The test now waits bounded fresh read-only connect/PING readiness and recreates closed worker transports, then still requires physically restored old SID/generation/incarnation, changed run_id, old-authority denial and fresh-login recovery. New exact-head full gates required.'
   streamed_body_fence: 'Frozen271 review used a real loopback HTTP server with flushed headers/delayed JSON and reproduced private200 after body-time logout despite final read at headers. Final shared read now follows bounded complete-body consumption before releasing any private response.8 new controls PASS: actual HTTP positive/body-time logout/expiry/outage, dishonest actual-byte bounds, cancellation, unchanged request deadline and bodyless response privacy. Re-review/new-head gates required.'
+  mutation_ingress: 'Independent frozenb389 control accepted1MiB ignored task padding and forwarded1MiB source metadata before authority. All task/source mutation readers now bound actual bytes (task32KiB preserves4000 fully JSON-escaped UTF16 units; source8192), strict UTF8/JSON media,10-second deadline and request cancellation with nonblocking cleanup. Origin remains first.44 new controls cover browser-with-password-disabled and retained local mode, maximum supported input, false Content-Length/chunks, invalid UTF8, foreign Origin before pull, stalled read/cleanup, abort and media.111 focused tests/TypeScript PASS. New-head CI/re-review required.'
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'
   remaining: 'Current BFF/logout/provisional-publication exact-head gates/frozen re-review, retained bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and full260 exact-head/main closure.'
