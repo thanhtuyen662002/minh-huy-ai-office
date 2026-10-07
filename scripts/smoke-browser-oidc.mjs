@@ -64,6 +64,10 @@ try {
     const response = await fetch(path, { cache: "no-store" });
     return { status: response.status, text: await response.text(), cache: response.headers.get("cache-control") };
   }, path);
+  const mutate = (path, method, body) => page.evaluate(async ({ path, method, body }) => {
+    const response = await fetch(path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    return { status: response.status, body: await response.json(), cache: response.headers.get("cache-control") };
+  }, { path, method, body });
   async function signIn(passwordRequired = false) {
     await page.goto(app);
     await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).waitFor();
@@ -106,7 +110,8 @@ try {
   const sources = await get("/api/local/data-sources" + query);
   const members = await get("/api/local/company/members" + query);
   requireProof(sources.status === 200 && members.status === 200 && sources.cache === "no-store" && members.cache === "no-store");
-  requireProof(JSON.parse(sources.text).some(item => item.id === manifest.AIOFFICE_DATA_SOURCE_ID));
+  const source = JSON.parse(sources.text).find(item => item.id === manifest.AIOFFICE_DATA_SOURCE_ID);
+  requireProof(source && guid(source.id) && source.allowRead && !source.allowWrite && source.isEnabled);
   requireProof(JSON.parse(members.text).items.some(item => item.userId === user));
   requireProof(!/access_token|accessToken|client_secret|connectionSecretReference|secretref:\/\//.test(sources.text + members.text));
   await page.getByRole("option", { name: "Local sample ERP", exact: true }).waitFor();
@@ -121,6 +126,21 @@ try {
   })).status);
   requireProof(password === 503 && (await current()).status === 200);
   console.log("PASS browser company/member/source access, cross-company denial and disabled local password route");
+
+  stage = "owned-source-metadata-mutation";
+  const sourcePath = `/api/local/data-sources/${source.id}` + query;
+  const metadata = Object.fromEntries(["logicalName", "purpose", "maxConcurrency", "isEnabled"].map(key => [key, source[key]]));
+  const changed = { ...metadata, purpose: "Disposable browser metadata control" };
+  try {
+    const updated = await mutate(sourcePath, "PUT", changed);
+    requireProof(updated.status === 200 && updated.cache === "no-store" && updated.body.purpose === changed.purpose);
+    requireProof(updated.body.kind === source.kind && updated.body.environment === source.environment
+      && updated.body.allowRead === source.allowRead && updated.body.allowWrite === source.allowWrite);
+  } finally {
+    const restored = await mutate(sourcePath, "PUT", metadata);
+    requireProof(restored.status === 200 && Object.entries(metadata).every(([key, value]) => restored.body[key] === value));
+  }
+  console.log("PASS browser source metadata mutation preserves policy and restores the original owned fixture");
 
   stage = "callback-denial-preserves-session";
   requireProof(originalCallback.cookie?.includes("aioffice_oidc_transaction="));
@@ -156,6 +176,7 @@ try {
     const authority = await current(); requireProof(authority.status === 200 && !authority.body.roles.includes("admin"));
     requireProof((await get("/api/local/company/members" + query)).status === 403);
     requireProof((await get("/api/local/data-sources/registration-options" + query)).status === 403);
+    requireProof((await mutate(sourcePath, "PUT", changed)).status === 403);
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await page.waitForFunction(() => ![...document.querySelectorAll("button")].some(item => item.textContent?.trim() === "Thành viên")
       && !document.querySelector('section[aria-label="Thành viên công ty"] tbody'));
@@ -184,6 +205,25 @@ try {
 
   stage = "owned-session-expiry-private-clear";
   await page.getByRole("option", { name: "Local sample ERP", exact: true }).waitFor();
+  // Prove browser mutation/SQL persistence and populate private chat before
+  // expiry. Provider business-answer qualification is a separate requirement.
+  const privateMessage = "Disposable browser task " + randomUUID();
+  await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
+  await page.locator('textarea[name="question"]').fill(privateMessage);
+  const submitted = page.waitForResponse(response => response.request().method() === "POST"
+    && response.url() === app + "/api/local/tasks" + query);
+  await page.getByRole("button", { name: "Gửi", exact: true }).click();
+  const acceptedResponse = await submitted;
+  requireProof(acceptedResponse.status() === 202 && acceptedResponse.headers()["cache-control"] === "no-store");
+  const accepted = await acceptedResponse.json(); requireProof(guid(accepted.taskId));
+  const task = await get(`/api/local/tasks/${accepted.taskId}` + query);
+  requireProof(task.status === 200 && task.cache === "no-store" && JSON.parse(task.text).taskId === accepted.taskId);
+  await page.getByText(privateMessage, { exact: true }).waitFor();
+  const privateDraft = "Disposable browser draft " + randomUUID();
+  await page.locator('textarea[name="question"]:enabled').waitFor();
+  await page.locator('textarea[name="question"]').fill(privateDraft);
+  requireProof((await mutate(`/api/local/tasks?companyId=${foreign}`, "POST", { dataSourceId: source.id, question: privateMessage })).status === 401);
+  console.log("PASS browser task submission and durable scoped task read; cross-company mutation denied");
   const liveBinding = (await cookie("aioffice_browser_binding")).value.split(".");
   const liveSid = (await cookie("aioffice_browser_session")).value;
   const namespace = digest(JSON.stringify(["aioffice-browser-session-v1", issuer, "aioffice-browser", callback]));
@@ -198,10 +238,14 @@ try {
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).waitFor();
   requireProof(await page.getByRole("option", { name: "Local sample ERP", exact: true }).count() === 0
-    && await page.locator('section[aria-label="Thành viên công ty"] tbody').count() === 0);
+    && await page.locator('section[aria-label="Thành viên công ty"] tbody').count() === 0
+    && await page.getByText(privateMessage, { exact: true }).count() === 0
+    && !await page.locator('textarea[name="question"]').count());
   stage = "provider-expiry-reauthentication";
   await signIn(); await page.getByRole("option", { name: "Local sample ERP", exact: true }).waitFor();
   requireProof((await current()).status === 200);
+  requireProof(await page.getByText(privateMessage, { exact: true }).count() === 0
+    && (await page.locator('textarea[name="question"]').inputValue()) === "");
   console.log("PASS actual Redis TIME session expiry clears private UI and fresh provider reauthentication recovers");
   stage = "sanitized-ui-artifact";
   requireProof(!JSON.stringify(await current()).includes(manifest.AIOFFICE_OWNER_PASSWORD));
