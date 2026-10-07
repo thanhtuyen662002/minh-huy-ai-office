@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: a372dd4c2454a4fbf2af022b6ed63a3ab1669d0d
+current_target_head: 52620a82d8175c1634c6579c5e934b303d73351d
 last_verified_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
 
 critical_paths:
@@ -24,7 +24,7 @@ critical_paths:
     branch: frontend/260-browser-oidc
     head: ed73d8a45576cb811ca9e0f02aa748cc89821518
     state: in_progress
-    next: "260/Draft261 remains active. Exacted73 Build37605100433/Governance37605100461/actual112738532113 PASS:828 web tests/20 actual Redis and physical restart, routes/BFF/logout/owned browser-client/public issuer/internal metadata/private key replay. Independent46 .NET/66 UI lifecycle/TypeScript/PS5 and7 review PASS; concurrent-disable P2 closed. New473fe4f required Chromium provider/company/member/source/cookie/callback/role/logout/relogin/expiry private-clear gate is running; exact current head/runs in HANDOFF261. Full260 acceptance and final matching-head merge/main closure remain required."
+    next: "260/Draft261 remains active. Exacted73 module gates/828 web/20 actual Redis and independent issuer/key/UI review PASS.473 real Chromium failed callback303; same261293 repair adds missing Keycloak basic access-sub scope, fixed-stage private-safe diagnostics and original-transaction replay. Current293 Build37642626398/Gov37642626591 running; full actual browser/mutation/populated private-state proof and final matching-head review/merge/main closure remain required. Follow HANDOFF261."
 
   runtime_ai:
     issue: null
@@ -79,7 +79,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "239 publisheda372 full CI/native artifact PASS; keep Draft for actual clean Windows lifecycle/signing and close current durable-state checkpoint gates.260 exacted73 runtime wiring/review PASS; close current473 actual Chromium gate/full acceptance review, fix any actionable red immediately, merge only when260 is complete and exact head matches green gates. Inventory/stock movements is first ERP business read, Medcom/Novo private schema/least-privilege qualification remains; user deferred Santino.115 refs audited and only239/261 Drafts remain open, no additional eligible PR."
+next_action: "239526 Build37641026525/Gov37641026377/native artifact11492986101 PASS; keep Draft for clean Windows lifecycle/signing. Close260 current293 Build37642626398/Gov37642626591 and full actual Chromium acceptance; repair any red same261 immediately and merge only with exact matching green gates and review. Inventory/stock movements is first ERP business read, Medcom/Novo private schema/least-privilege qualification remains; user deferred Santino.115 refs audited, only239/261 Drafts open, no additional eligible PR. Full233 stays active."
 
 blocked_by:
   - "Medcom/Novo existing encrypted ERP configuration locations are selected privately outside public Git; user deferred Santino until later. Credentials are not yet verified for authorized least-privilege business-row access. Inventory/stock movements is the first semantic capability; its schema/version mapping remains required."
