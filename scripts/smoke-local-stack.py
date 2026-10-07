@@ -122,7 +122,8 @@ def main():
 
     def login(expected=200):
         status, headers, body = http("/api/local/session/login", {
-            "username": "owner", "password": manifest["AIOFFICE_OWNER_PASSWORD"], "companyId": company})
+            "username": "owner", "password": manifest["AIOFFICE_OWNER_PASSWORD"], "companyId": company},
+            headers={"Origin": web})
         assert status == expected, f"FE login status {status}, expected {expected}"
         assert "no-store" in headers.get("Cache-Control", "")
         if expected == 200:
@@ -157,6 +158,47 @@ def main():
     assert all(secret not in page for secret in secrets)
     login()
     selector = "?companyId=" + company
+    # These are real cookie mutations and issued sessions, not mocked identity responses.
+    session_credentials = {"username": "owner", "password": manifest["AIOFFICE_OWNER_PASSWORD"], "companyId": company}
+    def cookie_snapshot():
+        return sorted((cookie.domain, cookie.path, cookie.name, cookie.value) for cookie in cookies)
+    issued_cookies = cookie_snapshot()
+    issued_token = next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token")
+    def preserved_session():
+        assert cookie_snapshot() == issued_cookies, "Denied request mutated issued cookies"
+        status, headers, body = http("/api/local/session" + selector)
+        assert status == 200 and "no-store" in headers.get("Cache-Control", "")
+        status, headers, body = http("/api/auth/context", base=api,
+            headers={"Authorization": "Bearer " + issued_token, "X-AIOffice-Company-Id": company})
+        assert status == 200 and body["tenantId"] == tenant and body["companyId"] == company and body["userId"] == user
+        assert "no-store" in headers.get("Cache-Control", "")
+    rejected_origins = [{}, {"Origin": "null"}, {"Origin": "https://foreign.example.invalid"},
+        {"Origin": "http://127.0.0.1:3001"}, {"Origin": web + "/"},
+        {"Origin": "https://foreign.example.invalid", "X-Forwarded-Host": "foreign.example.invalid", "X-Forwarded-Proto": "https"}]
+    for origin_headers in rejected_origins:
+        for path, payload in (("/api/local/session/login", session_credentials), ("/api/local/session/logout", None)):
+            status, headers, body = http(path, payload, headers=origin_headers, method="POST")
+            assert status == 403 and "no-store" in headers.get("Cache-Control", "")
+            assert not headers.get_all("Set-Cookie"), "Denied request emitted a cookie"
+            assert all(secret not in json.dumps(body) for secret in secrets) and issued_token not in json.dumps(body)
+            preserved_session()
+    for payload, extra_headers, expected in (
+        ({**session_credentials, "tenantId": tenant}, {}, 400),
+        ({**session_credentials, "password": "á" * 4096}, {}, 413),
+        (session_credentials, {"Content-Type": "text/plain"}, 415)):
+        status, headers, body = http("/api/local/session/login", payload, headers={"Origin": web, **extra_headers})
+        assert status == expected and "no-store" in headers.get("Cache-Control", "")
+        assert not headers.get_all("Set-Cookie")
+        assert all(secret not in json.dumps(body) for secret in secrets) and issued_token not in json.dumps(body)
+        preserved_session()
+    status, headers, body = http("/api/local/session/logout", headers={"Origin": web}, method="POST")
+    assert status == 200 and "no-store" in headers.get("Cache-Control", "")
+    assert "Max-Age=0" in headers.get("Set-Cookie", "") and "HttpOnly" in headers.get("Set-Cookie", "")
+    assert not any(cookie.name == "aioffice_local_access_token" for cookie in cookies)
+    status, headers, body = http("/api/local/session" + selector)
+    assert status == 401 and "no-store" in headers.get("Cache-Control", "")
+    login()
+    print("PASS actual OIDC session Origin and input refusals preserve issued API/BFF authority; same-origin logout clears and sign-in restores cookie")
     status, headers, sources = http("/api/local/data-sources" + selector)
     assert status == 200 and "no-store" in headers.get("Cache-Control", "")
     assert any(item["id"] == source and item["allowRead"] and not item["allowWrite"] for item in sources)
