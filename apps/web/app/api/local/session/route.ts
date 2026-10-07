@@ -2,13 +2,13 @@ import {
   copyCoreResponse,
   fetchCoreApi,
   isCanonicalCompanyId,
-  isLocalAiUiEnabled,
+  isOfficeAiUiEnabled,
   localUiDisabledResponse,
   unauthenticatedResponse,
 } from "../../../../lib/local-ai-bff";
 
 export async function GET(request: Request) {
-  if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
   const companyId = new URL(request.url).searchParams.get("companyId");
   if (!isCanonicalCompanyId(companyId)) {
     return Response.json({ error: "Invalid company selector." }, { status: 400 });

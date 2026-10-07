@@ -2,6 +2,7 @@
 import json
 import sys
 from pathlib import Path
+from browser_deployment_contract import validate_browser_deployment
 
 
 def fail(message: str) -> None:
@@ -100,6 +101,9 @@ if not any(
     fail("core-api must publish container port 8080 on IPv4 loopback only")
 
 api_environment = core_api.get("environment") or {}
+browser_error = validate_browser_deployment(web_environment, api_environment)
+if browser_error:
+    fail(browser_error)
 expected_secret_ref = "secretref://env/AIOFFICE_DB_CONNECTION"
 if (
     api_environment.get("AIOffice__PlatformDatabase__ConnectionSecretRef")

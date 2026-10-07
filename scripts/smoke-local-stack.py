@@ -2,8 +2,11 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import hmac
+import base64
 from http.cookiejar import CookieJar
 import json
+import os
 import re
 import subprocess
 import time
@@ -41,14 +44,18 @@ def main():
     user = str(uuid.UUID(manifest["AIOFFICE_USER_ID"]))
     source = str(uuid.UUID(manifest["AIOFFICE_DATA_SOURCE_ID"]))
     compose = ["docker", "compose", "--env-file", str(directory / "local.env"), "-f", "compose.local.yaml"]
+    # Retained password-grant compatibility controls opt in explicitly on this
+    # owned smoke fixture. Shipping local setup now defaults to browser PKCE.
+    legacy_environment = {**os.environ, "AIOFFICE_BROWSER_OIDC_ENABLED": "false", "AIOFFICE_LOCAL_UI_ENABLED": "true"}
 
     def clean(message):
         for secret in secrets:
             message = message.replace(secret, "[REDACTED]")
         return message
 
-    def run(*arguments, timeout=900):
-        result = subprocess.run([*compose, *arguments], capture_output=True, text=True, timeout=timeout)
+    def run(*arguments, timeout=900, environment=None):
+        result = subprocess.run([*compose, *arguments], capture_output=True, text=True, timeout=timeout,
+                                env=legacy_environment if environment is None else environment)
         if result.returncode:
             if arguments and arguments[0] == "up":
                 bootstrap_log = subprocess.run([*compose, "logs", "--no-color", "--tail", "30", "bootstrap"],
@@ -133,7 +140,15 @@ def main():
             cookie = headers.get("Set-Cookie", "")
             assert "HttpOnly" in cookie and "SameSite=lax" in cookie
 
+    shipping_environment = {key: value for key, value in os.environ.items()
+                            if key not in {"AIOFFICE_BROWSER_OIDC_ENABLED", "AIOFFICE_LOCAL_UI_ENABLED"}}
+    shipping = json.loads(run("config", "--format", "json", environment=shipping_environment))
+    assert shipping["services"]["web"]["environment"]["AIOFFICE_BROWSER_OIDC_ENABLED"] == "true"
+    assert shipping["services"]["web"]["environment"]["AIOFFICE_LOCAL_UI_ENABLED"] == "false"
+    print("PASS shipping local setup defaults to browser PKCE and disabled password UI")
     profile = json.loads(run("config", "--format", "json"))
+    assert profile["services"]["web"]["environment"]["AIOFFICE_BROWSER_OIDC_ENABLED"] == "false"
+    assert profile["services"]["web"]["environment"]["AIOFFICE_LOCAL_UI_ENABLED"] == "true"
     assert profile["name"] == "aioffice-" + uuid.UUID(manifest["AIOFFICE_INSTALLATION_ID"]).hex
     services = profile["services"]
     for service in ("core-api", "agent-worker"):
@@ -150,9 +165,67 @@ def main():
         assert all(port["host_ip"] == "127.0.0.1" for port in service.get("ports", []))
     for name in ("sql", "identity-db", "rabbitmq", "redis"):
         assert not services[name].get("ports"), "Internal data service has a host port"
+    public_issuer = "http://127.0.0.1:" + str(services["identity"]["ports"][0]["published"]) + "/realms/aioffice-local"
+    assert services["identity"]["environment"]["KC_HOSTNAME"] == public_issuer.removesuffix("/realms/aioffice-local")
+    assert services["identity"]["environment"]["KC_HOSTNAME_BACKCHANNEL_DYNAMIC"] == "true"
+    assert services["core-api"]["environment"]["AIOffice__Authentication__Authority"] == public_issuer
+    assert services["core-api"]["environment"]["AIOffice__Authentication__MetadataAddress"] == "http://identity:8080/realms/aioffice-local/.well-known/openid-configuration"
+    browser_key = services["web"]["environment"]["AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY"]
+    expected_key = base64.urlsafe_b64encode(hmac.digest(manifest["AIOFFICE_RUNTIME_PASSWORD"].encode(),
+        ("aioffice-local-browser-key-v1|" + manifest["AIOFFICE_INSTALLATION_ID"]).encode(), hashlib.sha256)).decode().rstrip("=")
+    assert browser_key == expected_key and re.fullmatch("[A-Za-z0-9_-]{43}", browser_key)
+    assert all(secret not in json.dumps(services["web"]["environment"]) for secret in secrets)
     print("PASS local service configuration, secret references and isolated loopback profile")
     run("up", "--build", "-d", timeout=1500)
     ready()
+    identity = "http://127.0.0.1:" + str(services["identity"]["ports"][0]["published"])
+    with urllib.request.urlopen(identity + "/realms/aioffice-local/.well-known/openid-configuration", timeout=15) as discovery:
+        document = json.loads(discovery.read(65537))
+        assert document["issuer"] == public_issuer
+        assert document["authorization_endpoint"] == public_issuer + "/protocol/openid-connect/auth"
+    print("PASS actual public issuer and explicit internal metadata configuration with private purpose-separated browser key")
+    browser_redirect = web + "/api/local/session/oidc/callback"
+
+    def identity_admin(path, payload=None):
+        form = urllib.parse.urlencode({"client_id": "admin-cli", "grant_type": "password",
+            "username": "bootstrap-admin", "password": manifest["AIOFFICE_IDENTITY_ADMIN_PASSWORD"]}).encode()
+        with urllib.request.urlopen(urllib.request.Request(identity + "/realms/master/protocol/openid-connect/token",
+            data=form, headers={"Content-Type": "application/x-www-form-urlencoded"}), timeout=15) as response:
+            admin_token = json.loads(response.read(65537))["access_token"]
+        request = urllib.request.Request(identity + "/admin/realms/aioffice-local/" + path,
+            data=None if payload is None else json.dumps(payload).encode(),
+            headers={"Authorization": "Bearer " + admin_token, "Content-Type": "application/json"},
+            method="GET" if payload is None else "PUT")
+        with urllib.request.urlopen(request, timeout=15) as response:
+            raw = response.read(65537)
+            assert len(raw) <= 65536, "Identity client response exceeded its bound"
+            return json.loads(raw) if raw else None
+
+    def browser_client_contract(expected_enabled=True):
+        clients = identity_admin("clients?clientId=aioffice-browser&search=false")
+        assert len(clients) == 1 and clients[0]["clientId"] == "aioffice-browser"
+        client_id = str(uuid.UUID(clients[0]["id"]))
+        client = identity_admin("clients/" + client_id)
+        assert client["id"] == client_id and client["enabled"] is expected_enabled
+        assert client["publicClient"] and client["standardFlowEnabled"] and client["protocol"] == "openid-connect"
+        for flag in ("directAccessGrantsEnabled", "implicitFlowEnabled", "serviceAccountsEnabled", "fullScopeAllowed"):
+            assert not client[flag], "Browser client enabled an unsupported flow/scope"
+        assert client["redirectUris"] == [browser_redirect] and not client["webOrigins"]
+        assert set(client["defaultClientScopes"]) == {"basic", "profile", "email"} and not client["optionalClientScopes"]
+        attributes = client["attributes"]
+        assert attributes["aioffice.installation-id"] == manifest["AIOFFICE_INSTALLATION_ID"]
+        assert attributes["pkce.code.challenge.method"] == "S256"
+        assert attributes["id.token.signed.response.alg"] == attributes["access.token.signed.response.alg"] == "RS256"
+        mappers = {mapper["name"]: mapper for mapper in client["protocolMappers"]}
+        assert set(mappers) == {"identity-provider", "api-audience"}
+        for mapper in mappers.values():
+            assert mapper["config"]["access.token.claim"] == "true" and mapper["config"]["id.token.claim"] == "false"
+        assert mappers["identity-provider"]["config"]["claim.value"] == "local-keycloak"
+        assert mappers["api-audience"]["config"]["included.custom.audience"] == "aioffice-local"
+        return client_id, client
+
+    browser_client_id, _ = browser_client_contract()
+    print("PASS actual owned browser client, exact callback, Code/S256-only flows and access-only API audience")
     status, _, page = http("/")
     assert status == 200 and company in page
     assert all(secret not in page for secret in secrets)
@@ -203,7 +276,7 @@ def main():
     assert status == 200 and "no-store" in headers.get("Cache-Control", "")
     assert any(item["id"] == source and item["allowRead"] and not item["allowWrite"] for item in sources)
     assert all(secret not in json.dumps(sources) for secret in secrets)
-    status, _, result = http(f"/api/local/data-sources/{source}/connection-test{selector}", {})
+    status, _, result = http(f"/api/local/data-sources/{source}/connection-test{selector}", {}, headers={"Origin": web})
     assert status == 200 and result["succeeded"], "Read-only SQL connection test failed"
 
     # Explicitly exercise the actual API's independent company authorization using the BFF cookie token.
@@ -884,7 +957,7 @@ def main():
 
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
     status, _, accepted = http("/api/local/tasks" + selector,
-        {"dataSourceId": source, "question": "Inspect the local sample database metadata"})
+        {"dataSourceId": source, "question": "Inspect the local sample database metadata"}, headers={"Origin": web})
     assert status == 202, f"Worker task submission status {status}"
     task = accepted["taskId"]
     def completed():
@@ -943,6 +1016,12 @@ def main():
     sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET IsActive=0 WHERE TenantId='{tenant}' AND Id='{user}';")
     assert http("/api/auth/context", base=api, headers=auth)[0] == 403
     login(expected=403)
+    # A deliberate owned-client disablement must survive bootstrap too; it is
+    # restored explicitly only in this disposable fixture after qualification.
+    disabled_client_id, disabled_browser_client = browser_client_contract()
+    assert disabled_client_id == browser_client_id
+    disabled_browser_client["enabled"] = False
+    identity_admin("clients/" + browser_client_id, disabled_browser_client)
     run("down", "--remove-orphans")  # deliberately keep every named volume
     # Configuration generation must preserve identifiers and credentials too.
     generated = subprocess.run(["pwsh", "-NoProfile", "-File", "infra/initialize-local-config.ps1",
@@ -951,6 +1030,11 @@ def main():
     assert hashlib.sha256(manifest_file.read_bytes()).hexdigest() == original_manifest
     run("up", "-d", timeout=600)
     ready()
+    retained_client_id, retained_browser_client = browser_client_contract(expected_enabled=False)
+    assert retained_client_id == browser_client_id
+    retained_browser_client["enabled"] = True
+    identity_admin("clients/" + browser_client_id, retained_browser_client)
+    assert browser_client_contract()[0] == browser_client_id
     assert sql("USE AIOfficeSample; SELECT COUNT(*) FROM dbo.LocalSample WHERE Id=2;") == "1"
     assert http("/api/auth/context", base=api, headers=auth)[0] == 403
     login(expected=403)
@@ -969,6 +1053,7 @@ def main():
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources WHERE {source_scope} AND Id='{registered_source}';") == "1"
     assert fingerprint("DataSourceRegistrationAudits", source_scope, "Id") == audit_before
     print("PASS repeat configuration/bootstrap, retained SQL/identity/revoked grant, inactive-user denial and retained task")
+    print("PASS retained browser client identity/disablement and explicit disposable-fixture restore")
     print("PASS complete local stack integration")
 
 
