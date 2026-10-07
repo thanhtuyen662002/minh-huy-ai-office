@@ -4,7 +4,7 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+head: 8a1e51712ab558fd846a2baf99821e038312e688
 state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
@@ -21,5 +21,15 @@ verification:
   base_build: 37564876619
   base_governance: 37564876597
   result: 'Main workflows PASS.259 exact7010f3b gates and frozen66f2f80 review approved;258 closed. Existing actual SQL/OIDC/member/source/audit/race/broker/restart controls remain required.'
+  configuration_head: 8a1e51712ab558fd846a2baf99821e038312e688
+  configuration_build: 37565706541
+  configuration_governance: 37565706525
+  configuration_actual_stack: 112612804988
+  configuration_result: 'All hosted gates PASS, including web/type-check/build and retained actual stack. Frozen independent review found no configuration/transaction code blocker. Browser routes and full260 acceptance remain unimplemented.'
+  head_semantics: 'head records the last hosted-verified implementation; exact current published HEAD and CI runs belong in HANDOFF261.'
 blocked_by: []
-next_action: Verify and checkpoint trusted configuration/authenticated-encrypted bounded login transactions, then implement callback/library/API authority, bootstrap/issuer routing and actual Chromium acceptance on Draft261. Close every meaningful checkpoint through exact-head CI. Keep239 Draft for actual Windows lifecycle; full233 and customer ERP qualification remain incomplete.
+next_action: Close private signed-token adapter checkpoint exact-head CI and frozen review. Implement shared atomic transaction/session generation consumption before exposing start/callback routes, then fresh API company authority, bootstrap/issuer routing/UI and actual Chromium acceptance on Draft261. Keep239 Draft for actual Windows lifecycle; full233 and customer ERP qualification remain incomplete.
+
+implementation_checkpoint:
+  local: '84 focused tests and TypeScript PASS. Real RSA-signed fixtures verify library signature/issuer/audience/nonce/lifetime checks and forged-signature denial; wrong/duplicate state/unpinned callback refuse before provider fetch. Actual-byte provider response limit65536 and token/ID-token expiry bounds apply. All failures generic. No routes or identity settings enabled.'
+  remaining: 'Shared multi-instance consume/revocation/session generations, start/callback/private session routing, Core authority, bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and independent exact-head/main closure.'
