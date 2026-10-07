@@ -112,6 +112,7 @@ services:
       AIOFFICE_READER_PASSWORD: ${AIOFFICE_READER_PASSWORD:?generate local configuration first}
       AIOFFICE_IDENTITY_ADMIN_PASSWORD: ${AIOFFICE_IDENTITY_ADMIN_PASSWORD:?generate local configuration first}
       AIOFFICE_OWNER_PASSWORD: ${AIOFFICE_OWNER_PASSWORD:?generate local configuration first}
+      AIOFFICE_WEB_PORT: ${AIOFFICE_WEB_PORT:-3000}
     depends_on:
       sql:
         condition: service_healthy
