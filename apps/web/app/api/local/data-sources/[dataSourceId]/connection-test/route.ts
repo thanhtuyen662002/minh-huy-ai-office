@@ -2,7 +2,8 @@ import {
   copyCoreResponse,
   fetchCoreApi,
   isCanonicalCompanyId,
-  isLocalAiUiEnabled,
+  isOfficeAiUiEnabled,
+  officeMutationIsSameOrigin,
   localUiDisabledResponse,
   unauthenticatedResponse,
 } from "../../../../../../lib/local-ai-bff";
@@ -10,7 +11,10 @@ import {
 type RouteContext = { params: Promise<{ dataSourceId: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
-  if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
+  if (!officeMutationIsSameOrigin(request)) return Response.json({ error: "Same-origin request is required." }, {
+    status: 403, headers: { "Cache-Control": "no-store" },
+  });
 
   const companyId = new URL(request.url).searchParams.get("companyId");
   if (!isCanonicalCompanyId(companyId)) {

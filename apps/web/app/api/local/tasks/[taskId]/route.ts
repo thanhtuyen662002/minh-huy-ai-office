@@ -2,7 +2,7 @@ import {
   copyCoreResponse,
   fetchCoreApi,
   isCanonicalCompanyId,
-  isLocalAiUiEnabled,
+  isOfficeAiUiEnabled,
   localUiDisabledResponse,
   unauthenticatedResponse,
 } from "../../../../../lib/local-ai-bff";
@@ -10,7 +10,7 @@ import {
 type RouteContext = { params: Promise<{ taskId: string }> };
 
 export async function GET(request: Request, context: RouteContext) {
-  if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
 
   const companyId = new URL(request.url).searchParams.get("companyId");
   if (!isCanonicalCompanyId(companyId)) {

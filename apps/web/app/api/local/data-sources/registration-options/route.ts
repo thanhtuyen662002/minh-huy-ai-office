@@ -1,7 +1,7 @@
-import { copyCoreResponse, fetchCoreApi, isCanonicalCompanyId, isLocalAiUiEnabled, localUiDisabledResponse, unauthenticatedResponse } from "../../../../../lib/local-ai-bff";
+import { copyCoreResponse, fetchCoreApi, isCanonicalCompanyId, isOfficeAiUiEnabled, localUiDisabledResponse, unauthenticatedResponse } from "../../../../../lib/local-ai-bff";
 
 export async function GET(request: Request) {
-  if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
   const url = new URL(request.url);
   const company = url.searchParams.get("companyId");
   const offset = url.searchParams.get("offset") ?? "0";

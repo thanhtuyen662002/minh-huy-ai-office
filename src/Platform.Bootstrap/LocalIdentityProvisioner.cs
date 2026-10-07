@@ -54,6 +54,8 @@ public sealed class LocalIdentityProvisioner(HttpClient http)
         }
         else EnsureSuccess(realm);
 
+        await new LocalBrowserClientProvisioner(http).EnsureAsync(options);
+
         var userUrl = $"{realmUrl}/users?username={BootstrapOptions.OwnerUsername}&exact=true";
         async Task<JsonElement[]> Users() => await http.GetFromJsonAsync<JsonElement[]>(userUrl)
             ?? throw new InvalidOperationException("Identity lookup returned no result.");

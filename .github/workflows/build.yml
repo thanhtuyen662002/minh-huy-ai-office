@@ -46,6 +46,15 @@ jobs:
     name: Web tests, type-check and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      session-redis:
+        image: redis:8-alpine
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,6 +63,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Test
+        env:
+          AIOFFICE_TEST_SESSION_REDIS_URL: redis://127.0.0.1:6379
+          AIOFFICE_TEST_SESSION_REDIS_CONTAINER: ${{ job.services.session-redis.id }}
+          AIOFFICE_TEST_SESSION_REDIS_DISPOSABLE: 'true'
         run: npm run web:test
       - name: Type-check
         run: npm run web:typecheck
@@ -80,6 +93,16 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install browser proof dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install required Chromium runtime
+        run: npx playwright install --with-deps chromium
+      - name: Verify private configuration replay and browser key
+        shell: pwsh
+        run: ./scripts/test-local-config.ps1
       - name: Generate protected local installation configuration
         shell: pwsh
         run: ./infra/initialize-local-config.ps1 -DataDirectory (Join-Path $env:RUNNER_TEMP 'aioffice-local')
@@ -87,6 +110,15 @@ jobs:
         run: docker compose --env-file "$RUNNER_TEMP/aioffice-local/local.env" -f compose.local.yaml config --quiet
       - name: Verify real SQL, OIDC, broker, API, worker and FE
         run: python scripts/smoke-local-stack.py "$RUNNER_TEMP/aioffice-local"
+      - name: Verify actual Chromium browser OIDC and private UI lifecycle
+        run: node scripts/smoke-browser-oidc.mjs "$RUNNER_TEMP/aioffice-local"
+      - name: Retain sanitized disposable workspace screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-workspace-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/aioffice-browser-proof/workspace.png
+          if-no-files-found: error
+          retention-days: 7
       - name: Remove only this ephemeral CI stack
         if: ${{ always() }}
         run: docker compose --env-file "$RUNNER_TEMP/aioffice-local/local.env" -f compose.local.yaml down --volumes --remove-orphans
@@ -117,7 +149,24 @@ jobs:
             -f compose.production.yaml \
             config --format json > "${rendered}"
           python3 scripts/validate-deployment.py "${rendered}"
+          python3 -m unittest discover -s scripts -p test_browser_deployment.py
           python3 -m json.tool apps/web/vercel.json >/dev/null
+      - name: Validate enabled production browser deployment contract
+        env:
+          AIOFFICE_BROWSER_OIDC_ENABLED: "true"
+          AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN: https://office.example.test
+          AIOFFICE_BROWSER_OIDC_AUTHORIZATION_ENDPOINT: https://identity.example.test/authorize
+          AIOFFICE_BROWSER_OIDC_TOKEN_ENDPOINT: https://identity.example.test/token
+          AIOFFICE_BROWSER_OIDC_JWKS_URI: https://identity.example.test/certs
+          AIOFFICE_BROWSER_OIDC_CLIENT_ID: office-browser
+          AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          AIOFFICE_BROWSER_CORE_API_ORIGIN: https://api.example.test
+          AIOFFICE_BROWSER_SESSION_REDIS_URL: rediss://private-cache.example.test:6380/1
+        run: |
+          set -euo pipefail
+          rendered="${RUNNER_TEMP}/browser-deployment-compose.json"
+          docker compose --env-file .env.production.example -f compose.yaml -f compose.production.yaml config --format json > "${rendered}"
+          python3 scripts/validate-deployment.py "${rendered}"
       - name: Build Core.Api container
         run: docker build --file src/Core.Api/Dockerfile --tag aioffice/core-api:ci .
       - name: Build Agent.Worker container
