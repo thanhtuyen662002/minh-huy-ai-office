@@ -67,7 +67,10 @@ export async function exchangeBrowserAuthorizationCode(
     });
     const idClaims = tokens.claims();
     const subject = idClaims?.sub;
-    if (tokens.token_type !== "bearer" || (idClaims?.azp !== undefined && idClaims.azp !== settings.clientId)
+    const audience = idClaims?.aud;
+    const exactAudience = audience === settings.clientId
+      || (Array.isArray(audience) && audience.length === 1 && audience[0] === settings.clientId);
+    if (!exactAudience || tokens.token_type !== "bearer" || (idClaims?.azp !== undefined && idClaims.azp !== settings.clientId)
       || typeof subject !== "string" || subject.length === 0 || subject.length > 200
       || typeof tokens.access_token !== "string" || !tokens.access_token || tokens.access_token.length > 16_384
       || typeof tokens.expires_in !== "number" || !Number.isSafeInteger(tokens.expires_in) || tokens.expires_in < 1) throw new Error();
@@ -77,7 +80,7 @@ export async function exchangeBrowserAuthorizationCode(
     if (pieces.length !== 3 || pieces.some((piece) => !/^[A-Za-z0-9_-]+$/.test(piece))) throw new Error();
     const accessClaims = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(pieces[1], "base64url")));
     const now = Math.floor(Date.now() / 1000);
-    if (accessClaims?.sub !== subject || accessClaims.iss !== settings.issuer
+    if (accessClaims?.sub !== subject || accessClaims.iss !== settings.issuer || Object.hasOwn(accessClaims, "cnf")
       || !Number.isSafeInteger(accessClaims.exp) || accessClaims.exp <= now
       || !idClaims || !Number.isSafeInteger(idClaims.exp) || idClaims.exp <= now) throw new Error();
     return Object.freeze({ accessToken: tokens.access_token,

@@ -73,6 +73,7 @@ it("verifies a real RSA-signed ID token before returning private token data", as
 it.each([
   { iss: "https://foreign.invalid" }, { aud: "foreign-client" }, { nonce: "foreign-nonce" },
   { exp: 1 }, { sub: "other-subject" }, { sub: "" }, { azp: "foreign-client" }, { aud: [client, "other"], azp: "other" },
+  { aud: [client, "untrusted-client"], azp: client },
 ])("refuses signed tokens with wrong issuer/audience/nonce/lifetime/subject", async (changes) => {
   provider(tokenResponse(changes));
   await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).rejects.toThrow("Browser sign-in could not be verified.");
@@ -116,4 +117,14 @@ it("cannot extend a session beyond the signed ID-token lifetime", async () => {
 it("accepts an explicit matching authorized party with the required Bearer token", async () => {
   provider(tokenResponse({ azp: client }));
   await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).resolves.toMatchObject({ subject });
+});
+it("accepts the configured client as the sole audience in singleton array form", async () => {
+  provider(tokenResponse({ aud: [client], azp: client }));
+  await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).resolves.toMatchObject({ subject });
+});
+it.each(["Bearer", "DPoP"])("rejects sender-constrained %s access without a proof contract", async (tokenType) => {
+  const now = Math.floor(Date.now() / 1000);
+  provider(tokenResponse({}, false, { token_type: tokenType,
+    access_token: jwt({ iss: issuer, aud: "office-api", sub: subject, iat: now, exp: now + 300, cnf: { jkt: "foreign-proof-key" } }) }));
+  await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).rejects.toThrow("Browser sign-in could not be verified.");
 });
