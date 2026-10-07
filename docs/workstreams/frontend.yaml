@@ -17,6 +17,11 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  chromium_selector_head: 2f3bbaba140b6d675d43c894ba18d5b0af5e0a23
+  chromium_selector_build: 37643731826
+  chromium_selector_governance: 37643732077
+  chromium_selector_actual_stack: 112868962211
+  chromium_selector_result: 'Build terminal FAILURE after actual provider sign-in/scoped authority/opaque cookies and company/source/member/cross-company/local-password-disabled PASS. Native option fix independently approved and local real Chrome confirms old option invisible/visible selector/exact attached option. New positive mutation control accidentally used full-PUT route for narrow metadata; correct supported /metadata route now matches product UI and server contract. Gate all other jobs/retained stack/Governance PASS. Follow new exact-head gate; do not claim full260 approval.'
   chromium_repair_head: 2935428f4a89004ed6180c2e9e43043b9629d442
   chromium_repair_build: 37642626398
   chromium_repair_governance: 37642626591

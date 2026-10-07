@@ -139,7 +139,7 @@ try {
   console.log("PASS browser company/member/source access, cross-company denial and disabled local password route");
 
   stage = "owned-source-metadata-mutation";
-  const sourcePath = `/api/local/data-sources/${source.id}` + query;
+  const sourcePath = `/api/local/data-sources/${source.id}/metadata` + query;
   const metadata = Object.fromEntries(["logicalName", "purpose", "maxConcurrency", "isEnabled"].map(key => [key, source[key]]));
   const changed = { ...metadata, purpose: "Disposable browser metadata control" };
   try {
