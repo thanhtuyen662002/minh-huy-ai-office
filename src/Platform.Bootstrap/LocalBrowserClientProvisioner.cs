@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MinhHuy.AIOffice.Platform.Bootstrap;
 
@@ -9,6 +10,8 @@ namespace MinhHuy.AIOffice.Platform.Bootstrap;
 public sealed class LocalBrowserClientProvisioner(HttpClient http)
 {
     public const string InstallationAttribute = "aioffice.installation-id";
+    private static readonly JsonSerializerOptions ClientJson = new(JsonSerializerDefaults.Web)
+    { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
     public async Task EnsureAsync(BootstrapOptions options)
     {
@@ -19,7 +22,7 @@ public sealed class LocalBrowserClientProvisioner(HttpClient http)
         var clients = await Clients();
         if (clients.Length == 0)
         {
-            using var created = await http.PostAsJsonAsync(clientsUrl, Desired(options, true));
+            using var created = await http.PostAsJsonAsync(clientsUrl, Desired(options, true), ClientJson);
             // A concurrent initial bootstrap can win creation. Re-read and
             // validate exact ownership; never convert a conflict into a takeover.
             if (!created.IsSuccessStatusCode && created.StatusCode != HttpStatusCode.Conflict) throw Refused();
@@ -40,11 +43,13 @@ public sealed class LocalBrowserClientProvisioner(HttpClient http)
             || enabled.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) throw Refused();
         // Preserve deliberate client disablement. Owner subject/password,
         // realm policy, pilot client and company grants are never updated here.
-        using var updated = await http.PutAsJsonAsync(clientUrl, Desired(options, enabled.GetBoolean()));
+        // Keycloak preserves its CURRENT enabled value when absent from PUT.
+        // Sending a GET snapshot could undo an operator disable between calls.
+        using var updated = await http.PutAsJsonAsync(clientUrl, Desired(options, null), ClientJson);
         if (!updated.IsSuccessStatusCode) throw Refused();
     }
 
-    private static object Desired(BootstrapOptions options, bool enabled) => new
+    private static object Desired(BootstrapOptions options, bool? enabled) => new
     {
         clientId = BootstrapOptions.BrowserClientId,
         enabled,

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: b38997774538e9a585858ddc6e40c2701af1abe8
+head: 0fdb3eebc285b300d9575e333b7ea2f19d43331c
 state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
@@ -32,6 +32,16 @@ verification:
   browser_bff_governance: 37601220290
   browser_bff_actual_stack: 112726864086
   browser_bff_result: 'All exact-head gates PASS;762 hosted web tests including20 actual Redis controls and physical pre-logout RDB restore/restart. Independent294 focused tests PASS; prior proxy, lost-publication and streamed-body findings independently closed. Remaining review P2: task/source mutations used unbounded body readers. Current patch adds actual-byte/strict UTF8/deadline/cancellation before authority; new exact-head gates/re-review required.'
+  ingress_head: cc2c14f3d563f1fce55bf18b7a323e3b8a823316
+  ingress_build: 37602708287
+  ingress_governance: 37602708273
+  ingress_actual_stack: 112730696764
+  ingress_result: 'All exact-head gates PASS;806 hosted web tests/20 actual Redis. Independent136 focused tests and old1MiB accepted-current413-before-authority/max legitimate inputs/real stall-abort-hostile cleanup controls PASS. Frozen ingress approval within scope; full260 not complete.'
+  bootstrap_head: 0fdb3eebc285b300d9575e333b7ea2f19d43331c
+  bootstrap_build: 37603479504
+  bootstrap_governance: 37603479488
+  bootstrap_actual_stack: 112733235864
+  bootstrap_result: 'All exact-head gates PASS. Actual Keycloak owned Code/S256 client and same-UUID disabled-retention/full restart/bootstrap replay controls PASS. Frozen review then found operator-disable race between detail GET/PUT. Current fix omits enabled from reconciliation (creation alone true) so Keycloak retains its live enabled model, with race/absent-field regression; new-head review required.'
   adapter_head: e8fdad8cc66a95a5a781665f6b2c3c7d0fc94ab8
   adapter_build: 37566597553
   adapter_governance: 37566597547
@@ -70,6 +80,7 @@ implementation_checkpoint:
   streamed_body_fence: 'Frozen271 review used a real loopback HTTP server with flushed headers/delayed JSON and reproduced private200 after body-time logout despite final read at headers. Final shared read now follows bounded complete-body consumption before releasing any private response.8 new controls PASS: actual HTTP positive/body-time logout/expiry/outage, dishonest actual-byte bounds, cancellation, unchanged request deadline and bodyless response privacy. Re-review/new-head gates required.'
   mutation_ingress: 'Independent frozenb389 control accepted1MiB ignored task padding and forwarded1MiB source metadata before authority. All task/source mutation readers now bound actual bytes (task32KiB preserves4000 fully JSON-escaped UTF16 units; source8192), strict UTF8/JSON media,10-second deadline and request cancellation with nonblocking cleanup. Origin remains first.44 new controls cover browser-with-password-disabled and retained local mode, maximum supported input, false Content-Length/chunks, invalid UTF8, foreign Origin before pull, stalled read/cleanup, abort and media.111 focused tests/TypeScript PASS. New-head CI/re-review required.'
   owned_browser_client: '30 focused bootstrap tests and formatting/smoke syntax PASS. Separate exact callback/public Code-S256/RS256 browser client, access-only API audience/idp mappers, installation ownership marker and UUID guard. Reconciliation preserves disabled state and retained owner/pilot/SQL grants; conflicting creation must recheck ownership. Added required actual Keycloak create/retained-disabled-same-UUID controls to existing full restart/replay smoke; new-head hosted evidence required. Public issuer/internal metadata/key/UI flags are not yet wired.'
+  concurrent_disablement: 'Frozen0fdb detail enabled snapshot could re-enable a concurrent operator disable at PUT. Reconciliation now omits enabled with explicit private null-omitting JSON, creation alone enabled=true. Keycloak preserves current enabled state when omitted. Fixture models live enabled retention and asserts every PUT lacks the field; new after-GET/before-PUT disable regression plus31 bootstrap and23 API-focused tests PASS. Required hosted retention controls unchanged.'
   browser_login_ui: '22 new public-projection/navigation/UI tests,39 retained lifecycle/race/page tests and TypeScript PASS. Browser mode collects no credentials; server serializes only validated public navigation values. Binding settles before selected-company start; generation/unmount fencing and shared mutation settlement preserve existing private-state lifecycle. Exact Code/S256/client/callback/provider destination checks and generic errors. Invalid enabled config never falls back to password UI. Current Compose flags remain disabled/unwired; actual Chromium required.'
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'

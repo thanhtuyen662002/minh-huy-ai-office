@@ -26,6 +26,7 @@ public sealed class LocalBrowserClientProvisionerTests
         var client = handler.Client!.Value;
         Assert.Equal(1, handler.Creates);
         Assert.Equal(BootstrapOptions.BrowserClientId, client.GetProperty("clientId").GetString());
+        Assert.True(client.GetProperty("enabled").GetBoolean());
         Assert.True(client.GetProperty("publicClient").GetBoolean());
         Assert.True(client.GetProperty("standardFlowEnabled").GetBoolean());
         foreach (var property in new[] { "directAccessGrantsEnabled", "implicitFlowEnabled", "serviceAccountsEnabled", "authorizationServicesEnabled", "fullScopeAllowed" })
@@ -64,6 +65,19 @@ public sealed class LocalBrowserClientProvisionerTests
         Assert.Equal(0, handler.Creates);
         Assert.Equal(2, handler.Updates);
         Assert.All(handler.Paths, path => Assert.Contains("/clients", path, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task OperatorDisableAfterDetailReadCannotBeOverwrittenByStaleSnapshot()
+    {
+        var options = Options();
+        using var handler = new IdentityFixture(options) { Client = Existing(options, true), DisableBeforeUpdate = true };
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://identity:8080/") };
+        await new LocalBrowserClientProvisioner(http).EnsureAsync(options);
+        Assert.Equal(1, handler.Updates);
+        Assert.False(handler.Client!.Value.GetProperty("enabled").GetBoolean());
+        Assert.False(handler.LastUpdate!.Value.TryGetProperty("enabled", out _));
+        Assert.True(handler.Client.Value.GetProperty("standardFlowEnabled").GetBoolean());
     }
 
     [Theory]
@@ -154,6 +168,8 @@ public sealed class LocalBrowserClientProvisionerTests
         public bool ForeignConflict { get; init; }
         public int Creates { get; private set; }
         public int Updates { get; private set; }
+        public bool DisableBeforeUpdate { get; init; }
+        public JsonElement? LastUpdate { get; private set; }
         public List<string> Paths { get; } = [];
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -177,7 +193,13 @@ public sealed class LocalBrowserClientProvisionerTests
             if (request.Method == HttpMethod.Put)
             {
                 Updates++;
-                Client = await request.Content!.ReadFromJsonAsync<JsonElement>(cancellationToken);
+                LastUpdate = await request.Content!.ReadFromJsonAsync<JsonElement>(cancellationToken);
+                Assert.False(LastUpdate.Value.TryGetProperty("enabled", out _));
+                // Model Keycloak's updateClient rule: absent enabled retains
+                // the live model value, including a disable after detail GET.
+                var fields = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(LastUpdate.Value.GetRawText())!;
+                fields["enabled"] = JsonSerializer.SerializeToElement(!DisableBeforeUpdate && Client!.Value.GetProperty("enabled").GetBoolean());
+                Client = JsonSerializer.SerializeToElement(fields);
                 return new HttpResponseMessage(HttpStatusCode.NoContent);
             }
             throw new InvalidOperationException("Unexpected identity mutation.");
