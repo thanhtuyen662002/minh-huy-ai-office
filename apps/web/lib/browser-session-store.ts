@@ -214,12 +214,12 @@ export function createBrowserSessionRedis(settings: BrowserOidcSettings,
   client.on("error", () => {});
   let connecting: Promise<unknown> | null = null;
   let closed = false;
-  async function connectWithDeadline() {
-    // connectTimeout covers TCP/TLS establishment, not an unresponsive Redis
-    // authentication/HELLO handshake. Bound and destroy the whole handshake.
+  async function withDeadline<T>(pending: Promise<T>): Promise<T> {
+    // Library socket timeout covers TCP/TLS only, and command timeout bounds
+    // the write queue only. Bound handshake AND reply, destroying stalled work.
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await Promise.race([client.connect(), new Promise<never>((_resolve, reject) => {
+      return await Promise.race([pending, new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => { client.destroy(); reject(unavailable()); }, 2000);
       })]);
     } finally { clearTimeout(timer); }
@@ -228,10 +228,10 @@ export function createBrowserSessionRedis(settings: BrowserOidcSettings,
     try {
       if (closed) throw unavailable();
       if (!client.isReady) {
-        connecting ??= connectWithDeadline().finally(() => { connecting = null; });
+        connecting ??= withDeadline(client.connect()).finally(() => { connecting = null; });
         await connecting;
       }
-      return await client.eval(script, { keys: [key], arguments: args });
+      return await withDeadline(client.eval(script, { keys: [key], arguments: args }));
     } catch { throw unavailable(); }
   };
   return Object.freeze({ evaluate, close() { closed = true; client.destroy(); } });

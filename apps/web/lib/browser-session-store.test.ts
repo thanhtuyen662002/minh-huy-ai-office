@@ -109,3 +109,50 @@ it("bounds a stalled Redis handshake without replaying offline work", async () =
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 }, 5000);
+
+it("bounds a stalled EVAL reply after a successful Redis handshake", async () => {
+  const sockets = new Set<import("node:net").Socket>(), commands: string[] = [];
+  const server = createServer((socket) => {
+    sockets.add(socket); socket.on("close", () => sockets.delete(socket));
+    let buffered = Buffer.alloc(0);
+    socket.on("data", (chunk: Buffer) => {
+      buffered = Buffer.concat([buffered, chunk]);
+      while (buffered.length) {
+        const firstEnd = buffered.indexOf("\r\n");
+        if (firstEnd < 0) break;
+        const count = Number(buffered.subarray(1, firstEnd).toString("ascii"));
+        let offset = firstEnd + 2;
+        const args: string[] = [];
+        for (let i = 0; i < count; i++) {
+          const end = buffered.indexOf("\r\n", offset);
+          if (end < 0) break;
+          const size = Number(buffered.subarray(offset + 1, end).toString("ascii"));
+          if (buffered.length < end + 2 + size + 2) break;
+          args.push(buffered.subarray(end + 2, end + 2 + size).toString("utf8"));
+          offset = end + 2 + size + 2;
+        }
+        if (args.length !== count) break;
+        buffered = buffered.subarray(offset);
+        commands.push(args[0]);
+        if (args[0] === "HELLO") socket.write("%2\r\n+server\r\n+redis\r\n+proto\r\n:3\r\n");
+        else if (args[0] !== "EVAL") socket.write("+OK\r\n");
+        // A written EVAL receives no response; no endpoint/token is logged.
+      }
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address() as import("node:net").AddressInfo;
+  const transport = createBrowserSessionRedis({ ...settings, localHttp: true }, () => `redis://127.0.0.1:${address.port}`);
+  const store = createBrowserSessionCoordinator(transport.evaluate, settings);
+  const started = Date.now();
+  try {
+    await expect(store.register()).rejects.toThrow(/^Browser session coordination is unavailable\.$/);
+    expect(commands).toContain("HELLO"); expect(commands.filter((command) => command === "EVAL")).toHaveLength(1);
+    expect(Date.now() - started).toBeLessThan(3500);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect([...sockets].every((socket) => socket.destroyed)).toBe(true);
+  } finally {
+    transport.close(); for (const socket of sockets) socket.destroy();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+}, 5000);
