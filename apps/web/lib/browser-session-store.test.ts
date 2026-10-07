@@ -43,6 +43,7 @@ it.each(["redis://foreign.invalid:6379", "redis://redis:6380", "redis://identity
 });
 it.each(["", "short", `${handle}.${handle}=`, `${handle}.${handle}.extra`, `${handle}.` + "_".repeat(43)])("rejects invalid or noncanonical handles before store access", async (value) => {
   const evaluate = vi.fn(), store = createBrowserSessionCoordinator(evaluate, settings);
+  expect(await store.isCurrent(value)).toBe(false);
   expect(await store.begin(value, transaction())).toBeNull();
   expect(await store.claim(value, transaction())).toBeNull();
   expect(await store.complete(value, transaction(), handle, session())).toBeNull();

@@ -51,6 +51,18 @@ afterAll(async () => {
   if (observer.isOpen) observer.destroy();
 });
 
+actual("checks shared registered binding generations without granting session authority", async () => {
+  const binding = await stores[0].register();
+  expect(await stores[1].isCurrent(binding)).toBe(true);
+  expect(await stores[1].read(binding, random())).toBeNull();
+  const current = (await stores[0].begin(binding, createOidcTransaction(companyId)))!;
+  expect(await stores[1].isCurrent(binding)).toBe(false);
+  expect(await stores[1].isCurrent(current)).toBe(true);
+  const loggedOut = (await stores[0].revoke(current))!;
+  expect(await stores[1].isCurrent(current)).toBe(false);
+  expect(await stores[1].isCurrent(loggedOut)).toBe(true);
+});
+
 actual("consumes exactly one of32 parallel callback claims across independent clients", async () => {
   const value = await pending();
   const claims = await Promise.all(Array.from({ length: 32 }, (_, i) => stores[i % 2].claim(value.binding, value.transaction)));

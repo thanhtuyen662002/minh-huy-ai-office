@@ -55,6 +55,7 @@ redis.call('HSET', key, 'incarnation', incarnation, 'generation', ARGV[1], 'bind
 redis.call('EXPIREAT', key, expiry)
 return 1
 `;
+const inspectScript = currentBinding + `return 1`;
 const beginScript = currentBinding + `
 local expiry = tonumber(ARGV[4])
 if expiry <= now or expiry > now + ${OIDC_TRANSACTION_SECONDS + 10} or expiry > bindingExpiry then return false end
@@ -146,6 +147,10 @@ export function createBrowserSessionCoordinator(evaluate: RedisSessionEval, sett
       const id = randomHandle(), generation = randomHandle();
       if (await run(registerScript, id, [digest(generation)]) !== 1) throw unavailable();
       return `${id}.${generation}`;
+    },
+    async isCurrent(binding: string): Promise<boolean> {
+      const parsed = parseBinding(binding);
+      return parsed ? await run(inspectScript, parsed.id, [digest(parsed.generation)]) === 1 : false;
     },
     async begin(binding: string, transaction: OidcTransaction): Promise<string | null> {
       const parsed = parseBinding(binding);
