@@ -22,9 +22,10 @@ const settings = readBrowserOidcSettings((name) => env[name])!;
 const transports = [createBrowserSessionRedis(settings, () => redisUrl || "redis://127.0.0.1:1"),
   createBrowserSessionRedis(settings, () => redisUrl || "redis://127.0.0.1:1")];
 const ownedKeys = new Set<string>();
-const stores = transports.map((transport) => createBrowserSessionCoordinator(async (script, key, args) => {
+const storeFor = (transport: ReturnType<typeof createBrowserSessionRedis>) => createBrowserSessionCoordinator(async (script, key, args) => {
   ownedKeys.add(key); return transport.evaluate(script, key, args);
-}, settings));
+}, settings);
+const stores = transports.map(storeFor);
 let observer = createClient({ url: redisUrl || "redis://127.0.0.1:1", socket: { reconnectStrategy: false }, commandOptions: { timeout: 2000 } });
 observer.on("error", () => {});
 const privateSession = (expiresAt = Math.floor(Date.now() / 1000) + 300) => ({ accessToken: "private-issued-token", companyId, subject: "private-subject", expiresAt });
@@ -277,10 +278,25 @@ actual("denies a physically restored pre-logout RDB after a disposable Redis res
   expect(await stores[1].revoke(value.binding)).toBeTruthy();
   expect(await stores[0].read(value.binding, value.sid)).toBeNull();
   observer.destroy();
+  transports.forEach((transport) => transport.close());
   execFileSync("docker", ["restart", container!], { stdio: "pipe", timeout: 20_000 });
-  observer = createClient({ url: redisUrl!, socket: { reconnectStrategy: false }, commandOptions: { timeout: 2000 } });
-  observer.on("error", () => {});
-  await observer.connect();
+  // docker restart reports process launch before Redis has finished loading
+  // its snapshot. Probe only fresh read-only connections, never replay EVALs.
+  const deadline = Date.now() + 10_000;
+  while (true) {
+    observer = createClient({ url: redisUrl!, socket: { reconnectStrategy: false, connectTimeout: 2000 }, commandOptions: { timeout: 2000 } });
+    observer.on("error", () => {});
+    try { await observer.connect(); expect(await observer.ping()).toBe("PONG"); break; }
+    catch {
+      observer.destroy();
+      if (Date.now() >= deadline) throw new Error("Disposable Redis restart readiness deadline exceeded.");
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+  for (let index = 0; index < transports.length; index++) {
+    transports[index] = createBrowserSessionRedis(settings, () => redisUrl!);
+    stores[index] = storeFor(transports[index]);
+  }
   const restored = await observer.hGetAll(value.key!);
   expect(restored.sid).toBe(oldRow.sid);
   expect(restored.generation).toBe(oldRow.generation);
