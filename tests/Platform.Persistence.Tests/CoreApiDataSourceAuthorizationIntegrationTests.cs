@@ -22,7 +22,7 @@ using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
-public sealed class CoreApiDataSourceAuthorizationIntegrationTests
+public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
 {
     [Fact]
     public async Task RegistrationOptionsWithoutAuthenticationConfigurationReturnUnavailableAndNoStore()
@@ -619,7 +619,7 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
 
     private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry,
         string? platformReference = null, ISecretResolver? resolver = null, IDataSourceConnectionProbe? probe = null,
-        DbConnection? platformProofConnection = null)
+        DbConnection? platformProofConnection = null, bool useRealDirectory = false)
     {
         var databaseName = $"core-api-datasource-{Guid.NewGuid():N}";
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -639,7 +639,8 @@ public sealed class CoreApiDataSourceAuthorizationIntegrationTests
                 services.RemoveAll<IAuthenticatedAuthorizationDirectory>();
                 services.AddScoped<IAuthenticatedAuthorizationDirectory>(_ => new StubAuthenticatedAuthorizationDirectory(entry));
                 services.RemoveAll<IAuthorizationDirectory>();
-                services.AddScoped<IAuthorizationDirectory>(_ => new StubAuthorizationDirectory(entry));
+                if (useRealDirectory) services.AddScoped<IAuthorizationDirectory, EfAuthorizationDirectory>();
+                else services.AddScoped<IAuthorizationDirectory>(_ => new StubAuthorizationDirectory(entry));
                 services.RemoveAll<DbContextOptions<PlatformDbContext>>();
                 services.RemoveAll<IDbContextOptionsConfiguration<PlatformDbContext>>();
                 services.RemoveAll<PlatformDbContext>();

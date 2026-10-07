@@ -2,10 +2,10 @@ workstream: backend
 role: Backend Platform
 status: active-development
 current_issue: 254
-current_pr: null
+current_pr: 255
 current_branch: backend/254-member-directory
 head: a3a929b58717b4f8e3ffe160699c179512441b07
-state: claimed
+state: in_progress
 lease_owner: root-backend-254
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
@@ -21,6 +21,11 @@ verification:
   previous_pr_head: eb5eb1a745ea4e3fa105c0689b66028a7b9002f9
   previous_pr_build: 37550999887
   previous_pr_governance: 37550999879
-  previous_result: 'PASS with independent review;253 merged and252 closed. Main Build37551390004 pending; Governance37551390052 PASS. Integrator retains main CI closure ownership.'
+  previous_result: 'PASS with independent review;253 merged and252 closed. Main Build37551390004 and Governance37551390052 PASS;252 closed. Installer239 integrated this verified main and remains Draft for clean Windows qualification.'
 blocked_by: []
 next_action: Open Draft PR for254, implement fresh admin-scoped bounded member reads, no-store API/BFF and session-fenced admin UI. Add service/API/UI and actual SQL positive/revocation evidence; close exact-head CI and independent review before integration.
+
+implementation_checkpoint:
+  result: '540 Persistence tests PASS after scoped CSharp format; full web395 tests PASS, plus32 focused tests including new pagination and type-check PASS. Smoke AST and diff-check PASS.'
+  completed: 'Fresh scoped admin member directory with stable bounds, safe statuses/roles DTO, no-store API/BFF and session-fenced admin UI. Actual SQL smoke adds cross-tenant identical-ID fixture isolation and issued-session API/BFF role-revocation denial.'
+  remaining: 'Exact-head hosted SQL/Compose and quality gates, independent frozen review and merged-main CI. Full membership mutations/production OIDC and233 remain incomplete.'
