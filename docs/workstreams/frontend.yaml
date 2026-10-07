@@ -1,41 +1,25 @@
 workstream: frontend
 role: Frontend Product
 status: active-development
-current_issue: 258
-current_pr: 259
-current_branch: frontend/258-session-origin
-head: 66f2f8080a8e52903b671c5c2e943fd27b3332e1
-state: ready_for_review
-lease_owner: root-frontend-258
+current_issue: 260
+current_pr: null
+current_branch: frontend/260-browser-oidc
+head: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+state: claimed
+lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
-last_completed_issue: 246
-last_merged_pr: 247
-last_merge_commit: 481d814c6d66c62084544e3bd889dcad7f64a254
+last_completed_issue: 258
+last_merged_pr: 259
+last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
 scope:
-  - shared-origin-fence-for-session-and-source-mutations
-  - bounded-strict-login-json
-  - real-issued-session-preservation-and-logout-proof
+  - browser-oidc-authorization-code-pkce
+  - trusted-configuration-and-encrypted-transaction-cookie
+  - fresh-company-authority-and-actual-browser-proof
 verification:
-  base_main: 6652940c5a9bfcc424422578d87c2f2851097211
-  base_build: 37556114743
-  base_governance: 37556114601
-  result: 'Both main workflows PASS. Security256/257 merged; issue256 closed. Prior frontend246/247 merged and authoritative source race gates remain in the current actual-stack smoke.'
-  previous_implementation_head: 6f6b2d790bfac3cf53787abee041b233c1152489
-  previous_build: 37560035627
-  previous_governance: 37560035671
-  previous_actual_stack_job: 112594984703
-  previous_result: 'All exact-head gates PASS including actual issued-session refusal/preservation, valid logout/re-login, identity/member/source/audit/race/broker/restart controls. Peer review found raw Host normalization P2; repaired locally, new-head CI/re-review required.'
-  implementation_head: 66f2f8080a8e52903b671c5c2e943fd27b3332e1
-  implementation_build: 37562369259
-  implementation_governance: 37562369215
-  actual_stack_job: 112602291543
-  result: 'All exact-head gates PASS, including448 web tests/type-check/build and actual SQL/OIDC/BFF issued-session preservation/logout/sign-in with retained identity/member/source/audit/race/broker/restart controls. Independent frozen re-review approved66f2f80 with no remaining code blockers; raw Host normalization P2 closed.'
-  head_semantics: 'head records the hosted-verified implementation; current exact published documentation HEAD and runs belong in HANDOFF259.'
+  base_main: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+  base_build: 37564876619
+  base_governance: 37564876597
+  result: 'Main workflows PASS.259 exact7010f3b gates and frozen66f2f80 review approved;258 closed. Existing actual SQL/OIDC/member/source/audit/race/broker/restart controls remain required.'
 blocked_by: []
-next_action: Close final documentation checkpoint CI on the exact published HEAD, then matching-head merge259 and verify main CI. Independent frozen implementation review is approved with no blockers. Preserve all existing source/identity/member/audit/race controls. Production browser OIDC/full233 remain incomplete.
-
-implementation_checkpoint:
-  completed: 'Shared Origin fence for source and session mutations; login8192 UTF8-byte stream bound, strict media/field/credential validation; same-origin logout with unchanged cookie/privacy properties; actual issued-session preservation and logout/sign-in smoke assertions.'
-  local: '434 full web tests and TypeScript/optimized build PASS before Host repair;137 focused Origin/session/source cases PASS after repair. Frozen6f6 Node Request negative control reproduces4 normalization aliases and repaired helper denies all4. Smoke AST/diff-check PASS. Integrator62eee97 Setup.Core76 PASS.'
-  remaining: 'Final documentation checkpoint exact-head gates, matching-head merge and main CI. Production browser OIDC/full233 remain incomplete.'
+next_action: Open the260 Draft lease, implement trusted configuration and authenticated-encrypted bounded login transactions, then callback/library/API authority, bootstrap/issuer routing and actual Chromium acceptance. Close every meaningful checkpoint through exact-head CI. Keep239 Draft for actual Windows lifecycle; full233 and customer ERP qualification remain incomplete.
