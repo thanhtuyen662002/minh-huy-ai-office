@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 62eee9757d0c887fd384dcd4055882dc2daa9c31
+current_target_head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
 last_verified_commit: 6652940c5a9bfcc424422578d87c2f2851097211
 
 critical_paths:
@@ -19,12 +19,12 @@ critical_paths:
     next: "PR255/member directory and PR257/exact opaque identity are merged with exact-head and main CI green;254/256 closed. Full member administration and production browser OIDC remain required."
 
   frontend:
-    issue: 258
-    pr: 259
-    branch: frontend/258-session-origin
-    head: 7010f3b91a2d6d0d1463dc7b646cac1901bdf402
-    state: in_progress
-    next: "Frozen66f2f80 session Origin/input implementation review approved;448 web tests and actual SQL/OIDC/stack gates PASS. Close final documentation checkpoint CI, matching-head merge259 and main CI before taking the next browser OIDC lease."
+    issue: null
+    pr: null
+    branch: null
+    head: null
+    state: retired
+    next: "PR259 merged at973c37be65b1db17c6b3eec279a8f2c12c6713b9;258 closed. Final7010f3b exact-head gates and frozen66f2f80 review PASS. Close merged-main CI37564876619/37564876597 before the next production browser OIDC lease."
 
   runtime_ai:
     issue: null
@@ -43,6 +43,7 @@ critical_paths:
     next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
 
 recent_authoritative_merges:
+  - 'PR259 / issue258 session Origin and bounded login input merged at973c37be65b1db17c6b3eec279a8f2c12c6713b9; main Build37564876619 pending and Governance37564876597 PASS at integration checkpoint.'
   - 'PR257 / issue256 exact opaque identity merged at6652940c5a9bfcc424422578d87c2f2851097211; main Build37556114743/Governance37556114601 PASS.'
   - 'PR255 / issue254 admin scoped member directory merged atb9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9; main Build37553826140/Governance37553826122 PASS.'
   - 'PR253 / issue252 audited read-only source registration merged at a3a929b58717b4f8e3ffe160699c179512441b07; main Build37551390004 and Governance37551390052 PASS.'
@@ -78,7 +79,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Close259 final exact-head/main CI and integrate its reviewed session security into239 with verified255/257. Keep239 Draft for actual clean Windows lifecycle/signing; continue production browser OIDC and remaining233 product workflows. Inventory/stock movements is the selected first real ERP business read; private least-privilege schema mapping remains required."
+next_action: "Close239 integration882f467 CI/native artifact and259 merged-main CI. Keep239 Draft for actual clean Windows lifecycle/signing; continue production browser OIDC and remaining233 product workflows. Inventory/stock movements is the selected first real ERP business read; private least-privilege schema mapping remains required."
 
 blocked_by:
   - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. User selected inventory/stock movements as the first semantic capability; its schema/version mapping remains required."
@@ -87,7 +88,7 @@ blocked_by:
 
 automation_liveness:
   backend: retired_after_verified_issue_256
-  frontend: active_issue_258
+  frontend: retired_after_merged_issue_258_pending_main_ci
   runtime_ai: retired_intentionally
   erp_data: retired_intentionally
   qa_release: retired_intentionally_after_green_gates
@@ -158,3 +159,13 @@ verified_identity_257:
   main_build: 37556114743
   main_governance: 37556114601
   result: 'PASS550 Persistence, binary SQL candidate filter and ordinal identity fence. Actual native SQL case/padding aliases denied by issued API/BFF sessions; original full-row identity and valid session restored. Independent frozen review approved;256 closed.'
+
+session_security_259:
+  merge: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+  pr_head: 7010f3b91a2d6d0d1463dc7b646cac1901bdf402
+  pr_build: 37564442806
+  pr_governance: 37564442800
+  main_build: 37564876619
+  main_governance: 37564876597
+  state: merged_pending_main_ci
+  result: 'Exact PR gates and independent frozen66f2f80 re-review PASS.448 web tests and actual issued-session Origin/input denial preserve cookies/API/BFF authority; valid logout/sign-in and retained stack security controls PASS. Main CI closure remains required.'

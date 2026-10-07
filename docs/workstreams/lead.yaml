@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 62eee9757d0c887fd384dcd4055882dc2daa9c31
+head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: "2026-10-07"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Close reviewed session259 final exact-head/main CI, integrate it with main255/257 into239, publish the integration and close all gates including its native artifact. Keep Draft pending authorized clean Windows install/UAC/reboot/sign-in/repair and signing proof. Continue browser OIDC/full233 and selected inventory/stock-movement ERP mapping."
+next_action: "Close239 integration882f467 CI/native artifact and259 main Build37564876619/Governance37564876597. Keep Draft pending authorized clean Windows install/UAC/reboot/sign-in/repair and signing proof. Continue browser OIDC/full233 and selected inventory/stock-movement ERP mapping."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -63,9 +63,9 @@ product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
 
 installer_verification:
-  code_head: 62eee9757d0c887fd384dcd4055882dc2daa9c31
+  code_head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
   local_core_tests: 76
-  local_result: "76 PASS after integrating verified main6652940 with reviewed255/257. Retained installation identity, lost-both-files refusal, reboot recovery, real PS5 Authenticode and PS7 diagnostics remain covered. No installer transition logic changed; new integration hosted/native gates remain required."
+  local_result: "76 PASS at62eee975 after integrating verified main6652940 with reviewed255/257. Integration882f467 additionally includes independently reviewed259/973c37b without changing installer transition logic. Diff-check PASS; current hosted/native gates remain required."
   previous_published_head: 41ce2a6705bd23346a8af15c0f5883926d84d149
   previous_build: 37552582888
   previous_governance: 37552582871
@@ -116,6 +116,17 @@ exact_identity_integration:
   main_build: 37556114743
   main_governance: 37556114601
   result: success
+
+session_security_integration:
+  issue: 258
+  pr: 259
+  state: merged_pending_main_ci
+  merge: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+  pr_build: 37564442806
+  pr_governance: 37564442800
+  main_build: 37564876619
+  main_governance: 37564876597
+  result: 'Exact PR CI and independent66f2f80 review PASS; main closure pending.'
 
 selected_customer_business_read:
   capability: inventory-and-stock-movements

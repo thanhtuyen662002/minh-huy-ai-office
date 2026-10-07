@@ -130,8 +130,8 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 
 ## Next executable work
 
-1. Close reviewed session security #258 / Draft #259 through its final exact-head gates, matching-head merge and main CI; preserve existing actual-stack authorization/race controls.
-2. Integrate reviewed member directory #255, exact identity #257 and session security #259 into installer #239. Close exact-head CI/native artifact generation and keep the installer Draft until actual clean Windows/UAC/reboot/sign-in/retained-data/repair/signing acceptance is proven.
+1. Close reviewed session security #259 merged-main CI; exact7010f3b gates and independent66f2f80 review pass. Preserve existing actual-stack authorization/race controls.
+2. Close installer #239 integration882f467 exact-head CI/native artifact for reviewed member directory #255, exact identity #257 and session security #259. Keep the installer Draft until actual clean Windows/UAC/reboot/sign-in/retained-data/repair/signing acceptance is proven.
 3. Deliver Authorization Code/PKCE browser OIDC, session expiry and supported company/member administration through actual browser/API/database evidence.
 4. Map the user-selected inventory/stock-movement read capability to an authorized real ERP schema/version and least-privilege credential. Private customer configuration and credentials remain outside public Git.
 5. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Goal #233 remains active.
@@ -151,3 +151,5 @@ P1-02/P1-06 remain Partial: this evidence covers source registration and its aud
 PR255 / issue254 merged at `b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9`; exact-head Build37553427104/Governance37553427057 and main Build37553826140/Governance37553826122 passed. The scoped admin member directory is available through API/BFF/UI, includes inactive membership inventory and excludes provider subjects/secrets.540 Persistence and396 web tests passed; actual SQL proves cross-tenant fixture exclusion and role revoke/restore using the same issued session. Member mutations/invites remain required.
 
 PR257 / issue256 merged at `6652940c5a9bfcc424422578d87c2f2851097211`; exact-head Build37555676743/Governance37555676768 and main Build37556114743/Governance37556114601 passed.550 Persistence tests and real native SQL case/padding negative controls prove exact opaque provider/subject matching before roles/context, with complete restoration of the owned identity row and valid session. Both implementations received independent frozen review. These checkpoints strengthen P1-01/P6-01; they do not complete production browser login or the full matrix.
+
+PR259 / issue258 merged at `973c37be65b1db17c6b3eec279a8f2c12c6713b9` after exact7010f3b Build37564442806/Governance37564442800 PASS and independent frozen66f2f80 approval.448 web tests and actual SQL/OIDC/BFF prove Origin/input refusals cannot mutate an issued session, valid logout clears the BFF cookie and valid sign-in restores scoped authority. Prior identity/member/source/audit/race/broker/restart controls remain green. Main Build37564876619 is pending at this integration checkpoint; main Governance37564876597 passed. This is local password-grant hardening, with browser OIDC/provider logout/expiry remaining required.
