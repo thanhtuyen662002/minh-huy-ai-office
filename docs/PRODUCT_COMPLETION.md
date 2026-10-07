@@ -138,3 +138,9 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 ## Genuine external evidence boundaries
 
 The repository contains placeholders rather than approved live customer ERP credentials, provider credentials, production OIDC accounts and tax/billing provider approval. Live external integrations require those inputs or permissions. Continue all unblocked code and sandbox/integration work while recording these boundaries; do not substitute fake provider responses for required live proof. Windows installation must be validated on a clean supported Windows host with the required OS privileges and virtualization. Linux container CI alone cannot prove Windows install/reboot behavior.
+
+## Verified onboarding checkpoint on 2026-10-07
+
+PR253 / issue252 merged at `a3a929b58717b4f8e3ffe160699c179512441b07`. Exact-head Build37550999887/Governance37550999879 and merged-main Build37551390004/Governance37551390052 passed. The admin flow registers an operator-approved SQL Server source through UI/BFF with lossless binding versions, atomic immutable scoped audit and idempotent uncertain-response retries. Actual disposable SQL/OIDC/Compose proves scoped grants, fresh role revocation, append-only audit including a column-GRANT exception guard, atomic failure rollback, preserved metadata race controls and retained history after restart.515 Persistence and364 web tests passed.
+
+P1-02/P1-06 remain Partial: this evidence covers source registration and its audit, not every administration/operation audit or actual customer business workflow. P1-01/P6-01 still require full member administration and production browser OIDC; issue254/Draft255 owns the next scoped member inventory. Installer239 has a native development artifact and integration evidence, but clean Windows lifecycle/signing remain unverified. All62 matrix rows remain subject to their actual acceptance;233 stays open.

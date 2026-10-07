@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 580d1162a93947bbf6402c801ca1534980ea0dfc
+head: 922a61f61a424b5b52a582d50bb28ff7428aa06b
 state: waiting_ci
 lease_owner: lead
 lease_heartbeat_at: "2026-10-06T21:58:37.8102225Z"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Close239 exact-head CI after integrating verified main251/e2165d8. Historical26a8968 native/full-stack CI green and76 local core tests pass; independent protocol3/PS5 review passed. Keep Draft for actual clean Windows lifecycle/signing. Continue audited source registration and frontend233; encrypted private ERP targets require authorized read identity/schema mapping."
+next_action: "Close239 CI for integration922a61f containing verified main253/a3a929b. Keep Draft pending authorized clean Windows install/UAC/reboot/sign-in/repair and signing proof. Backend254/255 owns scoped member inventory; goal233 remains active."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -63,7 +63,7 @@ product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
 
 installer_verification:
-  code_head: 580d1162a93947bbf6402c801ca1534980ea0dfc
+  code_head: 922a61f61a424b5b52a582d50bb28ff7428aa06b
   local_core_tests: 76
   local_result: "PASS actual lost-both-files and manifest identity mismatch refusal, retained-ID reboot recovery, real PS5 Authenticode and PS7 diagnostic rendering. Error normalization preserves all refusal/file/identity/secret assertions. Re-review5836e29 found no new blocker; native/real-stack passed63f80dc, full current-head CI remains required."
   previous_published_head: 45714aac54c1d4ae1eb9c3f3e4c4e4714c81f3db
@@ -87,4 +87,13 @@ onboarding_integration:
   merge: e2165d8a67644cbfc9672ed373e2062761b3c31c
   main_build: 37534355053
   main_governance: 37534355102
+  result: success
+
+source_registration_integration:
+  issue: 252
+  pr: 253
+  state: done
+  merge: a3a929b58717b4f8e3ffe160699c179512441b07
+  main_build: 37551390004
+  main_governance: 37551390052
   result: success

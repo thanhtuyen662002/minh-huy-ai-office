@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 580d1162a93947bbf6402c801ca1534980ea0dfc
-last_verified_commit: e2165d8a67644cbfc9672ed373e2062761b3c31c
+current_target_head: 922a61f61a424b5b52a582d50bb28ff7428aa06b
+last_verified_commit: a3a929b58717b4f8e3ffe160699c179512441b07
 
 critical_paths:
   backend:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "PR #249 / issue #248 merged at db2ef9a141b69b10618b7c74548828753dfd2dd0 with exact-head/main CI green. Scoped secret grants, real SQL permission fences, metadata races and queued revocation/replay are verified. Continue owner/company/member/source onboarding under #233."
+    issue: 254
+    pr: 255
+    branch: backend/254-member-directory
+    head: c05a837b76db32fa1e4efd58d3a3436ef54eeae6
+    state: in_progress
+    next: "PR253/issue252 merged at a3a929b with exact-head and main CI green. Backend255 owns scoped admin member directory/API/BFF/UI and actual SQL revocation proof; follow its HANDOFF for exact published HEAD."
 
   frontend:
     issue: null
@@ -43,6 +43,7 @@ critical_paths:
     next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
 
 recent_authoritative_merges:
+  - 'PR253 / issue252 audited read-only source registration merged at a3a929b58717b4f8e3ffe160699c179512441b07; main Build37551390004 and Governance37551390052 PASS.'
   - "PR #249 / issue #248 scoped secret grants and real SQL/queue authorization: MERGED at db2ef9a141b69b10618b7c74548828753dfd2dd0; main Build 37506783690 and Governance 37506783677 passed."
   - "PR #247 / issue #246 metadata-only source management: MERGED at 481d814c6d66c62084544e3bd889dcad7f64a254; secured-main integration includes its SQL race regressions."
   - "PR #241 / issue #240 fresh source-management administration and real SQL role-revocation proof: MERGED at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed."
@@ -75,7 +76,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Close installer239 integration CI after verified main e2165d8 enters its bundle. Main source251 Build37534355053/Governance37534355102 PASS;250 closed. Installer26a8968 Build37528486023/Governance37528486001 PASS with76 core tests and independent review. Clean Windows qualification/signing remain external; continue source registration with atomic durable audit and frontend under233. Goal remains active."
+next_action: "Close239 integration CI after verified main253/a3a929b enters its bundle. Keep239 Draft for actual clean Windows lifecycle/signing. Continue backend254/Draft255 scoped admin member directory and remaining233 product workflows. Full production completion remains unproven."
 
 blocked_by:
   - "Customer ERP targets and existing configuration locations are selected privately outside public Git; credentials are encrypted and not yet verified for authorized least-privilege business-row access. The first semantic capability remains to be mapped."
@@ -128,3 +129,12 @@ verified_onboarding_251:
   main_build: 37534355053
   main_governance: 37534355102
   result: 'PASS scoped admin choices, exact SQL grant metadata, role revoke/restore, unsafe-store denial, no secret/ref release;250 closed. Registration/audit/UI and actual ERP remain incomplete.'
+
+verified_onboarding_253:
+  merge: a3a929b58717b4f8e3ffe160699c179512441b07
+  pr_head: eb5eb1a745ea4e3fa105c0689b66028a7b9002f9
+  pr_build: 37550999887
+  pr_governance: 37550999879
+  main_build: 37551390004
+  main_governance: 37551390052
+  result: 'PASS515 Persistence and364 web tests; actual SQL registration/idempotency/scope/immutable audit/column escalation/rollback/restart and retained metadata race positive/negative controls.252 closed. Full product remains incomplete.'
