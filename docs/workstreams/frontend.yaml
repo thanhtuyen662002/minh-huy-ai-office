@@ -17,6 +17,11 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  chromium_metadata_head: 3ffd831d8d751c06e1cf7a525714459dce1bb2b1
+  chromium_metadata_build: 37645536078
+  chromium_metadata_governance: 37645536004
+  chromium_metadata_actual_stack: 112875187075
+  chromium_metadata_result: 'Build terminal FAILURE after actual provider/cookies/company/member/source/access denial, owned narrow metadata PUT/policy-preservation/full original metadata restoration, original-transaction replay/wrong-state/oversized-input denial PASS. Gate then failed during real SQL admin revoke within450ms: mutation helper unconditionally parses JSON, but supported Core403 may be empty. Current harness accepts empty denial bodies while preserving numeric403 and strict positive payload assertions, with precise fixed role stages. Role restoration remains finally. All retained stack/other jobs/Governance PASS; full260 unapproved, close new-head actual proof.'
   production_browser_wiring: 'Current same260 slice adds explicit opt-in Web OIDC runtime variables to production Compose, same Core issuer, fixed localHTTP/proof false, company default selector, and operator HTTPS/provider/TLS Redis/private key/ingress qualification guide. Disabled and enabled synthetic docker compose rendering locally PASS;3 Python contract tests with unsafe/incomplete/private-value refusal cases PASS. Required CI validates both Compose modes. This is configuration/contract evidence only, not production connectivity or deployment. Current3ffd Chromium runtime remains live; preserve it through terminal before pushing this checkpoint.'
   chromium_selector_head: 2f3bbaba140b6d675d43c894ba18d5b0af5e0a23
   chromium_selector_build: 37643731826

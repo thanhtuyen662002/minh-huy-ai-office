@@ -75,7 +75,9 @@ try {
   }, path);
   const mutate = (path, method, body) => page.evaluate(async ({ path, method, body }) => {
     const response = await fetch(path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    return { status: response.status, body: await response.json(), cache: response.headers.get("cache-control") };
+    let payload = null;
+    try { payload = await response.json(); } catch { /* Core's forbidden response may have no body. */ }
+    return { status: response.status, body: payload, cache: response.headers.get("cache-control") };
   }, { path, method, body });
   async function signIn(passwordRequired = false) {
     await page.goto(app);
@@ -183,11 +185,17 @@ try {
   requireProof((await current()).body.roles.includes("admin"));
   sql(`USE AIOfficeLocal; SELECT TenantId,CompanyId,UserId,RoleKey,CreatedAtUtc INTO ${backup} FROM aioffice.RoleAssignments WHERE ${scope};`);
   try {
+    stage = "owned-sql-admin-revocation";
     sql(`USE AIOfficeLocal; DELETE FROM aioffice.RoleAssignments WHERE ${scope} AND RoleKey COLLATE Latin1_General_100_BIN2=N'admin';`);
+    stage = "fresh-authority-after-role-revocation";
     const authority = await current(); requireProof(authority.status === 200 && !authority.body.roles.includes("admin"));
+    stage = "member-denial-after-role-revocation";
     requireProof((await get("/api/local/company/members" + query)).status === 403);
+    stage = "registration-denial-after-role-revocation";
     requireProof((await get("/api/local/data-sources/registration-options" + query)).status === 403);
+    stage = "metadata-denial-after-role-revocation";
     requireProof((await mutate(sourcePath, "PUT", changed)).status === 403);
+    stage = "member-ui-clearing-after-role-revocation";
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await page.waitForFunction(() => ![...document.querySelectorAll("button")].some(item => item.textContent?.trim() === "Thành viên")
       && !document.querySelector('section[aria-label="Thành viên công ty"] tbody'));
@@ -196,6 +204,7 @@ try {
       INSERT INTO aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey,CreatedAtUtc) SELECT TenantId,CompanyId,UserId,RoleKey,CreatedAtUtc FROM ${backup};
       DROP TABLE ${backup}; COMMIT TRANSACTION;`);
   }
+  stage = "fresh-authority-after-role-restoration";
   requireProof((await current()).body.roles.includes("admin") && (await get("/api/local/company/members" + query)).status === 200);
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.getByRole("button", { name: "Thành viên", exact: true }).first().waitFor();
