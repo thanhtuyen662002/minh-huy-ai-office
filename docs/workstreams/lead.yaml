@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
+head: adb5816e2526e8c1468237d9f3924afa032d10e6
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: "2026-10-07"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "239526 full Build37641026525/Gov37641026377/native artifact PASS; keep Draft for clean Windows lifecycle/signing.260 current293 repairs real473 callback red with basic scope plus bounded diagnostics/replay and stronger mutations/private-clear proof. Close Build37642626398/Gov37642626591 and full actual Chromium/frozen acceptance before exact matching merge/main CI. Full233 and Medcom/Novo inventory/movement qualification remain; user deferred Santino.115 refs audited, only239/261 Drafts remain, no additional eligible PR."
+next_action: "Close current installer239 integration exact-head Build/Governance/native artifact/actual Chromium gates, preserving approved main39e browser integration. Keep239 Draft until clean Windows/UAC/reboot/startup/retention/repair/signing acceptance. Continue full member administration and selected inventory/movements: both real ERP metadata captures succeeded, private versioned mapping is preliminary, dedicated read-only credentials and business proof remain. Santino deferred; full233 stays active."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -63,7 +63,7 @@ product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
 
 installer_verification:
-  code_head: 882f467ee727e23a7d2aae541274c3c6ad67ec8f
+  code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
   local_core_tests: 76
   local_result: "76 PASS on exact89ce9cb after reviewed255/257/259 integration. Retained-ID recovery, lost-both-files refusal, real PS5 Authenticode and PS7 diagnostics remain green. No installer transition logic changed. Hosted full gates, actual stack and Windows artifact PASS."
   verified_published_head: 52620a82d8175c1634c6579c5e934b303d73351d
@@ -142,19 +142,27 @@ session_security_integration:
 
 selected_customer_business_read:
   capability: inventory-and-stock-movements
-  state: pending-private-least-privilege-schema-mapping
+  state: metadata-captured-pending-read-only-credential-and-profile
   selected_by_user: '2026-10-07'
-  credentials_policy: 'Customer configuration locations and encrypted credentials remain outside public Git; no customer database writes authorized or performed.'
+  credentials_policy: 'Private operator configuration and metadata/module hashes stay outside public Git. Both metadata connections succeeded; current credentials are elevated and unqualified for product read execution. No customer business rows or writes occurred.'
 
 browser_oidc_frontier:
   issue: 260
   pr: 261
+  state: done
+  merge: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  approved_pr_head: 94749957035a1dcb51cda9762c6fa045c84b982b
+  pr_build: 37650230590
+  pr_governance: 37650230960
+  main_build: 37651174359
+  main_governance: 37651174354
+  actual_stack: 112894592064
+  result: 'Full frozen947 acceptance approved, exact PR/main gates832 web/20 actual Redis and full retained SQL/Chromium lifecycle PASS. Browser PKCE is shipping local default;260 closed. Product administration and approved production qualification remain.'
+
+installer_browser_integration:
+  code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
   state: in_progress
-  verified_module_head: ed73d8a45576cb811ca9e0f02aa748cc89821518
-  build: 37605100433
-  governance: 37605100461
-  actual_stack: 112738532113
-  result: 'Exacted73 module gates/828 web/20 actual Redis and independent46 .NET/66 UI/PS5+7 review PASS.473 actual Chromium failed callback303; same261293 adds required basic access-sub scope, bounded private-safe stage diagnostics and original-transaction replay, plus owned source/task mutations and populated private chat/draft expiry clearing.31 .NET/35 web focused tests/TypeScript/syntax PASS; e147 independent82 tests/diagnostic/replay review approved.293 Build37642626398/Gov37642626591 running; whole260 actual proof and full frozen acceptance/merge remain pending. Follow HANDOFF261.'
+  local: '76 Setup.Core tests, actual PS5/PS7 private stable key/replay/ACL and3 production-contract tests PASS. Installer owner copy directs sign-in through the provider page. Current exact-head native artifact/full runtime gates are required. Static copy changes no installer lifecycle or authority; compile/visual preview verifies its presentation.'
 
 branch_audit:
   inspected_at: '2026-10-07'
@@ -162,5 +170,6 @@ branch_audit:
   merged_pr_exact_heads: 109
   closed_pr_exact_heads: 1
   backup_snapshot_refs_without_pr: 3
-  active_draft_leases: [239, 261]
+  active_draft_leases: [239]
+  update: '261 now merged;239 is the only open Draft after merge. Historical115-ref classification remains recorded; no backup is authorized for merge.'
   additional_eligible_prs: 0

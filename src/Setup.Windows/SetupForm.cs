@@ -14,7 +14,14 @@ internal sealed partial class SetupForm : Form
     private readonly TextBox password = new() { ReadOnly = true, UseSystemPasswordChar = true, Width = 400, Visible = false };
     private readonly CheckBox reveal = new() { Text = "Hiện mật khẩu ban đầu", AutoSize = true, Visible = false };
     private readonly Button export = new() { Text = "Xuất chẩn đoán", Width = 155, Height = 34 };
-    private readonly Label owner = new() { Text = "Tài khoản ban đầu: owner", AutoSize = true, Margin = new Padding(0, 18, 0, 4), Visible = false };
+    private readonly Label owner = new()
+    {
+        Text = "Tài khoản ban đầu: owner. Trong ứng dụng, chọn Đăng nhập rồi nhập tài khoản và mật khẩu này trên trang xác thực.",
+        AutoSize = true,
+        MaximumSize = new Size(610, 0),
+        Margin = new Padding(0, 18, 0, 4),
+        Visible = false
+    };
     private readonly bool preview;
     private bool skipInitialInspection;
     private bool busy;
