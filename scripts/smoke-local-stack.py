@@ -198,7 +198,7 @@ def main():
         for flag in ("directAccessGrantsEnabled", "implicitFlowEnabled", "serviceAccountsEnabled", "fullScopeAllowed"):
             assert not client[flag], "Browser client enabled an unsupported flow/scope"
         assert client["redirectUris"] == [browser_redirect] and not client["webOrigins"]
-        assert set(client["defaultClientScopes"]) == {"profile", "email"} and not client["optionalClientScopes"]
+        assert set(client["defaultClientScopes"]) == {"basic", "profile", "email"} and not client["optionalClientScopes"]
         attributes = client["attributes"]
         assert attributes["aioffice.installation-id"] == manifest["AIOFFICE_INSTALLATION_ID"]
         assert attributes["pkce.code.challenge.method"] == "S256"

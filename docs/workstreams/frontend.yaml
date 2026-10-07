@@ -7,8 +7,8 @@ current_branch: frontend/260-browser-oidc
 head: ed73d8a45576cb811ca9e0f02aa748cc89821518
 state: in_progress
 lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07T15:12:00Z'
-last_checkpoint_at: '2026-10-07T15:12:00Z'
+lease_heartbeat_at: '2026-10-07T15:18:00Z'
+last_checkpoint_at: '2026-10-07T15:18:00Z'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -17,6 +17,7 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  browser_repair_candidate: 'Local diagnostic e147 independently approved with82 tests/TypeScript/syntax;3b11f87 adds owned metadata PUT/full original restore/admin-revoke denial, actual UI task202/durable read/cross-company denial and populated message/draft expiry clearing. Current correction adds Keycloak basic scope for access-token sub, preserving signed subject checks.31 focused .NET/35 signed-adapter+diagnostic tests/TypeScript/Python+JS syntax PASS. Repeated GitHub server500 prevented publication since15:10UTC; same261 lease retained, push exact candidate after service recovery and close hosted gates. Do not count local proof as actual Chromium acceptance.'
   chromium_first_head: 473fe4f0fe6ecdcf824196a6089407addbd84df2
   chromium_first_build: 37640596775
   chromium_first_governance: 37640596792

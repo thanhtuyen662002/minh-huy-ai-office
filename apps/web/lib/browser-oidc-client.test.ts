@@ -85,6 +85,11 @@ it("refuses a forged RSA signature even with valid issuer/audience/nonce/expiry"
   provider(tokenResponse({}, true));
   await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).rejects.toThrow("Browser sign-in could not be verified.");
 });
+it("refuses a signed access token missing subject even when the signed ID token has the correct subject", async () => {
+  const now = Math.floor(Date.now() / 1000);
+  provider(tokenResponse({}, false, { access_token: jwt({ iss: issuer, aud: "office-api", iat: now, exp: now + 300 }) }));
+  await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).rejects.toThrow("Browser sign-in could not be verified.");
+});
 it.each([
   { id_token: undefined }, { access_token: "opaque-token" }, { access_token: "x".repeat(16_385) },
   { expires_in: 0 }, { expires_in: 1.5 }, { expires_in: undefined }, { token_type: "DPoP" },

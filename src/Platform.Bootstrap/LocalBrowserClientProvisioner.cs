@@ -64,7 +64,9 @@ public sealed class LocalBrowserClientProvisioner(HttpClient http)
         consentRequired = false,
         redirectUris = new[] { options.BrowserRedirectUri },
         webOrigins = Array.Empty<string>(),
-        defaultClientScopes = new[] { "profile", "email" },
+        // Keycloak 25+ emits access-token sub through the basic scope mapper.
+        // The signed access/ID subject consistency check requires that claim.
+        defaultClientScopes = new[] { "basic", "profile", "email" },
         optionalClientScopes = Array.Empty<string>(),
         attributes = new Dictionary<string, string>
         {

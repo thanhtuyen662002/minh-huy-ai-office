@@ -34,6 +34,8 @@ public sealed class LocalBrowserClientProvisionerTests
         Assert.Equal(new[] { "http://127.0.0.1:3300/api/local/session/oidc/callback" },
             client.GetProperty("redirectUris").EnumerateArray().Select(x => x.GetString()));
         Assert.Empty(client.GetProperty("webOrigins").EnumerateArray());
+        Assert.Equal(new[] { "basic", "profile", "email" },
+            client.GetProperty("defaultClientScopes").EnumerateArray().Select(x => x.GetString()));
         Assert.Empty(client.GetProperty("optionalClientScopes").EnumerateArray());
         Assert.Equal("S256", client.GetProperty("attributes").GetProperty("pkce.code.challenge.method").GetString());
         Assert.Equal("RS256", client.GetProperty("attributes").GetProperty("id.token.signed.response.alg").GetString());
@@ -62,6 +64,7 @@ public sealed class LocalBrowserClientProvisionerTests
         await provisioner.EnsureAsync(options);
         Assert.Equal(first, handler.Client!.Value.GetRawText());
         Assert.Equal(enabled, handler.Client.Value.GetProperty("enabled").GetBoolean());
+        Assert.Contains("basic", handler.Client.Value.GetProperty("defaultClientScopes").EnumerateArray().Select(x => x.GetString()));
         Assert.Equal(0, handler.Creates);
         Assert.Equal(2, handler.Updates);
         Assert.All(handler.Paths, path => Assert.Contains("/clients", path, StringComparison.Ordinal));
