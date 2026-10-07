@@ -4,8 +4,8 @@ status: active-development
 current_issue: 252
 current_pr: 253
 current_branch: backend/252-audited-source-registration
-head: e2165d8a67644cbfc9672ed373e2062761b3c31c
-state: in_progress
+head: 70a98043d06fc5681ead7727942e98fe00b79c11
+state: waiting_ci
 lease_owner: root-backend-252
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
@@ -19,10 +19,16 @@ scope:
   - cross-stream-admin-onboarding-ui-and-bff
   - authorization-and-real-sql-tests
 verification:
-  base: e2165d8a67644cbfc9672ed373e2062761b3c31c
-  previous_result: '251 exact-head and merged-main CI green;250 closed. Only independent installer239 remains Draft; no competing backend/frontend lease.'
+  implementation_head: 70a98043d06fc5681ead7727942e98fe00b79c11
+  build_run: 37550450446
+  governance_run: 37550450492
+  actual_stack_job: 112564384092
+  result: 'All exact-head gates PASS, including actual SQL/OIDC/broker/API/worker/FE. Persistence 515 tests and web 364 tests PASS; migration integrity, container builds and runtime checks PASS.'
+  independent_review: 'Read-only reviewer found no remaining cleanup, authorization or atomicity blocker at70a9804. Prior options403 role-reconciliation finding fixed and regression-tested.'
 blocked_by: []
-next_action: Implement strict binding ID/version registration with serializable source/audit transaction, idempotency, append-only SQL privilege proof, UI/BFF and meaningful local/actual-stack tests. Close exact-head CI and review before merge;233 remains incomplete.
+next_action: Close CI for this documentation checkpoint, capture its exact HEAD in PR253 HANDOFF, then merge only with matching head and verify merged-main CI. Retire this lease after verified integration; continue next owner/company/member onboarding slice under233.
 implementation_checkpoint:
-  result: '506 Persistence tests PASS;362 web tests PASS including21 new onboarding/BFF cases; web type-check, scoped CSharp formatting, smoke AST and diff-check PASS. Backend code4ea429d. Actual SQL audit/rollback/column escalation/restart and frozen review require hosted CI.'
-  remaining: 'Complete web verification, exact-head Compose CI, adversarial audit permission proof and independent review. Do not merge253 yet.'
+  completed: 'Strict approved-binding registration, lossless version tokens, atomic scoped audit, idempotent retries, effective append-only SQL permission proof, admin UI/BFF with fresh session/company/role fencing.'
+  actual_sql: 'Registration/idempotency/scope/audit privilege denial including column-GRANT negative control, atomic failure rollback and retained history after restart PASS. Existing protected-column race positive/full-PUT negative controls and queued revocation proofs remain PASS.'
+  repaired_ci: '6c9ae2c Build37549256849 failed at the existing metadata race with a blocked source load.70a9804 pins transaction connections and restores prior/default isolation before pooling, with cancellation-safe cleanup, poisoned-pool eviction and9 focused tests. New runtime pool-baseline assertion and unchanged metadata race PASS in Build37550450446.'
+  remaining: 'Documentation-head CI and merged-main CI. This source onboarding slice does not qualify customer ERP schemas/credentials/business results or clean Windows installation;233 and238 remain open.'
