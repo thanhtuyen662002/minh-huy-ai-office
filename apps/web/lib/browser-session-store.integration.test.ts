@@ -120,7 +120,7 @@ actual("promotes a delivered replacement atomically across16 readers and revokes
   const replies = await Promise.all(Array.from({ length: 16 }, (_, i) => stores[i % 2].read(value.binding, sid)));
   expect(replies.every((reply) => JSON.stringify(reply) === JSON.stringify(session))).toBe(true);
   expect(await stores[1].read(value.binding, old.sid)).toBeNull();
-  expect(await observer.hExists(old.key!, "replacementSid")).toBe(false);
+  expect(await observer.hExists(old.key!, "replacementSid")).toBe(0);
   expect(await stores[0].read(value.binding, sid)).toEqual(session);
 });
 actual("does not promote tampered replacement ciphertext or evict the valid active SID", async () => {
@@ -165,7 +165,7 @@ actual("refuses a replacement after an older worker rotates generation without k
   // pending fields but did not know the newly expanded replacement fields.
   await observer.multi().hSet(old.key!, "generation", createHash("sha256").update(generation).digest("hex"))
     .hDel(old.key!, ["sid", "payload", "sessionExpiry", "pending", "pendingExpiry", "phase", "claim"]).exec();
-  expect(await observer.hExists(old.key!, "replacementSid")).toBe(true);
+  expect(await observer.hExists(old.key!, "replacementSid")).toBe(1);
   expect(await stores[0].isCurrent(loggedOut)).toBe(true);
   expect(await stores[0].read(loggedOut, sid)).toBeNull();
   expect(await stores[1].read(value.binding, sid)).toBeNull();
