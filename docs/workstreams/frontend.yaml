@@ -4,7 +4,7 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: c1f30f7c3b889ece5e845c235187a4770c8afb50
+head: 3314ef5c1f7b5b4a09f7c1a88eca82c6ae8a6836
 state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
@@ -41,12 +41,18 @@ verification:
   authority_governance: 37568603700
   authority_actual_stack: 112622037980
   authority_result: 'All exact-head gates PASS;640 hosted web tests/type-check/build,12 actual Redis tests and retained stack. Frozen review approved; supported33/256-role compatibility finding closed with old-refused/current-accepted controls;41 focused tests independently PASS.'
+  runtime_head: 3314ef5c1f7b5b4a09f7c1a88eca82c6ae8a6836
+  runtime_build: 37569260739
+  runtime_governance: 37569260755
+  runtime_actual_stack: 112623961888
+  runtime_result: 'All exact-head gates PASS;651 hosted web tests/type-check/build including13 actual Redis controls. Independent frozen runtime/binding review approved with99 focused tests independently PASS. No browser UI/bootstrap/BFF acceptance yet.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close private runtime/binding-inspection checkpoint exact-head CI and review; require13 actual Redis controls. Then implement registered binding preparation/start/callback, opaque BFF session routing, bootstrap/issuer routing/UI and actual Chromium acceptance. Keep239 Draft for actual Windows lifecycle; full233 and customer inventory/movement qualification remain incomplete.
+next_action: Close binding preparation/start/callback checkpoint exact-head CI and frozen review; retain13 actual Redis controls. Continue opaque BFF session routing/logout, bootstrap/issuer routing/UI and actual Chromium acceptance. Keep239 Draft for actual Windows lifecycle; full233 and customer inventory/movement qualification remain incomplete.
 
 implementation_checkpoint:
-  runtime_binding: '10 new runtime configuration/transport lifecycle tests and TypeScript PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session; new13th actual Redis control pending hosted CI. No routes exposed.'
+  runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
+  routes: '48 new focused route/body tests PASS. Origin precedes body/cookie/store access, bounded strict company input, registered preparation and generation-CAS start, pinned encrypted transaction and PKCE URL. Callback requires raw trusted Host, valid bounded transaction and unambiguous expected state/code/issuer before one-use claim; signed exchange and fresh captured Core authority precede atomic SID publication. Success writes opaque SID and clears transaction only; never rewrites binding. Failure preserves cookies. Route tests do not replace actual browser proof; flags remain disabled by default.'
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'
-  remaining: 'Full exact-head stack closure and private Core helper review/gates, start/callback/private session routing, bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and full260 exact-head/main closure.'
+  remaining: 'Route checkpoint exact-head gates/frozen review, private BFF session routing/logout, bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and full260 exact-head/main closure.'
