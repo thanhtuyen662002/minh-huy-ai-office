@@ -4,11 +4,11 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: 4e1880652cbe398f66f42cb760fd1b60f3b3a387
-state: in_progress
+head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
+state: ready_for_review
 lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07T15:18:00Z'
-last_checkpoint_at: '2026-10-07T15:18:00Z'
+lease_heartbeat_at: '2026-10-07T16:18:00Z'
+last_checkpoint_at: '2026-10-07T16:18:00Z'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -17,20 +17,20 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
-  shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. New exact-head full gate and final frozen review required; no customer/config/credential/OS changes.'
-  chromium_verified_head: 4e1880652cbe398f66f42cb760fd1b60f3b3a387
-  chromium_verified_build: 37646560686
-  chromium_verified_governance: 37646560635
-  chromium_verified_actual_stack: 112878733833
-  chromium_verified_web_job: 112878734106
-  chromium_verified_artifact: 11494403657
-  chromium_verified_result: 'All exact-head gates PASS;832 hosted web tests/20 actual Redis and full retained SQL/OIDC/member/source/audit/race/broker/restart. Actual Chromium provider Code/S256303/scoped authority/opaque cookie privacy/source-member UI/cross-company denial/local-password disabled/owned metadata mutation-policy preservation-original restore/original-cookie replay-wrong state-input limit/real SQL role revoke-restore-private member clearing/logout-old SID denial-SSO re-login/UI task202-durable scoped read-foreign mutation denial/natural Redis TIME expiry-populated private chat+draft clear-reauthentication PASS. Passing sanitized fixture screenshot inspected; no private customer data. Production enabled/disabled synthetic contract gate PASS. Whole matching-head final independent acceptance review still required; keep261 Draft. Current UI copy removes unsupported static Worker-online claim and local-pilot footer in browser mode; no authority/lifecycle changes, focused UI and actual new-head gates required.'
+  shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. Exactbac shipping-default and compatibility profile controls, full Chromium/retained stack gates and independent full frozen acceptance review PASS; no customer/config/credential/OS changes.'
+  chromium_verified_head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
+  chromium_verified_build: 37648878161
+  chromium_verified_governance: 37648878122
+  chromium_verified_actual_stack: 112886663552
+  chromium_verified_web_job: 112886663851
+  chromium_verified_artifact: 11495082669
+  chromium_verified_result: 'All exact-head gates PASS;832 hosted web tests/20 actual Redis and full retained SQL/OIDC/member/source/audit/race/broker/restart. Actual Chromium provider Code/S256303/scoped authority/opaque cookie privacy/source-member UI/cross-company denial/local-password disabled/owned metadata mutation-policy preservation-original restore/original-cookie replay-wrong state-input limit/real SQL role revoke-restore-private member clearing/logout-old SID denial-SSO re-login/UI task202-durable scoped read-foreign mutation denial/natural Redis TIME expiry-populated private chat+draft clear-reauthentication PASS. Passing sanitized fixture screenshot inspected; no private customer data. Production enabled/disabled synthetic contract gate PASS. Whole frozenbac implementation/acceptance independently approved with408 focused web/46 .NET/3 production contract tests, TypeScript and syntax PASS. Exactbac gates/832 hosted web/20 actual Redis and truthful UI screenshot11495082669 PASS. Current documentation closure checkpoint must pass exact-head gates and receive review before matching merge/main CI.'
   chromium_metadata_head: 3ffd831d8d751c06e1cf7a525714459dce1bb2b1
   chromium_metadata_build: 37645536078
   chromium_metadata_governance: 37645536004
   chromium_metadata_actual_stack: 112875187075
   chromium_metadata_result: 'Build terminal FAILURE after actual provider/cookies/company/member/source/access denial, owned narrow metadata PUT/policy-preservation/full original metadata restoration, original-transaction replay/wrong-state/oversized-input denial PASS. Gate then failed during real SQL admin revoke within450ms: mutation helper unconditionally parses JSON, but supported Core403 may be empty. Current harness accepts empty denial bodies while preserving numeric403 and strict positive payload assertions, with precise fixed role stages. Role restoration remains finally. All retained stack/other jobs/Governance PASS; full260 unapproved, close new-head actual proof.'
-  production_browser_wiring: 'Current same260 slice adds explicit opt-in Web OIDC runtime variables to production Compose, same Core issuer, fixed localHTTP/proof false, company default selector, and operator HTTPS/provider/TLS Redis/private key/ingress qualification guide. Disabled and enabled synthetic docker compose rendering locally PASS;3 Python contract tests with unsafe/incomplete/private-value refusal cases PASS. Required CI validates both Compose modes. This is configuration/contract evidence only, not production connectivity or deployment. Current3ffd Chromium runtime remains live; preserve it through terminal before pushing this checkpoint.'
+  production_browser_wiring: 'Current same260 slice adds explicit opt-in Web OIDC runtime variables to production Compose, same Core issuer, fixed localHTTP/proof false, company default selector, and operator HTTPS/provider/TLS Redis/private key/ingress qualification guide. Disabled and enabled synthetic docker compose rendering locally PASS;3 Python contract tests with unsafe/incomplete/private-value refusal cases PASS. Required CI validates both Compose modes. This is configuration/contract evidence only, not production connectivity or deployment. Exactbac enabled/disabled contract and full actual Chromium gates PASS; final current documentation-head gates/main integration remain.'
   chromium_selector_head: 2f3bbaba140b6d675d43c894ba18d5b0af5e0a23
   chromium_selector_build: 37643731826
   chromium_selector_governance: 37643732077
@@ -108,7 +108,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close required actual Chromium gate on exact new head and inspect any actionable failure immediately. Real provider sign-in, company/member/source/cookie/callback/role/logout/relogin/Redis expiry private-clear proof must pass after retained SQL/OIDC stack, with local password UI disabled. Then independent acceptance review/matching-head merge/main CI if260 complete. Keep239 Draft for Windows lifecycle; Santino deferred by user, private Medcom/Novo inventory/movements qualification/full233 remain incomplete.
+next_action: Close documentation-only final checkpoint CI and independent delta review, match approved green HEAD when merging261, and verify main CI. Full frozenbac implementation/acceptance review is approved;832 hosted web/20 actual Redis and complete actual Chromium lifecycle PASS. Keep239 Draft for clean Windows lifecycle/signing. Medcom/Novo least-privilege/schema/business-row and approved production qualification/full233 remain; Santino deferred.
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -126,4 +126,4 @@ implementation_checkpoint:
   actual_chromium_gate: 'Added pinned Playwright1.63.0 Chromium gate after retained full SQL/Keycloak/API/worker/FE smoke. Guard restricts fixture to exact GitHub CI runner-private installation/project. Recreates only owned CI Web in browser mode with local password disabled; real provider form and signed callback303, scoped member/source/company authority, opaque HttpOnly/privacy, replay/wrong-state/input denial preservation, scoped SQL admin revoke/full original-role restore/private UI clear, old binding/SID after logout, SSO re-login, only owned current Redis-row TIME expiry and private UI clear/recovery. No traces/private errors/tokens/cookies logged; only passing sanitized disposable workspace PNG retained. Syntax/typecheck PASS; actual new-head runtime evidence required.'
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'
-  remaining: 'Current BFF/logout/provisional-publication exact-head gates/frozen re-review, retained bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and full260 exact-head/main closure.'
+  remaining: 'Only current documentation checkpoint exact-head CI/delta review, matching-head merge and main CI remain for260. Approved production connectivity/HTTPS/identity/TLS Redis and full product scope are separately unverified.'
