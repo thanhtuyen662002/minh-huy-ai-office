@@ -7,8 +7,8 @@ current_branch: frontend/260-browser-oidc
 head: ed73d8a45576cb811ca9e0f02aa748cc89821518
 state: in_progress
 lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07T14:52:00Z'
-last_checkpoint_at: '2026-10-07T14:52:00Z'
+lease_heartbeat_at: '2026-10-07T15:12:00Z'
+last_checkpoint_at: '2026-10-07T15:12:00Z'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -17,6 +17,11 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  chromium_first_head: 473fe4f0fe6ecdcf824196a6089407addbd84df2
+  chromium_first_build: 37640596775
+  chromium_first_governance: 37640596792
+  chromium_first_actual_stack: 112858200952
+  chromium_first_result: 'Build terminal FAILURE at actual Chromium verified-provider-callback303 assertion; retained stack and all other jobs PASS, Governance PASS. This is a runtime integration defect, not runner noise. Current same-PR checkpoint adds explicitly enabled disposable-loopback fixed-stage/allowlisted-category diagnostics with no private values and replays the original encrypted transaction cookie/current binding/issued SID. Diagnose exact new-head CI and repair the cause without weakening callback requirements. Independent473 review confirmed replay previously lacked original transaction, now corrected; whole260 remains unapproved.'
   base_main: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
   base_build: 37564876619
   base_governance: 37564876597

@@ -1,5 +1,6 @@
 import * as oidc from "openid-client";
 import type { BrowserOidcSettings, OidcTransaction } from "./browser-oidc";
+import { reportBrowserProof } from "./browser-proof-diagnostic";
 
 function configuration(settings: BrowserOidcSettings) {
   const config = new oidc.Configuration({
@@ -87,7 +88,8 @@ export async function exchangeBrowserAuthorizationCode(
     // Carry the absolute verified deadline through later API/Redis calls.
     // Reusing expiresIn relative to callback completion would extend the grant.
     return Object.freeze({ accessToken: tokens.access_token, expiresIn, expiresAt: now + expiresIn, subject });
-  } catch {
+  } catch (error) {
+    reportBrowserProof(settings, "signed-exchange", error);
     // OIDC exceptions may contain provider bodies, parameters or private JWTs.
     throw new Error("Browser sign-in could not be verified.");
   }

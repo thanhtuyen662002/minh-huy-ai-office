@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 
-let stage = "disposable-fixture-guard", browser;
+let stage = "disposable-fixture-guard", browser, safeFailureLogs;
 const requireProof = condition => { if (!condition) throw new Error("Browser proof failed."); };
 const digest = value => createHash("sha256").update(value).digest("hex");
 const guid = value => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
@@ -23,9 +23,15 @@ try {
     const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
     requireProof(result.status === 0); return result.stdout.trim();
   };
-  const flags = { ...process.env, AIOFFICE_BROWSER_OIDC_ENABLED: "true", AIOFFICE_LOCAL_UI_ENABLED: "false" };
+  const flags = { ...process.env, AIOFFICE_BROWSER_OIDC_ENABLED: "true", AIOFFICE_LOCAL_UI_ENABLED: "false", AIOFFICE_BROWSER_CI_PROOF: "true" };
   const profile = JSON.parse(run(["config", "--format", "json"], flags));
   requireProof(profile.name === "aioffice-" + manifest.AIOFFICE_INSTALLATION_ID.replaceAll("-", ""));
+  safeFailureLogs = () => {
+    for (const line of run(["logs", "--no-color", "--tail", "30", "web"]).split("\n")) {
+      const marker = line.match(/\[aioffice-browser-proof\] (configuration|origin|transaction|response|claim|exchange|signed-exchange|authority|publish|lifetime)(?: (OAUTH_INVALID_RESPONSE|OAUTH_RESPONSE_BODY_ERROR|OAUTH_INVALID_REQUEST|OAUTH_JWT_CLAIM_COMPARISON_FAILED|OAUTH_JWT_TIMESTAMP_CHECK_FAILED|OAUTH_KEY_SELECTION_FAILED|OAUTH_SIGNATURE_VERIFICATION_FAILED|OAUTH_UNSUPPORTED_OPERATION|OAUTH_INVALID_SERVER_METADATA))?$/);
+      if (marker) console.error(`CI verification refusal: ${marker[1]}${marker[2] ? " " + marker[2] : ""}`);
+    }
+  };
   const service = profile.services.web;
   const settings = service.environment;
   requireProof(settings.AIOFFICE_BROWSER_OIDC_ENABLED === "true" && settings.AIOFFICE_LOCAL_UI_ENABLED === "false"
@@ -74,14 +80,16 @@ try {
     }
     stage = "verified-provider-callback";
     const callbackRequest = await response;
-    requireProof((await callbackRequest.response())?.status() === 303);
+    const callbackStatus = (await callbackRequest.response())?.status();
+    if (callbackStatus !== 303) console.error(`CI callback HTTP status: ${Number.isInteger(callbackStatus) ? callbackStatus : "unavailable"}`);
+    requireProof(callbackStatus === 303);
     await page.waitForURL(url => url.origin === app && url.pathname === "/");
     stage = "authenticated-workspace-ready";
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
     const authority = await current();
     requireProof(authority.status === 200 && authority.body.companyId === company && authority.body.tenantId === tenant
       && authority.body.userId === user && authority.cache === "no-store");
-    return callbackRequest.url();
+    return { url: callbackRequest.url(), cookie: (await callbackRequest.allHeaders()).cookie };
   }
   const cookie = async name => (await context.cookies(app)).find(item => item.name === name);
   stage = "provider-page-sign-in";
@@ -115,7 +123,10 @@ try {
   console.log("PASS browser company/member/source access, cross-company denial and disabled local password route");
 
   stage = "callback-denial-preserves-session";
-  const replay = await context.request.get(originalCallback, { maxRedirects: 0 });
+  requireProof(originalCallback.cookie?.includes("aioffice_oidc_transaction="));
+  const replayCookies = originalCallback.cookie.split("; ").filter(item => !item.startsWith("aioffice_browser_session="));
+  replayCookies.push(`aioffice_browser_session=${sid.value}`);
+  const replay = await context.request.get(originalCallback.url, { maxRedirects: 0, headers: { Cookie: replayCookies.join("; ") } });
   requireProof(replay.status() === 401 && !replay.headers()["set-cookie"] && (await current()).status === 200);
   const start = await page.evaluate(async companyId => {
     const response = await fetch("/api/local/session/oidc/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }) });
@@ -201,4 +212,5 @@ try {
   // Assertion/library/CLI errors can embed a password, authorization code,
   // JWT or private environment. Emit only a fixed stage identifier.
   console.error(`FAIL actual Chromium browser OIDC gate: ${stage}`); process.exitCode = 1;
+  try { safeFailureLogs?.(); } catch { console.error("CI verification refusal stage unavailable"); }
 } finally { if (browser) await browser.close().catch(() => {}); }
