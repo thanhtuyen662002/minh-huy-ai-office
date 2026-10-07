@@ -14,10 +14,13 @@ import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
+import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
 
 type Props = {
   companyId: string;
   companyName: string;
+  loginMode?: "local" | "browser";
+  browserLogin?: PublicBrowserLogin;
 };
 
 type ChatMessage = {
@@ -52,7 +55,7 @@ function sourceLabel(source: LocalDataSource) {
   return "Không có quyền đọc";
 }
 
-export function LocalAiWorkspace({ companyId, companyName }: Props) {
+export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", browserLogin }: Props) {
   const [surface, setSurface] = useState<Surface>("assistant");
   const [sources, setSources] = useState<readonly LocalDataSource[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState("");
@@ -230,6 +233,41 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sessionState !== "signed-out") return;
+    if (loginMode === "browser") {
+      if (!browserLogin) { setNotice("Dịch vụ đăng nhập chưa sẵn sàng."); return; }
+      const finish = beginMutation("signed-out");
+      if (!finish) return;
+      const generation = sessionGeneration.current;
+      setNotice(""); setBusy(true);
+      let navigating = false;
+      try {
+        // Settle both cookie mutations in order. Aborting would not undo a
+        // received cookie, so company changes wait before restoring context.
+        const prepared = await fetch("/api/local/session/oidc/binding", {
+          method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
+        });
+        const preparation = await readJson(prepared);
+        if (!isCurrent(generation)) return;
+        if (!prepared.ok || !preparation || typeof preparation !== "object"
+          || Object.keys(preparation).join(",") !== "ok" || Object.getOwnPropertyDescriptor(preparation, "ok")?.value !== true) throw new Error();
+        const started = await fetch("/api/local/session/oidc/start", {
+          method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }),
+        });
+        const payload = await readJson(started);
+        if (!isCurrent(generation)) return;
+        const destination = started.ok ? browserLoginDestination(payload, browserLogin) : null;
+        if (!destination) throw new Error();
+        navigateBrowserLogin(destination);
+        navigating = true;
+      } catch {
+        if (isCurrent(generation)) setNotice("Không bắt đầu được đăng nhập. Hãy thử lại.");
+      } finally {
+        finish();
+        if (isCurrent(generation) && !navigating) setBusy(false);
+      }
+      return;
+    }
     const form = event.currentTarget;
     const data = new FormData(form);
     const username = String(data.get("username") ?? "").trim();
@@ -452,12 +490,13 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
         <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <section>
             <div className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-200">
-              Local Pilot
+              {loginMode === "browser" ? "Không gian làm việc" : "Local Pilot"}
             </div>
             <p className="mt-7 text-sm font-semibold tracking-[0.2em] text-indigo-600 dark:text-indigo-300">MINH HUY</p>
             <h1 className="mt-3 max-w-2xl text-5xl font-semibold tracking-[-0.04em] sm:text-6xl">AI Office</h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              Làm việc với ERP và AI trên một giao diện duy nhất. Phiên local hiện dùng quyền chỉ đọc và OpenAI trực tiếp.
+              {loginMode === "browser" ? "Làm việc với ERP và AI bằng tài khoản doanh nghiệp. Mỗi nguồn dữ liệu được kiểm tra theo quyền truy cập của bạn."
+                : "Làm việc với ERP và AI trên một giao diện duy nhất. Phiên local hiện dùng quyền chỉ đọc và OpenAI trực tiếp."}
             </p>
             <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
               {["ERP chỉ đọc", "Task bền vững", "AI có bằng chứng"].map((item) => (
@@ -469,9 +508,9 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
           </section>
 
           <form onSubmit={signIn} className="rounded-[28px] border border-black/10 bg-white p-7 shadow-xl shadow-slate-900/5 dark:border-white/10 dark:bg-[#11182a]">
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Đăng nhập local</p>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{loginMode === "browser" ? "Đăng nhập doanh nghiệp" : "Đăng nhập local"}</p>
             <h2 className="mt-2 text-2xl font-semibold">{companyName}</h2>
-            <label className="mt-7 block text-sm font-medium">
+            {loginMode === "browser" ? <p className="mt-7 text-sm leading-6 text-slate-600 dark:text-slate-300">Tiếp tục đến trang đăng nhập của doanh nghiệp để vào không gian làm việc.</p> : <><label className="mt-7 block text-sm font-medium">
               Tên đăng nhập
               <input
                 name="username"
@@ -488,17 +527,18 @@ export function LocalAiWorkspace({ companyId, companyName }: Props) {
                 autoComplete="current-password"
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-transparent px-4 py-3 outline-none transition focus:border-indigo-500 dark:border-white/15"
               />
-            </label>
+            </label></>}
             {notice ? <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">{notice}</p> : null}
             <button
               type="submit"
               disabled={busy}
               className="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {busy ? "Đang đăng nhập…" : "Vào AI Office"}
+              {busy ? "Đang đăng nhập…" : loginMode === "browser" ? "Đăng nhập doanh nghiệp" : "Vào AI Office"}
             </button>
             <p className="mt-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Token được giữ trong cookie HttpOnly của web local, không hiển thị cho JavaScript phía trình duyệt.
+              {loginMode === "browser" ? "Quyền truy cập được xác minh lại khi bạn sử dụng nguồn dữ liệu."
+                : "Token được giữ trong cookie HttpOnly của web local, không hiển thị cho JavaScript phía trình duyệt."}
             </p>
           </form>
         </div>
