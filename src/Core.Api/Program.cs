@@ -25,6 +25,10 @@ if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
     platformConnectionString = await secretResolver.ResolveAsync(SecretReference.Parse(platformConnectionSecretReference));
 
 builder.Services.AddHealthChecks();
+// Return bounded 400 responses for invalid JSON in every environment. Letting
+// development binding errors escape clears sensitive no-store headers and
+// renders serializer/stack details through DeveloperExceptionPage.
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
 builder.Services.AddOptions<RabbitMqWorkOptions>()
@@ -211,6 +215,17 @@ if (authenticationConfigured)
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid registration options page." }); }
     });
+    dataSources.MapPost("/read-only-registration", async (IRequestAuthorizationContextAccessor accessor,
+        [FromServices] DataSourceRegistryService registry, DataSourceReadOnlyRegistrationRequest request, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
+        try { return Results.Ok(await registry.RegisterReadOnlyAsync(context, request, cancellationToken)); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid source registration." }); }
+        catch (DataSourceRegistrationConflictException) { return Results.Conflict(new { error = "Source registration conflicts with current state." }); }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException) { return Results.Conflict(new { error = "Source registration could not be saved. Retry with the same operation ID." }); }
+        catch (System.Data.Common.DbException) { return Results.Json(new { error = "Source registration is temporarily unavailable. Retry with the same operation ID." }, statusCode: 503); }
+    });
     dataSources.MapGet("/", async (IRequestAuthorizationContextAccessor accessor, [FromServices] DataSourceRegistryService registry, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor); if (context is null) return (IResult)Results.Forbid();
@@ -274,6 +289,7 @@ if (authenticationConfigured)
 else
 {
     dataSources.MapGet("/registration-options", AuthenticationUnavailable);
+    dataSources.MapPost("/read-only-registration", AuthenticationUnavailable);
     dataSources.MapGet("/", AuthenticationUnavailable);
     dataSources.MapPost("/", AuthenticationUnavailable);
     dataSources.MapPut("/{dataSourceId:guid}", AuthenticationUnavailable);

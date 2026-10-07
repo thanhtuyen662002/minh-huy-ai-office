@@ -256,6 +256,17 @@ def main():
         assert "secretref://" not in json.dumps(choice_body)
         assert http("/api/data-sources", base=api, headers=auth)[0] == 200
         assert http("/api/local/data-sources" + selector)[0] == 200
+        revoked_registration = {"bindingId": source, "bindingVersion": "1", "operationId": str(uuid.uuid4()),
+            "logicalName": "revoked-registration-" + uuid.uuid4().hex, "environment": "Development",
+            "purpose": "Fresh admin revocation acceptance", "maxConcurrency": 2}
+        for denied_path, denied_base, denied_headers in (
+            ("/api/data-sources/read-only-registration", api, auth),
+            ("/api/local/data-sources/read-only-registration" + selector, web, {"Origin": web})):
+            denied_status, denied_response_headers, denied_body = http(denied_path, revoked_registration,
+                base=denied_base, headers=denied_headers)
+            assert denied_status == 403 and "no-store" in denied_response_headers.get("Cache-Control", "")
+            assert "secretref://" not in json.dumps(denied_body)
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceRegistrationAudits WHERE {source_scope} AND OperationId='{revoked_registration['operationId']}';") == "0"
         for path, method in (("/api/data-sources/", "POST"), (f"/api/data-sources/{source}", "PUT")):
             assert http(path, metadata, base=api, headers=auth, method=method)[0] == 403
         assert http(f"/api/data-sources/{source}/metadata", narrow, base=api, headers=auth, method="PUT")[0] == 403
@@ -277,11 +288,15 @@ def main():
         assert fingerprint("RoleAssignments", role_scope, "RoleKey") == roles_before, "Role fixture restoration changed assignments"
     status, _, context = http("/api/auth/context", base=api, headers=auth)
     assert status == 200 and "admin" in context["roles"], "Restored admin authority unavailable"
+    assert sql("""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_sessions
+        WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'
+          AND is_user_process=1 AND transaction_isolation_level<>2;""") == "0", "Registration leaked session isolation into the runtime connection pool"
     choice_status, choice_headers, choices = http("/api/data-sources/registration-options?offset=0&limit=1", base=api, headers=auth)
     assert choice_status == 200 and "no-store" in choice_headers.get("Cache-Control", "")
     assert len(choices["items"]) == 1 and choices["offset"] == 0 and choices["limit"] == 1
     choice = choices["items"][0]
-    assert set(choice) == {"bindingId", "label", "version"} and choice["version"] > 0
+    assert set(choice) == {"bindingId", "label", "version", "versionToken"} and choice["version"] > 0
+    assert choice["versionToken"] == str(choice["version"])
     assert "secretref://" not in json.dumps(choices) and all(secret not in json.dumps(choices) for secret in [*secrets, token])
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{uuid.UUID(choice['bindingId'])}' AND IsEnabled=1 AND Version={int(choice['version'])};") == "1"
     assert http("/api/data-sources/registration-options", base=api, headers=wrong)[0] == 403
@@ -688,6 +703,68 @@ def main():
     assert permission_proof() == "1"
     print("PASS exact grant case/scope, legacy missing/revoked grant denial, and indirect procedure/trigger permission fences")
 
+    # Owned onboarding fixture is retained for restart proof. Immutable history
+    # is never deleted for cleanup; the final CI stack owns its disposable volume.
+    registration = {"bindingId": choice["bindingId"], "bindingVersion": choice["versionToken"],
+                    "operationId": str(uuid.uuid4()), "logicalName": "registered-erp-" + uuid.uuid4().hex,
+                    "environment": "Development", "purpose": "Read-only onboarding acceptance", "maxConcurrency": 2}
+    registration_path = "/api/local/data-sources/read-only-registration" + selector
+    status, registration_headers, registered = http(registration_path, registration, headers={"Origin": web})
+    assert status == 200 and "no-store" in registration_headers.get("Cache-Control", ""), "Audited source registration failed"
+    registered_source = str(uuid.UUID(registered["id"]))
+    assert registered["allowRead"] and not registered["allowWrite"] and registered["kind"] == "sql-server"
+    assert "secretref://" not in json.dumps(registered) and "connectionSecretReference" not in registered
+    audit_scope = source_scope + f" AND OperationId='{registration['operationId']}'"
+    assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceRegistrationAudits
+        WHERE {audit_scope} AND ActorUserId='{user}' AND DataSourceId='{registered_source}'
+          AND BindingId='{registration['bindingId']}' AND BindingVersion={registration['bindingVersion']};""") == "1"
+    assert http(registration_path, registration, headers={"Origin": web})[2]["id"] == registered_source
+    assert http(registration_path, {**registration, "purpose": "Conflicting retry"}, headers={"Origin": web})[0] == 409
+    assert http(registration_path, {**registration, "operationId": str(uuid.uuid4())}, headers={"Origin": web})[0] == 409
+    assert http(registration_path, {**registration, "allowWrite": True}, headers={"Origin": web})[0] == 400
+    assert http(registration_path, registration, headers={"Origin": "https://foreign.invalid"})[0] == 403
+    assert http("/api/data-sources/read-only-registration", registration, base=api, headers=wrong)[0] == 403
+    assert fingerprint("DataSourceSecretBindings", source_scope, "Id") == bindings_before
+    audit_before = fingerprint("DataSourceRegistrationAudits", source_scope, "Id")
+    runtime_statement("UPDATE aioffice.DataSourceRegistrationAudits SET RequestHash=REPLICATE(N'0',64)")
+    runtime_statement("DELETE FROM aioffice.DataSourceRegistrationAudits")
+    runtime_statement("ALTER TABLE aioffice.DataSourceRegistrationAudits ADD Forbidden int NULL")
+    runtime_statement("TRUNCATE TABLE aioffice.DataSourceRegistrationAudits")
+    runtime_statement("ALTER AUTHORIZATION ON OBJECT::aioffice.DataSourceRegistrationAudits TO aioffice_runtime")
+    assert fingerprint("DataSourceRegistrationAudits", source_scope, "Id") == audit_before
+    # SQL Server permits a column GRANT to override a table DENY. Prove the
+    # unsafe right is real, and that registration refuses it before any write.
+    fresh_registration = {**registration, "operationId": str(uuid.uuid4()), "logicalName": "column-guard-" + uuid.uuid4().hex}
+    try:
+        sql("""USE AIOfficeLocal;
+            REVOKE UPDATE ON OBJECT::aioffice.DataSourceRegistrationAudits (RequestHash) FROM aioffice_binding_runtime;
+            GRANT UPDATE ON OBJECT::aioffice.DataSourceRegistrationAudits (RequestHash) TO aioffice_runtime;""")
+        runtime_statement("UPDATE aioffice.DataSourceRegistrationAudits SET RequestHash=REPLICATE(N'0',64)", expected="ALLOWED")
+        denied_status, denied_headers, denied_body = http(registration_path, fresh_registration, headers={"Origin": web})
+        assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", "")
+        assert "secretref://" not in json.dumps(denied_body)
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources WHERE {source_scope} AND LogicalName=N'{fresh_registration['logicalName']}';") == "0"
+    finally:
+        sql("""USE AIOfficeLocal;
+            REVOKE UPDATE ON OBJECT::aioffice.DataSourceRegistrationAudits (RequestHash) FROM aioffice_runtime;
+            DENY UPDATE ON OBJECT::aioffice.DataSourceRegistrationAudits (RequestHash) TO aioffice_binding_runtime;""")
+    assert fingerprint("DataSourceRegistrationAudits", source_scope, "Id") == audit_before
+
+    # A real SQL failure after source INSERT must roll both rows back. This
+    # operator-only constraint targets one owned operation, then is removed.
+    failed_operation = str(uuid.uuid4())
+    failed_registration = {**registration, "operationId": failed_operation, "logicalName": "rollback-erp-" + uuid.uuid4().hex}
+    sql(f"""USE AIOfficeLocal; ALTER TABLE aioffice.DataSourceRegistrationAudits
+        ADD CONSTRAINT CK_CiRegistrationRollback CHECK (OperationId<>'{failed_operation}');""")
+    try:
+        assert http(registration_path, failed_registration, headers={"Origin": web})[0] == 409
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources WHERE {source_scope} AND LogicalName=N'{failed_registration['logicalName']}';") == "0"
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceRegistrationAudits WHERE {source_scope} AND OperationId='{failed_operation}';") == "0"
+    finally:
+        sql("USE AIOfficeLocal; ALTER TABLE aioffice.DataSourceRegistrationAudits DROP CONSTRAINT CK_CiRegistrationRollback;")
+    assert fingerprint("DataSourceRegistrationAudits", source_scope, "Id") == audit_before
+    print("PASS actual SQL/BFF read-only registration, idempotency, scope, immutable audit and atomic failure rollback")
+
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
     status, _, accepted = http("/api/local/tasks" + selector,
         {"dataSourceId": source, "question": "Inspect the local sample database metadata"})
@@ -772,6 +849,8 @@ def main():
         WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2
           AND Version={retained_grant_version};""")
     assert completed()
+    assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources WHERE {source_scope} AND Id='{registered_source}';") == "1"
+    assert fingerprint("DataSourceRegistrationAudits", source_scope, "Id") == audit_before
     print("PASS repeat configuration/bootstrap, retained SQL/identity/revoked grant, inactive-user denial and retained task")
     print("PASS complete local stack integration")
 
