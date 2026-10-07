@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchCoreApi } from "./local-ai-bff";
+import { createServer } from "node:http";
+import { BROWSER_CORE_RESPONSE_BYTES, fetchCoreApi } from "./local-ai-bff";
 import { readBrowserOidcSettings } from "./browser-oidc";
 import { browserBindingCookieName, browserSessionCookieName } from "./browser-session-store";
 import { GET as context } from "../app/api/local/session/route";
@@ -30,6 +31,7 @@ const nextBinding = `${binding.split(".")[0]}.${Buffer.alloc(32, 3).toString("ba
 const sid = Buffer.alloc(32, 4).toString("base64url"), token = "private.access.token";
 const jar = new Map<string, string>();
 const read = vi.fn(), revoke = vi.fn(), fetcher = vi.fn();
+const networkFetch = globalThis.fetch;
 const session = () => ({ accessToken: token, companyId: company, subject: "private-subject", expiresAt: Math.floor(Date.now() / 1000) + 300 });
 function request(path = "/api/local/session", method = "GET", body?: unknown, extra: Record<string, string> = {}) {
   return new Request(`http://web:3000${path}?companyId=${company}`, {
@@ -114,6 +116,64 @@ describe("opaque browser BFF", () => {
     expect(fetcher.mock.calls[0][0]).toBe("http://untrusted-legacy.invalid/api/auth/context");
     expect(fetcher.mock.calls[0][1].headers.get("Authorization")).toBe("Bearer untrusted-legacy-token");
     expect(mocks.runtime).not.toHaveBeenCalled(); expect(read).not.toHaveBeenCalled();
+  });
+  it.each(["positive", "logout", "expiry", "outage"])("fences %s after real HTTP headers while the private body is delayed", async (change) => {
+    let releaseBody!: () => void, gotHeaders!: () => void;
+    const headersReady = new Promise<void>((resolve) => { gotHeaders = resolve; });
+    let current = true;
+    read.mockImplementation(async () => {
+      if (!current && change === "outage") throw new Error("private-store-unavailable");
+      return current ? session() : null;
+    });
+    const server = createServer((_request, response) => {
+      response.setHeader("Content-Type", "application/json"); response.flushHeaders();
+      releaseBody = () => response.end(JSON.stringify({ privateEvidence: "private-streamed-context" }));
+      gotHeaders();
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address() as import("node:net").AddressInfo;
+    fetcher.mockImplementation(async (_url, init) => networkFetch(`http://127.0.0.1:${address.port}/context`, init));
+    try {
+      const pending = context(request()); await headersReady;
+      expect(read).toHaveBeenCalledOnce();
+      current = change === "positive"; releaseBody();
+      const response = await pending; expect(response.status).toBe(current ? 200 : 401);
+      const body = await response.text();
+      if (current) expect(body).toContain("private-streamed-context");
+      else expect(body).not.toContain("private-streamed-context");
+      expect(response.headers.get("cache-control")).toBe("no-store"); expect(response.headers.get("set-cookie")).toBeNull();
+      expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      server.closeAllConnections(); await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+  it("bounds actual Core body bytes despite dishonest Content-Length", async () => {
+    const cancel = vi.fn();
+    fetcher.mockResolvedValue(new Response(new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(BROWSER_CORE_RESPONSE_BYTES + 1)); }, cancel,
+    }), { headers: { "Content-Type": "application/json", "Content-Length": "1" } }));
+    expect((await context(request())).status).toBe(401); expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledOnce();
+  });
+  it("cancels a stalled Core body on caller abort without returning private data", async () => {
+    const cancel = vi.fn(), controller = new AbortController();
+    fetcher.mockResolvedValue(new Response(new ReadableStream({ cancel }), { headers: { "Content-Type": "application/json" } }));
+    const pending = fetchCoreApi("/api/auth/context", company, { signal: controller.signal });
+    await new Promise<void>((resolve) => setImmediate(resolve)); controller.abort();
+    expect(await pending).toBeNull(); expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledOnce();
+  });
+  it("does not extend the Core deadline while reading a stalled body", async () => {
+    const cancel = vi.fn(), deadline = new AbortController();
+    const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
+    fetcher.mockResolvedValue(new Response(new ReadableStream({ cancel })));
+    try {
+      const pending = context(request()); await new Promise<void>((resolve) => setImmediate(resolve)); deadline.abort();
+      expect((await pending).status).toBe(401); expect(cancel).toHaveBeenCalledOnce(); expect(timeout).toHaveBeenCalledWith(10_000);
+    } finally { timeout.mockRestore(); }
+  });
+  it("copies a bodyless Core response without inventing content or upstream cookies", async () => {
+    fetcher.mockResolvedValue(new Response(null, { status: 204, headers: { "Set-Cookie": "untrusted=1" } }));
+    const response = await sources(request()); expect(response.status).toBe(204); expect(await response.text()).toBe("");
+    expect(response.headers.get("set-cookie")).toBeNull();
   });
 });
 describe("browser mutation Origin", () => {
