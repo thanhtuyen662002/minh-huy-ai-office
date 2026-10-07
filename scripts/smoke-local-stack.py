@@ -203,7 +203,7 @@ def main():
     assert status == 200 and "no-store" in headers.get("Cache-Control", "")
     assert any(item["id"] == source and item["allowRead"] and not item["allowWrite"] for item in sources)
     assert all(secret not in json.dumps(sources) for secret in secrets)
-    status, _, result = http(f"/api/local/data-sources/{source}/connection-test{selector}", {})
+    status, _, result = http(f"/api/local/data-sources/{source}/connection-test{selector}", {}, headers={"Origin": web})
     assert status == 200 and result["succeeded"], "Read-only SQL connection test failed"
 
     # Explicitly exercise the actual API's independent company authorization using the BFF cookie token.
@@ -884,7 +884,7 @@ def main():
 
     # The fallback executor performs real read-only metadata collection without fabricating an AI answer.
     status, _, accepted = http("/api/local/tasks" + selector,
-        {"dataSourceId": source, "question": "Inspect the local sample database metadata"})
+        {"dataSourceId": source, "question": "Inspect the local sample database metadata"}, headers={"Origin": web})
     assert status == 202, f"Worker task submission status {status}"
     task = accepted["taskId"]
     def completed():

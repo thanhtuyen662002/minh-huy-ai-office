@@ -1,4 +1,4 @@
-import { COMPANY_SELECTOR_HEADER, isCanonicalCompanyId } from "./local-ai-bff";
+import { COMPANY_SELECTOR_HEADER, isCanonicalCompanyId } from "./company-scope";
 import { parseAuthContext, type LocalAuthContext } from "./local-ai-workspace";
 import type { BrowserOidcSettings, OidcTransaction } from "./browser-oidc";
 import type { VerifiedBrowserTokens } from "./browser-oidc-client";

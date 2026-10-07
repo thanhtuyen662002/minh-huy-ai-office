@@ -104,6 +104,22 @@ it("uses independent unpredictable state, nonce and verifier for every login", (
   for (const token of tokens) expect(Buffer.from(token, "base64url").length).toBe(32);
   expect(Object.isFrozen(transactions[0])).toBe(true);
 });
+
+it("uses configured HTTPS browser authority after TLS terminates before Next.js", () => {
+  const config = settings();
+  expect(oidcStartIsSameOrigin(new Request("http://web:3000/start", {
+    headers: { Origin: config.publicOrigin, Host: "office.example.test", "X-Forwarded-Proto": "untrusted" },
+  }), config)).toBe(true);
+  expect(oidcStartIsSameOrigin(new Request(`${config.publicOrigin}/start`, { headers: { Origin: config.publicOrigin } }), config)).toBe(true);
+  expect(oidcStartIsSameOrigin(new Request("http://web:3000/start", {
+    headers: { Origin: config.publicOrigin, "X-Forwarded-Host": "office.example.test", "X-Forwarded-Proto": "https" },
+  }), config)).toBe(false);
+});
+it.each(["office.example.test:443", "OFFICE.example.test", "office.example.test/", "office.example.test\\a\\..", "office.example.test."])(
+  "rejects raw browser Host alias %s", (host) => {
+    const config = settings();
+    expect(oidcStartIsSameOrigin(new Request("http://web:3000/start", { headers: { Origin: config.publicOrigin, Host: host } }), config)).toBe(false);
+  });
 it.each(["", "00000000-0000-0000-0000-000000000000", "foreign-company"])("rejects invalid company selector %s", (value) => {
   expect(() => createOidcTransaction(value)).toThrow("Invalid login transaction.");
 });

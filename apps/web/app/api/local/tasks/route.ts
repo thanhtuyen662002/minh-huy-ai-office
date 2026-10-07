@@ -2,7 +2,8 @@ import {
   copyCoreResponse,
   fetchCoreApi,
   isCanonicalCompanyId,
-  isLocalAiUiEnabled,
+  isOfficeAiUiEnabled,
+  officeMutationIsSameOrigin,
   localUiDisabledResponse,
   unauthenticatedResponse,
 } from "../../../../lib/local-ai-bff";
@@ -10,7 +11,10 @@ import {
 type TaskBody = { dataSourceId?: unknown; question?: unknown };
 
 export async function POST(request: Request) {
-  if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
+  if (!officeMutationIsSameOrigin(request)) return Response.json({ error: "Same-origin request is required." }, {
+    status: 403, headers: { "Cache-Control": "no-store" },
+  });
 
   const companyId = new URL(request.url).searchParams.get("companyId");
   if (!isCanonicalCompanyId(companyId)) {
@@ -25,7 +29,8 @@ export async function POST(request: Request) {
   }
 
   if (
-    typeof body.dataSourceId !== "string"
+    !body || typeof body !== "object" || Array.isArray(body)
+    || typeof body.dataSourceId !== "string"
     || !/^[0-9a-fA-F-]{36}$/.test(body.dataSourceId)
     || typeof body.question !== "string"
     || body.question.length === 0

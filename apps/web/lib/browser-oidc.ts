@@ -1,6 +1,5 @@
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto";
-import { isCanonicalCompanyId } from "./local-ai-bff";
-import { hasSameOrigin } from "./request-origin";
+import { isCanonicalCompanyId } from "./company-scope";
 
 export const OIDC_CALLBACK_PATH = "/api/local/session/oidc/callback";
 export const OIDC_TRANSACTION_SECONDS = 300;
@@ -68,7 +67,12 @@ export function readBrowserOidcSettings(
 }
 
 export function oidcStartIsSameOrigin(request: Request, settings: BrowserOidcSettings): boolean {
-  return request.headers.get("origin") === settings.publicOrigin && hasSameOrigin(request);
+  if (request.headers.get("origin") !== settings.publicOrigin) return false;
+  // TLS can terminate before Next.js sees the request. The configured browser
+  // origin and exact raw Host are authoritative, never internal/forwarded URLs.
+  const host = request.headers.get("host");
+  return host !== null ? host === new URL(settings.publicOrigin).host
+    : new URL(request.url).origin === settings.publicOrigin;
 }
 
 export type OidcTransaction = Readonly<{

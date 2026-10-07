@@ -1,7 +1,13 @@
 import { cookies } from "next/headers";
+import { COMPANY_SELECTOR_HEADER, isCanonicalCompanyId } from "./company-scope";
+import { getBrowserAuthRuntime } from "./browser-auth-runtime";
+import { oidcStartIsSameOrigin } from "./browser-oidc";
+import { browserBindingCookieName, browserSessionCookieName } from "./browser-session-store";
+import { hasSameOrigin } from "./request-origin";
+
+export { COMPANY_SELECTOR_HEADER, isCanonicalCompanyId } from "./company-scope";
 
 export const LOCAL_ACCESS_TOKEN_COOKIE = "aioffice_local_access_token";
-export const COMPANY_SELECTOR_HEADER = "X-AIOffice-Company-Id";
 
 const DEFAULT_CORE_API_URL = "http://127.0.0.1:8080";
 const DEFAULT_TOKEN_URL =
@@ -10,6 +16,22 @@ const DEFAULT_CLIENT_ID = "aioffice-local-cli";
 
 export function isLocalAiUiEnabled() {
   return process.env.AIOFFICE_LOCAL_UI_ENABLED === "true";
+}
+
+export function isBrowserAiUiEnabled() {
+  return process.env.AIOFFICE_BROWSER_OIDC_ENABLED === "true";
+}
+
+export function isOfficeAiUiEnabled() {
+  return isBrowserAiUiEnabled() || isLocalAiUiEnabled();
+}
+
+export function officeMutationIsSameOrigin(request: Request) {
+  try {
+    if (!isBrowserAiUiEnabled()) return hasSameOrigin(request);
+    const runtime = getBrowserAuthRuntime();
+    return !!runtime && oidcStartIsSameOrigin(request, runtime.settings);
+  } catch { return false; }
 }
 
 export function localCoreApiUrl() {
@@ -28,15 +50,6 @@ export function localCookieSecure() {
   return process.env.AIOFFICE_LOCAL_UI_COOKIE_SECURE === "true";
 }
 
-export function isCanonicalCompanyId(value: unknown): value is string {
-  return (
-    typeof value === "string"
-    && value.trim() === value
-    && value !== "00000000-0000-0000-0000-000000000000"
-    && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
-  );
-}
-
 export async function readLocalAccessToken() {
   const store = await cookies();
   const token = store.get(LOCAL_ACCESS_TOKEN_COOKIE)?.value;
@@ -48,7 +61,32 @@ export async function fetchCoreApi(
   companyId: string,
   init: RequestInit = {},
 ): Promise<Response | null> {
-  if (!isLocalAiUiEnabled() || !isCanonicalCompanyId(companyId)) return null;
+  if (!isOfficeAiUiEnabled() || !isCanonicalCompanyId(companyId)) return null;
+  if (isBrowserAiUiEnabled()) {
+    try {
+      const runtime = getBrowserAuthRuntime();
+      if (!runtime) return null;
+      const store = await cookies();
+      const binding = store.get(browserBindingCookieName(runtime.settings))?.value;
+      const sid = store.get(browserSessionCookieName(runtime.settings))?.value;
+      if (!binding || !sid) return null;
+      const session = await runtime.sessions.read(binding, sid);
+      if (!session || session.companyId.toLowerCase() !== companyId.toLowerCase()) return null;
+      const headers = new Headers(init.headers);
+      headers.set("Authorization", `Bearer ${session.accessToken}`);
+      headers.set(COMPANY_SELECTOR_HEADER, companyId);
+      headers.set("Accept", "application/json");
+      const deadline = AbortSignal.timeout(10_000);
+      const response = await fetch(`${runtime.coreApiOrigin}${path}`, {
+        ...init, headers, cache: "no-store", redirect: "error",
+        signal: init.signal ? AbortSignal.any([init.signal, deadline]) : deadline,
+      });
+      // Discard a reply whose browser authority expired or was revoked while
+      // Core was running. Core independently resolves fresh membership/roles.
+      if (!await runtime.sessions.read(binding, sid)) return null;
+      return response;
+    } catch { return null; }
+  }
   const token = await readLocalAccessToken();
   if (!token) return null;
 

@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { createClient } from "redis";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { createOidcTransaction, readBrowserOidcSettings } from "./browser-oidc";
@@ -42,6 +43,7 @@ async function issued() {
   const value = await pending(), claim = (await stores[1].claim(value.binding, value.transaction))!;
   const session = privateSession(), sid = (await stores[0].complete(value.binding, value.transaction, claim, session))!;
   expect(sid).toBeTruthy();
+  expect(await stores[1].read(value.binding, sid)).toEqual(session);
   return { ...value, claim, session, sid };
 }
 beforeAll(async () => { if (redisUrl) await observer.connect(); });
@@ -86,6 +88,87 @@ actual("publishes only one session for concurrent completion of the same claimed
   const results = await Promise.all(stores.map((store) => store.complete(value.binding, value.transaction, claim, session)));
   expect(results.filter(Boolean)).toHaveLength(1);
   expect(await stores[1].read(value.binding, results.find(Boolean)!)).toEqual(session);
+});
+actual("preserves active authority when replacement publication applied but its reply was lost", async () => {
+  const old = await issued(), value = await pending(old.binding);
+  const claim = (await stores[0].claim(value.binding, value.transaction))!;
+  const uncertain = createBrowserSessionCoordinator(async (script, key, args) => {
+    const reply = await transports[0].evaluate(script, key, args);
+    if (args.length === 6) throw new Error("deliberately lost completion reply");
+    return reply;
+  }, settings);
+  await expect(uncertain.complete(value.binding, value.transaction, claim, privateSession()))
+    .rejects.toThrow(/^Browser session coordination is unavailable\.$/);
+  const row = await observer.hGetAll(old.key!);
+  expect(row.replacementSid).toMatch(/^[a-f0-9]{64}$/);
+  expect(row.sid).toMatch(/^[a-f0-9]{64}$/);
+  expect(await stores[1].read(value.binding, old.sid)).toEqual(old.session);
+  expect(await stores[1].complete(value.binding, value.transaction, claim, privateSession())).toBeNull();
+});
+actual("retains active authority if a published replacement expires before browser receipt", async () => {
+  const old = await issued(), value = await pending(old.binding), claim = (await stores[0].claim(value.binding, value.transaction))!;
+  const sid = (await stores[1].complete(value.binding, value.transaction, claim, privateSession()))!;
+  await observer.hSet(old.key!, "replacementExpiry", String(Math.floor(Date.now() / 1000) - 1));
+  expect(await stores[0].read(value.binding, sid)).toBeNull();
+  expect(await stores[1].read(value.binding, old.sid)).toEqual(old.session);
+});
+actual("promotes a delivered replacement atomically across16 readers and revokes the previous SID", async () => {
+  const old = await issued(), value = await pending(old.binding), claim = (await stores[0].claim(value.binding, value.transaction))!;
+  const session = { ...privateSession(), accessToken: "private-replacement-token" };
+  const sid = (await stores[1].complete(value.binding, value.transaction, claim, session))!;
+  expect(await stores[0].read(value.binding, old.sid)).toEqual(old.session);
+  const replies = await Promise.all(Array.from({ length: 16 }, (_, i) => stores[i % 2].read(value.binding, sid)));
+  expect(replies.every((reply) => JSON.stringify(reply) === JSON.stringify(session))).toBe(true);
+  expect(await stores[1].read(value.binding, old.sid)).toBeNull();
+  expect(await observer.hExists(old.key!, "replacementSid")).toBe(false);
+  expect(await stores[0].read(value.binding, sid)).toEqual(session);
+});
+actual("does not promote tampered replacement ciphertext or evict the valid active SID", async () => {
+  const old = await issued(), value = await pending(old.binding), claim = (await stores[0].claim(value.binding, value.transaction))!;
+  const sid = (await stores[1].complete(value.binding, value.transaction, claim, privateSession()))!;
+  const payload = (await observer.hGet(old.key!, "replacementPayload"))!;
+  await observer.hSet(old.key!, "replacementPayload", payload.slice(0, -2) + "AA");
+  expect(await stores[0].read(value.binding, sid)).toBeNull();
+  expect(await stores[1].read(value.binding, old.sid)).toEqual(old.session);
+});
+actual("fences undelivered replacements on a new start and revokes active/provisional authority on logout", async () => {
+  const old = await issued(), first = await pending(old.binding), firstClaim = (await stores[0].claim(first.binding, first.transaction))!;
+  const sid = (await stores[1].complete(first.binding, first.transaction, firstClaim, privateSession()))!;
+  const latest = await pending(first.binding);
+  expect(await stores[0].read(latest.binding, sid)).toBeNull();
+  expect(await stores[1].read(latest.binding, old.sid)).toEqual(old.session);
+  const claim = (await stores[0].claim(latest.binding, latest.transaction))!;
+  const replacement = (await stores[1].complete(latest.binding, latest.transaction, claim, privateSession()))!;
+  const loggedOut = (await stores[0].revoke(latest.binding))!;
+  for (const cookie of [old.sid, replacement]) {
+    expect(await stores[1].read(latest.binding, cookie)).toBeNull();
+    expect(await stores[1].read(loggedOut, cookie)).toBeNull();
+  }
+});
+actual("recovers a delivered SID after promotion applied but the acknowledgment reply was lost", async () => {
+  const old = await issued(), value = await pending(old.binding), claim = (await stores[0].claim(value.binding, value.transaction))!;
+  const session = privateSession(), sid = (await stores[1].complete(value.binding, value.transaction, claim, session))!;
+  const uncertain = createBrowserSessionCoordinator(async (script, key, args) => {
+    const reply = await transports[0].evaluate(script, key, args);
+    if (script.includes("redis.call('HSET', key, 'sid'")) throw new Error("deliberately lost promotion reply");
+    return reply;
+  }, settings);
+  await expect(uncertain.read(value.binding, sid)).rejects.toThrow(/^Browser session coordination is unavailable\.$/);
+  expect(await stores[0].read(value.binding, sid)).toEqual(session);
+  expect(await stores[1].read(value.binding, old.sid)).toBeNull();
+});
+actual("refuses a replacement after an older worker rotates generation without knowing replacement fields", async () => {
+  const old = await issued(), value = await pending(old.binding), claim = (await stores[0].claim(value.binding, value.transaction))!;
+  const sid = (await stores[1].complete(value.binding, value.transaction, claim, privateSession()))!;
+  const generation = random(), loggedOut = `${value.binding.split(".")[0]}.${generation}`;
+  // Simulate the previous protocol's atomic logout, which cleared active and
+  // pending fields but did not know the newly expanded replacement fields.
+  await observer.multi().hSet(old.key!, "generation", createHash("sha256").update(generation).digest("hex"))
+    .hDel(old.key!, ["sid", "payload", "sessionExpiry", "pending", "pendingExpiry", "phase", "claim"]).exec();
+  expect(await observer.hExists(old.key!, "replacementSid")).toBe(true);
+  expect(await stores[0].isCurrent(loggedOut)).toBe(true);
+  expect(await stores[0].read(loggedOut, sid)).toBeNull();
+  expect(await stores[1].read(value.binding, sid)).toBeNull();
 });
 actual("preserves the issued session through wrong-state/claim/company denials", async () => {
   const old = await issued(), value = await pending(old.binding);
@@ -186,6 +269,7 @@ actual("denies a physically restored pre-logout RDB after a disposable Redis res
   expect(process.env.AIOFFICE_TEST_SESSION_REDIS_DISPOSABLE).toBe("true");
   expect(container).toMatch(/^[a-f0-9]{64}$/);
   const value = await issued(), oldRow = await observer.hGetAll(value.key!);
+  expect(oldRow.sid).toMatch(/^[a-f0-9]{64}$/);
   // The saved snapshot has active authority; the later logout is deliberately
   // absent from that RDB. Only this CI service is restarted, never product Redis.
   await observer.configSet("save", "");

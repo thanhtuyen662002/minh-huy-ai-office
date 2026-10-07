@@ -72,7 +72,7 @@ it("encrypts private data and authenticates it against binding, SID and configur
   let encrypted: unknown;
   const evaluate = vi.fn(async (_script: string, _key: string, args: string[]) => {
     if (args.length === 6) { encrypted = args[4]; return 1; }
-    return encrypted;
+    return [1, encrypted];
   });
   const store = createBrowserSessionCoordinator(evaluate, settings), value = session();
   const sid = (await store.complete(binding, transaction(), handle, value))!;
@@ -93,6 +93,33 @@ it("does not return private store errors or fall back to a process session", asy
   await expect(store.register()).rejects.toThrow(/^Browser session coordination is unavailable\.$/);
   await expect(store.read(binding, handle)).rejects.toThrow(/^Browser session coordination is unavailable\.$/);
   await expect(store.revoke(binding)).rejects.toThrow(/^Browser session coordination is unavailable\.$/);
+});
+it("authenticates replacement payload before acknowledging browser delivery", async () => {
+  let encrypted: unknown;
+  const evaluate = vi.fn(async (_script: string, _key: string, args: string[]) => {
+    if (args.length === 6) { encrypted = args[4]; return 1; }
+    return args.length === 2 ? [2, encrypted] : 1;
+  });
+  const store = createBrowserSessionCoordinator(evaluate, settings), value = session();
+  const sid = (await store.complete(binding, transaction(), handle, value))!;
+  expect(await store.read(binding, sid)).toEqual(value);
+  expect(evaluate.mock.calls.at(-1)![2]).toHaveLength(3);
+  const calls = evaluate.mock.calls.length; encrypted = "invalid-ciphertext";
+  expect(await store.read(binding, sid)).toBeNull(); expect(evaluate.mock.calls).toHaveLength(calls + 1);
+});
+it("does not return decrypted replacement authority when generation acknowledgment loses", async () => {
+  let encrypted: unknown;
+  const evaluate = vi.fn(async (_script: string, _key: string, args: string[]) => {
+    if (args.length === 6) { encrypted = args[4]; return 1; }
+    return args.length === 2 ? [2, encrypted] : null;
+  });
+  const store = createBrowserSessionCoordinator(evaluate, settings);
+  const sid = (await store.complete(binding, transaction(), handle, session()))!;
+  expect(await store.read(binding, sid)).toBeNull();
+});
+it.each(["private-raw-payload", [3, "payload"], [1], [2, "cipher", "extra"]])("refuses invalid read envelope before decryption or promotion", async (reply) => {
+  const evaluate = vi.fn(async () => reply), store = createBrowserSessionCoordinator(evaluate, settings);
+  expect(await store.read(binding, handle)).toBeNull(); expect(evaluate).toHaveBeenCalledOnce();
 });
 it("bounds a stalled Redis handshake without replaying offline work", async () => {
   const sockets = new Set<import("node:net").Socket>();

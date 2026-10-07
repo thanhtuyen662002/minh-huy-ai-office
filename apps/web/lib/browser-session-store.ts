@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "node:crypto";
 import { createClient } from "redis";
-import { isCanonicalCompanyId } from "./local-ai-bff";
+import { isCanonicalCompanyId } from "./company-scope";
 import { OIDC_TRANSACTION_SECONDS, type BrowserOidcSettings, type OidcTransaction } from "./browser-oidc";
 
 export const BROWSER_BINDING_SECONDS = 86_400;
@@ -60,7 +60,7 @@ const beginScript = currentBinding + `
 local expiry = tonumber(ARGV[4])
 if expiry <= now or expiry > now + ${OIDC_TRANSACTION_SECONDS + 10} or expiry > bindingExpiry then return false end
 redis.call('HSET', key, 'generation', ARGV[2], 'pending', ARGV[3], 'pendingExpiry', expiry, 'phase', 'pending')
-redis.call('HDEL', key, 'claim')
+redis.call('HDEL', key, 'claim', 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration')
 return 1
 `;
 const claimScript = currentBinding + `
@@ -75,18 +75,35 @@ if redis.call('HGET', key, 'pending') ~= ARGV[2] or redis.call('HGET', key, 'pha
   or redis.call('HGET', key, 'claim') ~= ARGV[3]
   or tonumber(redis.call('HGET', key, 'pendingExpiry') or '0') <= now
   or expiry <= now or expiry > now + 3610 or expiry > bindingExpiry then return false end
-redis.call('HSET', key, 'sid', ARGV[4], 'payload', ARGV[5], 'sessionExpiry', expiry)
+redis.call('HSET', key, 'replacementSid', ARGV[4], 'replacementPayload', ARGV[5], 'replacementExpiry', expiry, 'replacementGeneration', ARGV[1])
 redis.call('HDEL', key, 'pending', 'pendingExpiry', 'phase', 'claim')
 return 1
 `;
 const readScript = currentBinding + `
+if redis.call('HGET', key, 'replacementSid') == ARGV[2]
+  and redis.call('HGET', key, 'replacementGeneration') == ARGV[1]
+  and tonumber(redis.call('HGET', key, 'replacementExpiry') or '0') > now then
+  return {2, redis.call('HGET', key, 'replacementPayload')} end
 if redis.call('HGET', key, 'sid') ~= ARGV[2]
   or tonumber(redis.call('HGET', key, 'sessionExpiry') or '0') <= now then return false end
-return redis.call('HGET', key, 'payload')
+return {1, redis.call('HGET', key, 'payload')}
+`;
+const acknowledgeScript = currentBinding + `
+if redis.call('HGET', key, 'replacementSid') == ARGV[2]
+  and redis.call('HGET', key, 'replacementGeneration') == ARGV[1]
+  and redis.call('HGET', key, 'replacementPayload') == ARGV[3]
+  and tonumber(redis.call('HGET', key, 'replacementExpiry') or '0') > now then
+  redis.call('HSET', key, 'sid', ARGV[2], 'payload', ARGV[3], 'sessionExpiry', redis.call('HGET', key, 'replacementExpiry'))
+  redis.call('HDEL', key, 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration')
+  return 1 end
+-- Concurrent reads of the delivered SID may have already promoted it.
+if redis.call('HGET', key, 'sid') == ARGV[2] and redis.call('HGET', key, 'payload') == ARGV[3]
+  and tonumber(redis.call('HGET', key, 'sessionExpiry') or '0') > now then return 1 end
+return false
 `;
 const revokeScript = currentBinding + `
 redis.call('HSET', key, 'generation', ARGV[2])
-redis.call('HDEL', key, 'sid', 'payload', 'sessionExpiry', 'pending', 'pendingExpiry', 'phase', 'claim')
+redis.call('HDEL', key, 'sid', 'payload', 'sessionExpiry', 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration', 'pending', 'pendingExpiry', 'phase', 'claim')
 return 1
 `;
 
@@ -181,7 +198,15 @@ export function createBrowserSessionCoordinator(evaluate: RedisSessionEval, sett
       const parsed = parseBinding(binding);
       if (!parsed || !isHandle(sid)) return null;
       const result = await run(readScript, parsed.id, [digest(parsed.generation), digest(sid)]);
-      return open(parsed.id, sid, result);
+      if (!Array.isArray(result) || result.length !== 2 || (result[0] !== 1 && result[0] !== 2)) return null;
+      const session = open(parsed.id, sid, result[1]);
+      if (!session) return null;
+      // Publication keeps one existing active session until the browser proves
+      // delivery by presenting the new opaque SID. Validate/decrypt first;
+      // an unknown completion reply or invalid replacement cannot evict it.
+      if (result[0] === 2 && await run(acknowledgeScript, parsed.id,
+        [digest(parsed.generation), digest(sid), result[1]]) !== 1) return null;
+      return session;
     },
     async revoke(binding: string): Promise<string | null> {
       const parsed = parseBinding(binding);

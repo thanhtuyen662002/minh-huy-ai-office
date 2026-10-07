@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isCanonicalCompanyId } from "./local-ai-bff";
+import { isCanonicalCompanyId } from "./company-scope";
 import type { BrowserOidcSettings } from "./browser-oidc";
 
 export function privateBrowserResponse<T extends Response>(response: T): T {

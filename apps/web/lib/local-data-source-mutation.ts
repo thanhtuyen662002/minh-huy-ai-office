@@ -1,5 +1,4 @@
-import { copyCoreResponse, fetchCoreApi, isCanonicalCompanyId, isLocalAiUiEnabled, localUiDisabledResponse, unauthenticatedResponse } from "./local-ai-bff";
-import { hasSameOrigin } from "./request-origin";
+import { copyCoreResponse, fetchCoreApi, isCanonicalCompanyId, isOfficeAiUiEnabled, officeMutationIsSameOrigin, localUiDisabledResponse, unauthenticatedResponse } from "./local-ai-bff";
 
 function failure(message: string, status: number) {
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -7,9 +6,9 @@ function failure(message: string, status: number) {
 
 export async function mutateLocalDataSource(request: Request, method: "POST" | "PUT", path: string,
   strict?: { validate: (value: unknown) => boolean; maxBodyBytes: number }) {
-  if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
   const url = new URL(request.url);
-  if (!hasSameOrigin(request)) return failure("Same-origin request is required.", 403);
+  if (!officeMutationIsSameOrigin(request)) return failure("Same-origin request is required.", 403);
   const companyId = url.searchParams.get("companyId");
   if (!isCanonicalCompanyId(companyId)) return failure("Invalid company selection.", 400);
   let payload: unknown;
