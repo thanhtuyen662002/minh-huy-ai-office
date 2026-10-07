@@ -72,7 +72,7 @@ it("verifies a real RSA-signed ID token before returning private token data", as
 });
 it.each([
   { iss: "https://foreign.invalid" }, { aud: "foreign-client" }, { nonce: "foreign-nonce" },
-  { exp: 1 }, { sub: "other-subject" }, { sub: "" }, { aud: [client, "other"], azp: "other" },
+  { exp: 1 }, { sub: "other-subject" }, { sub: "" }, { azp: "foreign-client" }, { aud: [client, "other"], azp: "other" },
 ])("refuses signed tokens with wrong issuer/audience/nonce/lifetime/subject", async (changes) => {
   provider(tokenResponse(changes));
   await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).rejects.toThrow("Browser sign-in could not be verified.");
@@ -83,7 +83,7 @@ it("refuses a forged RSA signature even with valid issuer/audience/nonce/expiry"
 });
 it.each([
   { id_token: undefined }, { access_token: "opaque-token" }, { access_token: "x".repeat(16_385) },
-  { expires_in: 0 }, { expires_in: 1.5 }, { expires_in: undefined },
+  { expires_in: 0 }, { expires_in: 1.5 }, { expires_in: undefined }, { token_type: "DPoP" },
 ])("refuses invalid token response shape or expiry", async (changes) => {
   provider(tokenResponse({}, false, changes));
   await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).rejects.toThrow("Browser sign-in could not be verified.");
@@ -112,4 +112,8 @@ it("cannot extend a session beyond the signed ID-token lifetime", async () => {
   const result = await exchangeBrowserAuthorizationCode(settings, callback(), transaction);
   expect(result.expiresIn).toBeGreaterThan(0);
   expect(result.expiresIn).toBeLessThanOrEqual(90);
+});
+it("accepts an explicit matching authorized party with the required Bearer token", async () => {
+  provider(tokenResponse({ azp: client }));
+  await expect(exchangeBrowserAuthorizationCode(settings, callback(), transaction)).resolves.toMatchObject({ subject });
 });

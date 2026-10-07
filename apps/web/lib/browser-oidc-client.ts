@@ -67,7 +67,8 @@ export async function exchangeBrowserAuthorizationCode(
     });
     const idClaims = tokens.claims();
     const subject = idClaims?.sub;
-    if (typeof subject !== "string" || subject.length === 0 || subject.length > 200
+    if (tokens.token_type !== "bearer" || (idClaims?.azp !== undefined && idClaims.azp !== settings.clientId)
+      || typeof subject !== "string" || subject.length === 0 || subject.length > 200
       || typeof tokens.access_token !== "string" || !tokens.access_token || tokens.access_token.length > 16_384
       || typeof tokens.expires_in !== "number" || !Number.isSafeInteger(tokens.expires_in) || tokens.expires_in < 1) throw new Error();
     // Core uses signed JWT access tokens. Check subject consistency now; Core
