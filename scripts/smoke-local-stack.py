@@ -240,6 +240,42 @@ def main():
         return result
 
     source_before = fingerprint("DataSources", source_scope, "Id")
+    identity_scope = f"TenantId='{tenant}' AND Id='{user}'"
+    identity_before = fingerprint("Users", identity_scope, "Id")
+    identity_backup = "tempdb.dbo.AIOfficeIdentityBackup_" + uuid.uuid4().hex
+    sql(f"USE AIOfficeLocal; SELECT TenantId,Id,IdentityProvider,Subject INTO {identity_backup} FROM aioffice.Users WHERE {identity_scope};")
+
+    def restore_identity():
+        sql(f"""USE AIOfficeLocal; UPDATE u SET IdentityProvider=b.IdentityProvider,Subject=b.Subject
+            FROM aioffice.Users u JOIN {identity_backup} b ON u.TenantId=b.TenantId AND u.Id=b.Id;""")
+
+    try:
+        for identity_column, identity_expression in (
+            ("IdentityProvider", "UPPER(IdentityProvider)"),
+            ("Subject", "UPPER(Subject)"),
+            ("IdentityProvider", "IdentityProvider+N' '"),
+            ("Subject", "Subject+N' '")):
+            try:
+                sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET {identity_column}={identity_expression} WHERE {identity_scope};")
+                # SQL equality, including binary equality's space padding, is
+                # not the final authority for opaque signed identity strings.
+                assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.Users u
+                    JOIN {identity_backup} b ON u.TenantId=b.TenantId AND u.Id=b.Id
+                    WHERE u.IdentityProvider COLLATE Latin1_General_100_CI_AS=b.IdentityProvider COLLATE Latin1_General_100_CI_AS
+                    AND u.Subject COLLATE Latin1_General_100_CI_AS=b.Subject COLLATE Latin1_General_100_CI_AS;""") == "1", "Native identity alias negative control failed"
+                for identity_path, identity_base, identity_headers in (
+                    ("/api/auth/context", api, auth), ("/api/local/session" + selector, web, {})):
+                    denied_status, denied_headers, denied_body = http(identity_path, base=identity_base, headers=identity_headers)
+                    assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", ""), "Opaque identity alias granted authority"
+                    assert all(secret not in json.dumps(denied_body) for secret in [*secrets, token])
+            finally:
+                restore_identity()
+                assert fingerprint("Users", identity_scope, "Id") == identity_before, "Identity fixture restoration changed stored fields"
+                assert http("/api/auth/context", base=api, headers=auth)[0] == 200
+    finally:
+        restore_identity()
+        sql(f"DROP TABLE {identity_backup};")
+    print("PASS real SQL native identity alias negative controls, exact API/BFF denial and retained identity restoration")
     bindings_before = fingerprint("DataSourceSecretBindings", source_scope, "Id")
     assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings
         WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION'
