@@ -2,10 +2,10 @@ workstream: backend
 role: Backend Platform
 status: active-development
 current_issue: 256
-current_pr: null
+current_pr: 257
 current_branch: backend/256-exact-identity
 head: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
-state: claimed
+state: in_progress
 lease_owner: root-backend-256
 lease_heartbeat_at: '2026-10-07'
 last_checkpoint_at: '2026-10-07'
@@ -25,3 +25,8 @@ verification:
   previous_result: 'All PASS with independent review;255 merged and254 closed. Installer41ce2a6 full CI PASS, remains Draft for clean Windows qualification.'
 blocked_by: []
 next_action: Open Draft257, implement exact provider/subject identity matching and schema-length bounds, add directory tests and real SQL case/padding native-equality negative controls plus issued-session API/BFF denial; restore exact fixtures. Close exact-head CI/review and main CI before retirement;233 remains active.
+
+implementation_checkpoint:
+  result: '550 Persistence tests PASS after scoped CSharp formatting;10 new identity tests PASS. Smoke AST and diff-check PASS. No frontend or schema change.'
+  completed: 'Binary SQL identity candidate filter, ordinal post-query provider/subject fence including SQL space padding, schema length bounds and unchanged public context/roles DTO. Actual SQL smoke adds native alias negative controls, issued-session API/BFF403 and exact full-row restoration.'
+  remaining: 'Hosted actual SQL/Compose and exact-head quality gates, frozen independent review and main CI. Production OIDC/customer ERP/full233 remain incomplete.'

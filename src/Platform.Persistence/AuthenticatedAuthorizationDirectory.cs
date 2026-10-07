@@ -27,17 +27,20 @@ public sealed class EfAuthenticatedAuthorizationDirectory(PlatformDbContext dbCo
     {
         if (string.IsNullOrWhiteSpace(identityProvider)
             || string.IsNullOrWhiteSpace(subject)
+            || identityProvider.Length > 100 || subject.Length > 200
             || companyId == Guid.Empty)
         {
             return null;
         }
 
-        var rows = await dbContext.Users
-            .AsNoTracking()
-            .Where(user =>
-                user.IdentityProvider == identityProvider
-                && user.Subject == subject
-                && user.IsActive)
+        var users = dbContext.Users.AsNoTracking().Where(user => user.IsActive);
+        // These are opaque identity keys, not human-readable search terms.
+        // SQL Server's default collation can fold distinct signed identities.
+        users = dbContext.Database.IsSqlServer()
+            ? users.Where(user => EF.Functions.Collate(user.IdentityProvider, "Latin1_General_100_BIN2") == identityProvider
+                && EF.Functions.Collate(user.Subject, "Latin1_General_100_BIN2") == subject)
+            : users.Where(user => user.IdentityProvider == identityProvider && user.Subject == subject);
+        var rows = await users
             .Join(
                 dbContext.CompanyMemberships.AsNoTracking().Where(membership =>
                     membership.CompanyId == companyId && membership.IsActive),
@@ -67,12 +70,18 @@ public sealed class EfAuthenticatedAuthorizationDirectory(PlatformDbContext dbCo
                     joined.joined.membership.TenantId,
                     joined.joined.membership.CompanyId,
                     joined.joined.membership.UserId,
+                    joined.joined.user.IdentityProvider,
+                    joined.joined.user.Subject,
                     RoleKey = role == null ? null : role.RoleKey
                 })
             .OrderBy(row => row.RoleKey)
             .ToArrayAsync(cancellationToken);
 
-        if (rows.Length == 0)
+        // Even binary SQL equality can pad trailing spaces. Check the actual
+        // stored strings ordinally before emitting any authority. These fields
+        // remain private query data and never enter the public context DTO.
+        if (rows.Length == 0 || rows.Any(row => !StringComparer.Ordinal.Equals(row.IdentityProvider, identityProvider)
+            || !StringComparer.Ordinal.Equals(row.Subject, subject)))
         {
             return null;
         }
