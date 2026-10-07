@@ -4,7 +4,7 @@ status: active-development
 current_issue: 260
 current_pr: 261
 current_branch: frontend/260-browser-oidc
-head: 8a1e51712ab558fd846a2baf99821e038312e688
+head: e8fdad8cc66a95a5a781665f6b2c3c7d0fc94ab8
 state: in_progress
 lease_owner: root-frontend-260
 lease_heartbeat_at: '2026-10-07'
@@ -27,9 +27,14 @@ verification:
   configuration_actual_stack: 112612804988
   configuration_result: 'All hosted gates PASS, including web/type-check/build and retained actual stack. Frozen independent review found no configuration/transaction code blocker. Browser routes and full260 acceptance remain unimplemented.'
   head_semantics: 'head records the last hosted-verified implementation; exact current published HEAD and CI runs belong in HANDOFF261.'
+  adapter_head: e8fdad8cc66a95a5a781665f6b2c3c7d0fc94ab8
+  adapter_build: 37566597553
+  adapter_governance: 37566597547
+  adapter_actual_stack: 112615826610
+  adapter_result: 'All hosted gates PASS;539 web tests/type-check/build and retained actual stack PASS. Independent frozen review approved with old-accepted/current-denied RSA controls for DPoP/azp/extra-audience/cnf.'
 blocked_by: []
-next_action: Close private signed-token adapter checkpoint exact-head CI and frozen review. Implement shared atomic transaction/session generation consumption before exposing start/callback routes, then fresh API company authority, bootstrap/issuer routing/UI and actual Chromium acceptance on Draft261. Keep239 Draft for actual Windows lifecycle; full233 and customer ERP qualification remain incomplete.
+next_action: Close shared Redis coordinator exact-head CI and frozen review, immediately fix real failures on261. Require actual multi-client races and physical pre-logout RDB restart refusal. Then implement start/callback with registered binding/generation cookies, fresh Core company authority, bootstrap/issuer routing/UI and actual Chromium acceptance. Keep239 Draft for actual Windows lifecycle; full233 and customer inventory/movement qualification remain incomplete.
 
 implementation_checkpoint:
-  local: '91 focused tests and TypeScript PASS after independent4838694 RSA probes found DPoP/wrong single-audience azp/extra-audience acceptance. Adapter now requires Bearer, no access cnf, sole configured ID audience and any azp exactly clientId, with denial and matching-azp/singleton-aud controls. Real signed/forged RSA, issuer/nonce/lifetime, pre-fetch callback/state refusal,65536 actual-byte response and signed expiry bounds remain tested. All failures generic. No routes or identity settings enabled.'
-  remaining: 'Shared multi-instance consume/revocation/session generations, start/callback/private session routing, Core authority, bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and independent exact-head/main closure.'
+  local: '138 focused tests/TypeScript PASS;12 real Redis tests skipped locally and required in hosted web gate. Private coordinator adds registered binding and CAS generation fences, one-use claim/completion, logout revocation, encrypted opaque-SID payloads, Redis TIME/run_id expiry/restart fencing and bounded no-offline-replay transport. Actual stalled-handshake control exposed and fixed a library connect-timeout gap. Hosted e8 adapter gates/review approved. No routes or identity settings enabled.'
+  remaining: 'Exact new-head Redis race/old-RDB restart CI and frozen review, start/callback/private session routing, Core authority, bootstrap/public issuer/internal metadata, actual browser/UI/expiry/races and full260 exact-head/main closure.'

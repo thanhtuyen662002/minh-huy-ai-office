@@ -46,6 +46,15 @@ jobs:
     name: Web tests, type-check and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      session-redis:
+        image: redis:8-alpine
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,6 +63,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Test
+        env:
+          AIOFFICE_TEST_SESSION_REDIS_URL: redis://127.0.0.1:6379
+          AIOFFICE_TEST_SESSION_REDIS_CONTAINER: ${{ job.services.session-redis.id }}
+          AIOFFICE_TEST_SESSION_REDIS_DISPOSABLE: 'true'
         run: npm run web:test
       - name: Type-check
         run: npm run web:typecheck
