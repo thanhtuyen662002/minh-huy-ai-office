@@ -66,7 +66,10 @@ it("builds only the pinned code/PKCE authorization request without exposing veri
 it("verifies a real RSA-signed ID token before returning private token data", async () => {
   const tokens = tokenResponse(); provider(tokens);
   const result = await exchangeBrowserAuthorizationCode(settings, callback(), transaction);
-  expect(result).toEqual({ accessToken: tokens.access_token, expiresIn: 300, subject });
+  const signedExpiry = JSON.parse(Buffer.from(tokens.access_token.split(".")[1], "base64url").toString("utf8")).exp;
+  expect(result).toMatchObject({ accessToken: tokens.access_token, expiresAt: signedExpiry, subject });
+  expect(result.expiresIn).toBeGreaterThan(0);
+  expect(result.expiresIn).toBeLessThanOrEqual(300);
   expect(Object.isFrozen(result)).toBe(true);
   expect(fetchMock).toHaveBeenCalledTimes(2);
 });

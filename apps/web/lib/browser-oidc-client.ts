@@ -50,7 +50,7 @@ export async function browserAuthorizationUrl(settings: BrowserOidcSettings, tra
   });
 }
 
-export type VerifiedBrowserTokens = Readonly<{ accessToken: string; expiresIn: number; subject: string }>;
+export type VerifiedBrowserTokens = Readonly<{ accessToken: string; expiresIn: number; expiresAt: number; subject: string }>;
 
 // The caller still must consume the shared transaction/session generation and
 // resolve fresh Core company authority before it can issue a session cookie.
@@ -83,8 +83,10 @@ export async function exchangeBrowserAuthorizationCode(
     if (accessClaims?.sub !== subject || accessClaims.iss !== settings.issuer || Object.hasOwn(accessClaims, "cnf")
       || !Number.isSafeInteger(accessClaims.exp) || accessClaims.exp <= now
       || !idClaims || !Number.isSafeInteger(idClaims.exp) || idClaims.exp <= now) throw new Error();
-    return Object.freeze({ accessToken: tokens.access_token,
-      expiresIn: Math.min(tokens.expires_in, 3600, accessClaims.exp - now, idClaims.exp - now), subject });
+    const expiresIn = Math.min(tokens.expires_in, 3600, accessClaims.exp - now, idClaims.exp - now);
+    // Carry the absolute verified deadline through later API/Redis calls.
+    // Reusing expiresIn relative to callback completion would extend the grant.
+    return Object.freeze({ accessToken: tokens.access_token, expiresIn, expiresAt: now + expiresIn, subject });
   } catch {
     // OIDC exceptions may contain provider bodies, parameters or private JWTs.
     throw new Error("Browser sign-in could not be verified.");
