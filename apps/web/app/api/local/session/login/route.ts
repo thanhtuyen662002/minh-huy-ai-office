@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { hasSameOrigin } from "../../../../../lib/request-origin";
 import {
   COMPANY_SELECTOR_HEADER,
   LOCAL_ACCESS_TOKEN_COOKIE,
@@ -31,19 +32,49 @@ function loginError(message: string, status: number) {
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
+async function readLoginBody(request: Request): Promise<{ value: unknown } | { error: Response }> {
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
+    return { error: loginError("JSON login payload is required.", 415) };
+  }
+  const reader = request.body?.getReader();
+  if (!reader) return { error: loginError("Invalid login payload.", 400) };
+  try {
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      length += chunk.value.byteLength;
+      if (length > 8192) {
+        try { await reader.cancel(); } catch { /* Refusal does not depend on stream cleanup. */ }
+        return { error: loginError("Login payload is too large.", 413) };
+      }
+      chunks.push(chunk.value);
+    }
+    const bytes = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    return { value: JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)) };
+  } catch {
+    return { error: loginError("Invalid login payload.", 400) };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export async function POST(request: Request) {
   if (!isLocalAiUiEnabled()) return localUiDisabledResponse();
-
-  let body: LoginBody;
-  try {
-    body = await request.json() as LoginBody;
-  } catch {
-    return loginError("Invalid login payload.", 400);
-  }
+  if (!hasSameOrigin(request)) return loginError("Same-origin request is required.", 403);
+  const parsed = await readLoginBody(request);
+  if ("error" in parsed) return parsed.error;
+  const body = parsed.value as LoginBody;
 
   if (
     body === null
     || typeof body !== "object"
+    || Array.isArray(body)
+    || Object.keys(body).length !== 3
+    || Object.keys(body).some((key) => key !== "username" && key !== "password" && key !== "companyId")
     || !canonicalCredential(body.username, 200)
     || !canonicalCredential(body.password, 1024)
     || !isCanonicalCompanyId(body.companyId)

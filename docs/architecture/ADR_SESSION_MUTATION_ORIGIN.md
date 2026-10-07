@@ -1,0 +1,9 @@
+# Browser session cookie mutation boundary
+
+The local BFF requires an exact same-origin request before login or logout can contact identity services or mutate an HttpOnly session cookie. Session and source mutations share `apps/web/lib/request-origin.ts`. It retains the addressed Host authority needed when Next.js constructs a container URL, rejects malformed authorities, and ignores caller-supplied forwarded hosts. Browser POST fetches supply Origin; non-browser callers must explicitly provide the addressed origin.
+
+Login requires application/json and reads at most8192 actual UTF-8 bytes before parsing. Invalid UTF-8/JSON, unknown fields and invalid existing username/password/company bounds fail generically. The body contains exactly username/password/companyId; tenant/user/role authority remains server-owned. Stream cancellation failure does not turn an oversized refusal into an accepted request. Responses retain no-store and existing HttpOnly/SameSite/secure-cookie configuration.
+
+Tests cover absent/foreign/null/malformed Origin, forwarded-host spoofing, container/IPv6 authority, exact byte boundaries, multibyte excess, invalid UTF-8 and cancellation failure. Actual disposable stack acceptance exercises issued cookies and API tokens: denied login/logout/input must emit no Set-Cookie and preserve the original scoped session; valid logout clears the BFF cookie, and valid sign-in restores authoritative context. API bearer tokens remain subject to their normal lifetime; this local logout is not provider-wide revocation.
+
+This is hardening of the local password-grant pilot. Production Authorization Code/PKCE browser login, provider logout/expiry, actual customer ERP and full product acceptance remain separate required work. No production identity, data, grants or credentials are changed.
