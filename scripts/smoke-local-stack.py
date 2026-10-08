@@ -31,6 +31,23 @@ def binding_permission_diagnostic_query():
     return "USE AIOfficeLocal; EXECUTE AS LOGIN=N'aioffice_runtime'; " + " UNION ALL ".join(checks) + "; REVERT;"
 
 
+def erp_permission_diagnostic_query():
+    """Only fixed predicate numbers/bits from the owned sample identity."""
+    verifier = Path("src/Platform.Persistence/ErpReadOnlyConnectionVerifier.cs").read_text(encoding="utf-8")
+    query = verifier.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0]
+    query = re.sub(r"--[^\n]*", "", query)
+    expression = query.split("SELECT CASE WHEN", 1)[1].rsplit("THEN 1 ELSE 0 END;", 1)[0].strip()
+    predicates = re.split(r"\n\s{10}AND (?=[A-Z])", expression)
+    checks = [f"SELECT N'erp_check_{index:02d}' AS CheckId, "
+        f"CASE WHEN ({predicate.strip()}) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END AS Result"
+        for index, predicate in enumerate(predicates, 1)]
+    checks.extend([
+        "SELECT N'erp_schema_business_visibility', CASE WHEN NOT EXISTS (SELECT 1 FROM sys.schemas s WHERE s.name NOT IN(N'sys',N'INFORMATION_SCHEMA') AND ISNULL(HAS_PERMS_BY_NAME(s.name,N'SCHEMA',N'VIEW DEFINITION'),0)<>1) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END",
+        "SELECT N'erp_schema_catalog_visibility', CASE WHEN NOT EXISTS (SELECT 1 FROM sys.schemas s WHERE s.name IN(N'sys',N'INFORMATION_SCHEMA') AND ISNULL(HAS_PERMS_BY_NAME(s.name,N'SCHEMA',N'VIEW DEFINITION'),0)<>1) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END",
+        "SELECT N'erp_schema_effective_rights', CASE WHEN NOT EXISTS (SELECT 1 FROM sys.schemas s CROSS APPLY sys.fn_my_permissions(s.name,N'SCHEMA') p WHERE p.permission_name NOT IN(N'SELECT',N'VIEW DEFINITION',N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION')) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END"])
+    return "USE AIOfficeSample; EXECUTE AS LOGIN=N'aioffice_reader'; " + " UNION ALL ".join(checks) + "; REVERT;"
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("data_directory", type=Path)
@@ -278,6 +295,14 @@ def main():
     assert any(item["id"] == source and item["allowRead"] and not item["allowWrite"] for item in sources)
     assert all(secret not in json.dumps(sources) for secret in secrets)
     status, _, result = http(f"/api/local/data-sources/{source}/connection-test{selector}", {}, headers={"Origin": web})
+    if not (status == 200 and result["succeeded"]) and os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true" \
+            and os.environ.get("RUNNER_TEMP") and directory == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve():
+        try:
+            for line in sql(erp_permission_diagnostic_query()).splitlines():
+                if re.fullmatch(r"erp_(?:check_\d{2}|schema_(?:business_visibility|catalog_visibility|effective_rights))\s+(?:PASS|FAIL_OR_UNKNOWN)", line.strip()):
+                    print(line.strip(), flush=True)
+        except Exception:
+            print("Owned ERP permission diagnostics unavailable.", flush=True)
     assert status == 200 and result["succeeded"], "Read-only SQL connection test failed"
 
     # Explicitly exercise the actual API's independent company authorization using the BFF cookie token.
@@ -1064,6 +1089,11 @@ def main():
     member_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
         http=http, sql=sql, runtime_statement=runtime_statement, identity_admin=identity_admin,
         identity=identity, api=api, web=web, auth=member_auth)
+    erp_spec = importlib.util.spec_from_file_location("erp_read_credentials_proof", Path("scripts/smoke-erp-readonly.py"))
+    erp_proof = importlib.util.module_from_spec(erp_spec)
+    erp_spec.loader.exec_module(erp_proof)
+    erp_proof.verify(directory=directory, manifest=manifest, http=http, sql=sql, run=run,
+        wait_for=wait_for, api=api, web=web, auth=member_auth, diagnostic_sql=erp_permission_diagnostic_query)
     print("PASS complete local stack integration")
 
 

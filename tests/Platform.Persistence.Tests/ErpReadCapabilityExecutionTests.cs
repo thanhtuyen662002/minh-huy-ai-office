@@ -10,6 +10,38 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class ErpReadCapabilityExecutionTests
 {
+    [Theory]
+    [InlineData("SELECT Id FROM OtherDb.dbo.Owned")]
+    [InlineData("SELECT Id FROM OtherDb..Owned")]
+    [InlineData("SELECT Id FROM [Other.Db].[dbo].[Owned]")]
+    [InlineData("SELECT Id FROM \"OtherDb\".\"dbo\".\"Owned\"")]
+    [InlineData("SELECT Id FROM LinkedServer.OtherDb.dbo.Owned")]
+    [InlineData("WITH scoped AS (SELECT Id FROM OtherDb.dbo.Owned) SELECT Id FROM scoped")]
+    [InlineData("SELECT OtherDb.dbo.fn() AS value")]
+    [InlineData("SELECT OtherDb..fn() AS value")]
+    [InlineData("SELECT [LinkedServer].[OtherDb].[dbo].[fn]() AS value")]
+    [InlineData("SELECT NEXT VALUE FOR OtherDb.dbo.OwnedSequence AS value")]
+    [InlineData("SELECT NEXT VALUE FOR dbo.OwnedSequence AS value")]
+    [InlineData("SELECT value FROM OPENQUERY(LinkedServer, 'dbo.OwnedProcedure')")]
+    [InlineData("SELECT not valid syntax")]
+    public void Definition_refuses_unqualified_external_graphs_or_state_changes_without_sql_diagnostics(string sql)
+    {
+        var error = Assert.Throws<InvalidOperationException>(() => new ErpReadCapabilityRegistry([
+            new("sample.read", "1", sql, [], new())]));
+        Assert.DoesNotContain(sql, error.Message, StringComparison.Ordinal);
+        Assert.Null(error.InnerException);
+    }
+
+    [Theory]
+    [InlineData("SELECT Id FROM dbo.Owned")]
+    [InlineData("SELECT t.Id FROM [dbo].[Owned] AS t")]
+    [InlineData("SELECT CAST(1.25 AS decimal(10,2)) AS value")]
+    [InlineData("SELECT N'OtherDb.dbo.Owned' AS label")]
+    [InlineData("WITH scoped AS (SELECT Id FROM dbo.Owned) SELECT Id FROM scoped")]
+    [InlineData("SELECT COUNT(*) AS count FROM dbo.Owned")]
+    public void Definition_preserves_current_database_selects_and_literals(string sql) =>
+        new ErpReadCapabilityDefinition("sample.read", "1", sql, [], new()).Validate();
+
     [Fact]
     public void Definition_rejects_side_effecting_or_multi_statement_sql()
     {

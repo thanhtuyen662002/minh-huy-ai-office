@@ -4,8 +4,8 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 595a587368786af93206ae8f3249ffd2a84cb250
-state: blocked
+head: 989f771b04e9f710103a242d0b6122913f3a127b
+state: in_progress
 lease_owner: lead
 lease_heartbeat_at: "2026-10-08"
 last_checkpoint_at: "2026-10-08"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "595 documentation gates and responsive21d full review PASS.239 retains external clean Windows/signing dependency. Lead closes active262/263 at a452 exact Build37744957617/Gov37744957590: actual member SQL proof passed atd46, Chromium and test fixes/full review remain. Merge only on acceptance/current green; close main afterward. Medcom/Novo business proof awaits dedicated read-only credentials; full233 active."
+next_action: "Accepted265 main002 ERP qualifier integrated into239; resolve additive solution projects, verify local/full exact9 gates and independent frozen integration delta. Installer source remains approved989/21d. Keep Draft for clean Windows/signing. Primary266/267 actual company selection closure/review remains; latest reviewer quota limited. Full233 active and customer ERP credentials/adapters remain."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -213,3 +213,13 @@ member_access_delivery:
   main_quality: 113212217055
   state: done
   result: 'Full frozen implementation/security/runtime and final docs review APPROVED. Exact PR/main gates PASS with actual SQL+Chromium acceptance;262 closed. Main integrated into239; current integrated installer HEAD/gates belong in HANDOFF. Draft clean Windows/signing remains.'
+
+accepted_erp_installer_integration:
+  approved_installer_head: 989f771b04e9f710103a242d0b6122913f3a127b
+  accepted_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+  main_build: 37801975078
+  main_governance: 37801976469
+  main_actual: 113396238709
+  main_quality: 113399168935
+  delta: 'Merge accepted264/265 qualifier/bootstrap/worker/browser bounded guidance and native SQL owned proofs into installer payload. Only solution conflict is additive Setup.Core/Setup.Core.Tests plus ErpReadOnly.RuntimeProof; preserve all three projects/configurations. Installer source/test/build/verify scripts unchanged from independently approved989/21d.'
+  next: 'Local solution restore/test plus exact9 hosted gates and independent frozen integration review. Reviewer quota is currently unavailable; preserve Draft. Actual clean Windows/UAC/reboot/resume/startup/repair/retained recovery/backup and signing remain external requirements. No customer or OS preparation changes.'

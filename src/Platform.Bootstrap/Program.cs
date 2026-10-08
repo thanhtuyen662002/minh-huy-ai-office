@@ -43,7 +43,10 @@ try
         IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'aioffice_runtime')
             CREATE LOGIN aioffice_runtime WITH PASSWORD=N'{options.RuntimePassword}';
         IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'aioffice_reader')
+        BEGIN
             CREATE LOGIN aioffice_reader WITH PASSWORD=N'{options.ReaderPassword}';
+            GRANT VIEW ANY DEFINITION TO aioffice_reader;
+        END
         """, master);
     await create.ExecuteNonQueryAsync();
     await using var platform = new SqlConnection(Connection("AIOfficeLocal"));
@@ -74,7 +77,9 @@ try
         IF USER_ID(N'aioffice_reader') IS NULL
         BEGIN
             CREATE USER aioffice_reader FOR LOGIN aioffice_reader;
-            ALTER ROLE db_datareader ADD MEMBER aioffice_reader;
+            -- Direct SELECT avoids inheriting control of the fixed role's schema.
+            GRANT SELECT TO aioffice_reader;
+            GRANT VIEW DEFINITION TO aioffice_reader;
         END
         IF OBJECT_ID(N'dbo.LocalSample', N'U') IS NULL
         BEGIN

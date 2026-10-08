@@ -6,8 +6,8 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 6814a9fd1106e11174ace601181b45032bdf69e2
-last_verified_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+current_target_head: 989f771b04e9f710103a242d0b6122913f3a127b
+last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
   backend:
@@ -38,11 +38,20 @@ critical_paths:
     issue: 264
     pr: 265
     branch: codex/264-erp-readonly-qualification
-    head: 96aa648149b613b584517ea43a41bd92998d9820
+    head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+    state: done
+    next: "264/265 accepted after independent frozen e3/final a7 reviews and exact PR/main Build37801975078/Gov37801976469/actual113396238709/quality113399168935 PASS. Customer credentials, qualified legacy profiles and inventory reconciliation remain."
+
+  company_selection:
+    issue: 266
+    pr: 267
+    branch: codex/266-company-selection
+    head: f03f082800d3324e0574b0b510d74bf6c9d93785
     state: in_progress
-    next: "Root implements effective read-only credential qualification on every actual ERP read connection, with independent initial/final proof and retained source-policy boundaries. This prerequisite has no customer business rows or adapter enrollment; dedicated credentials/versioned profiles/reconciliation remain."
+    next: "Root backend owns API/BFF/UI company discovery/switching; exactf03 Build37809426615 actual113422110270 active. Independent frozen latest review required after reviewer quota. Follow live267 HANDOFF; unaccepted266 shipping is not included in this installer integration."
 
 recent_authoritative_merges:
+  - 'PR265 / issue264 merged002e5cd with independent full frozen reviews and exact main Build37801975078/Gov37801976469/actual113396238709/quality113399168935 PASS.'
   - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
   - 'PR261 / issue260 browser PKCE merged at39e668ebebe1f8bd19803199b8db393f12a4edb6; main Build37651174359/Governance37651174354/actual stack112894592064 PASS.'
   - 'PR259 / issue258 session Origin and bounded login input merged at973c37be65b1db17c6b3eec279a8f2c12c6713b9; main Build37564876619/Governance37564876597 PASS.'
@@ -81,7 +90,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "262/263 accepted and merged; exact main0d03 gates/actual SQL+Chromium PASS. Installer6814 docs gates/review PASS; integrate verified main into239 and close current integrated gates while retaining Draft for clean Windows/signing. Continue active264/265 per-connection ERP read-only qualification. Medcom/Novo dedicated read-only credentials/qualified inventory adapters/business proof remain; Santino deferred; full233 active."
+next_action: "Integrate accepted main002 ERP qualifier into installer239, preserving approved989 installer source. Close renewed exact9 gates and frozen integration review; retain Draft for clean Windows/signing. Parallel primary266/267 actual SQL/Chromium closure remains active; frozen latest reviewer currently quota limited. Dedicated Medcom/Novo credentials/qualified inventory adapters/production and full233 remain. Live PR HEAD/HANDOFF supersede these checkpoint fields."
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."

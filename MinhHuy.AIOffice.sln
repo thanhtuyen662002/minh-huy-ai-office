@@ -28,12 +28,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Setup.Core", "src\Setup.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Setup.Core.Tests", "tests\Setup.Core.Tests\Setup.Core.Tests.csproj", "{FC631AA9-F0DA-4A28-81AF-21BF78C517C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErpReadOnly.RuntimeProof", "tests\ErpReadOnly.RuntimeProof\ErpReadOnly.RuntimeProof.csproj", "{31F2527B-F758-4FD4-9B9D-0D73C3A19A4E}"
+EndProject
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
     Debug|Any CPU = Debug|Any CPU
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {31F2527B-F758-4FD4-9B9D-0D73C3A19A4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {31F2527B-F758-4FD4-9B9D-0D73C3A19A4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {31F2527B-F758-4FD4-9B9D-0D73C3A19A4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {31F2527B-F758-4FD4-9B9D-0D73C3A19A4E}.Release|Any CPU.Build.0 = Release|Any CPU
     {8EDE76D3-1D32-42B0-9F0B-60E34274949B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {8EDE76D3-1D32-42B0-9F0B-60E34274949B}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {8EDE76D3-1D32-42B0-9F0B-60E34274949B}.Release|Any CPU.ActiveCfg = Release|Any CPU
