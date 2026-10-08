@@ -4,13 +4,13 @@ status: active-development
 current_issue: 264
 current_pr: 265
 current_branch: codex/264-erp-readonly-qualification
-head: e3d5254d8b7c7d72261ddf53841232587b1ee1c6
-state: ready_for_review
+head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+state: done
 lease_owner: root-erp-264
 lease_heartbeat_at: '2026-10-08'
 last_checkpoint_at: '2026-10-08'
-last_merged_pr: 208
-last_merge_commit: f61cddee2a4e45b1efe5100161056d8f77e73b80
+last_merged_pr: 265
+last_merge_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 preferred_next_issue: null
 blocked_by: []
 scope:
@@ -34,7 +34,7 @@ verification:
   quality: 113389149345
   independent_review: approved
   result: 'All eight Build jobs and Governance PASS. Actual safe/unsafe permissions, all four compiled read paths, replacement and mid-read discard, changed-session worker, retained revoke/replay and Chromium PASS. Frozen independent security/runtime review approved this conservative standalone engine16/current-database profile. Full650 Persistence and independent313 focused controls PASS. Final evidence-only head and main delivery closure still required.'
-next_action: 'Verify evidence-only delta and exact final PR head, merge in lead sequence, then close exact main CI and HANDOFF. Start the next unleased prerequisite under233 from accepted main; dedicated Medcom/Novo read-only credentials, legacy adapter profile and business reconciliation remain. Santino deferred;239 remains Draft pending clean Windows/signing.'
+next_action: '264/265 delivered at002e5cd with exact PR/main gates PASS. Continue266 complete company selection from accepted main; ERP profile/adapters require dedicated Medcom/Novo credentials and legacy dependency/version qualification, followed by business reconciliation. Santino deferred;239 Draft;233 active.'
 
 implementation_checkpoint:
   completed: 'Conservative live effective-rights profile; exact open connection initial/final checks for catalog/capability/schema reads. Explicit qualified probe mode for read-only source tests and worker tasks; write-enabled connectivity preserved and policy race denied. Initial owned sample metadata grants preserve revoked rights on replay. Bounded API/browser credential guidance.'
@@ -108,3 +108,15 @@ accepted_implementation_evidence:
   browser_artifact: 11559389155
   result: 'Explicit owned class32 REVOKE before DROP restores the positive profile. Real TYPE CONTROL/ownership, credential CONTROL, WITH GRANT OPTION, concealed login impersonation, fixed metadata-role administration and accessible hidden/external/encrypted graph controls all PASS. Safe catalog/capability/schema/probe, elevated replacement, same-session evidence discard and prior-probe changed-rights worker denial PASS. Retained actual SQL and Chromium gates PASS. Frozen independent review approved; no customer credential or adapter qualification is inferred.'
   delivery: 'Evidence-only final PR head and exact main CI pending; latest GitHub HANDOFF is authoritative for those subsequent hashes and workflow IDs. Historical checkpoints above describe repaired failures, not current blockers.'
+
+main_delivery:
+  final_pr_head: a7aebb47cd0a811bae452dd5d6302d707d7e4d0b
+  pr_build: 37800895363
+  pr_governance: 37800895171
+  merge: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+  main_build: 37801975078
+  main_governance: 37801976469
+  main_actual: 113396238709
+  main_quality: 113399168935
+  state: done
+  result: 'Exact final PR/main gates and independent frozen implementation/security/runtime/evidence delta APPROVED.264 closed; current engineering lease moves to266 company selection. Customer credentials/adapters/reconciliation remain unverified;233 stays active.'
