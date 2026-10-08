@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/266-company-selection
-current_pr: 267
-current_target_head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
-last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+current_branch: codex/268-member-administrators
+current_pr: null
+current_target_head: a75f31a2761ffe0afcbf067425eb8324789b3554
+last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 
 critical_paths:
   backend:
-    issue: 262
-    pr: 263
-    branch: codex/262-membership-access
-    head: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
-    state: done
-    next: "262/263 merged after full frozen implementation/security/runtime and final docs review. Exact PR552 Build37746135981/Gov37746135890 and main0d03 Build37746848054/Gov37746848190 PASS, including actual member SQL/Chromium113210254492. Invitations/role administration/full233 remain."
+    issue: 268
+    pr: null
+    branch: codex/268-member-administrators
+    head: a75f31a2761ffe0afcbf067425eb8324789b3554
+    state: claimed
+    next: "Create Draft268 lease, then deliver audited exact admin role mutation/shared version/API/BFF/UI plus actual SQL/Chromium proof. Full review and exact PR/main gates remain.266 is delivered."
 
   frontend:
     issue: null
@@ -46,11 +46,12 @@ critical_paths:
     issue: 266
     pr: 267
     branch: codex/266-company-selection
-    head: f03f082800d3324e0574b0b510d74bf6c9d93785
-    state: ready_for_review
-    next: "Shipping f03/proof764 independently approved; exact764 all8/native SQL/Chromium PASS. Close final docs review and exact PR gates, merge267 and close main. Full233/customer/production remain."
+    head: a75f31a2761ffe0afcbf067425eb8324789b3554
+    state: done
+    next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
   - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
   - 'PR261 / issue260 browser PKCE merged at39e668ebebe1f8bd19803199b8db393f12a4edb6; main Build37651174359/Governance37651174354/actual stack112894592064 PASS.'
@@ -90,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Independent frozen266 shipping/proof764 APPROVED; exact764 Build37811540458/Gov37811540124/all8/actual113429366483/quality113432454238 PASS. Close final documentation delta review/current PR gates, merge267 and close exact main. Installer239 fa/3ff integration independently APPROVED and all9 PASS; accepted266 integration follows main closure, while clean Windows/signing keeps239 Draft. Full233 active; customer credentials/adapters/production remain. Live HEAD/HANDOFF supersede checkpoint fields."
+next_action: "268 member administrator lease from acceptedmaina75: create Draft PR and implement shared-version audited exact admin role mutation plus real API/BFF/UI and actual SQL/Chromium acceptance.266/267 delivered after full reviews and exact PR/main all8 PASS. Installer239 integration4b Build37816394932/Gov37816394855 separately owned; finish current9 gates/frozen integration review and keep Draft for clean Windows/signing. Dedicated customer ERP credentials/adapters/production and all233 remain."
 
 
 blocked_by:
@@ -335,3 +336,24 @@ installer_reviewed_3ff:
   artifact_bytes: 48597796
   review: 'Independent frozen fa integration/3ff documentation APPROVED. All9 exact jobs PASS; accepted ERP and retained SQL/Chromium,76 core tests/pinned self-contained isolated Windows proof PASS. Setup source/tests/scripts remain approved21d/989; additive solution preserves all projects. No clean Windows/signing acceptance.'
   next: 'Close final documentation delta review/exact gates; integrate266 only after approved merge and exact main gates. Keep239 Draft; full233 remains active.'
+
+verified_company_selection_267:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  final_pr_head: 9385acb554b73f5a125767215386a861615df412
+  merge: a75f31a2761ffe0afcbf067425eb8324789b3554
+  pr_build: 37813468995
+  pr_governance: 37813469019
+  pr_actual: 113435971711
+  pr_quality: 113440765045
+  main_build: 37815044494
+  main_governance: 37815044554
+  main_actual: 113441393702
+  main_quality: 113444186237
+  main_artifact: 11567296114
+  main_artifact_bytes: 72696
+  state: done
+  review: Full independent frozen shipping f03/proof764/final938 docs APPROVED, receipt6065013062.
+    Exact PR/main all8 gates PASS, including native identity/ambiguity/stored-byte Unicode
+    and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
+    separation/revoke-restore.266 closed. Full233/customer/production and installer
+    clean Windows/signing remain.

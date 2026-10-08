@@ -1,23 +1,23 @@
 workstream: backend
 role: 'Backend Platform; root-owned company selection API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 266
-current_pr: 267
-current_branch: codex/266-company-selection
-head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
-state: ready_for_review
-lease_owner: root-backend-266
+current_issue: 268
+current_pr: null
+current_branch: codex/268-member-administrators
+head: a75f31a2761ffe0afcbf067425eb8324789b3554
+state: claimed
+lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
-last_completed_issue: 262
-last_merged_pr: 263
-last_merge_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+last_completed_issue: 266
+last_merged_pr: 267
+last_merge_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 scope:
-  - authoritative-exact-identity-company-directory
-  - narrowly-marked-authenticated-pre-selection-endpoint
-  - issued-session-bff-and-provider-company-transition
-  - private-state-generation-fences-and-server-selected-scope
-  - actual-two-company-sql-oidc-chromium-acceptance
+  - existing-company-administrator-role-mutation
+  - shared-membership-version-and-company-transaction
+  - immutable-versioned-role-audit-and-replay
+  - strict-issued-session-api-bff-and-member-panel
+  - actual-role-authority-sql-chromium-denial-and-recovery
   - lead-owned-durable-frontier-refresh
 
 verification:
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: 'Claim268 from acceptedmaina75; create Draft lease, implement audited exact existing admin role assignment/removal with shared membership concurrency/company transaction, strict API/BFF/member panel and actual owned SQL/Chromium proof. Preserve all other roles/identity/durable work. Full independent security/runtime review and exact PR/main gates required. Installer239 integration4b remains separately owned and Draft for clean Windows/signing; full233 active.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
@@ -176,3 +176,24 @@ company_selection_reviewed_764:
   state: ready_for_review
   review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
   next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'
+
+verified_company_selection_267:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  final_pr_head: 9385acb554b73f5a125767215386a861615df412
+  merge: a75f31a2761ffe0afcbf067425eb8324789b3554
+  pr_build: 37813468995
+  pr_governance: 37813469019
+  pr_actual: 113435971711
+  pr_quality: 113440765045
+  main_build: 37815044494
+  main_governance: 37815044554
+  main_actual: 113441393702
+  main_quality: 113444186237
+  main_artifact: 11567296114
+  main_artifact_bytes: 72696
+  state: done
+  review: Full independent frozen shipping f03/proof764/final938 docs APPROVED, receipt6065013062.
+    Exact PR/main all8 gates PASS, including native identity/ambiguity/stored-byte Unicode
+    and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
+    separation/revoke-restore.266 closed. Full233/customer/production and installer
+    clean Windows/signing remain.
