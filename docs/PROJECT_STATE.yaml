@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 21d67981dbfd6b070e3030d03305429f76292671
+current_target_head: 595a587368786af93206ae8f3249ffd2a84cb250
 last_verified_commit: 39e668ebebe1f8bd19803199b8db393f12a4edb6
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 262
     pr: 263
     branch: codex/262-membership-access
-    head: a00ec01c88d78064b92741097332a35e9aae5fe6
-    state: claimed
-    next: "Existing membership suspend/reactivate API/BFF/UI with optimistic version, immutable idempotent audit and real SQL last-admin/concurrency proof. Base main39e is approved/green; no invitation/role administration/full233 completion claim."
+    head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
+    state: in_progress
+    next: "API/BFF/UI implemented. Actual member SQL version/replay/audit/rollback/opposite-admin barrier proof passed atd46. Fixes and finer Chromium stale substages are at a452; close exact Build37744957617/Gov37744957590 and complete full frozen review before merge. Base main39e is approved/green; invitations/role administration/full233 remain."
 
   frontend:
     issue: null
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Installer responsive21d exact gates/frozen review PASS; keep239 Draft for clean Windows/UAC/reboot/startup/retention/repair/signing. Close its documentation checkpoint gates. Continue active262/263 member-access vertical slice from approved main39e. Medcom/Novo private mapping is preliminary; dedicated read-only credentials and business proof remain. Santino deferred; full233 stays active."
+next_action: "Installer595 exact gates and responsive21d frozen review PASS; keep239 Draft for clean Windows/UAC/reboot/startup/retention/repair/signing. Continue active262/263 exact CI closure: actual SQL member proof passed atd46, but browser stale-stage and randomized legacy tag test need their a452 fixes verified. Merge263 only after acceptance/full review/current green gates, then close main gates. Medcom/Novo need dedicated read-only credentials/business proof; Santino deferred; full233 stays active."
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
@@ -214,3 +214,40 @@ installer_responsive_verified:
   unsigned_artifact: 11523499541
   artifact_bytes: 48531144
   review: 'Independent frozen21d native20-case review at192DPI closes minimum-size clipping. Native gate/76 core/pinned developer-tool-free executable/isolated Windows controls and full retained SQL/Chromium gates PASS. No clean installation/signing proof;239 stays Draft.'
+
+installer_documentation_verified:
+  head: 595a587368786af93206ae8f3249ffd2a84cb250
+  build: 37717383890
+  governance: 37717384074
+  actual_stack: 113116883520
+  native_artifact_job: 113116883822
+  required_quality: 113118363698
+  unsigned_artifact: 11524202094
+  artifact_bytes: 48534017
+  result: 'All9 jobs and independent documentation delta review PASS. Code equals approved responsive21d. Hosted native20 cases and retained SQL/Chromium are verified; external clean Windows/signing gate remains.'
+
+membership_access_progress:
+  issue: 262
+  pr: 263
+  security_head: e7fe3217c6cdfd910a8affa688d41780bd2a9ba7
+  security_build: 37742062502
+  security_governance: 37742062504
+  ui_head: 1250c24b2cbb08c747bad61f213bf712668cf574
+  ui_build: 37742649576
+  ui_governance: 37742649549
+  sql_proof_head: d46b2844c6d18ab60c1d5f6e678e2d68ecbf1299
+  sql_proof_job: 113201022413
+  current_head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
+  current_build: 37744957617
+  current_governance: 37744957590
+  result: 'New actual SQL versions/historical/concurrent replay, immutable audit direct/column/module/trigger/impersonation controls, rollback and opposite-admin barrier PASS atd46. Full frozen code review is conditional: actual Chromium and exact green gates remain. Newest PR HANDOFF/GitHub HEAD supersedes this snapshot.'
+
+branch_integration_audit:
+  baseline_main: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  remote_non_main_branches: 128
+  matched_merged_pr_heads: 121
+  other_main_ancestor: 1
+  archived_or_superseded: 4
+  active_draft_leases: [239, 263]
+  evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
+  result: 'No additional eligible unmerged implementation identified. Preserve historical backups/snapshot; old53 is superseded by merged54.239/263 retain their acceptance/review/current-gate requirements.'

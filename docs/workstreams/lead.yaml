@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 21d67981dbfd6b070e3030d03305429f76292671
+head: 595a587368786af93206ae8f3249ffd2a84cb250
 state: blocked
 lease_owner: lead
 lease_heartbeat_at: "2026-10-08"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Close239 documentation checkpoint gates; responsive21d exact CI/frozen review is green.239 retains its external clean Windows/signing dependency. Lead coordinates active262/263 member-access implementation and full233; Medcom/Novo business proof awaits dedicated read-only credentials."
+next_action: "595 documentation gates and responsive21d full review PASS.239 retains external clean Windows/signing dependency. Lead closes active262/263 at a452 exact Build37744957617/Gov37744957590: actual member SQL proof passed atd46, Chromium and test fixes/full review remain. Merge only on acceptance/current green; close main afterward. Medcom/Novo business proof awaits dedicated read-only credentials; full233 active."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
