@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 989f771b04e9f710103a242d0b6122913f3a127b
+current_target_head: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
 last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
@@ -48,7 +48,7 @@ critical_paths:
     branch: codex/266-company-selection
     head: f03f082800d3324e0574b0b510d74bf6c9d93785
     state: in_progress
-    next: "Root backend owns API/BFF/UI company discovery/switching; exactf03 Build37809426615 actual113422110270 active. Independent frozen latest review required after reviewer quota. Follow live267 HANDOFF; unaccepted266 shipping is not included in this installer integration."
+    next: "Primary266 shippingf03/proof764 independently APPROVED/all8 PASS. Final documentation delta/current PR/main gates remain. Follow live267 HANDOFF; not yet included in this installer integration."
 
 recent_authoritative_merges:
   - 'PR265 / issue264 merged002e5cd with independent full frozen reviews and exact main Build37801975078/Gov37801976469/actual113396238709/quality113399168935 PASS.'
@@ -90,7 +90,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Integrate accepted main002 ERP qualifier into installer239, preserving approved989 installer source. Close renewed exact9 gates and frozen integration review; retain Draft for clean Windows/signing. Parallel primary266/267 actual SQL/Chromium closure remains active; frozen latest reviewer currently quota limited. Dedicated Medcom/Novo credentials/qualified inventory adapters/production and full233 remain. Live PR HEAD/HANDOFF supersede these checkpoint fields."
+next_action: "Installer239 accepted ERP integrationfa/finaldocs3ff independently APPROVED; exact3ff Build37811764980/Gov37811765041/all9/actual113430137673/native113430137570/quality113433280589 PASS. Close final documentation delta/current gates; retain Draft for clean Windows/signing. Primary266 shippingf03/proof764 approved/all8 PASS; integrate only after its exact final PR/main delivery. Full233/customer credentials/adapters/production remain. Live PR HEAD/HANDOFF supersede checkpoint fields."
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
@@ -294,3 +294,15 @@ installer_verified_erp_integration:
   local_dotnet_tests: 1127
   result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. No independent frozenfa integration approval exists after reviewer quota; prior989 approval is separate historical evidence.'
   next: 'Close current documentation HEAD gates, independently review fa integration/final docs when available and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
+installer_reviewed_3ff:
+  integration_head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  reviewed_checkpoint: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
+  build: 37811764980
+  governance: 37811765041
+  actual_stack: 113430137673
+  native_installer: 113430137570
+  required_quality: 113433280589
+  artifact: 11564714166
+  artifact_bytes: 48597796
+  review: 'Independent frozen fa integration/3ff documentation APPROVED. All9 exact jobs PASS; accepted ERP and retained SQL/Chromium,76 core tests/pinned self-contained isolated Windows proof PASS. Setup source/tests/scripts remain approved21d/989; additive solution preserves all projects. No clean Windows/signing acceptance.'
+  next: 'Close final documentation delta review/exact gates; integrate266 only after approved merge and exact main gates. Keep239 Draft; full233 remains active.'

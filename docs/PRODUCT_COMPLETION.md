@@ -140,7 +140,7 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 ## Next executable work
 
 1. Continue the active #266/PR267 lease through actual two-company SQL/OIDC/Chromium acceptance, independent frozen review, exact PR merge and main gates. Read its current live HANDOFF before acting.
-2. Integrate accepted ERP qualification into Draft installer239 with renewed exact gates/review; complete the separately required clean Windows lifecycle and signing evidence when its external fixture is available.
+2. Close the current exact gates and independent integration review of Draft installer239, whose fa payload already includes accepted ERP qualification; complete clean Windows lifecycle and signing evidence when its external fixture is available.
 3. Continue missing member administration and customer workflow prerequisites. Customer inventory/stock-movement execution requires dedicated approved credentials and qualified schema/version dependencies before business-row proof.
 4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Keep #233 active until every applicable row and completion gate is proven.
 

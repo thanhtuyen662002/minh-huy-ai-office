@@ -4,11 +4,11 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 989f771b04e9f710103a242d0b6122913f3a127b
+head: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-10-08"
-last_checkpoint_at: "2026-10-08"
+lease_heartbeat_at: '2026-10-09'
+last_checkpoint_at: '2026-10-09'
 scope:
   - integration
   - roadmap-priority
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Accepted265 main002 ERP qualifier integrated into239; resolve additive solution projects, verify local/full exact9 gates and independent frozen integration delta. Installer source remains approved989/21d. Keep Draft for clean Windows/signing. Primary266/267 actual company selection closure/review remains; latest reviewer quota limited. Full233 active and customer ERP credentials/adapters remain."
+next_action: 'Installerfa/3ff independently APPROVED; exact3ff all9 gates/artifact PASS. Close final docs delta review/current gates; retain Draft for external clean Windows/signing. Primary266 shippingf03/proof764 approved/all8 PASS; integrate only after exact PR/main delivery. Full233/customer workflows/production remain.'
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -233,5 +233,5 @@ installer_verified_erp_integration:
   artifact: 11564961765
   artifact_bytes: 48601200
   local_dotnet_tests: 1127
-  result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. No independent frozenfa integration approval exists after reviewer quota; prior989 approval is separate historical evidence.'
-  next: 'Close current documentation HEAD gates, independently review fa integration/final docs when available and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
+  result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. Independent frozenfa/3ff integration APPROVED; reviewed3ff current all9 gates PASS.'
+  next: 'Close final documentation delta review/current HEAD gates and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
