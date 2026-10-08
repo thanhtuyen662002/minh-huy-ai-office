@@ -1,14 +1,14 @@
 workstream: erp-data
 role: "ERP / Data"
-status: retired
-current_issue: null
+status: active-development
+current_issue: 264
 current_pr: null
-current_branch: null
-head: null
-state: retired
-lease_owner: null
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-09-27T06:20:00Z"
+current_branch: codex/264-erp-readonly-qualification
+head: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+state: claimed
+lease_owner: root-erp-264
+lease_heartbeat_at: '2026-10-08'
+last_checkpoint_at: '2026-10-08'
 last_merged_pr: 208
 last_merge_commit: f61cddee2a4e45b1efe5100161056d8f77e73b80
 preferred_next_issue: null
@@ -27,5 +27,8 @@ scope:
   - datasource-failover
   - datasource-failover-operation-policy-persistence
 verification:
-  result: "PR #208 / issue #206 is merged at f61cddee2a4e45b1efe5100161056d8f77e73b80. The bounded pilot uses the server-authorized read-only data-source contract; broader adapters and schema observers remain future scope."
-next_action: "Keep the ERP/Data lease retired. The next action is operator provisioning of a read-only pilot data source and authenticated smoke verification; open a new issue only for a newly observed data blocker."
+  base_build: 37746848054
+  base_governance: 37746848190
+  base_actual_stack: 113210254492
+  result: 'Reviewed member-access262/263 merged at0d03c529 with exact PR/main gates PASS. ERP probes currently only open; subsequent readers have independent sessions. Source AllowRead is not a credential permission proof.'
+next_action: 'Implement264 effective read-only qualification on each actual ERP read connection, initial/final proof and explicit source-policy probe mode. Add meaningful denial/order/redaction and actual owned SQL adversarial controls; frozen review and exact PR/main closure required. Medcom/Novo business credentials/qualified adapters/reconciliation remain; Santino deferred;233 active.'
