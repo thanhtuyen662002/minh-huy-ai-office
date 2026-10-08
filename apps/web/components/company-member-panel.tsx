@@ -58,7 +58,8 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         const messages: Record<string, string> = { "self-deactivation": "Bạn không thể khóa quyền của tài khoản đang sử dụng.",
           "last-administrator": "Công ty cần giữ ít nhất một quản trị viên đang hoạt động.", "inactive-user": "Tài khoản này đang bị khóa. Hãy liên hệ quản trị viên tài khoản." };
         if (!await validate(generation) || !current()) return;
-        setPage(null); setPending(null); setError(messages[body?.code] ?? "Quyền thành viên đã thay đổi. Hãy tải lại danh sách trước khi tiếp tục.");
+        setPage(null); setPending(null); setError(typeof body?.code === "string" && Object.hasOwn(messages, body.code)
+          ? messages[body.code] : "Quyền thành viên đã thay đổi. Hãy tải lại danh sách trước khi tiếp tục.");
         return;
       }
       if (response.status === 400 || response.status === 404) {

@@ -35,10 +35,11 @@ it("retains exactly the same operation after a lost reply and blocks other actio
   fireEvent.click(screen.getByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" })); await screen.findByText("Đã khóa quyền truy cập thành viên.");
   const bodies = mutationBodies(request); expect(bodies).toHaveLength(2); expect(bodies[0]).toEqual(bodies[1]); expect(screen.queryByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" })).toBeNull();
 });
-it.each(["stale-version", "operation-conflict", "last-administrator", "self-deactivation", "inactive-user"])("clears stale private rows and permits reloading after server conflict %s", async code => {
+it.each(["stale-version", "operation-conflict", "last-administrator", "self-deactivation", "inactive-user", "__proto__", "constructor", "PRIVATE_UNKNOWN_CODE"])("clears stale private rows and permits reloading after server conflict %s", async code => {
   fixture(url => url.includes("/access?") ? Response.json({ code }, { status: 409 }) : undefined);
   await screen.findByText(member.displayName); fireEvent.click(screen.getByRole("button", { name: "Khóa quyền PRIVATE MEMBER" }));
   await screen.findByRole("alert"); expect(screen.queryByText(member.displayName)).toBeNull(); expect(screen.queryByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" })).toBeNull();
+  expect(screen.getByRole("alert").textContent).not.toContain("PRIVATE_UNKNOWN_CODE");
   fireEvent.click(screen.getByRole("button", { name: "Tải lại thành viên" })); await screen.findByText(member.displayName);
 });
 it.each([400, 403, 404, 401])("clears private rows and pending operation on definitive denial %i", async status => {
