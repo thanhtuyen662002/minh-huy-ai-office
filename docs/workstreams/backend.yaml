@@ -59,4 +59,13 @@ ui_denial_checkpoint:
 integration_fix:
   cause: 'New fixture used the BFF fallback client name aioffice-local-cli; shipping owned bootstrap/Compose explicitly uses aioffice-local. Corrected fixture to the tracked owned client; no identity or production config change.'
   verification: 'Python compilation/JS syntax/diff checks PASS. New member SQL/Chromium scenarios and exact current CI/full review still required.'
+runtime_checkpoint:
+  head: d46b2844c6d18ab60c1d5f6e678e2d68ecbf1299
+  build: 37743988293
+  governance: 37743988263
+  actual_stack: 113201022413
+  sql_result: 'New actual SQL versions/historical replay/concurrent duplicates/stale operations, column/module/trigger/impersonation audit denial, atomic rollback and two-admin barrier/fingerprints all PASS.'
+  remaining: 'Chromium terminal red at broad stale-version stage. Retain assertions, require the real409 response and DOM settlement, add fixed substages to pinpoint any remaining mismatch.'
+  web_failure: 'Pre-existing randomized tag test could replace suffix with identical AA. Fixed by flipping one decoded GCM authentication byte and asserting ciphertext differs;54 focused session tests/type-check PASS. No cryptographic behavior change.'
+  fixture_freshness: 'New member race uses the owner token actually issued by the retained restart/sign-in, avoiding dependence on the pre-restart token lifespan.'
 

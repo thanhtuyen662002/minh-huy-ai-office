@@ -175,14 +175,22 @@ try {
   await memberButton(false).waitFor(); requireProof(memberCount() === "3" && memberState() === "0:4");
   await memberButton(false).click(); await memberButton(true).waitFor();
   requireProof(memberState() === "1:5" && memberCount() === "4");
-  stage = "browser-member-stale-version";
+  stage = "browser-member-stale-version-setup";
   sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0,Version=Version+1 WHERE ${memberScope};`);
-  await memberButton(true).click(); await page.getByRole("alert").waitFor();
-  requireProof(await memberButton(true).count() === 0 && await memberButton(false).count() === 0
-    && memberState() === "0:6" && memberCount() === "4");
+  requireProof(memberState() === "0:6" && memberCount() === "4");
+  const staleResponse = page.waitForResponse(response => response.url() === app + memberPath && response.request().method() === "POST");
+  stage = "browser-member-stale-version-response";
+  await memberButton(true).click(); const stale = await staleResponse;
+  requireProof(stale.status() === 409 && stale.request().postDataJSON().expectedVersion === "5");
+  stage = "browser-member-stale-version-private-clear";
+  await page.getByRole("alert").waitFor();
+  await page.locator('section[aria-label="Thành viên công ty"] tbody').waitFor({ state: "detached" });
+  requireProof(await memberButton(true).count() === 0 && await memberButton(false).count() === 0 && memberState() === "0:6" && memberCount() === "4");
+  stage = "browser-member-stale-version-reload";
   await page.getByRole("button", { name: "Tải lại thành viên", exact: true }).click();
   await memberButton(false).waitFor(); await memberButton(false).click(); await memberButton(true).waitFor();
   requireProof(memberState() === "1:7" && memberCount() === "5");
+  stage = "browser-member-stale-version-role-session";
   const roleProof = sql(`USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.RoleAssignments WHERE ${memberScope} AND RoleKey=N'viewer';`);
   requireProof(roleProof === "1" && (await current()).status === 200 && (await cookie("aioffice_browser_session")).value === sid.value);
   console.log("PASS actual Chromium member suspend/reactivate, committed lost reply with stable replay, stale version reload and unchanged role/session");

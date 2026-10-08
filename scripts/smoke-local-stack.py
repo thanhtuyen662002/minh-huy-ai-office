@@ -1058,9 +1058,12 @@ def main():
     member_spec = importlib.util.spec_from_file_location("membership_access_proof", Path("scripts/smoke-membership-access.py"))
     member_proof = importlib.util.module_from_spec(member_spec)
     member_spec.loader.exec_module(member_proof)
+    # The preceding restart proof explicitly signs in again. Use that issued
+    # current identity for the new race, not the token captured before restart.
+    member_auth = {**auth, "Authorization": "Bearer " + next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token")}
     member_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
         http=http, sql=sql, runtime_statement=runtime_statement, identity_admin=identity_admin,
-        identity=identity, api=api, web=web, auth=auth)
+        identity=identity, api=api, web=web, auth=member_auth)
     print("PASS complete local stack integration")
 
 
