@@ -4,7 +4,7 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: e51fc2b924a960879277b7daaccf42e1745a5c36
+head: e9370b9d34d884b73e5c16b02fdff2d803833831
 state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,16 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Push SQL fixture collation fix and actual shipping two-session Chromium proof, close exact current8 gates and inspect/fix red SAME269. Full268 SQL and browser execution/acceptance, independent frozen security/runtime review and exact PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+next_action: 'SQL e937 full new administrator proof PASS. Diagnose actual Chromium terminal red at broad stale409 stage with fixed detailed substages; retain assertions and fix SAME269. Close current exact8 gates. Full frozen independent security/runtime review and final PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_runtime_checkpoint:
+  head: e9370b9d34d884b73e5c16b02fdff2d803833831
+  build: 37822504244
+  governance: 37822504403
+  actual: 113466853376
+  sql: 'PASS complete new role/audit/version/replay/shared-access and opposite-admin/native lock barriers/queued external actor revocation/privilege rollback and stored-byte Unicode/alias/fingerprint scenarios, plus all retained SQL/ERP/member controls.'
+  browser: 'Terminal red administrator-shipping-role-stale409-private-clear after two Code/S256 sessions, shipping grant/remove/fresh authority/private clearing/committed lost-response and historical replay assertions passed. Added fixed substage markers and pre-stale SQL positive, retaining every assertion; current exact rerun required.'
+  other_gates: 'All six other Build jobs and Governance PASS. Quality red follows actionable browser failure; no runner-noise retry.'
 
 administrator_browser_checkpoint:
   sql_head: e51fc2b924a960879277b7daaccf42e1745a5c36

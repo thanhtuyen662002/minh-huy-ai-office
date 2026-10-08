@@ -145,21 +145,30 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
       && ![...document.querySelectorAll("button")].some(item => item.textContent?.trim() === "Thành viên"));
     requireProof(await cookie(secondaryContext) === secondarySid);
 
-    stage("shipping-role-stale409-private-clear");
+    stage("shipping-role-stale-version-setup");
     sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET Version=Version+1 WHERE ${memberScope};`);
+    requireProof(state() === "1:6:0" && auditCount() === "4");
     const stale = ownerPage.waitForResponse(response => response.url() === app + path && response.request().method() === "POST");
+    stage("shipping-role-stale-version-response");
     await button(false).click(); const conflict = await stale;
-    requireProof(conflict.status() === 409 && conflict.request().postDataJSON().expectedVersion === "5" && state() === "1:6:0" && auditCount() === "4");
+    requireProof(conflict.status() === 409 && conflict.request().postDataJSON().expectedVersion === "5");
+    stage("shipping-role-stale409-private-clear");
     await ownerPage.getByRole("alert").waitFor();
     await ownerPage.locator('section[aria-label="Thành viên công ty"] tbody').waitFor({ state: "detached" });
     requireProof(await button(false).count() === 0 && await button(true).count() === 0);
+    requireProof(state() === "1:6:0" && auditCount() === "4");
+    stage("shipping-role-stale-version-reload");
     await ownerPage.getByRole("button", { name: "Tải lại thành viên", exact: true }).click();
     await button(false).waitFor(); await button(false).click(); await button(true).waitFor();
     requireProof(state() === "1:7:1" && auditCount() === "5");
+    stage("shipping-role-restored-final-authority");
     await button(true).click(); await button(false).waitFor();
     requireProof(state() === "1:8:0" && auditCount() === "6" && !(await current(secondary)).body.roles.includes("admin")
       && await cookie(ownerContext) === ownerSid && await cookie(secondaryContext) === secondarySid);
-    requireProof(preserved.map(item => fingerprint(...item)).every((value, index) => value === before[index]));
+    for (let index = 0; index < preserved.length; index++) {
+      stage("preserved-" + preserved[index][0]);
+      requireProof(fingerprint(...preserved[index]) === before[index]);
+    }
     console.log("PASS actual Chromium administrator grant/remove, two provider sessions/fresh authority under unchanged SIDs, lost-response historical replay/stale409/private clearing and preserved identities/other roles/member state/tasks");
   } finally {
     await secondaryContext.close();
