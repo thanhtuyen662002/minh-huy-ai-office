@@ -52,11 +52,26 @@ public sealed class EfAuthenticatedCompanyDirectory(PlatformDbContext database) 
                 || !StringComparer.Ordinal.Equals(row.Subject, subject)
                 || row.Id == Guid.Empty || row.TenantId == Guid.Empty || row.UserId == Guid.Empty
                 || string.IsNullOrWhiteSpace(row.Name) || row.Name.Length > 200
-                || !StringComparer.Ordinal.Equals(row.Name, row.Name.Trim()) || row.Name.Any(char.IsControl))
+                || !StringComparer.Ordinal.Equals(row.Name, row.Name.Trim()) || row.Name.Any(char.IsControl)
+                || HasInvalidUnicode(row.Name))
             || rows.GroupBy(row => row.Id).Any(group => group.Count() != 1)
             || rows.GroupBy(row => row.TenantId).Any(group => group.Select(row => row.UserId).Distinct().Count() != 1))
             throw new UnauthorizedAccessException();
 
         return rows.Select(row => new AuthenticatedCompany(row.Id, row.Name)).ToArray();
+    }
+
+    private static bool HasInvalidUnicode(string value)
+    {
+        // Reject malformed stored UTF-16 before JSON can replace it with U+FFFD.
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (char.IsHighSurrogate(value[index]))
+            {
+                if (index + 1 == value.Length || !char.IsLowSurrogate(value[++index])) return true;
+            }
+            else if (char.IsLowSurrogate(value[index])) return true;
+        }
+        return false;
     }
 }

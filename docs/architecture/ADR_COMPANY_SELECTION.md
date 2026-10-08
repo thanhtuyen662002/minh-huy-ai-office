@@ -12,7 +12,7 @@ Explicit enrollment of the same signed identity in distinct tenants can yield di
 
 ## Browser scope transition
 
-The BFF directory uses the existing issued-session Core helper, with bounded body/timeout and a final shared-session check, and validates the complete two-field choice response before returning it. Browser choices are navigation options, not authority. The workspace independently validates current context before accepting them.
+The BFF directory uses the existing issued-session Core helper and a final shared-session check. The directory response has a shared ten-second deadline and a 128 KiB byte limit, is decoded with strict UTF-8, and must satisfy the complete two-field choice contract before returning it. Both stored names and JSON escaped names must contain valid Unicode scalar sequences: isolated UTF-16 surrogates are refused before a serializer or browser can repair the name. Valid supplementary characters and a literal U+FFFD remain supported. Browser choices are navigation options, not authority. The workspace independently validates current context before accepting them.
 
 Switching clears private chat/source/member/task state and invalidates request generations before beginning the existing Code/S256 provider flow for the target. Cookie mutations settle without being aborted. Core independently resolves target membership at callback; stale cached choices cannot publish an unauthorized target session. Existing Redis binding generations, one-shot transactions, callback/reordered-response and session-expiry protections remain unchanged. The selected company after callback/reload comes from the private issued server session, not a URL or browser storage value. Names come from the authoritative directory.
 

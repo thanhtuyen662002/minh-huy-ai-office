@@ -53,7 +53,7 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
         {
             var db = scope.ServiceProvider.GetRequiredService<PlatformDbContext>(); MemberDirectoryFixture.Seed(db, authority);
             var user = db.Users.Local.Single(); user.IdentityProvider = "test-oidc"; user.Subject = "test-subject";
-            db.Companies.Local.Single().Name = "\nPRIVATE_INVALID_NAME"; await db.SaveChangesAsync();
+            db.Companies.Local.Single().Name = "PRIVATE_INVALID_NAME\ud800"; await db.SaveChangesAsync();
         }
         using var client = factory.CreateClient(); var response = await client.GetAsync("/api/auth/companies");
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode); Assert.True(response.Headers.CacheControl!.NoStore);

@@ -48,6 +48,13 @@ it("rejects malformed UTF8 bytes rather than publishing a repaired authoritative
   fixture.fetch.mockResolvedValue(new Response(bytes, { headers: { "Content-Type": "application/json" } }));
   await privateFailure(await GET(request()), 503);
 });
+it("refuses isolated surrogate JSON escapes while keeping partial choices private", async () => {
+  for (const companyName of ["PRIVATE\ud800", "PRIVATE\udc00", "PRIVATE\ud800x", "PRIVATE\udc00\ud800"]) {
+    const json = JSON.stringify({ items: [choice, { companyId: "33333333-3333-3333-3333-333333333333", companyName }] });
+    fixture.fetch.mockResolvedValue(new Response(json, { headers: { "Content-Type": "application/json" } }));
+    await privateFailure(await GET(request()), 503);
+  }
+});
 it.each(["Công ty Việt Nam", "Legitimate \ufffd name"])("preserves valid Unicode bytes exactly: %s", async name => {
   const value = { ...choice, companyName: name }; fixture.fetch.mockResolvedValue(Response.json({ items: [value] }));
   const response = await GET(request()); expect(response.status).toBe(200); expect(await response.json()).toEqual({ items: [value] });

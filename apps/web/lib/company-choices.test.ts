@@ -18,3 +18,13 @@ it("rejects accessors without invoking their private code", () => {
   Object.defineProperty(item, "companyName", { enumerable: true, get: getter });
   expect(parseCompanyChoices({ items: [item] })).toBeNull(); expect(getter).not.toHaveBeenCalled();
 });
+it("refuses escaped isolated surrogate names without repairing a partial directory", () => {
+  for (const companyName of ["Name\ud800", "Name\udc00", "Name\ud800x", "Name\udc00\ud800"]) {
+    const wire = JSON.stringify({ items: [choice, { ...choice, companyId: "33333333-3333-3333-3333-333333333333", companyName }] });
+    expect(parseCompanyChoices(JSON.parse(wire))).toBeNull();
+  }
+});
+it("preserves valid supplementary Unicode and a literal replacement character", () => {
+  const unicode = { ...choice, companyName: "Công ty \ud83d\ude00 \ufffd" };
+  expect(parseCompanyChoices({ items: [unicode] })).toEqual([unicode]);
+});

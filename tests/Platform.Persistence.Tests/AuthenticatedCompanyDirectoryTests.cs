@@ -112,6 +112,21 @@ public sealed class AuthenticatedCompanyDirectoryTests
     }
 
     [Fact]
+    public async Task IsolatedSurrogatesCannotBeRepairedIntoPublishedCompanyNames()
+    {
+        await using var db = new PlatformDbContext(MemberDirectoryFixture.Options()); var scope = MemberDirectoryFixture.Authority();
+        MemberDirectoryFixture.Seed(db, scope); var second = AddCompany(db, scope.TenantId, scope.UserId, "Valid second company");
+        foreach (var name in new[] { "Name\ud800", "Name\udc00", "Name\ud800x", "Name\udc00\ud800" })
+        {
+            db.Companies.Local.Single(row => row.Id == second).Name = name; await db.SaveChangesAsync();
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => Directory(db).ListAsync("PRIVATE_PROVIDER", "PRIVATE_SUBJECT_" + scope.UserId));
+        }
+        var valid = "Company \ud83d\ude00 \ufffd";
+        db.Companies.Local.Single(row => row.Id == second).Name = valid; await db.SaveChangesAsync();
+        Assert.Equal(valid, (await Directory(db).ListAsync("PRIVATE_PROVIDER", "PRIVATE_SUBJECT_" + scope.UserId)).Single(row => row.CompanyId == second).CompanyName);
+    }
+
+    [Fact]
     public async Task CancellationAndUnsupportedIdentityInputsFailBeforeDiscovery()
     {
         await using var db = new PlatformDbContext(MemberDirectoryFixture.Options()); using var cancelled = new CancellationTokenSource(); cancelled.Cancel();

@@ -454,6 +454,31 @@ def main():
     assert fingerprint("Users", identity_scope, "Id") == identity_before
     assert http("/api/auth/companies", base=api, headers=auth)[0] == 200
     print("PASS actual SQL company discovery native identity aliases, ambiguity refusal and owned restoration")
+    unicode_company = str(uuid.uuid4())
+    unicode_scope = f"TenantId='{tenant}' AND CompanyId='{unicode_company}' AND UserId='{user}'"
+    try:
+        sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+            INSERT aioffice.Companies(TenantId,Id,Code,Name) VALUES('{tenant}','{unicode_company}',N'{unicode_company}',N'Disposable Unicode company');
+            INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('{tenant}','{unicode_company}','{user}'); COMMIT TRANSACTION;""")
+        for malformed in ("0x00D8", "0x00DC", "0x00D87800", "0x00DC00D8"):
+            sql(f"USE AIOfficeLocal; UPDATE aioffice.Companies SET Name=N'Disposable '+CONVERT(nvarchar(3),{malformed}) WHERE TenantId='{tenant}' AND Id='{unicode_company}';")
+            for choice_path, choice_base, choice_headers in (
+                ("/api/auth/companies", api, auth), ("/api/local/companies" + selector, web, {})):
+                denied_status, denied_headers, denied_body = http(choice_path, base=choice_base, headers=choice_headers)
+                assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", ""), "Malformed stored Unicode company was published"
+                assert all(secret not in json.dumps(denied_body) for secret in [*secrets, token])
+        sql(f"USE AIOfficeLocal; UPDATE aioffice.Companies SET Name=N'Disposable '+CONVERT(nvarchar(3),0x3DD800DEFDFF) WHERE TenantId='{tenant}' AND Id='{unicode_company}';")
+        for choice_path, choice_base, choice_headers in (
+            ("/api/auth/companies", api, auth), ("/api/local/companies" + selector, web, {})):
+            valid_status, valid_headers, valid_body = http(choice_path, base=choice_base, headers=choice_headers)
+            assert valid_status == 200 and "no-store" in valid_headers.get("Cache-Control", "")
+            assert next(item for item in valid_body["items"] if item["companyId"] == unicode_company)["companyName"] == "Disposable \U0001f600\ufffd"
+    finally:
+        sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+            DELETE aioffice.CompanyMemberships WHERE {unicode_scope};
+            DELETE aioffice.Companies WHERE TenantId='{tenant}' AND Id='{unicode_company}'; COMMIT TRANSACTION;""")
+    assert http("/api/auth/companies", base=api, headers=auth)[0] == 200
+    print("PASS actual SQL malformed UTF16 company refusal and supplementary Unicode preservation")
     bindings_before = fingerprint("DataSourceSecretBindings", source_scope, "Id")
     assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings
         WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION'

@@ -385,6 +385,18 @@ try {
     requireProof(choices.some(item => item.companyId === company) && choices.some(item => item.companyId === selectedCompany));
     await page.reload(); await companyPicker.waitFor();
     await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
+    stage = "original-company-private-chat-positive";
+    await waitForSource();
+    const switchMessage = "Disposable company-switch private chat " + randomUUID();
+    await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
+    await page.locator('textarea[name="question"]').fill(switchMessage);
+    const switchSubmitted = page.waitForResponse(response => response.request().method() === "POST"
+      && response.url() === app + "/api/local/tasks" + query);
+    await page.getByRole("button", { name: "Gửi", exact: true }).click();
+    const switchAccepted = await switchSubmitted; requireProof(switchAccepted.status() === 202);
+    const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));
+    await page.getByText(switchMessage, { exact: true }).waitFor();
+    await page.locator('textarea[name="question"]:enabled').waitFor();
     await page.locator('textarea[name="question"]').fill(privateDraft);
     const oldAuthority = await context.cookies(app);
     stage = "provider-company-switch-to-second";
@@ -395,8 +407,10 @@ try {
       Cookie: oldAuthority.filter(item => item.name.startsWith("aioffice_browser_")).map(item => `${item.name}=${item.value}`).join("; "),
     } }); requireProof(obsolete.status() === 401);
     stage = "second-company-private-state-and-data-isolation";
-    requireProof(await page.getByText(privateMessage, { exact: true }).count() === 0
-      && (await page.locator('textarea[name="question"]').inputValue()) === "");
+    requireProof(await page.getByText(switchMessage, { exact: true }).count() === 0
+      && (await page.locator('textarea[name="question"]').inputValue()) === ""
+      && await page.locator(`option[value="${source.id}"]`).count() === 0);
+    requireProof((await get(`/api/local/tasks/${switchTask}` + secondQuery)).status === 404);
     const secondSources = await get("/api/local/data-sources" + secondQuery), secondMembers = await get("/api/local/company/members" + secondQuery);
     requireProof(secondSources.status === 200 && secondMembers.status === 200 && secondSources.cache === "no-store" && secondMembers.cache === "no-store");
     const sourceRows = JSON.parse(secondSources.text), memberRows = JSON.parse(secondMembers.text).items;
@@ -418,6 +432,7 @@ try {
     stage = "target-membership-revoked-after-cached-choice";
     await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
     sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0 WHERE ${selectedScope};`);
+    stage = "revoked-target-directory-removal";
     const revokedChoices = await companyChoices(query); requireProof(!revokedChoices.some(item => item.companyId === selectedCompany));
     const priorSid = (await cookie("aioffice_browser_session")).value;
     const refusedCallback = page.waitForRequest(request => request.url().startsWith(callback + "?"));
@@ -425,14 +440,34 @@ try {
     // callback membership must deny it after the real SQL revocation.
     await companyPicker.selectOption(selectedCompany);
     const refusedRequest = await refusedCallback;
-    requireProof((await refusedRequest.response())?.status() === 401 && !(await refusedRequest.response()).headers()["set-cookie"]);
+    stage = "revoked-target-callback-denial";
+    const refusedResponse = await refusedRequest.response();
+    requireProof(refusedResponse?.status() === 401 && !refusedResponse.headers()["set-cookie"]);
+    // Receiving headers does not mean the browser committed its navigation.
+    // Settle the denied provider page before issuing a competing root navigation.
+    await page.waitForURL(url => url.origin === app && url.pathname === new URL(callback).pathname);
+    await refusedResponse.finished();
+    stage = "revoked-target-preserves-original-sid";
     requireProof((await cookie("aioffice_browser_session")).value === priorSid);
+    stage = "revoked-target-original-workspace-recovery";
     await page.goto(app); await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage = "revoked-target-original-authority-recovery";
     requireProof((await current()).status === 200 && (await get("/api/local/session" + secondQuery)).status === 401);
     stage = "target-membership-explicit-owned-restore";
     sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${selectedScope};`);
     await page.reload(); await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
-    await switchCompany(selectedCompany); await switchCompany(company); await waitForSource();
+    stage = "original-member-panel-positive-before-switch";
+    await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await page.getByRole("cell", { name: "Disposable browser member", exact: true }).waitFor();
+    stage = "second-member-panel-after-switch";
+    await switchCompany(selectedCompany);
+    requireProof(await page.getByRole("cell", { name: "Disposable browser member", exact: true }).count() === 0);
+    await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await page.getByRole("cell", { name: "Disposable second-company member", exact: true }).waitFor();
+    requireProof(await page.getByRole("cell", { name: "Disposable browser member", exact: true }).count() === 0);
+    stage = "second-member-panel-clears-on-original-switch";
+    await switchCompany(company); await waitForSource();
+    requireProof(await page.getByRole("cell", { name: "Disposable second-company member", exact: true }).count() === 0);
     requireProof(originalMembership() === originalAccess && (await get(`/api/local/tasks/${accepted.taskId}` + query)).status === 200);
   } finally {
     // Restore only this proof's added membership. Existing grants/data/history
