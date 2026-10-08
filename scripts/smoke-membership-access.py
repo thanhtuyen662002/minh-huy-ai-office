@@ -27,7 +27,7 @@ def verify(*, directory, manifest, compose, environment, http, sql,
     identities = identity_admin("users?username=" + username + "&exact=true")
     assert len(identities) == 1 and identities[0]["username"] == username
     subject = str(uuid.UUID(identities[0]["id"]))
-    form = urllib.parse.urlencode({"client_id": "aioffice-local-cli", "grant_type": "password",
+    form = urllib.parse.urlencode({"client_id": "aioffice-local", "grant_type": "password",
         "username": username, "password": manifest["AIOFFICE_OWNER_PASSWORD"]}).encode()
     with urllib.request.urlopen(urllib.request.Request(identity + "/realms/aioffice-local/protocol/openid-connect/token",
         data=form, headers={"Content-Type": "application/x-www-form-urlencoded"}), timeout=15) as response:

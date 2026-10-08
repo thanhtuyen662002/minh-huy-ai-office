@@ -55,5 +55,8 @@ integration_checkpoint:
   limitation: 'Host has no usable Linux Docker engine; new member runtime proof must execute in the mandatory hosted owned-stack job. Current integration HEAD/gates and full frozen review remain;262 is incomplete.'
 ui_denial_checkpoint:
   completed: 'Only own known conflict codes select localized messages; unknown/prototype-property codes use bounded generic text. New workspace mutation403 control proves fresh role reconciliation removes the entire private member panel/navigation.'
-  local: '29 focused member-panel/workspace controls and type-check PASS, including4 additional denial controls. Integration98 Build37743265803 still live in actual-stack job113198700889; Governance37743265637 PASS. Preserve that verified wait while finishing local checkpoint.'
+  local: '29 focused member-panel/workspace controls and type-check PASS, including4 additional denial controls. Integration98 Build37743265803 terminal red in actual-stack job113198700889 at secondary-user token401; all retained SQL/worker/restart gates passed before new fixture. Governance37743265637 PASS.'
+integration_fix:
+  cause: 'New fixture used the BFF fallback client name aioffice-local-cli; shipping owned bootstrap/Compose explicitly uses aioffice-local. Corrected fixture to the tracked owned client; no identity or production config change.'
+  verification: 'Python compilation/JS syntax/diff checks PASS. New member SQL/Chromium scenarios and exact current CI/full review still required.'
 
