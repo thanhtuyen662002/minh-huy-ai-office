@@ -139,9 +139,9 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 
 ## Next executable work
 
-1. #266/#267 is delivered at maina75 with full frozen review and exact PR/main gates. Integrate its accepted company selection into Draft installer239 with renewed exact9 gates and frozen integration review.
+1. #266/#267 is delivered at maina75 with full frozen review and exact PR/main gates. Installer239 already includes it at4b with all9 gates PASS; close final documentation gates and remaining independent frozen integration/runtime review.
 2. Draft installer239 already includes accepted ERP qualification and reviewed45a/all9 evidence. Complete clean Windows lifecycle and signing evidence when its external fixture is available; keep it Draft until acceptance.
-3. Continue missing member administration and customer workflow prerequisites. Customer inventory/stock-movement execution requires dedicated approved credentials and qualified schema/version dependencies before business-row proof.
+3. Continue the active #268/PR269 administrator-management lease and remaining member/customer workflow prerequisites. Customer inventory/stock-movement execution requires dedicated approved credentials and qualified schema/version dependencies before business-row proof.
 4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Keep #233 active until every applicable row and completion gate is proven.
 
 ## Genuine external evidence boundaries

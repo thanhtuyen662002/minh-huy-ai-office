@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 45a2ba58abf00cdb278951d8bed7c9444f007982
+current_target_head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
 last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 
 critical_paths:
@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Accepted266 maina75 exact Build37815044494/Gov37815044554/all8/actual113441393702/quality113444186237 PASS after full frozen reviews. Integrate accepted company selection into installer239 preserving approved21d/989 Setup bytes, then local verification/current exact9 gates/frozen integration review.45a baseline all9/final docs approved. Keep Draft for clean Windows/signing; full233/customer credentials/adapters/production remain. Backend may claim the next unblocked member administrator flow after266 delivery; no duplicate lease."
+next_action: 'Installer239 already includes accepted266/maina75 at4b; exact4b Build37816394932/Gov37816394855/all9/native113446015962/actual113446015945/quality113448938090 PASS. Close current final docs9 gates and independent remaining frozen runtime/final integration review when reviewer quota permits; static source review found no blocker. Keep Draft for clean Windows/signing. Backend268/269 current69b service/API foundation is a separate unaccepted lease and is not ininstaller. Full233/customer ERP credentials/adapters/production remain.'
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
@@ -357,3 +357,18 @@ installer_verified_45a:
   artifact: 11565887828
   artifact_bytes: 48598421
   review: 'Final docs45a independently APPROVED, receipt6065013782. All9 exact gates PASS; accepted ERP/retained SQL+Chromium and unchanged pinned native installer proof retained. Company selection is integrated only from accepted maina75 with exact main gates closed; renew integration gates/review. Clean Windows/signing remains external.'
+
+installer_verified_company_integration_4b:
+  head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
+  build: 37816394932
+  governance: 37816394855
+  native: 113446015962
+  actual: 113446015945
+  quality: 113448938090
+  artifact: 11566689313
+  artifact_bytes: 48623949
+  browser_artifact: 11567462838
+  browser_artifact_bytes: 72696
+  state: in_progress
+  review: 'Independent static frozen integration/source review found no blocker: non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify unchangedapproved21d/989/45a; workflow retains acceptedmain guard/native9 gate and solution retains all configurations. Exact4b all9 native/SQL/Chromium SUCCESS. Reviewer account quota interrupted remaining runtime/final documentation review; no full4b approval inferred.'
+  next: 'Close final documentation current9 gates; resume independent frozen runtime/final integration review when available. Keep239 Draft for external clean Windows/signing; full233/customer/production remain.'
