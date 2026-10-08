@@ -80,6 +80,35 @@ public sealed class RequestAuthorizationContextMiddlewareTests
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OnlyRegisteredIdentityDirectoryMetadataCanSkipCompanySelection(bool marker)
+    {
+        var context = AuthenticatedContext("oidc", "subject"); context.Request.Path = "/api/auth/companies";
+        context.Request.Headers["X-AIOffice-Identity-Directory"] = "true";
+        context.Request.Headers[AuthorizationHeaders.CompanyId] = "forged";
+        if (marker) context.SetEndpoint(new Endpoint(_ => Task.CompletedTask,
+            new EndpointMetadataCollection(IdentityCompanyDirectoryEndpoint.Instance), "identity directory"));
+        var directory = new RecordingDirectory(null); var accessor = new RequestAuthorizationContextAccessor();
+        var nextCalled = false; var middleware = new RequestAuthorizationContextMiddleware(_ => { nextCalled = true; return Task.CompletedTask; });
+        await middleware.InvokeAsync(context, directory, accessor);
+        Assert.Equal(marker, nextCalled); Assert.Null(directory.LastRequest); Assert.Null(accessor.Current);
+        if (!marker) Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(null, "subject")]
+    [InlineData("oidc", null)]
+    public async Task RegisteredDirectoryStillRequiresTrustedIdentityClaims(string? provider, string? subject)
+    {
+        var context = AuthenticatedContext(provider, subject); context.SetEndpoint(new Endpoint(_ => Task.CompletedTask,
+            new EndpointMetadataCollection(IdentityCompanyDirectoryEndpoint.Instance), "identity directory"));
+        var nextCalled = false; var middleware = new RequestAuthorizationContextMiddleware(_ => { nextCalled = true; return Task.CompletedTask; });
+        await middleware.InvokeAsync(context, new RecordingDirectory(null), new RequestAuthorizationContextAccessor());
+        Assert.False(nextCalled); Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
+    }
+
     private static DefaultHttpContext AuthenticatedContext(string? provider, string? subject)
     {
         var claims = new List<Claim>();

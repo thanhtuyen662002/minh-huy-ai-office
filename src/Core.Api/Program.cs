@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -113,6 +114,18 @@ app.MapHealthChecks("/health");
 if (authenticationConfigured)
 {
     app.MapHub<TaskStatusHub>(TaskStatusRealtime.HubPath).RequireAuthorization();
+    app.MapGet("/api/auth/companies", async (HttpContext httpContext,
+        IServiceProvider services, CancellationToken cancellationToken) =>
+    {
+        var directory = services.GetService<IAuthenticatedCompanyDirectory>();
+        if (directory is null) return AuthenticationUnavailable();
+        var provider = httpContext.User.FindFirstValue(AuthenticationClaimTypes.IdentityProvider);
+        var subject = httpContext.User.FindFirstValue(AuthenticationClaimTypes.Subject)
+            ?? httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (provider is null || subject is null) return (IResult)Results.Forbid();
+        try { return Results.Ok(new { items = await directory.ListAsync(provider, subject, cancellationToken) }); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+    }).WithMetadata(IdentityCompanyDirectoryEndpoint.Instance).RequireAuthorization();
     app.MapGet("/api/auth/context", (IRequestAuthorizationContextAccessor accessor) =>
     {
         var current = accessor.Current;
@@ -144,6 +157,7 @@ if (authenticationConfigured)
 }
 else
 {
+    app.MapGet("/api/auth/companies", AuthenticationUnavailable);
     app.MapGet("/api/auth/context", () => Results.Json(new { error = "Authentication is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapGet("/api/billing/plan", AuthenticationUnavailable);
     app.MapGet("/api/sla/status", AuthenticationUnavailable);

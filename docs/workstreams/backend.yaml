@@ -2,10 +2,10 @@ workstream: backend
 role: 'Backend Platform; root-owned company selection API/BFF/UI plus lead durable integration state'
 status: active-development
 current_issue: 266
-current_pr: null
+current_pr: 267
 current_branch: codex/266-company-selection
-head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-state: claimed
+head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
+state: in_progress
 lease_owner: root-backend-266
 lease_heartbeat_at: '2026-10-08'
 last_checkpoint_at: '2026-10-08'
@@ -13,10 +13,13 @@ last_completed_issue: 262
 last_merged_pr: 263
 last_merge_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
 scope:
-  - scoped-existing-membership-activation
-  - optimistic-version-and-idempotent-immutable-audit
-  - real-sql-company-concurrency-and-last-admin-fence
-  - api-bff-browser-vertical-acceptance
+  - authoritative-exact-identity-company-directory
+  - narrowly-marked-authenticated-pre-selection-endpoint
+  - issued-session-bff-and-provider-company-transition
+  - private-state-generation-fences-and-server-selected-scope
+  - actual-two-company-sql-oidc-chromium-acceptance
+  - lead-owned-durable-frontier-refresh
+
 verification:
   base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
   base_build: 37651174359
@@ -93,3 +96,11 @@ company_selection_266:
   state: claimed
   acceptance: 'Full authoritative company discovery and switching in shipping workspace, stale private-state fences and actual two-company isolation/revocation/restore proof. Existing browser Code/S256 and fresh Core membership remain authoritative. No customer writes or credentials.'
   durable_state: 'Root acts as lead/integrator for PROJECT_STATE refresh and as backend owner for this complete API/BFF/UI slice. No competing lease; installer239 remains separately blocked Draft.'
+
+company_selection_implementation:
+  lease_head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
+  lease_build: 37803215022
+  lease_governance: 37803214961
+  result: 'Initial claim exact gates PASS. Directory/API/middleware and BFF/parser/private-server-scope restore/workspace provider switching implemented.56 focused .NET controls and102 focused web controls PASS; TypeScript/changed C# format/diff checks PASS. Full actual two-company/runtime/security review remains. No266 completion or customer data/grant change.'
+  fixes: 'Independent reviewer reproduced trailing-slash directory response without no-store; route alias controls and StartsWithSegments close it. Fast failed-switch batching preserved uncontrolled private draft; scope/generation private-body key clears it while unchanged-session focus still preserves drafts.'
+  next: 'Push checkpoint, capture and close exact CI, implement mandatory actual two-company SQL/OIDC/Chromium controls and close independent frozen review. Keep same267 lease active; main gates only after full scoped acceptance.'

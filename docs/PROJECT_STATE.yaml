@@ -5,8 +5,8 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: codex/266-company-selection
-current_pr: null
-current_target_head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+current_pr: 267
+current_target_head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
 last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
@@ -44,10 +44,10 @@ critical_paths:
 
   company_selection:
     issue: 266
-    pr: null
+    pr: 267
     branch: codex/266-company-selection
     head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-    state: claimed
+    state: in_progress
     next: "Root backend plus required API/BFF/UI owns authoritative active-company discovery, existing provider Code/S256 switching, stale private-state fences and actual two-company SQL/Chromium acceptance. No competing lease; full233 stays active."
 
 recent_authoritative_merges:
