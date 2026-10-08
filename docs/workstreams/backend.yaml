@@ -1,38 +1,87 @@
 workstream: backend
-role: Backend Platform
+role: 'Backend Platform; root-owned member API/BFF/UI acceptance slice'
 status: active-development
-current_issue: 256
-current_pr: 257
-current_branch: backend/256-exact-identity
-head: 8eefd6ab78af4daa2214480dcf7132050e3054f4
-state: in_progress
-lease_owner: root-backend-256
-lease_heartbeat_at: '2026-10-07'
-last_checkpoint_at: '2026-10-07'
-last_completed_issue: 254
-last_merged_pr: 255
-last_merge_commit: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
+current_issue: 262
+current_pr: 263
+current_branch: codex/262-membership-access
+head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
+state: ready_for_review
+lease_owner: root-backend-262
+lease_heartbeat_at: '2026-10-08'
+last_checkpoint_at: '2026-10-08'
+last_completed_issue: 256
+last_merged_pr: 257
+last_merge_commit: 6652940c5a9bfcc424422578d87c2f2851097211
 scope:
-  - exact-opaque-authentication-directory-identity
-  - sql-binary-candidate-filter-and-ordinal-fence
-  - actual-sql-issued-session-alias-denial
+  - scoped-existing-membership-activation
+  - optimistic-version-and-idempotent-immutable-audit
+  - real-sql-company-concurrency-and-last-admin-fence
+  - api-bff-browser-vertical-acceptance
 verification:
-  previous_pr_head: 64e71c469c931ab730e563ab955766f64a7f37f9
-  previous_pr_build: 37553427104
-  previous_pr_governance: 37553427057
-  previous_main_build: 37553826140
-  previous_main_governance: 37553826122
-  previous_result: 'All PASS with independent review;255 merged and254 closed. Installer41ce2a6 full CI PASS, remains Draft for clean Windows qualification.'
-  implementation_head: 8eefd6ab78af4daa2214480dcf7132050e3054f4
-  implementation_build: 37555104776
-  implementation_governance: 37555104782
-  actual_stack_job: 112579406639
-  result: 'All exact implementation-head gates PASS; actual SQL native case/padding aliases denied by issued API/BFF sessions, original full-row identity and valid session restored. Independent frozen review pending.'
-  head_semantics: 'head records the verified implementation; exact published documentation HEAD and current workflow IDs belong in PR257 HANDOFF.'
+  base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  base_build: 37651174359
+  base_governance: 37651174354
+  base_actual_stack: 112894592064
+  result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: Close documentation checkpoint CI on the exact published HEAD and obtain concrete independent review of8eefd6a. Then matching-head merge257 and close main CI before retirement. Keep239 Draft for actual Windows lifecycle and continue full233 product flows.
+next_action: 'Implementation262 is accepted at independently approved a452 with exact PR gates PASS. Close the final evidence-only HEAD gates and independent delta review, then lead merges263 with an exact-head fence and closes main CI. Preserve roles/global identity/durable work; invitations/role administration/full233 remain.'
 
 implementation_checkpoint:
-  result: '550 Persistence tests PASS after scoped CSharp formatting;10 new identity tests PASS. Smoke AST and diff-check PASS. No frontend or schema change.'
-  completed: 'Binary SQL identity candidate filter, ordinal post-query provider/subject fence including SQL space padding, schema length bounds and unchanged public context/roles DTO. Actual SQL smoke adds native alias negative controls, issued-session API/BFF403 and exact full-row restoration.'
-  remaining: 'Documentation checkpoint exact-head CI, concrete frozen independent review and main CI. Production OIDC/customer ERP/full233 remain incomplete.'
+  completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
+  local: '30 new service/API controls and50 focused access/directory tests PASS after opt-in legacy-compatible assertion. Full611 Persistence PASS; model has no pending migration changes; full changed-code format and diff-check PASS. Real SQL/race/UI acceptance remains.'
+  remaining: 'The API foundation was followed by the accepted UI and actual runtime evidence below. Final evidence-only PR HEAD and main CI delivery closure remain; full product233 stays active.'
+security_checkpoint:
+  prior_head: c6f428707e5263df029f8187b4000043408480fa
+  prior_build: 37718397774
+  prior_governance: 37718397806
+  failure: '.NET job113120136391 failed CHARSET on the new migration; governance and retained actual SQL/Chromium gates passed. Removed UTF-8 BOM in the same PR.'
+  fix: 'Every membership mutation now repeats the global effective SQL rights proof before append-only table proof, including immediately before save. Synthetic negative controls prove indirect escalation denial and repeat proof on the pinned transaction.'
+  local: '7 audit/global permission controls PASS; changed security/migration files formatted. BFF/UI work remains under construction and is not included in this security checkpoint.'
+  next: 'Security e7 exact gates closed; continue UI checkpoint CI and real SQL race/audit/indirect escalation plus actual Chromium member mutation.'
+ui_checkpoint:
+  verified_security_head: e7fe3217c6cdfd910a8affa688d41780bd2a9ba7
+  security_build: 37742062502
+  security_governance: 37742062504
+  security_actual_stack: 113194815059
+  result: 'Exact security gates PASS. BFF version opt-in and bounded same-origin mutation, member suspend/reactivate panel, stable unknown-result retry and scope/session fences implemented.102 focused parser/BFF/UI controls and882 full local web tests PASS;20 real Redis controls require hosted CI. Type-check PASS.'
+  remaining: 'The subsequent actual SQL and Chromium member proof passed at a452, with full independent review. Final evidence-only PR HEAD/main CI delivery closure remain.'
+integration_checkpoint:
+  verified_ui_head: 1250c24b2cbb08c747bad61f213bf712668cf574
+  ui_build: 37742649576
+  ui_governance: 37742649549
+  ui_actual_stack: 113196720899
+  ui_quality: 113198151441
+  completed: 'New required owned-CI SQL member version/replay/concurrency/immutable-audit/rollback/opposite-admin lock barrier fixture and actual Chromium member mutation/lost-response/stale-version controls wired into the retained stack gates. Python compilation, JS syntax and diff checks PASS.'
+  limitation: 'Host has no usable Linux Docker engine. The mandatory hosted owned-stack job supplied the accepted actual runtime proof at a452; this does not execute customer ERP or production deployment.'
+ui_denial_checkpoint:
+  completed: 'Only own known conflict codes select localized messages; unknown/prototype-property codes use bounded generic text. New workspace mutation403 control proves fresh role reconciliation removes the entire private member panel/navigation.'
+  local: '29 focused member-panel/workspace controls and type-check PASS, including4 additional denial controls. Integration98 Build37743265803 terminal red in actual-stack job113198700889 at secondary-user token401; all retained SQL/worker/restart gates passed before new fixture. Governance37743265637 PASS.'
+integration_fix:
+  cause: 'New fixture used the BFF fallback client name aioffice-local-cli; shipping owned bootstrap/Compose explicitly uses aioffice-local. Corrected fixture to the tracked owned client; no identity or production config change.'
+  verification: 'Python compilation/JS syntax/diff checks PASS. New member SQL/Chromium scenarios and exact current CI/full review still required.'
+runtime_checkpoint:
+  head: d46b2844c6d18ab60c1d5f6e678e2d68ecbf1299
+  build: 37743988293
+  governance: 37743988263
+  actual_stack: 113201022413
+  sql_result: 'New actual SQL versions/historical replay/concurrent duplicates/stale operations, column/module/trigger/impersonation audit denial, atomic rollback and two-admin barrier/fingerprints all PASS.'
+  remaining: 'Chromium terminal red at broad stale-version stage. Retain assertions, require the real409 response and DOM settlement, add fixed substages to pinpoint any remaining mismatch.'
+  web_failure: 'Pre-existing randomized tag test could replace suffix with identical AA. Fixed by flipping one decoded GCM authentication byte and asserting ciphertext differs;54 focused session tests/type-check PASS. No cryptographic behavior change.'
+  fixture_freshness: 'New member race uses the owner token actually issued by the retained restart/sign-in, avoiding dependence on the pre-restart token lifespan.'
+
+accepted_implementation:
+  head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
+  build: 37744957617
+  governance: 37744957590
+  actual_stack: 113204131935
+  required_quality: 113206080516
+  browser_artifact: 11534529739
+  browser_artifact_bytes: 68657
+  hosted_web_tests: 906
+  actual_redis_tests: 20
+  hosted_dotnet_tests: 1014
+  review: 'Independent full frozen implementation/security/runtime review approved a452.53 focused backend controls,193 distinct web controls and separate complete lost-response/stale/reload probe passed. Sanitized screenshot independently inspected.'
+  sql: 'Actual scoped versions and historical replay, concurrent duplicate/different operations, direct/column/module/trigger/impersonation immutable-audit fences, atomic rollback, two-admin SQL lock barrier and identity/role/task fingerprints PASS.'
+  chromium: 'Actual suspend/reactivate, committed lost-response stable replay without duplicate audit, expectedVersion5 conflict409/private clear/reload, role and issued SID preservation, cross-company/role/logout denial and retained lifecycle PASS.'
+  delivery_remaining: 'Final evidence-only HEAD gates/delta review, exact-head merge and exact main CI. Current GitHub HEAD and HANDOFF supersede this verified implementation snapshot.'
+

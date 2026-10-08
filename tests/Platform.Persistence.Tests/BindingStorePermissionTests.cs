@@ -58,6 +58,8 @@ public sealed class BindingStorePermissionTests
     {
         private ConnectionState state;
         public object? Result { get; set; } = result;
+        public Func<string, object?>? ResultForCommand { get; set; }
+        public List<string> Commands { get; } = [];
         public Exception? Fault { get; set; }
         public int Calls { get; set; }
         public DbTransaction? LastTransaction { get; set; }
@@ -89,7 +91,7 @@ public sealed class BindingStorePermissionTests
         public override void Cancel() { }
         public override void Prepare() { }
         public override int ExecuteNonQuery() => throw new NotSupportedException();
-        public override object? ExecuteScalar() { connection.Calls++; connection.LastTransaction = DbTransaction; if (connection.Fault is not null) throw connection.Fault; return connection.Result; }
+        public override object? ExecuteScalar() { connection.Calls++; connection.Commands.Add(CommandText); connection.LastTransaction = DbTransaction; if (connection.Fault is not null) throw connection.Fault; return connection.ResultForCommand is null ? connection.Result : connection.ResultForCommand(CommandText); }
         public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult(ExecuteScalar()); }
         protected override DbParameter CreateDbParameter() => throw new NotSupportedException();
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotSupportedException();

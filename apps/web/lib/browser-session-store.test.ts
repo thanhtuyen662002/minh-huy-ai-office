@@ -85,7 +85,11 @@ it("encrypts private data and authenticates it against binding, SID and configur
   expect(await store.read(`${Buffer.alloc(32, 9).toString("base64url")}.${handle}`, sid)).toBeNull();
   const foreign = createBrowserSessionCoordinator(evaluate, { ...settings, transactionKey: Buffer.alloc(32, 9).toString("base64url") });
   expect(await foreign.read(binding, sid)).toBeNull();
-  encrypted = String(encrypted).slice(0, -2) + "AA";
+  const originalEncrypted = String(encrypted), pieces = originalEncrypted.split(".");
+  const tamperedTag = Buffer.from(pieces[3], "base64url");
+  tamperedTag[0] ^= 1; // Always change an authenticated byte; suffix replacement can be identical.
+  pieces[3] = tamperedTag.toString("base64url"); encrypted = pieces.join(".");
+  expect(encrypted).not.toBe(originalEncrypted);
   expect(await store.read(binding, sid)).toBeNull();
 });
 it("does not return private store errors or fall back to a process session", async () => {

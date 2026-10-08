@@ -152,12 +152,34 @@ else
 
 if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString))
 {
+    app.MapCompanyMembershipAccess();
     app.MapGet("/api/company/members", async (IRequestAuthorizationContextAccessor accessor,
-        [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, CancellationToken cancellationToken) =>
+        [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, [FromQuery] bool? includeAccessVersion, CancellationToken cancellationToken) =>
     {
         var context = AuthorizedContext(accessor);
         if (context is null) return (IResult)Results.Forbid();
-        try { return Results.Ok(await directory.ListAsync(context, offset ?? 0, limit ?? 50, cancellationToken)); }
+        try
+        {
+            var page = await directory.ListAsync(context, offset ?? 0, limit ?? 50, cancellationToken);
+            if (includeAccessVersion == true)
+                return Results.Ok(new
+                {
+                    page.CompanyId,
+                    Items = page.Items.Select(member => new
+                    {
+                        member.UserId,
+                        member.DisplayName,
+                        member.UserActive,
+                        member.MembershipActive,
+                        member.Roles,
+                        member.MembershipVersion
+                    }),
+                    page.Offset,
+                    page.Limit,
+                    page.HasMore
+                });
+            return Results.Ok(page);
+        }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (ArgumentOutOfRangeException) { return Results.BadRequest(new { error = "Invalid member pagination." }); }
         catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
@@ -216,6 +238,7 @@ else
     app.MapPost("/api/tasks", PilotTaskUnavailable);
     app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
     app.MapGet("/api/company/members", () => Results.Json(new { error = "Company directory is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
+    app.MapPost("/api/company/members/{userId:guid}/access", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
 }
 
 var dataSources = app.MapGroup("/api/data-sources");
