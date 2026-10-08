@@ -30,4 +30,12 @@ implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
   local: '30 new service/API controls and50 focused access/directory tests PASS after opt-in legacy-compatible assertion. Full611 Persistence PASS; model has no pending migration changes; full changed-code format and diff-check PASS. Real SQL/race/UI acceptance remains.'
   remaining: 'BFF/UI and actual SQL/Chromium acceptance, independent security review and current-head/main CI. API foundation is incomplete262, not a product completion claim.'
+security_checkpoint:
+  prior_head: c6f428707e5263df029f8187b4000043408480fa
+  prior_build: 37718397774
+  prior_governance: 37718397806
+  failure: '.NET job113120136391 failed CHARSET on the new migration; governance and retained actual SQL/Chromium gates passed. Removed UTF-8 BOM in the same PR.'
+  fix: 'Every membership mutation now repeats the global effective SQL rights proof before append-only table proof, including immediately before save. Synthetic negative controls prove indirect escalation denial and repeat proof on the pinned transaction.'
+  local: '7 audit/global permission controls PASS; changed security/migration files formatted. BFF/UI work remains under construction and is not included in this security checkpoint.'
+  next: 'Close current security checkpoint CI; finish BFF/UI controls, then real SQL race/audit/indirect escalation and actual Chromium member mutation.'
 

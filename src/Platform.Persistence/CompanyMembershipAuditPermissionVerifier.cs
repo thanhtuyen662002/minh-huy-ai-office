@@ -23,6 +23,10 @@ public sealed class CompanyMembershipAuditPermissionVerifier(PlatformDbContext d
 
     // Reuse the global effective-rights proof (including impersonation, column
     // escalation, executable ownership chains and triggers) before this proof.
-    public Task RequireAppendOnlyAsync(CancellationToken cancellationToken = default) =>
-        new BindingStorePermissionVerifier(database).RequireProofAsync(VerificationSql, cancellationToken);
+    public async Task RequireAppendOnlyAsync(CancellationToken cancellationToken = default)
+    {
+        var verifier = new BindingStorePermissionVerifier(database);
+        await verifier.RequireReadOnlyAsync(cancellationToken);
+        await verifier.RequireProofAsync(VerificationSql, cancellationToken);
+    }
 }
