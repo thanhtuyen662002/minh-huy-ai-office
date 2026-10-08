@@ -34,6 +34,8 @@ public sealed class CompanyRecord
 
 public sealed class CompanyMembershipRecord
 {
+    public long Version { get; set; } = 1;
+
     public Guid TenantId { get; set; }
 
     public Guid CompanyId { get; set; }

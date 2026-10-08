@@ -2,10 +2,10 @@ workstream: backend
 role: 'Backend Platform; root-owned member API/BFF/UI acceptance slice'
 status: active-development
 current_issue: 262
-current_pr: null
+current_pr: 263
 current_branch: codex/262-membership-access
 head: 39e668ebebe1f8bd19803199b8db393f12a4edb6
-state: claimed
+state: in_progress
 lease_owner: root-backend-262
 lease_heartbeat_at: '2026-10-08'
 last_checkpoint_at: '2026-10-08'
@@ -24,4 +24,10 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Open the Draft lease for262, then implement versioned membership toggle/audit/API/BFF/UI with actual SQL and browser acceptance. Preserve roles/global identity/durable work; invitations/role administration/full233 remain.'
+next_action: 'Close first backend checkpoint CI on263, then implement BFF/UI and actual SQL concurrent/idempotent/immutable-audit controls plus Chromium activation proof. Preserve roles/global identity/durable work; invitations/role administration/full233 remain.'
+
+implementation_checkpoint:
+  completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
+  local: '30 new service/API controls and50 focused access/directory tests PASS after opt-in legacy-compatible assertion. Full611 Persistence PASS; model has no pending migration changes; full changed-code format and diff-check PASS. Real SQL/race/UI acceptance remains.'
+  remaining: 'BFF/UI and actual SQL/Chromium acceptance, independent security review and current-head/main CI. API foundation is incomplete262, not a product completion claim.'
+

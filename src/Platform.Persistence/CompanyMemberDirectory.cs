@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text.Json.Serialization;
 using MinhHuy.AIOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
-public sealed record CompanyMemberView(Guid UserId, string DisplayName, bool UserActive, bool MembershipActive, IReadOnlyList<string> Roles);
+public sealed record CompanyMemberView(Guid UserId, string DisplayName, bool UserActive, bool MembershipActive, IReadOnlyList<string> Roles,
+    [property: JsonIgnore] string MembershipVersion = "1");
 public sealed record CompanyMemberPage(Guid CompanyId, IReadOnlyList<CompanyMemberView> Items, int Offset, int Limit, bool HasMore);
 
 public sealed class CompanyMemberDirectory(PlatformDbContext database, IAuthorizationDirectory directory)
@@ -17,7 +20,7 @@ public sealed class CompanyMemberDirectory(PlatformDbContext database, IAuthoriz
             .Where(member => member.TenantId == authority.TenantId && member.CompanyId == authority.CompanyId)
             .Join(database.Users.AsNoTracking().Where(user => user.TenantId == authority.TenantId),
                 member => new { member.TenantId, Id = member.UserId }, user => new { user.TenantId, user.Id },
-                (member, user) => new { UserId = user.Id, user.DisplayName, UserActive = user.IsActive, MembershipActive = member.IsActive })
+                (member, user) => new { UserId = user.Id, user.DisplayName, UserActive = user.IsActive, MembershipActive = member.IsActive, member.Version })
             .OrderBy(row => row.UserId).Skip(offset).Take(limit + 1).ToArrayAsync(cancellationToken);
         var members = rows.Take(limit).ToArray();
         var userIds = members.Select(member => member.UserId).ToArray();
@@ -32,7 +35,7 @@ public sealed class CompanyMemberDirectory(PlatformDbContext database, IAuthoriz
         var roleMap = roles.GroupBy(role => role.UserId).ToDictionary(group => group.Key,
             group => (IReadOnlyList<string>)group.Select(role => role.RoleKey).Order(StringComparer.Ordinal).ToArray());
         var items = members.Select(member => new CompanyMemberView(member.UserId, member.DisplayName,
-            member.UserActive, member.MembershipActive, roleMap.GetValueOrDefault(member.UserId) ?? [])).ToArray();
+            member.UserActive, member.MembershipActive, roleMap.GetValueOrDefault(member.UserId) ?? [], member.Version.ToString(CultureInfo.InvariantCulture))).ToArray();
 
         // Revocation between the initial authorization and the data query must
         // not turn this response into a retained privileged directory snapshot.
