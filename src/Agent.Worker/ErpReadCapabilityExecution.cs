@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
 using MinhHuy.AiOffice.Shared.Contracts.Erp;
 using MinhHuy.AIOffice.Platform.Persistence;
 
@@ -105,7 +106,7 @@ public sealed record ErpReadCapabilityDefinition(
 
     private static readonly Regex ForbiddenSqlToken =
         new(
-            @"\b(INSERT|UPDATE|DELETE|MERGE|EXEC|EXECUTE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE|DENY|DBCC|BACKUP|RESTORE|BULK|OPENROWSET|OPENDATASOURCE|INTO)\b",
+            @"\b(INSERT|UPDATE|DELETE|MERGE|EXEC|EXECUTE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE|DENY|DBCC|BACKUP|RESTORE|BULK|OPENQUERY|OPENROWSET|OPENDATASOURCE|INTO)\b",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
     public ErpReadCapabilityDefinition Validate()
@@ -196,6 +197,38 @@ public sealed record ErpReadCapabilityDefinition(
             throw new InvalidOperationException(
                 "ERP read capability SQL contains a forbidden side-effecting or data-export token.");
         }
+
+        // The connection proof qualifies this database. Trusted code still must
+        // not reach unqualified external functions/sequences via ad-hoc SQL;
+        // persisted dependency catalogs cannot see those references.
+        using var input = new StringReader(statement);
+        var parsed = new TSql160Parser(initialQuotedIdentifiers: true).Parse(input, out var errors);
+        if (errors.Count != 0 || parsed is not TSqlScript { Batches.Count: 1 } script
+            || script.Batches[0].Statements.Count != 1
+            || script.Batches[0].Statements[0] is not SelectStatement)
+            throw InvalidProfileSql();
+        parsed.Accept(new CurrentDatabaseReadVisitor());
+    }
+
+    private static InvalidOperationException InvalidProfileSql() => new(
+        "ERP read capability SQL is outside the qualified current-database SELECT profile.");
+
+    private sealed class CurrentDatabaseReadVisitor : TSqlFragmentVisitor
+    {
+        public override void ExplicitVisit(SchemaObjectName node)
+        {
+            if (node.Identifiers.Count > 2) throw InvalidProfileSql();
+            base.ExplicitVisit(node);
+        }
+
+        public override void ExplicitVisit(MultiPartIdentifierCallTarget node)
+        {
+            if (node.MultiPartIdentifier.Identifiers.Count > 1) throw InvalidProfileSql();
+            base.ExplicitVisit(node);
+        }
+
+        // Even a current-database sequence changes persistent state.
+        public override void ExplicitVisit(NextValueForExpression node) => throw InvalidProfileSql();
     }
 }
 
@@ -259,16 +292,20 @@ public sealed class SqlServerErpReadCapabilityExecutor(
         await using var connection = connectionFactory.Create(connectionString);
         await connection.OpenAsync(cancellationToken);
 
-        await using var command = connection.CreateCommand();
-        ConfigureCommand(command, definition, request);
+        return await ErpReadOnlyConnectionVerifier.ReadAsync(connection, async () =>
+        {
 
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        return await MaterializeAsync(
-                request,
-                definition,
-                reader,
-                cancellationToken)
-            .ConfigureAwait(false);
+            await using var command = connection.CreateCommand();
+            ConfigureCommand(command, definition, request);
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            return await MaterializeAsync(
+                    request,
+                    definition,
+                    reader,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     public static void ConfigureCommand(

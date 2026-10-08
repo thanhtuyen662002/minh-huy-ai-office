@@ -159,7 +159,7 @@ public sealed class PilotDataSourceProbeExecutor(
             await new ScopedDataSourceSecretResolver(bindings, secretResolver).UseAsync(authority, request.DataSourceId,
                 readOnly: true, async (connectionString, token) =>
                 {
-                    await connectionProbe.ProbeAsync(connectionString, token);
+                    await connectionProbe.ProbeAsync(connectionString, requireReadOnly: true, token);
                     return true;
                 }, cancellationToken, taskId: envelope.TaskId);
         }

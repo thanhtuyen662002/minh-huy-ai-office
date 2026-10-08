@@ -70,11 +70,18 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
             INNER JOIN sys.schemas AS s ON s.schema_id = o.schema_id
             WHERE o.is_ms_shipped = 0 AND i.name IS NOT NULL AND i.is_hypothetical = 0
         )
-        SELECT object_kind, schema_name, object_name, definition_text FROM schema_objects
+        -- Catalog descriptions, identifiers and module text can have different
+        -- implicit collations. Unify the projection without changing its text.
+        SELECT object_kind COLLATE DATABASE_DEFAULT AS object_kind,
+               schema_name COLLATE DATABASE_DEFAULT AS schema_name,
+               object_name COLLATE DATABASE_DEFAULT AS object_name,
+               definition_text COLLATE DATABASE_DEFAULT AS definition_text FROM schema_objects
         UNION ALL
-        SELECT object_kind, schema_name, object_name, definition_text FROM foreign_keys
+        SELECT object_kind COLLATE DATABASE_DEFAULT, schema_name COLLATE DATABASE_DEFAULT,
+               object_name COLLATE DATABASE_DEFAULT, definition_text COLLATE DATABASE_DEFAULT FROM foreign_keys
         UNION ALL
-        SELECT object_kind, schema_name, object_name, definition_text FROM indexes
+        SELECT object_kind COLLATE DATABASE_DEFAULT, schema_name COLLATE DATABASE_DEFAULT,
+               object_name COLLATE DATABASE_DEFAULT, definition_text COLLATE DATABASE_DEFAULT FROM indexes
         ORDER BY object_kind, schema_name, object_name;
         """;
 
@@ -92,18 +99,22 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
 
         await using var connection = connectionFactory.Create(connectionString);
         await connection.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = DiscoverySql;
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var rows = new List<(string Kind, string Schema, string Name, string Definition)>();
-        while (await reader.ReadAsync(cancellationToken))
+        return await ErpReadOnlyConnectionVerifier.ReadAsync(connection, async () =>
         {
-            rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2),
-                reader.IsDBNull(3) ? string.Empty : reader.GetString(3)));
-        }
+            await using var command = connection.CreateCommand();
+            command.CommandText = DiscoverySql;
+            command.CommandTimeout = ErpReadOnlyConnectionVerifier.CommandTimeoutSeconds;
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        return Materialize(authority, rows);
+            var rows = new List<(string Kind, string Schema, string Name, string Definition)>();
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.IsDBNull(3) ? string.Empty : reader.GetString(3)));
+            }
+
+            return Materialize(authority, rows);
+        }, cancellationToken);
     }
 
     internal static ErpSchemaSnapshot Materialize(

@@ -113,42 +113,46 @@ public sealed class SqlServerPilotErpEvidenceReader(
         await using var connection = connectionFactory.Create(connectionString);
         await connection.OpenAsync(cancellationToken);
 
-        await using var command = connection.CreateCommand();
-        command.CommandText = EvidenceSql;
-        command.CommandTimeout = CommandTimeoutSeconds;
-        var maxTables = command.CreateParameter();
-        maxTables.ParameterName = "@maxTables";
-        maxTables.Value = PilotErpEvidence.MaximumTables;
-        command.Parameters.Add(maxTables);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
+        return await ErpReadOnlyConnectionVerifier.ReadAsync(connection, async () =>
         {
-            throw new InvalidOperationException("ERP evidence summary result is missing.");
-        }
 
-        var databaseName = reader.IsDBNull(0)
-            ? throw new InvalidOperationException("ERP evidence database name is missing.")
-            : reader.GetString(0);
-        var tableCount = reader.GetInt64(1);
+            await using var command = connection.CreateCommand();
+            command.CommandText = EvidenceSql;
+            command.CommandTimeout = CommandTimeoutSeconds;
+            var maxTables = command.CreateParameter();
+            maxTables.ParameterName = "@maxTables";
+            maxTables.Value = PilotErpEvidence.MaximumTables;
+            command.Parameters.Add(maxTables);
 
-        if (!await reader.NextResultAsync(cancellationToken))
-        {
-            throw new InvalidOperationException("ERP evidence table result is missing.");
-        }
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                throw new InvalidOperationException("ERP evidence summary result is missing.");
+            }
 
-        var tables = new List<PilotErpTableEvidence>(PilotErpEvidence.MaximumTables);
-        while (tables.Count < PilotErpEvidence.MaximumTables
-               && await reader.ReadAsync(cancellationToken))
-        {
-            tables.Add(new PilotErpTableEvidence(
-                reader.GetString(0),
-                reader.GetString(1),
-                reader.GetInt64(2)));
-        }
+            var databaseName = reader.IsDBNull(0)
+                ? throw new InvalidOperationException("ERP evidence database name is missing.")
+                : reader.GetString(0);
+            var tableCount = reader.GetInt64(1);
 
-        var evidence = new PilotErpEvidence(databaseName, tableCount, tables);
-        evidence.Validate();
-        return evidence;
+            if (!await reader.NextResultAsync(cancellationToken))
+            {
+                throw new InvalidOperationException("ERP evidence table result is missing.");
+            }
+
+            var tables = new List<PilotErpTableEvidence>(PilotErpEvidence.MaximumTables);
+            while (tables.Count < PilotErpEvidence.MaximumTables
+                   && await reader.ReadAsync(cancellationToken))
+            {
+                tables.Add(new PilotErpTableEvidence(
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetInt64(2)));
+            }
+
+            var evidence = new PilotErpEvidence(databaseName, tableCount, tables);
+            evidence.Validate();
+            return evidence;
+        }, cancellationToken);
     }
 }

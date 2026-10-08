@@ -679,6 +679,8 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
     private sealed class RecordingConnectionProbe : IDataSourceConnectionProbe
     {
         public int Calls { get; private set; }
+        public ValueTask ProbeAsync(string connectionString, bool requireReadOnly, CancellationToken cancellationToken = default)
+            => ProbeAsync(connectionString, cancellationToken);
         public ValueTask ProbeAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             Assert.Equal("synthetic-fixture-value", connectionString);

@@ -112,6 +112,20 @@ it("invalidates chat and ERP evidence on a connection-test 401", async () => {
   privateGone();
 });
 
+it.each(["read_only_unqualified", "__proto__"])("shows bounded credential guidance for connection code %s", async (code) => {
+  fixture((url) => url.includes("/connection-test?")
+    ? Response.json({ code, succeeded: false, message: "PRIVATE-PASSWORD-ENDPOINT" }, { status: 400 }) : undefined);
+  const { container } = render(workspace());
+  await ready();
+  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("article button")!);
+  await screen.findByText(code === "read_only_unqualified"
+    ? "Cần tài khoản ERP chỉ đọc và quyền xem metadata phù hợp. Liên hệ quản trị viên để cấu hình."
+    : "Kết nối thất bại");
+  expect(screen.queryByText("PRIVATE-PASSWORD-ENDPOINT")).toBeNull();
+  expect(screen.queryByText("Kết nối tốt")).toBeNull();
+});
+
 it("cancels polling timers and aborts outstanding requests on unmount under StrictMode", async () => {
   const fetcher = fixture();
   const { container, unmount } = render(<StrictMode>{workspace()}</StrictMode>);
