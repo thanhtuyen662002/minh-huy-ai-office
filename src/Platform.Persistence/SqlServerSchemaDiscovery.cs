@@ -92,18 +92,22 @@ public sealed class SqlServerSchemaDiscovery(ISqlConnectionFactory connectionFac
 
         await using var connection = connectionFactory.Create(connectionString);
         await connection.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = DiscoverySql;
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var rows = new List<(string Kind, string Schema, string Name, string Definition)>();
-        while (await reader.ReadAsync(cancellationToken))
+        return await ErpReadOnlyConnectionVerifier.ReadAsync(connection, async () =>
         {
-            rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2),
-                reader.IsDBNull(3) ? string.Empty : reader.GetString(3)));
-        }
+            await using var command = connection.CreateCommand();
+            command.CommandText = DiscoverySql;
+            command.CommandTimeout = ErpReadOnlyConnectionVerifier.CommandTimeoutSeconds;
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        return Materialize(authority, rows);
+            var rows = new List<(string Kind, string Schema, string Name, string Definition)>();
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.IsDBNull(3) ? string.Empty : reader.GetString(3)));
+            }
+
+            return Materialize(authority, rows);
+        }, cancellationToken);
     }
 
     internal static ErpSchemaSnapshot Materialize(

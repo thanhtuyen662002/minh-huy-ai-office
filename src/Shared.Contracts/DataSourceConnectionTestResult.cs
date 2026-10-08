@@ -9,6 +9,7 @@ public static class DataSourceConnectionTestCodes
     public const string InvalidConfiguration = "invalid_configuration";
     public const string SecretUnavailable = "secret_unavailable";
     public const string ConnectionFailed = "connection_failed";
+    public const string ReadOnlyUnqualified = "read_only_unqualified";
 }
 
 public sealed record DataSourceConnectionTestResult(
@@ -36,4 +37,8 @@ public sealed record DataSourceConnectionTestResult(
 
     public static DataSourceConnectionTestResult ConnectionFailed() =>
         new(false, DataSourceConnectionTestCodes.ConnectionFailed, "Connection test failed.");
+
+    public static DataSourceConnectionTestResult ReadOnlyUnqualified() =>
+        new(false, DataSourceConnectionTestCodes.ReadOnlyUnqualified,
+            "Use a dedicated read-only ERP credential with the required metadata visibility and qualified read profile.");
 }

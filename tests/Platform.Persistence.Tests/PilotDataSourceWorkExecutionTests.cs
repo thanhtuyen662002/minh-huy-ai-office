@@ -559,6 +559,11 @@ public sealed class PilotDataSourceWorkExecutionTests
     private sealed class RecordingProbe(Func<Task>? after = null) : IDataSourceConnectionProbe
     {
         public List<string> Connections { get; } = [];
+        public ValueTask ProbeAsync(string connectionString, bool requireReadOnly, CancellationToken cancellationToken = default)
+        {
+            Assert.True(requireReadOnly);
+            return ProbeAsync(connectionString, cancellationToken);
+        }
 
         public async ValueTask ProbeAsync(string connectionString, CancellationToken cancellationToken = default)
         {

@@ -349,7 +349,9 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
         : null;
       setConnectionState((current) => ({
         ...current,
-        [source.id]: response.ok && code === "success" ? "Kết nối tốt" : "Kết nối thất bại",
+        [source.id]: response.ok && code === "success" ? "Kết nối tốt"
+          : code === "read_only_unqualified" ? "Cần tài khoản ERP chỉ đọc và quyền xem metadata phù hợp. Liên hệ quản trị viên để cấu hình."
+            : "Kết nối thất bại",
       }));
     } catch {
       if (!isCurrent(generation)) return;

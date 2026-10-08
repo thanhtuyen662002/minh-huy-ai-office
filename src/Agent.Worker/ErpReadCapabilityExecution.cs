@@ -259,16 +259,20 @@ public sealed class SqlServerErpReadCapabilityExecutor(
         await using var connection = connectionFactory.Create(connectionString);
         await connection.OpenAsync(cancellationToken);
 
-        await using var command = connection.CreateCommand();
-        ConfigureCommand(command, definition, request);
+        return await ErpReadOnlyConnectionVerifier.ReadAsync(connection, async () =>
+        {
 
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        return await MaterializeAsync(
-                request,
-                definition,
-                reader,
-                cancellationToken)
-            .ConfigureAwait(false);
+            await using var command = connection.CreateCommand();
+            ConfigureCommand(command, definition, request);
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            return await MaterializeAsync(
+                    request,
+                    definition,
+                    reader,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     public static void ConfigureCommand(

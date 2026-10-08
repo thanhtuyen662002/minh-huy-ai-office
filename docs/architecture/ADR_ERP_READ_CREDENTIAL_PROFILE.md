@@ -1,0 +1,19 @@
+# Effective credentials for ERP reads
+
+Issue #264 / PR #265, under full product #233. Implementation checkpoint; actual adversarial SQL acceptance and independent security review remain required.
+
+Source `AllowRead` is platform policy. Successfully opening a connection establishes connectivity. Neither proves the SQL identity is unable to mutate persistent ERP data. Every independent ERP read session therefore runs `ErpReadOnlyConnectionVerifier` using its actual open connection and current security context. It accepts only an explicit integer proof, bounds its command timeout, preserves cancellation and returns a fixed nonsecret denial. Qualification is never cached by connection string, source, prior probe or pool.
+
+The initial supported profile uses ad-hoc reads on SQL Server with full server `VIEW ANY DEFINITION` and current-database `VIEW DEFINITION` metadata visibility. These are metadata permissions; they do not replace read permission on selected data. Effective server/database/schema/object rights must fit a conservative read/metadata allowlist. Impersonation, role administration, ownership, persistent DML/DDL and column UPDATE rights are denied. Missing/hidden metadata or unsupported results fail closed. Private SQL diagnostics and definitions are never returned by the proof.
+
+This profile refuses user functions, including functions reachable through views or computed expressions, and synonyms hiding external targets. Executable procedures or modules accessible to the reader are denied. Supporting a legacy inventory function requires a separate reviewed dependency graph and versioned capability profile. This checkpoint does not declare Medcom/Novo's inventory functions qualified, and it does not register customer business adapters. The private customer mapping remains outside public Git.
+
+Catalog evidence, typed capability execution and schema discovery require a proof before querying and another after the reader is disposed, before evidence is returned. A permission change during materialization discards the result. The read-only worker probe also explicitly requests qualification. Credential denial is an authorization failure in the worker and prevents a success checkpoint or provider call.
+
+Read-only source connection tests request this profile from fresh server-owned source flags and reject policy changes while resolving/probing. Write-enabled source tests retain connectivity-only semantics. Legacy probe implementations cannot silently satisfy the new read-only request. API results and the browser provide bounded instructions to configure a dedicated read-only credential and appropriate metadata access without displaying upstream diagnostics.
+
+Owned bootstrap grants the sample reader's metadata permissions only when initially creating the login/user. Repeating bootstrap does not repair or re-grant revoked permissions. No customer privileges are changed by this implementation.
+
+Permission semantics were checked against primary documentation: [effective permissions](https://learn.microsoft.com/en-us/sql/relational-databases/system-functions/sys-fn-my-permissions-transact-sql), [metadata visibility](https://learn.microsoft.com/en-us/sql/relational-databases/security/metadata-visibility-configuration), [column GRANT versus table DENY](https://learn.microsoft.com/en-us/sql/t-sql/statements/deny-object-permissions-transact-sql), and [module execution/ownership chaining](https://learn.microsoft.com/en-us/sql/t-sql/statements/execute-as-clause-transact-sql).
+
+Definition of done includes actual owned SQL positive/negative controls, change-between-sessions and mid-read discard evidence, independent frozen security review, exact PR/main gates and durable HANDOFF. Source/tests alone do not prove those controls passed. Customer read-only credentials, schema/version qualification, inventory and stock-movement reconciliation, production deployment and full #233 remain incomplete.

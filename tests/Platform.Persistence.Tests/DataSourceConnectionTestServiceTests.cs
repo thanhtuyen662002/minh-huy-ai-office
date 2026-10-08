@@ -36,8 +36,56 @@ public sealed class DataSourceConnectionTestServiceTests
         Assert.Equal(DataSourceConnectionTestCodes.Success, result.Code);
         Assert.Equal("company-erp-production", resolver.LastReference?.Resource);
         Assert.Equal("opaque-runtime-connection-material", probe.LastConnectionString);
+        Assert.True(probe.RequiredReadOnly);
         Assert.DoesNotContain("opaque-runtime-connection-material", result.Message);
         Assert.DoesNotContain("secretref://", result.Message);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public async Task Write_enabled_source_preserves_connectivity_only_policy(bool allowRead, bool allowWrite)
+    {
+        var tenant = Guid.NewGuid(); var company = Guid.NewGuid(); var user = Guid.NewGuid(); var source = Guid.NewGuid();
+        await using var context = CreateContext();
+        await SeedAuthorizationAsync(context, tenant, company, user);
+        var row = CreateDataSource(tenant, company, source, "secretref://env/company-erp-production");
+        row.AllowRead = allowRead; row.AllowWrite = allowWrite;
+        context.DataSources.Add(row); await context.SaveChangesAsync();
+        var probe = new RecordingProbe();
+        var result = await CreateService(context, new("private synthetic"), probe)
+            .TestAsync(AuthorizationContext.Create(tenant, company, user), source);
+        Assert.True(result.Succeeded);
+        Assert.False(probe.RequiredReadOnly);
+    }
+
+    [Fact]
+    public async Task Source_policy_change_during_connectivity_probe_cannot_report_read_only_success()
+    {
+        var tenant = Guid.NewGuid(); var company = Guid.NewGuid(); var user = Guid.NewGuid(); var source = Guid.NewGuid();
+        await using var context = CreateContext(); await SeedAuthorizationAsync(context, tenant, company, user);
+        var row = CreateDataSource(tenant, company, source, "secretref://env/company-erp-production");
+        row.AllowWrite = true;
+        context.DataSources.Add(row); await context.SaveChangesAsync();
+        var probe = new RecordingProbe(after: async () => { row.AllowWrite = false; await context.SaveChangesAsync(); });
+        var result = await CreateService(context, new("private synthetic"), probe)
+            .TestAsync(AuthorizationContext.Create(tenant, company, user), source);
+        Assert.False(result.Succeeded); Assert.Equal(DataSourceConnectionTestCodes.NotAuthorized, result.Code);
+        Assert.False(probe.RequiredReadOnly);
+    }
+
+    [Fact]
+    public async Task Unqualified_read_credentials_have_actionable_bounded_result_without_private_detail()
+    {
+        var tenant = Guid.NewGuid(); var company = Guid.NewGuid(); var user = Guid.NewGuid(); var source = Guid.NewGuid();
+        await using var context = CreateContext(); await SeedAuthorizationAsync(context, tenant, company, user);
+        context.DataSources.Add(CreateDataSource(tenant, company, source, "secretref://env/company-erp-production"));
+        await context.SaveChangesAsync();
+        var probe = new RecordingProbe(unqualified: true);
+        var result = await CreateService(context, new("private password endpoint"), probe)
+            .TestAsync(AuthorizationContext.Create(tenant, company, user), source);
+        Assert.False(result.Succeeded); Assert.Equal(DataSourceConnectionTestCodes.ReadOnlyUnqualified, result.Code);
+        Assert.Contains("dedicated read-only", result.Message); Assert.DoesNotContain("password", result.Message);
     }
 
     [Fact]
@@ -345,9 +393,18 @@ public sealed class DataSourceConnectionTestServiceTests
         }
     }
 
-    private sealed class RecordingProbe(string? failureDetail = null) : IDataSourceConnectionProbe
+    private sealed class RecordingProbe(string? failureDetail = null, Func<Task>? after = null, bool unqualified = false) : IDataSourceConnectionProbe
     {
         public string? LastConnectionString { get; private set; }
+        public bool? RequiredReadOnly { get; private set; }
+
+        public async ValueTask ProbeAsync(string connectionString, bool requireReadOnly, CancellationToken cancellationToken = default)
+        {
+            RequiredReadOnly = requireReadOnly;
+            if (unqualified) throw ErpReadOnlyConnectionVerifier.Unqualified();
+            await ProbeAsync(connectionString, cancellationToken);
+            if (after is not null) await after();
+        }
 
         public ValueTask ProbeAsync(
             string connectionString,

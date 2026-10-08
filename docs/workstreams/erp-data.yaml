@@ -2,10 +2,10 @@ workstream: erp-data
 role: "ERP / Data"
 status: active-development
 current_issue: 264
-current_pr: null
+current_pr: 265
 current_branch: codex/264-erp-readonly-qualification
 head: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
-state: claimed
+state: in_progress
 lease_owner: root-erp-264
 lease_heartbeat_at: '2026-10-08'
 last_checkpoint_at: '2026-10-08'
@@ -32,3 +32,8 @@ verification:
   base_actual_stack: 113210254492
   result: 'Reviewed member-access262/263 merged at0d03c529 with exact PR/main gates PASS. ERP probes currently only open; subsequent readers have independent sessions. Source AllowRead is not a credential permission proof.'
 next_action: 'Implement264 effective read-only qualification on each actual ERP read connection, initial/final proof and explicit source-policy probe mode. Add meaningful denial/order/redaction and actual owned SQL adversarial controls; frozen review and exact PR/main closure required. Medcom/Novo business credentials/qualified adapters/reconciliation remain; Santino deferred;233 active.'
+
+implementation_checkpoint:
+  completed: 'Conservative live effective-rights profile; exact open connection initial/final checks for catalog/capability/schema reads. Explicit qualified probe mode for read-only source tests and worker tasks; write-enabled connectivity preserved and policy race denied. Initial owned sample metadata grants preserve revoked rights on replay. Bounded API/browser credential guidance.'
+  local: '156 focused connection/service/API/worker/pipeline controls and full630 Persistence tests PASS.30 workspace lifecycle controls, type-check, changed C# formatting/YAML/diff checks PASS; build no warnings/errors. Actual owned SQL profile/adversarial acceptance has not yet executed; no customer rows/writes.'
+  remaining: 'Required actual SQL safe/unsafe and between-session/mid-read controls, retained runtime/current CI and independent full security review. This is not an accepted ERP adapter or completed264.'
