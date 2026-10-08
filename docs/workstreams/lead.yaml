@@ -4,8 +4,8 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 6e1734113175269ca6451664879727954deb9c0f
-state: in_progress
+head: 21d67981dbfd6b070e3030d03305429f76292671
+state: blocked
 lease_owner: lead
 lease_heartbeat_at: "2026-10-08"
 last_checkpoint_at: "2026-10-08"
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Close current installer239 integration exact-head Build/Governance/native artifact/actual Chromium gates, preserving approved main39e browser integration. Keep239 Draft until clean Windows/UAC/reboot/startup/retention/repair/signing acceptance. Continue full member administration and selected inventory/movements: both real ERP metadata captures succeeded, private versioned mapping is preliminary, dedicated read-only credentials and business proof remain. Santino deferred; full233 stays active."
+next_action: "Close239 documentation checkpoint gates; responsive21d exact CI/frozen review is green.239 retains its external clean Windows/signing dependency. Lead coordinates active262/263 member-access implementation and full233; Medcom/Novo business proof awaits dedicated read-only credentials."
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -175,7 +175,16 @@ branch_audit:
   additional_eligible_prs: 0
 
 installer_layout_checkpoint:
-  state: in_progress
+  state: done
+  head: 21d67981dbfd6b070e3030d03305429f76292671
+  build: 37716749021
+  governance: 37716749012
+  actual_stack: 113114854321
+  native_job: 113114854671
+  required_quality: 113116040384
+  unsigned_artifact: 11523499541
+  artifact_bytes: 48531144
+  review: 'Independent frozen21d20-case native192DPI review approved the responsive/integration/documentation delta; original P2 closed. Full hosted gates and clean pinned local verification PASS.'
   prior_head: 6e1734113175269ca6451664879727954deb9c0f
   prior_build: 37715495368
   prior_governance: 37715495383
@@ -183,4 +192,12 @@ installer_layout_checkpoint:
   prior_native_artifact: 11523339266
   defect: 'Independent192DPI review found license height/clipping and hscroll at720x570 despite green default-only gates.'
   local: 'Single table column inside scroll panel, measured multiline checkbox height and synchronized scroll extent.20 compiled offscreen cases across four states/default/minimum/expanded/minimum-again/14pt-minimum PASS; masked password and reveal reachable, minimum images visually inspected.76 core tests/formatting/real isolated ACL-shortcut-cache-diagnostic-failure-form PASS. No OS preparation/real Startup-folder changes.'
-  next: 'Close repaired exact-head hosted gates and frozen independent review. Keep239 Draft for clean Windows lifecycle/signing; continue unblocked full233 product engineering.'
+  next: 'Keep239 Draft for clean Windows lifecycle/signing. Continue262/263 member-access implementation; exact published documentation HEAD/gates belong in239 HANDOFF.'
+
+active_product_slice:
+  issue: 262
+  pr: 263
+  branch: codex/262-membership-access
+  base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  state: claimed
+  next: 'Root implements scoped member suspension/reactivation on the independent backend lease; preserves roles/global identity/tasks. Full233 remains active.'

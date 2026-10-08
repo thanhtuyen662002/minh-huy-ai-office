@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 6e1734113175269ca6451664879727954deb9c0f
+current_target_head: 21d67981dbfd6b070e3030d03305429f76292671
 last_verified_commit: 39e668ebebe1f8bd19803199b8db393f12a4edb6
 
 critical_paths:
   backend:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "PR255/member directory and PR257/exact opaque identity are merged with exact-head and main CI green;254/256 closed. Full member administration and production browser OIDC remain required."
+    issue: 262
+    pr: 263
+    branch: codex/262-membership-access
+    head: a00ec01c88d78064b92741097332a35e9aae5fe6
+    state: claimed
+    next: "Existing membership suspend/reactivate API/BFF/UI with optimistic version, immutable idempotent audit and real SQL last-admin/concurrency proof. Base main39e is approved/green; no invitation/role administration/full233 completion claim."
 
   frontend:
     issue: null
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Close current installer239 integration exact-head Build/Governance/native artifact/actual Chromium gates, preserving approved main39e browser integration. Keep239 Draft until clean Windows/UAC/reboot/startup/retention/repair/signing acceptance. Continue full member administration and selected inventory/movements: both real ERP metadata captures succeeded, private versioned mapping is preliminary, dedicated read-only credentials and business proof remain. Santino deferred; full233 stays active."
+next_action: "Installer responsive21d exact gates/frozen review PASS; keep239 Draft for clean Windows/UAC/reboot/startup/retention/repair/signing. Close its documentation checkpoint gates. Continue active262/263 member-access vertical slice from approved main39e. Medcom/Novo private mapping is preliminary; dedicated read-only credentials and business proof remain. Santino deferred; full233 stays active."
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
@@ -203,3 +203,14 @@ installer_browser_verified:
   artifact: 11497921154
   artifact_bytes: 48069731
   result: 'All gates PASS at browser-integrated installer head.6e Build37715495368/Governance37715495383 also PASS, but independent minimum-size review found a responsive defect. Repaired candidate has20 compiled minimum/resize/font cases and isolated native proof; current-head hosted gates/frozen review remain. Clean Windows lifecycle/signing remains required;239 stays Draft.'
+
+installer_responsive_verified:
+  head: 21d67981dbfd6b070e3030d03305429f76292671
+  build: 37716749021
+  governance: 37716749012
+  actual_stack: 113114854321
+  native_artifact_job: 113114854671
+  required_quality: 113116040384
+  unsigned_artifact: 11523499541
+  artifact_bytes: 48531144
+  review: 'Independent frozen21d native20-case review at192DPI closes minimum-size clipping. Native gate/76 core/pinned developer-tool-free executable/isolated Windows controls and full retained SQL/Chromium gates PASS. No clean installation/signing proof;239 stays Draft.'
