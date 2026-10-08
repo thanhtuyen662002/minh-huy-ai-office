@@ -1,38 +1,27 @@
 workstream: backend
-role: Backend Platform
+role: 'Backend Platform; root-owned member API/BFF/UI acceptance slice'
 status: active-development
-current_issue: 256
-current_pr: 257
-current_branch: backend/256-exact-identity
-head: 8eefd6ab78af4daa2214480dcf7132050e3054f4
-state: in_progress
-lease_owner: root-backend-256
-lease_heartbeat_at: '2026-10-07'
-last_checkpoint_at: '2026-10-07'
-last_completed_issue: 254
-last_merged_pr: 255
-last_merge_commit: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
+current_issue: 262
+current_pr: null
+current_branch: codex/262-membership-access
+head: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+state: claimed
+lease_owner: root-backend-262
+lease_heartbeat_at: '2026-10-08'
+last_checkpoint_at: '2026-10-08'
+last_completed_issue: 256
+last_merged_pr: 257
+last_merge_commit: 6652940c5a9bfcc424422578d87c2f2851097211
 scope:
-  - exact-opaque-authentication-directory-identity
-  - sql-binary-candidate-filter-and-ordinal-fence
-  - actual-sql-issued-session-alias-denial
+  - scoped-existing-membership-activation
+  - optimistic-version-and-idempotent-immutable-audit
+  - real-sql-company-concurrency-and-last-admin-fence
+  - api-bff-browser-vertical-acceptance
 verification:
-  previous_pr_head: 64e71c469c931ab730e563ab955766f64a7f37f9
-  previous_pr_build: 37553427104
-  previous_pr_governance: 37553427057
-  previous_main_build: 37553826140
-  previous_main_governance: 37553826122
-  previous_result: 'All PASS with independent review;255 merged and254 closed. Installer41ce2a6 full CI PASS, remains Draft for clean Windows qualification.'
-  implementation_head: 8eefd6ab78af4daa2214480dcf7132050e3054f4
-  implementation_build: 37555104776
-  implementation_governance: 37555104782
-  actual_stack_job: 112579406639
-  result: 'All exact implementation-head gates PASS; actual SQL native case/padding aliases denied by issued API/BFF sessions, original full-row identity and valid session restored. Independent frozen review pending.'
-  head_semantics: 'head records the verified implementation; exact published documentation HEAD and current workflow IDs belong in PR257 HANDOFF.'
+  base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  base_build: 37651174359
+  base_governance: 37651174354
+  base_actual_stack: 112894592064
+  result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: Close documentation checkpoint CI on the exact published HEAD and obtain concrete independent review of8eefd6a. Then matching-head merge257 and close main CI before retirement. Keep239 Draft for actual Windows lifecycle and continue full233 product flows.
-
-implementation_checkpoint:
-  result: '550 Persistence tests PASS after scoped CSharp formatting;10 new identity tests PASS. Smoke AST and diff-check PASS. No frontend or schema change.'
-  completed: 'Binary SQL identity candidate filter, ordinal post-query provider/subject fence including SQL space padding, schema length bounds and unchanged public context/roles DTO. Actual SQL smoke adds native alias negative controls, issued-session API/BFF403 and exact full-row restoration.'
-  remaining: 'Documentation checkpoint exact-head CI, concrete frozen independent review and main CI. Production OIDC/customer ERP/full233 remain incomplete.'
+next_action: 'Open the Draft lease for262, then implement versioned membership toggle/audit/API/BFF/UI with actual SQL and browser acceptance. Preserve roles/global identity/durable work; invitations/role administration/full233 remain.'
