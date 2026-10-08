@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/266-company-selection
 current_pr: 267
-current_target_head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
+current_target_head: f03f082800d3324e0574b0b510d74bf6c9d93785
 last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
@@ -46,9 +46,9 @@ critical_paths:
     issue: 266
     pr: 267
     branch: codex/266-company-selection
-    head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
-    state: in_progress
-    next: "Root backend plus required API/BFF/UI owns authoritative active-company discovery, existing provider Code/S256 switching, stale private-state fences and actual two-company SQL/Chromium acceptance. No competing lease; full233 stays active."
+    head: f03f082800d3324e0574b0b510d74bf6c9d93785
+    state: ready_for_review
+    next: "Actualf03 SQL Unicode/identity/ambiguity and two-company Chromium switches/reload/fresh chat/draft/source/member/task isolation/revoked cached target PASS; Build37809426615/Gov37809426734/all8/actual113422110270/quality113425115443. Exact current final proof/docs/CI guard gates and latest independent frozen review remain. Reviewer quota currently unavailable; do not merge before review. Full233 active."
 
 recent_authoritative_merges:
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
@@ -90,7 +90,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "264/265 delivered at002e5cd with exact main gates/actual SQL+Chromium PASS. Continue same266/267 actual two-company closure; b67 native SQL malformed UTF16 exposed driver name repair, fixed by same-query raw byte projection/strict decode with native negative/positive fixture preserved. Current live PR HEAD/HANDOFF supersede checkpoint fields. Independent reviewer hit quota after2f findings; latest source/runtime review remains required before merge.239 current989/all9 independently approved but stays Draft for clean Windows/signing; accepted264 integration still required. Full233 active."
+next_action: "Primary266/267 actualf03/all8 gates passed; close current final proof/docs/owned-CI guard gates and latest independent frozen security/runtime review before merge/main gates. Reviewer quota currently unavailable; live PR HEAD/HANDOFF supersede checkpoint fields. Installer239 integrated acceptedmain002 atfa120f1, all9 Build37809993008/Gov37809992983/actual113424054565/native113424054961/quality113426861674 PASS; latest integration review plus clean Windows/signing remain. Full233 stays active; customer credentials/adapters/production remain."
 
 
 blocked_by:

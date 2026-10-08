@@ -18,6 +18,15 @@ import importlib.util
 from pathlib import Path
 
 
+def require_owned_ci_fixture(directory):
+    # This adversarial gate changes identity/permissions in its own fixture.
+    # Reject retained/local installations before reading config or starting Docker.
+    runner_temp = os.environ.get("RUNNER_TEMP")
+    if not (os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
+            and runner_temp and directory == (Path(runner_temp) / "aioffice-local").resolve()):
+        raise RuntimeError("Adversarial stack proof requires the owned disposable GitHub CI fixture.")
+
+
 def binding_permission_diagnostic_query():
     """Evaluate the shipping predicates as the fixture login; emit only labels/bits."""
     verifier = Path("src/Platform.Persistence/BindingStorePermissionVerifier.cs").read_text(encoding="utf-8")
@@ -53,6 +62,7 @@ def main():
     parser.add_argument("data_directory", type=Path)
     args = parser.parse_args()
     directory = args.data_directory.resolve()
+    require_owned_ci_fixture(directory)
     manifest_file = directory / "installation.json"
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     original_manifest = hashlib.sha256(manifest_file.read_bytes()).hexdigest()

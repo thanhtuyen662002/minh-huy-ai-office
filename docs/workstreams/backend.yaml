@@ -4,8 +4,8 @@ status: active-development
 current_issue: 266
 current_pr: 267
 current_branch: codex/266-company-selection
-head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
-state: in_progress
+head: f03f082800d3324e0574b0b510d74bf6c9d93785
+state: ready_for_review
 lease_owner: root-backend-266
 lease_heartbeat_at: '2026-10-08'
 last_checkpoint_at: '2026-10-08'
@@ -145,3 +145,19 @@ company_selection_sql_byte_repair:
   local: '21 focused .NET directory/API controls PASS, including relational EF SQL query translation that aborts before opening any connection. Changed C# format/Python AST/YAML/diff PASS. Required actual native scalar/Chromium proof remains.'
   review_boundary: 'Independent reviewer hit account quota after frozen2f review; no b67/new raw-byte shipping/runtime approval exists. Re-enter independent frozen review when available before any merge. This is separate from CI/product defects; same267 lease remains owned.'
   next: 'Capture current GitHub HEAD and exact CI after push. Inspect/fix any terminal red on SAME267, preserve full actual controls, then close independent final security/runtime review plus exact PR/main gates. No premature266/full233 closure.'
+
+company_selection_verified_runtime:
+  implementation_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  build: 37809426615
+  governance: 37809426734
+  actual_stack: 113422110270
+  required_quality: 113425115443
+  browser_artifact: 11564687136
+  browser_artifact_bytes: 72696
+  hosted_dotnet_tests: 1086
+  hosted_web_tests: 951
+  sql: 'PASS actual native binary/ordinal identity aliases, cross-tenant ambiguous company denial, stored malformed UTF16 bytes refusal and unchanged valid supplementary/literal replacement names. Retained source/member/worker/ERP qualification adversaries also PASS.'
+  chromium: 'PASS actual authorized two-choice/unassigned exclusion, both provider switches, obsolete binding/SID denial, reload selected scope, fresh visible pre-switch chat/task plus draft/private source/member separation, preserved original durable task/membership fingerprint and cached target revoke401/noCookie/sameSID/recovery/restore.'
+  visual: 'Owner downloaded/inspected sanitized77663-byte workspace image; picker/original source/empty chat and draft/no credentials. Independent frozen latest source/runtime/artifact review is still absent after quota error; no266 approval/merge inferred.'
+  execution_boundary: 'Whole adversarial stack script now requires exact owned GitHub CI directory before config/Docker; required workflow step tests positive plus7 false-flag/retained/nested/unrelated cases without resources. Local3 tests/8 cases PASS. Final proof/workflow/docs HEAD needs renewed exact gates.'
+  next: 'Close exact final current HEAD gates, then re-enter independent frozen latest shipping/raw-SQL/parser/proof/workflow/docs/runtime review when available. Merge only on approval/current green and close main. Keep same267 lease and full233 active; no customer business execution.'
