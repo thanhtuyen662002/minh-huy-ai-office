@@ -17,10 +17,10 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 | ID | Requirement | Required acceptance | Current state |
 | --- | --- | --- | --- |
 | P0-01 | Governance and ADRs | Current issue/PR/head/CI and architecture decisions let a new contributor resume without chat history. | Partial |
-| P0-02 | Monorepo, .NET solution and Next.js workspace | A clean checkout reproducibly installs, builds and tests every workspace from tracked inputs. | Done |
+| P0-02 | Monorepo, .NET solution and Next.js workspace | A clean checkout reproducibly installs, builds and tests every workspace from tracked inputs. | Done — clean hosted checkout restore/build/test and web install/type/build at accepted main002, Build37801975078. |
 | P0-03 | Local Docker dependencies | SQL, identity, RabbitMQ, Redis and observability are provisioned automatically and retain durable data across restart. | Partial |
 | P0-04 | Core API and Agent Worker skeletons | Authenticated requests cross the real API, broker, worker and database with useful health/error reporting. | Partial |
-| P0-05 | Next.js/shadcn web skeleton | The browser UI builds reproducibly, serves its assets and runs as a non-root container using runtime configuration. | Done |
+| P0-05 | Next.js/shadcn web skeleton | The browser UI builds reproducibly, serves its assets and runs as a non-root container using runtime configuration. | Done — FE container runtime smoke and actual Chromium at accepted main002, Build37801975078/actual113396238709. |
 | P0-06 | Initial migrations and shadow test harness | Fresh install, upgrade and rollback/compatibility checks execute against real SQL Server and validate schema history. | Partial |
 | P0-07 | CI format/build/tests and observability | Mandatory CI covers every shipped service; a real request can be followed through logs, metrics and traces. | Partial |
 | P0-08 | Secret provider and development bootstrap | Installer generates/stores local secrets safely and bootstraps resources without editing env files or logging credentials. | Partial |
@@ -125,46 +125,25 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 - P2 baseline: provider execution and grounded questions in `src/Agent.Worker`; persistence and policy contracts in `src/Platform.Persistence` and `src/Shared.Contracts`. Broader context, attachments, real charging/billing and evaluations must be verified against the acceptance above.
 - P3/P5 baseline: bounded scoped ERP business reads and typed policy/workflow contracts. This evidence cannot prove schema adaptation, accounting posting, tax/invoice, inventory writes, specialist operations or bulk reconciliation.
 - P4 baseline: contract/safety frameworks, repository CI, migration validation and operator deployment script. A product-operated coding/release/repair workflow requires its own end-to-end evidence.
-- P6 current: `apps/web` browser Code/S256 PKCE/shared-session workspace and scoped API/BFF are merged and fully Chromium-verified. Approved production OIDC/HTTPS/TLS Redis connectivity, multi-company selection and full member administration/portal flows remain.
-- W current: Draft239 has a pinned native unsigned development setup artifact and actual-stack evidence. Clean Windows/UAC/reboot/startup/retention/repair/signing and production delivery remain unverified. Development artifacts cannot close the Windows acceptance rows.
+- P6 baseline: `apps/web` local AI workspace/BFF and current authorized API endpoints. The local password-grant pilot is not the production OIDC browser flow or a complete customer portal.
+- W baseline: no shipped single Windows setup artifact or clean-machine/reboot proof. #234 adds `apps/web/Dockerfile`, runtime Compose wiring and `scripts/smoke-web-container.mjs`; these are prerequisites for setup.
+
+### Accepted progress after the baseline
+
+- Accepted main `002e5cd9c1fd95eabc02dd3580bb8e964409764b` has [Build37801975078](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37801975078) and [Governance37801976469](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37801976469) PASS, including actual SQL/OIDC/broker/worker/FE/Chromium113396238709. P0-02 and P0-05 are marked Done against their bounded requirements; the other rows retain their broader acceptance.
+- P1-01/P6-01: reviewed exact identity, scoped member listing and audited suspend/reactivate are shipped (#254/#256/#262), and provider Code/S256 browser authentication/session lifecycle is shipped (#260). Authoritative company selection is active #266/PR267; invitations/role administration/approved production identity remain.
+- P1-02: reviewed source administration, typed secret bindings, read-only registration and fresh capability authorization are shipped (#240/#246/#248/#250/#252). Real customer source qualification remains separate.
+- P3/P5: reviewed #264/#265 conservative standalone SQL Server read credential profile refuses elevation, unsupported dependency graphs and mid-read privilege changes on the actual connection. Its owned SQL proof is recorded in `docs/validation/ERP_READ_CREDENTIAL_PROFILE.md`; it does not accept the elevated private Medcom/Novo connections or prove inventory business answers. Dedicated read credentials, versioned legacy module profiles and reconciliation remain; Santino is deferred.
+- W: Draft PR239 contains a reviewed self-contained development installer with hosted native/retained-stack evidence. Clean supported Windows install/UAC/reboot/resume/sign-in/startup/repair/backup and signing are still required. Missing W rows describe delivered acceptance, not the absence of all source code.
+- Current branch eligibility is recorded in `docs/validation/BRANCH_INTEGRATION_AUDIT.md`. Historical merged branches, contract tests and installer artifacts do not substitute for remaining product acceptance.
 
 ## Next executable work
 
-1. Issue260/PR261 is complete at main39e with full independent frozen947 approval and green exact PR/main CI, including832 web/20 actual Redis and the full SQL/Chromium lifecycle. Full company/member administration and company selection remain executable product work.
-2. Installer239 includes main39e browser integration at code checkpointadb5816;76 Setup.Core tests, actual PS5/PS7 private configuration replay and3 production-contract tests pass locally. Close current exact-head CI/native artifact/actual browser gates, then qualify clean Windows/UAC/reboot/startup/retention/repair/signing. The last verified development artifact11492189546 atb46 is historical evidence.
-3. Preserve every actual authorization, Origin, role, identity, audit, metadata-race, broker and restart control.
-4. User-selected Medcom/Novo metadata-only connections succeeded. Private module hashes and preliminary inventory/stock-movement mapping were captured; current identities are elevated. Qualify dedicated read-only credentials, exact local schema/module versions and scoped deterministic adapters before real business-row proof. Santino is deferred.
-5. Continue every remaining P0-P6/Windows/integration row through feature issues and actual acceptance.233 remains active.
-
-The2026-10-07 historical115-ref audit found109 merged PR heads,1 closed PR head,3 backups/snapshots and2 Drafts.261 has since merged;239 is the only current open Draft. No backup/snapshot is eligible based on ancestry alone.
+1. Continue the active #266/PR267 lease through actual two-company SQL/OIDC/Chromium acceptance, independent frozen review, exact PR merge and main gates. Read its current live HANDOFF before acting.
+2. Integrate accepted ERP qualification into Draft installer239 with renewed exact gates/review; complete the separately required clean Windows lifecycle and signing evidence when its external fixture is available.
+3. Continue missing member administration and customer workflow prerequisites. Customer inventory/stock-movement execution requires dedicated approved credentials and qualified schema/version dependencies before business-row proof.
+4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Keep #233 active until every applicable row and completion gate is proven.
 
 ## Genuine external evidence boundaries
 
 The repository contains placeholders rather than approved live customer ERP credentials, provider credentials, production OIDC accounts and tax/billing provider approval. Live external integrations require those inputs or permissions. Continue all unblocked code and sandbox/integration work while recording these boundaries; do not substitute fake provider responses for required live proof. Windows installation must be validated on a clean supported Windows host with the required OS privileges and virtualization. Linux container CI alone cannot prove Windows install/reboot behavior.
-
-## Verified onboarding checkpoint on 2026-10-07
-
-PR253 / issue252 merged at `a3a929b58717b4f8e3ffe160699c179512441b07`. Exact-head Build37550999887/Governance37550999879 and merged-main Build37551390004/Governance37551390052 passed. The admin flow registers an operator-approved SQL Server source through UI/BFF with lossless binding versions, atomic immutable scoped audit and idempotent uncertain-response retries. Actual disposable SQL/OIDC/Compose proves scoped grants, fresh role revocation, append-only audit including a column-GRANT exception guard, atomic failure rollback, preserved metadata race controls and retained history after restart.515 Persistence and364 web tests passed.
-
-P1-02/P1-06 remain Partial: this evidence covers source registration and its audit, not every administration/operation audit or actual customer business workflow. P1-01/P6-01 still require full member administration and production browser OIDC. Installer239 has a native development artifact and integration evidence, but clean Windows lifecycle/signing remain unverified. All62 matrix rows remain subject to their actual acceptance;233 stays open.
-
-## Verified member and identity checkpoints on 2026-10-07
-
-PR255 / issue254 merged at `b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9`; exact-head Build37553427104/Governance37553427057 and main Build37553826140/Governance37553826122 passed. The scoped admin member directory is available through API/BFF/UI, includes inactive membership inventory and excludes provider subjects/secrets.540 Persistence and396 web tests passed; actual SQL proves cross-tenant fixture exclusion and role revoke/restore using the same issued session. Member mutations/invites remain required.
-
-PR257 / issue256 merged at `6652940c5a9bfcc424422578d87c2f2851097211`; exact-head Build37555676743/Governance37555676768 and main Build37556114743/Governance37556114601 passed.550 Persistence tests and real native SQL case/padding negative controls prove exact opaque provider/subject matching before roles/context, with complete restoration of the owned identity row and valid session. Both implementations received independent frozen review. These checkpoints strengthen P1-01/P6-01; they do not complete production browser login or the full matrix.
-
-PR259 / issue258 merged at `973c37be65b1db17c6b3eec279a8f2c12c6713b9` after exact7010f3b Build37564442806/Governance37564442800 PASS and independent frozen66f2f80 approval.448 web tests and actual SQL/OIDC/BFF prove Origin/input refusals cannot mutate an issued session, valid logout clears the BFF cookie and valid sign-in restores scoped authority. Prior identity/member/source/audit/race/broker/restart controls remain green. Main Build37564876619/Governance37564876597 passed. This is local password-grant hardening, with browser OIDC/provider logout/expiry remaining required under260/Draft261.
-
-Installer239 published `89ce9cbd725a593de12d3fb5ec336a6f48eef8ad` includes these reviewed integrations. Build37564958347/Governance37564958342, actual stack112610445116 and native artifact job112610445188 passed; local76 Setup.Core tests passed on that exact commit. Artifact11458177452 (`windows-setup-89ce9cbd725a593de12d3fb5ec336a6f48eef8ad`,47963419 bytes) is unsigned development evidence. It does not prove clean Windows/UAC/reboot/repair or production signing, so239 stays Draft and238/233 remain open.
-
-## Verified foundation rows on 2026-10-07
-
-Independent acceptance audit marks only P0-02 and P0-05 Done at main `39e668ebebe1f8bd19803199b8db393f12a4edb6`. [Build37651174359](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37651174359) and [Governance37651174354](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37651174354) passed. All other rows retain their individual incomplete acceptance; no overall completion percentage is inferred.
-
-| Row | Implementation and complete scoped evidence |
-| --- | --- |
-| P0-02 | `MinhHuy.AIOffice.sln`, `global.json`, tracked11 .NET projects, root `package.json`/`package-lock.json` and the sole `apps/web` workspace. Clean checkout restore/format/Release build and982 .NET tests PASS in job112894591516; clean `npm ci`,832 web tests/50 files including20 actual Redis, TypeScript and Next build PASS in job112894592532. |
-| P0-05 | `apps/web/Dockerfile`, `next.config.ts`, dynamic `app/page.tsx`, `scripts/smoke-web-container.mjs`. Actual job112894592035 verifies one standalone image in two company runtime configurations, assets HTTP200/non-HTML, nonzero UID, read-only filesystem, no-store and healthy service. Actual Chromium112894592064 verifies provider sign-in and rendered scoped workspace/task/private-state lifecycle; sanitized artifact11496885793. |
-
-PR261 exact947 Build37650230590/Governance37650230960 and full frozen implementation/documentation review passed before the matching merge. The evidence report is [BROWSER_OIDC_E2E.md](validation/BROWSER_OIDC_E2E.md). This proves browser login in the disposable integration environment; approved production infrastructure, full member administration/multi-company selection and all remaining product/Windows rows require their own evidence.

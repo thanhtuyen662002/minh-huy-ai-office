@@ -281,3 +281,16 @@ branch_integration_audit:
   active_draft_leases: [239, 263]
   evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
   result: 'No additional eligible unmerged implementation identified. Preserve historical backups/snapshot; old53 is superseded by merged54.239/263 retain their acceptance/review/current-gate requirements.'
+
+installer_verified_erp_integration:
+  head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  build: 37809993008
+  governance: 37809992983
+  actual_stack: 113424054565
+  native_installer: 113424054961
+  required_quality: 113426861674
+  artifact: 11564961765
+  artifact_bytes: 48601200
+  local_dotnet_tests: 1127
+  result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. No independent frozenfa integration approval exists after reviewer quota; prior989 approval is separate historical evidence.'
+  next: 'Close current documentation HEAD gates, independently review fa integration/final docs when available and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'

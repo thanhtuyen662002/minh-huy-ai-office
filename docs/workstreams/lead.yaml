@@ -223,3 +223,15 @@ accepted_erp_installer_integration:
   main_quality: 113399168935
   delta: 'Merge accepted264/265 qualifier/bootstrap/worker/browser bounded guidance and native SQL owned proofs into installer payload. Only solution conflict is additive Setup.Core/Setup.Core.Tests plus ErpReadOnly.RuntimeProof; preserve all three projects/configurations. Installer source/test/build/verify scripts unchanged from independently approved989/21d.'
   next: 'Local solution restore/test plus exact9 hosted gates and independent frozen integration review. Reviewer quota is currently unavailable; preserve Draft. Actual clean Windows/UAC/reboot/resume/startup/repair/retained recovery/backup and signing remain external requirements. No customer or OS preparation changes.'
+installer_verified_erp_integration:
+  head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  build: 37809993008
+  governance: 37809992983
+  actual_stack: 113424054565
+  native_installer: 113424054961
+  required_quality: 113426861674
+  artifact: 11564961765
+  artifact_bytes: 48601200
+  local_dotnet_tests: 1127
+  result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. No independent frozenfa integration approval exists after reviewer quota; prior989 approval is separate historical evidence.'
+  next: 'Close current documentation HEAD gates, independently review fa integration/final docs when available and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
