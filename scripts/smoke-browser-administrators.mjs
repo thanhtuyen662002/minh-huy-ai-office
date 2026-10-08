@@ -2,6 +2,7 @@
 // Never print provider bodies, passwords, authorization codes or cookies.
 import { randomUUID } from "node:crypto";
 import { resolve, join } from "node:path";
+import { mkdir } from "node:fs/promises";
 
 export async function verifyCompanyAdministrators({ directory, manifest, browser, ownerPage, ownerContext, sql,
   app, identity, company, tenant, owner, setStage }) {
@@ -96,6 +97,7 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
 
     stage("shipping-grant-fresh-existing-sid");
     await button(false).click(); await button(true).waitFor();
+    await ownerPage.getByText("Đã cấp quyền quản trị công ty.", { exact: true }).waitFor();
     requireProof(state() === "1:2:1" && auditCount() === "1" && (await current(secondary)).body.roles.includes("admin")
       && await cookie(secondaryContext) === secondarySid);
     await focus(secondary);
@@ -105,6 +107,7 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
 
     stage("shipping-remove-fresh-denial-private-control-clear");
     await button(true).click(); await button(false).waitFor();
+    await ownerPage.getByText("Đã gỡ quyền quản trị công ty.", { exact: true }).waitFor();
     const revoked = await current(secondary);
     requireProof(state() === "1:3:0" && auditCount() === "2" && revoked.status === 200 && !revoked.body.roles.includes("admin"));
     const denied = await mutate(secondary, { operationId: randomUUID(), expectedVersion: "3", isAdministrator: true });
@@ -132,10 +135,13 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     const replay = await replayed;
     requireProof(replay.status() === 200 && replay.headers()["cache-control"] === "no-store" && !replay.headers()["set-cookie"]
       && JSON.stringify(replay.request().postDataJSON()) === JSON.stringify(lostInput));
-    await button(true).waitFor(); requireProof(state() === "1:4:1" && auditCount() === "3");
+    await button(true).waitFor();
+    await ownerPage.getByText("Đã cấp quyền quản trị công ty.", { exact: true }).waitFor();
+    requireProof(state() === "1:4:1" && auditCount() === "3");
     await focus(secondary); await secondary.getByRole("button", { name: "Thành viên", exact: true }).first().click();
     await secondary.getByRole("cell", { name, exact: true }).waitFor();
     await button(true).click(); await button(false).waitFor();
+    await ownerPage.getByText("Đã gỡ quyền quản trị công ty.", { exact: true }).waitFor();
     requireProof(state() === "1:5:0" && auditCount() === "4" && !(await current(secondary)).body.roles.includes("admin"));
     const historical = await mutate(ownerPage, lostInput);
     requireProof(historical.status === 200 && historical.body.isAdministrator && historical.body.membershipVersion === "4"
@@ -160,15 +166,21 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     stage("shipping-role-stale-version-reload");
     await ownerPage.getByRole("button", { name: "Tải lại thành viên", exact: true }).click();
     await button(false).waitFor(); await button(false).click(); await button(true).waitFor();
+    await ownerPage.getByText("Đã cấp quyền quản trị công ty.", { exact: true }).waitFor();
     requireProof(state() === "1:7:1" && auditCount() === "5");
     stage("shipping-role-restored-final-authority");
     await button(true).click(); await button(false).waitFor();
+    await ownerPage.getByText("Đã gỡ quyền quản trị công ty.", { exact: true }).waitFor();
     requireProof(state() === "1:8:0" && auditCount() === "6" && !(await current(secondary)).body.roles.includes("admin")
       && await cookie(ownerContext) === ownerSid && await cookie(secondaryContext) === secondarySid);
     for (let index = 0; index < preserved.length; index++) {
       stage("preserved-" + preserved[index][0]);
       requireProof(fingerprint(...preserved[index]) === before[index]);
     }
+    stage("sanitized-member-controls-artifact");
+    const artifact = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof");
+    await mkdir(artifact, { recursive: true });
+    await ownerPage.screenshot({ path: join(artifact, "administrators.png"), fullPage: true });
     console.log("PASS actual Chromium administrator grant/remove, two provider sessions/fresh authority under unchanged SIDs, lost-response historical replay/stale409/private clearing and preserved identities/other roles/member state/tasks");
   } finally {
     await secondaryContext.close();

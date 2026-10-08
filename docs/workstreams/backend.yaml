@@ -4,7 +4,7 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: e9370b9d34d884b73e5c16b02fdff2d803833831
+head: 228df11ea878da129c84742c266f10bd042b6723
 state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,16 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'SQL e937 full new administrator proof PASS. Diagnose actual Chromium terminal red at broad stale409 stage with fixed detailed substages; retain assertions and fix SAME269. Close current exact8 gates. Full frozen independent security/runtime review and final PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+next_action: '228 full new/retained SQL and Chromium all8 PASS. Push sanitized member screenshot and meaningful historical replay/current-version UI test checkpoint, close renewed exact8 gates and inspect/fix real red SAME269. Full frozen independent security/runtime review and final PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_verified_228:
+  head: 228df11ea878da129c84742c266f10bd042b6723
+  build: 37823779384
+  governance: 37823779368
+  actual: 113471219460
+  quality: 113474198004
+  result: 'All8 exact gates PASS, including all new SQL and two-session shipping Chromium role controls plus retained gates. Broad e937 stale-stage failure did not reproduce with fixed detailed substages/pre-stale SQL positive; every assertion retained. Current artifact proof additionally awaits real UI completion notices before later changes and captures sanitized member controls; renewed exact run/frozen review required.'
+  local_additional: '18 administrator UI plus20 retained access UI and type-check PASS, including historical lost receipt after another actor changes role/version and next mutation using the fresh version. Python/JS guard controls remain verified.'
 
 administrator_runtime_checkpoint:
   head: e9370b9d34d884b73e5c16b02fdff2d803833831

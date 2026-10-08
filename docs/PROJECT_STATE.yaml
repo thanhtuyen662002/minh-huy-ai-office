@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/268-member-administrators
 current_pr: 269
-current_target_head: e9370b9d34d884b73e5c16b02fdff2d803833831
+current_target_head: 228df11ea878da129c84742c266f10bd042b6723
 last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 268
     pr: 269
     branch: codex/268-member-administrators
-    head: e9370b9d34d884b73e5c16b02fdff2d803833831
+    head: 228df11ea878da129c84742c266f10bd042b6723
     state: in_progress
-    next: "269 service/API/audit/BFF/UI implemented;3e all8 PASS. Close current e937 actual owned SQL and two-session shipping Chromium proof; full independent frozen review and exact PR/main delivery remain.266 is delivered."
+    next: "269 service/API/audit/BFF/UI implemented;228 all8 including new SQL/two-session Chromium PASS. Close current artifact/test checkpoint, full independent frozen review and exact PR/main delivery.266 is delivered."
 
   frontend:
     issue: null
@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '268/269 new actual administrator SQL e937 PASS, including rights/rollback/replay/native races/queued external revocation/Unicode/fingerprints. Browser terminal red at broad stale409 phase after earlier grant/remove/two-session/fresh authority/lost reply checks; retain assertions, add precise substages and fix SAME269. Close exact current8 CI, full frozen independent review and final PR/main delivery. Installer723 all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: '268/269228 full new SQL and two-session shipping Chromium all8 PASS. Push sanitized administrator screenshot and historical replay/fresh-version UI test checkpoint; close renewed exact8 CI, inspect/fix red SAME269, obtain full frozen independent security/runtime review then exact PR/main delivery. Installer723 all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
 
 
 blocked_by:

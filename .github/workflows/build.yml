@@ -120,7 +120,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: browser-workspace-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/aioffice-browser-proof/workspace.png
+          path: |
+            ${{ runner.temp }}/aioffice-browser-proof/workspace.png
+            ${{ runner.temp }}/aioffice-browser-proof/administrators.png
           if-no-files-found: error
           retention-days: 7
       - name: Remove only this ephemeral CI stack

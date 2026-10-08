@@ -43,6 +43,23 @@ it("lost committed reply retains the same operation and blocks further edits unt
   fireEvent.click(screen.getByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" })); await screen.findByText("Đã cấp quyền quản trị công ty.");
   expect(bodies(f.request)).toHaveLength(2); expect(bodies(f.request)[0]).toEqual(bodies(f.request)[1]); expect(f.receipts.size).toBe(1); expect(f.state.version).toBe(8);
 });
+it("historical lost-reply receipt reloads current roles and uses the later version for the next change", async () => {
+  const f = fixture({ lostReply: true }); await screen.findByText("PRIVATE MEMBER");
+  fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" })); await screen.findByRole("alert");
+  const original = bodies(f.request)[0];
+  // Another authorized actor removes the committed role before its lost reply
+  // is retried. The immutable original receipt must not become current state.
+  f.state.administrator = false; f.state.version++;
+  fireEvent.click(screen.getByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" }));
+  await screen.findByText("Đã cấp quyền quản trị công ty.");
+  expect(bodies(f.request)[1]).toEqual(original); expect(f.receipts.size).toBe(1);
+  expect(f.state.version).toBe(9); expect(screen.getByText("viewer")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Gỡ quyền quản trị PRIVATE MEMBER" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" }));
+  await screen.findByText("admin, viewer");
+  const next = bodies(f.request)[2]; expect(next.expectedVersion).toBe("9"); expect(next.isAdministrator).toBe(true);
+  expect(next.operationId).not.toBe(original.operationId); expect(f.receipts.size).toBe(2);
+});
 it.each(["stale-version", "last-administrator", "self-role-change", "constructor", "PRIVATE_CODE"])("conflict %s clears rows/pending and requires reload", async code => {
   fixture({ status: 409, code }); await screen.findByText("PRIVATE MEMBER");
   fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" })); await screen.findByRole("alert");
