@@ -17,10 +17,10 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 | ID | Requirement | Required acceptance | Current state |
 | --- | --- | --- | --- |
 | P0-01 | Governance and ADRs | Current issue/PR/head/CI and architecture decisions let a new contributor resume without chat history. | Partial |
-| P0-02 | Monorepo, .NET solution and Next.js workspace | A clean checkout reproducibly installs, builds and tests every workspace from tracked inputs. | Partial |
+| P0-02 | Monorepo, .NET solution and Next.js workspace | A clean checkout reproducibly installs, builds and tests every workspace from tracked inputs. | Done — clean hosted checkout restore/build/test and web install/type/build at accepted main002, Build37801975078. |
 | P0-03 | Local Docker dependencies | SQL, identity, RabbitMQ, Redis and observability are provisioned automatically and retain durable data across restart. | Partial |
 | P0-04 | Core API and Agent Worker skeletons | Authenticated requests cross the real API, broker, worker and database with useful health/error reporting. | Partial |
-| P0-05 | Next.js/shadcn web skeleton | The browser UI builds reproducibly, serves its assets and runs as a non-root container using runtime configuration. | Partial |
+| P0-05 | Next.js/shadcn web skeleton | The browser UI builds reproducibly, serves its assets and runs as a non-root container using runtime configuration. | Done — FE container runtime smoke and actual Chromium at accepted main002, Build37801975078/actual113396238709. |
 | P0-06 | Initial migrations and shadow test harness | Fresh install, upgrade and rollback/compatibility checks execute against real SQL Server and validate schema history. | Partial |
 | P0-07 | CI format/build/tests and observability | Mandatory CI covers every shipped service; a real request can be followed through logs, metrics and traces. | Partial |
 | P0-08 | Secret provider and development bootstrap | Installer generates/stores local secrets safely and bootstraps resources without editing env files or logging credentials. | Partial |
@@ -128,12 +128,21 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 - P6 baseline: `apps/web` local AI workspace/BFF and current authorized API endpoints. The local password-grant pilot is not the production OIDC browser flow or a complete customer portal.
 - W baseline: no shipped single Windows setup artifact or clean-machine/reboot proof. #234 adds `apps/web/Dockerfile`, runtime Compose wiring and `scripts/smoke-web-container.mjs`; these are prerequisites for setup.
 
+### Accepted progress after the baseline
+
+- Accepted main `002e5cd9c1fd95eabc02dd3580bb8e964409764b` has [Build37801975078](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37801975078) and [Governance37801976469](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37801976469) PASS, including actual SQL/OIDC/broker/worker/FE/Chromium113396238709. P0-02 and P0-05 are marked Done against their bounded requirements; the other rows retain their broader acceptance.
+- P1-01/P6-01: reviewed exact identity, scoped member listing and audited suspend/reactivate are shipped (#254/#256/#262), and provider Code/S256 browser authentication/session lifecycle is shipped (#260). Authoritative company selection is active #266/PR267; invitations/role administration/approved production identity remain.
+- P1-02: reviewed source administration, typed secret bindings, read-only registration and fresh capability authorization are shipped (#240/#246/#248/#250/#252). Real customer source qualification remains separate.
+- P3/P5: reviewed #264/#265 conservative standalone SQL Server read credential profile refuses elevation, unsupported dependency graphs and mid-read privilege changes on the actual connection. Its owned SQL proof is recorded in `docs/validation/ERP_READ_CREDENTIAL_PROFILE.md`; it does not accept the elevated private Medcom/Novo connections or prove inventory business answers. Dedicated read credentials, versioned legacy module profiles and reconciliation remain; Santino is deferred.
+- W: Draft PR239 contains a reviewed self-contained development installer with hosted native/retained-stack evidence. Clean supported Windows install/UAC/reboot/resume/sign-in/startup/repair/backup and signing are still required. Missing W rows describe delivered acceptance, not the absence of all source code.
+- Current branch eligibility is recorded in `docs/validation/BRANCH_INTEGRATION_AUDIT.md`. Historical merged branches, contract tests and installer artifacts do not substitute for remaining product acceptance.
+
 ## Next executable work
 
-1. Close #234 only after the two-instance FE image smoke, web checks and all required CI gates pass on the exact PR head and the PR is merged.
-2. Provision SQL Server and local identity automatically, with an idempotent database/first-company bootstrap and a complete local Compose profile.
-3. Implement the versioned Windows setup entry point, dependency download/validation, startup task and interruption/reboot recovery on that stack.
-4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Do not postpone those requirements merely because setup or a pilot works.
+1. Continue the active #266/PR267 lease through actual two-company SQL/OIDC/Chromium acceptance, independent frozen review, exact PR merge and main gates. Read its current live HANDOFF before acting.
+2. Integrate accepted ERP qualification into Draft installer239 with renewed exact gates/review; complete the separately required clean Windows lifecycle and signing evidence when its external fixture is available.
+3. Continue missing member administration and customer workflow prerequisites. Customer inventory/stock-movement execution requires dedicated approved credentials and qualified schema/version dependencies before business-row proof.
+4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Keep #233 active until every applicable row and completion gate is proven.
 
 ## Genuine external evidence boundaries
 

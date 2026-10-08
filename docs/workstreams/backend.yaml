@@ -4,7 +4,7 @@ status: active-development
 current_issue: 266
 current_pr: 267
 current_branch: codex/266-company-selection
-head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
+head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
 state: in_progress
 lease_owner: root-backend-266
 lease_heartbeat_at: '2026-10-08'
@@ -133,3 +133,15 @@ company_selection_runtime_repair:
   repair: 'Split revoked-target runtime assertions into fixed substages and settle denied callback navigation before root recovery, preserving401/no-cookie/SID assertions. Populate a fresh visible chat/durable task before switching instead of relying on chat already cleared by expiry; add actual old/new member panel controls. Add owned SQL malformed UTF16 denial plus valid supplementary/literal replacement preservation.'
   local: '20 focused .NET directory/API malformed controls,34 parser/BFF controls, TypeScript, changed C# format, Python AST/node syntax/YAML/diff PASS.'
   next: 'Push same267 verified checkpoint, capture exact HEAD/CI and close runtime. Inspect any red immediately; new Unicode/native and split recovery controls must actually pass before full frozen review/final PR/main gates.'
+
+company_selection_sql_byte_repair:
+  head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
+  build: 37808053618
+  governance: 37808053541
+  failed_actual: 113417416966
+  required_quality: 113419009516
+  cause: 'Build terminal red in new real SQL malformed UTF16 name control. Managed scalar negatives pass but the SQL read path published the owned invalid name before validation; retained identity/ambiguity positive and negative controls passed. Chromium did not execute; prior2f denial recovery is still unqualified.'
+  fix: 'Same-query SQL binary name projection preserves stored UTF16 instead of relying on a repaired string. Strict little-endian decoder with400-byte/even-length limit; tenant-composite active joins and binary/ordinal signed identity fences stay. Owned fixture asserts exact malformed stored bytes and preserves valid supplementary/literal replacement positives.'
+  local: '21 focused .NET directory/API controls PASS, including relational EF SQL query translation that aborts before opening any connection. Changed C# format/Python AST/YAML/diff PASS. Required actual native scalar/Chromium proof remains.'
+  review_boundary: 'Independent reviewer hit account quota after frozen2f review; no b67/new raw-byte shipping/runtime approval exists. Re-enter independent frozen review when available before any merge. This is separate from CI/product defects; same267 lease remains owned.'
+  next: 'Capture current GitHub HEAD and exact CI after push. Inspect/fix any terminal red on SAME267, preserve full actual controls, then close independent final security/runtime review plus exact PR/main gates. No premature266/full233 closure.'

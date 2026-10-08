@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/266-company-selection
 current_pr: 267
-current_target_head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
+current_target_head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
 last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
@@ -46,7 +46,7 @@ critical_paths:
     issue: 266
     pr: 267
     branch: codex/266-company-selection
-    head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+    head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
     state: in_progress
     next: "Root backend plus required API/BFF/UI owns authoritative active-company discovery, existing provider Code/S256 switching, stale private-state fences and actual two-company SQL/Chromium acceptance. No competing lease; full233 stays active."
 
@@ -90,7 +90,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "264/265 delivered at002e5cd with exact main gates/actual SQL+Chromium PASS. Continue266 complete company discovery/switching API/BFF/UI and actual two-company proof.239 current989 integration/docs and all9 gates independently approved, but remains Draft for clean Windows/signing; integrate accepted264 into it after exact integrated gates/review. Root lead owns this durable-state refresh so accepted frontier can reach main without waiting for blocked installer."
+next_action: "264/265 delivered at002e5cd with exact main gates/actual SQL+Chromium PASS. Continue same266/267 actual two-company closure; b67 native SQL malformed UTF16 exposed driver name repair, fixed by same-query raw byte projection/strict decode with native negative/positive fixture preserved. Current live PR HEAD/HANDOFF supersede checkpoint fields. Independent reviewer hit quota after2f findings; latest source/runtime review remains required before merge.239 current989/all9 independently approved but stays Draft for clean Windows/signing; accepted264 integration still required. Full233 active."
 
 
 blocked_by:
@@ -274,14 +274,14 @@ installer_latest_documentation_verified:
   review: 'Independent frozen documentation delta APPROVED; installer bytes equal approved21d. All9 hosted gates PASS. No clean Windows/signing completion claim;239 remains Draft.'
 
 branch_integration_audit:
-  baseline_main: 39e668ebebe1f8bd19803199b8db393f12a4edb6
-  remote_non_main_branches: 128
-  matched_merged_pr_heads: 121
+  baseline_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+  remote_non_main_branches: 130
+  matched_merged_pr_heads: 123
   other_main_ancestor: 1
   archived_or_superseded: 4
-  active_draft_leases: [239]
+  active_draft_leases: [239, 267]
   evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
-  result: 'No additional eligible unmerged implementation identified. Preserve historical backups/snapshot; old53 is superseded by merged54.239/263 retain their acceptance/review/current-gate requirements.'
+  result: 'Refreshed130 non-main remote branches against accepted002:123 exact merged PR heads,1 main ancestor,4 archival/superseded,2 active Drafts239/267. No additional eligible implementation; preserve backups/snapshot.263/265 subsequently merged with exact main proof. Latest267 acceptance/review/gates and installer clean Windows/signing remain.'
 
 verified_erp_265:
   implementation_head: e3d5254d8b7c7d72261ddf53841232587b1ee1c6

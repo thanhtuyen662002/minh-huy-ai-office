@@ -1,5 +1,7 @@
+using System.Data.Common;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
@@ -133,6 +135,24 @@ public sealed class AuthenticatedCompanyDirectoryTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Directory(db).ListAsync("P", "S", cancelled.Token));
         foreach (var (provider, subject) in new[] { ("", "S"), ("P", " "), (new string('P', 101), "S"), ("P", new string('S', 201)) })
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => Directory(db).ListAsync(provider, subject));
+    }
+
+    [Fact]
+    public async Task SqlByteProjectionAndTenantJoinsTranslateBeforeOpeningAnyConnection()
+    {
+        var options = new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseSqlServer("Server=127.0.0.1,1;Database=QueryTranslationOnly;Integrated Security=true")
+            .AddInterceptors(new StopBeforeConnection()).Options;
+        await using var db = new PlatformDbContext(options);
+        await Assert.ThrowsAsync<QueryTranslationCompleted>(() => Directory(db).ListAsync("opaque-provider", "opaque-subject"));
+    }
+
+    private sealed class QueryTranslationCompleted : Exception;
+    private sealed class StopBeforeConnection : DbConnectionInterceptor
+    {
+        public override ValueTask<InterceptionResult> ConnectionOpeningAsync(DbConnection connection,
+            ConnectionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
+            => throw new QueryTranslationCompleted();
     }
 
     private static EfAuthenticatedCompanyDirectory Directory(PlatformDbContext db) => new(db);

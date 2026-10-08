@@ -4,7 +4,7 @@ status: active-development
 current_issue: 266
 current_pr: 267
 current_branch: codex/266-company-selection
-head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
+head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: '2026-10-08'

@@ -462,6 +462,8 @@ def main():
             INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('{tenant}','{unicode_company}','{user}'); COMMIT TRANSACTION;""")
         for malformed in ("0x00D8", "0x00DC", "0x00D87800", "0x00DC00D8"):
             sql(f"USE AIOfficeLocal; UPDATE aioffice.Companies SET Name=N'Disposable '+CONVERT(nvarchar(3),{malformed}) WHERE TenantId='{tenant}' AND Id='{unicode_company}';")
+            assert sql(f"""USE AIOfficeLocal; SELECT CASE WHEN CONVERT(varbinary(max),Name)=CONVERT(varbinary(max),N'Disposable ')+{malformed}
+                THEN 1 ELSE 0 END FROM aioffice.Companies WHERE TenantId='{tenant}' AND Id='{unicode_company}';""") == "1", "Owned malformed-name fixture bytes changed"
             for choice_path, choice_base, choice_headers in (
                 ("/api/auth/companies", api, auth), ("/api/local/companies" + selector, web, {})):
                 denied_status, denied_headers, denied_body = http(choice_path, base=choice_base, headers=choice_headers)

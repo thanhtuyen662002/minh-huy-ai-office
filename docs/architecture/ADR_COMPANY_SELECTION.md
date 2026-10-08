@@ -8,6 +8,8 @@ The authenticated company directory uses signed identity provider/subject claims
 
 Explicit enrollment of the same signed identity in distinct tenants can yield distinct companies. Duplicate selectable company IDs or multiple users for that identity inside one tenant are ambiguous and deny the whole list. The complete choice set is limited to 100; overflow is refused rather than silently truncated. Malformed names/identifiers also deny without publishing partial choices. No list or permission result is cached.
 
+SQL names are projected as their stored UTF-16 bytes within the same bounded tenant-composite join and decoded strictly, with a 400-byte name limit. Reading `nvarchar` directly through the driver repaired the owned malformed-surrogate fixture before managed validation could reject it. The constant SQL projection has no caller-controlled SQL; provider/subject remain parameterized binary candidate predicates. No second name lookup or permission cache is introduced.
+
 `/api/auth/companies` is the sole endpoint registered with `IdentityCompanyDirectoryEndpoint` metadata. This server-owned marker permits authenticated discovery before selecting a company and produces no company/role context. Headers, URL spellings and client claims cannot supply the marker. All existing company-scoped APIs and hubs remain behind the existing context middleware. Routed trailing-slash/case aliases, success and refusals receive `no-store`.
 
 ## Browser scope transition
