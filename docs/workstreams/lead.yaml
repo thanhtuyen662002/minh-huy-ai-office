@@ -195,9 +195,21 @@ installer_layout_checkpoint:
   next: 'Keep239 Draft for clean Windows lifecycle/signing. Continue262/263 member-access implementation; exact published documentation HEAD/gates belong in239 HANDOFF.'
 
 active_product_slice:
+  issue: 264
+  pr: 265
+  branch: codex/264-erp-readonly-qualification
+  base: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+  state: in_progress
+  next: 'Root implements effective read-only ERP connection qualification before/after each independent read.262/263 full review/exact PR/main gates closed. Customer credentials/qualified inventory adapters/business proof and full233 remain.'
+
+member_access_delivery:
   issue: 262
   pr: 263
-  branch: codex/262-membership-access
-  base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
-  state: claimed
-  next: 'Root implements scoped member suspension/reactivation on the independent backend lease; preserves roles/global identity/tasks. Full233 remains active.'
+  final_pr_head: 552d5dd707b5bb69911ab9b6d6b61f5188caa9bf
+  merge: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+  main_build: 37746848054
+  main_governance: 37746848190
+  main_actual_stack: 113210254492
+  main_quality: 113212217055
+  state: done
+  result: 'Full frozen implementation/security/runtime and final docs review APPROVED. Exact PR/main gates PASS with actual SQL+Chromium acceptance;262 closed. Main integrated into239; current integrated installer HEAD/gates belong in HANDOFF. Draft clean Windows/signing remains.'

@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: 595a587368786af93206ae8f3249ffd2a84cb250
-last_verified_commit: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+current_target_head: 6814a9fd1106e11174ace601181b45032bdf69e2
+last_verified_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
 
 critical_paths:
   backend:
     issue: 262
     pr: 263
     branch: codex/262-membership-access
-    head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
-    state: in_progress
-    next: "API/BFF/UI implemented. Actual member SQL version/replay/audit/rollback/opposite-admin barrier proof passed atd46. Fixes and finer Chromium stale substages are at a452; close exact Build37744957617/Gov37744957590 and complete full frozen review before merge. Base main39e is approved/green; invitations/role administration/full233 remain."
+    head: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+    state: done
+    next: "262/263 merged after full frozen implementation/security/runtime and final docs review. Exact PR552 Build37746135981/Gov37746135890 and main0d03 Build37746848054/Gov37746848190 PASS, including actual member SQL/Chromium113210254492. Invitations/role administration/full233 remain."
 
   frontend:
     issue: null
@@ -35,14 +35,15 @@ critical_paths:
     next: "PR224 proves bounded catalog grounding and PR226 provides capability-bound read-only execution. User selected inventory/stock movements. Qualify its authorized ERP schema/version and least-privilege source from private configuration before customer business-row execution; create the adapter lease only when that dependency is available."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
+    issue: 264
+    pr: 265
+    branch: codex/264-erp-readonly-qualification
+    head: 96aa648149b613b584517ea43a41bd92998d9820
+    state: in_progress
+    next: "Root implements effective read-only credential qualification on every actual ERP read connection, with independent initial/final proof and retained source-policy boundaries. This prerequisite has no customer business rows or adapter enrollment; dedicated credentials/versioned profiles/reconciliation remain."
 
 recent_authoritative_merges:
+  - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
   - 'PR261 / issue260 browser PKCE merged at39e668ebebe1f8bd19803199b8db393f12a4edb6; main Build37651174359/Governance37651174354/actual stack112894592064 PASS.'
   - 'PR259 / issue258 session Origin and bounded login input merged at973c37be65b1db17c6b3eec279a8f2c12c6713b9; main Build37564876619/Governance37564876597 PASS.'
   - 'PR257 / issue256 exact opaque identity merged at6652940c5a9bfcc424422578d87c2f2851097211; main Build37556114743/Governance37556114601 PASS.'
@@ -80,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Installer595 exact gates and responsive21d frozen review PASS; keep239 Draft for clean Windows/UAC/reboot/startup/retention/repair/signing. Continue active262/263 exact CI closure: actual SQL member proof passed atd46, but browser stale-stage and randomized legacy tag test need their a452 fixes verified. Merge263 only after acceptance/full review/current green gates, then close main gates. Medcom/Novo need dedicated read-only credentials/business proof; Santino deferred; full233 stays active."
+next_action: "262/263 accepted and merged; exact main0d03 gates/actual SQL+Chromium PASS. Installer6814 docs gates/review PASS; integrate verified main into239 and close current integrated gates while retaining Draft for clean Windows/signing. Continue active264/265 per-connection ERP read-only qualification. Medcom/Novo dedicated read-only credentials/qualified inventory adapters/business proof remain; Santino deferred; full233 active."
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
@@ -240,7 +241,27 @@ membership_access_progress:
   current_head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
   current_build: 37744957617
   current_governance: 37744957590
-  result: 'New actual SQL versions/historical/concurrent replay, immutable audit direct/column/module/trigger/impersonation controls, rollback and opposite-admin barrier PASS atd46. Full frozen code review is conditional: actual Chromium and exact green gates remain. Newest PR HANDOFF/GitHub HEAD supersedes this snapshot.'
+  final_pr_head: 552d5dd707b5bb69911ab9b6d6b61f5188caa9bf
+  final_pr_build: 37746135981
+  final_pr_governance: 37746135890
+  merge: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+  main_build: 37746848054
+  main_governance: 37746848190
+  main_actual_stack: 113210254492
+  main_quality: 113212217055
+  state: done
+  result: 'Full frozen a452 implementation/security/runtime and final552 documentation independently APPROVED. Exact PR/main gates PASS,906 hosted web incl20 actual Redis and1014 .NET. All new SQL replay/concurrency/immutable direct+indirect rights/atomic rollback/opposite-admin barriers and actual Chromium lost-response replay/stale409/reload/role+SID preservation plus retained gates PASS.262 closed; full233 remains.'
+
+installer_latest_documentation_verified:
+  head: 6814a9fd1106e11174ace601181b45032bdf69e2
+  build: 37745475535
+  governance: 37745475508
+  native_job: 113205808730
+  actual_stack: 113205808739
+  quality: 113207282315
+  unsigned_artifact: 11534759533
+  artifact_bytes: 48544276
+  review: 'Independent frozen documentation delta APPROVED; installer bytes equal approved21d. All9 hosted gates PASS. No clean Windows/signing completion claim;239 remains Draft.'
 
 branch_integration_audit:
   baseline_main: 39e668ebebe1f8bd19803199b8db393f12a4edb6
