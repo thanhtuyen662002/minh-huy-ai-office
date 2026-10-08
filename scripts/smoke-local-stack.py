@@ -1093,7 +1093,7 @@ def main():
     erp_proof = importlib.util.module_from_spec(erp_spec)
     erp_spec.loader.exec_module(erp_proof)
     erp_proof.verify(directory=directory, manifest=manifest, http=http, sql=sql, run=run,
-        wait_for=wait_for, api=api, web=web, auth=member_auth)
+        wait_for=wait_for, api=api, web=web, auth=member_auth, diagnostic_sql=erp_permission_diagnostic_query)
     print("PASS complete local stack integration")
 
 

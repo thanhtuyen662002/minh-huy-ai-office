@@ -85,3 +85,13 @@ adhoc_profile_revision:
   repair: 'Valid scalar-function permission fixture and master context for login/server-role permissions. Qualified standalone engine16/user-database only; availability-group ownership, native X/RF modules are unsupported/refused. Added class32 actual synthetic credential CONTROL/DROP rollback control; no external credential use.'
   definition: 'Pinned Microsoft ScriptDom170.157.0 in SQL160 mode enforces one current-database SELECT before opening: external object/function names, NEXT VALUE FOR and external rowsets refused.13 negative/6 positive parser cases plus existing bounds/parameters and focused connection/source/bootstrap/schema total85 PASS; proof builds0 warnings/errors. Owned foreign sequence must remain unused after definition denial.'
   next: 'Push and close current mandatory actual controls plus retained Chromium, obtain revised frozen independent review and exact PR/main gates.264 and full233 remain incomplete.'
+
+credential_fixture_restore:
+  prior_head: aa5a476150d56eaeddeaac1aeb1bad6cee1c88f6
+  build: 37797381593
+  governance: 37797381710
+  failed_actual: 113380256579
+  failed_quality: 113384179728
+  result: 'All previous Python controls and compiled positive/replacement/mid-read/metadata controls PASS. Hidden function/view and real TYPE CONTROL/ownership DROP+rollback with all-path denial now PASS. Post-credential cleanup positive probe denies; grant-option/login/external/encrypted controls and Chromium unreached.'
+  local_review: 'Current full650 Persistence PASS. Independent frozen aa5 focused313 ERP/source/schema tests PASS; original external definition bypasses and7 further external variants refused,7 local/literal variants accepted. No new source blocker; runtime approval withheld.'
+  next: 'Explicitly revoke owned class32 grant before dropping fixture; isolate positive-restore stage and emit only numbered shipping predicate bits on failure. Do not relax the product profile without actual evidence. Close same PR runtime/review/exact PR/main gates.'

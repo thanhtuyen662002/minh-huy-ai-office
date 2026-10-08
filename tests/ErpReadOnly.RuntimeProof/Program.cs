@@ -186,8 +186,9 @@ try
     }
     finally
     {
-        await SqlAsync($"IF EXISTS(SELECT 1 FROM sys.database_scoped_credentials WHERE name=N'{credential}') DROP DATABASE SCOPED CREDENTIAL {credential};");
+        await SqlAsync($"IF EXISTS(SELECT 1 FROM sys.database_scoped_credentials WHERE name=N'{credential}') BEGIN REVOKE CONTROL ON DATABASE SCOPED CREDENTIAL::{credential} FROM aioffice_reader; DROP DATABASE SCOPED CREDENTIAL {credential}; END;");
     }
+    stage = "actual-credential-restored-profile";
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
     Console.WriteLine("PASS actual subordinate credential CONTROL allows rolled-back DROP but every read path denies");
 

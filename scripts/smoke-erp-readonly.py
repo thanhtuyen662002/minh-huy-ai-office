@@ -7,7 +7,7 @@ import subprocess
 import uuid
 
 
-def verify(*, directory, manifest, http, sql, run, wait_for, api, web, auth):
+def verify(*, directory, manifest, http, sql, run, wait_for, api, web, auth, diagnostic_sql):
     assert os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
     assert os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
     assert api == "http://127.0.0.1:8080" and web == "http://127.0.0.1:3000"
@@ -167,6 +167,12 @@ def verify(*, directory, manifest, http, sql, run, wait_for, api, web, auth):
             for line in (result.stdout + result.stderr).splitlines():
                 if re.fullmatch(r"(?:PASS actual |FAIL owned ERP runtime proof)[A-Za-z0-9 /_-]*", line):
                     print(line, flush=True)
+            if result.returncode:
+                # Only numbered predicate results, never permissions/definitions,
+                # diagnose unexpected denial after owned fixture restoration.
+                for line in sql(diagnostic_sql()).splitlines():
+                    if re.fullmatch(r"erp_check_\d{2}\s+(?:PASS|FAIL_OR_UNKNOWN)", line.strip()):
+                        print(line.strip(), flush=True)
             assert result.returncode == 0, "Owned compiled ERP reader/mid-read proof failed"
         finally:
             subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30)
