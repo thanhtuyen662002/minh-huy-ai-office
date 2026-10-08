@@ -28,7 +28,8 @@ public static class ErpReadOnlyConnectionVerifier
             WHERE permission_name=N'VIEW DEFINITION')
           AND NOT EXISTS (SELECT 1 FROM sys.fn_my_permissions(NULL,N'DATABASE')
             WHERE permission_name NOT IN (N'CONNECT',N'SELECT',N'VIEW DEFINITION',
-              N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION'))
+              N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION',
+              N'VIEW ANY COLUMN ENCRYPTION KEY DEFINITION',N'VIEW ANY COLUMN MASTER KEY DEFINITION'))
           AND NOT EXISTS (SELECT 1 FROM sys.server_principals p
             WHERE p.type IN ('S','U','G','E','X') AND p.principal_id<>SUSER_ID()
               AND ISNULL(HAS_PERMS_BY_NAME(p.name,N'LOGIN',N'IMPERSONATE'),1)<>0)

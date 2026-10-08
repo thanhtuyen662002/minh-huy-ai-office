@@ -37,3 +37,12 @@ implementation_checkpoint:
   completed: 'Conservative live effective-rights profile; exact open connection initial/final checks for catalog/capability/schema reads. Explicit qualified probe mode for read-only source tests and worker tasks; write-enabled connectivity preserved and policy race denied. Initial owned sample metadata grants preserve revoked rights on replay. Bounded API/browser credential guidance.'
   local: '156 focused connection/service/API/worker/pipeline controls and full630 Persistence tests PASS.30 workspace lifecycle controls, type-check, changed C# formatting/YAML/diff checks PASS; build no warnings/errors. Actual owned SQL profile/adversarial acceptance has not yet executed; no customer rows/writes.'
   remaining: 'Required actual SQL safe/unsafe and between-session/mid-read controls, retained runtime/current CI and independent full security review. This is not an accepted ERP adapter or completed264.'
+
+runtime_checkpoint:
+  prior_head: 6cf737bc637312d9546ea8dbe0436e3b58ba5495
+  prior_build: 37748907431
+  prior_governance: 37748907418
+  failed_job: 113217001612
+  result: 'Retained stack failed the first read-only sample connection test. Other6 Build jobs and governance PASS. Added SQL Server default public column-key metadata permissions to the conservative allowlist; no write/elevation grant accepted. Fixed-predicate owned diagnostics locate any remaining positive-profile mismatch.'
+  added_proof: 'Required owned-CI actual safe SELECT/DML/DDL denial, real rolled-back direct/column/nested-role/elevated/OWNER module/impersonation effects with product denial, and prior API probe then changed-rights queued-worker authorization denial. Python syntax checked; these new runtime controls have not yet passed.'
+  remaining: 'Close current exact runtime gates, implement actual mid-read discard/session-rotation/full profile coverage and obtain frozen security review. Do not claim264 accepted from an incremental runtime checkpoint.'
