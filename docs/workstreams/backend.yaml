@@ -112,3 +112,12 @@ company_selection_ci_repair:
   failed_web: 113407484232
   cause: 'Hosted full web run942 controls passed but the existing page root test mounted the now-async server page as a client component and had no main. Await the server page before mounting its returned client workspace, with private session helper mocked; no shipping change.'
   focused: 'Both page files5 controls and TypeScript PASS. Mandatory actual two-company proof and full frozen review remain; next exact CI closure belongs to same267.'
+
+company_selection_actual_proof:
+  prior_head: a49bf387b93aeb0f499f6b93b01ed5ea0ab4969b
+  prior_build: 37805604492
+  prior_governance: 37805604495
+  prior_actual: 113409662667
+  source_review: 'Independent frozen1b directory/metadata/session/picker boundaries reviewed;45 .NET and175 web controls PASS. no-store alias P2 closed. Found malformed UTF8 repair in Response.json; strict128KiB fatal UTF8 plus10sec shared deadline implemented, with valid nonASCII/literal replacement, invalid byte, overlarge and stalled response controls17 PASS. TypeScript PASS.'
+  actual_added: 'Owned SQL discovery native case/padding alias and genuinely ambiguous cross-tenant company GUID denial/restoration. Owned Chromium two-way provider switching, fresh selected scope after reload, obsolete binding/SID refusal, private draft clearing, source/member/task separation and stale cached target membership revoke/restore. Syntax and diff checks PASS; new actual controls have not executed.'
+  next: 'Push this verified checkpoint; close exact CI and inspect any real red on same267. Re-enter independent frozen shipping/proof review, fix concrete findings and complete actual two-company acceptance before final docs/review/exact PR/main delivery.'

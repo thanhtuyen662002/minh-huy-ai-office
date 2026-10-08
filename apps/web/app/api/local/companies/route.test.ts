@@ -19,7 +19,7 @@ it("relays only verified two-field choices through the issued-session Core helpe
   fixture.fetch.mockResolvedValue(Response.json({ items: [choice] }));
   const response = await GET(request()); expect(await response.json()).toEqual({ items: [choice] });
   expect(response.headers.get("cache-control")).toBe("no-store"); expect(response.headers.get("set-cookie")).toBeNull();
-  expect(fixture.fetch).toHaveBeenCalledWith("/api/auth/companies", company);
+  expect(fixture.fetch).toHaveBeenCalledWith("/api/auth/companies", company, { signal: expect.any(AbortSignal) });
 });
 it.each(["", "companyId=foreign", `companyId=${company}&companyId=${company}`])("rejects invalid or duplicate selection %s", async query => {
   await privateFailure(await GET(request(query)), 400); expect(fixture.fetch).not.toHaveBeenCalled();
@@ -40,4 +40,33 @@ it("bounds transport, malformed JSON and non-JSON replies", async () => {
   fixture.fetch.mockRejectedValue(new Error("PRIVATE")); await privateFailure(await GET(request()), 503);
   fixture.fetch.mockResolvedValue(new Response("PRIVATE")); await privateFailure(await GET(request()), 503);
   fixture.fetch.mockResolvedValue(new Response("{PRIVATE", { headers: { "Content-Type": "application/json" } })); await privateFailure(await GET(request()), 503);
+});
+it("rejects malformed UTF8 bytes rather than publishing a repaired authoritative company name", async () => {
+  const prefix = new TextEncoder().encode(`{"items":[{"companyId":"${company}","companyName":"`);
+  const suffix = new TextEncoder().encode('"}]}');
+  const bytes = new Uint8Array(prefix.length + 1 + suffix.length); bytes.set(prefix); bytes[prefix.length] = 255; bytes.set(suffix, prefix.length + 1);
+  fixture.fetch.mockResolvedValue(new Response(bytes, { headers: { "Content-Type": "application/json" } }));
+  await privateFailure(await GET(request()), 503);
+});
+it.each(["Công ty Việt Nam", "Legitimate \ufffd name"])("preserves valid Unicode bytes exactly: %s", async name => {
+  const value = { ...choice, companyName: name }; fixture.fetch.mockResolvedValue(Response.json({ items: [value] }));
+  const response = await GET(request()); expect(response.status).toBe(200); expect(await response.json()).toEqual({ items: [value] });
+});
+it("bounds bytes even before structural parsing and cancels the oversized response", async () => {
+  const cancelled = vi.fn(); let sent = false;
+  const stream = new ReadableStream<Uint8Array>({ pull(controller) {
+    if (!sent) { sent = true; controller.enqueue(new Uint8Array(128 * 1024 + 1)); }
+  }, cancel: cancelled });
+  fixture.fetch.mockResolvedValue(new Response(stream, { headers: { "Content-Type": "application/json" } }));
+  await privateFailure(await GET(request()), 503); expect(cancelled).toHaveBeenCalled();
+});
+it("cancels a stalled streamed body when the shared deadline expires", async () => {
+  const deadline = new AbortController(), cancelled = vi.fn();
+  const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
+  try {
+    fixture.fetch.mockResolvedValue(new Response(new ReadableStream<Uint8Array>({ cancel: cancelled }),
+      { headers: { "Content-Type": "application/json" } }));
+    const pending = GET(request()); await Promise.resolve(); await Promise.resolve(); deadline.abort();
+    await privateFailure(await pending, 503); expect(cancelled).toHaveBeenCalled(); expect(timeout).toHaveBeenCalledWith(10_000);
+  } finally { timeout.mockRestore(); }
 });

@@ -409,6 +409,15 @@ def main():
                     denied_status, denied_headers, denied_body = http(identity_path, base=identity_base, headers=identity_headers)
                     assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", ""), "Opaque identity alias granted authority"
                     assert all(secret not in json.dumps(denied_body) for secret in [*secrets, token])
+                # Discovery must not leak companies for SQL case/padding aliases
+                # even though it deliberately requires no selected company.
+                for choice_path, choice_base, choice_headers in (
+                    ("/api/auth/companies/", api, auth),
+                    ("/api/local/companies" + selector, web, {})):
+                    choice_status, choice_headers_out, choice_body = http(choice_path, base=choice_base, headers=choice_headers)
+                    assert "no-store" in choice_headers_out.get("Cache-Control", ""), "Company discovery alias was cacheable"
+                    assert choice_status == 403 or (choice_status == 200 and choice_body == {"items": []}), "Opaque identity alias discovered company data"
+                    assert all(secret not in json.dumps(choice_body) for secret in [*secrets, token])
             finally:
                 restore_identity()
                 assert fingerprint("Users", identity_scope, "Id") == identity_before, "Identity fixture restoration changed stored fields"
@@ -417,6 +426,34 @@ def main():
         restore_identity()
         sql(f"DROP TABLE {identity_backup};")
     print("PASS real SQL native identity alias negative controls, exact API/BFF denial and retained identity restoration")
+    choice_status, choice_headers, choice_body = http("/api/auth/companies/", base=api, headers=auth)
+    assert choice_status == 200 and "no-store" in choice_headers.get("Cache-Control", "")
+    assert any(item["companyId"] == company for item in choice_body["items"])
+    assert all(set(item) == {"companyId", "companyName"} for item in choice_body["items"])
+    # A second explicit enrollment can reuse the selectable company GUID in a
+    # different tenant. This is genuinely ambiguous despite all joins passing.
+    choice_tenant, choice_user = str(uuid.uuid4()), str(uuid.uuid4())
+    try:
+        sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+            INSERT aioffice.Companies(TenantId,Id,Code,Name) VALUES('{choice_tenant}','{company}',N'{choice_tenant}',N'Disposable ambiguous company');
+            INSERT aioffice.Users(TenantId,Id,IdentityProvider,Subject,DisplayName)
+                SELECT '{choice_tenant}','{choice_user}',IdentityProvider,Subject,N'Disposable duplicate enrollment'
+                FROM aioffice.Users WHERE {identity_scope};
+            INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('{choice_tenant}','{company}','{choice_user}');
+            COMMIT TRANSACTION;""")
+        for choice_path, choice_base, choice_headers in (
+            ("/api/auth/companies", api, auth), ("/api/local/companies" + selector, web, {})):
+            denied_status, denied_headers, denied_body = http(choice_path, base=choice_base, headers=choice_headers)
+            assert denied_status == 403 and "no-store" in denied_headers.get("Cache-Control", ""), "Ambiguous company selection published choices"
+            assert all(secret not in json.dumps(denied_body) for secret in [*secrets, token])
+    finally:
+        sql(f"""USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+            DELETE aioffice.CompanyMemberships WHERE TenantId='{choice_tenant}' AND CompanyId='{company}' AND UserId='{choice_user}';
+            DELETE aioffice.Users WHERE TenantId='{choice_tenant}' AND Id='{choice_user}';
+            DELETE aioffice.Companies WHERE TenantId='{choice_tenant}' AND Id='{company}'; COMMIT TRANSACTION;""")
+    assert fingerprint("Users", identity_scope, "Id") == identity_before
+    assert http("/api/auth/companies", base=api, headers=auth)[0] == 200
+    print("PASS actual SQL company discovery native identity aliases, ambiguity refusal and owned restoration")
     bindings_before = fingerprint("DataSourceSecretBindings", source_scope, "Id")
     assert sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSourceSecretBindings
         WHERE {source_scope} AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION'
