@@ -1,6 +1,6 @@
 # Authoritative company discovery and browser selection
 
-Issue #266 / Draft PR #267, under full product #233. Actual two-company SQL/OIDC/Chromium passed at f03; the latest independent frozen security/runtime review and final PR/main gates remain. Scoped evidence is recorded in `docs/validation/COMPANY_SELECTION.md`.
+Issue #266 / PR #267, under full product #233. Actual two-company SQL/OIDC/Chromium and independent frozen shipping f03/proof764 review passed; final documentation delta and exact PR/main gates remain. Scoped evidence is recorded in `docs/validation/COMPANY_SELECTION.md`.
 
 ## Discovery
 
@@ -24,4 +24,4 @@ No schema, identity, membership or role mutation is introduced by selection. Exi
 
 ## Delivery still required
 
-Actual disposable SQL identity/padding/ambiguity/Unicode controls and provider/Chromium switches in both directions, target membership revoke/restore, fresh private chat/draft clearing and source/task/member separation passed at f03. Independent review of the latest fixes and exact final PR/main delivery remain mandatory. This checkpoint does not complete #266, production identity or full #233. Installer #239 remains Draft pending its separate clean Windows/signing evidence.
+Actual disposable SQL identity/padding/ambiguity/Unicode controls and provider/Chromium switches in both directions, target membership revoke/restore, fresh private chat/draft clearing and source/task/member separation passed at f03 and764. Independent frozen shipping/security/runtime review approved both checkpoints with additional real BFF helper and Unicode controls. Final documentation delta and exact final PR/main delivery remain mandatory. This checkpoint does not complete production identity or full #233. Installer #239 remains Draft pending its separate clean Windows/signing evidence.

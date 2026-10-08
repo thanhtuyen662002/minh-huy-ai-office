@@ -4,11 +4,11 @@ status: active-development
 current_issue: 266
 current_pr: 267
 current_branch: codex/266-company-selection
-head: f03f082800d3324e0574b0b510d74bf6c9d93785
+head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
 state: ready_for_review
 lease_owner: root-backend-266
-lease_heartbeat_at: '2026-10-08'
-last_checkpoint_at: '2026-10-08'
+lease_heartbeat_at: '2026-10-09'
+last_checkpoint_at: '2026-10-09'
 last_completed_issue: 262
 last_merged_pr: 263
 last_merge_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '266 claim from accepted264 main002e5cd: implement bounded exact-identity active-company directory and narrowly marked auth endpoint, issued-session BFF/private-state-safe provider Code/S256 switching and selected-company restoration. Actual two-company SQL/Chromium, independent frozen review and exact PR/main delivery remain. Historical262 checkpoints below are delivered at0d03; full233 active.'
+next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
@@ -161,3 +161,18 @@ company_selection_verified_runtime:
   visual: 'Owner downloaded/inspected sanitized77663-byte workspace image; picker/original source/empty chat and draft/no credentials. Independent frozen latest source/runtime/artifact review is still absent after quota error; no266 approval/merge inferred.'
   execution_boundary: 'Whole adversarial stack script now requires exact owned GitHub CI directory before config/Docker; required workflow step tests positive plus7 false-flag/retained/nested/unrelated cases without resources. Local3 tests/8 cases PASS. Final proof/workflow/docs HEAD needs renewed exact gates.'
   next: 'Close exact final current HEAD gates, then re-enter independent frozen latest shipping/raw-SQL/parser/proof/workflow/docs/runtime review when available. Merge only on approval/current green and close main. Keep same267 lease and full233 active; no customer business execution.'
+company_selection_reviewed_764:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  reviewed_checkpoint: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+  build: 37811540458
+  governance: 37811540124
+  actual_stack: 113429366483
+  required_quality: 113432454238
+  browser_artifact: 11566115491
+  artifact_bytes: 72710
+  independent_dotnet: 28
+  independent_web: 92
+  independent_guard_tests: 3
+  state: ready_for_review
+  review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
+  next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/266-company-selection
 current_pr: 267
-current_target_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+current_target_head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
 last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
@@ -48,7 +48,7 @@ critical_paths:
     branch: codex/266-company-selection
     head: f03f082800d3324e0574b0b510d74bf6c9d93785
     state: ready_for_review
-    next: "Actualf03 SQL Unicode/identity/ambiguity and two-company Chromium switches/reload/fresh chat/draft/source/member/task isolation/revoked cached target PASS; Build37809426615/Gov37809426734/all8/actual113422110270/quality113425115443. Exact current final proof/docs/CI guard gates and latest independent frozen review remain. Reviewer quota currently unavailable; do not merge before review. Full233 active."
+    next: "Shipping f03/proof764 independently approved; exact764 all8/native SQL/Chromium PASS. Close final docs review and exact PR gates, merge267 and close main. Full233/customer/production remain."
 
 recent_authoritative_merges:
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
@@ -90,7 +90,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Primary266/267 actualf03/all8 gates passed; close current final proof/docs/owned-CI guard gates and latest independent frozen security/runtime review before merge/main gates. Reviewer quota currently unavailable; live PR HEAD/HANDOFF supersede checkpoint fields. Installer239 integrated acceptedmain002 atfa120f1, all9 Build37809993008/Gov37809992983/actual113424054565/native113424054961/quality113426861674 PASS; latest integration review plus clean Windows/signing remain. Full233 stays active; customer credentials/adapters/production remain."
+next_action: "Independent frozen266 shipping/proof764 APPROVED; exact764 Build37811540458/Gov37811540124/all8/actual113429366483/quality113432454238 PASS. Close final documentation delta review/current PR gates, merge267 and close exact main. Installer239 fa/3ff integration independently APPROVED and all9 PASS; accepted266 integration follows main closure, while clean Windows/signing keeps239 Draft. Full233 active; customer credentials/adapters/production remain. Live HEAD/HANDOFF supersede checkpoint fields."
 
 
 blocked_by:
@@ -306,3 +306,32 @@ installer_integrated_989:
   artifact: 11536771819
   artifact_bytes: 48582443
   review: 'Frozen independent integration/docs APPROVED. Installer source/tests/scripts equal approved21d; non-installer source equals accepted main0d03. All9 gates PASS. Remains Draft pending external clean Windows/signing; accepted264 still needs integration into239.'
+
+company_selection_reviewed_764:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  reviewed_checkpoint: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+  build: 37811540458
+  governance: 37811540124
+  actual_stack: 113429366483
+  required_quality: 113432454238
+  browser_artifact: 11566115491
+  artifact_bytes: 72710
+  independent_dotnet: 28
+  independent_web: 92
+  independent_guard_tests: 3
+  state: ready_for_review
+  review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
+  next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'
+
+installer_reviewed_3ff:
+  integration_head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  reviewed_checkpoint: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
+  build: 37811764980
+  governance: 37811765041
+  actual_stack: 113430137673
+  native_installer: 113430137570
+  required_quality: 113433280589
+  artifact: 11564714166
+  artifact_bytes: 48597796
+  review: 'Independent frozen fa integration/3ff documentation APPROVED. All9 exact jobs PASS; accepted ERP and retained SQL/Chromium,76 core tests/pinned self-contained isolated Windows proof PASS. Setup source/tests/scripts remain approved21d/989; additive solution preserves all projects. No clean Windows/signing acceptance.'
+  next: 'Close final documentation delta review/exact gates; integrate266 only after approved merge and exact main gates. Keep239 Draft; full233 remains active.'

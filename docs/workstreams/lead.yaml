@@ -4,11 +4,11 @@ status: active-development
 current_issue: 266
 current_pr: 267
 current_branch: codex/266-company-selection
-head: f03f082800d3324e0574b0b510d74bf6c9d93785
-state: in_progress
+head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+state: ready_for_review
 lease_owner: lead
-lease_heartbeat_at: '2026-10-08'
-last_checkpoint_at: '2026-10-08'
+lease_heartbeat_at: '2026-10-09'
+last_checkpoint_at: '2026-10-09'
 scope:
   - integration
   - roadmap-priority
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Root leads integration and current backend266/267 company discovery/switching acceptance.264/265 delivered002e5cd with exact main Build37801975078/Gov37801976469/actual113396238709/quality113399168935 PASS after independent review. Installer239 current989 all9 gates and independent integration/docs approved; stays Draft for external clean Windows/signing. Continue all62 requirements; no production completion claim."
+next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
 
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
