@@ -2,6 +2,8 @@
 import json
 import os
 from pathlib import Path
+import re
+import subprocess
 import uuid
 
 
@@ -127,5 +129,46 @@ def verify(*, directory, manifest, http, sql, run, wait_for, api, web, auth):
             run("start", "agent-worker")
         safe()
         print("PASS actual prior API probe followed by changed ERP rights denies queued worker without checkpoint")
+
+        # Retained metadata permission revocation is not repaired by bootstrap.
+        try:
+            sql("USE master; REVOKE VIEW ANY DEFINITION FROM aioffice_reader;")
+            proof("0")
+            connection(False)
+            run("run", "--rm", "bootstrap")
+            proof("0")
+            connection(False)
+        finally:
+            sql("USE master; GRANT VIEW ANY DEFINITION TO aioffice_reader;")
+        safe()
+        print("PASS actual ERP metadata revocation remains denied after repeat bootstrap and explicit owned restore")
+
+        # A separate nonshipping executable calls the actual compiled readers and
+        # proves final same-session qualification discards materialized evidence.
+        installation = uuid.UUID(manifest["AIOFFICE_INSTALLATION_ID"]).hex
+        image = "aioffice-erp-proof-" + suffix
+        runtime_environment = dict(os.environ)
+        for key, user in (("SQL", "sa"), ("READER", "aioffice_reader")):
+            password = manifest[f"AIOFFICE_{key}_PASSWORD"]
+            assert re.fullmatch(r"[A-Za-z0-9_-]{32,128}", password)
+            runtime_environment["AIOFFICE_ERP_PROOF_" + ("OPERATOR" if key == "SQL" else "READER")] = (
+                "Server=sql;Database=AIOfficeSample;User ID=" + user + ";Password=" + password
+                + ";Encrypt=true;TrustServerCertificate=true;Connect Timeout=15")
+        runtime_environment["AIOFFICE_OWNED_ERP_PROOF"] = "true"
+        try:
+            built = subprocess.run(["docker", "build", "-f", "tests/ErpReadOnly.RuntimeProof/Dockerfile", "-t", image, "."],
+                capture_output=True, text=True, timeout=300)
+            assert built.returncode == 0, "Owned ERP runtime proof build failed"
+            result = subprocess.run(["docker", "run", "--rm", "--network", "aioffice-" + installation + "_default",
+                "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true", "--tmpfs", "/tmp:rw,noexec,nosuid,size=16m",
+                "-e", "CI", "-e", "GITHUB_ACTIONS", "-e", "AIOFFICE_OWNED_ERP_PROOF",
+                "-e", "AIOFFICE_ERP_PROOF_OPERATOR", "-e", "AIOFFICE_ERP_PROOF_READER", image],
+                env=runtime_environment, capture_output=True, text=True, timeout=120)
+            for line in (result.stdout + result.stderr).splitlines():
+                if re.fullmatch(r"(?:PASS actual |FAIL owned ERP runtime proof)[A-Za-z0-9 /_-]*", line):
+                    print(line, flush=True)
+            assert result.returncode == 0, "Owned compiled ERP reader/mid-read proof failed"
+        finally:
+            subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30)
     finally:
         sql(f"USE AIOfficeSample; DROP TABLE {table};")

@@ -46,3 +46,12 @@ runtime_checkpoint:
   result: 'Retained stack failed the first read-only sample connection test. Other6 Build jobs and governance PASS. Added SQL Server default public column-key metadata permissions to the conservative allowlist; no write/elevation grant accepted. Fixed-predicate owned diagnostics locate any remaining positive-profile mismatch.'
   added_proof: 'Required owned-CI actual safe SELECT/DML/DDL denial, real rolled-back direct/column/nested-role/elevated/OWNER module/impersonation effects with product denial, and prior API probe then changed-rights queued-worker authorization denial. Python syntax checked; these new runtime controls have not yet passed.'
   remaining: 'Close current exact runtime gates, implement actual mid-read discard/session-rotation/full profile coverage and obtain frozen security review. Do not claim264 accepted from an incremental runtime checkpoint.'
+
+runtime_profile_fix:
+  prior_head: 456e9cac5625881c75903f337c2821e1ac699476
+  prior_build: 37749595880
+  prior_governance: 37749595879
+  failed_job: 113219285027
+  diagnosis: 'Fixed predicates show only schema check14 fails on the owned sample reader; all other18 predicates PASS. Initial sample now receives direct database SELECT instead of membership in the fixed reader role owning a schema. Added bounded schema component diagnostics if any remaining mismatch persists. No retained or customer grant is repaired.'
+  added: 'Compiled nonshipping owned-CI proof for all four positive/denied read paths, elevated replacement connection, actual same-session mid-read effect/rollback/final evidence discard and metadata denial. Build zero warnings/errors and unowned local invocation refusal PASS. New proof has not passed actual SQL yet.'
+  next: 'Close current profile/runtime gates; inspect any red immediately. Missing independent frozen security review remains; full233/ERP customer adapters are incomplete.'

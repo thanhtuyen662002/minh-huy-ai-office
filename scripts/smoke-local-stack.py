@@ -41,6 +41,10 @@ def erp_permission_diagnostic_query():
     checks = [f"SELECT N'erp_check_{index:02d}' AS CheckId, "
         f"CASE WHEN ({predicate.strip()}) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END AS Result"
         for index, predicate in enumerate(predicates, 1)]
+    checks.extend([
+        "SELECT N'erp_schema_business_visibility', CASE WHEN NOT EXISTS (SELECT 1 FROM sys.schemas s WHERE s.name NOT IN(N'sys',N'INFORMATION_SCHEMA') AND ISNULL(HAS_PERMS_BY_NAME(s.name,N'SCHEMA',N'VIEW DEFINITION'),0)<>1) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END",
+        "SELECT N'erp_schema_catalog_visibility', CASE WHEN NOT EXISTS (SELECT 1 FROM sys.schemas s WHERE s.name IN(N'sys',N'INFORMATION_SCHEMA') AND ISNULL(HAS_PERMS_BY_NAME(s.name,N'SCHEMA',N'VIEW DEFINITION'),0)<>1) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END",
+        "SELECT N'erp_schema_effective_rights', CASE WHEN NOT EXISTS (SELECT 1 FROM sys.schemas s CROSS APPLY sys.fn_my_permissions(s.name,N'SCHEMA') p WHERE p.permission_name NOT IN(N'SELECT',N'VIEW DEFINITION',N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION')) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END"])
     return "USE AIOfficeSample; EXECUTE AS LOGIN=N'aioffice_reader'; " + " UNION ALL ".join(checks) + "; REVERT;"
 
 
@@ -295,7 +299,7 @@ def main():
             and os.environ.get("RUNNER_TEMP") and directory == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve():
         try:
             for line in sql(erp_permission_diagnostic_query()).splitlines():
-                if re.fullmatch(r"erp_check_\d{2}\s+(?:PASS|FAIL_OR_UNKNOWN)", line.strip()):
+                if re.fullmatch(r"erp_(?:check_\d{2}|schema_(?:business_visibility|catalog_visibility|effective_rights))\s+(?:PASS|FAIL_OR_UNKNOWN)", line.strip()):
                     print(line.strip(), flush=True)
         except Exception:
             print("Owned ERP permission diagnostics unavailable.", flush=True)

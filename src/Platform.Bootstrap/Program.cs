@@ -77,7 +77,8 @@ try
         IF USER_ID(N'aioffice_reader') IS NULL
         BEGIN
             CREATE USER aioffice_reader FOR LOGIN aioffice_reader;
-            ALTER ROLE db_datareader ADD MEMBER aioffice_reader;
+            -- Direct SELECT avoids inheriting control of the fixed role's schema.
+            GRANT SELECT TO aioffice_reader;
             GRANT VIEW DEFINITION TO aioffice_reader;
         END
         IF OBJECT_ID(N'dbo.LocalSample', N'U') IS NULL

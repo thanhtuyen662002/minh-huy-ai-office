@@ -19,6 +19,12 @@ public static class ErpReadOnlyConnectionVerifier
           AND HAS_PERMS_BY_NAME(NULL,NULL,N'VIEW ANY DEFINITION')=1
           AND HAS_PERMS_BY_NAME(DB_NAME(),N'DATABASE',N'VIEW DEFINITION')=1
           AND HAS_PERMS_BY_NAME(DB_NAME(),N'DATABASE',N'CONNECT')=1
+          -- Object/schema metadata DENY can hide an executable despite the
+          -- database grant. Inspect denies for every effective principal token.
+          AND NOT EXISTS (SELECT 1 FROM sys.database_permissions p
+            JOIN sys.user_token t ON t.principal_id=p.grantee_principal_id
+            WHERE p.state='D' AND p.permission_name IN
+              (N'VIEW DEFINITION',N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION'))
           AND EXISTS (SELECT 1 FROM sys.fn_my_permissions(NULL,N'SERVER')
             WHERE permission_name=N'CONNECT SQL')
           AND NOT EXISTS (SELECT 1 FROM sys.fn_my_permissions(NULL,N'SERVER')
