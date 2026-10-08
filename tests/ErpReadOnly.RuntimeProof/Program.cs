@@ -139,7 +139,8 @@ try
     {
         await SqlAsync($"EXEC(N'CREATE FUNCTION {function}() RETURNS int AS BEGIN RETURN 1; END');");
         await SqlAsync($"EXEC(N'CREATE VIEW {view} AS SELECT {function}() AS Value;');");
-        await SqlAsync($"DENY VIEW DEFINITION ON OBJECT::{function} TO aioffice_reader; DENY SELECT ON OBJECT::{function} TO aioffice_reader; DENY EXECUTE ON OBJECT::{function} TO aioffice_reader;");
+        // Scalar SQL functions support EXECUTE, not object SELECT (SQL4606).
+        await SqlAsync($"DENY VIEW DEFINITION ON OBJECT::{function} TO aioffice_reader; DENY EXECUTE ON OBJECT::{function} TO aioffice_reader;");
         await using var reader = new SqlConnection(readerConnection);
         await reader.OpenAsync();
         // A direct module denial does not stop a same-owner view from using it.
@@ -173,6 +174,23 @@ try
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
     Console.WriteLine("PASS actual subordinate type CONTROL and ownership allow rolled-back DDL but every read path denies");
 
+    stage = "actual-subordinate-credential-control";
+    var credential = "ReadCredentialObject_" + Guid.NewGuid().ToString("N");
+    try
+    {
+        // Synthetic identity without a secret or external use; class32 permission
+        // must be refused independently of the catalog's filtered visibility.
+        await SqlAsync($"CREATE DATABASE SCOPED CREDENTIAL {credential} WITH IDENTITY=N'Owned unused fixture'; GRANT CONTROL ON DATABASE SCOPED CREDENTIAL::{credential} TO aioffice_reader;");
+        await EffectAsync($"DROP DATABASE SCOPED CREDENTIAL {credential}");
+        await AllDeniedAsync(readerConnection);
+    }
+    finally
+    {
+        await SqlAsync($"IF EXISTS(SELECT 1 FROM sys.database_scoped_credentials WHERE name=N'{credential}') DROP DATABASE SCOPED CREDENTIAL {credential};");
+    }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual subordinate credential CONTROL allows rolled-back DROP but every read path denies");
+
     stage = "actual-read-grant-option";
     var grantee = "ReadGrantee_" + Guid.NewGuid().ToString("N");
     try
@@ -193,21 +211,21 @@ try
     var password = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)) + "!aZ9";
     try
     {
-        await SqlAsync($"CREATE LOGIN {login} WITH PASSWORD=N'{password}', CHECK_POLICY=ON, DEFAULT_DATABASE=AIOfficeSample; CREATE USER {login} FOR LOGIN {login}; GRANT UPDATE ON OBJECT::{fixture} TO {login}; GRANT IMPERSONATE ON LOGIN::{login} TO aioffice_reader; DENY VIEW DEFINITION ON LOGIN::{login} TO aioffice_reader;");
+        await SqlAsync($"USE master; CREATE LOGIN {login} WITH PASSWORD=N'{password}', CHECK_POLICY=ON, DEFAULT_DATABASE=AIOfficeSample; GRANT IMPERSONATE ON LOGIN::{login} TO aioffice_reader; DENY VIEW DEFINITION ON LOGIN::{login} TO aioffice_reader; USE AIOfficeSample; CREATE USER {login} FOR LOGIN {login}; GRANT UPDATE ON OBJECT::{fixture} TO {login};");
         await EffectAsync($"EXECUTE AS LOGIN=N'{login}'; UPDATE {fixture} SET Label=N'Mutated'; REVERT");
         await AllDeniedAsync(readerConnection);
-        await SqlAsync($"REVOKE IMPERSONATE ON LOGIN::{login} FROM aioffice_reader; REVOKE VIEW DEFINITION ON LOGIN::{login} FROM aioffice_reader;");
+        await SqlAsync($"USE master; REVOKE IMPERSONATE ON LOGIN::{login} FROM aioffice_reader; REVOKE VIEW DEFINITION ON LOGIN::{login} FROM aioffice_reader;");
         await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
 
         stage = "actual-fixed-metadata-server-role";
-        await SqlAsync("ALTER SERVER ROLE [##MS_DefinitionReader##] ADD MEMBER aioffice_reader;");
-        await EffectAsync($"ALTER SERVER ROLE [##MS_DefinitionReader##] ADD MEMBER {login}");
+        await SqlAsync("USE master; ALTER SERVER ROLE [##MS_DefinitionReader##] ADD MEMBER aioffice_reader;");
+        await EffectAsync($"USE master; ALTER SERVER ROLE [##MS_DefinitionReader##] ADD MEMBER {login}");
         await AllDeniedAsync(readerConnection);
     }
     finally
     {
-        await SqlAsync("IF IS_SRVROLEMEMBER(N'##MS_DefinitionReader##',N'aioffice_reader')=1 ALTER SERVER ROLE [##MS_DefinitionReader##] DROP MEMBER aioffice_reader;");
-        await SqlAsync($"DROP USER IF EXISTS {login}; IF SUSER_ID(N'{login}') IS NOT NULL DROP LOGIN {login};");
+        await SqlAsync("USE master; IF IS_SRVROLEMEMBER(N'##MS_DefinitionReader##',N'aioffice_reader')=1 ALTER SERVER ROLE [##MS_DefinitionReader##] DROP MEMBER aioffice_reader;");
+        await SqlAsync($"DROP USER IF EXISTS {login}; USE master; IF SUSER_ID(N'{login}') IS NOT NULL DROP LOGIN {login};");
     }
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
     Console.WriteLine("PASS actual concealed login impersonation and metadata fixed-role administration denied by every read path");
@@ -218,7 +236,21 @@ try
     try
     {
         await SqlAsync($"CREATE DATABASE {externalDatabase};");
-        await SqlAsync($"EXEC(N'USE {externalDatabase}; CREATE TABLE dbo.Owned(Id int NOT NULL); INSERT dbo.Owned VALUES(1); CREATE USER aioffice_reader FOR LOGIN aioffice_reader; GRANT SELECT ON dbo.Owned TO aioffice_reader;');");
+        await SqlAsync($"EXEC(N'USE {externalDatabase}; CREATE TABLE dbo.Owned(Id int NOT NULL); INSERT dbo.Owned VALUES(1); CREATE SEQUENCE dbo.OwnedSequence AS bigint START WITH 100; CREATE USER aioffice_reader FOR LOGIN aioffice_reader; GRANT SELECT ON dbo.Owned TO aioffice_reader; GRANT UPDATE ON dbo.OwnedSequence TO aioffice_reader;');");
+        // The credential qualifies the current database, while this foreign
+        // sequence grant really exists. Definition denial must precede any read.
+        await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+        foreach (var sql in new[] { $"SELECT Id FROM {externalDatabase}.dbo.Owned", $"SELECT NEXT VALUE FOR {externalDatabase}.dbo.OwnedSequence AS value" })
+        {
+            try
+            {
+                _ = new ErpReadCapabilityRegistry([new("sample.external", "1", sql, [], new())]);
+                throw new InvalidOperationException("Expected definition denial.");
+            }
+            catch (InvalidOperationException error) when (error.Message == "ERP read capability SQL is outside the qualified current-database SELECT profile.") { }
+        }
+        if (!Equals(await SqlAsync($"SELECT CASE WHEN last_used_value IS NULL THEN 1 ELSE 0 END FROM {externalDatabase}.sys.sequences WHERE name=N'OwnedSequence';"), 1))
+            throw new InvalidOperationException();
         await SqlAsync($"EXEC(N'CREATE VIEW {externalView} AS SELECT Id FROM {externalDatabase}.dbo.Owned;');");
         await using var reader = new SqlConnection(readerConnection);
         await reader.OpenAsync();

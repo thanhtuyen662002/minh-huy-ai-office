@@ -16,6 +16,10 @@ public static class ErpReadOnlyConnectionVerifier
           -- This first profile is qualified against SQL Server 2022. New server
           -- versions/securable classes need their own reviewed qualification.
           CONVERT(int,SERVERPROPERTY(N'ProductMajorVersion'))=16
+          -- Availability-group ownership is outside the qualified standalone
+          -- profile; a filtered AG catalog cannot prove ownership absence.
+          AND CONVERT(int,SERVERPROPERTY(N'IsHadrEnabled'))=0
+          AND DB_ID()>4
           AND USER_NAME() <> N'dbo'
           AND ISNULL(IS_SRVROLEMEMBER(N'sysadmin'),1)=0
           AND ISNULL(IS_ROLEMEMBER(N'db_owner'),1)=0
@@ -127,6 +131,7 @@ public static class ErpReadOnlyConnectionVerifier
           -- function grant. Such module graphs require a separate qualification.
           AND NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0
             AND o.type IN ('FN','FS','FT','AF','TF','IF'))
+          AND NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('X','RF'))
           -- Synonyms can hide cross-database/linked-server targets and permissions.
           AND NOT EXISTS (SELECT 1 FROM sys.synonyms)
           -- Views/computed expressions can bypass this database's rights via

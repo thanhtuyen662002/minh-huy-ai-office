@@ -75,3 +75,13 @@ profile_security_revision:
   security: 'Conservative SQL2022 engine16 profile refuses token grant-options, unsupported subordinate grants, fixed roles except public, server metadata denies and subordinate ownership. External/unresolved/ambiguous/caller-dependent graphs, encrypted/external/CLR/linked facilities are refused. Ordinary verified TSQL endpoint CONNECT remains a narrow public exception.'
   actual_controls_pending: 'Real rolled-back TYPE CONTROL/ownership DROP, SELECT WITH GRANT OPTION permission grant, concealed login impersonated UPDATE, fixed metadata-role member administration, accessible cross-database and encrypted views; each requires all four compiled shipping reads denied and explicit owned restore. These controls have not yet passed SQL runtime.'
   next: 'Close actual schema/profile controls and exact runtime CI, obtain revised independent frozen review, then exact PR/main delivery gates. No264 acceptance or customer inventory adapter claim yet.'
+
+adhoc_profile_revision:
+  prior_head: 8f291a5bf66af40319afd4b668f96bd06fbffb0c
+  prior_build: 37796076612
+  prior_governance: 37796076582
+  failed_job: 113375751680
+  runtime: 'Actual safe profile/adversarial API/BFF/queued worker/revoke-replay controls PASS. Compiled probe/catalog/capability/schema positives now PASS, including structural projections; replacement elevation denial, same-session mid-read discard and metadata denial PASS. Hidden scalar-function fixture fails SQL4606 from unsupported SELECT permission; use valid EXECUTE+metadata denial. Later new controls not reached; browser not reached.'
+  repair: 'Valid scalar-function permission fixture and master context for login/server-role permissions. Qualified standalone engine16/user-database only; availability-group ownership, native X/RF modules are unsupported/refused. Added class32 actual synthetic credential CONTROL/DROP rollback control; no external credential use.'
+  definition: 'Pinned Microsoft ScriptDom170.157.0 in SQL160 mode enforces one current-database SELECT before opening: external object/function names, NEXT VALUE FOR and external rowsets refused.13 negative/6 positive parser cases plus existing bounds/parameters and focused connection/source/bootstrap/schema total85 PASS; proof builds0 warnings/errors. Owned foreign sequence must remain unused after definition denial.'
+  next: 'Push and close current mandatory actual controls plus retained Chromium, obtain revised frozen independent review and exact PR/main gates.264 and full233 remain incomplete.'
