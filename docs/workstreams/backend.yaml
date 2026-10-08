@@ -4,7 +4,7 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: 7e05cf2699d84a63f5fbe2d3858a947635dcaa7b
+head: 69b24e29b7571a7cf8160271631533d5d101173a
 state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '268/269 foundation service/API/audit migration verified; push small checkpoint and close exact CI. Continue strict issued-session BFF/member panel plus actual owned SQL role/audit/version/permission/concurrency and Chromium grant-remove/lost reply/private clearing. Full frozen independent review and exact PR/main delivery mandatory. Installer4b all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: 'Push verified BFF/member-panel checkpoint, close exact current8 gates and inspect/fix red SAME269. Implement mandatory actual owned SQL role/audit/version/permission/races/Unicode and Chromium admin gain/revoke/lost reply/private state proof. Retained green runtime is insufficient for268. Independent frozen security/runtime review required before final PR/main delivery; installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
@@ -204,3 +204,15 @@ company_administrator_foundation:
   migration: 20261008173733_AddCompanyAdministratorAudit
   local: '45 administrator-focused tests PASS (44 new plus retained last-admin control), including service/API/immutable effective rights/relational query translation and malformed Unicode. Full725 Persistence passed before four final Unicode/query controls; model has no pending changes; changed C# format/diff PASS.'
   remaining: 'BFF/UI, actual new SQL/Chromium mutations and permission/concurrency proof, independent frozen review and exact PR/main gates. Foundation is not268 completion.'
+
+company_administrator_ui_checkpoint:
+  foundation_head: 69b24e29b7571a7cf8160271631533d5d101173a
+  build: 37818966435
+  governance: 37818966438
+  actual_stack: 113455083869
+  required_quality: 113457936779
+  hosted_dotnet_tests: 1130
+  foundation: 'All8 exact gates PASS,729 Persistence/370 Contracts/25 configuration/6 observability, actual migration and retained SQL/OIDC/Chromium. This retained proof does not exercise the new role mutation and cannot close268.'
+  ui: 'Strict issued-session same-origin administrator BFF validates canonical selectors,2048-byte requests and decoded duplicate keys,4096-byte response/10sec/final shared helper fence, exact scoped receipt echo and bounded conflicts. No private diagnostics/cookies proxy. Member panel grant/remove uses shared version, stable lost-reply replay, current-user/inactive protection and fresh authority reconciliation; stale/denied/expired/scope controls clear private state.'
+  local: '79 focused web PASS (42 new BFF,17 new admin UI,20 retained access UI); type-check/diff PASS. Common bounded JSON helper preserves existing default decoder; optional strict parser only used for new mutation/response.'
+  remaining: 'Actual owned SQL role mutation/audit/permission/concurrency/Unicode controls and actual shipping Chromium grant-remove/lost reply/session authority proof, independent frozen security/runtime review and final exact PR/main delivery.'

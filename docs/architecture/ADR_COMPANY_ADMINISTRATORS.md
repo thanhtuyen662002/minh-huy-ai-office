@@ -1,6 +1,6 @@
 # Existing member administrator changes
 
-Issue #268 / Draft PR #269, under full product #233. This checkpoint implements the service/API/migration foundation. The supported browser flow, actual role-mutation SQL/Chromium proof, independent security review and exact PR/main delivery are still required.
+Issue #268 / Draft PR #269, under full product #233. This checkpoint implements the service/API/migration and BFF/member-panel flow. Actual new role-mutation SQL/Chromium proof, independent security review and exact PR/main delivery are still required.
 
 ## Authority and concurrency
 
@@ -20,4 +20,4 @@ The strict authenticated `/api/company/members/{userId}/administrator` endpoint 
 
 ## Remaining delivery
 
-Build the issued-session same-origin BFF and shipping member controls, with bounded responses and shared-session fences, stable unknown-result retry and immediate fresh role reconciliation. Prove mutation/audit atomicity, SQL permission and concurrency adversaries plus actual browser grant/remove/lost-reply behavior. Obtain independent frozen security/runtime review and close exact PR/main gates before merge. Full invitations/custom-role policy/customer ERP/production and clean Windows/signing remain separate #233 acceptance.
+The issued-session same-origin BFF and shipping member controls are implemented: strict canonical selectors and decoded duplicate-field rejection, bounded2048-byte requests/4096-byte responses/10sec deadline and final shared helper fence, exact scoped receipt echo, bounded known conflicts and no upstream diagnostics/cookies. Member controls keep a stable operation on unknown results, reload authoritative roles after success, block current-user/inactive changes and clear private state on fresh authority loss or definitive denial.79 focused web controls (42 BFF,17 administrator UI,20 retained access UI) and type-check pass. Prove mutation/audit atomicity, SQL permission and concurrency adversaries plus actual browser grant/remove/lost-reply behavior. Obtain independent frozen security/runtime review and close exact PR/main gates before merge. Full invitations/custom-role policy/customer ERP/production and clean Windows/signing remain separate #233 acceptance.
