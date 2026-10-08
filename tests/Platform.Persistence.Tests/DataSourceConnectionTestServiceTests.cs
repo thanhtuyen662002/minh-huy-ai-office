@@ -75,6 +75,21 @@ public sealed class DataSourceConnectionTestServiceTests
     }
 
     [Fact]
+    public async Task Source_policy_change_during_secret_resolution_is_denied_before_connectivity_probe()
+    {
+        var tenant = Guid.NewGuid(); var company = Guid.NewGuid(); var user = Guid.NewGuid(); var source = Guid.NewGuid();
+        await using var context = CreateContext(); await SeedAuthorizationAsync(context, tenant, company, user);
+        var row = CreateDataSource(tenant, company, source, "secretref://env/company-erp-production");
+        row.AllowWrite = true;
+        context.DataSources.Add(row); await context.SaveChangesAsync();
+        var resolver = new RecordingSecretResolver("private synthetic", async () => { row.AllowWrite = false; await context.SaveChangesAsync(); });
+        var probe = new RecordingProbe();
+        var result = await CreateService(context, resolver, probe).TestAsync(AuthorizationContext.Create(tenant, company, user), source);
+        Assert.False(result.Succeeded); Assert.Equal(DataSourceConnectionTestCodes.NotAuthorized, result.Code);
+        Assert.Null(probe.RequiredReadOnly); Assert.Null(probe.LastConnectionString);
+    }
+
+    [Fact]
     public async Task Unqualified_read_credentials_have_actionable_bounded_result_without_private_detail()
     {
         var tenant = Guid.NewGuid(); var company = Guid.NewGuid(); var user = Guid.NewGuid(); var source = Guid.NewGuid();
@@ -377,19 +392,20 @@ public sealed class DataSourceConnectionTestServiceTests
             IsEnabled = true
         };
 
-    private sealed class RecordingSecretResolver(string value) : ISecretResolver
+    private sealed class RecordingSecretResolver(string value, Func<Task>? after = null) : ISecretResolver
     {
         public string Provider => "env";
 
         public SecretReference? LastReference { get; private set; }
 
-        public ValueTask<string> ResolveAsync(
+        public async ValueTask<string> ResolveAsync(
             SecretReference reference,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             LastReference = reference;
-            return ValueTask.FromResult(value);
+            if (after is not null) await after();
+            return value;
         }
     }
 

@@ -55,3 +55,13 @@ runtime_profile_fix:
   diagnosis: 'Fixed predicates show only schema check14 fails on the owned sample reader; all other18 predicates PASS. Initial sample now receives direct database SELECT instead of membership in the fixed reader role owning a schema. Added bounded schema component diagnostics if any remaining mismatch persists. No retained or customer grant is repaired.'
   added: 'Compiled nonshipping owned-CI proof for all four positive/denied read paths, elevated replacement connection, actual same-session mid-read effect/rollback/final evidence discard and metadata denial. Build zero warnings/errors and unowned local invocation refusal PASS. New proof has not passed actual SQL yet.'
   next: 'Close current profile/runtime gates; inspect any red immediately. Missing independent frozen security review remains; full233/ERP customer adapters are incomplete.'
+
+runtime_reader_diagnosis:
+  prior_head: 457e02c525e0f464842b7faba2c78f7bd97f1ce7
+  build: 37792980099
+  governance: 37792980086
+  failed_job: 113364967899
+  result: 'Safe SELECT and persistent DML/DDL denial, actual direct/column/nested-role/elevated/module/impersonation API/BFF controls, prior probe then changed-rights queued-worker denial, and metadata revoke/repeated-bootstrap controls PASS. Compiled actual reader proof fails within positive read paths; Chromium not reached. Split fixed stages plus bounded category/SQL number identify the failing reader without exposing diagnostics.'
+  added: 'Owned hidden function accessed through same-owner view must be denied by all compiled read paths. Source-policy change during secret resolution must deny before probing. Local25 focused source/connection/bootstrap controls and runtime-proof build PASS.'
+  review: 'Independent frozen457 focused156 .NET controls,30 UI lifecycle controls and TypeScript PASS. Two source-level blockers remain: non-object securable mutation rights and WITH GRANT OPTION; actual controls and conservative refusal are next. Server metadata concealment and external dependency graphs are also under review.'
+  next: 'Close the positive-reader CI failure on this same PR; repair and prove permission class/grant-option/metadata/external dependency gaps. Obtain new frozen security review and exact PR/main gates before integration;264 and233 remain incomplete.'

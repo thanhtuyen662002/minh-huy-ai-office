@@ -57,14 +57,21 @@ try
         await DeniedAsync(async () => await new SqlServerSchemaDiscovery(factory).DiscoverAsync("owned", "owned", "owned", 1, connection));
     }
 
-    stage = "actual-positive-read-paths";
+    stage = "actual-positive-fixture";
     await SqlAsync($"CREATE TABLE {fixture}(Id int NOT NULL PRIMARY KEY, Label nvarchar(100) NOT NULL); INSERT {fixture} VALUES(1,N'Owned runtime value');");
+    stage = "actual-positive-probe";
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    stage = "actual-positive-catalog";
     var catalog = await new SqlServerPilotErpEvidenceReader(factory).ReadAsync(readerConnection);
+    stage = "actual-positive-catalog-result";
     if (catalog.TableCount < 1) throw new InvalidOperationException();
+    stage = "actual-positive-capability";
     var evidence = await executor.ExecuteAsync(readerConnection, request);
+    stage = "actual-positive-capability-result";
     if (evidence.Rows.Count != 1) throw new InvalidOperationException();
+    stage = "actual-positive-schema";
     var schema = await new SqlServerSchemaDiscovery(factory).DiscoverAsync("owned", "owned", "owned", 1, readerConnection);
+    stage = "actual-positive-schema-result";
     if (schema.Objects.Count == 0) throw new InvalidOperationException();
     Console.WriteLine("PASS actual qualified probe/catalog/capability/schema read paths");
 
@@ -108,12 +115,43 @@ try
     finally { await SqlAsync("GRANT VIEW DEFINITION TO aioffice_reader;"); }
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
     Console.WriteLine("PASS actual missing metadata visibility denied by every read path and explicit owned restore");
+
+    stage = "actual-hidden-module-through-view";
+    var function = fixture.Replace("ReadCredentialRuntime_", "ReadHiddenFunction_", StringComparison.Ordinal);
+    var view = fixture.Replace("ReadCredentialRuntime_", "ReadHiddenView_", StringComparison.Ordinal);
+    try
+    {
+        await SqlAsync($"EXEC(N'CREATE FUNCTION {function}() RETURNS int AS BEGIN RETURN 1; END');");
+        await SqlAsync($"EXEC(N'CREATE VIEW {view} AS SELECT {function}() AS Value;');");
+        await SqlAsync($"DENY VIEW DEFINITION ON OBJECT::{function} TO aioffice_reader; DENY SELECT ON OBJECT::{function} TO aioffice_reader; DENY EXECUTE ON OBJECT::{function} TO aioffice_reader;");
+        await using var reader = new SqlConnection(readerConnection);
+        await reader.OpenAsync();
+        // A direct module denial does not stop a same-owner view from using it.
+        // The profile must reject the hidden graph before any product read.
+        if (!Equals(await SqlAsync($"SELECT Value FROM {view};", reader), 1)) throw new InvalidOperationException();
+        await AllDeniedAsync(readerConnection);
+    }
+    finally
+    {
+        await SqlAsync($"DROP VIEW IF EXISTS {view}; DROP FUNCTION IF EXISTS {function};");
+    }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual hidden function through accessible ownership-chain view denied before product read");
     return 0;
 }
-catch
+catch (Exception error)
 {
     // Neither exception text nor SQL, connection values, rows or metadata are diagnostics.
-    Console.Error.WriteLine("FAIL owned ERP runtime proof at " + stage);
+    var category = error switch
+    {
+        SqlException sql => "sql_code_" + sql.Number.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ErpReadOnlyCredentialsException => "credential_denied",
+        InvalidOperationException => "invalid_operation",
+        ArgumentException => "invalid_argument",
+        OperationCanceledException => "cancelled",
+        _ => "other_failure"
+    };
+    Console.Error.WriteLine("FAIL owned ERP runtime proof at " + stage + " category " + category);
     return 1;
 }
 finally
