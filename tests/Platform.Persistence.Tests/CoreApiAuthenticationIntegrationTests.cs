@@ -180,7 +180,26 @@ public sealed class CoreApiAuthenticationIntegrationTests
         Assert.True(response.Headers.CacheControl.NoStore);
     }
 
-    private static WebApplicationFactory<CoreApiProgram> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry)
+    [Theory]
+    [InlineData("/api/auth/companies")]
+    [InlineData("/api/auth/companies/")]
+    [InlineData("/API/AUTH/COMPANIES/")]
+    public async Task Identity_company_directory_requires_authentication_without_company_selector(string path)
+    {
+        await using var factory = AuthenticatedFactory(null, authenticate: false); using var client = factory.CreateClient();
+        var response = await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode); AssertNoStore(response);
+    }
+
+    [Fact]
+    public async Task Identity_company_directory_without_database_is_unavailable_and_no_store()
+    {
+        await using var factory = AuthenticatedFactory(null); using var client = factory.CreateClient();
+        var response = await client.GetAsync("/api/auth/companies");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode); AssertNoStore(response);
+    }
+
+    private static WebApplicationFactory<CoreApiProgram> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry, bool authenticate = true)
     {
         return new WebApplicationFactory<CoreApiProgram>().WithWebHostBuilder(builder =>
         {
@@ -190,7 +209,7 @@ public sealed class CoreApiAuthenticationIntegrationTests
             builder.UseSetting("AIOffice:Authentication:Audience", "minh-huy-ai-office-tests");
             builder.ConfigureServices(services =>
             {
-                services.AddAuthentication(options =>
+                if (authenticate) services.AddAuthentication(options =>
                     {
                         options.DefaultAuthenticateScheme = TestAuthenticationHandler.AuthenticationScheme;
                         options.DefaultChallengeScheme = TestAuthenticationHandler.AuthenticationScheme;

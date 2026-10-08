@@ -100,6 +100,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Install required Chromium runtime
         run: npx playwright install --with-deps chromium
+      - name: Verify adversarial fixture execution boundary
+        run: python scripts/test-owned-stack-guard.py
       - name: Verify private configuration replay and browser key
         shell: pwsh
         run: ./scripts/test-local-config.ps1

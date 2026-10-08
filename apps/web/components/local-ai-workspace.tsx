@@ -15,6 +15,7 @@ import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
+import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
 
 type Props = {
   companyId: string;
@@ -55,7 +56,10 @@ function sourceLabel(source: LocalDataSource) {
   return "Không có quyền đọc";
 }
 
-export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", browserLogin }: Props) {
+export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, loginMode = "local", browserLogin }: Props) {
+  const [companies, setCompanies] = useState<readonly CompanyChoice[]>([]);
+  const [companyChoiceError, setCompanyChoiceError] = useState("");
+  const companyName = companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyName ?? initialCompanyName;
   const [surface, setSurface] = useState<Surface>("assistant");
   const [sources, setSources] = useState<readonly LocalDataSource[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState("");
@@ -84,6 +88,8 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
   const selectedSource = sources.find((source) => source.id === selectedSourceId) ?? null;
 
   const clearPrivateState = useCallback(() => {
+    setCompanies([]);
+    setCompanyChoiceError("");
     setSources([]);
     setSelectedSourceId("");
     setSourceLoading(false);
@@ -145,6 +151,52 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
   useEffect(() => {
     if (sessionState === "ready") void loadSources();
   }, [sessionState, auth, loadSources]);
+
+  const loadCompanies = useCallback(async () => {
+    if (loginMode !== "browser" || !ready()) return;
+    const generation = sessionGeneration.current;
+    setCompanies([]); setCompanyChoiceError("");
+    try {
+      if (!await validate(generation) || !isCurrent(generation)) return;
+      const response = await request(generation, `/api/local/companies?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
+      const payload = await readJson(response);
+      if (!isCurrent(generation) || !await validate(generation) || !isCurrent(generation)) return;
+      const items = response.ok ? parseCompanyChoices(payload) : null;
+      if (!items || !items.some(item => item.companyId.toLowerCase() === companyId.toLowerCase())) throw new Error();
+      setCompanies(items);
+    } catch {
+      if (isCurrent(generation)) { setCompanies([]); setCompanyChoiceError("Không tải được công ty được cấp quyền. Hãy làm mới để thử lại."); }
+    }
+  }, [companyId, isCurrent, loginMode, ready, request, sessionGeneration, validate]);
+
+  useEffect(() => { if (sessionState === "ready") void loadCompanies(); }, [sessionState, auth, loadCompanies]);
+
+  async function selectCompany(targetCompanyId: string) {
+    if (loginMode !== "browser" || !browserLogin || !ready() || busy || sourceSaving
+      || targetCompanyId.toLowerCase() === companyId.toLowerCase()
+      || !companies.some(item => item.companyId === targetCompanyId)) return;
+    const previous = sessionGeneration.current;
+    if (!await validate(previous) || !isCurrent(previous)) return;
+    const finish = beginMutation("ready"); if (!finish) return;
+    // Clear old chat, source, member and task state before cookie authority
+    // changes. Existing OIDC begin/callback fencing rejects stale completions.
+    const generation = reset("closing"); let navigating = false;
+    try {
+      const response = await fetch("/api/local/session/oidc/start", {
+        method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId: targetCompanyId }),
+      });
+      const payload = await readJson(response);
+      if (!isCurrent(generation)) return;
+      const destination = response.ok ? browserLoginDestination(payload, browserLogin) : null;
+      if (!destination) throw new Error();
+      navigateBrowserLogin(destination); navigating = true;
+    } catch { /* Restore verifies whichever issued session is actually current. */ }
+    finally {
+      finish();
+      if (isCurrent(generation) && !navigating) { await restore(); setNotice("Không chuyển được công ty. Hãy thử lại."); }
+    }
+  }
 
   async function editSource(source: LocalDataSource) {
     if (!ready() || sourceLoading || sourceSave.current || !auth?.roles.includes("admin")) return;
@@ -575,10 +627,18 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="flex min-h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur dark:border-white/10 dark:bg-[#0f1627]/90 sm:px-8">
-            <div>
+          <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-5 py-3 backdrop-blur dark:border-white/10 dark:bg-[#0f1627]/90 sm:px-8">
+            <div className="min-w-0">
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Công ty đang làm việc</p>
-              <h2 className="mt-0.5 font-semibold">{companyName}</h2>
+              <h2 className="mt-0.5 break-words font-semibold">{companyName}</h2>
+              {loginMode === "browser" && companies.length > 1 ? <div className="mt-2">
+                <label htmlFor="workspace-company" className="mr-2 text-sm">Chuyển công ty</label>
+                <select id="workspace-company" value={companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyId ?? companyId} disabled={busy || sourceSaving}
+                  onChange={event => void selectCompany(event.target.value)}
+                  className="max-w-full rounded-lg border border-slate-200 bg-transparent px-2 py-1 text-sm dark:border-white/15">
+                  {companies.map(item => <option key={item.companyId} value={item.companyId}>{item.companyName}</option>)}
+                </select>
+              </div> : null}
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200 sm:inline-flex">
@@ -590,7 +650,10 @@ export function LocalAiWorkspace({ companyId, companyName, loginMode = "local", 
             </div>
           </header>
 
-          <div className="px-4 py-5 sm:px-8 sm:py-7">
+          <div key={`${companyId}:${sessionGeneration.current}`} className="px-4 py-5 sm:px-8 sm:py-7">
+            {companyChoiceError ? <div role="alert" className="mb-4 rounded-xl border border-amber-200 p-3 text-sm dark:border-amber-400/30">
+              {companyChoiceError} <button type="button" onClick={() => void loadCompanies()} className="ml-2 underline">Làm mới công ty</button>
+            </div> : null}
             <div className="mb-5 flex gap-2 lg:hidden">
               <button type="button" onClick={() => setSurface("assistant")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Trợ lý AI</button>
               <button type="button" onClick={() => setSurface("data-sources")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Nguồn dữ liệu</button>

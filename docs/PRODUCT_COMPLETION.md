@@ -131,7 +131,7 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 ### Accepted progress after the baseline
 
 - Accepted main `002e5cd9c1fd95eabc02dd3580bb8e964409764b` has [Build37801975078](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37801975078) and [Governance37801976469](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37801976469) PASS, including actual SQL/OIDC/broker/worker/FE/Chromium113396238709. P0-02 and P0-05 are marked Done against their bounded requirements; the other rows retain their broader acceptance.
-- P1-01/P6-01: reviewed exact identity, scoped member listing and audited suspend/reactivate are shipped (#254/#256/#262), and provider Code/S256 browser authentication/session lifecycle is shipped (#260). Authoritative company selection is active #266/PR267; invitations/role administration/approved production identity remain.
+- P1-01/P6-01: reviewed exact identity, scoped member listing and audited suspend/reactivate are shipped (#254/#256/#262), and provider Code/S256 browser authentication/session lifecycle is shipped (#260). Authoritative company selection is shipped (#266/#267, accepted maina75 with full review/exact PR+main SQL/Chromium gates); invitations/role administration/approved production identity remain.
 - P1-02: reviewed source administration, typed secret bindings, read-only registration and fresh capability authorization are shipped (#240/#246/#248/#250/#252). Real customer source qualification remains separate.
 - P3/P5: reviewed #264/#265 conservative standalone SQL Server read credential profile refuses elevation, unsupported dependency graphs and mid-read privilege changes on the actual connection. Its owned SQL proof is recorded in `docs/validation/ERP_READ_CREDENTIAL_PROFILE.md`; it does not accept the elevated private Medcom/Novo connections or prove inventory business answers. Dedicated read credentials, versioned legacy module profiles and reconciliation remain; Santino is deferred.
 - W: Draft PR239 contains a reviewed self-contained development installer with hosted native/retained-stack evidence. Clean supported Windows install/UAC/reboot/resume/sign-in/startup/repair/backup and signing are still required. Missing W rows describe delivered acceptance, not the absence of all source code.
@@ -139,8 +139,8 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 
 ## Next executable work
 
-1. Continue the active #266/PR267 lease through actual two-company SQL/OIDC/Chromium acceptance, independent frozen review, exact PR merge and main gates. Read its current live HANDOFF before acting.
-2. Close the current exact gates and independent integration review of Draft installer239, whose fa payload already includes accepted ERP qualification; complete clean Windows lifecycle and signing evidence when its external fixture is available.
+1. #266/#267 is delivered at maina75 with full frozen review and exact PR/main gates. Integrate its accepted company selection into Draft installer239 with renewed exact9 gates and frozen integration review.
+2. Draft installer239 already includes accepted ERP qualification and reviewed45a/all9 evidence. Complete clean Windows lifecycle and signing evidence when its external fixture is available; keep it Draft until acceptance.
 3. Continue missing member administration and customer workflow prerequisites. Customer inventory/stock-movement execution requires dedicated approved credentials and qualified schema/version dependencies before business-row proof.
 4. Continue all remaining P0-P6 rows through feature issues and actual browser/runtime acceptance. Keep #233 active until every applicable row and completion gate is proven.
 

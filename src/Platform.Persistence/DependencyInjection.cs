@@ -22,6 +22,7 @@ public static class DependencyInjection
                         PlatformDbContext.DefaultSchema)));
             services.AddScoped<IAuthorizationDirectory, EfAuthorizationDirectory>();
             services.AddScoped<IAuthenticatedAuthorizationDirectory, EfAuthenticatedAuthorizationDirectory>();
+            services.AddScoped<IAuthenticatedCompanyDirectory, EfAuthenticatedCompanyDirectory>();
             services.AddScoped<CompanyMemberDirectory>();
             services.AddScoped<CompanyMembershipAccessService>();
             services.AddScoped<BindingStorePermissionVerifier>();

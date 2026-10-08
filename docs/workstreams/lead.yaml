@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
+head: 45a2ba58abf00cdb278951d8bed7c9444f007982
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: '2026-10-09'
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: 'Installerfa/3ff independently APPROVED; exact3ff all9 gates/artifact PASS. Close final docs delta review/current gates; retain Draft for external clean Windows/signing. Primary266 shippingf03/proof764 approved/all8 PASS; integrate only after exact PR/main delivery. Full233/customer workflows/production remain.'
+next_action: 'Accepted266 maina75/all8 delivered. Integrate into239 preserving approved Setup bytes, close local/current9 gates and independent frozen integration review.45a prior all9/docs reviewed. Keep Draft for clean Windows/signing; full233/customer/production remain.'
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -235,3 +235,25 @@ installer_verified_erp_integration:
   local_dotnet_tests: 1127
   result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. Independent frozenfa/3ff integration APPROVED; reviewed3ff current all9 gates PASS.'
   next: 'Close final documentation delta review/current HEAD gates and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
+installer_verified_45a:
+  head: 45a2ba58abf00cdb278951d8bed7c9444f007982
+  build: 37813475810
+  governance: 37813475639
+  native: 113435995421
+  actual: 113435995742
+  quality: 113439235869
+  artifact: 11565887828
+  artifact_bytes: 48598421
+  review: 'Final docs45a independently APPROVED, receipt6065013782. All9 exact gates PASS; accepted ERP/retained SQL+Chromium and unchanged pinned native installer proof retained. Company selection is integrated only from accepted maina75 with exact main gates closed; renew integration gates/review. Clean Windows/signing remains external.'
+
+installer_company_selection_integration:
+  accepted_main: a75f31a2761ffe0afcbf067425eb8324789b3554
+  main_build: 37815044494
+  main_governance: 37815044554
+  main_actual: 113441393702
+  main_quality: 113444186237
+  prior_installer_head: 45a2ba58abf00cdb278951d8bed7c9444f007982
+  local_dotnet_tests: 1162
+  local_guard_tests: 3
+  local: 'Full solution restore/build/tests PASS:685 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core; owned guard3tests/8paths, YAML/AST/node syntax/diff PASS. Non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify scripts unchanged approved21d/989/45a. Workflow retains required owned guard and native9 quality results. Only three durable-state conflicts resolved, preserving accepted component and installer receipts.'
+  next: 'Capture exact integration HEAD and renewed9 CI gates; obtain independent frozen integration/docs/runtime review. Keep239 Draft for clean Windows/signing; full233/customer/production remain.'
