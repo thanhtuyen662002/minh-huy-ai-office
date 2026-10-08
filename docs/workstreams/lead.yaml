@@ -4,11 +4,11 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
+head: 6e1734113175269ca6451664879727954deb9c0f
 state: in_progress
 lease_owner: lead
-lease_heartbeat_at: "2026-10-07"
-last_checkpoint_at: "2026-10-07"
+lease_heartbeat_at: "2026-10-08"
+last_checkpoint_at: "2026-10-08"
 scope:
   - integration
   - roadmap-priority
@@ -176,6 +176,11 @@ branch_audit:
 
 installer_layout_checkpoint:
   state: in_progress
-  defect: 'Actual host-DPI preview clipped text/horizontal scrollbar;96-DPI baseline/live text width/natural action sizing repaired it.'
-  local: 'Compiled WinForms candidate, four offscreen states plus masked ready-onboarding preview and real isolated Windows ACL/shortcut/cache/diagnostic/failure-form verification PASS. Ready/onboarding images visually inspected; no clipping. No OS preparation or real Startup-folder changes.'
-  next: 'Close current code-head hosted gates and independent delta review. Keep239 Draft for clean Windows lifecycle/signing; no new installation claim.'
+  prior_head: 6e1734113175269ca6451664879727954deb9c0f
+  prior_build: 37715495368
+  prior_governance: 37715495383
+  prior_actual_stack: 113110901977
+  prior_native_artifact: 11523339266
+  defect: 'Independent192DPI review found license height/clipping and hscroll at720x570 despite green default-only gates.'
+  local: 'Single table column inside scroll panel, measured multiline checkbox height and synchronized scroll extent.20 compiled offscreen cases across four states/default/minimum/expanded/minimum-again/14pt-minimum PASS; masked password and reveal reachable, minimum images visually inspected.76 core tests/formatting/real isolated ACL-shortcut-cache-diagnostic-failure-form PASS. No OS preparation/real Startup-folder changes.'
+  next: 'Close repaired exact-head hosted gates and frozen independent review. Keep239 Draft for clean Windows lifecycle/signing; continue unblocked full233 product engineering.'

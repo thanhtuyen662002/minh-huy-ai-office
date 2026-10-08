@@ -70,12 +70,23 @@ foreach ($requiredCheck in @('actual-helper-acl', 'administrator-traverse-only',
 $previewDirectory = Join-Path $Directory 'ui-preview'
 Invoke-SetupInspection '--preview-ui' $previewDirectory
 $preview = Get-Content -LiteralPath (Join-Path $previewDirectory 'preview-proof.json') -Raw | ConvertFrom-Json
-if ($preview.schemaVersion -ne 1 -or !$preview.simulated -or $preview.installationVerified -or
+if ($preview.schemaVersion -ne 1 -or !$preview.simulated -or !$preview.offscreen -or $preview.installationVerified -or
     $preview.privilegedOperations) { throw 'UI previews must be marked as simulations.' }
 foreach ($state in @('initial', 'failed', 'reboot', 'ready')) {
     if ($preview.states -notcontains $state -or !(Test-Path -LiteralPath (Join-Path $previewDirectory ($state + '.png')))) {
         throw ('Missing simulated UI preview: ' + $state)
     }
+    foreach ($scenario in @('default', 'minimum', 'expanded', 'minimum-again', 'large-font-minimum')) {
+        $scenarioName = if ($scenario -eq 'default') { $state } else { $state + '-' + $scenario }
+        if ($preview.scenarios -notcontains $scenario -or
+            @($preview.verified | Where-Object { $_.state -eq $state -and $_.scenario -eq $scenario }).Count -ne 1 -or
+            !(Test-Path -LiteralPath (Join-Path $previewDirectory ($scenarioName + '.png')))) {
+            throw ('Missing responsive UI verification: ' + $scenarioName)
+        }
+    }
+}
+foreach ($requiredCheck in @('no-horizontal-scroll', 'complete-text-height', 'buttons-fit', 'resize-cycle', 'masked-password-reachable')) {
+    if ($preview.checks -notcontains $requiredCheck) { throw ('Missing UI layout check: ' + $requiredCheck) }
 }
 Write-Output 'PASS isolated real Windows shortcuts/ACLs, typed export, failure UI controls, simulated offscreen previews.'
 Write-Output 'Clean Windows installation, reboot, UAC and alternate-administrator login acceptance remain pending.'

@@ -7,12 +7,12 @@ internal sealed partial class SetupForm : Form
 {
     private readonly SetupEngine engine;
     private readonly Label status = new() { AutoSize = true, MaximumSize = new Size(610, 0) };
-    private readonly CheckBox license = new() { Text = "Tôi chấp nhận điều khoản Docker cho việc cài đặt và sử dụng.", AutoSize = true };
+    private readonly CheckBox license = new() { Text = "Tôi chấp nhận điều khoản Docker cho việc cài đặt và sử dụng.", CheckAlign = ContentAlignment.TopLeft, TextAlign = ContentAlignment.TopLeft };
     private readonly Button install = new() { Text = "Cài đặt / Sửa chữa", Width = 185, Height = 38 };
     private readonly Button open = new() { Text = "Mở ứng dụng", Width = 150, Height = 38, Enabled = false };
     private readonly Button restart = new() { Text = "Khởi động lại Windows", Width = 190, Height = 38, Visible = false };
     private readonly TextBox password = new() { ReadOnly = true, UseSystemPasswordChar = true, Width = 400, Visible = false };
-    private readonly CheckBox reveal = new() { Text = "Hiện mật khẩu ban đầu", AutoSize = true, Visible = false };
+    private readonly CheckBox reveal = new() { Text = "Hiện mật khẩu ban đầu", CheckAlign = ContentAlignment.TopLeft, TextAlign = ContentAlignment.TopLeft, Visible = false };
     private readonly Button export = new() { Text = "Xuất chẩn đoán", Width = 155, Height = 34 };
     private readonly Label owner = new()
     {
@@ -27,7 +27,8 @@ internal sealed partial class SetupForm : Form
     private bool busy;
     private readonly bool background;
     private readonly bool startOnly;
-    private readonly FlowLayoutPanel layout;
+    private readonly Panel layout;
+    private readonly TableLayoutPanel content;
 
     public SetupForm(string[] arguments, bool preview = false, SetupEngine? setupEngine = null)
     {
@@ -42,21 +43,29 @@ internal sealed partial class SetupForm : Form
         MinimumSize = new Size(720, 570);
         background = arguments.Contains("--background", StringComparer.Ordinal);
         startOnly = arguments.Contains("--start", StringComparer.Ordinal);
-        layout = new FlowLayoutPanel
+        layout = new Panel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.TopDown,
-            WrapContents = false,
             AutoScroll = true,
             Padding = new Padding(24)
         };
-        if (preview) layout.Controls.Add(new Label { Text = "MÔ PHỎNG GIAO DIỆN — KHÔNG PHẢI BẰNG CHỨNG CÀI ĐẶT", AutoSize = true, ForeColor = Color.DarkRed });
-        layout.Controls.Add(new Label { Text = "Cài đặt và chạy MinhHuy AI Office", Font = new Font(Font, FontStyle.Bold), AutoSize = true });
-        layout.Controls.Add(new Label { Text = "Bộ cài chuẩn bị Docker/WSL, dịch vụ và ứng dụng.\nCấu hình và dữ liệu được giữ nguyên khi chạy lại hoặc sửa chữa.", AutoSize = true, Margin = new Padding(0, 12, 0, 12) });
+        content = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 1,
+            GrowStyle = TableLayoutPanelGrowStyle.AddRows,
+            Margin = Padding.Empty
+        };
+        content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        if (preview) content.Controls.Add(new Label { Text = "MÔ PHỎNG GIAO DIỆN — KHÔNG PHẢI BẰNG CHỨNG CÀI ĐẶT", AutoSize = true, ForeColor = Color.DarkRed });
+        content.Controls.Add(new Label { Text = "Cài đặt và chạy MinhHuy AI Office", Font = new Font(Font, FontStyle.Bold), AutoSize = true });
+        content.Controls.Add(new Label { Text = "Bộ cài chuẩn bị Docker/WSL, dịch vụ và ứng dụng.\nCấu hình và dữ liệu được giữ nguyên khi chạy lại hoặc sửa chữa.", AutoSize = true, Margin = new Padding(0, 12, 0, 12) });
         var terms = new LinkLabel { Text = "Xem điều khoản Docker", AutoSize = true };
         terms.LinkClicked += (_, _) => { if (!preview) OpenUrl("https://www.docker.com/legal/docker-subscription-service-agreement/"); };
-        layout.Controls.Add(terms);
-        layout.Controls.Add(license);
+        content.Controls.Add(terms);
+        content.Controls.Add(license);
         var buttons = new FlowLayoutPanel
         {
             AutoSize = true,
@@ -67,15 +76,20 @@ internal sealed partial class SetupForm : Form
         };
         foreach (var button in new[] { install, open, restart, export }) button.AutoSize = true;
         buttons.Controls.AddRange([install, open, restart]);
-        layout.Controls.Add(buttons);
-        layout.Controls.Add(status);
-        layout.Controls.Add(export);
-        layout.Controls.Add(new Label { Text = "Báo cáo chỉ chứa trạng thái máy và dịch vụ; không chứa mật khẩu hoặc nội dung cấu hình.", MaximumSize = new Size(610, 0), AutoSize = true });
-        layout.Controls.Add(owner);
-        layout.Controls.Add(password);
-        layout.Controls.Add(reveal);
+        content.Controls.Add(buttons);
+        content.Controls.Add(status);
+        content.Controls.Add(export);
+        content.Controls.Add(new Label { Text = "Báo cáo chỉ chứa trạng thái máy và dịch vụ; không chứa mật khẩu hoặc nội dung cấu hình.", MaximumSize = new Size(610, 0), AutoSize = true });
+        content.Controls.Add(owner);
+        content.Controls.Add(password);
+        content.Controls.Add(reveal);
+        layout.Controls.Add(content);
         Controls.Add(layout);
+        content.SizeChanged += (_, _) => layout.AutoScrollMinSize = new Size(0, content.Height + layout.Padding.Vertical);
         layout.SizeChanged += (_, _) => FitLayoutWidth();
+        FontChanged += (_, _) => FitLayoutWidth();
+        license.FontChanged += (_, _) => FitLayoutWidth();
+        reveal.FontChanged += (_, _) => FitLayoutWidth();
         Shown += (_, _) => FitLayoutWidth();
         FitLayoutWidth();
         install.Click += async (_, _) => await RunAsync();
@@ -115,15 +129,24 @@ internal sealed partial class SetupForm : Form
 
     private void FitLayoutWidth()
     {
-        // FlowLayoutPanel does not automatically wrap a top-down child's text.
-        // Reserve the vertical scrollbar even before it appears, so changes in
-        // status/owner text cannot cause a horizontal scrollbar at higher DPI.
+        // Reserve the vertical scrollbar even before it appears. A single
+        // table column keeps the scroll extent tied to the current width.
         var available = Math.Max(1, layout.ClientSize.Width - layout.Padding.Horizontal
             - SystemInformation.VerticalScrollBarWidth - 8);
-        foreach (Control control in layout.Controls)
+        content.MaximumSize = new Size(available, 0);
+        foreach (Control control in content.Controls)
         {
             var width = Math.Max(1, available - control.Margin.Horizontal);
-            if (control is Label or CheckBox or FlowLayoutPanel)
+            if (control is CheckBox checkBox)
+            {
+                // CheckBox.AutoSize keeps a single-line height when MaximumSize
+                // narrows. Give the native multiline renderer enough text space.
+                var glyphSpace = (int)Math.Ceiling(24d * DeviceDpi / 96);
+                var text = TextRenderer.MeasureText(checkBox.Text, checkBox.Font,
+                    new Size(Math.Max(1, width - glyphSpace), int.MaxValue), TextFormatFlags.WordBreak);
+                checkBox.Size = new Size(width, Math.Max(text.Height, glyphSpace) + 4);
+            }
+            else if (control is Label or FlowLayoutPanel)
                 control.MaximumSize = new Size(width, 0);
             else if (control.Width > width) control.Width = width;
         }

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
+current_target_head: 6e1734113175269ca6451664879727954deb9c0f
 last_verified_commit: 39e668ebebe1f8bd19803199b8db393f12a4edb6
 
 critical_paths:
@@ -202,4 +202,4 @@ installer_browser_verified:
   native_artifact_job: 112901482578
   artifact: 11497921154
   artifact_bytes: 48069731
-  result: 'All gates PASS at browser-integrated installer head. Subsequent DPI layout correction has local compiled/offscreen/isolated native proof; it needs current-head hosted gates/review. Clean Windows lifecycle/signing remains required;239 stays Draft.'
+  result: 'All gates PASS at browser-integrated installer head.6e Build37715495368/Governance37715495383 also PASS, but independent minimum-size review found a responsive defect. Repaired candidate has20 compiled minimum/resize/font cases and isolated native proof; current-head hosted gates/frozen review remain. Clean Windows lifecycle/signing remains required;239 stays Draft.'
