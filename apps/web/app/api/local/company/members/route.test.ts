@@ -21,3 +21,11 @@ it.each([401, 403, 503])("preserves server denial %i without caching", async sta
 });
 it("requires a session cookie", async () => { state.token = ""; const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher); expect((await GET(request())).status).toBe(401); expect(fetcher).not.toHaveBeenCalled(); });
 it("fails closed when local UI is disabled", async () => { vi.stubEnv("AIOFFICE_LOCAL_UI_ENABLED", "false"); expect((await GET(request())).status).toBe(503); });
+it("forwards the explicit version opt-in without changing the legacy default", async () => {
+  const fetcher = vi.fn(async () => Response.json({ items: [] })); vi.stubGlobal("fetch", fetcher);
+  expect((await GET(request("&includeAccessVersion=true"))).status).toBe(200);
+  expect((fetcher.mock.calls[0] as unknown as [string])[0]).toBe("http://core.fixture.invalid/api/company/members?offset=0&limit=25&includeAccessVersion=true");
+});
+it.each(["&includeAccessVersion=false", "&includeAccessVersion=True", "&includeAccessVersion=true&includeAccessVersion=true"])("rejects ambiguous version opt-in %s", async suffix => {
+  const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher); expect((await GET(request(suffix))).status).toBe(400); expect(fetcher).not.toHaveBeenCalled();
+});

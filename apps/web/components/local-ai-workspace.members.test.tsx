@@ -4,10 +4,10 @@ import { LocalAiWorkspace } from "./local-ai-workspace";
 const company = "22222222-2222-2222-2222-222222222222";
 const other = "66666666-6666-6666-6666-666666666666";
 const member = { userId: "33333333-3333-3333-3333-333333333333", displayName: "PRIVATE MEMBER A", userActive: false, membershipActive: false, roles: ["viewer"] };
-function backend(override: (url: string) => Response | Promise<Response> | undefined = () => undefined) {
+function backend(override: (url: string, init?: RequestInit) => Response | Promise<Response> | undefined = () => undefined) {
   const state = { roles: ["admin"] };
-  const fetcher = vi.fn(async (url: string) => {
-    const custom = override(url); if (custom !== undefined) return custom;
+  const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
+    const custom = override(url, init); if (custom !== undefined) return custom;
     const selected = new URL(url, "http://fixture.invalid").searchParams.get("companyId");
     if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: "tenant", companyId: selected, userId: "owner", roles: state.roles });
     if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
@@ -32,6 +32,17 @@ it("keeps member navigation absent for viewers", async () => {
   const { state } = backend(); state.roles = ["viewer"];
   const view = render(<LocalAiWorkspace companyId={company} companyName="Fixture" />); await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
   expect(screen.queryByRole("button", { name: "Thành viên" })).toBeNull();
+});
+it("clears the member panel and navigation when a mutation discovers revoked admin authority", async () => {
+  const { state } = backend(url => {
+    if (url.startsWith("/api/local/company/members?") ) return Response.json({ companyId: company,
+      items: [{ ...member, userActive: true, membershipActive: true, membershipVersion: "1" }], offset: 0, limit: 25, hasMore: false });
+    if (url.includes("/access?")) { state.roles = ["viewer"]; return Response.json({}, { status: 403 }); }
+    return undefined;
+  });
+  await open(); await screen.findByText(member.displayName); fireEvent.click(screen.getByRole("button", { name: `Khóa quyền ${member.displayName}` }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Thành viên" })).toBeNull());
+  expect(screen.queryByRole("region", { name: "Thành viên công ty" })).toBeNull(); expect(screen.queryByText(member.displayName)).toBeNull();
 });
 it("clears cached members while a retry fails", async () => {
   let fail = false; backend(url => fail && url.startsWith("/api/local/company/members?") ? Response.json({}, { status: 503 }) : undefined);

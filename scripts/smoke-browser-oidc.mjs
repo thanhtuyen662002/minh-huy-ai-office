@@ -23,6 +23,9 @@ try {
     const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
     requireProof(result.status === 0); return result.stdout.trim();
   };
+  const sql = text => run(["exec", "-T", "sql", "sh", "-c",
+    'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -Q "$1"',
+    "sql", "SET NOCOUNT ON; " + text]);
   const flags = { ...process.env, AIOFFICE_BROWSER_OIDC_ENABLED: "true", AIOFFICE_LOCAL_UI_ENABLED: "false", AIOFFICE_BROWSER_CI_PROOF: "true" };
   const profile = JSON.parse(run(["config", "--format", "json"], flags));
   requireProof(profile.name === "aioffice-" + manifest.AIOFFICE_INSTALLATION_ID.replaceAll("-", ""));
@@ -130,6 +133,67 @@ try {
   stage = "company-member-panel-ready";
   await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
   await page.locator('section[aria-label="Thành viên công ty"] tbody tr').first().waitFor();
+  const ownerMember = JSON.parse(members.text).items.find(item => item.userId === user);
+  requireProof(await page.getByRole("button", { name: `Khóa quyền ${ownerMember.displayName}`, exact: true }).isDisabled());
+  stage = "owned-browser-member-fixture";
+  const memberId = randomUUID(), memberName = "Disposable browser member";
+  const memberScope = `TenantId='${tenant}' AND CompanyId='${company}' AND UserId='${memberId}'`;
+  const memberAuditScope = `TenantId='${tenant}' AND CompanyId='${company}' AND TargetUserId='${memberId}'`;
+  // Retain this owned member and immutable history for the CI volume lifetime.
+  sql(`USE AIOfficeLocal; BEGIN TRANSACTION;
+    INSERT aioffice.Users(TenantId,Id,IdentityProvider,Subject,DisplayName) VALUES('${tenant}','${memberId}',N'disposable-browser-proof',N'${randomUUID()}',N'${memberName}');
+    INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('${tenant}','${company}','${memberId}');
+    INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES('${tenant}','${company}','${memberId}',N'viewer'); COMMIT TRANSACTION;`);
+  const memberPath = `/api/local/company/members/${memberId}/access` + query;
+  const memberCount = () => sql(`USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.CompanyMembershipAccessAudits WHERE ${memberAuditScope};`);
+  const memberState = () => sql(`USE AIOfficeLocal; SELECT CONCAT(CONVERT(int,IsActive),N':',Version) FROM aioffice.CompanyMemberships WHERE ${memberScope};`);
+  await page.getByRole("button", { name: "Tải lại thành viên", exact: true }).click();
+  const memberButton = active => page.getByRole("button", { name: `${active ? "Khóa quyền" : "Mở lại quyền"} ${memberName}`, exact: true });
+  await memberButton(true).waitFor();
+  stage = "browser-member-suspend-reactivate";
+  await memberButton(true).click(); await memberButton(false).waitFor();
+  requireProof(memberState() === "0:2" && memberCount() === "1");
+  await memberButton(false).click(); await memberButton(true).waitFor();
+  requireProof(memberState() === "1:3" && memberCount() === "2");
+  stage = "browser-member-committed-lost-reply";
+  let lostInput, committed = false;
+  const loseReply = async route => {
+    lostInput = route.request().postDataJSON();
+    const response = await route.fetch(); committed = response.status() === 200;
+    await route.abort("failed");
+  };
+  await page.route(app + memberPath, loseReply);
+  await memberButton(true).click();
+  await page.getByRole("button", { name: `Thử lại thao tác với ${memberName}`, exact: true }).waitFor();
+  requireProof(committed && lostInput.expectedVersion === "3" && !lostInput.isActive && guid(lostInput.operationId)
+    && memberState() === "0:4" && memberCount() === "3");
+  await page.unroute(app + memberPath, loseReply);
+  const retried = page.waitForResponse(response => response.url() === app + memberPath && response.request().method() === "POST");
+  await page.getByRole("button", { name: `Thử lại thao tác với ${memberName}`, exact: true }).click();
+  const retry = await retried;
+  requireProof(retry.status() === 200 && JSON.stringify(retry.request().postDataJSON()) === JSON.stringify(lostInput));
+  await memberButton(false).waitFor(); requireProof(memberCount() === "3" && memberState() === "0:4");
+  await memberButton(false).click(); await memberButton(true).waitFor();
+  requireProof(memberState() === "1:5" && memberCount() === "4");
+  stage = "browser-member-stale-version-setup";
+  sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0,Version=Version+1 WHERE ${memberScope};`);
+  requireProof(memberState() === "0:6" && memberCount() === "4");
+  const staleResponse = page.waitForResponse(response => response.url() === app + memberPath && response.request().method() === "POST");
+  stage = "browser-member-stale-version-response";
+  await memberButton(true).click(); const stale = await staleResponse;
+  requireProof(stale.status() === 409 && stale.request().postDataJSON().expectedVersion === "5");
+  stage = "browser-member-stale-version-private-clear";
+  await page.getByRole("alert").waitFor();
+  await page.locator('section[aria-label="Thành viên công ty"] tbody').waitFor({ state: "detached" });
+  requireProof(await memberButton(true).count() === 0 && await memberButton(false).count() === 0 && memberState() === "0:6" && memberCount() === "4");
+  stage = "browser-member-stale-version-reload";
+  await page.getByRole("button", { name: "Tải lại thành viên", exact: true }).click();
+  await memberButton(false).waitFor(); await memberButton(false).click(); await memberButton(true).waitFor();
+  requireProof(memberState() === "1:7" && memberCount() === "5");
+  stage = "browser-member-stale-version-role-session";
+  const roleProof = sql(`USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.RoleAssignments WHERE ${memberScope} AND RoleKey=N'viewer';`);
+  requireProof(roleProof === "1" && (await current()).status === 200 && (await cookie("aioffice_browser_session")).value === sid.value);
+  console.log("PASS actual Chromium member suspend/reactivate, committed lost reply with stable replay, stale version reload and unchanged role/session");
   const foreign = randomUUID();
   for (const path of ["/api/local/session", "/api/local/data-sources", "/api/local/company/members"]) {
     requireProof((await get(path + `?companyId=${foreign}`)).status === 401);
@@ -139,6 +203,8 @@ try {
   })).status);
   requireProof(password === 503 && (await current()).status === 200);
   console.log("PASS browser company/member/source access, cross-company denial and disabled local password route");
+  requireProof((await mutate(`/api/local/company/members/${memberId}/access?companyId=${foreign}`, "POST",
+    { operationId: randomUUID(), expectedVersion: "7", isActive: false })).status === 401 && memberState() === "1:7" && memberCount() === "5");
 
   stage = "owned-source-metadata-mutation";
   const sourcePath = `/api/local/data-sources/${source.id}/metadata` + query;
@@ -177,9 +243,6 @@ try {
   console.log("PASS actual callback replay/wrong-state and oversized mutation denial preserve the issued browser session");
 
   stage = "fresh-sql-role-revocation";
-  const sql = text => run(["exec", "-T", "sql", "sh", "-c",
-    'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -Q "$1"',
-    "sql", "SET NOCOUNT ON; " + text]);
   const scope = `TenantId='${tenant}' AND CompanyId='${company}' AND UserId='${user}'`;
   const backup = "tempdb.dbo.AIOfficeBrowserRoles_" + randomUUID().replaceAll("-", "");
   requireProof((await current()).body.roles.includes("admin"));
@@ -191,6 +254,8 @@ try {
     const authority = await current(); requireProof(authority.status === 200 && !authority.body.roles.includes("admin"));
     stage = "member-denial-after-role-revocation";
     requireProof((await get("/api/local/company/members" + query)).status === 403);
+    requireProof((await mutate(memberPath, "POST", { operationId: randomUUID(), expectedVersion: "7", isActive: false })).status === 403
+      && memberState() === "1:7" && memberCount() === "5");
     stage = "registration-denial-after-role-revocation";
     requireProof((await get("/api/local/data-sources/registration-options" + query)).status === 403);
     stage = "metadata-denial-after-role-revocation";
@@ -219,6 +284,10 @@ try {
     headers: { Cookie: previous.filter(item => item.name.startsWith("aioffice_browser_")).map(item => `${item.name}=${item.value}`).join("; ") },
   });
   requireProof(old.status() === 401);
+  const oldMember = await context.request.post(app + memberPath, { headers: {
+    Origin: app, Cookie: previous.filter(item => item.name.startsWith("aioffice_browser_")).map(item => `${item.name}=${item.value}`).join("; "),
+  }, data: { operationId: randomUUID(), expectedVersion: "7", isActive: false } });
+  requireProof(oldMember.status() === 401 && memberState() === "1:7" && memberCount() === "5");
   stage = "provider-sso-relogin";
   await signIn(); requireProof((await cookie("aioffice_browser_session")).value !== sid.value);
   console.log("PASS actual logout denies presented old binding/SID and provider SSO re-login issues fresh opaque session");
