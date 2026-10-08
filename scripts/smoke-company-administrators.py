@@ -18,6 +18,7 @@ def verify(*, directory, manifest, compose, environment, http, sql,
     assert api == "http://127.0.0.1:8080" and web == "http://127.0.0.1:3000"
     tenant, company, owner = (str(uuid.UUID(manifest[f"AIOFFICE_{key}_ID"])) for key in ("TENANT", "COMPANY", "USER"))
     target, race_company, foreign_member = (str(uuid.uuid4()) for _ in range(3))
+    foreign_tenant, foreign_target = str(uuid.uuid4()), str(uuid.uuid4())
     username = "administrator-proof-" + uuid.uuid4().hex
     identity_admin("users", {"username": username, "enabled": True, "emailVerified": True,
         "firstName": "Disposable", "lastName": "Administrator", "email": username + "@example.invalid",
@@ -38,12 +39,16 @@ def verify(*, directory, manifest, compose, environment, http, sql,
           ('{tenant}','{foreign_member}',N'disposable-role-proof',N'{uuid.uuid4()}',N'Disposable foreign role proof');
         INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('{tenant}','{company}','{target}');
         INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES
-          ('{tenant}','{company}','{target}',N'viewer'),('{tenant}','{company}','{target}',N'viewer😀');
+          ('{tenant}','{company}','{target}',N'viewer'),('{tenant}','{company}','{target}',N'supplementary-😀');
         INSERT aioffice.Companies(TenantId,Id,Code,Name) VALUES('{tenant}','{race_company}',N'{race_company}',N'Disposable administrator race');
         INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES
           ('{tenant}','{race_company}','{owner}'),('{tenant}','{race_company}','{target}'),('{tenant}','{race_company}','{foreign_member}');
         INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES
           ('{tenant}','{race_company}','{owner}',N'admin'),('{tenant}','{race_company}','{target}',N'admin');
+        INSERT aioffice.Companies(TenantId,Id,Code,Name) VALUES('{foreign_tenant}','{company}',N'{company}',N'Disposable foreign tenant role proof');
+        INSERT aioffice.Users(TenantId,Id,IdentityProvider,Subject,DisplayName)
+          VALUES('{foreign_tenant}','{foreign_target}',N'disposable-role-proof',N'{uuid.uuid4()}',N'Disposable foreign tenant member');
+        INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('{foreign_tenant}','{company}','{foreign_target}');
         COMMIT TRANSACTION;""")
     scope = f"TenantId='{tenant}' AND CompanyId='{company}'"
     member_scope = scope + f" AND UserId='{target}'"
@@ -98,7 +103,7 @@ def verify(*, directory, manifest, compose, environment, http, sql,
       AND ActorUserId='{owner}' AND OperationId='{grant['operationId']}' AND BeforeAdministrator=0 AND AfterAdministrator=1
       AND BeforeVersion=1 AND AfterVersion=2 AND ISJSON(BeforeRolesJson)=1 AND ISJSON(AfterRolesJson)=1
       AND (SELECT COUNT(*) FROM OPENJSON(BeforeRolesJson))=2 AND (SELECT COUNT(*) FROM OPENJSON(AfterRolesJson))=3
-      AND EXISTS(SELECT 1 FROM OPENJSON(AfterRolesJson) WHERE value COLLATE Latin1_General_100_BIN2=N'viewer😀');""") == "1"
+      AND EXISTS(SELECT 1 FROM OPENJSON(AfterRolesJson) WHERE value COLLATE Latin1_General_100_BIN2=N'supplementary-😀');""") == "1"
     change(operation(1, False), 409)
     change({**grant, "isAdministrator": False}, 409)
     removed = change(operation(2, False))
@@ -125,7 +130,7 @@ def verify(*, directory, manifest, compose, environment, http, sql,
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.CompanyAdministratorAudits WHERE {audit_scope};") == "4"
     replies = parallel([(path, operation(4, False), {"Origin": web}, web) for _ in range(2)])
     assert sorted(reply[0] for reply in replies) == [200, 409] and state() == "1:5:0"
-    for target_id, status in ((owner, 409), (foreign_member, 404), (str(uuid.uuid4()), 404)):
+    for target_id, status in ((owner, 409), (foreign_member, 404), (foreign_target, 404), (str(uuid.uuid4()), 404)):
         assert http(f"/api/local/company/members/{target_id}/administrator?companyId={company}",
             operation(1, False), headers={"Origin": web})[0] == status
     assert change(operation(5, True))["membershipVersion"] == "6"
@@ -138,7 +143,7 @@ def verify(*, directory, manifest, compose, environment, http, sql,
 
     # A native SQL lock barrier proves both services use the same company lock,
     # and proves both opposite-admin requests wait before either can commit.
-    def locked_parallel(lock_company, requests):
+    def locked_parallel(lock_company, requests, after_wait=None):
         gate = "dbo.AdministratorGate_" + uuid.uuid4().hex
         resource = f"aioffice:membership:{tenant}:{lock_company}"
         sql(f"USE AIOfficeLocal; CREATE TABLE {gate}(Released bit NOT NULL); INSERT {gate} VALUES(0);")
@@ -168,6 +173,8 @@ def verify(*, directory, manifest, compose, environment, http, sql,
             executor = ThreadPoolExecutor(max_workers=1)
             pending = executor.submit(parallel, requests)
             await_sql(lambda: locks("WAIT", "aioffice_runtime") == 2, 4)
+            if after_wait is not None:
+                after_wait()
             sql(f"USE AIOfficeLocal; UPDATE {gate} SET Released=1;")
             replies = pending.result(timeout=20)
         finally:
@@ -193,6 +200,22 @@ def verify(*, directory, manifest, compose, environment, http, sql,
         assert state() == "1:10:1"
         change(operation(10, False))
     assert state() == "1:11:0"
+    revocation_before = fingerprint("CompanyAdministratorAudits", audit_scope, "Id")
+    owner_scope = scope + f" AND UserId='{owner}' AND RoleKey COLLATE Latin1_General_100_BIN2=N'admin' AND DATALENGTH(RoleKey)=10"
+    backup = "tempdb.dbo.AdministratorRoleBackup_" + uuid.uuid4().hex
+    sql(f"USE AIOfficeLocal; SELECT * INTO {backup} FROM aioffice.RoleAssignments WHERE {owner_scope};")
+    try:
+        replies = locked_parallel(company, [(path, operation(11, True), {"Origin": web}, web),
+            (access_path, {**access, "operationId": str(uuid.uuid4()), "expectedVersion": "11"}, {"Origin": web}, web)],
+            after_wait=lambda: sql(f"USE AIOfficeLocal; DELETE aioffice.RoleAssignments WHERE {owner_scope};"))
+        assert [reply[0] for reply in replies] == [403, 403] and state() == "1:11:0"
+        assert fingerprint("CompanyAdministratorAudits", audit_scope, "Id") == revocation_before
+    finally:
+        sql(f"""USE AIOfficeLocal; BEGIN TRANSACTION;
+          INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey,CreatedAtUtc)
+            SELECT b.TenantId,b.CompanyId,b.UserId,b.RoleKey,b.CreatedAtUtc FROM {backup} b
+            WHERE NOT EXISTS(SELECT 1 FROM aioffice.RoleAssignments r WHERE r.TenantId=b.TenantId AND r.CompanyId=b.CompanyId
+              AND r.UserId=b.UserId AND r.RoleKey=b.RoleKey); DROP TABLE {backup}; COMMIT TRANSACTION;""")
     owner_race_auth = {**auth, "X-AIOffice-Company-Id": race_company}
     target_race_auth = {**second_auth, "X-AIOffice-Company-Id": race_company}
     replies = locked_parallel(race_company, [
@@ -209,7 +232,7 @@ def verify(*, directory, manifest, compose, environment, http, sql,
     surviving_user = [owner, target][1-losing]
     # The sole remaining administrator cannot remove its own last role.
     assert http(f"/api/company/members/{surviving_user}/administrator", operation(1, False), base=api, headers=surviving)[0] == 409
-    print("PASS real SQL shared access/role lock and version race, opposite administrator race, fresh losing-actor/sole-admin denial")
+    print("PASS real SQL shared access/role lock and version race, queued external actor revocation, opposite administrator race, fresh losing-actor/sole-admin denial")
 
     audit_before = fingerprint("CompanyAdministratorAudits", audit_scope, "Id")
     role_before = fingerprint("RoleAssignments", member_scope, "RoleKey")
@@ -279,6 +302,13 @@ def verify(*, directory, manifest, compose, environment, http, sql,
     assert change(operation(12, False))["membershipVersion"] == "13"
     print("PASS real SQL immutable administrator audit, effective column/module/role-trigger/impersonation refusal and atomic restored-positive rollback")
 
+    inactive_audit = fingerprint("CompanyAdministratorAudits", audit_scope, "Id")
+    try:
+        sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET IsActive=0 WHERE TenantId='{tenant}' AND Id='{target}';")
+        assert change(operation(13, True), 409)["code"] == "inactive-user" and state() == "1:13:0"
+        assert fingerprint("CompanyAdministratorAudits", audit_scope, "Id") == inactive_audit
+    finally:
+        sql(f"USE AIOfficeLocal; UPDATE aioffice.Users SET IsActive=1 WHERE TenantId='{tenant}' AND Id='{target}';")
     for raw in ("CONVERT(nvarchar(100),0x00D8)", "CONVERT(nvarchar(100),0x00DC)", "N'bad'+NCHAR(1)", "N'ADMIN'", "N'admin '"):
         sql(f"USE AIOfficeLocal; INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES('{tenant}','{company}','{target}',{raw});")
         try:

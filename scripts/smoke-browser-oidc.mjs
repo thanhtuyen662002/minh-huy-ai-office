@@ -6,6 +6,7 @@ import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
+import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs";
 
 let stage = "disposable-fixture-guard", browser, safeFailureLogs;
 const requireProof = condition => { if (!condition) throw new Error("Browser proof failed."); };
@@ -194,6 +195,8 @@ try {
   const roleProof = sql(`USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.RoleAssignments WHERE ${memberScope} AND RoleKey=N'viewer';`);
   requireProof(roleProof === "1" && (await current()).status === 200 && (await cookie("aioffice_browser_session")).value === sid.value);
   console.log("PASS actual Chromium member suspend/reactivate, committed lost reply with stable replay, stale version reload and unchanged role/session");
+  await verifyCompanyAdministrators({ directory, manifest, browser, ownerPage: page, ownerContext: context, sql,
+    app, identity, company, tenant, owner: user, setStage: value => { stage = value; } });
   const foreign = randomUUID();
   for (const path of ["/api/local/session", "/api/local/data-sources", "/api/local/company/members"]) {
     requireProof((await get(path + `?companyId=${foreign}`)).status === 401);

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: 3e50621fa7eafcd9802aa02974e4a05a1009488c
+head: e51fc2b924a960879277b7daaccf42e1745a5c36
 state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,16 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Push owned administrator SQL fixture, close exact current8 gates and inspect/fix red SAME269. Continue actual shipping Chromium grant/remove/lost reply/fresh authority gain-revocation/private state proof. Full268 SQL and browser acceptance, independent frozen security/runtime review and exact PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+next_action: 'Push SQL fixture collation fix and actual shipping two-session Chromium proof, close exact current8 gates and inspect/fix red SAME269. Full268 SQL and browser execution/acceptance, independent frozen security/runtime review and exact PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_browser_checkpoint:
+  sql_head: e51fc2b924a960879277b7daaccf42e1745a5c36
+  sql_build: 37821635626
+  sql_governance: 37821635882
+  sql_actual: 113463873920
+  failure: 'SQL fixture setup duplicate PK: default collation ignores supplementary suffix so viewer and viewer-emoji were equivalent. Fixture now uses distinct supplementary prefix. All six other jobs/Governance and retained SQL/member proof passed; no new administrator scenarios executed yet.'
+  implementation: 'Added actual shipping Chromium grant/remove with separate target provider Code/S256 session and immediate fresh role gain/loss under same SID, member private clearing, committed lost reply/stable and historical replay, stale409/reload and retained original fingerprints. New standalone CI guard checks9 unowned flags/paths/hosts. SQL adds cross-tenant target, queued external actor revocation and inactive-global-target denial.'
+  local: 'Python compilation/4 guard tests/15 refusal paths, JS syntax/1 guard test/9 refusal paths, workflow YAML and diff checks PASS. Actual current-head hosted SQL/Chromium and frozen independent review remain mandatory.'
 
 administrator_sql_checkpoint:
   verified_ui_head: 3e50621fa7eafcd9802aa02974e4a05a1009488c

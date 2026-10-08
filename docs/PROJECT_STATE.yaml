@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '268/269 service/API/audit/BFF/member-panel3e all8 exact gates PASS. Push mandatory owned SQL role/audit/version/permission/concurrency/Unicode fixture and close exact CI; continue actual shipping Chromium grant-remove/lost reply/fresh gain-revocation/private clearing. Full268 acceptance, independent frozen review and exact PR/main delivery remain. Installer723 all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: '268/269 service/API/audit/BFF/member-panel3e all8 exact gates PASS. Fix SQL fixture e51 collation setup failure on SAME269 and push shipping actual two-session Chromium grant/remove/lost reply/fresh gain-revocation/private clearing proof. Close exact current8 CI, inspect/fix real red immediately. Full268 actual SQL/browser acceptance, independent frozen review and exact PR/main delivery remain. Installer723 all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
 
 
 blocked_by:
