@@ -167,6 +167,7 @@ else
 if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString))
 {
     app.MapCompanyMembershipAccess();
+    app.MapCompanyAdministrator();
     app.MapGet("/api/company/members", async (IRequestAuthorizationContextAccessor accessor,
         [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, [FromQuery] bool? includeAccessVersion, CancellationToken cancellationToken) =>
     {
@@ -253,6 +254,7 @@ else
     app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
     app.MapGet("/api/company/members", () => Results.Json(new { error = "Company directory is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/access", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
+    app.MapPost("/api/company/members/{userId:guid}/administrator", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
 }
 
 var dataSources = app.MapGroup("/api/data-sources");

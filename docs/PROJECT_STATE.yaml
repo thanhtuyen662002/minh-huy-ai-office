@@ -5,18 +5,18 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: codex/268-member-administrators
-current_pr: null
+current_pr: 269
 current_target_head: a75f31a2761ffe0afcbf067425eb8324789b3554
 last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 
 critical_paths:
   backend:
     issue: 268
-    pr: null
+    pr: 269
     branch: codex/268-member-administrators
     head: a75f31a2761ffe0afcbf067425eb8324789b3554
-    state: claimed
-    next: "Create Draft268 lease, then deliver audited exact admin role mutation/shared version/API/BFF/UI plus actual SQL/Chromium proof. Full review and exact PR/main gates remain.266 is delivered."
+    state: in_progress
+    next: "269 lease active; deliver audited exact admin role mutation/shared version/API/BFF/UI plus actual SQL/Chromium proof. Full review and exact PR/main gates remain.266 is delivered."
 
   frontend:
     issue: null
@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "268 member administrator lease from acceptedmaina75: create Draft PR and implement shared-version audited exact admin role mutation plus real API/BFF/UI and actual SQL/Chromium acceptance.266/267 delivered after full reviews and exact PR/main all8 PASS. Installer239 integration4b Build37816394932/Gov37816394855 separately owned; finish current9 gates/frozen integration review and keep Draft for clean Windows/signing. Dedicated customer ERP credentials/adapters/production and all233 remain."
+next_action: '268/269 foundation service/API/audit migration verified; push small checkpoint and close exact CI. Continue strict issued-session BFF/member panel plus actual owned SQL role/audit/version/permission/concurrency and Chromium grant-remove/lost reply/private clearing. Full frozen independent review and exact PR/main delivery mandatory. Installer4b all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
 
 
 blocked_by:

@@ -2,10 +2,10 @@ workstream: backend
 role: 'Backend Platform; root-owned company selection API/BFF/UI plus lead durable integration state'
 status: active-development
 current_issue: 268
-current_pr: null
+current_pr: 269
 current_branch: codex/268-member-administrators
-head: a75f31a2761ffe0afcbf067425eb8324789b3554
-state: claimed
+head: 7e05cf2699d84a63f5fbe2d3858a947635dcaa7b
+state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Claim268 from acceptedmaina75; create Draft lease, implement audited exact existing admin role assignment/removal with shared membership concurrency/company transaction, strict API/BFF/member panel and actual owned SQL/Chromium proof. Preserve all other roles/identity/durable work. Full independent security/runtime review and exact PR/main gates required. Installer239 integration4b remains separately owned and Draft for clean Windows/signing; full233 active.'
+next_action: '268/269 foundation service/API/audit migration verified; push small checkpoint and close exact CI. Continue strict issued-session BFF/member panel plus actual owned SQL role/audit/version/permission/concurrency and Chromium grant-remove/lost reply/private clearing. Full frozen independent review and exact PR/main delivery mandatory. Installer4b all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
@@ -197,3 +197,10 @@ verified_company_selection_267:
     and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
     separation/revoke-restore.266 closed. Full233/customer/production and installer
     clean Windows/signing remain.
+
+company_administrator_foundation:
+  base: a75f31a2761ffe0afcbf067425eb8324789b3554
+  service: 'Fresh scoped exact admin assignment/removal, active target, no self/last-admin/alias, shared access version/company serializable lock, immutable full role snapshots and exact actor/request replay. Constant raw SQL role bytes/strict scalar validation preserve audit fidelity.'
+  migration: 20261008173733_AddCompanyAdministratorAudit
+  local: '45 administrator-focused tests PASS (44 new plus retained last-admin control), including service/API/immutable effective rights/relational query translation and malformed Unicode. Full725 Persistence passed before four final Unicode/query controls; model has no pending changes; changed C# format/diff PASS.'
+  remaining: 'BFF/UI, actual new SQL/Chromium mutations and permission/concurrency proof, independent frozen review and exact PR/main gates. Foundation is not268 completion.'
