@@ -1,22 +1,25 @@
 workstream: backend
-role: 'Backend Platform; root-owned member API/BFF/UI acceptance slice'
+role: 'Backend Platform; root-owned company selection API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 262
-current_pr: 263
-current_branch: codex/262-membership-access
-head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
+current_issue: 266
+current_pr: 267
+current_branch: codex/266-company-selection
+head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
 state: ready_for_review
-lease_owner: root-backend-262
-lease_heartbeat_at: '2026-10-08'
-last_checkpoint_at: '2026-10-08'
-last_completed_issue: 256
-last_merged_pr: 257
-last_merge_commit: 6652940c5a9bfcc424422578d87c2f2851097211
+lease_owner: root-backend-266
+lease_heartbeat_at: '2026-10-09'
+last_checkpoint_at: '2026-10-09'
+last_completed_issue: 262
+last_merged_pr: 263
+last_merge_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
 scope:
-  - scoped-existing-membership-activation
-  - optimistic-version-and-idempotent-immutable-audit
-  - real-sql-company-concurrency-and-last-admin-fence
-  - api-bff-browser-vertical-acceptance
+  - authoritative-exact-identity-company-directory
+  - narrowly-marked-authenticated-pre-selection-endpoint
+  - issued-session-bff-and-provider-company-transition
+  - private-state-generation-fences-and-server-selected-scope
+  - actual-two-company-sql-oidc-chromium-acceptance
+  - lead-owned-durable-frontier-refresh
+
 verification:
   base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
   base_build: 37651174359
@@ -24,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Implementation262 is accepted at independently approved a452 with exact PR gates PASS. Close the final evidence-only HEAD gates and independent delta review, then lead merges263 with an exact-head fence and closes main CI. Preserve roles/global identity/durable work; invitations/role administration/full233 remain.'
+next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
@@ -85,3 +88,91 @@ accepted_implementation:
   chromium: 'Actual suspend/reactivate, committed lost-response stable replay without duplicate audit, expectedVersion5 conflict409/private clear/reload, role and issued SID preservation, cross-company/role/logout denial and retained lifecycle PASS.'
   delivery_remaining: 'Final evidence-only HEAD gates/delta review, exact-head merge and exact main CI. Current GitHub HEAD and HANDOFF supersede this verified implementation snapshot.'
 
+
+company_selection_266:
+  base: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+  base_build: 37801975078
+  base_governance: 37801976469
+  state: claimed
+  acceptance: 'Full authoritative company discovery and switching in shipping workspace, stale private-state fences and actual two-company isolation/revocation/restore proof. Existing browser Code/S256 and fresh Core membership remain authoritative. No customer writes or credentials.'
+  durable_state: 'Root acts as lead/integrator for PROJECT_STATE refresh and as backend owner for this complete API/BFF/UI slice. No competing lease; installer239 remains separately blocked Draft.'
+
+company_selection_implementation:
+  lease_head: 63aa3ac96ef9c3c6257dd577ad936bb4054d527b
+  lease_build: 37803215022
+  lease_governance: 37803214961
+  result: 'Initial claim exact gates PASS. Directory/API/middleware and BFF/parser/private-server-scope restore/workspace provider switching implemented.56 focused .NET controls and102 focused web controls PASS; TypeScript/changed C# format/diff checks PASS. Full actual two-company/runtime/security review remains. No266 completion or customer data/grant change.'
+  fixes: 'Independent reviewer reproduced trailing-slash directory response without no-store; route alias controls and StartsWithSegments close it. Fast failed-switch batching preserved uncontrolled private draft; scope/generation private-body key clears it while unchanged-session focus still preserves drafts.'
+  next: 'Push checkpoint, capture and close exact CI, implement mandatory actual two-company SQL/OIDC/Chromium controls and close independent frozen review. Keep same267 lease active; main gates only after full scoped acceptance.'
+
+company_selection_ci_repair:
+  prior_head: 1bda96a974cb3bd8122edc911034a42afe803342
+  build: 37805179898
+  governance: 37805179791
+  failed_web: 113407484232
+  cause: 'Hosted full web run942 controls passed but the existing page root test mounted the now-async server page as a client component and had no main. Await the server page before mounting its returned client workspace, with private session helper mocked; no shipping change.'
+  focused: 'Both page files5 controls and TypeScript PASS. Mandatory actual two-company proof and full frozen review remain; next exact CI closure belongs to same267.'
+
+company_selection_actual_proof:
+  prior_head: a49bf387b93aeb0f499f6b93b01ed5ea0ab4969b
+  prior_build: 37805604492
+  prior_governance: 37805604495
+  prior_actual: 113409662667
+  source_review: 'Independent frozen1b directory/metadata/session/picker boundaries reviewed;45 .NET and175 web controls PASS. no-store alias P2 closed. Found malformed UTF8 repair in Response.json; strict128KiB fatal UTF8 plus10sec shared deadline implemented, with valid nonASCII/literal replacement, invalid byte, overlarge and stalled response controls17 PASS. TypeScript PASS.'
+  actual_added: 'Owned SQL discovery native case/padding alias and genuinely ambiguous cross-tenant company GUID denial/restoration. Owned Chromium two-way provider switching, fresh selected scope after reload, obsolete binding/SID refusal, private draft clearing, source/member/task separation and stale cached target membership revoke/restore. Syntax and diff checks PASS; new actual controls have not executed.'
+  next: 'Push this verified checkpoint; close exact CI and inspect any real red on same267. Re-enter independent frozen shipping/proof review, fix concrete findings and complete actual two-company acceptance before final docs/review/exact PR/main delivery.'
+
+company_selection_runtime_repair:
+  head: 2f5fb780fe05a7901a0c3f2e7a540cb94a57c972
+  build: 37806355260
+  governance: 37806355086
+  actual_stack: 113412157043
+  required_quality: 113415048587
+  status: 'Build terminal red at Chromium target-membership-revoked-after-cached-choice; all six other Build jobs and Governance PASS. New actual native SQL directory aliases/ambiguity and retained SQL/worker gates PASS. Both provider switches, selected reload and source/member/task separation advanced before the failed stage; no full acceptance inferred.'
+  independent: 'Real fetchCoreApi malformed-byte, final shared-session revoke and foreign-selector probes PASS; maximum legitimate100*200 escaped-Unicode choices within128KiB PASS. Reviewer reproduced isolated UTF16 surrogate repair in Core/JSON escaped BFF names; closed by scalar validation with positive supplementary Unicode/literal replacement controls.'
+  repair: 'Split revoked-target runtime assertions into fixed substages and settle denied callback navigation before root recovery, preserving401/no-cookie/SID assertions. Populate a fresh visible chat/durable task before switching instead of relying on chat already cleared by expiry; add actual old/new member panel controls. Add owned SQL malformed UTF16 denial plus valid supplementary/literal replacement preservation.'
+  local: '20 focused .NET directory/API malformed controls,34 parser/BFF controls, TypeScript, changed C# format, Python AST/node syntax/YAML/diff PASS.'
+  next: 'Push same267 verified checkpoint, capture exact HEAD/CI and close runtime. Inspect any red immediately; new Unicode/native and split recovery controls must actually pass before full frozen review/final PR/main gates.'
+
+company_selection_sql_byte_repair:
+  head: b67b4e498902eb743e14d47da5a2a9c80ecf4597
+  build: 37808053618
+  governance: 37808053541
+  failed_actual: 113417416966
+  required_quality: 113419009516
+  cause: 'Build terminal red in new real SQL malformed UTF16 name control. Managed scalar negatives pass but the SQL read path published the owned invalid name before validation; retained identity/ambiguity positive and negative controls passed. Chromium did not execute; prior2f denial recovery is still unqualified.'
+  fix: 'Same-query SQL binary name projection preserves stored UTF16 instead of relying on a repaired string. Strict little-endian decoder with400-byte/even-length limit; tenant-composite active joins and binary/ordinal signed identity fences stay. Owned fixture asserts exact malformed stored bytes and preserves valid supplementary/literal replacement positives.'
+  local: '21 focused .NET directory/API controls PASS, including relational EF SQL query translation that aborts before opening any connection. Changed C# format/Python AST/YAML/diff PASS. Required actual native scalar/Chromium proof remains.'
+  review_boundary: 'Independent reviewer hit account quota after frozen2f review; no b67/new raw-byte shipping/runtime approval exists. Re-enter independent frozen review when available before any merge. This is separate from CI/product defects; same267 lease remains owned.'
+  next: 'Capture current GitHub HEAD and exact CI after push. Inspect/fix any terminal red on SAME267, preserve full actual controls, then close independent final security/runtime review plus exact PR/main gates. No premature266/full233 closure.'
+
+company_selection_verified_runtime:
+  implementation_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  build: 37809426615
+  governance: 37809426734
+  actual_stack: 113422110270
+  required_quality: 113425115443
+  browser_artifact: 11564687136
+  browser_artifact_bytes: 72696
+  hosted_dotnet_tests: 1086
+  hosted_web_tests: 951
+  sql: 'PASS actual native binary/ordinal identity aliases, cross-tenant ambiguous company denial, stored malformed UTF16 bytes refusal and unchanged valid supplementary/literal replacement names. Retained source/member/worker/ERP qualification adversaries also PASS.'
+  chromium: 'PASS actual authorized two-choice/unassigned exclusion, both provider switches, obsolete binding/SID denial, reload selected scope, fresh visible pre-switch chat/task plus draft/private source/member separation, preserved original durable task/membership fingerprint and cached target revoke401/noCookie/sameSID/recovery/restore.'
+  visual: 'Owner downloaded/inspected sanitized77663-byte workspace image; picker/original source/empty chat and draft/no credentials. Independent frozen latest source/runtime/artifact review is still absent after quota error; no266 approval/merge inferred.'
+  execution_boundary: 'Whole adversarial stack script now requires exact owned GitHub CI directory before config/Docker; required workflow step tests positive plus7 false-flag/retained/nested/unrelated cases without resources. Local3 tests/8 cases PASS. Final proof/workflow/docs HEAD needs renewed exact gates.'
+  next: 'Close exact final current HEAD gates, then re-enter independent frozen latest shipping/raw-SQL/parser/proof/workflow/docs/runtime review when available. Merge only on approval/current green and close main. Keep same267 lease and full233 active; no customer business execution.'
+company_selection_reviewed_764:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  reviewed_checkpoint: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+  build: 37811540458
+  governance: 37811540124
+  actual_stack: 113429366483
+  required_quality: 113432454238
+  browser_artifact: 11566115491
+  artifact_bytes: 72710
+  independent_dotnet: 28
+  independent_web: 92
+  independent_guard_tests: 3
+  state: ready_for_review
+  review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
+  next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'

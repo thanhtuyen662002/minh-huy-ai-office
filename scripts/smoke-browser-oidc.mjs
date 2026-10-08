@@ -336,6 +336,145 @@ try {
   requireProof(await page.getByText(privateMessage, { exact: true }).count() === 0
     && (await page.locator('textarea[name="question"]').inputValue()) === "");
   console.log("PASS actual Redis TIME session expiry clears private UI and fresh provider reauthentication recovers");
+  stage = "owned-two-company-fixture";
+  const selectedCompany = randomUUID(), selectedSource = randomUUID(), selectedMember = randomUUID(), unassignedCompany = randomUUID();
+  const secondQuery = `?companyId=${selectedCompany}`;
+  const selectedScope = `TenantId='${tenant}' AND CompanyId='${selectedCompany}' AND UserId='${user}'`;
+  const originalMembership = () => sql(`USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
+    (SELECT * FROM aioffice.CompanyMemberships WHERE ${scope} FOR JSON PATH,INCLUDE_NULL_VALUES)),2);`);
+  const originalAccess = originalMembership();
+  sql(`USE AIOfficeLocal; SET XACT_ABORT ON; BEGIN TRANSACTION;
+    INSERT aioffice.Companies(TenantId,Id,Code,Name) VALUES
+      ('${tenant}','${selectedCompany}',N'${selectedCompany}',N'Disposable second company'),
+      ('${tenant}','${unassignedCompany}',N'${unassignedCompany}',N'PRIVATE_UNASSIGNED_COMPANY');
+    INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('${tenant}','${selectedCompany}','${user}');
+    INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES('${tenant}','${selectedCompany}','${user}',N'admin');
+    INSERT aioffice.Users(TenantId,Id,IdentityProvider,Subject,DisplayName)
+      VALUES('${tenant}','${selectedMember}',N'owned-company-proof',N'${selectedMember}',N'Disposable second-company member');
+    INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES('${tenant}','${selectedCompany}','${selectedMember}');
+    INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES('${tenant}','${selectedCompany}','${selectedMember}',N'viewer');
+    INSERT aioffice.DataSources(TenantId,CompanyId,Id,LogicalName,Kind,Environment,Purpose,ConnectionSecretReference,AllowRead,AllowWrite,MaxConcurrency,IsEnabled)
+      SELECT TenantId,'${selectedCompany}','${selectedSource}',N'Disposable second-company source',Kind,Environment,Purpose,ConnectionSecretReference,
+        AllowRead,AllowWrite,MaxConcurrency,IsEnabled FROM aioffice.DataSources
+      WHERE TenantId='${tenant}' AND CompanyId='${company}' AND Id='${source.id}';
+    COMMIT TRANSACTION;`);
+  // These owned additions remain until the disposable volume is removed. No
+  // retained user, membership, grant, audit or task is deleted for cleanup.
+  const companyChoices = async selector => {
+    const reply = await get("/api/local/companies" + selector);
+    requireProof(reply.status === 200 && reply.cache === "no-store");
+    const payload = JSON.parse(reply.text); requireProof(Object.keys(payload).join(",") === "items");
+    requireProof(payload.items.every(item => Object.keys(item).sort().join(",") === "companyId,companyName"));
+    requireProof(!reply.text.includes(unassignedCompany) && !reply.text.includes("PRIVATE_UNASSIGNED_COMPANY"));
+    return payload.items;
+  };
+  const companyPicker = page.getByRole("combobox", { name: "Chuyển công ty", exact: true });
+  const switchCompany = async target => {
+    const completed = page.waitForRequest(request => request.url().startsWith(callback + "?"));
+    await companyPicker.selectOption(target);
+    const callbackRequest = await completed;
+    requireProof((await callbackRequest.response())?.status() === 303);
+    await page.waitForURL(url => url.origin === app && url.pathname === "/");
+    await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    const authority = await get(`/api/local/session?companyId=${target}`);
+    requireProof(authority.status === 200 && authority.cache === "no-store" && JSON.parse(authority.text).companyId === target);
+  };
+  try {
+    stage = "two-company-directory-isolation";
+    const choices = await companyChoices(query);
+    requireProof(choices.some(item => item.companyId === company) && choices.some(item => item.companyId === selectedCompany));
+    await page.reload(); await companyPicker.waitFor();
+    await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
+    stage = "original-company-private-chat-positive";
+    await waitForSource();
+    const switchMessage = "Disposable company-switch private chat " + randomUUID();
+    await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
+    await page.locator('textarea[name="question"]').fill(switchMessage);
+    const switchSubmitted = page.waitForResponse(response => response.request().method() === "POST"
+      && response.url() === app + "/api/local/tasks" + query);
+    await page.getByRole("button", { name: "Gửi", exact: true }).click();
+    const switchAccepted = await switchSubmitted; requireProof(switchAccepted.status() === 202);
+    const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));
+    await page.getByText(switchMessage, { exact: true }).waitFor();
+    await page.locator('textarea[name="question"]:enabled').waitFor();
+    await page.locator('textarea[name="question"]').fill(privateDraft);
+    const oldAuthority = await context.cookies(app);
+    stage = "provider-company-switch-to-second";
+    await switchCompany(selectedCompany);
+    requireProof((await cookie("aioffice_browser_session")).value !== oldAuthority.find(item => item.name === "aioffice_browser_session").value);
+    requireProof((await get("/api/local/session" + query)).status === 401);
+    const obsolete = await context.request.get(app + "/api/local/session" + query, { headers: {
+      Cookie: oldAuthority.filter(item => item.name.startsWith("aioffice_browser_")).map(item => `${item.name}=${item.value}`).join("; "),
+    } }); requireProof(obsolete.status() === 401);
+    stage = "second-company-private-state-and-data-isolation";
+    requireProof(await page.getByText(switchMessage, { exact: true }).count() === 0
+      && (await page.locator('textarea[name="question"]').inputValue()) === ""
+      && await page.locator(`option[value="${source.id}"]`).count() === 0);
+    requireProof((await get(`/api/local/tasks/${switchTask}` + secondQuery)).status === 404);
+    const secondSources = await get("/api/local/data-sources" + secondQuery), secondMembers = await get("/api/local/company/members" + secondQuery);
+    requireProof(secondSources.status === 200 && secondMembers.status === 200 && secondSources.cache === "no-store" && secondMembers.cache === "no-store");
+    const sourceRows = JSON.parse(secondSources.text), memberRows = JSON.parse(secondMembers.text).items;
+    requireProof(sourceRows.some(item => item.id === selectedSource) && !sourceRows.some(item => item.id === source.id)
+      && memberRows.some(item => item.userId === selectedMember) && !memberRows.some(item => item.userId === memberId));
+    requireProof((await get(`/api/local/tasks/${accepted.taskId}` + secondQuery)).status === 404);
+    requireProof((await get(`/api/local/tasks/${accepted.taskId}` + query)).status === 401);
+    requireProof((await mutate("/api/local/tasks" + secondQuery, "POST", { dataSourceId: source.id, question: privateMessage })).status === 403);
+    await page.reload(); await companyPicker.waitFor();
+    requireProof(await companyPicker.inputValue() === selectedCompany && (await get("/api/local/session" + secondQuery)).status === 200);
+    stage = "provider-company-switch-back-original";
+    await page.locator('textarea[name="question"]').fill("Disposable second-company private draft");
+    await switchCompany(company); await waitForSource();
+    requireProof((await page.locator('textarea[name="question"]').inputValue()) === ""
+      && (await current()).status === 200 && (await get(`/api/local/tasks/${accepted.taskId}` + query)).status === 200);
+    const originalSources = JSON.parse((await get("/api/local/data-sources" + query)).text);
+    requireProof(originalSources.some(item => item.id === source.id) && !originalSources.some(item => item.id === selectedSource));
+    requireProof((await get("/api/local/company/members" + secondQuery)).status === 401 && originalMembership() === originalAccess);
+    stage = "target-membership-revoked-after-cached-choice";
+    await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
+    sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0 WHERE ${selectedScope};`);
+    stage = "revoked-target-directory-removal";
+    const revokedChoices = await companyChoices(query); requireProof(!revokedChoices.some(item => item.companyId === selectedCompany));
+    const priorSid = (await cookie("aioffice_browser_session")).value;
+    const refusedCallback = page.waitForRequest(request => request.url().startsWith(callback + "?"));
+    // The DOM intentionally still has the previously accepted choice. Fresh
+    // callback membership must deny it after the real SQL revocation.
+    await companyPicker.selectOption(selectedCompany);
+    const refusedRequest = await refusedCallback;
+    stage = "revoked-target-callback-denial";
+    const refusedResponse = await refusedRequest.response();
+    requireProof(refusedResponse?.status() === 401 && !refusedResponse.headers()["set-cookie"]);
+    // Receiving headers does not mean the browser committed its navigation.
+    // Settle the denied provider page before issuing a competing root navigation.
+    await page.waitForURL(url => url.origin === app && url.pathname === new URL(callback).pathname);
+    await refusedResponse.finished();
+    stage = "revoked-target-preserves-original-sid";
+    requireProof((await cookie("aioffice_browser_session")).value === priorSid);
+    stage = "revoked-target-original-workspace-recovery";
+    await page.goto(app); await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage = "revoked-target-original-authority-recovery";
+    requireProof((await current()).status === 200 && (await get("/api/local/session" + secondQuery)).status === 401);
+    stage = "target-membership-explicit-owned-restore";
+    sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${selectedScope};`);
+    await page.reload(); await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
+    stage = "original-member-panel-positive-before-switch";
+    await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await page.getByRole("cell", { name: "Disposable browser member", exact: true }).waitFor();
+    stage = "second-member-panel-after-switch";
+    await switchCompany(selectedCompany);
+    requireProof(await page.getByRole("cell", { name: "Disposable browser member", exact: true }).count() === 0);
+    await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await page.getByRole("cell", { name: "Disposable second-company member", exact: true }).waitFor();
+    requireProof(await page.getByRole("cell", { name: "Disposable browser member", exact: true }).count() === 0);
+    stage = "second-member-panel-clears-on-original-switch";
+    await switchCompany(company); await waitForSource();
+    requireProof(await page.getByRole("cell", { name: "Disposable second-company member", exact: true }).count() === 0);
+    requireProof(originalMembership() === originalAccess && (await get(`/api/local/tasks/${accepted.taskId}` + query)).status === 200);
+  } finally {
+    // Restore only this proof's added membership. Existing grants/data/history
+    // are preserved; the two-company fixture lives in an owned CI volume.
+    sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${selectedScope};`);
+  }
+  console.log("PASS actual Chromium authoritative company choices, two-way provider switching, reload/private-data separation and target membership revoke/restore");
   stage = "sanitized-ui-artifact";
   requireProof(!JSON.stringify(await current()).includes(manifest.AIOFFICE_OWNER_PASSWORD));
   const artifact = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof"); await mkdir(artifact, { recursive: true });

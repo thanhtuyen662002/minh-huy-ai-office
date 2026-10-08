@@ -15,6 +15,14 @@ public static class AuthorizationHeaders
     public const string CompanyId = "X-AIOffice-Company-Id";
 }
 
+// Only the authenticated identity directory is callable before company
+// selection. Endpoint registration supplies this marker; request data cannot.
+public sealed class IdentityCompanyDirectoryEndpoint
+{
+    private IdentityCompanyDirectoryEndpoint() { }
+    public static IdentityCompanyDirectoryEndpoint Instance { get; } = new();
+}
+
 public sealed record RequestAuthorizationContext(
     AuthorizationContext Context,
     IReadOnlyList<string> Roles);
@@ -46,6 +54,20 @@ public sealed class RequestAuthorizationContextMiddleware(RequestDelegate next)
         var subject = httpContext.User.FindFirstValue(AuthenticationClaimTypes.Subject)
             ?? httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var companyHeader = httpContext.Request.Headers[AuthorizationHeaders.CompanyId].FirstOrDefault();
+
+        if (httpContext.GetEndpoint()?.Metadata.GetMetadata<IdentityCompanyDirectoryEndpoint>() is not null)
+        {
+            if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject)
+                || provider.Length > 100 || subject.Length > 200)
+            {
+                await RejectAsync(httpContext);
+                return;
+            }
+            // No company/role context is produced by this discovery endpoint.
+            accessor.Current = null;
+            await next(httpContext);
+            return;
+        }
 
         if (string.IsNullOrWhiteSpace(provider)
             || string.IsNullOrWhiteSpace(subject)

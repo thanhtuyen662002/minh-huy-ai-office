@@ -4,27 +4,27 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: lead/238-windows-installer
-current_pr: 239
-current_target_head: null
-last_verified_commit: 4275b2c18fc136f26e088d631896875c76cb8653
+current_branch: codex/266-company-selection
+current_pr: 267
+current_target_head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+last_verified_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 
 critical_paths:
   backend:
+    issue: 262
+    pr: 263
+    branch: codex/262-membership-access
+    head: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+    state: done
+    next: "262/263 merged after full frozen implementation/security/runtime and final docs review. Exact PR552 Build37746135981/Gov37746135890 and main0d03 Build37746848054/Gov37746848190 PASS, including actual member SQL/Chromium113210254492. Invitations/role administration/full233 remain."
+
+  frontend:
     issue: null
     pr: null
     branch: null
     head: null
     state: retired
-    next: "PR #241 / issue #240 merged at 4275b2c18fc136f26e088d631896875c76cb8653. Fresh server-resolved admin enforcement and real SQL issued-session revocation passed exact-head and main CI. Deliver full owner/company/member/source onboarding next under #233."
-
-  frontend:
-    issue: 242
-    pr: null
-    branch: frontend/242-test-discovery
-    head: null
-    state: coding
-    next: "Collect all app/lib/components tests, isolate DOM and mutable fixtures, preserve authority-denial assertions, then pass exact-head CI and merge #242 before full company/member/source onboarding."
+    next: "260/261 merged at39e with full frozen947 approval and exact PR/main CI/actual Chromium PASS. Browser PKCE is the local shipping default. Full member administration, multi-company selection and approved production connectivity remain."
 
   runtime_ai:
     issue: null
@@ -32,17 +32,34 @@ critical_paths:
     branch: null
     head: null
     state: retired
-    next: "PR #224 proved bounded ERP-catalog grounding through openai-direct/gpt-6-sol. PR #226 added the capability-bound read-only ERP query framework. Start a new runtime lease only after the first authorized customer business-read capability is selected."
+    next: "PR224 proves bounded catalog grounding and PR226 provides capability-bound read-only execution. User selected inventory/stock movements. Qualify its authorized ERP schema/version and least-privilege source from private configuration before customer business-row execution; create the adapter lease only when that dependency is available."
 
   erp_data:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "The next ERP/Data slice is customer-specific: bind one semantic read capability to the selected ERP schema/version using server-owned SQL and a least-privilege read-only data source."
+    issue: 264
+    pr: 265
+    branch: codex/264-erp-readonly-qualification
+    head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+    state: done
+    next: "264/265 accepted after independent frozen e3 and final a7 reviews, exact PR/main gates and actual SQL/Chromium PASS. Conservative standalone engine16/current-database qualifier is shipped; dedicated customer credentials, legacy module profiles and inventory reconciliation remain."
+
+  company_selection:
+    issue: 266
+    pr: 267
+    branch: codex/266-company-selection
+    head: f03f082800d3324e0574b0b510d74bf6c9d93785
+    state: ready_for_review
+    next: "Shipping f03/proof764 independently approved; exact764 all8/native SQL/Chromium PASS. Close final docs review and exact PR gates, merge267 and close main. Full233/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
+  - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
+  - 'PR261 / issue260 browser PKCE merged at39e668ebebe1f8bd19803199b8db393f12a4edb6; main Build37651174359/Governance37651174354/actual stack112894592064 PASS.'
+  - 'PR259 / issue258 session Origin and bounded login input merged at973c37be65b1db17c6b3eec279a8f2c12c6713b9; main Build37564876619/Governance37564876597 PASS.'
+  - 'PR257 / issue256 exact opaque identity merged at6652940c5a9bfcc424422578d87c2f2851097211; main Build37556114743/Governance37556114601 PASS.'
+  - 'PR255 / issue254 admin scoped member directory merged atb9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9; main Build37553826140/Governance37553826122 PASS.'
+  - 'PR253 / issue252 audited read-only source registration merged at a3a929b58717b4f8e3ffe160699c179512441b07; main Build37551390004 and Governance37551390052 PASS.'
+  - "PR #249 / issue #248 scoped secret grants and real SQL/queue authorization: MERGED at db2ef9a141b69b10618b7c74548828753dfd2dd0; main Build 37506783690 and Governance 37506783677 passed."
+  - "PR #247 / issue #246 metadata-only source management: MERGED at 481d814c6d66c62084544e3bd889dcad7f64a254; secured-main integration includes its SQL race regressions."
   - "PR #241 / issue #240 fresh source-management administration and real SQL role-revocation proof: MERGED at 4275b2c18fc136f26e088d631896875c76cb8653; main Build 37141764735 and Governance 37141764739 passed."
   - "PR #237 / issue #236 automatic local SQL/OIDC bootstrap and real Compose proof: MERGED at cb43b99b4e9c1efdf7fcacf8a6dd255b8d94d59e; main Build 37111971610 and governance 37111971569 passed."
   - "PR #235 / issue #234 frontend production runtime: MERGED at 8c1f80db6c8d8fa400345fb60f9b3125d97decea."
@@ -73,16 +90,17 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: finish Windows #238 / draft #239 acceptance and complete FE test discovery #242, then deliver owner/company/member/source onboarding and all remaining P0-P6 workflows through feature PRs and exact-head CI. SQL/OIDC bootstrap, FE production runtime, real RabbitMQ execution and fresh source administration are merged. Full product completion remains unproven."
+next_action: "Independent frozen266 shipping/proof764 APPROVED; exact764 Build37811540458/Gov37811540124/all8/actual113429366483/quality113432454238 PASS. Close final documentation delta review/current PR gates, merge267 and close exact main. Installer239 fa/3ff integration independently APPROVED and all9 PASS; accepted266 integration follows main closure, while clean Windows/signing keeps239 Draft. Full233 active; customer credentials/adapters/production remain. Live HEAD/HANDOFF supersede checkpoint fields."
+
 
 blocked_by:
-  - "The first real customer ERP/data source and business capability have not yet been selected/authorized for AI Office business-row access."
+  - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
   - "A least-privilege read-only credential and schema/version mapping for that selected ERP are required before a real business-value E2E."
   - "Production deployment still requires approved production OIDC, private platform SQL/backup, private host/tunnel and production bootstrap."
 
 automation_liveness:
-  backend: retired_after_verified_issue_240
-  frontend: active_issue_242
+  backend: retired_after_verified_issue_256
+  frontend: retired_after_verified_issue_260
   runtime_ai: retired_intentionally
   erp_data: retired_intentionally
   qa_release: retired_intentionally_after_green_gates
@@ -109,3 +127,211 @@ product_completion:
   all_requirements_verified: false
   windows_setup_ready: false
   clean_windows_install_verified: false
+
+verified_security_249:
+  merge: db2ef9a141b69b10618b7c74548828753dfd2dd0
+  pr_build: 37505720443
+  pr_governance: 37505720572
+  main_build: 37506783690
+  main_governance: 37506783677
+  result: "PASS actual SQL/stack guards, impersonation/module/trigger, metadata races, broker revocation and replay retention;248 closed. Full product remains incomplete."
+
+verified_onboarding_251:
+  merge: e2165d8a67644cbfc9672ed373e2062761b3c31c
+  pr_head: 5e1a5f047a4c94ba576830fd40036379313ecfd9
+  pr_build: 37533802883
+  pr_governance: 37533802947
+  main_build: 37534355053
+  main_governance: 37534355102
+  result: 'PASS scoped admin choices, exact SQL grant metadata, role revoke/restore, unsafe-store denial, no secret/ref release;250 closed. Registration/audit/UI and actual ERP remain incomplete.'
+
+verified_onboarding_253:
+  merge: a3a929b58717b4f8e3ffe160699c179512441b07
+  pr_head: eb5eb1a745ea4e3fa105c0689b66028a7b9002f9
+  pr_build: 37550999887
+  pr_governance: 37550999879
+  main_build: 37551390004
+  main_governance: 37551390052
+  result: 'PASS515 Persistence and364 web tests; actual SQL registration/idempotency/scope/immutable audit/column escalation/rollback/restart and retained metadata race positive/negative controls.252 closed. Full product remains incomplete.'
+
+verified_members_255:
+  merge: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
+  pr_head: 64e71c469c931ab730e563ab955766f64a7f37f9
+  pr_build: 37553427104
+  pr_governance: 37553427057
+  main_build: 37553826140
+  main_governance: 37553826122
+  result: 'PASS scoped admin member directory/API/BFF/UI,540 Persistence/396 web tests, actual SQL cross-tenant fixture and same-session role revoke/restore.254 closed. Member mutation/invites and production browser OIDC remain incomplete.'
+
+verified_identity_257:
+  merge: 6652940c5a9bfcc424422578d87c2f2851097211
+  pr_head: 8a48fc8493160e47cdcdd5d4fab04b055af4799b
+  pr_build: 37555676743
+  pr_governance: 37555676768
+  main_build: 37556114743
+  main_governance: 37556114601
+  result: 'PASS550 Persistence, binary SQL candidate filter and ordinal identity fence. Actual native SQL case/padding aliases denied by issued API/BFF sessions; original full-row identity and valid session restored. Independent frozen review approved;256 closed.'
+
+session_security_259:
+  merge: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+  pr_head: 7010f3b91a2d6d0d1463dc7b646cac1901bdf402
+  pr_build: 37564442806
+  pr_governance: 37564442800
+  main_build: 37564876619
+  main_governance: 37564876597
+  state: done
+  result: 'Exact PR/main gates and independent frozen66f2f80 re-review PASS.448 web tests and actual issued-session Origin/input denial preserve cookies/API/BFF authority; valid logout/sign-in and retained stack security controls PASS.258 closed; production browser OIDC remains required.'
+
+verified_browser_261:
+  merge: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  approved_pr_head: 94749957035a1dcb51cda9762c6fa045c84b982b
+  pr_build: 37650230590
+  pr_governance: 37650230960
+  main_build: 37651174359
+  main_governance: 37651174354
+  main_actual_stack: 112894592064
+  main_required_quality: 112897134732
+  main_browser_artifact: 11496885793
+  result: 'Full frozen implementation and documentation delta independently approved. Exact PR/main gates,832 hosted web/20 actual Redis and complete retained stack/Chromium lifecycle PASS;260 closed. Approved live production identity/HTTPS/TLS Redis, full administration and all other233 scope remain.'
+
+customer_inventory_qualification:
+  state: metadata-captured-pending-read-only-credential-and-profile
+  selected: [Medcom, Novo]
+  deferred: [Santino]
+  medcom_tables: 615
+  novo_tables: 591
+  business_rows_read: false
+  customer_writes: false
+  private_mapping: 'Protected operator-local metadata, module hashes and handoff; no config values, connection paths, customer schema definitions or row data in Git.'
+  next: 'Qualify dedicated read-only identities and versioned local module/schema dependencies, then implement deterministic scoped inventory/stock-movement adapters and actual business proof. Current elevated configuration is not runtime enrollment.'
+
+installer_browser_verified:
+  head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
+  build: 37653169431
+  governance: 37653169432
+  actual_stack: 112901482261
+  native_artifact_job: 112901482578
+  artifact: 11497921154
+  artifact_bytes: 48069731
+  result: 'All gates PASS at browser-integrated installer head.6e Build37715495368/Governance37715495383 also PASS, but independent minimum-size review found a responsive defect. Repaired candidate has20 compiled minimum/resize/font cases and isolated native proof; current-head hosted gates/frozen review remain. Clean Windows lifecycle/signing remains required;239 stays Draft.'
+
+installer_responsive_verified:
+  head: 21d67981dbfd6b070e3030d03305429f76292671
+  build: 37716749021
+  governance: 37716749012
+  actual_stack: 113114854321
+  native_artifact_job: 113114854671
+  required_quality: 113116040384
+  unsigned_artifact: 11523499541
+  artifact_bytes: 48531144
+  review: 'Independent frozen21d native20-case review at192DPI closes minimum-size clipping. Native gate/76 core/pinned developer-tool-free executable/isolated Windows controls and full retained SQL/Chromium gates PASS. No clean installation/signing proof;239 stays Draft.'
+
+installer_documentation_verified:
+  head: 595a587368786af93206ae8f3249ffd2a84cb250
+  build: 37717383890
+  governance: 37717384074
+  actual_stack: 113116883520
+  native_artifact_job: 113116883822
+  required_quality: 113118363698
+  unsigned_artifact: 11524202094
+  artifact_bytes: 48534017
+  result: 'All9 jobs and independent documentation delta review PASS. Code equals approved responsive21d. Hosted native20 cases and retained SQL/Chromium are verified; external clean Windows/signing gate remains.'
+
+membership_access_progress:
+  issue: 262
+  pr: 263
+  security_head: e7fe3217c6cdfd910a8affa688d41780bd2a9ba7
+  security_build: 37742062502
+  security_governance: 37742062504
+  ui_head: 1250c24b2cbb08c747bad61f213bf712668cf574
+  ui_build: 37742649576
+  ui_governance: 37742649549
+  sql_proof_head: d46b2844c6d18ab60c1d5f6e678e2d68ecbf1299
+  sql_proof_job: 113201022413
+  current_head: a4521f0a209c646f98be79fcda2f52bd9a2a8af9
+  current_build: 37744957617
+  current_governance: 37744957590
+  final_pr_head: 552d5dd707b5bb69911ab9b6d6b61f5188caa9bf
+  final_pr_build: 37746135981
+  final_pr_governance: 37746135890
+  merge: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+  main_build: 37746848054
+  main_governance: 37746848190
+  main_actual_stack: 113210254492
+  main_quality: 113212217055
+  state: done
+  result: 'Full frozen a452 implementation/security/runtime and final552 documentation independently APPROVED. Exact PR/main gates PASS,906 hosted web incl20 actual Redis and1014 .NET. All new SQL replay/concurrency/immutable direct+indirect rights/atomic rollback/opposite-admin barriers and actual Chromium lost-response replay/stale409/reload/role+SID preservation plus retained gates PASS.262 closed; full233 remains.'
+
+installer_latest_documentation_verified:
+  head: 6814a9fd1106e11174ace601181b45032bdf69e2
+  build: 37745475535
+  governance: 37745475508
+  native_job: 113205808730
+  actual_stack: 113205808739
+  quality: 113207282315
+  unsigned_artifact: 11534759533
+  artifact_bytes: 48544276
+  review: 'Independent frozen documentation delta APPROVED; installer bytes equal approved21d. All9 hosted gates PASS. No clean Windows/signing completion claim;239 remains Draft.'
+
+branch_integration_audit:
+  baseline_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+  remote_non_main_branches: 130
+  matched_merged_pr_heads: 123
+  other_main_ancestor: 1
+  archived_or_superseded: 4
+  active_draft_leases: [239, 267]
+  evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
+  result: 'Refreshed130 non-main remote branches against accepted002:123 exact merged PR heads,1 main ancestor,4 archival/superseded,2 active Drafts239/267. No additional eligible implementation; preserve backups/snapshot.263/265 subsequently merged with exact main proof. Latest267 acceptance/review/gates and installer clean Windows/signing remain.'
+
+verified_erp_265:
+  implementation_head: e3d5254d8b7c7d72261ddf53841232587b1ee1c6
+  final_pr_head: a7aebb47cd0a811bae452dd5d6302d707d7e4d0b
+  merge: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+  pr_build: 37800895363
+  pr_governance: 37800895171
+  main_build: 37801975078
+  main_governance: 37801976469
+  main_actual: 113396238709
+  main_quality: 113399168935
+  state: done
+  result: 'Reviewed conservative exact-connection qualifier, initial/final evidence fence, source policy and bounded API/browser guidance PASS. Real permission/ownership/grant-option/impersonation/external/encrypted graph effects rolled back and all shipping paths deny; restored positives, changed worker session, retained SQL and Chromium PASS.650 local Persistence/313 independent focused controls. Customer adapters/credentials/production and full233 remain.'
+
+installer_integrated_989:
+  head: 989f771b04e9f710103a242d0b6122913f3a127b
+  build: 37747829938
+  governance: 37747830005
+  actual: 113213454508
+  native: 113213454560
+  quality: 113215427738
+  artifact: 11536771819
+  artifact_bytes: 48582443
+  review: 'Frozen independent integration/docs APPROVED. Installer source/tests/scripts equal approved21d; non-installer source equals accepted main0d03. All9 gates PASS. Remains Draft pending external clean Windows/signing; accepted264 still needs integration into239.'
+
+company_selection_reviewed_764:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  reviewed_checkpoint: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+  build: 37811540458
+  governance: 37811540124
+  actual_stack: 113429366483
+  required_quality: 113432454238
+  browser_artifact: 11566115491
+  artifact_bytes: 72710
+  independent_dotnet: 28
+  independent_web: 92
+  independent_guard_tests: 3
+  state: ready_for_review
+  review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
+  next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'
+
+installer_reviewed_3ff:
+  integration_head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  reviewed_checkpoint: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
+  build: 37811764980
+  governance: 37811765041
+  actual_stack: 113430137673
+  native_installer: 113430137570
+  required_quality: 113433280589
+  artifact: 11564714166
+  artifact_bytes: 48597796
+  review: 'Independent frozen fa integration/3ff documentation APPROVED. All9 exact jobs PASS; accepted ERP and retained SQL/Chromium,76 core tests/pinned self-contained isolated Windows proof PASS. Setup source/tests/scripts remain approved21d/989; additive solution preserves all projects. No clean Windows/signing acceptance.'
+  next: 'Close final documentation delta review/exact gates; integrate266 only after approved merge and exact main gates. Keep239 Draft; full233 remains active.'

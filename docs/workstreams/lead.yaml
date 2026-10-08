@@ -1,14 +1,14 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
 status: active-development
-current_issue: 238
-current_pr: 239
-current_branch: lead/238-windows-installer
-head: null
-state: full-product-completion
+current_issue: 266
+current_pr: 267
+current_branch: codex/266-company-selection
+head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+state: ready_for_review
 lease_owner: lead
-lease_heartbeat_at: null
-last_checkpoint_at: "2026-10-03"
+lease_heartbeat_at: '2026-10-09'
+last_checkpoint_at: '2026-10-09'
 scope:
   - integration
   - roadmap-priority
@@ -55,7 +55,8 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: "Continue full-product issue #233 and docs/PRODUCT_COMPLETION.md: finish Windows #238 / draft #239 and FE test discovery #242, then deliver full company/member/source onboarding and every remaining P0-P6 requirement. PRs #235/#237/#241 are merged with verified main CI. Full product completion remains unproven."
+next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
+
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."

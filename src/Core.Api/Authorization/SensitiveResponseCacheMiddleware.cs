@@ -3,6 +3,7 @@ namespace MinhHuy.AIOffice.Core.Api.Authorization;
 public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
 {
     private static readonly PathString AuthorizationContextPath = new("/api/auth/context");
+    private static readonly PathString CompanyDirectoryPath = new("/api/auth/companies");
     private static readonly PathString BillingPlanPath = new("/api/billing/plan");
     private static readonly PathString DataSourcesPath = new("/api/data-sources");
     private static readonly PathString AuditPath = new("/api/audit");
@@ -15,6 +16,7 @@ public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
         ArgumentNullException.ThrowIfNull(context);
 
         if (context.Request.Path.Equals(AuthorizationContextPath)
+            || context.Request.Path.StartsWithSegments(CompanyDirectoryPath)
             || context.Request.Path.Equals(BillingPlanPath)
             || context.Request.Path.StartsWithSegments(DataSourcesPath)
             || context.Request.Path.StartsWithSegments(AuditPath)

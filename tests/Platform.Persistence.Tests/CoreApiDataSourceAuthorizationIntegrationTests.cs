@@ -650,6 +650,7 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
                     else options.UseSqlServer(platformProofConnection);
                 });
                 services.AddScoped<DataSourceRegistryService>();
+                services.AddScoped<IAuthenticatedCompanyDirectory, EfAuthenticatedCompanyDirectory>();
                 services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
                 services.AddScoped<DataSourceConnectionTestService>();
                 if (platformReference is not null)
