@@ -37,5 +37,12 @@ security_checkpoint:
   failure: '.NET job113120136391 failed CHARSET on the new migration; governance and retained actual SQL/Chromium gates passed. Removed UTF-8 BOM in the same PR.'
   fix: 'Every membership mutation now repeats the global effective SQL rights proof before append-only table proof, including immediately before save. Synthetic negative controls prove indirect escalation denial and repeat proof on the pinned transaction.'
   local: '7 audit/global permission controls PASS; changed security/migration files formatted. BFF/UI work remains under construction and is not included in this security checkpoint.'
-  next: 'Close current security checkpoint CI; finish BFF/UI controls, then real SQL race/audit/indirect escalation and actual Chromium member mutation.'
+  next: 'Security e7 exact gates closed; continue UI checkpoint CI and real SQL race/audit/indirect escalation plus actual Chromium member mutation.'
+ui_checkpoint:
+  verified_security_head: e7fe3217c6cdfd910a8affa688d41780bd2a9ba7
+  security_build: 37742062502
+  security_governance: 37742062504
+  security_actual_stack: 113194815059
+  result: 'Exact security gates PASS. BFF version opt-in and bounded same-origin mutation, member suspend/reactivate panel, stable unknown-result retry and scope/session fences implemented.102 focused parser/BFF/UI controls and882 full local web tests PASS;20 real Redis controls require hosted CI. Type-check PASS.'
+  remaining: 'Actual member SQL concurrency/audit/rollback/indirect escalation proof and Chromium mutation are pending; existing retained stack PASS does not establish the new member mutation acceptance. Full frozen review and current PR/main gates remain.'
 
