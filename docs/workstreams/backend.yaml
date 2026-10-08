@@ -4,7 +4,7 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: 69b24e29b7571a7cf8160271631533d5d101173a
+head: 3e50621fa7eafcd9802aa02974e4a05a1009488c
 state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,15 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Push verified BFF/member-panel checkpoint, close exact current8 gates and inspect/fix red SAME269. Implement mandatory actual owned SQL role/audit/version/permission/races/Unicode and Chromium admin gain/revoke/lost reply/private state proof. Retained green runtime is insufficient for268. Independent frozen security/runtime review required before final PR/main delivery; installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+next_action: 'Push owned administrator SQL fixture, close exact current8 gates and inspect/fix red SAME269. Continue actual shipping Chromium grant/remove/lost reply/fresh authority gain-revocation/private state proof. Full268 SQL and browser acceptance, independent frozen security/runtime review and exact PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_sql_checkpoint:
+  verified_ui_head: 3e50621fa7eafcd9802aa02974e4a05a1009488c
+  ui_build: 37820209367
+  ui_governance: 37820209365
+  ui_actual: 113458996444
+  ui_quality: 113461955053
+  result: 'Current UI all8 exact gates PASS. New mandatory owned SQL fixture authored: role/audit/version/replay/shared-access/opposite-admin barriers, effective permission and rollback/restored positives, raw malformed role/alias and supplementary Unicode preservation. Python compile and4 boundary tests/15 refusal paths PASS; actual fixture execution remains required. Chromium admin scenarios remain to implement.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
