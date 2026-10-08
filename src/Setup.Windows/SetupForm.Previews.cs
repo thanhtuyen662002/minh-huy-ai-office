@@ -110,11 +110,25 @@ internal sealed partial class SetupForm
             Application.DoEvents();
             RequireOffscreen(form);
             form.PerformLayout();
+            if (form.layout.HorizontalScroll.Visible)
+                throw new VerificationFailure("preview-horizontal-clipping");
             using var bitmap = new Bitmap(form.Width, form.Height);
             form.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
             var output = Path.Combine(directory, state + ".png");
             PathSafety.RejectLinks(output);
             bitmap.Save(output, ImageFormat.Png);
+            if (state == "ready")
+            {
+                form.layout.ScrollControlIntoView(form.password);
+                Application.DoEvents();
+                if (form.layout.HorizontalScroll.Visible || !form.password.UseSystemPasswordChar)
+                    throw new VerificationFailure("preview-onboarding-privacy-layout");
+                using var onboarding = new Bitmap(form.Width, form.Height);
+                form.DrawToBitmap(onboarding, new Rectangle(Point.Empty, onboarding.Size));
+                var onboardingPath = Path.Combine(directory, "ready-onboarding.png");
+                PathSafety.RejectLinks(onboardingPath);
+                onboarding.Save(onboardingPath, ImageFormat.Png);
+            }
             form.Hide();
         }
         PathSafety.RejectLinks(Path.Combine(directory, "preview-proof.json"));

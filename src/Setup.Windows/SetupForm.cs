@@ -27,6 +27,7 @@ internal sealed partial class SetupForm : Form
     private bool busy;
     private readonly bool background;
     private readonly bool startOnly;
+    private readonly FlowLayoutPanel layout;
 
     public SetupForm(string[] arguments, bool preview = false, SetupEngine? setupEngine = null)
     {
@@ -35,12 +36,13 @@ internal sealed partial class SetupForm : Form
         Text = "MinhHuy AI Office";
         ClientSize = new Size(700, 530);
         Font = new Font("Segoe UI", 10);
+        AutoScaleDimensions = new SizeF(96, 96);
         AutoScaleMode = AutoScaleMode.Dpi;
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(720, 570);
         background = arguments.Contains("--background", StringComparer.Ordinal);
         startOnly = arguments.Contains("--start", StringComparer.Ordinal);
-        var layout = new FlowLayoutPanel
+        layout = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.TopDown,
@@ -55,7 +57,15 @@ internal sealed partial class SetupForm : Form
         terms.LinkClicked += (_, _) => { if (!preview) OpenUrl("https://www.docker.com/legal/docker-subscription-service-agreement/"); };
         layout.Controls.Add(terms);
         layout.Controls.Add(license);
-        var buttons = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, Margin = new Padding(0, 12, 0, 12) };
+        var buttons = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Margin = new Padding(0, 12, 0, 12)
+        };
+        foreach (var button in new[] { install, open, restart, export }) button.AutoSize = true;
         buttons.Controls.AddRange([install, open, restart]);
         layout.Controls.Add(buttons);
         layout.Controls.Add(status);
@@ -65,6 +75,9 @@ internal sealed partial class SetupForm : Form
         layout.Controls.Add(password);
         layout.Controls.Add(reveal);
         Controls.Add(layout);
+        layout.SizeChanged += (_, _) => FitLayoutWidth();
+        Shown += (_, _) => FitLayoutWidth();
+        FitLayoutWidth();
         install.Click += async (_, _) => await RunAsync();
         open.Click += (_, _) => { if (!preview) OpenUrl("http://127.0.0.1:3000/"); };
         export.Click += (_, _) => ExportDiagnostic();
@@ -98,6 +111,22 @@ internal sealed partial class SetupForm : Form
                 status.Text = "Trạng thái cài đặt không hợp lệ. Dữ liệu hiện có được giữ nguyên; cần kiểm tra trạng thái trước khi tiếp tục.";
             }
         };
+    }
+
+    private void FitLayoutWidth()
+    {
+        // FlowLayoutPanel does not automatically wrap a top-down child's text.
+        // Reserve the vertical scrollbar even before it appears, so changes in
+        // status/owner text cannot cause a horizontal scrollbar at higher DPI.
+        var available = Math.Max(1, layout.ClientSize.Width - layout.Padding.Horizontal
+            - SystemInformation.VerticalScrollBarWidth - 8);
+        foreach (Control control in layout.Controls)
+        {
+            var width = Math.Max(1, available - control.Margin.Horizontal);
+            if (control is Label or CheckBox or FlowLayoutPanel)
+                control.MaximumSize = new Size(width, 0);
+            else if (control.Width > width) control.Width = width;
+        }
     }
 
     private async Task RunAsync()

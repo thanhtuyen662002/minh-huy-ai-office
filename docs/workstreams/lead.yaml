@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: adb5816e2526e8c1468237d9f3924afa032d10e6
+head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: "2026-10-07"
@@ -66,13 +66,13 @@ installer_verification:
   code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
   local_core_tests: 76
   local_result: "76 PASS on exact89ce9cb after reviewed255/257/259 integration. Retained-ID recovery, lost-both-files refusal, real PS5 Authenticode and PS7 diagnostics remain green. No installer transition logic changed. Hosted full gates, actual stack and Windows artifact PASS."
-  verified_published_head: 52620a82d8175c1634c6579c5e934b303d73351d
-  build: 37641026525
-  governance: 37641026377
-  actual_stack: 112859701510
-  native_artifact_job: 112859701679
-  unsigned_artifact: 11492986101
-  artifact_bytes: 47968456
+  verified_published_head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
+  build: 37653169431
+  governance: 37653169432
+  actual_stack: 112901482261
+  native_artifact_job: 112901482578
+  unsigned_artifact: 11497921154
+  artifact_bytes: 48069731
   previous_integrated_head: 89ce9cbd725a593de12d3fb5ec336a6f48eef8ad
   previous_integrated_build: 37564958347
   previous_integrated_governance: 37564958342
@@ -173,3 +173,9 @@ branch_audit:
   active_draft_leases: [239]
   update: '261 now merged;239 is the only open Draft after merge. Historical115-ref classification remains recorded; no backup is authorized for merge.'
   additional_eligible_prs: 0
+
+installer_layout_checkpoint:
+  state: in_progress
+  defect: 'Actual host-DPI preview clipped text/horizontal scrollbar;96-DPI baseline/live text width/natural action sizing repaired it.'
+  local: 'Compiled WinForms candidate, four offscreen states plus masked ready-onboarding preview and real isolated Windows ACL/shortcut/cache/diagnostic/failure-form verification PASS. Ready/onboarding images visually inspected; no clipping. No OS preparation or real Startup-folder changes.'
+  next: 'Close current code-head hosted gates and independent delta review. Keep239 Draft for clean Windows lifecycle/signing; no new installation claim.'

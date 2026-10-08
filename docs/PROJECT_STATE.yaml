@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: lead/238-windows-installer
 current_pr: 239
-current_target_head: adb5816e2526e8c1468237d9f3924afa032d10e6
+current_target_head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
 last_verified_commit: 39e668ebebe1f8bd19803199b8db393f12a4edb6
 
 critical_paths:
@@ -193,3 +193,13 @@ customer_inventory_qualification:
   customer_writes: false
   private_mapping: 'Protected operator-local metadata, module hashes and handoff; no config values, connection paths, customer schema definitions or row data in Git.'
   next: 'Qualify dedicated read-only identities and versioned local module/schema dependencies, then implement deterministic scoped inventory/stock-movement adapters and actual business proof. Current elevated configuration is not runtime enrollment.'
+
+installer_browser_verified:
+  head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
+  build: 37653169431
+  governance: 37653169432
+  actual_stack: 112901482261
+  native_artifact_job: 112901482578
+  artifact: 11497921154
+  artifact_bytes: 48069731
+  result: 'All gates PASS at browser-integrated installer head. Subsequent DPI layout correction has local compiled/offscreen/isolated native proof; it needs current-head hosted gates/review. Clean Windows lifecycle/signing remains required;239 stays Draft.'
