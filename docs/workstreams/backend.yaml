@@ -45,4 +45,12 @@ ui_checkpoint:
   security_actual_stack: 113194815059
   result: 'Exact security gates PASS. BFF version opt-in and bounded same-origin mutation, member suspend/reactivate panel, stable unknown-result retry and scope/session fences implemented.102 focused parser/BFF/UI controls and882 full local web tests PASS;20 real Redis controls require hosted CI. Type-check PASS.'
   remaining: 'Actual member SQL concurrency/audit/rollback/indirect escalation proof and Chromium mutation are pending; existing retained stack PASS does not establish the new member mutation acceptance. Full frozen review and current PR/main gates remain.'
+integration_checkpoint:
+  verified_ui_head: 1250c24b2cbb08c747bad61f213bf712668cf574
+  ui_build: 37742649576
+  ui_governance: 37742649549
+  ui_actual_stack: 113196720899
+  ui_quality: 113198151441
+  completed: 'New required owned-CI SQL member version/replay/concurrency/immutable-audit/rollback/opposite-admin lock barrier fixture and actual Chromium member mutation/lost-response/stale-version controls wired into the retained stack gates. Python compilation, JS syntax and diff checks PASS.'
+  limitation: 'Host has no usable Linux Docker engine; new member runtime proof must execute in the mandatory hosted owned-stack job. Current integration HEAD/gates and full frozen review remain;262 is incomplete.'
 

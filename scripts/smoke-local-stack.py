@@ -14,6 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+import importlib.util
 from pathlib import Path
 
 
@@ -186,7 +187,7 @@ def main():
     print("PASS actual public issuer and explicit internal metadata configuration with private purpose-separated browser key")
     browser_redirect = web + "/api/local/session/oidc/callback"
 
-    def identity_admin(path, payload=None):
+    def identity_admin(path, payload=None, method=None):
         form = urllib.parse.urlencode({"client_id": "admin-cli", "grant_type": "password",
             "username": "bootstrap-admin", "password": manifest["AIOFFICE_IDENTITY_ADMIN_PASSWORD"]}).encode()
         with urllib.request.urlopen(urllib.request.Request(identity + "/realms/master/protocol/openid-connect/token",
@@ -195,7 +196,7 @@ def main():
         request = urllib.request.Request(identity + "/admin/realms/aioffice-local/" + path,
             data=None if payload is None else json.dumps(payload).encode(),
             headers={"Authorization": "Bearer " + admin_token, "Content-Type": "application/json"},
-            method="GET" if payload is None else "PUT")
+            method=method or ("GET" if payload is None else "PUT"))
         with urllib.request.urlopen(request, timeout=15) as response:
             raw = response.read(65537)
             assert len(raw) <= 65536, "Identity client response exceeded its bound"
@@ -1054,6 +1055,12 @@ def main():
     assert fingerprint("DataSourceRegistrationAudits", source_scope, "Id") == audit_before
     print("PASS repeat configuration/bootstrap, retained SQL/identity/revoked grant, inactive-user denial and retained task")
     print("PASS retained browser client identity/disablement and explicit disposable-fixture restore")
+    member_spec = importlib.util.spec_from_file_location("membership_access_proof", Path("scripts/smoke-membership-access.py"))
+    member_proof = importlib.util.module_from_spec(member_spec)
+    member_spec.loader.exec_module(member_proof)
+    member_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
+        http=http, sql=sql, runtime_statement=runtime_statement, identity_admin=identity_admin,
+        identity=identity, api=api, web=web, auth=auth)
     print("PASS complete local stack integration")
 
 
