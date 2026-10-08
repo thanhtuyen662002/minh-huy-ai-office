@@ -10,6 +10,7 @@ using RuntimeWorker::MinhHuy.AIOffice.Agent.Worker;
 // endpoint and is not included in any shipping API/worker image.
 var stage = "owned-guard";
 string? fixture = null;
+string? fixtureView = null;
 string? operatorConnection = null;
 try
 {
@@ -27,6 +28,7 @@ try
     operatorConnection = Connection("AIOFFICE_ERP_PROOF_OPERATOR", "sa");
     var readerConnection = Connection("AIOFFICE_ERP_PROOF_READER", "aioffice_reader");
     fixture = "dbo.ReadCredentialRuntime_" + Guid.NewGuid().ToString("N");
+    fixtureView = fixture.Replace("ReadCredentialRuntime_", "ReadInternalView_", StringComparison.Ordinal);
 
     async Task<object?> SqlAsync(string text, SqlConnection? existing = null)
     {
@@ -56,9 +58,19 @@ try
         await DeniedAsync(async () => await executor.ExecuteAsync(connection, request));
         await DeniedAsync(async () => await new SqlServerSchemaDiscovery(factory).DiscoverAsync("owned", "owned", "owned", 1, connection));
     }
+    async Task EffectAsync(string statement)
+    {
+        await using var connection = new SqlConnection(readerConnection);
+        await connection.OpenAsync();
+        if (!Equals(await SqlAsync($"BEGIN TRANSACTION; {statement}; ROLLBACK TRANSACTION; SELECT 1;", connection), 1))
+            throw new InvalidOperationException();
+        if (!Equals(await SqlAsync($"SELECT Label FROM {fixture} WHERE Id=1;"), "Owned runtime value"))
+            throw new InvalidOperationException();
+    }
 
     stage = "actual-positive-fixture";
-    await SqlAsync($"CREATE TABLE {fixture}(Id int NOT NULL PRIMARY KEY, Label nvarchar(100) NOT NULL); INSERT {fixture} VALUES(1,N'Owned runtime value');");
+    await SqlAsync($"CREATE TABLE {fixture}(Id int NOT NULL PRIMARY KEY, Label nvarchar(100) NOT NULL, ParentId int NULL, FOREIGN KEY(ParentId) REFERENCES {fixture}(Id)); INSERT {fixture}(Id,Label) VALUES(1,N'Owned runtime value');");
+    await SqlAsync($"EXEC(N'CREATE VIEW {fixtureView} AS SELECT Label FROM {fixture};');");
     stage = "actual-positive-probe";
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
     stage = "actual-positive-catalog";
@@ -72,7 +84,11 @@ try
     stage = "actual-positive-schema";
     var schema = await new SqlServerSchemaDiscovery(factory).DiscoverAsync("owned", "owned", "owned", 1, readerConnection);
     stage = "actual-positive-schema-result";
-    if (schema.Objects.Count == 0) throw new InvalidOperationException();
+    if (!schema.Objects.Any(o => o.Kind == ErpSchemaObjectKind.Table && o.Name == fixture.Split('.')[1])
+        || !schema.Objects.Any(o => o.Kind == ErpSchemaObjectKind.View && o.Name == fixtureView.Split('.')[1])
+        || !schema.Objects.Any(o => o.Kind == ErpSchemaObjectKind.Index)
+        || !schema.Objects.Any(o => o.Kind == ErpSchemaObjectKind.ForeignKey)
+        || schema.Objects.Any(o => o.DefinitionHash.Length != 64)) throw new InvalidOperationException();
     Console.WriteLine("PASS actual qualified probe/catalog/capability/schema read paths");
 
     stage = "actual-elevated-replacement-session";
@@ -137,6 +153,98 @@ try
     }
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
     Console.WriteLine("PASS actual hidden function through accessible ownership-chain view denied before product read");
+
+    stage = "actual-type-control-and-ownership";
+    var aliasType = fixture.Replace("ReadCredentialRuntime_", "ReadAliasType_", StringComparison.Ordinal);
+    try
+    {
+        await SqlAsync($"CREATE TYPE {aliasType} FROM int;");
+        // An ordinary type owned by dbo is compatible; type-level CONTROL is not.
+        await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+        await SqlAsync($"GRANT CONTROL ON TYPE::{aliasType} TO aioffice_reader;");
+        await EffectAsync($"DROP TYPE {aliasType}");
+        await AllDeniedAsync(readerConnection);
+        await SqlAsync($"REVOKE CONTROL ON TYPE::{aliasType} FROM aioffice_reader; ALTER AUTHORIZATION ON TYPE::{aliasType} TO aioffice_reader;");
+        // Ownership has no explicit GRANT row and still allows persistent DDL.
+        await EffectAsync($"DROP TYPE {aliasType}");
+        await AllDeniedAsync(readerConnection);
+    }
+    finally { await SqlAsync($"DROP TYPE IF EXISTS {aliasType};"); }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual subordinate type CONTROL and ownership allow rolled-back DDL but every read path denies");
+
+    stage = "actual-read-grant-option";
+    var grantee = "ReadGrantee_" + Guid.NewGuid().ToString("N");
+    try
+    {
+        await SqlAsync($"CREATE USER {grantee} WITHOUT LOGIN; GRANT SELECT ON OBJECT::{fixture} TO aioffice_reader WITH GRANT OPTION;");
+        await EffectAsync($"GRANT SELECT ON OBJECT::{fixture} TO {grantee}");
+        // The effect really succeeded, and rollback left no permission for it.
+        if (!Equals(await SqlAsync($"SELECT COUNT(*) FROM sys.database_permissions WHERE grantee_principal_id=USER_ID(N'{grantee}') AND major_id=OBJECT_ID(N'{fixture}');"), 0))
+            throw new InvalidOperationException();
+        await AllDeniedAsync(readerConnection);
+    }
+    finally { await SqlAsync($"REVOKE SELECT ON OBJECT::{fixture} FROM aioffice_reader CASCADE; DROP USER IF EXISTS {grantee};"); }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual read WITH GRANT OPTION permits rolled-back permission grant but every read path denies");
+
+    stage = "actual-hidden-server-login";
+    var login = "ReadLogin_" + Guid.NewGuid().ToString("N");
+    var password = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)) + "!aZ9";
+    try
+    {
+        await SqlAsync($"CREATE LOGIN {login} WITH PASSWORD=N'{password}', CHECK_POLICY=ON, DEFAULT_DATABASE=AIOfficeSample; CREATE USER {login} FOR LOGIN {login}; GRANT UPDATE ON OBJECT::{fixture} TO {login}; GRANT IMPERSONATE ON LOGIN::{login} TO aioffice_reader; DENY VIEW DEFINITION ON LOGIN::{login} TO aioffice_reader;");
+        await EffectAsync($"EXECUTE AS LOGIN=N'{login}'; UPDATE {fixture} SET Label=N'Mutated'; REVERT");
+        await AllDeniedAsync(readerConnection);
+        await SqlAsync($"REVOKE IMPERSONATE ON LOGIN::{login} FROM aioffice_reader; REVOKE VIEW DEFINITION ON LOGIN::{login} FROM aioffice_reader;");
+        await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+
+        stage = "actual-fixed-metadata-server-role";
+        await SqlAsync("ALTER SERVER ROLE [##MS_DefinitionReader##] ADD MEMBER aioffice_reader;");
+        await EffectAsync($"ALTER SERVER ROLE [##MS_DefinitionReader##] ADD MEMBER {login}");
+        await AllDeniedAsync(readerConnection);
+    }
+    finally
+    {
+        await SqlAsync("IF IS_SRVROLEMEMBER(N'##MS_DefinitionReader##',N'aioffice_reader')=1 ALTER SERVER ROLE [##MS_DefinitionReader##] DROP MEMBER aioffice_reader;");
+        await SqlAsync($"DROP USER IF EXISTS {login}; IF SUSER_ID(N'{login}') IS NOT NULL DROP LOGIN {login};");
+    }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual concealed login impersonation and metadata fixed-role administration denied by every read path");
+
+    stage = "actual-external-view-graph";
+    var externalDatabase = "ReadExternal_" + Guid.NewGuid().ToString("N");
+    var externalView = fixture.Replace("ReadCredentialRuntime_", "ReadExternalView_", StringComparison.Ordinal);
+    try
+    {
+        await SqlAsync($"CREATE DATABASE {externalDatabase};");
+        await SqlAsync($"EXEC(N'USE {externalDatabase}; CREATE TABLE dbo.Owned(Id int NOT NULL); INSERT dbo.Owned VALUES(1); CREATE USER aioffice_reader FOR LOGIN aioffice_reader; GRANT SELECT ON dbo.Owned TO aioffice_reader;');");
+        await SqlAsync($"EXEC(N'CREATE VIEW {externalView} AS SELECT Id FROM {externalDatabase}.dbo.Owned;');");
+        await using var reader = new SqlConnection(readerConnection);
+        await reader.OpenAsync();
+        if (!Equals(await SqlAsync($"SELECT Id FROM {externalView};", reader), 1)) throw new InvalidOperationException();
+        await AllDeniedAsync(readerConnection);
+    }
+    finally
+    {
+        await SqlAsync($"DROP VIEW IF EXISTS {externalView}; IF DB_ID(N'{externalDatabase}') IS NOT NULL DROP DATABASE {externalDatabase};");
+    }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual accessible cross-database view refused as an unqualified external dependency graph");
+
+    stage = "actual-encrypted-view-graph";
+    var encryptedView = fixture.Replace("ReadCredentialRuntime_", "ReadEncryptedView_", StringComparison.Ordinal);
+    try
+    {
+        await SqlAsync($"EXEC(N'CREATE VIEW {encryptedView} WITH ENCRYPTION AS SELECT Id FROM {fixture};');");
+        await using var reader = new SqlConnection(readerConnection);
+        await reader.OpenAsync();
+        if (!Equals(await SqlAsync($"SELECT Id FROM {encryptedView};", reader), 1)) throw new InvalidOperationException();
+        await AllDeniedAsync(readerConnection);
+    }
+    finally { await SqlAsync($"DROP VIEW IF EXISTS {encryptedView};"); }
+    await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+    Console.WriteLine("PASS actual accessible encrypted view refused before unqualified graph reads");
     return 0;
 }
 catch (Exception error)
@@ -164,7 +272,7 @@ finally
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
             command.CommandTimeout = 10;
-            command.CommandText = $"DROP TABLE IF EXISTS {fixture};";
+            command.CommandText = $"DROP VIEW IF EXISTS {fixtureView}; DROP TABLE IF EXISTS {fixture};";
             await command.ExecuteNonQueryAsync();
         }
         catch

@@ -65,3 +65,13 @@ runtime_reader_diagnosis:
   added: 'Owned hidden function accessed through same-owner view must be denied by all compiled read paths. Source-policy change during secret resolution must deny before probing. Local25 focused source/connection/bootstrap controls and runtime-proof build PASS.'
   review: 'Independent frozen457 focused156 .NET controls,30 UI lifecycle controls and TypeScript PASS. Two source-level blockers remain: non-object securable mutation rights and WITH GRANT OPTION; actual controls and conservative refusal are next. Server metadata concealment and external dependency graphs are also under review.'
   next: 'Close the positive-reader CI failure on this same PR; repair and prove permission class/grant-option/metadata/external dependency gaps. Obtain new frozen security review and exact PR/main gates before integration;264 and233 remain incomplete.'
+
+profile_security_revision:
+  prior_head: d1973843766f729974dd18f20e126c0e87b03799
+  prior_build: 37794740448
+  prior_governance: 37794740461
+  failed_job: 113371139346
+  reader_diagnosis: 'Compiled probe/catalog/capability reached schema discovery, which fails with bounded SQL code451. Normalize all three UNION catalog projections to DATABASE_DEFAULT; actual positive fixture now covers table/internal view/FK/index and structural hashes. Customer database schema/collation is not changed.'
+  security: 'Conservative SQL2022 engine16 profile refuses token grant-options, unsupported subordinate grants, fixed roles except public, server metadata denies and subordinate ownership. External/unresolved/ambiguous/caller-dependent graphs, encrypted/external/CLR/linked facilities are refused. Ordinary verified TSQL endpoint CONNECT remains a narrow public exception.'
+  actual_controls_pending: 'Real rolled-back TYPE CONTROL/ownership DROP, SELECT WITH GRANT OPTION permission grant, concealed login impersonated UPDATE, fixed metadata-role member administration, accessible cross-database and encrypted views; each requires all four compiled shipping reads denied and explicit owned restore. These controls have not yet passed SQL runtime.'
+  next: 'Close actual schema/profile controls and exact runtime CI, obtain revised independent frozen review, then exact PR/main delivery gates. No264 acceptance or customer inventory adapter claim yet.'
