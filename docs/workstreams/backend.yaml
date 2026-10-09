@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: d4f53451aa9833449d2cd9b74118d77918bb6280
+head: f59d517677f7e404b3bc63a486643a0572038f22
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -49,6 +49,14 @@ submission_composer_hook_checkpoint:
   local: '37 new hook/stream controls PASS, including repeat handle, same-input prepare/202 retry, GET-only404/recovery, persisted states, conflict/expiry/grant denial, stable accepted IDs, malformed receipts, fresh final authority, late headers/body and replacement-lock fences. Type-check PASS; contract/BFF regressions rerun with hook.'
   limitation: 'Hook is tested but not yet integrated into the workspace. Server recovery panel and realSQL/Core202/Chromium acceptance remain; no shipping approval or merge readiness.'
   next: 'Integrate same274 composer and bounded private owner recovery panel, extend retained session-race controls, then mandatory nativeSQL/realCore fault/worker/twoCodeS256 browser proof and frozen review/exact PR-main.'
+submission_node24_stream_repair:
+  failing_head: f59d517677f7e404b3bc63a486643a0572038f22
+  failing_build: 37931217235
+  failing_web_job: 113822125173
+  governance: 37931217245
+  result: 'Exact hosted Node24 web gate found15 hook failures. Reproduced unchanged failures using bundled local Node24.19.0; direct positive stream regression identified native Request rejecting jsdom AbortSignal. The client unnecessarily constructed a synthetic Request just to read a Response. Read the existing actual stream/headers/signal directly through the same bounded reader; no JSON, byte, UTF8, timeout or cancellation policy is relaxed.'
+  local: 'Actual Node24 runner:38 hook including new direct positive stream regression,59 BFF and27 pending local owner-panel controls PASS124. Node22 retained51 session/privacy/history/race controls PASS with pending workspace integration. Type-check must remain current. New panel/workspace files are separate uncommitted integration work at this repair checkpoint; no new realSQL/Core202 acceptance or review inferred.'
+  next: 'Push same274 narrowly verified stream repair immediately, own renewed exact CI, then finish and checkpoint workspace/recovery integration with actual Node24 retained gates and mandatory runtime evidence.'
 scope:
   - durable-owner-company-submission-intent-and-exact-operation-replay
   - final-fresh-admission-source-authority-and-safe-typed-receipts

@@ -14,8 +14,7 @@ type Attempt = Readonly<{ generation: number; serial: number; input: SubmissionI
 const unknownNotice = "Chưa xác nhận hệ thống đã nhận yêu cầu. Kiểm tra trạng thái hoặc thử lại đúng yêu cầu này.";
 
 export async function readSubmissionPayload(response: Response, signal: AbortSignal, maximum = 65536): Promise<unknown> {
-  const received = await readBoundedRequestJson(new Request("http://bounded-response.invalid", { method: "POST", body: response.body,
-    signal, headers: { "Content-Type": response.headers.get("Content-Type") ?? "" }, duplex: "half" } as RequestInit), maximum, parseSubmissionJson);
+  const received = await readBoundedRequestJson({ body: response.body, headers: response.headers, signal }, maximum, parseSubmissionJson);
   if (!received.ok) throw new Error("Submission response could not be verified");
   return received.value;
 }

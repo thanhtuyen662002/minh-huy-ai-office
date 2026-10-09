@@ -184,3 +184,6 @@ it.each([
 ])("bounds and validates actual streamed payloads", async response => {
   await expect(readSubmissionPayload(response, new AbortController().signal)).rejects.toThrow();
 });
+it("reads a valid streamed private payload with the actual runtime Request and AbortSignal", async () => {
+  expect(await readSubmissionPayload(Response.json(intent()), new AbortController().signal)).toEqual(intent());
+});
