@@ -479,9 +479,22 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
         ("binding", "DataSourceSecretBindings", binding_scope, "IsEnabled")]
     for name, table, predicate, column in revocations:
         assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.{table} WHERE {predicate} AND {column}=1;") == "1"
+        revoke = f"UPDATE aioffice.{table} SET {column}=0 WHERE {predicate}"
+        restore = f"UPDATE aioffice.{table} SET {column}=1 WHERE {predicate}"
+        if name == "source-read":
+            # CK_DataSources_AccessMode requires at least one mode. Use a real
+            # valid write-only owned source; no task/tool may execute while revoked.
+            original_write = sql(f"USE AIOfficeLocal; SELECT CONVERT(varchar(1),AllowWrite) FROM aioffice.DataSources WHERE {predicate};")
+            assert original_write in ("0", "1")
+            source_bytes = f"""USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),
+              (SELECT * FROM aioffice.DataSources WHERE {predicate} FOR JSON PATH,INCLUDE_NULL_VALUES))),2);"""
+            original_source = sql(source_bytes)
+            assert re.fullmatch(r"[0-9A-F]{64}", original_source)
+            revoke = f"UPDATE aioffice.DataSources SET AllowRead=0,AllowWrite=1 WHERE {predicate}"
+            restore = f"UPDATE aioffice.DataSources SET AllowRead=1,AllowWrite={original_write} WHERE {predicate}"
         for kind in ("prepare", "execute", "replay"):
-            queued_admission(kind, f"UPDATE aioffice.{table} SET {column}=0 WHERE {predicate}",
-                f"UPDATE aioffice.{table} SET {column}=1 WHERE {predicate}")
+            queued_admission(kind, revoke, restore)
+            if name == "source-read": assert sql(source_bytes) == original_source, "Read-grant fixture did not restore exact source bytes"
         print("PASS native observed queued prepare/new execution/committed replay " + name + " revocation denies without effects and restores positive")
 
     # Block a real original-request read AFTER the initial authority checks.

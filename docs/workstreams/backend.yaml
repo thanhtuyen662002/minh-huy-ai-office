@@ -146,7 +146,16 @@ submission_actual_application_resource_observation:
   result: 'All six prerequisites/Gov PASS; full1287.NET/1276web including realRedis PASS. All initialnative controls plus FEFF roundtrips/legacy PASS. Terminal at queued-lock observer: sanitized actualLCK_M_X|blocker1|APPLICATION|X|WAIT|callerText0 proves actual block; nested system procedure text lacks caller name. No queued revocation/new browser acceptance yet.'
   repair: 'Match exact runtime waiting X lock against operator granted transaction X lock by resource type/database/exactresource description plus sameblocking session/LCK_M_X. Replace brittle caller-text match with direct resource causality, retain all revocation/noeffects/restoredpositive assertions. Bounded diagnostic reports engine enums/booleans only.'
   review: 'Independent full shipping/static frozena843 APPROVED and originalFEFF realHTTP503→200 repro CLOSED; receipt6086781182.106web/26Contracts/Core1/repro/10Python/6Node/YAML independentlyPASS. Runtime/fourimages and laterproofdelta remain mandatory, not approved.'
-next_action: 'Push same274 actual resource-lock observation fix; close exact native queued19/realCore202/twoCodeS256/fourimages and fix any failure. Full independent runtime/image/proofdelta approval then finalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
+submission_valid_read_grant_revocation_fixture:
+  predecessor: b3d0cc1a8237b83aa5a870ae2a2eeeecb2c204cf
+  build: 37973684669
+  governance: 37973684638
+  actual: 113966453053
+  quality: 113969853673
+  result: 'All initialnative/FEFF/legacy PASS. Actual exactresource observed queued prepare/new execution/committed replay membership/global-user/source-enabled revocations ALL9 PASS: empty403/noeffects/restoredpositives. Terminal SQL547 at sourceAllowRead0 with originalAllowWrite0, correctly refused by CK_DataSources_AccessMode. Remaining6queued/fourprivate-read/newbrowser not executed.'
+  repair: 'Keep source access constraint enabled. Capture originalAllowWrite bit and exact fullsource rowSHA256; temporarily switch owned disposable source to valid write-only AllowRead0/AllowWrite1. All queued read attempts must403/noeffects. Finally restore AllowRead1/originalAllowWrite and compare exact originalfullrow hash after each kind. No shipping/permission grant bypass or customer operation.'
+  review: 'Independent b3 four-fileproof/docs delta APPROVED; actualdiagnostic/exact held-waiting transactionresource join verified and3queries SQL160 syntaxPASS;10Python/AST/YAML/diffPASS. Full shipping/statica843 approval retained; runtime/fourimages remain mandatory.'
+next_action: 'Push same274 valid source-read revocation fixture, execute remaining6queued/four private-read plus all realCore202/twoCodeS256/fourimages. Fix each actual failure, full independent acceptance and exact finalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
