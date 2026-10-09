@@ -1187,7 +1187,13 @@ def main():
     group_spec = importlib.util.spec_from_file_location("group_ingress_proof", Path("scripts/smoke-group-ingress.py"))
     group_proof = importlib.util.module_from_spec(group_spec)
     group_spec.loader.exec_module(group_proof)
-    group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api, auth=member_auth)
+    # All preceding adversarial SQL suites may outlive the original short-lived
+    # portal token. Obtain a current issued owner token for this independent read
+    # gate; expired tokens must not be treated as a source-read product defect.
+    login()
+    group_auth = {"Authorization": "Bearer " + next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token"),
+        "X-AIOffice-Company-Id": company}
+    group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api, auth=group_auth)
     print("PASS complete local stack integration")
 
 

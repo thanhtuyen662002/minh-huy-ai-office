@@ -361,8 +361,12 @@ try {
   const acceptedResponse = await submitted;
   stage = "owned-expiry-submit-accepted";
   requireProof(acceptedResponse.status() === 202 && acceptedResponse.headers()["cache-control"] === "no-store");
-  stage = "owned-expiry-submit-receipt";
-  const accepted = await acceptedResponse.json(); requireProof(guid(accepted.taskId));
+  stage = "owned-expiry-submit-receipt-body";
+  const acceptedBytes = await acceptedResponse.body();
+  stage = "owned-expiry-submit-receipt-json";
+  const accepted = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(acceptedBytes));
+  stage = "owned-expiry-submit-receipt-task-id";
+  requireProof(guid(accepted?.taskId));
   stage = "owned-expiry-task-read";
   const task = await get(`/api/local/tasks/${accepted.taskId}` + query);
   requireProof(task.status === 200 && task.cache === "no-store" && JSON.parse(task.text).taskId === accepted.taskId);
