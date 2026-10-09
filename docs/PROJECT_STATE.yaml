@@ -14,9 +14,9 @@ critical_paths:
     issue: 270
     pr: 271
     branch: codex/270-task-history
-    head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
+    head: 70465e72cee05459dc541cef1a1fa836a6603ba5
     state: in_progress
-    next: 'Same271 actual CI closure after secondary owned default-company login and real provider picker repair.6ea all native plus owner archive/reload/newSID PASS; secondary URL-scope fixture failed. Frozen review/all3 images/exact final PR-main gates required;272 depends on270 accepted main.'
+    next: 'Frozen704 full270 security/runtime/all3images APPROVED6077185197 with exactall8PASS. Finaldocsreview/renewedexactCI then merge-mainclosure;272 depends onaccepted270main.'
 
   erp_data:
     issue: 264
@@ -76,7 +76,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own current271 closure: repair secondary owned fixture through default-company Code/S256 signin then shipping provider picker, preserve server-selected scope, close actual history/native/fingerprints/all3 images/frozen review/exact final PR-main. Installer22f internally approved/all9 PASS,239 Draft for clean Windows/signing; integrate271 only after acceptedmain.272 queued after270; full233/customer/production remain.'
+next_action: 'Finalize271 reviewed docs/renewed exactCI then merge/exactmain: frozen704 full270 security-runtime-all3 images APPROVED6077185197 andall8currentPASS. Preserve approvedinstaller22f239DraftexternalWindows-signing; integrateaccepted270onlyaftermainclosure.272 queued next; full233/customer/production remain.'
 
 
 blocked_by:
@@ -260,14 +260,14 @@ installer_latest_documentation_verified:
   review: 'Independent frozen documentation delta APPROVED; installer bytes equal approved21d. All9 hosted gates PASS. No clean Windows/signing completion claim;239 remains Draft.'
 
 branch_integration_audit:
-  baseline_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-  remote_non_main_branches: 130
-  matched_merged_pr_heads: 123
+  baseline_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  remote_non_main_branches: 132
+  matched_merged_pr_heads: 125
   other_main_ancestor: 1
   archived_or_superseded: 4
-  active_draft_leases: [239, 267]
+  active_draft_leases: [239, 271]
   evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
-  result: 'Refreshed130 non-main remote branches against accepted002:123 exact merged PR heads,1 main ancestor,4 archival/superseded,2 active Drafts239/267. No additional eligible implementation; preserve backups/snapshot.263/265 subsequently merged with exact main proof. Latest267 acceptance/review/gates and installer clean Windows/signing remain.'
+  result: 'Current paginated132-branch audit:125 exact merged PR heads,1 verified main ancestor,4 preserved historical/superseded refs and2 Draftleases239/271. No additional eligible implementation.23922f internally approved/all9 but externalWindows-signing;271704all8/actualhistoryPASS fullreview6077185197approved; finaldocsreview/exactfinalPR-main remain.'
 
 verified_erp_265:
   implementation_head: e3d5254d8b7c7d72261ddf53841232587b1ee1c6
@@ -450,3 +450,17 @@ task_history_secondary_fixture_repair:
   cause_and_fix: 'Fresh Home deliberately ignores URL company selectors and uses configured default until issuedSID selects company. Owned second identity had archive membership only, so default-company callback denied. Independent original Home controls confirm server authority. Give disposable second identity default-company viewer membership before fingerprints; actual ordinary Code/S256 UI login must confirm that viewer/current company, then real shipping picker performs Code/S256 switch to archive admin with newSID. Both full-row fingerprints include those original fixture memberships/roles; no product scope change or assertion bypass.'
   local: '74 new web including pagination/second-page detail/same-page refresh/read-only request assertions and typecheck PASS.51 focused.NET and45 retained session race controls previously independently PASS. Renewed guard/syntax checks and mandatory hosted execution required for fixture change.'
   next: 'Own same271 exact current native/Chromium closure, split fixed secondary form/callback/picker stages to diagnose real failures without private logs, inspect all3 current images and full frozen review before readiness/merge/main. Full233 active;239 external Windows/signing Draft;272 dependency retained.'
+
+task_history_704_actual_verified:
+  head: 70465e72cee05459dc541cef1a1fa836a6603ba5
+  build: 37900176803
+  governance: 37900176836
+  actual: 113720632034
+  quality: 113723223489
+  artifact: 11602387209
+  artifact_bytes: 260997
+  dotnet_tests: 1170
+  web_tests: 1102
+  result: 'All8 exact gates/Governance PASS. ALL native stored-byte/max64000/corrupt metadata/owner-company/pagination/canonicalempty/natively queued3finalauthority/noeffects SQL controls PASS. Shipping two CodeS256 users, defaultviewer then actualprovider archiveadmin switch, reciprocal404, completed/pending/failed/detail/uppercaseGUID/reload/newSID, held successful late-detail company fence and external member revoke/private clear/restored recovery/no-extra-task-dispatch-charge PASS. Retained stack/security/Chromium PASS.'
+  review: 'Independent full prior shipping/static has no remaining concrete finding; GUID P2 CLOSED, frozen704 fixture/pagination/docs delta no blocker. Independent78 web including4 own controls/5Node/6Python/typecheck PASS. Root inspected all3 current images: readable/reachable/unclipped/no secrets. Full frozen current implementation/security/runtime/all3 images independently APPROVED, receipt6077185197. Final documentation delta review and exact final PR/main closure remain.'
+  next: 'Finalize durable docs with independent frozen delta review and exact final CI, then approved PR/main closure. Preserve separate239Draft for actual Windows/signing;272 depends on accepted270main. Full233 remains active.'

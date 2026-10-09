@@ -4,7 +4,7 @@ status: active-development
 current_issue: 270
 current_pr: 271
 current_branch: codex/270-task-history
-head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
+head: 70465e72cee05459dc541cef1a1fa836a6603ba5
 state: in_progress
 lease_owner: root-backend-270
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Close same271 actual SQL/Chromium after owned secondary default-company signin and real provider picker repair.6ea native and owner recovery PASS, secondary fixture failed; no full approval. Inspect three current images, frozen independent review and exact final PR/main gates before merge.272 depends on270 accepted main;239 remainsDraft; full233 active.'
+next_action: 'Finalize reviewed270 docs: frozen704 full security/runtime/all3 images APPROVED6077185197, exactBuild37900176803/Gov37900176836/all8/actual113720632034 PASS. Close final frozen docs review/renewed exactCI, merge then exactmain.272 follows accepted270main;239DraftWindows-signing/full233 remain.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
@@ -398,3 +398,17 @@ task_history_secondary_fixture_repair:
   cause_and_fix: 'Fresh Home deliberately ignores URL company selectors and uses configured default until issuedSID selects company. Owned second identity had archive membership only, so default-company callback denied. Independent original Home controls confirm server authority. Give disposable second identity default-company viewer membership before fingerprints; actual ordinary Code/S256 UI login must confirm that viewer/current company, then real shipping picker performs Code/S256 switch to archive admin with newSID. Both full-row fingerprints include those original fixture memberships/roles; no product scope change or assertion bypass.'
   local: '74 new web including pagination/second-page detail/same-page refresh/read-only request assertions and typecheck PASS.51 focused.NET and45 retained session race controls previously independently PASS. Renewed guard/syntax checks and mandatory hosted execution required for fixture change.'
   next: 'Own same271 exact current native/Chromium closure, split fixed secondary form/callback/picker stages to diagnose real failures without private logs, inspect all3 current images and full frozen review before readiness/merge/main. Full233 active;239 external Windows/signing Draft;272 dependency retained.'
+
+task_history_704_actual_verified:
+  head: 70465e72cee05459dc541cef1a1fa836a6603ba5
+  build: 37900176803
+  governance: 37900176836
+  actual: 113720632034
+  quality: 113723223489
+  artifact: 11602387209
+  artifact_bytes: 260997
+  dotnet_tests: 1170
+  web_tests: 1102
+  result: 'All8 exact gates/Governance PASS. ALL native stored-byte/max64000/corrupt metadata/owner-company/pagination/canonicalempty/natively queued3finalauthority/noeffects SQL controls PASS. Shipping two CodeS256 users, defaultviewer then actualprovider archiveadmin switch, reciprocal404, completed/pending/failed/detail/uppercaseGUID/reload/newSID, held successful late-detail company fence and external member revoke/private clear/restored recovery/no-extra-task-dispatch-charge PASS. Retained stack/security/Chromium PASS.'
+  review: 'Independent full prior shipping/static has no remaining concrete finding; GUID P2 CLOSED, frozen704 fixture/pagination/docs delta no blocker. Independent78 web including4 own controls/5Node/6Python/typecheck PASS. Root inspected all3 current images: readable/reachable/unclipped/no secrets. Full frozen current implementation/security/runtime/all3 images independently APPROVED, receipt6077185197. Final documentation delta review and exact final PR/main closure remain.'
+  next: 'Finalize durable docs with independent frozen delta review and exact final CI, then approved PR/main closure. Preserve separate239Draft for actual Windows/signing;272 depends on accepted270main. Full233 remains active.'
