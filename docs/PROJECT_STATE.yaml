@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/276-group-routing-contracts
 current_pr: 282
-current_target_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
-last_verified_commit: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+current_target_head: ee30ad80680c1cd457cb5b3518111efaa17575ae
+last_verified_commit: 1b0b7c53273a9405ff8d60b9c1976c6f6cc34519
 
 critical_paths:
   backend:
     issue: 276
     pr: 282
     branch: codex/276-group-routing-contracts
-    head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
+    head: ee30ad80680c1cd457cb5b3518111efaa17575ae
     state: in_progress
-    next: '276/282 active lease after272/274 delivery and attachment reading. Concrete routing/service policies plus controlled-vs-synthetic qualification and frozen batch/note/report refs implemented locally;66 new/full462 Contracts PASS. Initial840 frozen routing33 independent tests/no blocker; full current qualification/workflow review and exact gates remain.281 docs correction fullreview6088335989/integrated38c3 all8 approved and mergedmain1b0; exact main pending. Then277 SQL ingress,278 real SQL brain/automatic notes,279 IT-only reporter. No live activation.'
+    next: '276/282 active. Full frozen ee30 contracts/qualification review APPROVED6088762933:475 independent tests including13 own probes;66 new/full462 repository Contracts PASS. Accepted main281/1b0 exact all8 Build37985845222/Gov37985845186/actual114007505342/quality114011846100 PASS. Integrated1b0 locally; final documentation/integration review and exact final PR/main gates remain. Then277 SQL ingress,278 real SQL brain/automatic notes,279 IT-only reporter. No live qualification/activation or runtime delivery from contracts.'
 
   erp_data:
     issue: 264
@@ -35,6 +35,7 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR281 requirement correction deliveredmain1b0b7c53273a9405ff8d60b9c1976c6f6cc34519 after full13-doc review6088335989 and byte-equal accepted integration38c3. Exact main Build37985845222/Gov37985845186/all8/actual114007505342/quality114011846100 PASS; plan only, no group feature delivered. Source messages automatically create SQL notes and notify separately configured internal IT destinations; no per-item human approval or customer output.'
   - 'PR274/issue272 deliveredmain09b7d36b23b554fcaa2b3534ddc6faa166cac651 at2026-10-09T19:46:10Z. Full frozen shipping6087833026/final6docs6087900218 approved. FinalPR f3cf3cc7eb8daa2737473f67d298b86858ee00c1 Build37980837971/Gov37980837996/all8/actual113990625301/quality113994648735 PASS. Main Build37982478564/Gov37982478631/all8/actual113996168399/quality114000211598 PASS;1287.NET/1276web. All15 queued/four finalprivate reads and actual receipt-loss/reload/newSID/isolation/revoke-restored Chromium passed; root inspected all4images11641407860.272 CLOSED; full233 remains.'
   - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR/main gates. Main Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
   - 'PR271/issue270 deliveredmain420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca with full frozen reviews6077185197/6077227682 and exactPR/main Build37905169739/Gov37905169543/all8/actual113736786869/quality113739461629 PASS. All3 sanitized main images11604905419 inspected.'
@@ -79,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Continue owned276/282 full frozen contract/qualification review and exactCI, preserving core progress while live connector is unqualified.281 docs correction mergedmain1b0 after approved38c3/all8; close exactmain then absorb accepted plan. Deliver276 before277 SQL ingress/revisions/queue,278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No runtime human approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
+next_action: 'Close owned276/282 final integration/documentation review and exact final PR/main gates after full ee30 approval6088762933. Accepted281/main1b0 all8 verified and integrated locally. Immediately continue277 SQL ingress/revisions/coverage/queue,278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No per-item approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
 
 
 blocked_by:

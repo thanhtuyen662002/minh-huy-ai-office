@@ -56,7 +56,11 @@ merged PRs, one verified ancestor, four historical/superseded refs, and two open
 PR239 remains Draft for actual Windows lifecycle/signing. PR281 documentation
 correction is independently approved at0df by receipt6088335989; after acceptedmain
 integration its head38c3f58f67b18fbd79f754e63337d57b4ffbf692 has refreshed
-Build37984363485/Gov37984363590 pending/full acceptance separate. No live group
-feature is delivered by that plan. User attachment now read; new issue276 branch
-claims executable routing/service contracts and qualification, preceding277–279.
+Build37984363485/Gov37984363590/all8 PASS. PR281 subsequently deliveredmain1b0
+with exact Build37985845222/Gov37985845186/all8/actual114007505342/quality114011846100
+PASS; the accepted main tree matches reviewed38c3. No live group feature is
+delivered by that plan. User attachment read after274 delivery; issue276/PR282
+owns executable routing/service contracts and qualification, preceding277–279.
+Full frozen ee30 review6088762933 approved475 tests including13 own probes.
+Final integration/documentation review and exact final PR/main gates remain.
 No historical branch was deleted, force updated or merged.
