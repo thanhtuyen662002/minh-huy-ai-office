@@ -1,6 +1,6 @@
 # Minh Huy AI Office
 
-**Owner-prioritized delivery:** [Customer group intake → IT task notes → one reviewed group digest](docs/features/customer-group-intake/README.md), tracked in [#275](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/275) and implementation slices #276–#279. Build this usable flow before conversational auto-replies; do not wait for the full wiki, ERP modules or Windows installer. This is a plan, not a delivered connector feature. Preserve active security/recovery leases and existing release gates.
+**Owner correction (2026-10-10):** [Customer groups → automatic SQL task notes → automatic INTERNAL IT-group notification](docs/features/customer-group-intake/OWNER_CORRECTION_AUTO_IT.md), epic [#275](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/275), slices #276–#279. **No human approval and no report back to customer groups.** IT receives work; it does not approve intake. Use the [replacement Codex prompt](docs/features/customer-group-intake/CODEX_PROMPT.md). Earlier reviewed same-group wording from PR #280 is superseded. This changes the plan, not deployed behavior; preserve active security/recovery leases and release gates.
 
 Full product and one-click Windows setup progress is tracked in [issue #233](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/233) and the [requirement matrix](docs/PRODUCT_COMPLETION.md). Historical pilot/contract milestones are partial evidence; the complete product and Windows installer are not yet delivered.
 

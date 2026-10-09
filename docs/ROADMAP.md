@@ -1,12 +1,12 @@
 # Roadmap
 
-## Immediate owner-prioritized delivery — customer group intake
+## Immediate owner-prioritized delivery — autonomous customer-group intake
 
-Owner direction 2026-10-09: ship [Zalo customer groups → IT task notes → one reviewed same-group digest](features/customer-group-intake/README.md) before conversational auto-replies. Epic #275; slices #276–#279; detailed flow/contracts/acceptance live in that feature folder.
+Corrected by owner 2026-10-10: [customer source groups → connector → agent → SQL work notes → agent → INTERNAL TECHNICAL GROUP](features/customer-group-intake/OWNER_CORRECTION_AUTO_IT.md). Epic #275; #276–#279 keep IDs with revised acceptance. **No runtime human approval, no manual Generate/Accept/Send prerequisite and no report back to customer source groups.** Earlier PR #280 wording is superseded.
 
-Deliver read-only group intake first, then evidence-backed request triage/IT notes, then a single reviewed consolidated report routed by backend to the originating group. Capture permitted future group text, not only mentions. Keep customer-safe report separate from internal notes. Full wiki/RAG, ERP business adapters, billing, installer completion and auto-replies are not prerequisites for this vertical slice.
+Build durable intake, automatically recorded evidence-backed notes, and a DB-driven IT notifier. Missing information produces an attention note automatically sent to IT, not an approval queue. Backend maps source bindings to explicitly authorized internal destinations; every item retains source identity. IT handles the work afterward. Conversational customer replies remain later scope.
 
-Retain security-critical/incident work and current active recovery leases (#274/#239 at planning time); sequence shared contracts/migrations through lead review instead of stealing ownership. This reorders the next available product-capacity slice, not a cancellation or false completion of #233. No live account/automation is enabled by the plan.
+Retain security-critical work and existing recovery/installer leases (#274/#239 if still active). Sequence shared contracts/migrations through Lead; do not steal ownership or cancel #233. Full wiki/vector/RAG, ERP business adapters, billing and Windows completion are not prerequisites. Initial source/target access configuration and code review/CI still apply; no live account or deployment is activated by this documentation correction.
 
 ## P0 — Engineering foundation
 Goal: make development resumable, testable and deployable.
