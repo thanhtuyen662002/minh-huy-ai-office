@@ -1,13 +1,14 @@
 // Required real Chromium proof against only the owned disposable GitHub CI stack.
 // No traces, provider bodies, credentials, tokens or private cookie values are logged.
 import { chromium } from "playwright";
-import { readFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, unlink, mkdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
+import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs";
 
-let stage = "disposable-fixture-guard", browser, safeFailureLogs;
+let stage = "disposable-fixture-guard", browser, safeFailureLogs, restoreCoreTransport;
 const requireProof = condition => { if (!condition) throw new Error("Browser proof failed."); };
 const digest = value => createHash("sha256").update(value).digest("hex");
 const guid = value => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
@@ -19,8 +20,17 @@ try {
   const manifest = JSON.parse(await readFile(join(directory, "installation.json"), "utf8"));
   for (const key of ["INSTALLATION", "TENANT", "COMPANY", "USER", "DATA_SOURCE"]) requireProof(guid(manifest[`AIOFFICE_${key}_ID`]));
   const compose = ["compose", "--env-file", join(directory, "local.env"), "-f", "compose.local.yaml"];
-  const run = (args, env = process.env) => {
-    const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
+  const run = (args, env = process.env, input) => {
+    const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, input, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
+    if (result.status !== 0) {
+      // Never emit CLI stderr: it can contain private configuration or SQL.
+      const category = result.error?.code === "ETIMEDOUT" ? "timeout"
+        : /read.only file system/i.test(result.stderr ?? "") ? "read-only"
+        : /permission denied/i.test(result.stderr ?? "") ? "permission"
+        : /no such file|not found/i.test(result.stderr ?? "") ? "missing-path"
+        : /not running/i.test(result.stderr ?? "") ? "service-stopped" : "command-exit";
+      console.error(`CI command refusal: ${stage}/${category}`);
+    }
     requireProof(result.status === 0); return result.stdout.trim();
   };
   const sql = text => run(["exec", "-T", "sql", "sh", "-c",
@@ -47,7 +57,47 @@ try {
   requireProof(app === `http://127.0.0.1:${service.ports[0].published}`
     && issuer === `http://127.0.0.1:${profile.services.identity.ports[0].published}/realms/aioffice-local`);
   stage = "browser-mode-readiness";
+  // The override exists only inside the owned CI directory. Product Compose
+  // and Core remain unchanged; the proxy listens inside web's loopback only.
+  const transportOverride = join(directory, "browser-core-reply-proof.yaml");
+  stage = "owned-core-transport-override";
+  await writeFile(transportOverride, 'services:\n  web:\n    environment:\n      AIOFFICE_BROWSER_CORE_API_ORIGIN: http://127.0.0.1:8099\n', { mode: 0o600 });
+  compose.push("-f", transportOverride);
+  restoreCoreTransport = async () => {
+    compose.splice(-2, 2);
+    run(["up", "-d", "--no-deps", "--force-recreate", "web"], flags);
+    await unlink(transportOverride);
+  };
+  stage = "owned-core-transport-web-recreate";
   run(["up", "-d", "--no-deps", "--force-recreate", "web"], flags);
+  const proxyDirectory = "/tmp/aioffice-core-reply-proof";
+  stage = "owned-core-transport-private-directory";
+  run(["exec", "-T", "web", "node", "-e", "require('node:fs').mkdirSync(process.argv[1],{mode:0o700})", proxyDirectory]);
+  stage = "owned-core-transport-script-copy";
+  // Docker cp does not support this writable tmpfs on a read-only container.
+  // Feed public fixture code through stdin to the unprivileged Node process.
+  const proxySource = await readFile(new URL("./owned-browser-core-proxy.mjs", import.meta.url), "utf8");
+  run(["exec", "-T", "web", "node", "-e", "require('node:fs').writeFileSync(process.argv[1],require('node:fs').readFileSync(0),{mode:0o600})",
+    proxyDirectory + "/proxy.mjs"], process.env, proxySource);
+  stage = "owned-core-transport-start";
+  run(["exec", "-d", "-T", "-e", "CI=true", "-e", "GITHUB_ACTIONS=true", "-e", "AIOFFICE_BROWSER_CORE_REPLY_PROOF=true",
+    "web", "node", proxyDirectory + "/proxy.mjs", proxyDirectory]);
+  let proxyReady = false;
+  stage = "owned-core-transport-readiness";
+  for (let attempt = 0; attempt < 30; attempt++) {
+    proxyReady = run(["exec", "-T", "web", "node", "-e", "process.stdout.write(require('node:fs').existsSync(process.argv[1])?'ready':'waiting')", proxyDirectory + "/ready"]) === "ready";
+    if (proxyReady) break; await delay(200);
+  }
+  requireProof(proxyReady);
+  const coreReplyFault = {
+    arm: fault => run(["exec", "-T", "web", "node", "-e",
+      "require('node:fs').writeFileSync(process.argv[1],process.argv[2],{mode:0o600})", proxyDirectory + "/fault.json", JSON.stringify({ ...fault, count: 0 })]),
+    read: () => JSON.parse(run(["exec", "-T", "web", "node", "-e",
+      "process.stdout.write(require('node:fs').readFileSync(process.argv[1],'utf8'))", proxyDirectory + "/fault.json"])),
+    disarm: () => run(["exec", "-T", "web", "node", "-e",
+      "require('node:fs').rmSync(process.argv[1],{force:true})", proxyDirectory + "/fault.json"]),
+  };
+  stage = "browser-mode-readiness";
   let ready = false;
   for (let attempt = 0; attempt < 60; attempt++) {
     try { ready = (await fetch(app, { signal: AbortSignal.timeout(2000) })).status === 200; } catch { /* Bounded readiness. */ }
@@ -194,6 +244,8 @@ try {
   const roleProof = sql(`USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.RoleAssignments WHERE ${memberScope} AND RoleKey=N'viewer';`);
   requireProof(roleProof === "1" && (await current()).status === 200 && (await cookie("aioffice_browser_session")).value === sid.value);
   console.log("PASS actual Chromium member suspend/reactivate, committed lost reply with stable replay, stale version reload and unchanged role/session");
+  await verifyCompanyAdministrators({ directory, manifest, browser, ownerPage: page, ownerContext: context, sql,
+    app, identity, company, tenant, owner: user, coreReplyFault, setStage: value => { stage = value; } });
   const foreign = randomUUID();
   for (const path of ["/api/local/session", "/api/local/data-sources", "/api/local/company/members"]) {
     requireProof((await get(path + `?companyId=${foreign}`)).status === 401);
@@ -485,4 +537,7 @@ try {
   // JWT or private environment. Emit only a fixed stage identifier.
   console.error(`FAIL actual Chromium browser OIDC gate: ${stage}`); process.exitCode = 1;
   try { safeFailureLogs?.(); } catch { console.error("CI verification refusal stage unavailable"); }
-} finally { if (browser) await browser.close().catch(() => {}); }
+} finally {
+  if (browser) await browser.close().catch(() => {});
+  try { await restoreCoreTransport?.(); } catch { console.error("FAIL owned Core transport restoration"); process.exitCode = 1; }
+}

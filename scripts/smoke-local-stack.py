@@ -1163,6 +1163,12 @@ def main():
     member_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
         http=http, sql=sql, runtime_statement=runtime_statement, identity_admin=identity_admin,
         identity=identity, api=api, web=web, auth=member_auth)
+    administrator_spec = importlib.util.spec_from_file_location("administrator_proof", Path("scripts/smoke-company-administrators.py"))
+    administrator_proof = importlib.util.module_from_spec(administrator_spec)
+    administrator_spec.loader.exec_module(administrator_proof)
+    administrator_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
+        http=http, sql=sql, runtime_statement=runtime_statement, identity_admin=identity_admin,
+        identity=identity, api=api, web=web, auth=member_auth)
     erp_spec = importlib.util.spec_from_file_location("erp_read_credentials_proof", Path("scripts/smoke-erp-readonly.py"))
     erp_proof = importlib.util.module_from_spec(erp_spec)
     erp_spec.loader.exec_module(erp_proof)

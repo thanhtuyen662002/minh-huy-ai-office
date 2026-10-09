@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
+head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: '2026-10-09'
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: 'Installer239 already includes accepted266/maina75 at4b; exact4b Build37816394932/Gov37816394855/all9/native113446015962/actual113446015945/quality113448938090 PASS. Close current final docs9 gates and independent remaining frozen runtime/final integration review when reviewer quota permits; static source review found no blocker. Keep Draft for clean Windows/signing. Backend268/269 current69b service/API foundation is a separate unaccepted lease and is not ininstaller. Full233/customer ERP credentials/adapters/production remain.'
+next_action: 'Integrate accepted269/main3fc only after full frozen approvals6073002478/6073139900 and exact main Build37875625822/Gov37875625829/all8/actual113643444397/quality113645840920 PASS. Preserve approved723 Setup bytes and required native ninth gate; close renewed exact9 integration gates/artifacts/review. Keep239 Draft for clean Windows/signing. External backend270/271 remains separately owned, unaccepted and absent from this installer shipping. Full233/customer/production remain.'
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
@@ -272,3 +272,16 @@ installer_verified_company_integration_4b:
   state: in_progress
   review: 'Independent static frozen integration/source review found no blocker: non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify unchangedapproved21d/989/45a; workflow retains acceptedmain guard/native9 gate and solution retains all configurations. Exact4b all9 native/SQL/Chromium SUCCESS. Reviewer account quota interrupted remaining runtime/final documentation review; no full4b approval inferred.'
   next: 'Close final documentation current9 gates; resume independent frozen runtime/final integration review when available. Keep239 Draft for external clean Windows/signing; full233/customer/production remain.'
+
+installer_accepted_administrator_integration:
+  approved_installer_head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
+  approved_review: 6072831478
+  accepted_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  main_build: 37875625822
+  main_governance: 37875625829
+  main_actual: 113643444397
+  main_quality: 113645840920
+  state: in_progress
+  integration: 'Merge only accepted administrator269/main3fc, full frozen approvals6073002478/6073139900 and exact PR/main all8 PASS. Non-installer src/apps/tests equal acceptedmain3fc; Setup source/tests/build/verify remain byte-identical approved723. Additive solution projects/configurations and mandatory native ninth gate retained. Resolve four documentation conflicts with current accepted delivery plus prior installer receipts;270 shipping is not integrated.'
+  local: 'Full solution1206.NET PASS (729 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core); native4 guard and2 browser guard controls, JS/Python syntax/YAML/diff PASS. Non-installer src/apps/tests byte-equal acceptedmain3fc and Setup source/tests/build/verify byte-equal approved723. Native ninth gate/solution configurations retained. Renew exact9 integration gates/artifacts/frozen review; no clean Windows/signing acceptance.'
+  next: 'Verify and push accepted-main integration on same239; own exact9 CI through terminal and fix actual failures. Keep Draft for external Windows/signing; continue270 on its separate271 lease/full233 active.'

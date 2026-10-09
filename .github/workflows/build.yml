@@ -101,7 +101,9 @@ jobs:
       - name: Install required Chromium runtime
         run: npx playwright install --with-deps chromium
       - name: Verify adversarial fixture execution boundary
-        run: python scripts/test-owned-stack-guard.py
+        run: |
+          python scripts/test-owned-stack-guard.py
+          node --test scripts/test-browser-administrators-guard.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh
         run: ./scripts/test-local-config.ps1
@@ -118,7 +120,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: browser-workspace-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/aioffice-browser-proof/workspace.png
+          path: |
+            ${{ runner.temp }}/aioffice-browser-proof/workspace.png
+            ${{ runner.temp }}/aioffice-browser-proof/administrators.png
           if-no-files-found: error
           retention-days: 7
       - name: Remove only this ephemeral CI stack

@@ -17,3 +17,9 @@ Of 130 remote branches outside main, 123 exact branch HEADs match merged PR HEAD
 [PR263](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/263) and [PR265](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/265), which were active in earlier audits, subsequently merged after independent frozen implementation/runtime reviews and exact PR/main gates. Main002 Build37801975078/Governance37801976469 and actual SQL/Chromium113396238709 passed. Their feature acceptance does not complete full product #233.
 
 No branch was deleted or force updated. Integrating an archival or superseded branch requires a new demonstrated requirement and reviewed compatibility evidence.
+
+## Subsequent delivery and active leases
+
+PR267/issue266 subsequently merged at main `a75f31a2761ffe0afcbf067425eb8324789b3554` after independent full frozen implementation/proof/final documentation reviews and exact PR/main all8 gates. Main Build37815044494/Governance37815044554/actual113441393702/quality113444186237 pass. The dated130-branch snapshot above remains historical evidence, not a current active-lease list.
+
+As of2026-10-09 after accepted main3fc,269/268 is merged and closed following full frozen approvals6073002478/6073139900 and exact PR/main all8 gates, main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 PASS. The current open Draft leases are installer239 and task-history271/270. Installer239 integrates only accepted269/main3fc into approved723, retaining Setup bytes and mandatory native ninth gate; current integration CI/artifacts/review must renew, clean Windows/signing remain. Task-history271 owns bounded owner recovery and actual SQL/Chromium/current frozen review; its live HANDOFF is authoritative and its shipping code is not integrated into239 before acceptance. Preserve historical backup/superseded refs; no new requirement authorizes integrating them.

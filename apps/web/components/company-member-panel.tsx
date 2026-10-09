@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { CompanyMember, MemberAccessInput, MemberPage, parseMemberAccessResult, parseMemberPage } from "../lib/company-members";
+import { AdministratorInput, parseAdministratorResult } from "../lib/company-administrators";
+
+type MemberOperation = { userId: string; name: string } &
+  ({ kind: "access"; input: MemberAccessInput } | { kind: "administrator"; input: AdministratorInput });
 
 type Props = { companyId: string; userId?: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
@@ -10,16 +14,21 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [pending, setPending] = useState<{ userId: string; name: string; input: MemberAccessInput } | null>(null);
+  const [pending, setPending] = useState<MemberOperation | null>(null);
   const [notice, setNotice] = useState("");
   const mounted = useRef(false);
   const lock = useRef(false);
   const current = () => mounted.current && isCurrent(generation);
+  async function confirmAuthority() {
+    const valid = await validate(generation);
+    if (!valid && current()) { setPage(null); setPending(null); }
+    return valid && current();
+  }
   async function load(nextOffset: number) {
     if (lock.current || !current()) return;
     lock.current = true; setLoading(true); setPage(null); setError(""); setOffset(nextOffset);
     try {
-      if (!await validate(generation) || !current()) return;
+      if (!await confirmAuthority()) return;
       const response = await request(generation, `/api/local/company/members?companyId=${encodeURIComponent(companyId)}&offset=${nextOffset}&limit=25&includeAccessVersion=true`, { cache: "no-store" });
       if (!current()) return;
       if (response.status === 401) { onUnauthorized(); return; }
@@ -33,7 +42,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (!current()) return;
       if (!received || received.companyId !== companyId || received.offset !== nextOffset || received.limit !== 25)
         throw new Error("Danh sách thành viên không hợp lệ. Hãy thử lại.");
-      if (!await validate(generation) || !current()) return;
+      if (!await confirmAuthority()) return;
       setPage(received);
     } catch {
       if (current()) { setPage(null); setError("Không thể xác nhận danh sách thành viên. Hãy tải lại."); }
@@ -43,8 +52,8 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     if (lock.current || !current()) return;
     lock.current = true; setLoading(true); setPending(operation); setError(""); setNotice("");
     try {
-      if (!await validate(generation) || !current()) return;
-      const response = await request(generation, `/api/local/company/members/${encodeURIComponent(operation.userId)}/access?companyId=${encodeURIComponent(companyId)}`,
+      if (!await confirmAuthority()) return;
+      const response = await request(generation, `/api/local/company/members/${encodeURIComponent(operation.userId)}/${operation.kind}?companyId=${encodeURIComponent(companyId)}`,
         { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(operation.input) });
       if (!current()) return;
       if (response.status === 401) { setPage(null); setPending(null); onUnauthorized(); return; }
@@ -56,24 +65,30 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (response.status === 409) {
         const body = await response.json().catch(() => ({}));
         const messages: Record<string, string> = { "self-deactivation": "Bạn không thể khóa quyền của tài khoản đang sử dụng.",
+          "self-role-change": "Bạn không thể thay đổi quyền quản trị của tài khoản đang sử dụng.",
           "last-administrator": "Công ty cần giữ ít nhất một quản trị viên đang hoạt động.", "inactive-user": "Tài khoản này đang bị khóa. Hãy liên hệ quản trị viên tài khoản." };
-        if (!await validate(generation) || !current()) return;
+        if (!await confirmAuthority()) return;
         setPage(null); setPending(null); setError(typeof body?.code === "string" && Object.hasOwn(messages, body.code)
           ? messages[body.code] : "Quyền thành viên đã thay đổi. Hãy tải lại danh sách trước khi tiếp tục.");
         return;
       }
       if (response.status === 400 || response.status === 404) {
-        if (!await validate(generation) || !current()) return;
+        if (!await confirmAuthority()) return;
         setPage(null); setPending(null); setError("Không thể thay đổi thành viên này. Hãy tải lại danh sách."); return;
       }
       if (!response.ok) throw new Error("Unavailable");
-      const result = parseMemberAccessResult(await response.json());
+      const body: unknown = await response.json();
+      const result = operation.kind === "access" ? parseMemberAccessResult(body) : parseAdministratorResult(body);
       if (!current()) return;
       if (!result || result.companyId !== companyId || result.userId !== operation.userId ||
-        result.operationId !== operation.input.operationId || result.membershipActive !== operation.input.isActive) throw new Error("Invalid result");
-      if (!await validate(generation) || !current()) return;
+        result.operationId !== operation.input.operationId) throw new Error("Invalid result");
+      if (operation.kind === "access" ? !("membershipActive" in result) || result.membershipActive !== operation.input.isActive
+        : !("isAdministrator" in result) || result.isAdministrator !== operation.input.isAdministrator) throw new Error("Invalid result");
+      if (!await confirmAuthority()) return;
       setPending(null); lock.current = false; await load(offset);
-      if (current()) setNotice(operation.input.isActive ? "Đã mở lại quyền truy cập thành viên." : "Đã khóa quyền truy cập thành viên.");
+      if (current()) setNotice(operation.kind === "access"
+        ? operation.input.isActive ? "Đã mở lại quyền truy cập thành viên." : "Đã khóa quyền truy cập thành viên."
+        : operation.input.isAdministrator ? "Đã cấp quyền quản trị công ty." : "Đã gỡ quyền quản trị công ty.");
     } catch {
       if (current()) {
         setPage(null);
@@ -86,8 +101,13 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   }
   function startAccess(member: CompanyMember) {
     if (!member.membershipVersion) return;
-    void setAccess({ userId: member.userId, name: member.displayName,
+    void setAccess({ kind: "access", userId: member.userId, name: member.displayName,
       input: { operationId: crypto.randomUUID(), expectedVersion: member.membershipVersion, isActive: !member.membershipActive } });
+  }
+  function startAdministrator(member: CompanyMember) {
+    if (!member.membershipVersion || !member.membershipActive || !member.userActive || member.userId === userId) return;
+    void setAccess({ kind: "administrator", userId: member.userId, name: member.displayName,
+      input: { operationId: crypto.randomUUID(), expectedVersion: member.membershipVersion, isAdministrator: !member.roles.includes("admin") } });
   }
   useEffect(() => {
     mounted.current = true; void load(0);
@@ -108,7 +128,9 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       <td className="p-2">{member.displayName}</td><td className="p-2">{member.userActive ? "Đang hoạt động" : "Đã khóa tài khoản"}</td>
       <td className="p-2">{member.membershipActive ? "Đang hoạt động" : "Đã tắt thành viên"}</td><td className="p-2">{member.roles.join(", ") || "Chưa gán vai trò"}</td>
       <td className="p-2"><button type="button" disabled={loading || !!pending || !member.membershipVersion || !member.userActive || member.userId === userId}
-        onClick={() => startAccess(member)} className="rounded-lg border px-3 py-2 text-sm" aria-label={`${member.membershipActive ? "Khóa quyền" : "Mở lại quyền"} ${member.displayName}`}>{member.membershipActive ? "Khóa quyền" : "Mở lại quyền"}</button></td>
+        onClick={() => startAccess(member)} className="rounded-lg border px-3 py-2 text-sm" aria-label={`${member.membershipActive ? "Khóa quyền" : "Mở lại quyền"} ${member.displayName}`}>{member.membershipActive ? "Khóa quyền" : "Mở lại quyền"}</button>
+        <button type="button" disabled={loading || !!pending || !member.membershipVersion || !member.userActive || !member.membershipActive || member.userId === userId}
+          onClick={() => startAdministrator(member)} className="ml-2 rounded-lg border px-3 py-2 text-sm" aria-label={`${member.roles.includes("admin") ? "Gỡ quyền quản trị" : "Cấp quyền quản trị"} ${member.displayName}`}>{member.roles.includes("admin") ? "Gỡ quyền quản trị" : "Cấp quyền quản trị"}</button></td>
     </tr>)}</tbody></table></div>{!page.items.length ? <p className="mt-4">Chưa có thành viên trong trang này.</p> : null}
     <div className="mt-4 flex items-center gap-3"><button type="button" disabled={loading || !!pending || offset === 0} onClick={() => void load(Math.max(0, offset - 25))} className="rounded-lg border px-3 py-2 text-sm">Trang trước</button>
       <span className="text-sm">Trang {Math.floor(offset / 25) + 1}</span>
