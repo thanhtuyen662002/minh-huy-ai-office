@@ -52,6 +52,6 @@ golden and YAML/diff checks. Accepted main281/1b0 has all8 gates PASS
 Frozen ee30 Build37986918810/Gov37986918797/all8/actual114011097674/quality114014463755
 PASS. Final integration/documentation review and refreshed final PR/main gates remain required.
 No group SQL store, migration, ingress endpoint, queue pipeline, memory worker or
-sender is delivered by this issue's contract checkpoint.277â€“279 must implement and
+sender is delivered by this issue's contract checkpoint.277–279 must implement and
 verify the actual call path, complete customer-role collision set, enrollment role
 exclusivity, final authority, protected content, commit order and no-click flow.
