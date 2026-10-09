@@ -4,7 +4,7 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
+head: 22f2866e5e4f95589d81484636ad665c5b4b4a6a
 state: in_progress
 lease_owner: lead
 lease_heartbeat_at: '2026-10-09'
@@ -55,10 +55,27 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: 'Accepted266 deliveredmaina75. Close installer239 current4b exact9/frozen integration review, preserving approved Setup bytes; keep Draft for clean Windows/signing. Backend268 may independently implement existing administrator role mutation from acceptedmain; integrate only after its acceptance. Full233 active.'
+next_action: 'Preserve accepted installer22f: full frozen review6076386907/all9 gates/artifacts PASS, acceptedmain3fc administrator integration complete. Keep239 Draft for external clean Windows/signing; no current CI repair remains. Independent270/271 owns current history runtime/fingerprint/image closure; integrate only after approved delivery/exact main. Full233/customer/production remain.'
 
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
 product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
+
+installer_verified_accepted_administrators_22f:
+  head: 22f2866e5e4f95589d81484636ad665c5b4b4a6a
+  accepted_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  build: 37897294589
+  governance: 37897294556
+  native: 113711446847
+  actual: 113711446868
+  quality: 113713554273
+  artifact: 11601020775
+  artifact_bytes: 48687170
+  sha256: 52e340c09dd654eeaf167e74c335e6fd368e676429015494103faa6a7dca8588
+  browser_artifact: 11600614843
+  browser_artifact_bytes: 162285
+  review_receipt: 6076386907
+  result: 'Frozen22f integration/runtime/docs/artifacts independently APPROVED. Exact9 gates PASS, pinned self-contained bundle/76 core/20 simulated responsive layout cases/34 isolated Windows checks and all retained SQL/OIDC/Chromium including accepted administrator/Core committed reply loss PASS. NonSetup source/apps/tests equal acceptedmain3fc, Setup bytes equal approved723; additive solution/native ninth gate preserved. Root and independent inspected current previews and both sanitized browser images; readable/no secrets. Actual NotSigned, no privileged/clean installation claim.'
+  next: 'Preserve internally accepted22f on separate239 Draft; no current CI/code repair remains. Clean Windows/UAC/reboot/resume/startup/repair/backup/signing remain external before238 delivery. Integrate271 only after full accepted delivery/exact main. Full233 active.'

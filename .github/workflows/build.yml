@@ -123,6 +123,7 @@ jobs:
           path: |
             ${{ runner.temp }}/aioffice-browser-proof/workspace.png
             ${{ runner.temp }}/aioffice-browser-proof/administrators.png
+            ${{ runner.temp }}/aioffice-browser-proof/task-history.png
           if-no-files-found: error
           retention-days: 7
       - name: Remove only this ephemeral CI stack

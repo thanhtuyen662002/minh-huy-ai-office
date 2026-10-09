@@ -280,6 +280,41 @@ public sealed class PilotTaskSubmissionServiceTests
         Assert.Null(result);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task HistoricalOwnerReadSurvivesSourceGrantRevocationButFinalMembershipFenceDenies(bool revokeDuringRead)
+    {
+        await using var db = CreateContext(); var seeded = await SeedIdentityAsync(db);
+        var accepted = await CreateService(db).SubmitAsync(seeded.Authority,
+            new PilotTaskSubmissionRequest("archive-owner-policy", seeded.DataSourceId, "synthetic question"));
+        (await db.DataSourceSecretBindings.SingleAsync()).IsEnabled = false;
+        seeded.DataSource.IsEnabled = false; await db.SaveChangesAsync();
+        var before = JsonSerializer.Serialize(new { tasks = db.Tasks.ToArray(), events = db.TaskEvents.ToArray(), dispatches = db.TaskDispatches.ToArray() });
+        var directory = new FinalReadDirectory(db, revokeDuringRead);
+        var result = new PilotTaskResultService(db, directory);
+        if (revokeDuringRead) await Assert.ThrowsAsync<UnauthorizedAccessException>(() => result.GetAsync(seeded.Authority, accepted.TaskId));
+        else Assert.Equal(accepted.TaskId, (await result.GetAsync(seeded.Authority, accepted.TaskId))!.TaskId);
+        Assert.Equal(2, directory.Calls);
+        Assert.Equal(before, JsonSerializer.Serialize(new { tasks = db.Tasks.ToArray(), events = db.TaskEvents.ToArray(), dispatches = db.TaskDispatches.ToArray() }));
+        (await db.CompanyMemberships.SingleAsync()).IsActive = true; await db.SaveChangesAsync();
+        Assert.Single((await new TaskHistoryService(db, new EfAuthorizationDirectory(db)).ListAsync(seeded.Authority)).Items);
+    }
+
+    private sealed class FinalReadDirectory(PlatformDbContext db, bool revoke) : IAuthorizationDirectory
+    {
+        public int Calls { get; private set; }
+        public async Task<AuthorizationDirectoryEntry?> ResolveAsync(AuthorizationContext context, CancellationToken cancellationToken = default)
+        {
+            if (++Calls == 2 && revoke)
+            {
+                (await db.CompanyMemberships.SingleAsync(cancellationToken)).IsActive = false;
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            return await new EfAuthorizationDirectory(db).ResolveAsync(context, cancellationToken);
+        }
+    }
+
     private static PilotTaskSubmissionService CreateService(PlatformDbContext context) =>
         new(context, new EfAuthorizationDirectory(context));
 

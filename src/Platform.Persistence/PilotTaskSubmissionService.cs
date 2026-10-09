@@ -82,6 +82,7 @@ public sealed class PilotTaskSubmissionService
             .ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("An active server-derived company membership is required.");
 
+
         var trustedAuthority = authorized.Context;
         var taskId = PilotTaskIdentity.ForTask(trustedAuthority, request.IdempotencyKey);
 
@@ -421,6 +422,7 @@ public sealed class PilotTaskResultProjection
         var authorized = await authorizationDirectory.ResolveAsync(authority, cancellationToken)
             .ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("An active server-derived company membership is required.");
+        if (authorized.Context != authority) throw new UnauthorizedAccessException("Company authority changed.");
 
         var task = await dbContext.Tasks
             .AsNoTracking()
@@ -433,6 +435,7 @@ public sealed class PilotTaskResultProjection
             .ConfigureAwait(false);
         if (task is null)
         {
+            await RequireCurrentAuthorityAsync(authority, cancellationToken);
             return null;
         }
 
@@ -481,6 +484,7 @@ public sealed class PilotTaskResultProjection
         if (step.UpdatedAtUtc > updatedAtUtc) updatedAtUtc = step.UpdatedAtUtc;
         if (execution.UpdatedAtUtc > updatedAtUtc) updatedAtUtc = execution.UpdatedAtUtc;
 
+        await RequireCurrentAuthorityAsync(authority, cancellationToken);
         return new PilotTaskStatusSnapshot(
             task.Id,
             step.Id,
@@ -491,6 +495,12 @@ public sealed class PilotTaskResultProjection
             updatedAtUtc,
             checkpoint?.PayloadJson,
             execution.LastFailureClass?.ToString());
+    }
+
+    private async Task RequireCurrentAuthorityAsync(AuthorizationContext authority, CancellationToken cancellationToken)
+    {
+        var current = await authorizationDirectory.ResolveAsync(authority, cancellationToken);
+        if (current?.Context != authority) throw new UnauthorizedAccessException("An active company membership is required.");
     }
 }
 

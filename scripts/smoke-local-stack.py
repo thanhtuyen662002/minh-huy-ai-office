@@ -1174,6 +1174,11 @@ def main():
     erp_spec.loader.exec_module(erp_proof)
     erp_proof.verify(directory=directory, manifest=manifest, http=http, sql=sql, run=run,
         wait_for=wait_for, api=api, web=web, auth=member_auth, diagnostic_sql=erp_permission_diagnostic_query)
+    history_spec = importlib.util.spec_from_file_location("task_history_proof", Path("scripts/smoke-task-history.py"))
+    history_proof = importlib.util.module_from_spec(history_spec)
+    history_spec.loader.exec_module(history_proof)
+    history_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
+        http=http, sql=sql, identity_admin=identity_admin, identity=identity, api=api, auth=member_auth, retained_task=task)
     print("PASS complete local stack integration")
 
 

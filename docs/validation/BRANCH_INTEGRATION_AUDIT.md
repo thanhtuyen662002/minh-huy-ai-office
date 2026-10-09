@@ -22,4 +22,15 @@ No branch was deleted or force updated. Integrating an archival or superseded br
 
 PR267/issue266 subsequently merged at main `a75f31a2761ffe0afcbf067425eb8324789b3554` after independent full frozen implementation/proof/final documentation reviews and exact PR/main all8 gates. Main Build37815044494/Governance37815044554/actual113441393702/quality113444186237 pass. The dated130-branch snapshot above remains historical evidence, not a current active-lease list.
 
-The current open Draft leases are installer239 and administrator269. Installer239 includes accepted main at integration4b and final documentation723 with all9 hosted jobs green and full scoped independent integration/runtime/docs approval receipt6072831478; clean Windows and signing remain. Administrator269 owns issue268 from accepted maina75; d85 all8 and actual SQL/two-session Chromium including Core-to-BFF committed header/body loss/one-audit replay pass. Final frozen review/documentation/exact PR/main closure remains before merge eligibility. Queued270 task history has no implementation lease yet. Preserve the historical backup/superseded refs; no new requirement authorizes integrating them.
+PR269/issue268 subsequently delivered at accepted main `3fcfa9a8541491c6a4d349bc31fd02d87d12284e`. Full frozen reviews6073002478/6073139900, exact PR Build37874870695/Gov37874870540 and main Build37875625822/Gov37875625829/all8/actual113643444397/quality113645840920 passed. The issue is closed; administrator implementation has no remaining lease.
+
+## Current audit: 2026-10-09
+
+Paginated GitHub branches and up to400 merged PR heads were refreshed against accepted main3fc. Of132 non-main remote branches,125 exactly match merged PR heads, one is a verified main ancestor, four are the historical/superseded refs above, and two have open Draft leases. No additional eligible implementation was found. No branch was deleted or force updated.
+
+| Active branch | Observed HEAD | Evidence and next gate |
+| --- | --- | --- |
+| `lead/238-windows-installer` | `22f2866e5e4f95589d81484636ad665c5b4b4a6a` | PR239 integrates acceptedmain3fc; full scoped frozen review6076386907 and exact Build37897294589/Gov37897294556/all9/native113711446847/actual113711446868 PASS. Current pinned unsigned artifact11601020775 and both browser images independently inspected. Keep Draft for actual clean Windows lifecycle and signing. |
+| `codex/270-task-history` | `70465e72cee05459dc541cef1a1fa836a6603ba5` | PR271 owns issue270; all8 exact Build37900176803/Gov37900176836/actual113720632034/quality113723223489 PASS, including new native SQL and two-user/two-company shipping Chromium. Root inspected all3 current sanitized images11602387209. Full frozen implementation/security/runtime/all3 images independently APPROVED6077185197; final documentation review/exact PR-main delivery remain. |
+
+Queued272 depends on accepted270 main and has no competing implementation lease. Preserve historical refs; new review and compatibility evidence are required for any future use. Full product233 remains active.

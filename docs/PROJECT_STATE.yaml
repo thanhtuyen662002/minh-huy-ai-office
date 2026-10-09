@@ -4,35 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/268-member-administrators
-current_pr: 269
-current_target_head: d85be6c6df108c1f4a411889792a4727e41ab107
-last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
+current_branch: codex/270-task-history
+current_pr: 271
+current_target_head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+last_verified_commit: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
 
 critical_paths:
   backend:
-    issue: 268
-    pr: 269
-    branch: codex/268-member-administrators
-    head: d85be6c6df108c1f4a411889792a4727e41ab107
-    state: ready_for_review
-    next: "269 d85 full independent scoped approval receipt6073002478 and all8 PASS, including actual Core/SQL/Chromium committed header/body reply loss and one-audit stable replay. Close final documentation review/exact gates, merge and exact main CI; then acquire queued270 task-history lease from accepted main."
-
-  frontend:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "260/261 merged at39e with full frozen947 approval and exact PR/main CI/actual Chromium PASS. Browser PKCE is the local shipping default. Full member administration, multi-company selection and approved production connectivity remain."
-
-  runtime_ai:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "PR224 proves bounded catalog grounding and PR226 provides capability-bound read-only execution. User selected inventory/stock movements. Qualify its authorized ERP schema/version and least-privilege source from private configuration before customer business-row execution; create the adapter lease only when that dependency is available."
+    issue: 270
+    pr: 271
+    branch: codex/270-task-history
+    head: 70465e72cee05459dc541cef1a1fa836a6603ba5
+    state: in_progress
+    next: 'Frozen704 full270 security/runtime/all3images APPROVED6077185197 with exactall8PASS. Finaldocsreview/renewedexactCI then merge-mainclosure;272 depends onaccepted270main.'
 
   erp_data:
     issue: 264
@@ -51,6 +35,7 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR269 / issue268 deliveredmain3fcfa9a8541491c6a4d349bc31fd02d87d12284e with full frozen review6073002478/final6073139900 and exact PR/main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 all8 PASS. Main sanitized artifact11592885599 visually inspected.'
   - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
   - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
@@ -91,7 +76,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '269 d85 fully independently APPROVED/all8 PASS receipt6073002478; final722 docs have no factual blocker but retained actual Redis tamper fixture is terminal red because random tag suffix replacement can be identical. Test-only fix flips a decoded authenticated bit and asserts change in both actual controls;54 local unit/type-check PASS,20 Redis locally skipped. Close renewed hosted20 Redis/actual SQL-Chromium/all8 and independent final delta, then merge/exact main. Queued270 follows accepted main; no premature lease. Installer723 independently APPROVED receipt6072831478, Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: 'Finalize271 reviewed docs/renewed exactCI then merge/exactmain: frozen704 full270 security-runtime-all3 images APPROVED6077185197 andall8currentPASS. Preserve approvedinstaller22f239DraftexternalWindows-signing; integrateaccepted270onlyaftermainclosure.272 queued next; full233/customer/production remain.'
 
 
 blocked_by:
@@ -275,14 +260,14 @@ installer_latest_documentation_verified:
   review: 'Independent frozen documentation delta APPROVED; installer bytes equal approved21d. All9 hosted gates PASS. No clean Windows/signing completion claim;239 remains Draft.'
 
 branch_integration_audit:
-  baseline_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-  remote_non_main_branches: 130
-  matched_merged_pr_heads: 123
+  baseline_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  remote_non_main_branches: 132
+  matched_merged_pr_heads: 125
   other_main_ancestor: 1
   archived_or_superseded: 4
-  active_draft_leases: [239, 267]
+  active_draft_leases: [239, 271]
   evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
-  result: 'Refreshed130 non-main remote branches against accepted002:123 exact merged PR heads,1 main ancestor,4 archival/superseded,2 active Drafts239/267. No additional eligible implementation; preserve backups/snapshot.263/265 subsequently merged with exact main proof. Latest267 acceptance/review/gates and installer clean Windows/signing remain.'
+  result: 'Current paginated132-branch audit:125 exact merged PR heads,1 verified main ancestor,4 preserved historical/superseded refs and2 Draftleases239/271. No additional eligible implementation.23922f internally approved/all9 but externalWindows-signing;271704all8/actualhistoryPASS fullreview6077185197approved; finaldocsreview/exactfinalPR-main remain.'
 
 verified_erp_265:
   implementation_head: e3d5254d8b7c7d72261ddf53841232587b1ee1c6
@@ -357,3 +342,125 @@ verified_company_selection_267:
     and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
     separation/revoke-restore.266 closed. Full233/customer/production and installer
     clean Windows/signing remain.
+
+task_history_backend_checkpoint:
+  issue: 270
+  pr: 271
+  local: '49 focused service/API/existing pilot tests PASS, Core build PASS, targeted whitespace/diff PASS. Generated additive owner/time migration preserves old owner index. Initial/final fresh company-user membership fences, owner-only bounded list, allowlisted archive detail, exact stored UTF16 binary bounds, malformed/duplicate/unknown request/checkpoint denial and completed-but-unavailable truthfulness implemented. Existing opaque result fields remain; final fence added and source-grant revoked historical-owner positive verified.'
+  remaining: 'Issued-SID BFF/Cong viec UI, actual relational execution and native external revocation/restore, actual Chromium owner/company/reload/new-sign-in recovery and no-dispatch/charge fingerprints, full frozen independent review/exact PR/main gates. Not ready for merge.'
+
+task_history_ui_checkpoint:
+  prior_head: 3301d18ffd7155cb896fbda8da7292d316f455ed
+  prior_build: 37879045956
+  prior_governance: 37879046019
+  prior_actual: 113654483822
+  prior_result: 'Migration BOM format defect at88ef Build37878689371/dotnet113653087126 corrected on same271; generated migration now required UTF8 without BOM and tracked LF, focused format PASS.3301.NET/migration/web/Compose/FE/deployment PASS, actual still live. No actual history acceptance yet.'
+  local: '70 new parser/issued-SID real-helper BFF/panel/workspace tests PASS plus40 retained session lifecycle/races PASS at previous69-new delta; typecheck PASS. New BFF requires exact typed scoped JSON/strict UTF8, drops Core private error diagnostics, final shared SID/body/deadline fence retained. Supported owner Công viec list/detail/refresh/paging and remount recovery; completed-but-unavailable/connection/pending/failed states truthful. Reads are GET-only. Company/user/generation/operation serial fence plus local and actual-hook composed aborts prevent late old-session repaint; logout/fresh validation clear private UI.'
+  remaining: 'Mandatory new owned SQL execution, native queued final-authority revocation and restored positives, stored raw Unicode/unknown metadata, two-provider-user/two-company actual Chromium reload/new-sign-in recovery and no-extra-task/dispatch/charge fingerprints. Full frozen independent review and exact final PR/main CI. Not ready for merge; full233 remains active.'
+
+task_history_sql_proof_checkpoint:
+  prior_head: f62b7b9a79aa2844bd2bff8d05557afc6ffa38f2
+  prior_build: 37879624334
+  prior_governance: 37879624305
+  prior_actual: 113656325455
+  result: 'Seven prior gates PASS, actual retained stack still live at this checkpoint. New mandatory owned SQL history proof added to the existing full-stack job; syntax and5 guard tests including6 new unowned refusal cases PASS locally. No local Linux Docker; no claim that new SQL proof passed.'
+  coverage: 'Two actual issued OIDC identities, isolated company and owner/admin/company isolation, equal-time pages, known completed/pending/failed rows, exact stored UTF16 surrogate/oversize/duplicate/unknown request/checkpoint refusal/restored supplementary/U+FFFD positives, historical revoked-source-grant reads, native row-lock barriers prove waiting at private data before external membership revoke for list/archive/legacy-result; restored positive and stable tasks/steps/events/checkpoints/executions/dispatches/identity/role/membership/audit/binding/credit-settlement fingerprints. Synthetic fixture checkpoint tests archive behavior, not provider or ERP completion.'
+  remaining: 'Execute new mandatory SQL proof and fix any real failure on271, then two Code/S256 Chromium shipping history acceptance, frozen independent review, final exact PR/main gates. Full233 active; no merge approval.'
+
+task_history_actual_d249_failure:
+  head: d24949669e1c6f8b59247281cd9cdf82aa672072
+  build: 37880365814
+  governance: 37880365958
+  actual: 113658432076
+  quality: 113660054159
+  result: 'Seven gates and Governance PASS. New real SQL owner/admin/company isolation, equal-time page ordering, known stored Unicode result and no-effects snapshot PASS. Native fixture then terminal red on Linux per-argument argv limit while installing the33000-character oversized raw nvarchar control; no later new corruption/barrier/browser acceptance. Not runner noise; no blind rerun.'
+  fix: 'Owned native SQL commands now carry exact large fixture bytes through structured subprocess stdin to sqlcmd /dev/stdin. No fixture shrink or raw CLI diagnostic output; safe bounded SQL message number only.6 guard/transport unit tests and Python syntax PASS, including large payload excluded from argv and private error redaction. Renewed mandatory hosted execution required.'
+  browser: 'Added guarded actual two Code/S256 shipping archive proof consuming only protected disposable fixture identifiers, list/detail completed/pending/failed, reload/new issued SID recovery, reciprocal owner404 even for admin, two-way company switch with held real successful detail and attempted late delivery, external membership loss/private clear/restored positive, stable task/event/step/checkpoint/dispatch/identity/role/audit/credit fingerprints, sanitized task-history.png artifact. JS syntax/3 guard tests20 refusal cases/workflow YAML/diff PASS; no actual new browser acceptance yet.'
+  next: 'Push same271 verified proof/transport checkpoint, own exact-head CI through new SQL/Chromium controls and fix all real failures. Then inspect all three current images and obtain full frozen independent security/runtime review before readiness or merge. Full233 active;239 Draft.'
+
+task_history_rcsi_barrier_repair:
+  prior_head: 2a35d8caa6e3fb2fcfcb57cae24e97b4ba86cb86
+  build: 37881175769
+  governance: 37881175753
+  actual: 113660977545
+  quality: 113662614845
+  result: 'Seven gates/Governance PASS; actual owner/company/admin/equal-time pages, stored raw UTF16 surrogate/oversize/duplicate/unknown refusal and restored Unicode positives, historical source-grant revoked owner reads and unchanged fingerprints PASS. Native final-read barrier terminal red because unchanged RCSI readers bypass the fixture row X lock. Chromium not executed; no full acceptance.'
+  fix: 'Owned disposable fixture holds transaction-owned Sch-M via adding a nullable random column to the private TaskEvents/TaskCheckpoints table, then rolls it back. Observe exact granted target Sch-M and runtime queued Sch-S plus blocker/query/table before external membership revoke; initial directory tables remain available. Preserve original RCSI and shipping code. Confirm empty403/restored200, absent fixture column and unchanged graph/credit fingerprints.6 guard/transport tests and Python syntax/diff PASS locally; actual execution remains mandatory.'
+  next: 'Push same271 checkpoint, close exact SQL/Chromium CI and fix terminal defects. Then inspect three current images and obtain independent full frozen review before readiness/merge. Full233 active;239 Draft.'
+
+task_history_native_authority_verified:
+  head: 7cdd034548355febb0c3afff8ca0141b10c8791d
+  build: 37881893324
+  governance: 37881893349
+  actual: 113663202086
+  quality: 113664871706
+  result: 'All native SQL history controls PASS, including unchanged RCSI with observed private-table Sch-M/queued runtime Sch-S, external membership revoke, empty403 for list/archive/existing result, restored200, fixture column rollback and stable graph/credit fingerprints. Retained SQL and Chromium controls PASS. Seven gates/Governance PASS; new history browser proof terminal red in fixture preparation before shipping archive navigation. No new browser acceptance or frozen review.'
+  unicode_repair: 'Reproduced a legitimate64000-unit fully escaped Unicode answer as incorrectly unavailable under the256KiB checkpoint ceiling. Raise bounded stored checkpoint limit to1MiB to include worker JSON expansion plus bounded catalog; answer remains64000. New local maximum/adjacent-overflow controls now pass, all26 history service tests PASS and changed C# format PASS. Actual SQL proof includes both exact lengths plus >1MiB payload denial; not executed yet.'
+  browser_diagnostics: 'Split fixed fixture stages for file/JSON/shape/identity/snapshots/browser context without printing data. Positive fixture/fingerprint preparation reaches mocked browser;4 browser guard tests and6 native guard/transport tests, JS/Python syntax/diff PASS. Diagnose the actual stage on same271; do not bypass it.'
+  next: 'Push verified checkpoint and own exact SQL/Chromium closure. Inspect sanitized images and full frozen independent review before ready/merge; full233 active.'
+
+task_history_11608_runtime_and_guid_review:
+  head: 11608b1c293b6eca1dbd55b4fca8899ce46c0211
+  build: 37896851529
+  governance: 37896851512
+  actual: 113710046360
+  quality: 113712255003
+  native: 'ALL new SQL controls PASS including full64000 worker-escaped Unicode answer/adjacent64001 refusal/>1MiB/raw malformed UTF16 controls, source-grant historical owner positive and all3 observed queued private-read final revoke/empty403/restored200/rolled-back schema/no-effects fences. Seven Build prerequisites and Governance PASS.'
+  browser: 'Retained Chromium PASS. New history terminal red at owned-fixture-snapshots before archive navigation. File/JSON/shape/identities pass, no CLI refusal; bounded fixed table-index/length/null/hex classification added to diagnose the actual fingerprint without printing content. Do not accept NULL or weaken fingerprint verification.'
+  independent: '51 focused.NET/70 web and4 browser+6 native guards independently PASS at frozen116. Concrete P2: accepted uppercase GUID selectors were compared as raw strings with lowercase Core Guid JSON, returning502 for same identity. Normalize validated route selectors and use GUID-case-insensitive receipt scope equality;29 real-helper tests incl3 uppercase positives/typecheck now PASS locally. Full frozen security/runtime/images approval remains absent.'
+  next: 'Push same271 verified fix/diagnostics; own exact CI and resolve actual fingerprint/browser defects. Inspect three current images and complete independent frozen review before ready/merge. Queued272 owns stable submission operation after unknown accepted reply, depends on270 accepted main. Full233 active;239 Draft.'
+
+task_history_empty_fingerprint_repair:
+  head: cd707a2d8bbc22003c6d19b23650dca30fa73e5a
+  build: 37897889287
+  governance: 37897889296
+  actual: 113713344197
+  quality: 113715932905
+  result: 'Seven prerequisites/Governance and ALL native history SQL/retained Chromium PASS. New archive browser terminal red at exact bounded diagnostic history-owned-fingerprint-11-length-4-null: empty CustomerAiCreditSettlements producedNULL. No archive UI navigation/images yet. Not infrastructure noise.'
+  fix: 'Both native/browser ordered full-row fingerprints now hash COALESCE(JSON,N[]), include null column values consistently and require an actual64-uppercase-hex SHA256. Never accept rawNULL. New actual native isolated-table proof compares empty input to Python SHA256 of UTF16LE[], detects inserted null row/changed value and restored empty, verifies zero credit settlements and the same empty digest without inserting settlement rows. Browser also verifies uppercase valid selectors through real BFF/Core after owner navigation.'
+  independent: 'Frozen cd shipping/security/static review has no remaining concrete blocker; GUID P2 independently CLOSED with original502 probes now200,51.NET/73shippingweb+2reviewer/45retainedsession/typecheck/4Node+6Python PASS. Full approval remains conditional on actual new browser/fingerprints/images/exact gates.'
+  local: '4 browser guard/preparation and6 native guard/transport controls, JS/Python syntax/YAML/diff PASS. New canonical empty native/runtime proof has not executed yet; do not infer acceptance.'
+  next: 'Push same271 proof repair, own exact CI and fix real defects through actual archive navigation/reload/two-users/two-companies/late-detail/native-revoke/no-effects and all3 images. Independent frozen final review then PR/main. Full233 active;272 queued dependency.'
+
+
+installer_verified_accepted_administrators_22f:
+  head: 22f2866e5e4f95589d81484636ad665c5b4b4a6a
+  accepted_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  build: 37897294589
+  governance: 37897294556
+  native: 113711446847
+  actual: 113711446868
+  quality: 113713554273
+  artifact: 11601020775
+  artifact_bytes: 48687170
+  sha256: 52e340c09dd654eeaf167e74c335e6fd368e676429015494103faa6a7dca8588
+  browser_artifact: 11600614843
+  browser_artifact_bytes: 162285
+  review_receipt: 6076386907
+  result: 'Frozen22f integration/runtime/docs/artifacts independently APPROVED. Exact9 gates PASS, pinned self-contained bundle/76 core/20 simulated responsive layout cases/34 isolated Windows checks and all retained SQL/OIDC/Chromium including accepted administrator/Core committed reply loss PASS. NonSetup source/apps/tests equal acceptedmain3fc, Setup bytes equal approved723; additive solution/native ninth gate preserved. Root and independent inspected current previews and both sanitized browser images; readable/no secrets. Actual NotSigned, no privileged/clean installation claim.'
+  next: 'Preserve internally accepted22f on separate239 Draft; no current CI/code repair remains. Clean Windows/UAC/reboot/resume/startup/repair/backup/signing remain external before238 delivery. Integrate271 only after full accepted delivery/exact main. Full233 active.'
+
+task_history_secondary_fixture_repair:
+  head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
+  build: 37898919779
+  governance: 37898919807
+  actual: 113716646268
+  quality: 113718556596
+  result: 'Seven prerequisites/Governance PASS. ALL native history SQL including canonical empty/null-row/changed/restored SHA256 and zero actual settlement controls PASS. Retained Chromium and shipping owner completed/pending/failed/detail/uppercase GUID/reload/newSID recovery PASS. New browser terminal red at secondary provider isolation; later company/late-reply/revoke/images not executed.'
+  cause_and_fix: 'Fresh Home deliberately ignores URL company selectors and uses configured default until issuedSID selects company. Owned second identity had archive membership only, so default-company callback denied. Independent original Home controls confirm server authority. Give disposable second identity default-company viewer membership before fingerprints; actual ordinary Code/S256 UI login must confirm that viewer/current company, then real shipping picker performs Code/S256 switch to archive admin with newSID. Both full-row fingerprints include those original fixture memberships/roles; no product scope change or assertion bypass.'
+  local: '74 new web including pagination/second-page detail/same-page refresh/read-only request assertions and typecheck PASS.51 focused.NET and45 retained session race controls previously independently PASS. Renewed guard/syntax checks and mandatory hosted execution required for fixture change.'
+  next: 'Own same271 exact current native/Chromium closure, split fixed secondary form/callback/picker stages to diagnose real failures without private logs, inspect all3 current images and full frozen review before readiness/merge/main. Full233 active;239 external Windows/signing Draft;272 dependency retained.'
+
+task_history_704_actual_verified:
+  head: 70465e72cee05459dc541cef1a1fa836a6603ba5
+  build: 37900176803
+  governance: 37900176836
+  actual: 113720632034
+  quality: 113723223489
+  artifact: 11602387209
+  artifact_bytes: 260997
+  dotnet_tests: 1170
+  web_tests: 1102
+  result: 'All8 exact gates/Governance PASS. ALL native stored-byte/max64000/corrupt metadata/owner-company/pagination/canonicalempty/natively queued3finalauthority/noeffects SQL controls PASS. Shipping two CodeS256 users, defaultviewer then actualprovider archiveadmin switch, reciprocal404, completed/pending/failed/detail/uppercaseGUID/reload/newSID, held successful late-detail company fence and external member revoke/private clear/restored recovery/no-extra-task-dispatch-charge PASS. Retained stack/security/Chromium PASS.'
+  review: 'Independent full prior shipping/static has no remaining concrete finding; GUID P2 CLOSED, frozen704 fixture/pagination/docs delta no blocker. Independent78 web including4 own controls/5Node/6Python/typecheck PASS. Root inspected all3 current images: readable/reachable/unclipped/no secrets. Full frozen current implementation/security/runtime/all3 images independently APPROVED, receipt6077185197. Final documentation delta review and exact final PR/main closure remain.'
+  next: 'Finalize durable docs with independent frozen delta review and exact final CI, then approved PR/main closure. Preserve separate239Draft for actual Windows/signing;272 depends on accepted270main. Full233 remains active.'
