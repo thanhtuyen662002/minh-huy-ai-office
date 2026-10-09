@@ -507,3 +507,15 @@ group_ci_registry_cache_repair:
   result: 'Six Build prerequisites/Gov PASS; actual attempt1 and the single retry attempt2 refuse DockerHub unauthenticated pull429 before native/browser. No renewed expiry diagnosis or final gate acceptance. Same282 adds fixed Google-managed DockerHub daemon cache only to empty hosted Linux CI jobs; canonical images, product configs, tests and security assertions remain.5 Python guard tests/syntax/YAML/diff PASS; all5 exact cache manifest HEAD probes200. Actual runner cache/new SQL-browser closure remains.'
   documentation: https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images
   next: 'Own exact new282 gates. Confirm hosted cache resolves image bootstrap then diagnose retained Chromium fixed expiry substage and repair on same282. Independent bounded CI/docs review required. No merge until final PR/main; stacked277/283 cannot merge first.'
+
+
+group_ci_explicit_cached_images:
+  predecessor: 7b77519637e2781a98a993168a81451231a93bae
+  build: 37991243593
+  governance: 37991243590
+  actual_attempts: [114025657740, 114028349805]
+  web_attempts: [114025657661, 114028350297]
+  review: 6089346345
+  result: 'Daemon cache bootstrap passed, but actual identity-db and service-initialization Redis both hit anonymous DockerHub429 before SQL/browser on attempt1 and the single retry. Same282 now explicitly pulls fixed job-specific references from the Google-managed cache, checks cache RepoDigests and identical image IDs after tagging canonical names, and starts the same disposable Redis after cache setup. Product images/configs, tests, restart control and all required gates remain; no local/customer daemon touched.'
+  local: '8 cache ownership/shape/idempotence/fixed-profile/digest/identity/failure controls and YAML/diff PASS. Hosted direct-cache pulls and retained expiry diagnosis remain unexecuted; independent delta review required.'
+  next: 'Own new exact282 CI, repair real failures on samePR, and obtain bounded frozen CI delta review. Do not merge before all8 final PR/main; explicitly stacked277 remains Draft and cannot merge first.'

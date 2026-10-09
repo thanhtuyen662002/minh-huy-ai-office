@@ -1,5 +1,9 @@
 name: Configure hosted Docker Hub cache
 description: Use the Google-managed cache on an empty disposable hosted Linux daemon.
+inputs:
+  profile:
+    description: Fixed repository image profile for the calling job.
+    required: true
 runs:
   using: composite
   steps:
@@ -10,6 +14,7 @@ runs:
       shell: bash
       env:
         AIOFFICE_DOCKER_CACHE_RUNNER: ${{ runner.environment }}
+        AIOFFICE_DOCKER_CACHE_PROFILE: ${{ inputs.profile }}
       run: |
-        sudo --preserve-env=CI,GITHUB_ACTIONS,RUNNER_OS,AIOFFICE_DOCKER_CACHE_RUNNER \
+        sudo --preserve-env=CI,GITHUB_ACTIONS,RUNNER_OS,AIOFFICE_DOCKER_CACHE_RUNNER,AIOFFICE_DOCKER_CACHE_PROFILE \
           python3 scripts/configure-ci-docker-cache.py
