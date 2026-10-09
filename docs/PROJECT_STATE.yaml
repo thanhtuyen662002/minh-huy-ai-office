@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '269 d85 full independent frozen security/runtime/images APPROVED receipt6073002478, Build37873606708/Gov37873606687 all8 PASS, actual113636976840/quality113639243215. Actual Core-to-BFF committed header/body loss proves shipping503/currentSID/exact replay/original receipt/one SQL audit. Close final documentation review/current exact gates, then merge and exact main CI. Queued270 durable task-history recovery follows accepted main; no premature lease. Installer723 independently APPROVED receipt6072831478, Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: '269 d85 fully independently APPROVED/all8 PASS receipt6073002478; final722 docs have no factual blocker but retained actual Redis tamper fixture is terminal red because random tag suffix replacement can be identical. Test-only fix flips a decoded authenticated bit and asserts change in both actual controls;54 local unit/type-check PASS,20 Redis locally skipped. Close renewed hosted20 Redis/actual SQL-Chromium/all8 and independent final delta, then merge/exact main. Queued270 follows accepted main; no premature lease. Installer723 independently APPROVED receipt6072831478, Draft for clean Windows/signing. Full233/customer/production remain.'
 
 
 blocked_by:

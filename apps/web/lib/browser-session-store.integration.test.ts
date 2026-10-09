@@ -31,6 +31,16 @@ observer.on("error", () => {});
 const privateSession = (expiresAt = Math.floor(Date.now() / 1000) + 300) => ({ accessToken: "private-issued-token", companyId, subject: "private-subject", expiresAt });
 const random = () => createOidcTransaction(companyId).state;
 const onlyNewKey = (prior: Set<string>) => [...ownedKeys].find((key) => !prior.has(key))!;
+function tamperAuthenticatedByte(payload: string) {
+  const pieces = payload.split(".");
+  const original = Buffer.from(pieces[3], "base64url"), damaged = Buffer.from(original);
+  expect(original.length).toBe(16);
+  // A random valid tag can already end in AA. Flip a decoded byte so this
+  // adversary always changes authenticated data, with canonical encoding.
+  damaged[0] ^= 1; expect(damaged.equals(original)).toBe(false);
+  pieces[3] = damaged.toString("base64url");
+  const tampered = pieces.join("."); expect(tampered).not.toBe(payload); return tampered;
+}
 
 async function pending(binding?: string) {
   const prior = new Set(ownedKeys);
@@ -128,7 +138,7 @@ actual("does not promote tampered replacement ciphertext or evict the valid acti
   const old = await issued(), value = await pending(old.binding), claim = (await stores[0].claim(value.binding, value.transaction))!;
   const sid = (await stores[1].complete(value.binding, value.transaction, claim, privateSession()))!;
   const payload = (await observer.hGet(old.key!, "replacementPayload"))!;
-  await observer.hSet(old.key!, "replacementPayload", payload.slice(0, -2) + "AA");
+  await observer.hSet(old.key!, "replacementPayload", tamperAuthenticatedByte(payload));
   expect(await stores[0].read(value.binding, sid)).toBeNull();
   expect(await stores[1].read(value.binding, old.sid)).toEqual(old.session);
 });
@@ -252,7 +262,7 @@ actual("denies ciphertext tampering, cross-binding copies and private key change
   expect(await stores[1].read(original.binding, original.sid)).toEqual(original.session);
   const wrongKey = createBrowserSessionCoordinator(transports[0].evaluate, { ...settings, transactionKey: Buffer.alloc(32, 18).toString("base64url") });
   expect(await wrongKey.read(original.binding, original.sid)).toBeNull();
-  await observer.hSet(original.key!, "payload", payload.slice(0, -2) + "AA");
+  await observer.hSet(original.key!, "payload", tamperAuthenticatedByte(payload));
   expect(await stores[1].read(original.binding, original.sid)).toBeNull();
 });
 actual("fails closed with generic errors during an unavailable Redis endpoint", async () => {
