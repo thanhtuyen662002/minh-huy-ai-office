@@ -4,8 +4,8 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
-state: in_progress
+head: d85be6c6df108c1f4a411889792a4727e41ab107
+state: ready_for_review
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
@@ -27,7 +27,21 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '9c all8 PASS; full independent review found sole P2 committed Core-to-BFF reply loss becoming401 and dropping stable retry. Close new verified fix exact8 gates and independent frozen blocker/runtime review, then final PR/main delivery. Installer239 final723 all9 PASS but final review/clean Windows/signing keepsDraft. Full233 active.'
+next_action: 'd85 full independent frozen scoped security/runtime/images APPROVED receipt6073002478 and all8 PASS including actual Core-to-BFF header/body fault/one-audit replay. Close final docs review/current exact gates, merge and exact main CI. Queued270 task-history recovery follows accepted main with one new Draft lease. Installer723 full scoped review APPROVED but clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_verified_d85:
+  head: d85be6c6df108c1f4a411889792a4727e41ab107
+  build: 37873606708
+  governance: 37873606687
+  actual: 113636976840
+  quality: 113639243215
+  artifact: 11592180944
+  artifact_bytes: 162308
+  dotnet: 1130
+  web: 1028
+  result: 'All8 exact gates PASS. New/retained SQL and two-provider-session actual Chromium PASS. Owned web-loopback proxy consumes real Core200 receipt after SQL commit then drops header or partial-body reply; shipping UI gets503, retains sameSID/fresh context/exact operation and replays original receipt with one audit and unchanged role/version. Private override/restoration succeeds; product Core/config unchanged.'
+  local_and_independent: '171 focused shipping web/type-check and8 independent original real-helper probes PASS. JS syntax/2 guard tests13 refusal paths PASS. Root and independent reviewer inspected both current sanitized images: readable member/workspace controls, preserved supplementary role and disabled current-user edits, no credentials. Full frozen security/runtime/images APPROVED, receipt6073002478; sole P2 CLOSED. Final documentation review/exact PR/main delivery remain.'
+  next: 'Close final documentation review/current exact gates; merge then exact main all8.270 is queued; do not implement before accepted main.'
 
 administrator_transport_review_9c:
   head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/268-member-administrators
 current_pr: 269
-current_target_head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
+current_target_head: d85be6c6df108c1f4a411889792a4727e41ab107
 last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 268
     pr: 269
     branch: codex/268-member-administrators
-    head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
-    state: in_progress
-    next: "269 all9c eight gates and actual SQL/two-session Chromium PASS. Full review found one P2: committed Core reply loss became401 and discarded stable UI retry. Fix preserves bounded503 only after a fresh same-company SID fence;171 focused web/type-check PASS. Close new exact CI and independent frozen blocker review before PR/main delivery."
+    head: d85be6c6df108c1f4a411889792a4727e41ab107
+    state: ready_for_review
+    next: "269 d85 full independent scoped approval receipt6073002478 and all8 PASS, including actual Core/SQL/Chromium committed header/body reply loss and one-audit stable replay. Close final documentation review/exact gates, merge and exact main CI; then acquire queued270 task-history lease from accepted main."
 
   frontend:
     issue: null
@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '269 shipping P2 fix independently passes171 web plus8 reviewer probes; new actual Core-to-BFF transport control328 failed during setup before browser sign-in. All SQL/six other gates/Gov PASS. Replace unsupported Docker cp to tmpfs with structured stdin/unprivileged exec and fixed safe setup markers, then close renewed actual/exact gates and frozen review before PR/main delivery. Installer723 full integration/runtime/docs now APPROVED receipt6072831478; stays Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: '269 d85 full independent frozen security/runtime/images APPROVED receipt6073002478, Build37873606708/Gov37873606687 all8 PASS, actual113636976840/quality113639243215. Actual Core-to-BFF committed header/body loss proves shipping503/currentSID/exact replay/original receipt/one SQL audit. Close final documentation review/current exact gates, then merge and exact main CI. Queued270 durable task-history recovery follows accepted main; no premature lease. Installer723 independently APPROVED receipt6072831478, Draft for clean Windows/signing. Full233/customer/production remain.'
 
 
 blocked_by:
