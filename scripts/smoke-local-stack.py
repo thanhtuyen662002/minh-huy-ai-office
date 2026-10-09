@@ -1184,6 +1184,10 @@ def main():
     submission_spec.loader.exec_module(submission_proof)
     submission_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
         http=http, sql=sql, runtime_statement=runtime_statement, identity=identity, api=api, auth=member_auth)
+    group_spec = importlib.util.spec_from_file_location("group_ingress_proof", Path("scripts/smoke-group-ingress.py"))
+    group_proof = importlib.util.module_from_spec(group_spec)
+    group_spec.loader.exec_module(group_proof)
+    group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api)
     print("PASS complete local stack integration")
 
 

@@ -758,3 +758,8 @@ group_ingress_http_review_repair:
   review: 'Frozen234 independent original timestamp probes2/2 PASS;47 retained HTTP/store PASS. New twoP2 HTTP findings: lazy provider error outside handler leaked Development details, stalled body lacked owned deadline. Repaired eager full enrollment validation and linked10second request-body/auth/store deadline with bounded unknown503 and preserved caller abort.'
   local: '3 invalid-enrollment and2 stalled/abort controls;52 focused HTTP/store PASS/zero skipped; solution changed whitespace PASS. Prior full959 remains checkpoint evidence; new exactCI/re-review required.'
   next: 'Freeze/re-review repaired HTTP, own exactCI closure; mandatory native group HTTP/runtimeSQL gate added separately. Complete listener/encrypted spool/queue recovery/authorized reads/UI before277 delivery.'
+
+group_ingress_native_gate_checkpoint:
+  predecessor: b7cc518b81cb876ba4ba62742b222c754526cfcd
+  result: 'Mandatory owned shipping HMAC HTTP-to-runtimeSQL proof now wired into retained complete local stack job. Explicit Development-only private0600 random key override, exact fixture guard before resources, fixed diagnostics/privateSQLstdin, original ship default-off restored. Concurrent100 replay/original graph snapshots/rollback/column escalation/queued current authority6/edit-recall-history gaps/order/Core restart fixtures encoded; all14 local ownership/vector/privacy guards PASS. No native execution result yet.'
+  next: 'Own exact native CI, inspect fixed failing phase and repair samePR immediately; bounded HTTP repairreview b7 ongoing. Then complete fencedlistener/encryptedspool/outbox recovery and scoped reads/private inbox. No277 delivery from nativeproof existence, no live connector/account/send.'

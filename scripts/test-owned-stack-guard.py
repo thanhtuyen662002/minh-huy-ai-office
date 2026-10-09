@@ -18,6 +18,9 @@ history_spec.loader.exec_module(history_smoke)
 submission_spec = importlib.util.spec_from_file_location("submission_smoke", Path(__file__).with_name("smoke-task-submission.py"))
 submission_smoke = importlib.util.module_from_spec(submission_spec)
 submission_spec.loader.exec_module(submission_smoke)
+group_spec = importlib.util.spec_from_file_location("group_ingress_smoke", Path(__file__).with_name("smoke-group-ingress.py"))
+group_smoke = importlib.util.module_from_spec(group_spec)
+group_spec.loader.exec_module(group_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
@@ -113,6 +116,42 @@ class OwnedStackGuardTests(unittest.TestCase):
             submission_smoke.require_single_execution_delta(before, after, credit, "CD" * 32)
         with self.assertRaises(AssertionError):
             submission_smoke.require_single_execution_delta(before[:-1], after[:-1], credit, credit)
+
+    def test_group_ingress_refuses_unowned_before_private_configuration_or_processes(self):
+        cases = [(self.owned, {"CI": "false"}, "http://127.0.0.1:8080"),
+            (self.owned, {"GITHUB_ACTIONS": "false"}, "http://127.0.0.1:8080"),
+            (self.owned, {"RUNNER_TEMP": ""}, "http://127.0.0.1:8080"),
+            (self.root, {}, "http://127.0.0.1:8080"), (self.owned / "nested", {}, "http://127.0.0.1:8080"),
+            (self.owned, {}, "https://customer.example.invalid")]
+        for directory, override, api in cases:
+            with self.subTest(directory=str(directory), override=override, api=api), patch.dict(os.environ, {**self.environment, **override}, clear=True):
+                with self.assertRaisesRegex(RuntimeError, "^Group ingress proof requires the owned disposable GitHub CI fixture\\.$"):
+                    group_smoke.verify(directory=directory, manifest=None, compose=None, environment=None, api=api)
+
+    def test_group_index_matches_accepted_shared_contract_golden_and_preserves_original_scalars(self):
+        self.assertEqual("E6A0749FB48B2CC0E601E3412D462580886A13C3E34971A794B21C63C5E68599",
+            group_smoke.identity_index("synthetic", "account ", " group😀 "))
+        self.assertNotEqual(group_smoke.identity_index("synthetic", "account", "ồ"), group_smoke.identity_index("synthetic", "account", "o\u0302\u0300"))
+        with self.assertRaises(UnicodeEncodeError): group_smoke.identity_index("synthetic", "account", "\ud800")
+
+    def test_group_signing_has_fixed_domain_and_complete_original_body_fingerprint(self):
+        service = "11111111-1111-4111-8111-111111111111"
+        nonce = "22222222-2222-4222-8222-222222222222"
+        expected = ("aioffice-group-ingest-v1\n" + service + "\n1\n1791580000\n" + nonce +
+            "\nE3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855").encode("ascii")
+        self.assertEqual(expected, group_smoke.signing_bytes(service, 1, 1791580000, nonce, b""))
+        self.assertNotEqual(expected, group_smoke.signing_bytes(service, 1, 1791580000, nonce, b" "))
+
+    def test_group_sql_private_bytes_stay_in_stdin_and_diagnostics_remain_fixed(self):
+        private = "SELECT N'PRIVATE_GROUP_FIXTURE';"
+        with patch.object(group_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="PASS\n", stderr="")) as command:
+            self.assertEqual("PASS", group_smoke.owned_sql(["docker", "compose"], {}, private))
+            args, kwargs = command.call_args
+            self.assertTrue(all("PRIVATE_GROUP" not in item for item in args[0]))
+            self.assertEqual("SET NOCOUNT ON; USE AIOfficeLocal; " + private, kwargs["input"])
+        with patch.object(group_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=1, stdout="Msg 207, Level 16 PRIVATE_GROUP", stderr="PRIVATE_TOKEN")):
+            with self.assertRaisesRegex(RuntimeError, r"^Owned group SQL fixture command failed \(SQL message 207\)\.$"):
+                group_smoke.owned_sql(["docker", "compose"], {}, private)
 
     def test_submission_original_event_transport_refuses_silent_sqlcmd_truncation(self):
         original = "7B00" * 300
