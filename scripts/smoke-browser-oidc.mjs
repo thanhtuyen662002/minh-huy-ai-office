@@ -346,7 +346,7 @@ try {
   await signIn(); requireProof((await cookie("aioffice_browser_session")).value !== sid.value);
   console.log("PASS actual logout denies presented old binding/SID and provider SSO re-login issues fresh opaque session");
 
-  stage = "owned-session-expiry-private-clear";
+  stage = "owned-expiry-source-selection";
   await waitForSource();
   // Prove browser mutation/SQL persistence and populate private chat before
   // expiry. Provider business-answer qualification is a separate requirement.
@@ -356,18 +356,26 @@ try {
   const submitted = page.waitForResponse(response => response.request().method() === "POST"
     && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
     && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
+  stage = "owned-expiry-submit-response";
   await page.getByRole("button", { name: "Gửi", exact: true }).click();
   const acceptedResponse = await submitted;
+  stage = "owned-expiry-submit-accepted";
   requireProof(acceptedResponse.status() === 202 && acceptedResponse.headers()["cache-control"] === "no-store");
+  stage = "owned-expiry-submit-receipt";
   const accepted = await acceptedResponse.json(); requireProof(guid(accepted.taskId));
+  stage = "owned-expiry-task-read";
   const task = await get(`/api/local/tasks/${accepted.taskId}` + query);
   requireProof(task.status === 200 && task.cache === "no-store" && JSON.parse(task.text).taskId === accepted.taskId);
+  stage = "owned-expiry-private-message";
   await page.getByText(privateMessage, { exact: true }).waitFor();
   const privateDraft = "Disposable browser draft " + randomUUID();
+  stage = "owned-expiry-draft-ready";
   await page.locator('textarea[name="question"]:enabled').waitFor();
   await page.locator('textarea[name="question"]').fill(privateDraft);
+  stage = "owned-expiry-foreign-denial";
   requireProof((await mutate(`/api/local/tasks?companyId=${foreign}`, "POST", { dataSourceId: source.id, question: privateMessage })).status === 401);
   console.log("PASS browser task submission and durable scoped task read; cross-company mutation denied");
+  stage = "owned-expiry-cookie-evidence";
   const liveBinding = (await cookie("aioffice_browser_binding")).value.split(".");
   const liveSid = (await cookie("aioffice_browser_session")).value;
   const namespace = digest(JSON.stringify(["aioffice-browser-session-v1", issuer, "aioffice-browser", callback]));
@@ -376,9 +384,12 @@ try {
   // advances naturally; no clock mocking, token forging or broad Redis cleanup.
   const expire = `if redis.call('HGET',KEYS[1],'generation') ~= ARGV[1] or redis.call('HGET',KEYS[1],'sid') ~= ARGV[2] then return 0 end
     local now=tonumber(redis.call('TIME')[1]); redis.call('HSET',KEYS[1],'sessionExpiry',now+1); return 1`;
+  stage = "owned-expiry-redis-revoke";
   requireProof(run(["exec", "-T", "redis", "redis-cli", "--raw", "EVAL", expire, "1", key, digest(liveBinding[1]), digest(liveSid)]) === "1");
   await delay(1500);
+  stage = "owned-expiry-session-denial";
   requireProof((await current()).status === 401);
+  stage = "owned-expiry-private-clear";
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).waitFor();
   requireProof(await page.locator(`option[value="${source.id}"]`).count() === 0
