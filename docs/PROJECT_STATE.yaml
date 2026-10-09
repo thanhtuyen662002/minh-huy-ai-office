@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/272-task-submission-recovery
     head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
     state: in_progress
-    next: '272/274 active:6075 initial native immutable/one graph/permissions/escalation/Unicode/original-event/rollback/quota/legacy adoption PASS; actual113958003013 terminal at runtime queued lock observation. Add sanitized engine-only diagnostic and keep mandatory fences. Independent full static found P2 FEFF parser/Core mismatch; fix parser/composer to Core whitespace, retain exact scalar/hash with106web+Core/26Contracts/typecheck PASS. Push, close actual queued19/Chromium/full independent review before finalPR-main. User requested current merge BEFORE reading second-brain attachment.'
+    next: '272/274 active:a843 all initialnative including FEFF/legacy PASS; full1287.NET/1276web/sixprereqs/GovPASS. Sanitized SQL shows actual same-blockerAPPLICATIONXWAIT but system-procedure text lacks caller name. Fix observer to exact held/waiting transaction resource join. Independent full shipping/static APPROVED6086781182, FEFFP2CLOSED. Actual queued19/newChromium/fourimages and fullruntime review/finalPR-main remain. User current merge BEFORE second-brain attachment.'
 
   erp_data:
     issue: 264

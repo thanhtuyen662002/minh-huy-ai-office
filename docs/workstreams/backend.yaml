@@ -137,7 +137,16 @@ submission_core_unicode_parity_repair:
   review: 'Full independent frozen da42/6075 static audit complete with one concrete P2: ECMAScript trim strips U+FEFF while Core accepts it. Original Core TestServer accepts leading/trailing/soleFEFF; real detail/list BFF refuses503. No additional shipping/static blocker; own135.NET/237web/10Python/6Node PASS. Full approval withheld until repair/runtime/four images.'
   repair: 'Parser and composer use Core Unicode White_Space edge policy preserving FEFF exact bytes. Permanent3 Python/C#/Node golden vectors, real Core API/GET/no-task control, parser/page/hash/bounds controls,3 actualHTTP BFF exact private read positives/changed bytes refusal and3 shipping composer prepare-loss/reload/deliberate-send controls. Add actual native leading/trailing/soleFEFF and hosted browser exactFEFF recovery question.'
   local: '106 Node24 parser/BFF/workspace PASS,1 new Core API and26 Contracts PASS, typecheck/changed.NET format/10Python/6Node/syntax/diff PASS. Hosted new repair/final fences/runtime/images remain unverified.'
-next_action: 'Push same274 FEFF repair and bounded native lock diagnostic. Own exact CI and fix observed queued admission failure; then full actual SQL/private-read and realCore202/twoCodeS256/fourimages. Obtain frozen independent P2 closure/full approval, finalPR-main. After current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
+submission_actual_application_resource_observation:
+  predecessor: a843b98a7dbddebb220e45dd2423ce031d73f694
+  build: 37972495059
+  governance: 37972495089
+  actual: 113962400795
+  quality: 113965481677
+  result: 'All six prerequisites/Gov PASS; full1287.NET/1276web including realRedis PASS. All initialnative controls plus FEFF roundtrips/legacy PASS. Terminal at queued-lock observer: sanitized actualLCK_M_X|blocker1|APPLICATION|X|WAIT|callerText0 proves actual block; nested system procedure text lacks caller name. No queued revocation/new browser acceptance yet.'
+  repair: 'Match exact runtime waiting X lock against operator granted transaction X lock by resource type/database/exactresource description plus sameblocking session/LCK_M_X. Replace brittle caller-text match with direct resource causality, retain all revocation/noeffects/restoredpositive assertions. Bounded diagnostic reports engine enums/booleans only.'
+  review: 'Independent full shipping/static frozena843 APPROVED and originalFEFF realHTTP503→200 repro CLOSED; receipt6086781182.106web/26Contracts/Core1/repro/10Python/6Node/YAML independentlyPASS. Runtime/fourimages and laterproofdelta remain mandatory, not approved.'
+next_action: 'Push same274 actual resource-lock observation fix; close exact native queued19/realCore202/twoCodeS256/fourimages and fix any failure. Full independent runtime/image/proofdelta approval then finalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

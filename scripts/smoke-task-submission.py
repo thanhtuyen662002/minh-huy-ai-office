@@ -414,14 +414,17 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             value = sql(f"""USE AIOfficeLocal; SELECT TOP(5) CONCAT(COALESCE(r.wait_type,N'NONE'),N'|',
               CASE WHEN r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) THEN 1 ELSE 0 END,N'|',
               COALESCE(l.resource_type,N'NONE'),N'|',COALESCE(l.request_mode,N'NONE'),N'|',COALESCE(l.request_status,N'NONE'),N'|',
-              CASE WHEN t.text LIKE N'%sp_getapplock%' THEN 1 ELSE 0 END)
+              CASE WHEN EXISTS(SELECT 1 FROM sys.dm_tran_locks held
+                WHERE held.request_session_id=(SELECT OwnerSpid FROM {gate}) AND held.resource_type=l.resource_type
+                  AND held.resource_database_id=l.resource_database_id AND held.resource_description=l.resource_description
+                  AND held.request_mode=N'X' AND held.request_status=N'GRANT') THEN 1 ELSE 0 END)
               FROM sys.dm_exec_requests r JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
               LEFT JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
-              OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
               WHERE s.login_name=N'aioffice_runtime' AND r.database_id=DB_ID()
               ORDER BY CASE WHEN r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) THEN 0 ELSE 1 END,
                 CASE WHEN l.resource_type=N'APPLICATION' THEN 0 ELSE 1 END;""")
-            return value.replace("\n", ";") if len(value) <= 512 and re.fullmatch(r"[A-Z_0-9|\r\n]*", value) else "UNAVAILABLE"
+            value = value.upper()
+            return value.replace("\n", ";") if len(value) <= 512 and re.fullmatch(r"[A-Z_0-9|\r\n-]*", value) else "UNAVAILABLE"
         def await_condition(predicate, phase, seconds):
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
@@ -438,10 +441,13 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_requests r
               JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
               JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
-              CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+              JOIN sys.dm_tran_locks held ON held.request_session_id=(SELECT OwnerSpid FROM {gate})
+                AND held.resource_type=l.resource_type AND held.resource_database_id=l.resource_database_id
+                AND held.resource_description=l.resource_description AND held.request_owner_type=N'TRANSACTION'
+                AND held.request_mode=N'X' AND held.request_status=N'GRANT'
               WHERE s.login_name=N'aioffice_runtime' AND r.blocking_session_id=(SELECT OwnerSpid FROM {gate})
                 AND r.wait_type=N'LCK_M_X' AND l.resource_type=N'APPLICATION' AND l.resource_database_id=DB_ID()
-                AND l.request_mode=N'X' AND l.request_status IN(N'WAIT',N'CONVERT') AND t.text LIKE N'%sp_getapplock%';""")) > 0, "runtime queued company lock", 3)
+                AND l.request_mode=N'X' AND l.request_status IN(N'WAIT',N'CONVERT');""")) > 0, "runtime queued company lock", 3)
             sql(f"USE AIOfficeLocal; {revoke}; UPDATE {gate} SET Released=1;")
             status, _, body = pending.result(timeout=15)
             assert status == 403 and body in ("", None), f"Observed queued {kind} expected empty403, got HTTP{int(status)}"
