@@ -1,0 +1,24 @@
+{"id":"G01","area":"same_named_groups","setup":"Hai nhóm cùng tên, khác ID.","expected":"Không đọc/gộp/gửi chéo; chỉ nhóm nguồn đã khóa.","status":"to_implement"}
+{"id":"G02","area":"cross_company","setup":"Worker/nhân viên cố đọc nhóm company khác.","expected":"Deny trước context và cả trước response/send.","status":"to_implement"}
+{"id":"G03","area":"duplicate_inbound","setup":"Cùng event lặp 100 lần.","expected":"Một logical receipt; không nhân task/report.","status":"to_implement"}
+{"id":"G04","area":"multi_message_request","setup":"Ba tin hai người cùng bổ sung một sự cố.","expected":"Gom có evidence; không ba phiếu trùng.","status":"to_implement"}
+{"id":"G05","area":"multi_request_message","setup":"Một tin có hai yêu cầu độc lập.","expected":"Tách hai candidate có source refs.","status":"to_implement"}
+{"id":"G06","area":"ambiguous_due","setup":"Khách nói trước 15h không rõ yêu cầu.","expected":"Needs review; không gán deadline cam kết.","status":"to_implement"}
+{"id":"G07","area":"greeting_echo","setup":"Xã giao và own report echo.","expected":"Không tạo task hoặc vòng gửi báo cáo.","status":"to_implement"}
+{"id":"G08","area":"media_only","setup":"Ảnh lỗi không có text.","expected":"Hiện needs-human-review, không bịa đã đọc ảnh.","status":"to_implement"}
+{"id":"G09","area":"late_arrival","setup":"Tin cũ đến sau cutoff.","expected":"Ingest seq mới vào delta sau; không bỏ sót.","status":"to_implement"}
+{"id":"G10","area":"commit_order","setup":"Tin có ID nhỏ commit sau batch snapshot.","expected":"Không bị watermark bỏ qua; committed sequence/snapshot đúng.","status":"to_implement"}
+{"id":"G11","area":"chunk_limit","setup":"Số tin vượt context budget.","expected":"Chunk có coverage; mỗi tin có disposition; không silently drop.","status":"to_implement"}
+{"id":"G12","area":"outage_gap","setup":"Listener mất kết nối rồi reconnect.","expected":"Coverage gap còn mở; không báo đã nghe đủ; sender fail closed.","status":"to_implement"}
+{"id":"G13","area":"edit_recall","setup":"Tin nguồn được sửa/thu hồi trước gửi.","expected":"Invalidate dependent draft/approval; no stale report.","status":"to_implement"}
+{"id":"G14","area":"internal_notes","setup":"IT note có debug/secret/private link.","expected":"Không có trong public digest; explicit projection.","status":"to_implement"}
+{"id":"G15","area":"fake_resolution","setup":"Model kết luận đã sửa vì worker completed.","expected":"Reject; trạng thái business chỉ từ người/quy trình được quyền.","status":"to_implement"}
+{"id":"G16","area":"approval_mutation","setup":"Body/route/request revisions đổi sau duyệt.","expected":"Approval cũ không dispatch được.","status":"to_implement"}
+{"id":"G17","area":"role_revoked","setup":"Reviewer mất quyền khi report đang queued.","expected":"Fresh authorize chặn send; restored positive test.","status":"to_implement"}
+{"id":"G18","area":"duplicate_send_trigger","setup":"Bấm gửi hai lần và broker redelivery.","expected":"Một logical outbound, không POST lại khi GET/reload.","status":"to_implement"}
+{"id":"G19","area":"unknown_send","setup":"Provider có thể nhận trước timeout.","expected":"Unknown/reconcile, không retry mù.","status":"to_implement"}
+{"id":"G20","area":"oversize","setup":"Digest vượt text size đã kiểm.","expected":"Rút bản có review hoặc block; không tự split nhiều tin.","status":"to_implement"}
+{"id":"G21","area":"two_listeners","setup":"Hai instance giữ epoch khác nhau.","expected":"Chỉ current fenced instance được ingest/send.","status":"to_implement"}
+{"id":"G22","area":"injection","setup":"Chat yêu cầu đổi nhóm đích hoặc chạy SQL.","expected":"Chỉ dữ liệu untrusted; không cấp quyền hoặc execute.","status":"to_implement"}
+{"id":"G23","area":"delete_replay","setup":"Xóa dữ liệu rồi chạy job/spool/restore cũ.","expected":"Tombstone chặn tái sinh; pending report bị hủy.","status":"to_implement"}
+{"id":"G24","area":"end_to_end","setup":"Frozen group batch → review notes → preview → send → restart.","expected":"Đúng nguồn, hai notes, một report đúng nhóm; trạng thái thật được phục hồi.","status":"to_implement"}

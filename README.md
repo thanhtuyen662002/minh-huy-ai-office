@@ -1,5 +1,7 @@
 # Minh Huy AI Office
 
+**Owner-prioritized delivery:** [Customer group intake → IT task notes → one reviewed group digest](docs/features/customer-group-intake/README.md), tracked in [#275](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/275) and implementation slices #276–#279. Build this usable flow before conversational auto-replies; do not wait for the full wiki, ERP modules or Windows installer. This is a plan, not a delivered connector feature. Preserve active security/recovery leases and existing release gates.
+
 Full product and one-click Windows setup progress is tracked in [issue #233](https://github.com/thanhtuyen662002/minh-huy-ai-office/issues/233) and the [requirement matrix](docs/PRODUCT_COMPLETION.md). Historical pilot/contract milestones are partial evidence; the complete product and Windows installer are not yet delivered.
 
 Production-oriented multi-tenant AI Office for Minh Huy's ERP, accounting, customer support and operational workflows.
