@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: d4f7955b34e4c82b402d60b58bd93dfa4c186bb6
+head: d4f53451aa9833449d2cd9b74118d77918bb6280
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -39,6 +39,16 @@ submission_api_bff_checkpoint:
   result: 'Persistence predecessor exact all8 PASS, including actual additive migration and retained SQL/OIDC/worker/Chromium flows; new intent acceptance remains required. Strict Core prepare/list/detail/submit API and matching browser BFF implemented with32KiB scalar/decoded-duplicate/selector bounds, typed exact owner input/hash and202 receipt, server GET binding before deliberate POST, known bounded failures and an additional issued-SID fence after asynchronous hash validation. Legacy reserved-key conflict is bounded409 and existing accepted DTO/header remains.'
   local: '44 new HTTP controls PASS; full858 Persistence PASS before the final additional legacy HTTP control, then all44 current HTTP PASS.87 new web contract/BFF controls and62 retained helper/transport controls PASS149 total; type-check and changed C# format/diff PASS. Two actual Node HTTP202 header/partial-body loss controls verify bounded503, unchanged operation/SID and deliberate replay; these are transport controls, not actual Core/SQL acceptance.'
   next: 'Push tested same274 API/BFF checkpoint and close exact CI while integrating synchronous composer mutex, pending/reconciliation UX and fresh owner GET afterreload/newSID. Mandatory owned SQL concurrency/permissions and realCore202 committed reply-loss/worker/twoCodeS256Chromium still required; independent frozen review remains pending reviewer availability.'
+submission_composer_hook_checkpoint:
+  predecessor: d4f53451aa9833449d2cd9b74118d77918bb6280
+  predecessor_build: 37929630684
+  predecessor_governance: 37929630652
+  predecessor_actual: 113816887067
+  predecessor_quality: 113819662623
+  result: 'API/BFF predecessor exact all8 and Governance PASS, including retained actual SQL/OIDC/worker/Chromium. New client hook synchronously captures one immutable operation before await, consumes each send handle once, retains uncertain prepare/202 outcomes for explicit identical replay, and reconciles through owner GET. Reset/unmount/generation/serial/controller fences protect private headers/body and prevent an old finally unlocking a newer operation. No browser storage or automatic recovered submission.'
+  local: '37 new hook/stream controls PASS, including repeat handle, same-input prepare/202 retry, GET-only404/recovery, persisted states, conflict/expiry/grant denial, stable accepted IDs, malformed receipts, fresh final authority, late headers/body and replacement-lock fences. Type-check PASS; contract/BFF regressions rerun with hook.'
+  limitation: 'Hook is tested but not yet integrated into the workspace. Server recovery panel and realSQL/Core202/Chromium acceptance remain; no shipping approval or merge readiness.'
+  next: 'Integrate same274 composer and bounded private owner recovery panel, extend retained session-race controls, then mandatory nativeSQL/realCore fault/worker/twoCodeS256 browser proof and frozen review/exact PR-main.'
 scope:
   - durable-owner-company-submission-intent-and-exact-operation-replay
   - final-fresh-admission-source-authority-and-safe-typed-receipts
@@ -53,7 +63,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '272/274 strict API/BFF locally verified; integrate synchronous composer mutex and serverpending/reconciliation UX, fresh owner GET afterreload/newSID. Close current exact CI and mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
+next_action: '272/274 API/BFF exact all8 PASS. New immutable composer hook37 controls/typecheck PASS; integrate workspace and bounded owner recovery panel with retained session-race controls. Close each exact CI and mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

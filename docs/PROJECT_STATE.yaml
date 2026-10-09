@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: d4f7955b34e4c82b402d60b58bd93dfa4c186bb6
-last_verified_commit: d4f7955b34e4c82b402d60b58bd93dfa4c186bb6
+current_target_head: d4f53451aa9833449d2cd9b74118d77918bb6280
+last_verified_commit: d4f53451aa9833449d2cd9b74118d77918bb6280
 
 critical_paths:
   backend:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: d4f7955b34e4c82b402d60b58bd93dfa4c186bb6
+    head: d4f53451aa9833449d2cd9b74118d77918bb6280
     state: in_progress
-    next: '272/274 active: persistence d4f exact all8 PASS; strict bounded API/BFF implemented with44 HTTP and149 focused web/real-helper controls PASS. Continue synchronous composer/ref fence, server recovery UX and mandatory new actual SQL/Chromium proof.270 delivered;273 queued after272.'
+    next: '272/274 active: API/BFF d4f534 exact all8/Governance/actual113816887067/quality113819662623 PASS. Immutable synchronous composer hook37 controls/typecheck PASS; integrate workspace and bounded owner recovery panel, retained session-race and mandatory new actual SQL/Core202/Chromium proof.270 delivered;273 queued after272.'
 
   erp_data:
     issue: 264
