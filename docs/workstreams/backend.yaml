@@ -711,3 +711,14 @@ group_authentication_review_repair:
   repair: 'Own bounded body snapshot before any await, parse/sign same private bytes and clear on exit. Recheck current signing time and current qualification after async proof; carry signedUTC into current store/final admission. Live explicitly denies synthetic provider/owned-fixture package regardless of labels. Store final signing/qualification checks use fresh clock after async SQL proof/listener reads. Store whitespace formatting fixed using solution workspace; no discarded assertion.'
   local: '8 new regression controls, focused58 auth/store and full934 Persistence PASS, zero skipped. Solution changed C# whitespace/diff/YAML PASS. Controlled fixture positive retained; local fixtures are not real connector/SQL evidence.'
   next: 'Freeze/push same277 candidate, rerun all original reviewer counterexamples plus scoped store review, close exactCI, then actualSQL service API/store/listener/recovery/private read acceptance. Parent282 merged4cfeda58fc3065094952dd30bbc4b41ee47a8b53 after approved5e all8; exactmain closure still required before child merge. Full277/275/233 active.'
+
+
+group_ingress_retained_ci_diagnostic:
+  predecessor: d4308350d4c2f25910df51d4590343eee9ddb266
+  build: 37993278552
+  governance: 37993278553
+  actual: 114032697414
+  quality: 114036448009
+  result: 'Six Build prerequisites/Gov PASS; all native SQL/queued/receipt/permission/rollback controls and retained provider/member/history/session-expiry browser PASS. Browser terminal at broad submission-real-core202-headers; proxy safe refusal categories claim/response/authority only. No child all8 or new group runtime acceptance. Same283 adds fixed phase-only diagnostics to existing realCore202 headers/body loss flow, preserving all assertions/timeouts/effects without private diagnostics.'
+  local: '6 owned browser guards and Node24 syntax/diff PASS. Auth immutable-input/fresh-time/synthetic-Live repairs d731 local934 Persistence PASS; independent counterexample closure remains. No retry classified as infrastructure for this real terminal assertion failure.'
+  next: 'Push same277/283 checkpoint, own exactCI and diagnose fixed202 substage immediately; fix real cause on samePR. Continue group API/SQL/listener acceptance and current review. Parent282 merged4cf after5e all8; exactmain gates remain active.'

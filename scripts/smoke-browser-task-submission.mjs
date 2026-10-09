@@ -81,28 +81,40 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   let secondaryContext, release, heldPattern;
   try {
     for (const boundary of ["headers", "body"]) {
-      stage("real-core202-" + boundary);
+      const phase = name => stage("real-core202-" + boundary + "-" + name);
+      phase("initial-session");
       const question = `Kiểm tra tồn kho ${boundary} 😀 �`, originalSid = await sid(ownerContext), count = sent.length;
       const initialCounts = effectCounts(), initialSnapshot = snapshot();
-      proof(originalSid); await composer(question);
+      proof(originalSid);
+      phase("composer"); await composer(question);
+      phase("fault-arm");
       coreReplyFault.arm({ kind: "task-submit", company, source, question, boundary });
       const lost = page.waitForResponse(response => /\/api\/local\/tasks\/intents\/[0-9a-f-]{36}\/submit\?/.test(response.url())
         && response.request().method() === "POST" && response.status() === 503, { timeout: 20_000 });
+      phase("first-response");
       await page.getByRole("button", { name: "Gửi", exact: true }).click(); await lost;
+      phase("retry-visible");
       await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).waitFor();
       const fault = coreReplyFault.read(); coreReplyFault.disarm();
+      phase("fault-evidence");
       proof(fault.count === 1 && fault.upstreamStatus === 202 && [fault.operationId, fault.taskId, fault.stepId, fault.messageId].every(guid));
+      phase("post-requests");
       proof(sent.length === count + 2 && sent[count].body.question === question && sent[count].body.operationId === fault.operationId
         && Object.keys(sent[count + 1].body).join(",") === "inputFingerprint" && sent[count + 1].body.inputFingerprint === fault.inputFingerprint);
-      await completed(fault.taskId); oneGraph(initialCounts, initialSnapshot, fault.taskId); const committed = snapshot();
+      phase("worker-completed"); await completed(fault.taskId);
+      phase("graph-after-commit"); oneGraph(initialCounts, initialSnapshot, fault.taskId); const committed = snapshot();
+      phase("session-unchanged");
       proof(await sid(ownerContext) === originalSid);
       const retry = waitResponse(`/api/local/tasks/intents/${fault.operationId}/submit`, 202);
+      phase("replay-response");
       await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click();
       const receipt = await (await retry).json();
+      phase("receipt-equal");
       proof(["companyId", "operationId", "inputFingerprint", "taskId", "stepId", "messageId", "createdAtUtc"].every(key => receipt[key] === (key === "companyId" ? company : fault[key])));
-      await idle(); proof(await sid(ownerContext) === originalSid && sent.length === count + 3
+      phase("final-idle"); await idle();
+      phase("same-original-request"); proof(await sid(ownerContext) === originalSid && sent.length === count + 3
         && sent[count + 2].path === sent[count + 1].path && JSON.stringify(sent[count + 2].body) === JSON.stringify(sent[count + 1].body));
-      equal(snapshot(), committed);
+      phase("graph-unchanged"); equal(snapshot(), committed);
       console.log(`PASS actual Core committed202 ${boundary} loss, same issuedSID/operation/fingerprint-only explicit retry and unchanged graph/worker/dispatch/settlements`);
     }
 
