@@ -826,3 +826,20 @@ group_private_initial_identity_boundary_repair:
   result: 'Groupsource path-only wrapper beforeAuthentication/currentDirectory/handler, fixed10s linkedRequestAborted, restoredcallertoken/genericnoStore503 beforeheaders; callerabortpropagated. Correlationouterseesfinalstatus. NativeownedSQLGuid normalizedcanonicalDlowercase.'
   local: '20 currentportalHTTP inclinitialfailure/stallPASS,1 additionalcallerabortPASS;17guards/changedwhitespace/diffPASS. Original independent twofailures needclosure.'
   next: 'Freeze boundarydelta review; continueown cd retry2 actual114055909438, then pushreviewedprivateHTTP/nativeproof andcloseexactCI. Mandatorynative finalrelease range/revoke proof, source/message discovery/BFF/privateinbox andlistener/spool/queue recovery remain277 acceptance.'
+
+group_native_ingress_owned_closure:
+  head: cd17377db0ba28667b77dec562746c961d2668ba
+  build: 37999783297
+  governance: 37999783280
+  attempt: 2
+  actual: 114055909438
+  quality: 114059401788
+  state: 'all8PASS; root inspected all13newnativegroup phases andretainedChromium'
+  result: 'FirstACK403 mismatchCLOSED byexactcolumnproof; actualmutablewrites/loss/escalation and100replays/unchangedbytes, scope/DM/self/echo/conflict, physicalalias/originalUTF16, fulloutboxrollback, appendonlyrights, observed6currentrevocations, edit/recall/history/gap/cursor/restart/no fakeuser-task/privateoverride/defaultoff PASS. RetainedSQL/OIDC/worker/Redisexpiry/currentSID/privateclear/realCore202headers-body PASS. No listener/spool/broker/privateGET/UI/full277 acceptance.'
+  next: 'Ownafb privateGET exactBuild38001296429/Gov38001296406/actual114059737157, sixprereqsPASS/nativepending. Frozen privateHTTP originalP2closed59+17approved; newsource/message metadata paging local96PASS needs frozenreview andnativequeryproof. Continue277 remaininggates.'
+
+group_source_discovery_checkpoint:
+  predecessor: afb2114a50ff26fc1d3bd3bff13cd321ec1db6ba
+  local: '14 newsource/message metadata/filter/keyset/precedence/bounds controlsPASS;96current HTTP/reader/key/protection/retainedingressPASS zero skipped;17 guards/compile/format/YAML/diffPASS. No newnativecatalog orUI result yet.'
+  result: 'CurrentexplicitReaderGrant/currentmember/fullphysicalsource beforepagination; source labelsboundedoriginalUTF16, logicalmessageMaxcommittedseq keyset plusrecall/editwinner, metadataonly/zero keyresolve underownedSerializable commit. UI listing isnot278 frozenbatchsnapshot; exactsourceversion/deletion readpolicy retained.'
+  next: 'Freeze/review samePR metadata delta, waitforafb native terminal andfiximmediately ifred, then pushreviewedcatalog/newactualproof. ActualSQL finalrelease range/revoke, BFF/privateinbox/listener/spool/broker remain;278/279/full233 active.'

@@ -11,11 +11,83 @@ public sealed record GroupSourceMessageView(GroupScope Source, Guid MessageId, s
     long Revision, long CommittedSequence, GroupSourceEventKind Kind, string SenderId, string? ReplyToMessageId,
     DateTimeOffset OccurredAtUtc, string? Text, bool IsHistoricalBackfill, bool HasCoverageGap);
 
+public sealed record GroupSourceSummaryView(GroupScope Source, string DisplayName, string Provider, long Version);
+public sealed record GroupSourcePageView(Guid CompanyId, IReadOnlyList<GroupSourceSummaryView> Items, bool HasMore);
+public sealed record GroupMessageHeadView(Guid MessageId, long Revision, long LastChangedSequence,
+    GroupSourceEventKind Kind, DateTimeOffset OccurredAtUtc, bool IsHistoricalBackfill);
+public sealed record GroupMessagePageView(GroupScope Source, IReadOnlyList<GroupMessageHeadView> Items,
+    long? NextBeforeSequence, bool HasCoverageGap);
+
 // Read grants are separate from service Ingest/Extract/Notify and IT disclosure.
 // No portal role (including administrator) substitutes for an explicit source grant.
 public sealed class GroupSourceReader(PlatformDbContext database, IAuthorizationDirectory directory,
     IGroupSourceKeyProvider keys, GroupSourceContentProtector protector)
 {
+    public async Task<GroupSourcePageView> ListSourcesAsync(AuthorizationContext authority, int offset = 0, int limit = 25,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        if (offset is < 0 or > 10000 || limit is < 1 or > 25) throw new ArgumentOutOfRangeException(nameof(limit));
+        RequireCleanRead();
+        await using var release = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
+        if ((await directory.ResolveAsync(authority, cancellationToken))?.Context != authority) throw GroupServiceDirectory.Denied();
+        await new GroupIngressPermissionVerifier(database).RequireSafeRuntimeAsync(cancellationToken);
+        var ids = await database.GroupReaderGrants.AsNoTracking().Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId &&
+            x.UserId == authority.UserId && x.IsEnabled && x.Version > 0)
+            .Join(database.GroupBindings.AsNoTracking().Where(x => x.IsEnabled && x.Role == GroupBindingRole.CustomerSource),
+                grant => new { grant.TenantId, grant.CompanyId, Id = grant.BindingId }, binding => new { binding.TenantId, binding.CompanyId, binding.Id },
+                (grant, binding) => binding.Id).OrderBy(x => x).Skip(offset).Take(limit + 1).ToArrayAsync(cancellationToken);
+        var items = new List<GroupSourceSummaryView>();
+        foreach (var id in ids.Take(limit))
+        {
+            var current = await RequireAccessAsync(authority, id, cancellationToken);
+            if (current.Binding.DisplayName.Length > 200) throw Unavailable();
+            _ = new UnicodeEncoding(false, false, true).GetByteCount(current.Binding.DisplayName);
+            items.Add(new(new(authority.TenantId, authority.CompanyId, id), current.Binding.DisplayName, current.Binding.Provider, current.Binding.Version));
+        }
+        await release.CommitAsync(cancellationToken);
+        return new(authority.CompanyId, items, ids.Length > limit);
+    }
+
+    public async Task<GroupMessagePageView> ListMessagesAsync(AuthorizationContext authority, Guid sourceId,
+        long beforeSequence = long.MaxValue, int limit = 25, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        if (sourceId == Guid.Empty || beforeSequence <= 0 || limit is < 1 or > 25) throw new ArgumentOutOfRangeException(nameof(limit));
+        RequireCleanRead();
+        await using var release = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
+        var access = await RequireAccessAsync(authority, sourceId, cancellationToken);
+        var source = new GroupScope(authority.TenantId, authority.CompanyId, sourceId);
+        var heads = await database.GroupMessageRevisions.AsNoTracking().Where(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId && x.BindingId == sourceId)
+            .GroupBy(x => x.MessageId).Select(rows => new { MessageId = rows.Key, LastSequence = rows.Max(x => x.CommittedSequence) })
+            .Where(x => x.LastSequence < beforeSequence).OrderByDescending(x => x.LastSequence).Take(limit + 1).ToArrayAsync(cancellationToken);
+        var cursor = await database.GroupSourceStates.AsNoTracking().Where(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId && x.BindingId == sourceId)
+            .Select(x => (long?)x.CommittedSequence).SingleOrDefaultAsync(cancellationToken);
+        var items = new List<GroupMessageHeadView>();
+        foreach (var head in heads.Take(limit))
+        {
+            if (head.LastSequence <= 0 || cursor is null || head.LastSequence > cursor) throw Unavailable();
+            var winner = await WinnerAsync(source, head.MessageId, cancellationToken) ?? throw Unavailable();
+            ValidateRevision(winner, access);
+            if (winner.CommittedSequence > head.LastSequence) throw Unavailable();
+            var message = await MessageAsync(source, head.MessageId, cancellationToken) ?? throw Unavailable();
+            if (message.IdentityHash != GroupIngressIdentity.MessageIndex(source, Text(message.ExternalBytes, message.ExternalText))) throw Unavailable();
+            var eventId = Text(winner.EventBytes, winner.EventText);
+            var receipt = await ReceiptAsync(source, eventId, cancellationToken) ?? throw Unavailable();
+            if (receipt.MessageId != head.MessageId || receipt.Revision != winner.Revision || Text(receipt.EventBytes, receipt.EventText) != eventId) throw Unavailable();
+            items.Add(new(head.MessageId, winner.Revision, head.LastSequence, winner.Kind, winner.OccurredAtUtc, winner.IsHistoricalBackfill));
+        }
+        var gap = await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId && x.BindingId == sourceId, cancellationToken);
+        await release.CommitAsync(cancellationToken);
+        return new(source, items, heads.Length > limit ? items[^1].LastChangedSequence : null, gap);
+    }
+
+    private void RequireCleanRead()
+    {
+        if (database.ChangeTracker.HasChanges() || database.Database.CurrentTransaction is not null || System.Transactions.Transaction.Current is not null ||
+            database.Database.IsRelational() && !database.Database.IsSqlServer()) throw Unavailable();
+    }
+
     public async Task<GroupSourceMessageView?> GetAsync(AuthorizationContext authority, Guid sourceId, Guid messageId,
         CancellationToken cancellationToken = default)
     {

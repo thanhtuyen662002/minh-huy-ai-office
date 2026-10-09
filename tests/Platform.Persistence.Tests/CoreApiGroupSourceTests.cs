@@ -20,6 +20,82 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
 {
     [Fact]
+    public async Task GroupSourceDiscoveryFiltersReadGrantsBeforePaginationWithoutResolvingContentKeys()
+    {
+        await using var fixture = new GroupReadApiFixture(); await fixture.CommitAsync();
+        for (var index = 0; index < 4; index++) fixture.AddSource("Granted " + index, true);
+        fixture.AddSource("PRIVATE_UNGRANTED_SOURCE", false);
+        await fixture.Auth.Db.SaveChangesAsync(); using var client = fixture.Client();
+        var allIds = new List<Guid>();
+        for (var offset = 0; offset < 6; offset += 2)
+        {
+            using var response = await client.GetAsync($"/api/group-sources?offset={offset}&limit=2");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode); Assert.True(response.Headers.CacheControl?.NoStore);
+            var page = (await response.Content.ReadFromJsonAsync<GroupSourcePageView>())!;
+            Assert.Equal(fixture.Authority.CompanyId, page.CompanyId); Assert.Equal(offset < 4, page.HasMore);
+            Assert.All(page.Items, item => Assert.Equal(fixture.Authority.CompanyId, item.Source.CompanyId));
+            allIds.AddRange(page.Items.Select(item => item.Source.SourceBindingId));
+            Assert.DoesNotContain("PRIVATE_", await response.Content.ReadAsStringAsync());
+        }
+        Assert.Equal(5, allIds.Count); Assert.Equal(5, allIds.Distinct().Count()); Assert.Equal(0, fixture.Keys.Reads);
+        fixture.Grant.IsEnabled = false; await fixture.Auth.Db.SaveChangesAsync();
+        using var current = await client.GetAsync("/api/group-sources");
+        Assert.DoesNotContain(fixture.Auth.Scope.SourceBindingId, (await current.Content.ReadFromJsonAsync<GroupSourcePageView>())!.Items.Select(x => x.Source.SourceBindingId));
+    }
+
+    [Fact]
+    public async Task GroupMessageMetadataUsesLatestLogicalCommitCursorAndRecallEditPrecedenceWithoutDecryption()
+    {
+        await using var fixture = new GroupReadApiFixture();
+        var first = await fixture.CommitAsync(fixture.Revision(fixture.Auth.Payload(), GroupSourceEventKind.Edit, "first-unseen-edit", "PRIVATE_INITIAL_EDIT"));
+        var secondPayload = fixture.Auth.Payload() with { Event = fixture.Auth.Payload().Event with { MessageId = "other-message", RevisionEventId = "other-original" } };
+        var second = await fixture.CommitAsync(secondPayload);
+        await fixture.CommitAsync(fixture.Revision(fixture.Auth.Payload(), GroupSourceEventKind.Edit, "first-edit", "PRIVATE_EDIT_TEXT"));
+        await fixture.CommitAsync(fixture.Revision(secondPayload, GroupSourceEventKind.Recall, "second-recall", ""));
+        await fixture.CommitAsync(fixture.Auth.Payload() with { Event = fixture.Auth.Payload().Event with { RevisionEventId = "first-late-original", IsHistoricalBackfill = true } });
+        using var client = fixture.Client();
+        using var response = await client.GetAsync($"/api/group-sources/{fixture.Auth.Scope.SourceBindingId:D}/messages?limit=1");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode); Assert.True(response.Headers.CacheControl?.NoStore);
+        var page = (await response.Content.ReadFromJsonAsync<GroupMessagePageView>())!;
+        Assert.Equal(fixture.Auth.Scope, page.Source); Assert.Equal(5, page.NextBeforeSequence);
+        var head = Assert.Single(page.Items); Assert.Equal(first.MessageId, head.MessageId);
+        Assert.Equal(GroupSourceEventKind.Edit, head.Kind); Assert.Equal(2, head.Revision); Assert.Equal(5, head.LastChangedSequence);
+        var body = await response.Content.ReadAsStringAsync(); Assert.DoesNotContain("PRIVATE_", body); Assert.DoesNotContain("original", body);
+        using var next = await client.GetAsync($"/api/group-sources/{fixture.Auth.Scope.SourceBindingId:D}/messages?beforeSequence={page.NextBeforeSequence}&limit=1");
+        var last = (await next.Content.ReadFromJsonAsync<GroupMessagePageView>())!;
+        var recalled = Assert.Single(last.Items); Assert.Equal(second.MessageId, recalled.MessageId);
+        Assert.Equal(GroupSourceEventKind.Recall, recalled.Kind); Assert.Equal(4, recalled.LastChangedSequence); Assert.Null(last.NextBeforeSequence);
+        Assert.Equal(0, fixture.Keys.Reads);
+        fixture.Grant.IsEnabled = false; await fixture.Auth.Db.SaveChangesAsync();
+        using var denied = await client.GetAsync($"/api/group-sources/{fixture.Auth.Scope.SourceBindingId:D}/messages");
+        await GroupReadBoundedAsync(denied, HttpStatusCode.Forbidden);
+        fixture.Grant.IsEnabled = true; await fixture.Auth.Db.SaveChangesAsync();
+        using var restored = await client.GetAsync($"/api/group-sources/{fixture.Auth.Scope.SourceBindingId:D}/messages");
+        Assert.Equal(HttpStatusCode.OK, restored.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/api/group-sources?tenantId=foreign")]
+    [InlineData("/api/group-sources?offset=01")]
+    [InlineData("/api/group-sources?offset=10001")]
+    [InlineData("/api/group-sources?limit=26")]
+    [InlineData("/api/group-sources?limit=0")]
+    [InlineData("/api/group-sources?offset=0&offset=1")]
+    [InlineData("messages?beforeSequence=0")]
+    [InlineData("messages?beforeSequence=01")]
+    [InlineData("messages?beforeSequence=9223372036854775808")]
+    [InlineData("messages?beforeSequence=2&beforeSequence=3")]
+    [InlineData("messages?companyId=foreign")]
+    [InlineData("messages?limit=26")]
+    public async Task GroupSourceAndMessageListRejectAmbiguousUnboundedAndScopeSelectors(string selector)
+    {
+        await using var fixture = new GroupReadApiFixture(); using var client = fixture.Client();
+        var path = selector.StartsWith('/') ? selector : $"/api/group-sources/{fixture.Auth.Scope.SourceBindingId:D}/{selector}";
+        using var response = await client.GetAsync(path); await GroupReadBoundedAsync(response, HttpStatusCode.BadRequest);
+        Assert.Equal(0, fixture.Keys.Reads);
+    }
+
+    [Fact]
     public async Task GroupReadInitialDirectoryPreservesCallerAbortWithoutSuccessOrPrivateKeyWork()
     {
         await using var fixture = new GroupReadApiFixture(); var receipt = await fixture.CommitAsync();
@@ -195,6 +271,12 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
             Authority = AuthorizationContext.Create(Auth.Scope.TenantId, Auth.Scope.CompanyId, Guid.NewGuid());
             MemberDirectoryFixture.AddMember(Auth.Db, Authority, Authority.UserId, "Owned reader", roles: [role]);
             Grant = new() { TenantId = Authority.TenantId, CompanyId = Authority.CompanyId, UserId = Authority.UserId, BindingId = Auth.Scope.SourceBindingId, IsEnabled = true };
+            Auth.Account.QualificationJson = JsonSerializer.Serialize(new
+            {
+                Environment = GroupQualificationEnvironment.Synthetic,
+                Observations = new[] { GroupConnectorCapability.EditEvents, GroupConnectorCapability.RecallEvents }.Select(capability =>
+                    new GroupConnectorObservation(capability, GroupConnectorSupport.Supported, Guid.NewGuid(), GroupServiceAuthenticatorTests.Fixture.Now)).ToArray()
+            }, GroupServiceAuthenticator.JsonOptions);
             Auth.Db.AddRange(Grant, new GroupListenerLeaseRecord
             {
                 TenantId = Authority.TenantId,
@@ -221,11 +303,38 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
         internal string Path(Guid message) => $"/api/group-sources/{Auth.Scope.SourceBindingId:D}/messages/{message:D}";
         internal HttpClient Client()
         { var client = Factory.CreateClient(); client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, Authority.CompanyId.ToString("D")); return client; }
-        internal async Task<GroupIngressCommittedReceipt> CommitAsync()
+        internal async Task<GroupIngressCommittedReceipt> CommitAsync(GroupIngressPayload? payload = null)
         {
-            var body = JsonSerializer.SerializeToUtf8Bytes(Auth.Payload(), GroupServiceAuthenticator.JsonOptions);
+            var body = JsonSerializer.SerializeToUtf8Bytes(payload ?? Auth.Payload(), GroupServiceAuthenticator.JsonOptions);
             var verified = await Auth.Authenticator.AuthenticateAsync(Auth.Sign(body: body), body);
             return await new GroupIngressStore(Auth.Db, Keys, new(), GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true), Auth.Clock).AcceptAsync(verified);
+        }
+        internal GroupIngressPayload Revision(GroupIngressPayload original, GroupSourceEventKind kind, string eventId, string text) => original with
+        {
+            Text = text,
+            Event = original.Event with { Kind = kind, RevisionEventId = eventId, ContentSha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text))) }
+        };
+        internal void AddSource(string label, bool granted)
+        {
+            var external = Auth.External with { GroupId = "owned-discovery-" + Guid.NewGuid().ToString("N") };
+            var id = Guid.NewGuid();
+            Auth.Db.GroupBindings.Add(new()
+            {
+                TenantId = Authority.TenantId,
+                CompanyId = Authority.CompanyId,
+                Id = id,
+                ConnectorAccountId = Auth.Account.Id,
+                Role = GroupBindingRole.CustomerSource,
+                Provider = external.Provider,
+                ExternalAccountId = external.AccountId,
+                ExternalGroupId = external.GroupId,
+                IdentityHash = external.IndexKey(),
+                PhysicalGroupHash = GroupIngressIdentity.PhysicalGroupIndex(external.Provider, external.GroupId),
+                DisplayName = label,
+                Version = 1,
+                IsEnabled = true
+            });
+            if (granted) Auth.Db.GroupReaderGrants.Add(new() { TenantId = Authority.TenantId, CompanyId = Authority.CompanyId, UserId = Authority.UserId, BindingId = id, IsEnabled = true });
         }
         public async ValueTask DisposeAsync() { await Factory.DisposeAsync(); Environment.SetEnvironmentVariable(variable, null); Auth.Dispose(); }
     }

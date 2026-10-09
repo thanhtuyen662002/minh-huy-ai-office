@@ -130,14 +130,17 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             "text": text, "isGroup": True, "isSelf": False, "isKnownReportEcho": False,
             "listenerOwnerId": listener, "listenerEpoch": 1}
 
-    def read_source(message, *, headers=None, binding=None):
-        request = urllib.request.Request(api + f"/api/group-sources/{binding or source}/messages/{message}", headers=auth if headers is None else headers)
+    def read_route(route, *, headers=None):
+        request = urllib.request.Request(api + route, headers=auth if headers is None else headers)
         try: response = urllib.request.urlopen(request, timeout=20)
         except urllib.error.HTTPError as error: response = error
         with response:
             value = response.read(65537)
             assert len(value) <= 65536 and "no-store" in response.headers.get("Cache-Control", ""), "Invalid private group read response"
             return response.status, json.loads(value) if value else None
+
+    def read_source(message, *, headers=None, binding=None):
+        return read_route(f"/api/group-sources/{binding or source}/messages/{message}", headers=headers)
 
     def require_private_denial(message, expected=403, **kwargs):
         status, value = read_source(message, **kwargs)
@@ -345,6 +348,14 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         try: require_private_denial(original["messageId"])
         finally: sql(f"UPDATE {schema}GroupReaderGrants SET IsEnabled=1 WHERE {scope} AND UserId='{owner}';")
         assert read_source(original["messageId"])[0] == 200 and snapshot() == first_snapshot
+        sources_status, source_page = read_route("/api/group-sources?limit=1")
+        assert sources_status == 200 and source_page == {"companyId": company, "items": [{"source": original["source"],
+            "displayName": "Owned CI source", "provider": "synthetic", "version": 1}], "hasMore": False}
+        messages_status, message_page = read_route(f"/api/group-sources/{source}/messages?limit=1")
+        assert messages_status == 200 and message_page["source"] == original["source"] and message_page["nextBeforeSequence"] is None
+        assert len(message_page["items"]) == 1 and message_page["items"][0]["messageId"] == original["messageId"] and message_page["items"][0]["lastChangedSequence"] == 1
+        assert all(set(item) == {"messageId", "revision", "lastChangedSequence", "kind", "occurredAtUtc", "isHistoricalBackfill"} for item in message_page["items"])
+        assert payload["text"] not in json.dumps(message_page) and snapshot() == first_snapshot
         print("PASS actual issued portal current explicit group read, exact protected Unicode, HMAC-only/foreign scope/grant denial and restored private positive without writes")
 
         changed = json.loads(json.dumps(payload)); changed["event"]["senderId"] += "changed"
