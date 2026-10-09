@@ -11,17 +11,20 @@ internal static class GroupIngressEndpoints
 {
     internal const string Path = "/internal/group-ingress/events";
 
-    internal static bool AddGroupIngress(this WebApplicationBuilder builder, bool hasPlatformDatabase)
+    internal static bool AddGroupIngress(this WebApplicationBuilder builder, bool hasPlatformDatabase, CompositeSecretResolver secrets)
     {
         if (builder.Configuration["AIOffice:GroupIntake:Enabled"] != "true" || !hasPlatformDatabase) return false;
         var synthetic = builder.Configuration["AIOffice:GroupIntake:OwnedSyntheticFixture"] == "true";
         var policy = synthetic ? GroupIngressRuntimePolicy.OwnedSyntheticFixture(builder.Environment.EnvironmentName,
             builder.Configuration["AIOffice:GroupIntake:OwnedDisposableFixture"] == "true") : GroupIngressRuntimePolicy.Live;
         var keys = ReadKeys(builder.Configuration.GetSection("AIOffice:GroupIntake:SourceKeys"));
+        // Validate the complete immutable enrollment before serving requests.
+        // A lazy DI factory would fail outside the bounded HTTP error handler.
+        var sourceKeys = new ConfiguredGroupSourceKeyProvider(secrets, keys);
         builder.Services.AddSingleton(policy);
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddSingleton<GroupSourceContentProtector>();
-        builder.Services.AddSingleton<IGroupSourceKeyProvider>(services => new ConfiguredGroupSourceKeyProvider(services.GetRequiredService<CompositeSecretResolver>(), keys));
+        builder.Services.AddSingleton<IGroupSourceKeyProvider>(sourceKeys);
         builder.Services.AddScoped<GroupServiceAuthenticator>();
         builder.Services.AddScoped<GroupIngressStore>();
         return true;
@@ -34,18 +37,22 @@ internal static class GroupIngressEndpoints
             [FromServices] GroupIngressStore store, CancellationToken cancellationToken) =>
         {
             byte[]? body = null;
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            deadline.CancelAfter(TimeSpan.FromSeconds(10));
             try
             {
                 if (request.Query.Count != 0) throw new ArgumentException();
                 var signature = Signature(request);
-                body = await ReadBodyAsync(request, cancellationToken);
-                var verified = await authentication.AuthenticateAsync(signature, body, cancellationToken);
-                return (IResult)Results.Ok(await store.AcceptAsync(verified, cancellationToken));
+                body = await ReadBodyAsync(request, deadline.Token);
+                var verified = await authentication.AuthenticateAsync(signature, body, deadline.Token);
+                return (IResult)Results.Ok(await store.AcceptAsync(verified, deadline.Token));
             }
             catch (UnauthorizedAccessException) { return Results.Json(new { error = "Group service access is not available." }, statusCode: 403); }
             catch (GroupIngressConflictException) { return Results.Json(new { error = "Group event identity conflicts with a committed receipt." }, statusCode: 409); }
             catch (BadHttpRequestException error) { return Results.Json(new { error = "Invalid group ingress request." }, statusCode: error.StatusCode); }
             catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid group ingress request." }); }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            { return Results.Json(new { error = "Group ingress is unavailable. Reconcile the same event." }, statusCode: 503); }
             catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
             { return Results.Json(new { error = "Group ingress is unavailable." }, statusCode: 503); }
             finally { if (body is not null) CryptographicOperations.ZeroMemory(body); }

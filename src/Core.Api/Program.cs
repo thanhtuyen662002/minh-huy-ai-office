@@ -32,7 +32,7 @@ builder.Services.AddHealthChecks();
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
-var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString));
+var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString), secretResolver);
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
         .GetSection(RabbitMqWorkOptions.SectionName)

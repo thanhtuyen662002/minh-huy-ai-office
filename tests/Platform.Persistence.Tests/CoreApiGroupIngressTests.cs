@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,57 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class CoreApiGroupIngressTests
 {
     private const string Path = "/internal/group-ingress/events";
+
+    [Theory]
+    [InlineData("invalid-key")]
+    [InlineData("duplicate-write")]
+    [InlineData("empty-scope")]
+    public async Task InvalidPrivateEnrollmentFailsBeforeServingAnyRequest(string invalidEnrollment)
+    {
+        await using var fixture = new Fixture(invalidEnrollment: invalidEnrollment);
+        var error = Assert.Throws<InvalidOperationException>(() => fixture.Factory.CreateClient());
+        Assert.DoesNotContain("secretref://", error.Message);
+        Assert.DoesNotContain("PRIVATE_FIXTURE", error.Message);
+        await fixture.EmptyAsync();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task StalledRequestBodyHasOwnedDeadlineAndPreservesCallerAbort(bool callerAbort)
+    {
+        await using var fixture = new Fixture();
+        using var request = fixture.Request();
+        using var abort = new CancellationTokenSource();
+        if (callerAbort) abort.CancelAfter(TimeSpan.FromMilliseconds(100));
+        var pending = fixture.Factory.Server.SendAsync(context =>
+        {
+            context.Request.Method = "POST"; context.Request.Path = Path;
+            context.Request.ContentType = "application/json"; context.Request.Body = new StalledStream();
+            foreach (var header in request.Headers) context.Request.Headers[header.Key] = header.Value.ToArray();
+        }, abort.Token);
+        if (callerAbort)
+        {
+            var response = await pending.WaitAsync(TimeSpan.FromSeconds(15));
+            Assert.True(abort.IsCancellationRequested);
+            // ASP.NET's Development exception middleware handles an aborted
+            // connection as499 with no error page or success receipt.
+            Assert.Equal(499, response.Response.StatusCode);
+            using var reader = new StreamReader(response.Response.Body);
+            await Assert.ThrowsAsync<IOException>(() => reader.ReadToEndAsync());
+        }
+        else
+        {
+            var response = await pending.WaitAsync(TimeSpan.FromSeconds(15));
+            Assert.Equal(503, response.Response.StatusCode);
+            Assert.Equal("no-store", response.Response.Headers.CacheControl);
+            using var reader = new StreamReader(response.Response.Body);
+            var body = await reader.ReadToEndAsync();
+            Assert.Contains("Reconcile the same event.", body);
+            Assert.DoesNotContain("Exception", body);
+        }
+        Assert.Equal(0, fixture.Auth.Secrets.Calls); await fixture.EmptyAsync();
+    }
 
     [Fact]
     public async Task DefaultEndpointIsUnavailableAndNeverClaimsSourceCommit()
@@ -159,7 +211,7 @@ public sealed class CoreApiGroupIngressTests
         private readonly string variable = "AIOFFICE_GROUP_HTTP_" + Guid.NewGuid().ToString("N");
         internal readonly GroupListenerLeaseRecord Lease;
         internal WebApplicationFactory<Program> Factory { get; }
-        internal Fixture(bool sourceKeyAvailable = true)
+        internal Fixture(bool sourceKeyAvailable = true, string? invalidEnrollment = null)
         {
             Lease = new()
             {
@@ -180,6 +232,17 @@ public sealed class CoreApiGroupIngressTests
                 builder.UseSetting("AIOffice:PlatformDatabase:ConnectionSecretRef", "secretref://env/" + variable);
                 builder.UseSetting("AIOffice:GroupIntake:Enabled", "true");
                 builder.UseSetting("AIOffice:GroupIntake:OwnedSyntheticFixture", "true"); builder.UseSetting("AIOffice:GroupIntake:OwnedDisposableFixture", "true");
+                if (invalidEnrollment is not null)
+                    for (var index = 0; index < (invalidEnrollment == "duplicate-write" ? 2 : 1); index++)
+                    {
+                        var section = "AIOffice:GroupIntake:SourceKeys:" + index + ":";
+                        builder.UseSetting(section + "TenantId", (invalidEnrollment == "empty-scope" ? Guid.Empty : Auth.Scope.TenantId).ToString("D"));
+                        builder.UseSetting(section + "CompanyId", Auth.Scope.CompanyId.ToString("D"));
+                        builder.UseSetting(section + "SourceBindingId", Auth.Scope.SourceBindingId.ToString("D"));
+                        builder.UseSetting(section + "KeyId", invalidEnrollment == "invalid-key" ? "bad!" : "owned-" + index);
+                        builder.UseSetting(section + "SecretRef", "secretref://env/PRIVATE_FIXTURE");
+                        builder.UseSetting(section + "IsWriteKey", "true");
+                    }
                 builder.ConfigureServices(services =>
                 {
                     services.RemoveAll<DbContextOptions<PlatformDbContext>>(); services.RemoveAll<IDbContextOptionsConfiguration<PlatformDbContext>>(); services.RemoveAll<PlatformDbContext>();
@@ -207,6 +270,22 @@ public sealed class CoreApiGroupIngressTests
         { Assert.Empty(await Auth.Db.GroupMessages.ToListAsync()); Assert.Empty(await Auth.Db.GroupIngressReceipts.ToListAsync()); Assert.Empty(await Auth.Db.GroupIngressOutbox.ToListAsync()); }
         public async ValueTask DisposeAsync() { await Factory.DisposeAsync(); Auth.Dispose(); Environment.SetEnvironmentVariable(variable, null); }
     }
+    private sealed class StalledStream : Stream
+    {
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        { await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken); return 0; }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
     private sealed class OwnedKeys(bool available) : IGroupSourceKeyProvider
     {
         public ValueTask<GroupSourceKeyMaterial> ResolveWriteAsync(GroupScope source, CancellationToken cancellationToken = default)

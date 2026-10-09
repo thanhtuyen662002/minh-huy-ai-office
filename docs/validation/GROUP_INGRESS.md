@@ -148,11 +148,10 @@ first source SaveChanges/final-proof delay inside the same transaction. Owned
 are not a measurement of actual physical SQL commit latency. The downstream
 scheduler must read committed state and preserve its maximum-window semantics.
 
-Twenty-three real Core HTTP/DI controls and two store delay regressions PASS;
+Twenty-eight real Core HTTP/DI controls and two store delay regressions PASS;
 full959 Persistence tests PASS, zero skipped. HTTP tests use owned in-memory
 persistence and explicit Development policy. Actual SQL/concurrency/rollback
-acceptance for this new path remains required. Independent timestamp/API review
-is pending on the new frozen checkpoint; earlier061 CI all8 PASS and retained
+acceptance for this new path remains required. Original independent timestamp probes now2/2 PASS. HTTP review found lazy key-provider initialization outside the handler and an unbounded stalled body. The repair validates the complete enrollment before serving and adds a linked10second body/auth/store deadline. Owned timeout returns bounded no-store503 and requires same-event reconciliation; caller abort remains an abort. Three invalid enrollment and two stalled/caller-abort regression controls PASS; focused52 HTTP/store tests PASS. Frozen repair review remains required; earlier061 CI all8 PASS and retained
 realCore202 header/body-loss proof do not execute this new group HTTP path.
 
 ## Remaining acceptance
@@ -167,3 +166,23 @@ brain, note creation or notification success is inferred from model tests.
 context, automatic extraction and atomic business notes.279 owns SQL-driven
 internal IT reports and unknown-send reconciliation. Live connector qualification
 remains separately unverified; synthetic fixtures must never activate live use.
+
+## Owned native SQL proof being added
+
+The complete-stack CI invokes `scripts/smoke-group-ingress.py` against its exact
+owned disposable GitHub fixture. Before configuration/files/processes it checks
+CI, GITHUB_ACTIONS, RUNNER_TEMP/aioffice-local and the fixed loopback API. Private
+random HMAC/content keys live in an exclusive0600 override outside Git. Only
+that Development fixture enables synthetic mode, temporarily recreates Core,
+then removes private configuration and restores shipping default-off behavior.
+SQL fixture bytes use stdin; diagnostics contain fixed categories/message IDs.
+
+The mandatory new gate checks shipping HTTP-to-runtime SQL admission, concurrent
+100 same-event replays, complete durable-byte snapshots, original UTF16 and
+physical-role aliases, actual outbox failure/whole-graph rollback, real column
+permission escalation/refusal, observed queued source/grant/epoch/account/
+deletion/listener revocation with restored positives, append-only edit/recall/
+late historical gaps, contiguous cursor and retained Core restart. It preserves
+portal task/user counts. Four new local fixture-boundary/vector/privacy tests
+and all14 stack guard tests PASS. Native execution is pending; no SQL acceptance
+or listener/queue/private-inbox delivery is claimed from script existence.
