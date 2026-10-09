@@ -1,6 +1,6 @@
 # Owner task history: actual SQL and browser evidence
 
-Issue270 / Draft PR271. Verified candidate `70465e72cee05459dc541cef1a1fa836a6603ba5` is based on accepted main `3fcfa9a8541491c6a4d349bc31fd02d87d12284e`. Full frozen implementation/security/runtime/all3 images independently APPROVED, [receipt6077185197](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/271#issuecomment-6077185197). Feature delivery still requires final documentation review, exact final PR gates and accepted main closure. Parent233 remains active.
+Issue270 CLOSED / PR271 MERGED. Verified candidate `70465e72cee05459dc541cef1a1fa836a6603ba5` is based on accepted main `3fcfa9a8541491c6a4d349bc31fd02d87d12284e`. Full frozen implementation/security/runtime/all3 images independently APPROVED, [receipt6077185197](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/271#issuecomment-6077185197). Feature delivery still requires final documentation review, exact final PR gates and accepted main closure. Parent233 remains active.
 
 ## Exact candidate gates
 
@@ -32,3 +32,10 @@ All new controls passed in actual stack113720632034 on2026-10-09, including both
 [Artifact11602387209](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37900176803/artifacts/11602387209),260997 bytes, contains current `task-history.png`, `administrators.png` and `workspace.png`. Root inspected all three: visible navigation, truthful three task states and saved detail, reachable controls, readable supplementary text, no clipping or secrets. Independent reviewer inspected all3 current images and approved the full frozen implementation/security/runtime, receipt6077185197. Final documentation/exact PR-main closure remains.
 
 These synthetic checkpoints prove archive behavior. They do not claim live provider generation, real Medcom/Novo inventory answers, new task-submission replay, complete durable conversations, production identity/deployment or clean Windows installation.272 owns stable submission recovery after an unknown accepted reply and depends on accepted270 main.239 stays Draft for external Windows/signing acceptance. All62 product requirements retain their actual broader gates.
+
+
+## Accepted delivery
+
+Full frozen shipping/runtime/images review6077185197 and final documentation review6077227682 approved exact final PR `a6959144edc9625db7a1d96f801c9740094f97bc`. Its Build37904275976/Gov37904276005/all8/actual113733861162/quality113736329253 passed; current three-image artifact11603992136 was inspected.
+
+PR271 merged on2026-10-09T08:28:30Z at main `420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca`. Exact main [Build37905169739](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37905169739), Governance37905169543, all8 jobs, actual113736786869 and quality113739461629 passed. Shipping/proof/workflow bytes equal the approved PR. All new/retained SQL/OIDC/Chromium controls passed again; root inspected all3 current images in artifact11604905419 (261799 bytes), readable/reachable/unclipped/no secrets. No270 acceptance remains. Earlier pending statements are historical candidate checkpoints.272 may now claim accepted main; full233/installer/customer/production acceptance remains.

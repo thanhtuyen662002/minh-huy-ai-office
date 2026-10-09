@@ -1,0 +1,43 @@
+# Durable task submission and uncertain acceptance
+
+Issue272, under full product233. Design checkpoint before implementation. Accepted dependency:270/271 at main `420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca`, exact PR/main gates and full frozen reviews6077185197/6077227682. No shipping272 behavior or new runtime acceptance is claimed by this ADR.
+
+## Problem and lifetime
+
+The current BFF creates a new idempotency key for every task POST. If Core commits a task and its reply is lost, a browser retry can create a second task. Keeping only a client UUID in memory cannot recover an uncertain request after reload or a new sign-in. Matching archive tasks by question, source or time would guess the original operation.
+
+One logical request therefore owns an opaque operation UUID and immutable version1 input. The composer captures both synchronously before its first await and uses a ref mutex against duplicate clicks. It first persists a bounded owner/company submission intent, then explicitly submits that prepared operation. Preparation is a durable draft; it creates no task, dispatch, execution, provider request or charge. The original submit action may perform both steps, but GET recovery, reload, sign-in and archive navigation never automatically submit.
+
+After uncertainty, the same operation and exact stored request remain available from fresh authenticated server reads. Deliberate retry uses that operation. Starting another operation is an explicit choice and warns that the earlier request may already have been accepted. Generation changes clear all rendered private input and replies; the replacement context must independently fetch its own authorized intents. No pending questions, tokens, session credentials or request bodies are stored in browser storage or URLs.
+
+## Durable identity and exact input
+
+Add a versioned SQL intent table with tenant/company/owner/operation composite identity, immutable source GUID, exact scalar-valid question, fixed server maxAttempts3, input version/fingerprint and timestamps. Owner membership foreign keys and a descending owner/time index preserve tenant boundaries. The question retains the existing4000 UTF16-unit/control/trim bounds. Composer trimming happens once; retries do not normalize Unicode, case or whitespace again.
+
+The version1 fingerprint is uppercase SHA256 over this explicit byte sequence: ASCII `aioffice-task-intent-v1`, byte0, the lowercase source GUID in32-character `N` form, fixed maxAttempts as uint32 little endian, strict UTF8 question byte length as uint32 little endian, then those exact strict UTF8 question bytes. Scalar validation precedes encoding. This avoids differences between JavaScript JSON serialization and .NET escaping. The operation selects identity; the fingerprint binds input. Same operation/exact input replays; any changed input conflicts, never chooses a new task.
+
+Use a fixed server key `web-intent-v1-` plus the lowercase operation UUID in `N` form. Preserve the existing PilotTaskIdentity namespaces, authority scope, hash byte layout, step/message identities and legacy Core POST/Idempotency-Key contract. New browser routes use the explicit prepared-operation contract. Legacy callers retain their existing API; they gain no new authority.
+
+## Preparation, lookup and execution
+
+Add bounded authenticated prepare, owner intent list/detail/reconciliation and deliberate submit operations. URLs and bodies contain no owner/tenant authority. Queries scope tenant/company/owner before pagination, with matching initial and final fresh company/global-user/membership checks. Preparation and new execution also require current source/binding permission; they do not open customer ERP connections. Strict bounded stored UTF16 decoding prevents SqlClient repair from turning malformed intent input into another executable request.
+
+Prepared execution eligibility lasts24 hours. Bound unresolved active intents to100 per owner/company, with serialized admission so concurrent prepares cannot bypass the limit. Expiry is an execution limit, not permission to erase a committed task or reuse an operation. Expired uncommitted requests are reported truthfully and require an explicit new operation. Explicitly closing a request never claims to cancel a task already accepted. Keep an operation tombstone/lookup compatible with deterministic committed-task discovery; physical retention remains a separately versioned policy.
+
+The deterministic owned task and its valid original request evidence are authoritative for committed acceptance. A reply or intent status update can be lost after commit. Either intent acceptance and the existing task/outbox graph commit atomically in one transaction, or recovery derives acceptance from the task instead of relying on an intent flag. Do not nest independent EF transactions or precreate a task during preparation.
+
+Admission locks and fresh authority/source checks must serialize the relevant prepared request and revocation boundaries before task creation. After private receipt reads, revalidate pinned authority/source permission before publishing a submission/replay receipt. A final denial after a real commit is an uncertain committed outcome; it must not claim that no task exists. Read-only committed lookup preserves270's historical-owner policy even when current source grants are revoked. A deliberate retry POST still requires current execution permission.
+
+## BFF and receipt
+
+Same-origin validation precedes bounded body consumption. The32KiB strict UTF8 limit preserves a fully escaped4000-unit request plus operation metadata. Reject unknown/decoded duplicate fields, duplicate selectors, empty/noncanonical GUIDs and malformed scalar input. Maintain shared body/deadline/final-issued-SID fences and no-store on every result. Only known bounded failures leave the BFF; Core diagnostics, cookies and raw events never do.
+
+Preparation and accepted receipts bind company, operation, source and fingerprint; accepted receipts also bind task/step/message identities. Typed exact parsers verify that binding before the composer accepts a result. Task status and dispatch state can advance as the worker runs; replay must preserve identities and input, not freeze mutable runtime status. Private generation/serial fences and cancellation prevent old responses repainting a replacement company or user.
+
+## Mandatory acceptance
+
+Meaningful service/API/BFF/composer/actual-hook tests must cover immutable replay/conflict, bounded owner reads, stored scalar corruption, synchronous duplicate-click admission, preparation/submit uncertainty, final source/member loss, replaced generations and restored positives. Additive migrations retain old task clients and all existing indexes/contracts.
+
+The owned SQL/Chromium proof must consume real committed Core receipts before dropping headers or partial bodies. Extend the existing disposable loopback proxy to typed task202 receipts; do not forge acceptance. Verify503/unknown state, same issued SID, deliberate same-operation retry, reload/new-sign-in discovery and stable task/step/message identities. Include preparation-reply loss, two Code/S256 users/two companies, source/member revoke/restore, foreign intent denial and late response/private clearing. Compare graph/dispatch/execution/completion/settlement identities and counts against one successful execution after worker progress settles. Preparation, reconciliation and archive reads create no extra effects.
+
+Full independent frozen shipping/security/runtime/images review and exact PR/main gates remain required. Installer239 stays Draft for actual Windows/signing;273 tracks initial company sign-in without default membership. Customer inventory/stock-movement proof and every broader233 requirement remain active.
