@@ -353,7 +353,8 @@ try {
   await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
   await page.locator('textarea[name="question"]').fill(privateMessage);
   const submitted = page.waitForResponse(response => response.request().method() === "POST"
-    && response.url() === app + "/api/local/tasks" + query);
+    && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
+    && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
   await page.getByRole("button", { name: "Gửi", exact: true }).click();
   const acceptedResponse = await submitted;
   requireProof(acceptedResponse.status() === 202 && acceptedResponse.headers()["cache-control"] === "no-store");
@@ -444,7 +445,8 @@ try {
     await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
     await page.locator('textarea[name="question"]').fill(switchMessage);
     const switchSubmitted = page.waitForResponse(response => response.request().method() === "POST"
-      && response.url() === app + "/api/local/tasks" + query);
+      && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
+      && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
     await page.getByRole("button", { name: "Gửi", exact: true }).click();
     const switchAccepted = await switchSubmitted; requireProof(switchAccepted.status() === 202);
     const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));

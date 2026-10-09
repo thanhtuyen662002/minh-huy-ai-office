@@ -126,6 +126,12 @@ it("checks a resumed fingerprint before anyPOST", async () => {
   let attempt!: ReturnType<typeof begin>; act(() => { attempt = view.result.current.retry()!; }); await send(view, attempt);
   expect(view.request).not.toHaveBeenCalled(); expect(view.result.current.pending?.phase).toBe("unknown");
 });
+it("honors an owned unavailable prepare receipt without executing or enabling another retry", async () => {
+  const view = fixture((_url, init) => Response.json({ companyId, operationId: JSON.parse(init!.body as string).operationId,
+    state: 3, dataSourceId: null, question: null, inputFingerprint: null, createdAtUtc: null, expiresAtUtc: null, accepted: null }));
+  await send(view); expect(view.request).toHaveBeenCalledOnce(); expect(view.result.current.pending?.phase).toBe("unavailable");
+  act(() => { expect(view.result.current.retry()).toBeNull(); });
+});
 it.each(["taskId", "stepId", "messageId", "createdAtUtc"])("preserves the original accepted %s across a lost prepare reply", async field => {
   let input = original;
   const view = fixture((url, init) => {

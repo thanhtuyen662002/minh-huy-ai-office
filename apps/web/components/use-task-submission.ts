@@ -102,10 +102,12 @@ export function useTaskSubmission({ companyId, generation, isCurrent, ready, val
         if (!prepared.response.ok) { markFailure(attempt, prepared.response.status, prepared.payload); return null; }
         const intent = await verifiedSubmissionIntent(prepared.payload);
         if (!current(attempt)) return null;
-        if (!intent || intent.companyId.toLowerCase() !== companyId.toLowerCase() || intent.operationId.toLowerCase() !== attempt.input.operationId
-          || intent.dataSourceId?.toLowerCase() !== attempt.input.dataSourceId || intent.question !== attempt.input.question || intent.inputFingerprint !== fingerprint)
+        if (!intent || intent.companyId.toLowerCase() !== companyId.toLowerCase() || intent.operationId.toLowerCase() !== attempt.input.operationId)
+          throw new Error("Invalid prepared owner");
+        if (intent.state === 3) { markFailure(attempt, 409, { code: "intent-unavailable" }); return null; }
+        if (intent.dataSourceId?.toLowerCase() !== attempt.input.dataSourceId || intent.question !== attempt.input.question || intent.inputFingerprint !== fingerprint)
           throw new Error("Invalid prepared receipt");
-        if (intent.state === 2 || intent.state === 3) { markFailure(attempt, 409, { code: intent.state === 2 ? "intent-expired" : "intent-unavailable" }); return null; }
+        if (intent.state === 2) { markFailure(attempt, 409, { code: "intent-expired" }); return null; }
         save({ input: attempt.input, fingerprint, prepared: true, phase: "prepared", receipt: intent.accepted, notice: "Yêu cầu đã lưu. Đang xác nhận gửi…" });
       }
       if (!await confirm(attempt)) return null;

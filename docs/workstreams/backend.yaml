@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: f59d517677f7e404b3bc63a486643a0572038f22
+head: 88c890ca07c724f5dacee4f358cb6467a821108d
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -57,6 +57,15 @@ submission_node24_stream_repair:
   result: 'Exact hosted Node24 web gate found15 hook failures. Reproduced unchanged failures using bundled local Node24.19.0; direct positive stream regression identified native Request rejecting jsdom AbortSignal. The client unnecessarily constructed a synthetic Request just to read a Response. Read the existing actual stream/headers/signal directly through the same bounded reader; no JSON, byte, UTF8, timeout or cancellation policy is relaxed.'
   local: 'Actual Node24 runner:38 hook including new direct positive stream regression,59 BFF and27 pending local owner-panel controls PASS124. Node22 retained51 session/privacy/history/race controls PASS with pending workspace integration. Type-check must remain current. New panel/workspace files are separate uncommitted integration work at this repair checkpoint; no new realSQL/Core202 acceptance or review inferred.'
   next: 'Push same274 narrowly verified stream repair immediately, own renewed exact CI, then finish and checkpoint workspace/recovery integration with actual Node24 retained gates and mandatory runtime evidence.'
+submission_workspace_checkpoint:
+  predecessor: 88c890ca07c724f5dacee4f358cb6467a821108d
+  predecessor_build: 37932277918
+  predecessor_governance: 37932277840
+  predecessor_actual: 113825656769
+  result: 'Node24 repaired predecessor web and six other prerequisites/Governance PASS; actual stack remains active at checkpoint preparation. Composer is wired to immutable prepare/explicit-submit, honest unknown/retry/reconcile/new-operation warning, stable polling run ownership, and private reset fences. The Công việc surface now restores bounded owner intents through fresh GET/detail/hash/final-authority checks; selecting a prepared request never sends it. Accepted/expired/unavailable states are truthful. Mobile archive access is available; private input never enters browser storage.'
+  local: 'Full actual Node24 web suite1246 PASS/20 realRedis skipped locally; hosted Redis gate remains required.39 hook,27 recovery-panel and9 actual-workspace/session-hook controls PASS. Retained51 session/privacy/history/race controls PASS, including new prepare and submit pre/post validation fences. Type-check, JS syntax and4 browser guard controls PASS. Native Request/jsdom AbortSignal regression remains fixed without weakening bounds or tests.'
+  proof_delta: 'Retained actual OIDC browser submission waits now observe the shipping intent submit path; legacy API compatibility probes remain. New intent actual nativeSQL/concurrent quota/revocation/append-only and actual Core202 lost-response/browser recovery acceptance are still required.'
+  next: 'Push same274 tested UI checkpoint and close exact CI, add mandatory owned native intent SQL and real committed Core header/body loss/worker/reload/newSID/twoCodeS256/late-body proof, inspect images and obtain full frozen independent review before PR/main delivery.'
 scope:
   - durable-owner-company-submission-intent-and-exact-operation-replay
   - final-fresh-admission-source-authority-and-safe-typed-receipts
@@ -71,7 +80,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '272/274 API/BFF exact all8 PASS. New immutable composer hook37 controls/typecheck PASS; integrate workspace and bounded owner recovery panel with retained session-race controls. Close each exact CI and mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
+next_action: '272/274 composer and bounded owner recovery integrated; actual Node24 fullweb1246 PASS/20 localRedis skipped, typecheck/4guards PASS. Push UI checkpoint and own exact gates; add mandatory new nativeSQL and realCore committedheader-body loss/onegraph-worker-noextracharge/twoCodeS256Chromium proof/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

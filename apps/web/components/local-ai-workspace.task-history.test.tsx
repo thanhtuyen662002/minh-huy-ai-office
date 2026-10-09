@@ -10,6 +10,7 @@ function backend() {
     if (url.startsWith("/api/local/session?")) return state.active ? Response.json({ tenantId: "tenant", companyId: company, userId: user, roles: ["viewer"] }) : Response.json({}, { status: 401 });
     if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
     if (url.startsWith("/api/local/session/companies")) return Response.json({ items: [{ companyId: company, companyName: "Fixture" }] });
+    if (url.startsWith("/api/local/tasks/intents?")) return Response.json({ companyId: company, items: [], offset: 0, limit: 25, hasMore: false });
     if (url.startsWith("/api/local/tasks?")) {
       expect(init?.signal).toBeTruthy();
       state.signal = init!.signal!;

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: f59d517677f7e404b3bc63a486643a0572038f22
+current_target_head: 88c890ca07c724f5dacee4f358cb6467a821108d
 last_verified_commit: d4f53451aa9833449d2cd9b74118d77918bb6280
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: f59d517677f7e404b3bc63a486643a0572038f22
+    head: 88c890ca07c724f5dacee4f358cb6467a821108d
     state: in_progress
-    next: '272/274 active: API/BFF d4f534 exact all8 PASS. Hook f59 hostedNode24 web113822125173 terminalred; reproduced native Request/jsdom AbortSignal incompatibility and fixed by reading actual stream directly. Actual local Node24 hook/BFF/pending panel PASS124. Push same274 repair and close exact CI, finish separate workspace/owner recovery integration, then mandatory new actual SQL/Core202/Chromium/fullreview.270 delivered;273 queued after272.'
+    next: '272/274 active:88c890 Node24 repaired web/other six prerequisites/Governance PASS, actual113825656769 active. Composer and bounded owner recovery now integrated: full localNode24 web1246 PASS/20 realRedis skipped, typecheck/4guards PASS. Push UI checkpoint, own exact CI and add mandatory new actualSQL/Core202/worker/twoCodeS256Chromium/fullreview.270 delivered;273 queued after272.'
 
   erp_data:
     issue: 264
