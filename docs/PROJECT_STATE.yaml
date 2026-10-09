@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/268-member-administrators
-current_pr: 269
-current_target_head: d85be6c6df108c1f4a411889792a4727e41ab107
-last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
+current_branch: lead/238-windows-installer
+current_pr: 239
+current_target_head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
+last_verified_commit: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
 
 critical_paths:
   backend:
     issue: 268
     pr: 269
     branch: codex/268-member-administrators
-    head: d85be6c6df108c1f4a411889792a4727e41ab107
-    state: ready_for_review
-    next: "269 d85 full independent scoped approval receipt6073002478 and all8 PASS, including actual Core/SQL/Chromium committed header/body reply loss and one-audit stable replay. Close final documentation review/exact gates, merge and exact main CI; then acquire queued270 task-history lease from accepted main."
+    head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+    state: done
+    next: "269/268 delivered after full frozen ef approval and exact PR/main all8 gates. Active270/271 lease is external to this installer checkout; do not integrate unaccepted history shipping. Its authoritative HANDOFF owns SQL/Chromium/current CI closure."
 
   frontend:
     issue: null
@@ -40,7 +40,7 @@ critical_paths:
     branch: codex/264-erp-readonly-qualification
     head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
     state: done
-    next: "264/265 accepted after independent frozen e3 and final a7 reviews, exact PR/main gates and actual SQL/Chromium PASS. Conservative standalone engine16/current-database qualifier is shipped; dedicated customer credentials, legacy module profiles and inventory reconciliation remain."
+    next: "264/265 accepted after independent frozen e3/final a7 reviews and exact PR/main Build37801975078/Gov37801976469/actual113396238709/quality113399168935 PASS. Customer credentials, qualified legacy profiles and inventory reconciliation remain."
 
   company_selection:
     issue: 266
@@ -51,6 +51,7 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR269 / issue268 delivered at3fcfa9a with full frozen approvals6073002478/6073139900, exact PR37874870695/Gov37874870540 and main37875625822/Gov37875625829/all8/actual113643444397/quality113645840920 PASS.'
   - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
   - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
@@ -91,8 +92,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '269 d85 fully independently APPROVED/all8 PASS receipt6073002478; final722 docs have no factual blocker but retained actual Redis tamper fixture is terminal red because random tag suffix replacement can be identical. Test-only fix flips a decoded authenticated bit and asserts change in both actual controls;54 local unit/type-check PASS,20 Redis locally skipped. Close renewed hosted20 Redis/actual SQL-Chromium/all8 and independent final delta, then merge/exact main. Queued270 follows accepted main; no premature lease. Installer723 independently APPROVED receipt6072831478, Draft for clean Windows/signing. Full233/customer/production remain.'
-
+next_action: 'Integrate accepted269/main3fc only after full frozen approvals6073002478/6073139900 and exact main Build37875625822/Gov37875625829/all8/actual113643444397/quality113645840920 PASS. Preserve approved723 Setup bytes and required native ninth gate; close renewed exact9 integration gates/artifacts/review. Keep239 Draft for clean Windows/signing. External backend270/271 remains separately owned, unaccepted and absent from this installer shipping. Full233/customer/production remain.'
 
 blocked_by:
   - "User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately; dedicated read-only connections and scoped business-row proof remain. Santino deferred."
@@ -275,38 +275,39 @@ installer_latest_documentation_verified:
   review: 'Independent frozen documentation delta APPROVED; installer bytes equal approved21d. All9 hosted gates PASS. No clean Windows/signing completion claim;239 remains Draft.'
 
 branch_integration_audit:
-  baseline_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-  remote_non_main_branches: 130
-  matched_merged_pr_heads: 123
+  baseline_main: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+  remote_non_main_branches: 128
+  matched_merged_pr_heads: 121
   other_main_ancestor: 1
   archived_or_superseded: 4
-  active_draft_leases: [239, 267]
+  active_draft_leases: [239, 263]
   evidence: docs/validation/BRANCH_INTEGRATION_AUDIT.md
-  result: 'Refreshed130 non-main remote branches against accepted002:123 exact merged PR heads,1 main ancestor,4 archival/superseded,2 active Drafts239/267. No additional eligible implementation; preserve backups/snapshot.263/265 subsequently merged with exact main proof. Latest267 acceptance/review/gates and installer clean Windows/signing remain.'
+  result: 'No additional eligible unmerged implementation identified. Preserve historical backups/snapshot; old53 is superseded by merged54.239/263 retain their acceptance/review/current-gate requirements.'
 
-verified_erp_265:
-  implementation_head: e3d5254d8b7c7d72261ddf53841232587b1ee1c6
-  final_pr_head: a7aebb47cd0a811bae452dd5d6302d707d7e4d0b
-  merge: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-  pr_build: 37800895363
-  pr_governance: 37800895171
-  main_build: 37801975078
-  main_governance: 37801976469
-  main_actual: 113396238709
-  main_quality: 113399168935
-  state: done
-  result: 'Reviewed conservative exact-connection qualifier, initial/final evidence fence, source policy and bounded API/browser guidance PASS. Real permission/ownership/grant-option/impersonation/external/encrypted graph effects rolled back and all shipping paths deny; restored positives, changed worker session, retained SQL and Chromium PASS.650 local Persistence/313 independent focused controls. Customer adapters/credentials/production and full233 remain.'
-
-installer_integrated_989:
-  head: 989f771b04e9f710103a242d0b6122913f3a127b
-  build: 37747829938
-  governance: 37747830005
-  actual: 113213454508
-  native: 113213454560
-  quality: 113215427738
-  artifact: 11536771819
-  artifact_bytes: 48582443
-  review: 'Frozen independent integration/docs APPROVED. Installer source/tests/scripts equal approved21d; non-installer source equals accepted main0d03. All9 gates PASS. Remains Draft pending external clean Windows/signing; accepted264 still needs integration into239.'
+installer_verified_erp_integration:
+  head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  build: 37809993008
+  governance: 37809992983
+  actual_stack: 113424054565
+  native_installer: 113424054961
+  required_quality: 113426861674
+  artifact: 11564961765
+  artifact_bytes: 48601200
+  local_dotnet_tests: 1127
+  result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. No independent frozenfa integration approval exists after reviewer quota; prior989 approval is separate historical evidence.'
+  next: 'Close current documentation HEAD gates, independently review fa integration/final docs when available and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
+installer_reviewed_3ff:
+  integration_head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+  reviewed_checkpoint: 3ff2b700d4255df2bd5bfb66c9905aab36a4f049
+  build: 37811764980
+  governance: 37811765041
+  actual_stack: 113430137673
+  native_installer: 113430137570
+  required_quality: 113433280589
+  artifact: 11564714166
+  artifact_bytes: 48597796
+  review: 'Independent frozen fa integration/3ff documentation APPROVED. All9 exact jobs PASS; accepted ERP and retained SQL/Chromium,76 core tests/pinned self-contained isolated Windows proof PASS. Setup source/tests/scripts remain approved21d/989; additive solution preserves all projects. No clean Windows/signing acceptance.'
+  next: 'Close final documentation delta review/exact gates; integrate266 only after approved merge and exact main gates. Keep239 Draft; full233 remains active.'
 
 company_selection_reviewed_764:
   shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
@@ -321,8 +322,14 @@ company_selection_reviewed_764:
   independent_web: 92
   independent_guard_tests: 3
   state: ready_for_review
-  review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
-  next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'
+  review: Independent full frozen shipping f03/proof-workflow-docs764 security and runtime
+    APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity
+    and strengthened two-company Chromium controls PASS; exact sanitized artifact independently
+    inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after
+    historical quota interruption.
+  next: Final documentation delta review and exact current PR gates, then merge267 and
+    close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft
+    for clean Windows/signing.
 
 installer_reviewed_3ff:
   integration_head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
@@ -352,8 +359,43 @@ verified_company_selection_267:
   main_artifact: 11567296114
   main_artifact_bytes: 72696
   state: done
-  review: Full independent frozen shipping f03/proof764/final938 docs APPROVED, receipt6065013062.
-    Exact PR/main all8 gates PASS, including native identity/ambiguity/stored-byte Unicode
-    and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
-    separation/revoke-restore.266 closed. Full233/customer/production and installer
-    clean Windows/signing remain.
+  review: 'Full independent frozen shipping f03/proof764/final938 docs APPROVED, receipt6065013062. Exact PR/main all8 gates PASS, including native identity/ambiguity/stored-byte Unicode and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task separation/revoke-restore.266 closed. Full233/customer/production and installer clean Windows/signing remain.'
+
+installer_verified_45a:
+  head: 45a2ba58abf00cdb278951d8bed7c9444f007982
+  build: 37813475810
+  governance: 37813475639
+  native: 113435995421
+  actual: 113435995742
+  quality: 113439235869
+  artifact: 11565887828
+  artifact_bytes: 48598421
+  review: 'Final docs45a independently APPROVED, receipt6065013782. All9 exact gates PASS; accepted ERP/retained SQL+Chromium and unchanged pinned native installer proof retained. Company selection is integrated only from accepted maina75 with exact main gates closed; renew integration gates/review. Clean Windows/signing remains external.'
+
+installer_verified_company_integration_4b:
+  head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
+  build: 37816394932
+  governance: 37816394855
+  native: 113446015962
+  actual: 113446015945
+  quality: 113448938090
+  artifact: 11566689313
+  artifact_bytes: 48623949
+  browser_artifact: 11567462838
+  browser_artifact_bytes: 72696
+  state: in_progress
+  review: 'Independent static frozen integration/source review found no blocker: non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify unchangedapproved21d/989/45a; workflow retains acceptedmain guard/native9 gate and solution retains all configurations. Exact4b all9 native/SQL/Chromium SUCCESS. Reviewer account quota interrupted remaining runtime/final documentation review; no full4b approval inferred.'
+  next: 'Close final documentation current9 gates; resume independent frozen runtime/final integration review when available. Keep239 Draft for external clean Windows/signing; full233/customer/production remain.'
+
+installer_accepted_administrator_integration:
+  approved_installer_head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
+  approved_review: 6072831478
+  accepted_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  main_build: 37875625822
+  main_governance: 37875625829
+  main_actual: 113643444397
+  main_quality: 113645840920
+  state: in_progress
+  integration: 'Merge only accepted administrator269/main3fc, full frozen approvals6073002478/6073139900 and exact PR/main all8 PASS. Non-installer src/apps/tests equal acceptedmain3fc; Setup source/tests/build/verify remain byte-identical approved723. Additive solution projects/configurations and mandatory native ninth gate retained. Resolve four documentation conflicts with current accepted delivery plus prior installer receipts;270 shipping is not integrated.'
+  local: 'Full solution1206.NET PASS (729 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core); native4 guard and2 browser guard controls, JS/Python syntax/YAML/diff PASS. Non-installer src/apps/tests byte-equal acceptedmain3fc and Setup source/tests/build/verify byte-equal approved723. Native ninth gate/solution configurations retained. Renew exact9 integration gates/artifacts/frozen review; no clean Windows/signing acceptance.'
+  next: 'Verify and push accepted-main integration on same239; own exact9 CI through terminal and fix actual failures. Keep Draft for external Windows/signing; continue270 on its separate271 lease/full233 active.'

@@ -1,5 +1,13 @@
 # Local AI Office Web UI
 
+## Current automatic installation
+
+The shipped local Compose profile defaults to browser Authorization Code/S256 PKCE with the password-grant UI disabled. Start the provisioned stack with `infra/start-local.ps1` on a Docker-ready host, or use the Windows development installer under #238. Open `http://127.0.0.1:3000`, choose **Đăng nhập**, and enter the retained initial `owner` credentials on the local identity provider page. The installer displays the initial password in a masked field; private configuration retains it. Never copy credentials into Git or logs.
+
+The browser uses an opaque HttpOnly session backed by shared Redis. The BFF rechecks fresh Core company authority and session lifetime on each use. See [actual browser evidence](BROWSER_OIDC_E2E.md) and the [production sign-in operator guide](BROWSER_SIGN_IN_OPERATOR.md). The development installer still needs clean Windows/reboot/startup/signing qualification.
+
+## Historical password-grant compatibility profile
+
 The local pilot is intended to be used from the browser. PowerShell remains an infrastructure/debug path, not the normal operator workflow.
 
 ## Start
