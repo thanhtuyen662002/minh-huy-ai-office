@@ -19,6 +19,42 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
 {
+    [Fact]
+    public async Task GroupReadInitialDirectoryPreservesCallerAbortWithoutSuccessOrPrivateKeyWork()
+    {
+        await using var fixture = new GroupReadApiFixture(); var receipt = await fixture.CommitAsync();
+        await using var stalled = fixture.Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<IAuthenticatedAuthorizationDirectory>();
+            services.AddSingleton<IAuthenticatedAuthorizationDirectory>(new GroupInitialDirectoryFailure(true));
+        }));
+        using var client = stalled.CreateClient(); using var abort = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        var response = await stalled.Server.SendAsync(context =>
+        {
+            context.Request.Method = "GET"; context.Request.Path = fixture.Path(receipt.MessageId);
+            context.Request.Headers[AuthorizationHeaders.CompanyId] = fixture.Authority.CompanyId.ToString("D");
+        }, abort.Token).WaitAsync(TimeSpan.FromSeconds(15));
+        Assert.True(abort.IsCancellationRequested); Assert.Equal(499, response.Response.StatusCode);
+        using var reader = new StreamReader(response.Response.Body);
+        await Assert.ThrowsAsync<IOException>(() => reader.ReadToEndAsync()); Assert.Equal(0, fixture.Keys.Reads);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GroupReadInitialIdentityDirectorySqlFailureOrStallRemainsBoundedNoStore(bool stall)
+    {
+        await using var fixture = new GroupReadApiFixture(); var receipt = await fixture.CommitAsync();
+        await using var broken = fixture.Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<IAuthenticatedAuthorizationDirectory>();
+            services.AddSingleton<IAuthenticatedAuthorizationDirectory>(new GroupInitialDirectoryFailure(stall));
+        }));
+        using var client = broken.CreateClient(); client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, fixture.Authority.CompanyId.ToString("D"));
+        using var response = await client.GetAsync(fixture.Path(receipt.MessageId)).WaitAsync(TimeSpan.FromSeconds(15));
+        await GroupReadBoundedAsync(response, HttpStatusCode.ServiceUnavailable); Assert.Equal(0, fixture.Keys.Reads);
+    }
+
     [Theory]
     [InlineData("viewer")]
     [InlineData("member")]
@@ -201,5 +237,14 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
         public ValueTask<GroupSourceKeyMaterial> ResolveWriteAsync(GroupScope source, CancellationToken cancellationToken = default) => ValueTask.FromResult(new GroupSourceKeyMaterial("owned", key));
         public async ValueTask<GroupSourceKeyMaterial> ResolveReadAsync(GroupScope source, string keyId, CancellationToken cancellationToken = default)
         { Reads++; if (BeforeRead is not null) await BeforeRead(); return new(keyId, key); }
+    }
+
+    private sealed class GroupInitialDirectoryFailure(bool stall) : IAuthenticatedAuthorizationDirectory
+    {
+        public async Task<AuthenticatedAuthorizationEntry?> ResolveAsync(string identityProvider, string subject, Guid companyId, CancellationToken cancellationToken = default)
+        {
+            if (stall) await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            throw new InvalidOperationException("PRIVATE_INITIAL_DIRECTORY_FAILURE");
+        }
     }
 }

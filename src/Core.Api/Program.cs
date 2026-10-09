@@ -99,6 +99,7 @@ app.Use(async (httpContext, next) =>
     try { await next(); }
     finally { AiOfficeTelemetry.RecordHttpRequest(httpContext.Response.StatusCode, System.Diagnostics.Stopwatch.GetElapsedTime(started)); }
 });
+app.UseMiddleware<GroupSourceRequestBoundaryMiddleware>();
 if (authenticationConfigured)
 {
     app.UseAuthentication();

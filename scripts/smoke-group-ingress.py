@@ -427,7 +427,7 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             for index, (kind, text, historical) in enumerate([(3, "Owned edit", False), (4, "", False), (1, "Late owned original", True)], start=1)]
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupCoverageGaps WHERE {scope} AND Reason='original-message-unseen' AND AfterCommittedSequence={before_edit};") == "1"
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupMessageRevisions WHERE {scope} AND IsHistoricalBackfill=1;") == "1"
-        recalled_message = sql(f"SELECT Id FROM {schema}GroupMessages WHERE {scope} AND ExternalMessageId=N'{message}';")
+        recalled_message = str(uuid.UUID(sql(f"SELECT Id FROM {schema}GroupMessages WHERE {scope} AND ExternalMessageId=N'{message}';")))
         recalled_status, recalled = read_source(recalled_message)
         assert recalled_status == 200 and recalled["kind"] == 4 and recalled["text"] is None and recalled["revision"] == 2 and recalled["hasCoverageGap"]
         sequence = int(sql(f"SELECT CommittedSequence FROM {schema}GroupSourceStates WHERE {scope};"))
