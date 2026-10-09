@@ -209,3 +209,31 @@ default256 limit for max types otherwise truncates the408character fixture).
 All17 local ownership/privacy/transport/oracle/cleanup guards and88 focused
 shipping auth/HTTP/store controls PASS. Native current-fence diagnosis, frozen
 final review and exact-head execution remain required.
+
+## Protected source read checkpoint (not yet exposed)
+
+GroupSourceReader reads one committed source message for a current portal member
+with an explicit exact GroupReaderGrant. Administrator membership does not
+supply that grant or an IT disclosure grant. Source role/original identity/
+physical catalog/version/deletion and current grant versions fence key work and
+final release. SQL reads pin the connection identity in ReadCommitted, use bounded
+original UTF16 bytes and reject caller/ambient transactions rather than holding
+membership/grant locks across private key awaits. No source version or key/ref
+can be selected by HTTP/model input.
+
+Content must decrypt in its exact source/message/revision/version/deletion/key
+context and match original message hash, source SHA256 and immutable logical
+receipt envelope. Recall outranks edits; edits outrank a late original. A recall
+returns metadata with null text. The final committed winner, original message/
+receipt bytes and current grants are rechecked after materialization; a recall
+or external revoke during key work discards the earlier private body. This is a
+read of source history, never another portal user's task archive or an automatic
+IT disclosure.
+
+Twenty focused read controls PASS using owned in-memory fixtures: exact Unicode/
+reply/source and no task/user/write effects, administrator/foreign user/company/
+role/grant/index denial before key work, six late current-revoke fences, cipher/
+receipt/message/sender corruption refusal, recall/edit/late-original precedence
+and recall committed during key await with restored recalled projection. This
+class has no shipping DI/API/list/read UI registration yet; frozen review and
+actual SQL/issued-session private-read/late-body evidence remain required.

@@ -781,3 +781,12 @@ group_native_runtime_refusal_diagnostic:
   failed_actual: 114046156901
   result: 'Actual retained nativeSQL passed; newgroup first committedACK expected200 got403 at2026-10-09T22:13:56Z beforeduplicate/history. Actionable runtime refusal, not infrastructure. Root inspected log; precise fence not yetidentified. Add fixed-only auth/store refusal phases and owned failing-permission predicate IDs; no inputs/keys/refs/exceptionbodies/logdump.88 focused auth/HTTP/store PASS. Repair history408char defaultsqlcmd-y256 transport using fixednvarchar4000 with exactUTF16 length oracle;17 guard/privacy/transport/cursor/cleanup tests PASS. No acceptance claimed.'
   next: 'Push diagnostic+fixture repairs; own exact nativeCI identify403 fence then repair samePR immediately. Untracked protectedSourceReader compiles but lacks tests/API/DI/nativeproof; continue afterruntimecause closure. Full277 listener/spool/queue/readUI and278/279 remain.'
+
+group_protected_read_checkpoint:
+  predecessor: 42cc94dc173bbf6cf77f94bfb05d3ad2f1ff55dc
+  exact_diagnostic_build: 37998551981
+  exact_diagnostic_governance: 37998552028
+  exact_diagnostic_actual: 114050684002
+  state: 'diagnosticCI sixprereqsPASS/nativepending; protectedread newlocal20controlsPASS'
+  result: 'New GroupSourceReader dedicatedReaderGrant/currentmember/sourceversion/deletion/fullphysicalrolefences, pinnedReadCommitted originalUTF16 projection, exactretainedkey/AEAD/messageSHA/immutableenvelope validation, recall/editprecedence andfinalcurrentwinner/grant/bytes fence.20 in-memory privacy/corruption/currentrevoke/recall-await controls PASS; noAPI/DI/UI/nativeSQL evidence yet.'
+  next: 'Own diagnostic42ccnativeCI and fixcurrent403fence. Freeze protectedread review; register boundedportalHTTP/list/BFF/UI withprivate clearing andactual issued-session readrace proof. Complete277listener/spool/queue then278/279; no currentwholefeature/production completion.'
