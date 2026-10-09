@@ -153,7 +153,18 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     expected_message = deterministic_identity(["pilot-message-v1", uuid.UUID(expected_task).hex, uuid.UUID(expected_step).hex, "1"])
     with ThreadPoolExecutor(max_workers=2) as executor:
         accepted = list(executor.map(lambda _: call(path + "/submit", {"inputFingerprint": fingerprint}), range(2)))
+    initial_submit_statuses = [status for status, _, _ in accepted]
     for status, headers, receipt in accepted:
+        if status == 503:
+            # The bounded public contract can report uncertainty under concurrent
+            # pressure. Reconcile exactly this operation, then perform ONE
+            # deliberate identical replay. Never retry another status/body.
+            assert receipt == {"error": "Task submission is unavailable. Reconcile the same operation."}
+            recovered_status, _, recovered = call(path)
+            assert recovered_status == 200 and recovered["state"] in (0, 1)
+            assert (recovered["companyId"], recovered["operationId"], recovered["dataSourceId"],
+                recovered["question"], recovered["inputFingerprint"]) == (company, operation, source, question, fingerprint)
+            status, headers, receipt = call(path + "/submit", {"inputFingerprint": fingerprint})
         assert status == 202, f"Concurrent owned submit expected202, got HTTP{int(status)}"
         assert headers.get("Location") == f"/api/tasks/{expected_task}/history", "Concurrent owned submit Location identity mismatch"
         assert (receipt["companyId"], receipt["operationId"], receipt["dataSourceId"], receipt["inputFingerprint"],
@@ -169,7 +180,8 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     assert call(path + "/submit", {"inputFingerprint": fingerprint})[2]["taskId"] == expected_task
     assert call("/api/tasks/intents", request)[2]["accepted"]["messageId"] == expected_message
     assert snapshot() == settled, "Accepted recovery/replay created another execution or charge"
-    print("PASS native concurrent same-operation submit preserves independent task/step/message identities and one completed worker attempt/dispatch/checkpoint")
+    print("PASS native concurrent same-operation submit initialHTTP=" + ",".join(str(value) for value in initial_submit_statuses)
+        + " with bounded exact unknown reconciliation preserves independent task/step/message identities and one completed worker attempt/dispatch/checkpoint")
 
     # The actual runtime cannot mutate any intent column, delete, truncate or take ownership.
     for column in ("TenantId", "CompanyId", "UserId", "OperationId", "DataSourceId", "InputVersion", "MaxAttempts", "Question", "InputFingerprint", "CreatedAtUtc", "ExpiresAtUtc"):
