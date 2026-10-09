@@ -22,8 +22,9 @@ export async function GET(request: Request) {
     return Response.json({ error: "Invalid task history page." }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
   try {
-    const response = await fetchCoreApi(`/api/tasks?offset=${offset}&limit=${limit}`, company);
-    return response ? taskHistoryResponse(response, company, { offset: Number(offset), limit: Number(limit) }) : unauthenticatedResponse();
+    const companyId = company.toLowerCase();
+    const response = await fetchCoreApi(`/api/tasks?offset=${offset}&limit=${limit}`, companyId);
+    return response ? taskHistoryResponse(response, companyId, { offset: Number(offset), limit: Number(limit) }) : unauthenticatedResponse();
   } catch {
     return Response.json({ error: "Task history is unavailable." }, { status: 502, headers: { "Cache-Control": "no-store" } });
   }

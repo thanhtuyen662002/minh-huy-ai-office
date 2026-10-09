@@ -398,3 +398,14 @@ task_history_native_authority_verified:
   unicode_repair: 'Reproduced a legitimate64000-unit fully escaped Unicode answer as incorrectly unavailable under the256KiB checkpoint ceiling. Raise bounded stored checkpoint limit to1MiB to include worker JSON expansion plus bounded catalog; answer remains64000. New local maximum/adjacent-overflow controls now pass, all26 history service tests PASS and changed C# format PASS. Actual SQL proof includes both exact lengths plus >1MiB payload denial; not executed yet.'
   browser_diagnostics: 'Split fixed fixture stages for file/JSON/shape/identity/snapshots/browser context without printing data. Positive fixture/fingerprint preparation reaches mocked browser;4 browser guard tests and6 native guard/transport tests, JS/Python syntax/diff PASS. Diagnose the actual stage on same271; do not bypass it.'
   next: 'Push verified checkpoint and own exact SQL/Chromium closure. Inspect sanitized images and full frozen independent review before ready/merge; full233 active.'
+
+task_history_11608_runtime_and_guid_review:
+  head: 11608b1c293b6eca1dbd55b4fca8899ce46c0211
+  build: 37896851529
+  governance: 37896851512
+  actual: 113710046360
+  quality: 113712255003
+  native: 'ALL new SQL controls PASS including full64000 worker-escaped Unicode answer/adjacent64001 refusal/>1MiB/raw malformed UTF16 controls, source-grant historical owner positive and all3 observed queued private-read final revoke/empty403/restored200/rolled-back schema/no-effects fences. Seven Build prerequisites and Governance PASS.'
+  browser: 'Retained Chromium PASS. New history terminal red at owned-fixture-snapshots before archive navigation. File/JSON/shape/identities pass, no CLI refusal; bounded fixed table-index/length/null/hex classification added to diagnose the actual fingerprint without printing content. Do not accept NULL or weaken fingerprint verification.'
+  independent: '51 focused.NET/70 web and4 browser+6 native guards independently PASS at frozen116. Concrete P2: accepted uppercase GUID selectors were compared as raw strings with lowercase Core Guid JSON, returning502 for same identity. Normalize validated route selectors and use GUID-case-insensitive receipt scope equality;29 real-helper tests incl3 uppercase positives/typecheck now PASS locally. Full frozen security/runtime/images approval remains absent.'
+  next: 'Push same271 verified fix/diagnostics; own exact CI and resolve actual fingerprint/browser defects. Inspect three current images and complete independent frozen review before ready/merge. Queued272 owns stable submission operation after unknown accepted reply, depends on270 accepted main. Full233 active;239 Draft.'

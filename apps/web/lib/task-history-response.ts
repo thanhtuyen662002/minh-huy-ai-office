@@ -16,11 +16,12 @@ export async function taskHistoryResponse(response: Response, companyId: string,
     const payload: unknown = JSON.parse(text);
     if ("taskId" in selector) {
       const detail = parseTaskHistoryDetail(payload);
-      if (!detail || detail.companyId !== companyId || detail.task.taskId !== selector.taskId) throw new Error("Invalid detail");
+      if (!detail || detail.companyId.toLowerCase() !== companyId.toLowerCase()
+        || detail.task.taskId.toLowerCase() !== selector.taskId.toLowerCase()) throw new Error("Invalid detail");
       return Response.json(detail, { headers });
     }
     const page = parseTaskHistoryPage(payload);
-    if (!page || page.companyId !== companyId || page.offset !== selector.offset || page.limit !== selector.limit) throw new Error("Invalid page");
+    if (!page || page.companyId.toLowerCase() !== companyId.toLowerCase() || page.offset !== selector.offset || page.limit !== selector.limit) throw new Error("Invalid page");
     return Response.json(page, { headers });
   } catch {
     return Response.json({ error: "Task history is unavailable." }, { status: 502, headers });

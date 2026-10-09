@@ -29,6 +29,20 @@ it.each(["list", "detail"])("uses issued SID and fresh final scope for %s throug
   expect(response.headers.get("Set-Cookie")).toBeNull(); expect(response.headers.get("X-PRIVATE")).toBeNull();
   expect(response.headers.get("Cache-Control")).toBe("no-store"); expect(mocks.read).toHaveBeenCalledTimes(2);
 });
+it.each(["list", "detail", "detail-task-only"])("preserves the same issued GUID identity for uppercase %s selectors", async route => {
+  const companyId = "abcdef01-abcd-abcd-abcd-abcdef012345", taskId = "fedcba98-fedc-fedc-fedc-fedcba987654";
+  mocks.read.mockResolvedValue({ ...session, companyId });
+  const payload = route === "list" ? { ...page, companyId, items: [{ ...row, taskId }] }
+    : { ...detailPayload, companyId, task: { ...row, taskId } };
+  mocks.fetch.mockResolvedValue(Response.json(payload));
+  const selectedCompany = route === "detail-task-only" ? companyId : companyId.toUpperCase();
+  const response = route === "list" ? await list(request(`companyId=${selectedCompany}`))
+    : await invokeDetail(request(`companyId=${selectedCompany}`), taskId.toUpperCase());
+  expect(response.status).toBe(200); expect(await response.json()).toEqual(payload);
+  expect(mocks.fetch.mock.calls[0][0]).toBe(`http://core.fixture.invalid/api/tasks${route === "list" ? "?offset=0&limit=25" : `/${taskId}/history`}`);
+  expect(mocks.fetch.mock.calls[0][1].headers.get("X-AIOffice-Company-Id")).toBe(companyId);
+  expect(response.headers.get("Cache-Control")).toBe("no-store"); expect(mocks.read).toHaveBeenCalledTimes(2);
+});
 it.each(["offset=-1", "offset=01", "offset=10001", "limit=0", "limit=101", "offset=0&offset=1", "ownerId=forged", "tenantId=forged", `companyId=${company}`])("rejects ambiguous/invalid list selector %s before authority", async suffix => {
   const response = await list(request(`companyId=${company}&${suffix}`)); expect(response.status).toBe(400);
   expect(response.headers.get("Cache-Control")).toBe("no-store"); expect(mocks.read).not.toHaveBeenCalled(); expect(mocks.fetch).not.toHaveBeenCalled();

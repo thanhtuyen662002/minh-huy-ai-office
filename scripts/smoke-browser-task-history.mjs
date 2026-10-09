@@ -60,8 +60,18 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     TaskStepExecutions: "TenantId,CompanyId,TaskId,StepId", TaskDispatches: "TenantId,CompanyId,TaskId,StepId,MessageId",
     Users: "TenantId,Id", RoleAssignments: "TenantId,CompanyId,UserId,RoleKey", CompanyMemberships: "TenantId,CompanyId,UserId",
     CompanyMembershipAccessAudits: "TenantId,CompanyId,Id", CompanyAdministratorAudits: "TenantId,CompanyId,Id", CustomerAiCreditSettlements: "SettlementId" };
-  const snapshot = () => Object.entries(tables).map(([table, order]) => sql(`USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
-    CONVERT(varbinary(max),(SELECT * FROM aioffice.${table} ORDER BY ${order} FOR JSON PATH))),2);`));
+  const snapshot = () => Object.entries(tables).map(([table, order], index) => {
+    stage("owned-fingerprint-" + index);
+    const value = sql(`USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
+      CONVERT(varbinary(max),(SELECT * FROM aioffice.${table} ORDER BY ${order} FOR JSON PATH))),2);`);
+    if (!/^[0-9A-F]{64}$/.test(value)) {
+      // Fixed table index and bounded classification only: never emit durable
+      // JSON, hash content, SQL text, private identifiers or CLI diagnostics.
+      stage(`owned-fingerprint-${index}-length-${Math.min(value.length, 999)}-${value === "NULL" ? "null" : /^[0-9a-fA-F]*$/.test(value) ? "hex" : "nonhex"}`);
+      requireProof(false);
+    }
+    return value;
+  });
   stage("owned-fixture-snapshots");
   const before = snapshot(); requireProof(before.every(value => /^[0-9A-F]{64}$/.test(value)));
   stage("owned-second-browser-context");
