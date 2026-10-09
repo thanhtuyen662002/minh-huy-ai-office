@@ -461,3 +461,64 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             queued_admission(kind, f"UPDATE aioffice.{table} SET {column}=0 WHERE {predicate}",
                 f"UPDATE aioffice.{table} SET {column}=1 WHERE {predicate}")
         print("PASS native observed queued prepare/new execution/committed replay " + name + " revocation denies without effects and restores positive")
+
+    # Block a real original-request read AFTER the initial authority checks.
+    # RCSI bypasses row locks, so use an operator transaction's Sch-M and observe
+    # the exact runtime Sch-S wait/query before revoking membership/global user.
+    def queued_private_read(read_path, table, predicate):
+        assert sql("SELECT is_read_committed_snapshot_on FROM sys.databases WHERE name=N'AIOfficeLocal';") == "1"
+        object_id = int(sql("USE AIOfficeLocal; SELECT OBJECT_ID(N'aioffice.TaskEvents');"))
+        assert object_id > 0
+        gate = "dbo.SubmissionReadGate_" + uuid.uuid4().hex
+        column = "SubmissionReadBarrier_" + uuid.uuid4().hex
+        before_effects, before_intents = snapshot(), intent_snapshot()
+        sql(f"USE AIOfficeLocal; CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
+        query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
+          UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
+          ALTER TABLE aioffice.TaskEvents ADD [{column}] bit NULL;
+          DECLARE @deadline datetime2=DATEADD(second,30,SYSUTCDATETIME());
+          WHILE (SELECT Released FROM {gate} WITH(READUNCOMMITTED))=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.050';
+          ROLLBACK TRANSACTION;"""
+        locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
+            'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
+        locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
+        executor, pending = None, None
+        def await_condition(predicate, phase):
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if predicate(): return
+                if locker.poll() is not None or pending is not None and pending.done():
+                    raise AssertionError("Native submission " + phase + " ended before observed private read")
+                time.sleep(.05)
+            raise AssertionError("Native submission " + phase + " was not observed")
+        try:
+            await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_tran_locks
+              WHERE request_session_id=(SELECT OwnerSpid FROM {gate}) AND resource_type=N'OBJECT' AND resource_database_id=DB_ID()
+                AND resource_associated_entity_id={object_id} AND request_mode=N'Sch-M' AND request_status=N'GRANT';""")) > 0, "owned private schema lock")
+            executor = ThreadPoolExecutor(max_workers=1); pending = executor.submit(call, read_path)
+            await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_requests r
+              JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
+              CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+              WHERE s.login_name=N'aioffice_runtime' AND r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) AND r.wait_type=N'LCK_M_SCH_S'
+                AND l.resource_type=N'OBJECT' AND l.resource_database_id=DB_ID() AND l.resource_associated_entity_id={object_id}
+                AND l.request_mode=N'Sch-S' AND l.request_status IN(N'WAIT',N'CONVERT')
+                AND t.text LIKE N'%TaskEvents%' AND t.text LIKE N'%PayloadJson%';""")) > 0, "runtime original-request private read")
+            sql(f"USE AIOfficeLocal; UPDATE aioffice.{table} SET IsActive=0 WHERE {predicate}; UPDATE {gate} SET Released=1;")
+            status, _, body = pending.result(timeout=15)
+            assert status == 403 and body in ("", None), "Queued private intent read did not apply final authority fence"
+        finally:
+            sql(f"USE AIOfficeLocal; UPDATE {gate} SET Released=1;")
+            try: locker.communicate(timeout=8)
+            except subprocess.TimeoutExpired:
+                locker.kill(); locker.communicate(timeout=5)
+            if executor is not None: executor.shutdown(wait=True, cancel_futures=True)
+            sql(f"USE AIOfficeLocal; UPDATE aioffice.{table} SET IsActive=1 WHERE {predicate}; DROP TABLE {gate};")
+        assert locker.returncode == 0 and call(read_path)[0] == 200
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM sys.columns WHERE object_id={object_id} AND name=N'{column}';") == "0"
+        assert snapshot() == before_effects and intent_snapshot() == before_intents
+
+    for table, predicate in (("CompanyMemberships", member), ("Users", user)):
+        for read_path in (path, "/api/tasks/intents?offset=0&limit=25"):
+            queued_private_read(read_path, table, predicate)
+    print("PASS native observed queued owner intent detail/list original-request reads apply final membership/global-user fences, empty403/restored200 with unchanged durable bytes")

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: 8e51b2264c94f20f839defbcb96a4c78bcf0e6cc
+head: da42aeee5cc26f16446c335570de1cf96688199f
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -112,7 +112,14 @@ submission_native_hex_transport_and_authority_checkpoint:
   review: 'Independent scoped frozen8e proof-only review has no blocker, P2 initial-baseline oracle CLOSED. Reviewer ran8Python/6Node/syntax and loopback transparent/202header-body/prepare200-body/foreign-company mechanics. These are transport controls, not actual Core/SQL or full272 approval.'
   added: 'New owned native proof: exact4000UTF16/adjacent overflow/NFC-NFD, original request key/source/question/attempt/unknown/duplicate/rawUTF16 corruption/restoration, impersonation/ordinary module/EXECUTE AS OWNER/trigger closes all intent boundaries, reserved legacy replay/conflict/expiry and compatible adoption. Observe actual shipping runtime queued on company application lock before external membership/global-user/sourceEnabled/sourceRead/binding revoke for prepare/new execution/committed replay, then empty403/no-effects/restored positives;15 cases. Browser adds external member loss/private clear/restored GET-only recovery. None of these added controls has executed on hosted SQL/Chromium yet.'
   user_sequence: 'Finish and merge current work, then read attached CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md from Downloads and integrate second brain. Do not read attachment before current delivery; full233 remains active.'
-next_action: 'Push same274 hex transport repair and native authority/legacy/Unicode proof, close exact CI and immediately fix real failures. Execute actualCore202/prepare-loss shipping browser proof, inspect4images, then full frozen shipping/security/runtime review/exactPR-main. After merge read user second-brain attachment and scope integration.239 actualWindows-signingDraft/full233 active.'
+submission_private_read_fence_checkpoint:
+  predecessor: da42aeee5cc26f16446c335570de1cf96688199f
+  build: 37969010685
+  governance: 37969010672
+  actual: 113950547760
+  state: 'Six prerequisites/Governance PASS; new native proof active, full frozen da42 shipping/security/static review active. No runtime/browser/full272 approval yet.'
+  added: 'Four native detail/list private original-request fences for membership/global-user loss: preserve RCSI1, hold owned transaction Sch-M on TaskEvents, observe exact runtime Sch-S wait/blocker/private PayloadJson query after initial checks, revoke before release, require empty403/restored200, rolled-back nullable fixture column and unchanged full intent/execution/settlement bytes.10Python/syntax/diff PASS locally; new four controls not executed yet.'
+next_action: 'Close exact da42 native/Chromium CI and fix all real failures. Then push additional four private-read fences and close that exact CI. Full independent shipping/security/runtime/four-image review and finalPR-main remain. After merge read user second-brain attachment and scope integration.239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

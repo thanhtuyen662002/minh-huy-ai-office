@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: 8e51b2264c94f20f839defbcb96a4c78bcf0e6cc
+current_target_head: da42aeee5cc26f16446c335570de1cf96688199f
 last_verified_commit: 4a3f7d7efda1513b39252da4f346f769664f7f81
 
 critical_paths:
@@ -14,7 +14,7 @@ critical_paths:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: 8e51b2264c94f20f839defbcb96a4c78bcf0e6cc
+    head: da42aeee5cc26f16446c335570de1cf96688199f
     state: in_progress
     next: '272/274 active:8e51 native concurrent same-op/one graph-worker-zero-credit, append-only/column escalation, corruption, expiry, rollback and99/100/101 quota PASS; actual113945721532 red at original-event restoration. Fix bounded SQL hex transport/default256 truncation with independent byte-length check; new10Python/6Node PASS. Add actual observed queued15 authority cases, indirect impersonation/module/trigger denial, original-byte/4000Unicode/legacy controls and shipping member-clear restoration. New native/browser controls require exact CI and full frozen review. Main9155 all8 PASS. User requested finish/merge current work BEFORE reading attached CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md and integrating second brain.'
 
