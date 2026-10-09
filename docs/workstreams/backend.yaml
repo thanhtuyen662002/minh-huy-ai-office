@@ -807,3 +807,15 @@ group_native_column_permission_repair:
   result: 'TerminalfirstACK403 atauth/permissions-initial; predicate085/095/105/115 failed: tableUPDATE requirement conflictswithdeliberateimmutablecolumnDENY. Fixedallowlist everymutablecolumnUPDATE1 andallremainingcolumnsUPDATE0; missing/unknown refuses, unexpectedcolumns immutable. No migrationrightsbroadened. Native actualrolledback mutablewrites plusallowedcolumnloss/immutablekeyescalation noeffects/restoredpositives added.'
   local: '113 model/auth/HTTP/store/reader PASS zero skipped;17 ownedguards PASS;compile/solutionwhitespace/diff PASS. Reader814 repair independent33 approved; nativeSQL range/API/UI remainsunapproved.'
   next: 'Push samePR repairednativecandidate and ownexactCI. Freeze permissiondelta review. Execute mandatoryactualgroupHTTP/SQL gate then scopedprivateHTTP/UI/range proof, fencedlistener/encryptedspool/broker recovery;277-279/full233 remainactive.'
+
+group_private_source_http_checkpoint:
+  predecessor: cd17377db0ba28667b77dec562746c961d2668ba
+  predecessor_build: 37999783297
+  predecessor_governance: 37999783280
+  predecessor_first_actual: 114054761793
+  predecessor_retry_actual: 114055909438
+  state: 'initialnativepreSQLregistryHTTP502; onefailedjob retryactive, no group native result yet'
+  review: 'Independent cdpermissiondelta APPROVED6090413905;120retained+5own+17guardsPASS; reader814 originalP2 closed33controls. Native/privateHTTP/full277 remain unapproved.'
+  result: 'Defaultoff canonicalboundedJWT/currentselectedmember+explicitReaderGrant GET registered; HMAC isnotportalread authority. Fixeddeadline10s/genericfailure/noStore; no key/ref/cipherfields/taskownership. Native fixture requiresissuedtoken/operatorgrant andnewactualprotectedUTF16/scope/HMAC401/revoke-restoration/recallnullcontrols.'
+  next: 'Freeze privateHTTP delta afterfocusedverification; own cd retry beforepushing nexthead and inspectterminalimmediately. Execute actualnewgroup/readerSQL gate, final release range/lock proof, then boundedsource discovery/message list/BFF/inbox and277 listener/spool/outbox recovery.278/279/full233 active.'
+  local: "79 current HTTP/reader/key/protection/retained ingress controlsPASS, zero skipped;18 newportalgroupread controls;17 guards/compile/solutionwhitespace/YAML/diffPASS. No nativeprivateGET acceptance yet."

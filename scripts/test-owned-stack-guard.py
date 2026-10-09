@@ -162,14 +162,15 @@ class OwnedStackGuardTests(unittest.TestCase):
                 directory = Path(root) / "aioffice-local"; directory.mkdir()
                 marker = directory / "retained-unowned-marker"; marker.write_text("retained", encoding="utf-8")
                 environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": root}
-                manifest = {"AIOFFICE_TENANT_ID": "11111111-1111-4111-8111-111111111111", "AIOFFICE_COMPANY_ID": "22222222-2222-4222-8222-222222222222"}
+                manifest = {"AIOFFICE_TENANT_ID": "11111111-1111-4111-8111-111111111111", "AIOFFICE_COMPANY_ID": "22222222-2222-4222-8222-222222222222", "AIOFFICE_USER_ID": "33333333-3333-4333-8333-333333333333"}
+                auth = {"Authorization": "Bearer owned-fixture", "X-AIOffice-Company-Id": manifest["AIOFFICE_COMPANY_ID"]}
                 with patch.dict(os.environ, environment, clear=True), patch.object(group_smoke.urllib.request, "urlopen", return_value=DisabledResponse()), \
                     patch.object(group_smoke, "owned_sql", side_effect=RuntimeError("Owned SQL admission failure.")), \
                     patch.object(group_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=1 if restore_failure else 0, stdout="", stderr="")), \
                     patch.object(group_smoke.time, "monotonic", side_effect=[0, 61]):
                     expected = "Owned group API recreation failed." if restore_failure else "Owned group API readiness deadline exceeded."
                     with self.assertRaisesRegex(RuntimeError, "^" + re.escape(expected) + "$"):
-                        group_smoke.verify(directory=directory, manifest=manifest, compose=["docker", "compose"], environment=environment, api="http://127.0.0.1:8080")
+                        group_smoke.verify(directory=directory, manifest=manifest, compose=["docker", "compose"], environment=environment, api="http://127.0.0.1:8080", auth=auth)
                 self.assertFalse((directory / "group-ingress-owned.override.json").exists())
                 self.assertEqual("retained", marker.read_text(encoding="utf-8"))
 

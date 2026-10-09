@@ -81,9 +81,13 @@ def permission_diagnostic_query():
     return "EXECUTE AS LOGIN=N'aioffice_runtime'; " + " UNION ALL ".join(checks) + "; REVERT;"
 
 
-def verify(*, directory, manifest, compose, environment, api):
+def verify(*, directory, manifest, compose, environment, api, auth=None):
     require_owned(directory, api)  # Before private configuration, files or processes.
+    if not auth or set(auth) != {"Authorization", "X-AIOffice-Company-Id"}:
+        raise RuntimeError("Group source proof requires the owned issued portal identity.")
     tenant, company = (str(uuid.UUID(manifest[key])) for key in ("AIOFFICE_TENANT_ID", "AIOFFICE_COMPANY_ID"))
+    owner = str(uuid.UUID(manifest["AIOFFICE_USER_ID"]))
+    assert auth["X-AIOffice-Company-Id"] == company
     source, account, service, listener = (str(uuid.uuid4()) for _ in range(4))
     external = {"provider": "synthetic", "accountId": "owned-account ", "groupId": "owned-group😀 \uFEFF"}
     group_key, content_key = secrets.token_bytes(32), secrets.token_bytes(32)
@@ -125,6 +129,22 @@ def verify(*, directory, manifest, compose, environment, api):
             "contentSha256": hashlib.sha256(text.encode("utf-8")).hexdigest().upper(), "isHistoricalBackfill": historical},
             "text": text, "isGroup": True, "isSelf": False, "isKnownReportEcho": False,
             "listenerOwnerId": listener, "listenerEpoch": 1}
+
+    def read_source(message, *, headers=None, binding=None):
+        request = urllib.request.Request(api + f"/api/group-sources/{binding or source}/messages/{message}", headers=auth if headers is None else headers)
+        try: response = urllib.request.urlopen(request, timeout=20)
+        except urllib.error.HTTPError as error: response = error
+        with response:
+            value = response.read(65537)
+            assert len(value) <= 65536 and "no-store" in response.headers.get("Cache-Control", ""), "Invalid private group read response"
+            return response.status, json.loads(value) if value else None
+
+    def require_private_denial(message, expected=403, **kwargs):
+        status, value = read_source(message, **kwargs)
+        assert status == expected, f"Group private read denial expectedHTTP{expected}, gotHTTP{status}"
+        if value is not None:
+            assert set(value) == {"error"}, "Private denial exposed source fields"
+            assert "secretref://" not in json.dumps(value) and "Owned original" not in json.dumps(value)
 
     def snapshot():
         # Hash complete original durable bytes, not only cardinalities.
@@ -251,6 +271,8 @@ def verify(*, directory, manifest, compose, environment, api):
           VALUES ('{tenant}','{company}','{service}','{source}',1,1,1);
           INSERT {schema}GroupListenerLeases(TenantId,CompanyId,ConnectorAccountId,OwnerId,Epoch,ExpiresAtUtc,HeartbeatAtUtc)
           VALUES ('{tenant}','{company}','{account}','{listener}',1,DATEADD(minute,20,TODATETIMEOFFSET(SYSUTCDATETIME(),'+00:00')),TODATETIMEOFFSET(SYSUTCDATETIME(),'+00:00'));
+          INSERT {schema}GroupReaderGrants(TenantId,CompanyId,UserId,BindingId,Version,IsEnabled)
+          VALUES ('{tenant}','{company}','{owner}','{source}',1,1);
         """)
         compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
         ready()
@@ -309,6 +331,21 @@ def verify(*, directory, manifest, compose, environment, api):
             assert receipt == {**original, "wasAlreadyCommitted": True}, "Duplicate event receipt changed"
         assert snapshot() == first_snapshot and counts() == [1, 1, 1, 1]
         print("PASS actual group HTTP HMAC/SQL scope/protected atomic graph and concurrent100 one-receipt replay with unchanged pending/outbox")
+
+        read_status, private = read_source(original["messageId"], headers={**auth, "X-AIOffice-Tenant-Id": str(uuid.uuid4()), "X-AIOffice-User-Id": str(uuid.uuid4())})
+        assert read_status == 200, f"Current explicit group reader expectedHTTP200, gotHTTP{read_status}"
+        assert private["source"] == original["source"] and private["messageId"] == original["messageId"]
+        assert private["externalMessageId"] == payload["event"]["messageId"] and private["text"] == payload["text"] and private["kind"] == 1
+        assert set(private) == {"source", "messageId", "externalMessageId", "revision", "committedSequence", "kind", "senderId", "replyToMessageId", "occurredAtUtc", "text", "isHistoricalBackfill", "hasCoverageGap"}
+        require_private_denial(original["messageId"], 401, headers={"X-AIOffice-Company-Id": company, "X-AIOffice-Group-Service": service, "X-AIOffice-Group-Signature": "A"*64})
+        require_private_denial(original["messageId"], headers={**auth, "X-AIOffice-Company-Id": str(uuid.uuid4())})
+        require_private_denial(original["messageId"], binding=str(uuid.uuid4()))
+        assert read_source(str(uuid.uuid4()))[0] == 404
+        sql(f"UPDATE {schema}GroupReaderGrants SET IsEnabled=0 WHERE {scope} AND UserId='{owner}';")
+        try: require_private_denial(original["messageId"])
+        finally: sql(f"UPDATE {schema}GroupReaderGrants SET IsEnabled=1 WHERE {scope} AND UserId='{owner}';")
+        assert read_source(original["messageId"])[0] == 200 and snapshot() == first_snapshot
+        print("PASS actual issued portal current explicit group read, exact protected Unicode, HMAC-only/foreign scope/grant denial and restored private positive without writes")
 
         changed = json.loads(json.dumps(payload)); changed["event"]["senderId"] += "changed"
         no_effect(changed, 409)
@@ -390,6 +427,9 @@ def verify(*, directory, manifest, compose, environment, api):
             for index, (kind, text, historical) in enumerate([(3, "Owned edit", False), (4, "", False), (1, "Late owned original", True)], start=1)]
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupCoverageGaps WHERE {scope} AND Reason='original-message-unseen' AND AfterCommittedSequence={before_edit};") == "1"
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupMessageRevisions WHERE {scope} AND IsHistoricalBackfill=1;") == "1"
+        recalled_message = sql(f"SELECT Id FROM {schema}GroupMessages WHERE {scope} AND ExternalMessageId=N'{message}';")
+        recalled_status, recalled = read_source(recalled_message)
+        assert recalled_status == 200 and recalled["kind"] == 4 and recalled["text"] is None and recalled["revision"] == 2 and recalled["hasCoverageGap"]
         sequence = int(sql(f"SELECT CommittedSequence FROM {schema}GroupSourceStates WHERE {scope};"))
         sequences = sql(f"SELECT STRING_AGG(CONVERT(varchar(max),CommittedSequence),',') WITHIN GROUP(ORDER BY CommittedSequence) FROM {schema}GroupMessageRevisions WHERE {scope};")
         require_contiguous_cursor([int(value) for value in sequences.split(',')], sequence)

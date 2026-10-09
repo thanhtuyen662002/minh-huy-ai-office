@@ -27,6 +27,7 @@ internal static class GroupIngressEndpoints
         builder.Services.AddSingleton<IGroupSourceKeyProvider>(sourceKeys);
         builder.Services.AddScoped<GroupServiceAuthenticator>();
         builder.Services.AddScoped<GroupIngressStore>();
+        builder.Services.AddScoped<GroupSourceReader>();
         return true;
     }
 

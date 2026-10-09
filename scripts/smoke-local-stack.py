@@ -1187,7 +1187,7 @@ def main():
     group_spec = importlib.util.spec_from_file_location("group_ingress_proof", Path("scripts/smoke-group-ingress.py"))
     group_proof = importlib.util.module_from_spec(group_spec)
     group_spec.loader.exec_module(group_proof)
-    group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api)
+    group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api, auth=member_auth)
     print("PASS complete local stack integration")
 
 
