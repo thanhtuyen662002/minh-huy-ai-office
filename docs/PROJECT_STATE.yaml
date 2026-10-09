@@ -5,18 +5,18 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
-current_pr: null
+current_pr: 274
 current_target_head: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
 last_verified_commit: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
 
 critical_paths:
   backend:
     issue: 272
-    pr: null
+    pr: 274
     branch: codex/272-task-submission-recovery
     head: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
     state: in_progress
-    next: 'Claim272 linkedDraft then implement durable immutable serverintent/preparation and explicit stable submission/ownerrecovery.270 fullydelivered with exactPR-main/all8/fullreviews; follow ADR_TASK_SUBMISSION_RECOVERY and independent contract review.273 queued after272.'
+    next: '272/274 active: strict version1 immutable input/operation contract and23 golden/scalar/identity controls implemented; full393 Contracts PASS. Continue additive append-only intent migration/service with fresh serialized admission and owner recovery.270 delivered;273 queued after272.'
 
   erp_data:
     issue: 264

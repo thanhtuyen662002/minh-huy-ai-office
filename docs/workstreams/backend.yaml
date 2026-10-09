@@ -2,7 +2,7 @@ workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
 current_issue: 272
-current_pr: null
+current_pr: 274
 current_branch: codex/272-task-submission-recovery
 head: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
 state: in_progress
@@ -12,6 +12,14 @@ last_checkpoint_at: '2026-10-09'
 last_completed_issue: 270
 last_merged_pr: 271
 last_merge_commit: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+submission_contract_checkpoint:
+  predecessor: 6ee5a7b17057f19803285f8b359b62224183e573
+  predecessor_build: 37906607394
+  predecessor_governance: 37906607373
+  predecessor_actual: 113741474294
+  result: 'Claim-only exact all8 PASS with shipping/proof equal acceptedmain420; no272 runtime acceptance. New strict required/unmapped request DTOs, scoped typed intent/accepted receipt, fixed24h/100 bounds, stable reserved key and explicit byte SHA256 fingerprint implemented.23 new independent golden-vector/scalar/maxUTF16/legacyidentity/JSON controls and full393 Contracts PASS; changed-file whitespace/diff checks PASS.'
+  review: 'Frozen6ee preimplementation ADR independently has no design blocker. Clarified fixed TTL/no renewal, preserve earlier intents on newoperation, committed-evidence quota, append-only effective SQL rights and strict stored bytes/hash including reserved-key legacy conflicts. Full shipping/runtime acceptance remains.'
+  next: 'Continue same274 additive immutable intent migration/service/API and fresh serialized authority/source admission, then BFF/UI and mandatory owned realCore202 receipt-loss/reload/newSID/SQL-worker-Chromium one-effect proof. Capture exact contract checkpoint and CI in HANDOFF afterpush; do not stop at contract scaffold.'
 scope:
   - durable-owner-company-submission-intent-and-exact-operation-replay
   - final-fresh-admission-source-authority-and-safe-typed-receipts
