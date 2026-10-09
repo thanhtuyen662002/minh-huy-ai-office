@@ -20,8 +20,17 @@ try {
   const manifest = JSON.parse(await readFile(join(directory, "installation.json"), "utf8"));
   for (const key of ["INSTALLATION", "TENANT", "COMPANY", "USER", "DATA_SOURCE"]) requireProof(guid(manifest[`AIOFFICE_${key}_ID`]));
   const compose = ["compose", "--env-file", join(directory, "local.env"), "-f", "compose.local.yaml"];
-  const run = (args, env = process.env) => {
-    const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
+  const run = (args, env = process.env, input) => {
+    const result = spawnSync("docker", [...compose, ...args], { encoding: "utf8", env, input, timeout: 90_000, maxBuffer: 8 * 1024 * 1024 });
+    if (result.status !== 0) {
+      // Never emit CLI stderr: it can contain private configuration or SQL.
+      const category = result.error?.code === "ETIMEDOUT" ? "timeout"
+        : /read.only file system/i.test(result.stderr ?? "") ? "read-only"
+        : /permission denied/i.test(result.stderr ?? "") ? "permission"
+        : /no such file|not found/i.test(result.stderr ?? "") ? "missing-path"
+        : /not running/i.test(result.stderr ?? "") ? "service-stopped" : "command-exit";
+      console.error(`CI command refusal: ${stage}/${category}`);
+    }
     requireProof(result.status === 0); return result.stdout.trim();
   };
   const sql = text => run(["exec", "-T", "sql", "sh", "-c",
@@ -51,6 +60,7 @@ try {
   // The override exists only inside the owned CI directory. Product Compose
   // and Core remain unchanged; the proxy listens inside web's loopback only.
   const transportOverride = join(directory, "browser-core-reply-proof.yaml");
+  stage = "owned-core-transport-override";
   await writeFile(transportOverride, 'services:\n  web:\n    environment:\n      AIOFFICE_BROWSER_CORE_API_ORIGIN: http://127.0.0.1:8099\n', { mode: 0o600 });
   compose.push("-f", transportOverride);
   restoreCoreTransport = async () => {
@@ -58,13 +68,22 @@ try {
     run(["up", "-d", "--no-deps", "--force-recreate", "web"], flags);
     await unlink(transportOverride);
   };
+  stage = "owned-core-transport-web-recreate";
   run(["up", "-d", "--no-deps", "--force-recreate", "web"], flags);
   const proxyDirectory = "/tmp/aioffice-core-reply-proof";
+  stage = "owned-core-transport-private-directory";
   run(["exec", "-T", "web", "node", "-e", "require('node:fs').mkdirSync(process.argv[1],{mode:0o700})", proxyDirectory]);
-  run(["cp", "scripts/owned-browser-core-proxy.mjs", "web:" + proxyDirectory + "/proxy.mjs"]);
+  stage = "owned-core-transport-script-copy";
+  // Docker cp does not support this writable tmpfs on a read-only container.
+  // Feed public fixture code through stdin to the unprivileged Node process.
+  const proxySource = await readFile(new URL("./owned-browser-core-proxy.mjs", import.meta.url), "utf8");
+  run(["exec", "-T", "web", "node", "-e", "require('node:fs').writeFileSync(process.argv[1],require('node:fs').readFileSync(0),{mode:0o600})",
+    proxyDirectory + "/proxy.mjs"], process.env, proxySource);
+  stage = "owned-core-transport-start";
   run(["exec", "-d", "-T", "-e", "CI=true", "-e", "GITHUB_ACTIONS=true", "-e", "AIOFFICE_BROWSER_CORE_REPLY_PROOF=true",
     "web", "node", proxyDirectory + "/proxy.mjs", proxyDirectory]);
   let proxyReady = false;
+  stage = "owned-core-transport-readiness";
   for (let attempt = 0; attempt < 30; attempt++) {
     proxyReady = run(["exec", "-T", "web", "node", "-e", "process.stdout.write(require('node:fs').existsSync(process.argv[1])?'ready':'waiting')", proxyDirectory + "/ready"]) === "ready";
     if (proxyReady) break; await delay(200);
@@ -78,6 +97,7 @@ try {
     disarm: () => run(["exec", "-T", "web", "node", "-e",
       "require('node:fs').rmSync(process.argv[1],{force:true})", proxyDirectory + "/fault.json"]),
   };
+  stage = "browser-mode-readiness";
   let ready = false;
   for (let attempt = 0; attempt < 60; attempt++) {
     try { ready = (await fetch(app, { signal: AbortSignal.timeout(2000) })).status === 200; } catch { /* Bounded readiness. */ }

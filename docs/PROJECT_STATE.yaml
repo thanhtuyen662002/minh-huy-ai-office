@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '2699c all8 PASS but independent full review withheld approval for committed Core-to-BFF reply loss incorrectly becoming401. Shipping fix and real HTTP before-header/partial-body replay and revoked/outage/company-change controls plus UI503 stable retry pass171 focused web/type-check. Close renewed exact8 CI, independently close P2 on frozen HEAD and assess actual transport proof, then final PR/main delivery. Installer723 stays Draft for clean Windows/signing and final review. Full233/customer/production remain.'
+next_action: '269 shipping P2 fix independently passes171 web plus8 reviewer probes; new actual Core-to-BFF transport control328 failed during setup before browser sign-in. All SQL/six other gates/Gov PASS. Replace unsupported Docker cp to tmpfs with structured stdin/unprivileged exec and fixed safe setup markers, then close renewed actual/exact gates and frozen review before PR/main delivery. Installer723 full integration/runtime/docs now APPROVED receipt6072831478; stays Draft for clean Windows/signing. Full233/customer/production remain.'
 
 
 blocked_by:

@@ -40,6 +40,16 @@ administrator_transport_review_9c:
   fix: 'Only Core fetch/body uncertainty becomes bodyless bounded no-store503 after a fresh same-company issued SID fence. Missing/revoked/mismatched session or coordinator outage remainsnull/401. Deadline/body bounds remain. Actual real-node-HTTP before-header/partial-body committed POST/replay and denied-session controls, UI503 stable operation retry and retained BFF/access/API controls pass171 focused web tests plus type-check.'
   next: 'Shipping fix committed at eb5d1fd46454fd67009abaa3d1d75d0c222ce762, Build37872637990 active/Gov37872638636 PASS. Reviewer independently closed original P2 probe with149 tests PASS, no mutable-tree approval. Added actual owned web-loopback proxy control for Core200/SQL commit then header/body response loss; shipping503/sameSID/exact replay/one-audit assertions, guarded private override and finally restoration. JS syntax and2 guard tests13 refusal paths PASS; close mandatory current actual/exact gates and frozen review. No merge approval yet.'
 
+administrator_transport_runtime_328:
+  head: 3284b2eaf2add03c030b29eec7537c95ad1b1580
+  build: 37872830827
+  governance: 37872830828
+  actual: 113634717739
+  result: 'Terminal actual browser-mode-readiness failure before provider sign-in/new proxy controls; all retained/new actual SQL and six other Build jobs/Governance PASS, quality follows actual red. No screenshots or full approval. Independent frozen shipping/proof delta and171 focused web plus8 reviewer probes/type-check/2 guard tests PASS; actual new transport proof remains required.'
+  fix: 'Setup previously used Docker cp into shipping web tmpfs/read-only rootfs, an unsupported Docker cp corner case consistent with immediate failure. Replace with public script bytes through structured spawnSync stdin to unprivileged docker exec Node writeFileSync. Add fixed setup substages and bounded CLI refusal categories without raw diagnostics. JS syntax/2 guard tests13 refusal paths/diff PASS; no local Linux Docker, so renewed mandatory actual execution confirms correction.'
+  installer_review: 'Frozen723 integration/runtime/docs now independently APPROVED, receipt6072831478. Artifact checksum/native76/retained actual stack and rendered previews/browser inspected.239 remains Draft for clean Windows/signing; no238/233 acceptance.'
+  next: 'Close renewed exact-head mandatory actual Core/SQL/Chromium transport proof and frozen independent closure; fix any actionable red SAME269. No merge yet.'
+
 administrator_verified_228:
   head: 228df11ea878da129c84742c266f10bd042b6723
   build: 37823779384
