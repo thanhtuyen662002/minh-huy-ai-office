@@ -8,6 +8,9 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("owned_stack_smoke", Path(__file__).with_name("smoke-local-stack.py"))
 smoke = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(smoke)
+administrator_spec = importlib.util.spec_from_file_location("administrator_smoke", Path(__file__).with_name("smoke-company-administrators.py"))
+administrator_smoke = importlib.util.module_from_spec(administrator_spec)
+administrator_spec.loader.exec_module(administrator_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
@@ -30,6 +33,17 @@ class OwnedStackGuardTests(unittest.TestCase):
             with self.subTest(directory=directory.name), patch.dict(os.environ, self.environment, clear=True):
                 with self.assertRaises(RuntimeError):
                     smoke.require_owned_ci_fixture(directory.resolve())
+
+    def test_administrator_proof_refuses_unowned_before_resources(self):
+        cases = [(self.owned, {"CI": "false"}), (self.owned, {"GITHUB_ACTIONS": "false"}),
+                 (self.owned, {"RUNNER_TEMP": ""}), (self.root, {}), (self.root / "retained", {}),
+                 (self.owned / "nested", {}), (self.root.parent / "aioffice-local", {})]
+        for directory, override in cases:
+            with self.subTest(directory=str(directory), override=override), patch.dict(os.environ, {**self.environment, **override}, clear=True):
+                with self.assertRaises(AssertionError):
+                    administrator_smoke.verify(directory=directory, manifest=None, compose=None, environment=None,
+                        http=None, sql=None, runtime_statement=None, identity_admin=None, identity=None,
+                        api="http://127.0.0.1:8080", web="http://127.0.0.1:3000", auth=None)
 
 
 if __name__ == "__main__":

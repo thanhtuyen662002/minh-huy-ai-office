@@ -17,3 +17,9 @@ Of 130 remote branches outside main, 123 exact branch HEADs match merged PR HEAD
 [PR263](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/263) and [PR265](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/265), which were active in earlier audits, subsequently merged after independent frozen implementation/runtime reviews and exact PR/main gates. Main002 Build37801975078/Governance37801976469 and actual SQL/Chromium113396238709 passed. Their feature acceptance does not complete full product #233.
 
 No branch was deleted or force updated. Integrating an archival or superseded branch requires a new demonstrated requirement and reviewed compatibility evidence.
+
+## Subsequent delivery and active leases
+
+PR267/issue266 subsequently merged at main `a75f31a2761ffe0afcbf067425eb8324789b3554` after independent full frozen implementation/proof/final documentation reviews and exact PR/main all8 gates. Main Build37815044494/Governance37815044554/actual113441393702/quality113444186237 pass. The dated130-branch snapshot above remains historical evidence, not a current active-lease list.
+
+The current open Draft leases are installer239 and administrator269. Installer239 includes accepted main at integration4b and final documentation723 with all9 hosted jobs green and full scoped independent integration/runtime/docs approval receipt6072831478; clean Windows and signing remain. Administrator269 owns issue268 from accepted maina75; d85 all8 and actual SQL/two-session Chromium including Core-to-BFF committed header/body loss/one-audit replay pass. Final frozen review/documentation/exact PR/main closure remains before merge eligibility. Queued270 task history has no implementation lease yet. Preserve the historical backup/superseded refs; no new requirement authorizes integrating them.

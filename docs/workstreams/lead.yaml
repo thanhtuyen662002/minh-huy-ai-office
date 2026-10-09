@@ -1,11 +1,11 @@
 workstream: lead
 role: "Lead / Integrator + QA / Security / Release"
 status: active-development
-current_issue: 266
-current_pr: 267
-current_branch: codex/266-company-selection
-head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
-state: ready_for_review
+current_issue: 238
+current_pr: 239
+current_branch: lead/238-windows-installer
+head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
+state: in_progress
 lease_owner: lead
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
@@ -55,7 +55,7 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: 'Accepted266 deliveredmaina75. Close installer239 current4b exact9/frozen integration review, preserving approved Setup bytes; keep Draft for clean Windows/signing. Backend268 may independently implement existing administrator role mutation from acceptedmain; integrate only after its acceptance. Full233 active.'
 
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."

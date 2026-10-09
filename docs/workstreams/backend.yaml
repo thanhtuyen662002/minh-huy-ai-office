@@ -1,23 +1,23 @@
 workstream: backend
 role: 'Backend Platform; root-owned company selection API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 266
-current_pr: 267
-current_branch: codex/266-company-selection
-head: 7647a3d8208febc1b0310fa2f794e63e76a5e9f4
+current_issue: 268
+current_pr: 269
+current_branch: codex/268-member-administrators
+head: d85be6c6df108c1f4a411889792a4727e41ab107
 state: ready_for_review
-lease_owner: root-backend-266
+lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
-last_completed_issue: 262
-last_merged_pr: 263
-last_merge_commit: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+last_completed_issue: 266
+last_merged_pr: 267
+last_merge_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 scope:
-  - authoritative-exact-identity-company-directory
-  - narrowly-marked-authenticated-pre-selection-endpoint
-  - issued-session-bff-and-provider-company-transition
-  - private-state-generation-fences-and-server-selected-scope
-  - actual-two-company-sql-oidc-chromium-acceptance
+  - existing-company-administrator-role-mutation
+  - shared-membership-version-and-company-transaction
+  - immutable-versioned-role-audit-and-replay
+  - strict-issued-session-api-bff-and-member-panel
+  - actual-role-authority-sql-chromium-denial-and-recovery
   - lead-owned-durable-frontier-refresh
 
 verification:
@@ -27,7 +27,86 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Frozen shippingf03/proof764 independently APPROVED and exact764 all8 gates PASS. Final documentation delta review/current PR gates, then merge267 and close main.239 fa/3ff integration reviewed/all9 PASS; retain Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: 'd85 full independent frozen scoped security/runtime/images APPROVED receipt6073002478 and all8 PASS including actual Core-to-BFF header/body fault/one-audit replay. Close final docs review/current exact gates, merge and exact main CI. Queued270 task-history recovery follows accepted main with one new Draft lease. Installer723 full scoped review APPROVED but clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_verified_d85:
+  head: d85be6c6df108c1f4a411889792a4727e41ab107
+  build: 37873606708
+  governance: 37873606687
+  actual: 113636976840
+  quality: 113639243215
+  artifact: 11592180944
+  artifact_bytes: 162308
+  dotnet: 1130
+  web: 1028
+  result: 'All8 exact gates PASS. New/retained SQL and two-provider-session actual Chromium PASS. Owned web-loopback proxy consumes real Core200 receipt after SQL commit then drops header or partial-body reply; shipping UI gets503, retains sameSID/fresh context/exact operation and replays original receipt with one audit and unchanged role/version. Private override/restoration succeeds; product Core/config unchanged.'
+  local_and_independent: '171 focused shipping web/type-check and8 independent original real-helper probes PASS. JS syntax/2 guard tests13 refusal paths PASS. Root and independent reviewer inspected both current sanitized images: readable member/workspace controls, preserved supplementary role and disabled current-user edits, no credentials. Full frozen security/runtime/images APPROVED, receipt6073002478; sole P2 CLOSED. Final documentation review/exact PR/main delivery remain.'
+  next: 'Close final documentation review/current exact gates; merge then exact main all8.270 is queued; do not implement before accepted main.'
+
+administrator_final_gate_722:
+  head: 722e6f052e5a7473d0687f746d047fba32959010
+  build: 37874616585
+  governance: 37874616644
+  web: 113640221229
+  result: 'Final five-doc delta independently has no factual blocker; shipping/proof bytes unchanged from approvedd85. Web terminal red in retained actual Redis replacement-tamper test (1027/1028 PASS). Other six jobs PASS; actual was still live before the fixture fix. No current merge acceptance.'
+  fix: 'Both retained real Redis tamper controls replaced a random valid tag suffix withAA, which can be identical. Decode the16-byte authentication tag, flip a bit, assert byte and payload change and canonically encode it; retain denial and valid-active-SID preservation. Test-only fixture correction, no session-store behavior change.54 local unit controls/type-check PASS;20 real Redis controls explicitly skipped locally and require renewed mandatory hosted execution.'
+  next: 'Push small verified same-PR fixture checkpoint; close current exact20 Redis/actual SQL-Chromium/all8 and independent final delta review before merge/main. Full233 remains active.'
+
+administrator_transport_review_9c:
+  head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
+  build: 37825083397
+  governance: 37825083434
+  actual: 113475736811
+  quality: 113478951911
+  artifact: 11570349874
+  result: 'All8 exact gates PASS, actual new/retained SQL and two Code/S256 browser flows PASS; two sanitized images independently inspected. Independent full shipping/proof/workflow/docs review withheld approval for sole P2: real committed Core transport loss returned401 through shared helper although SID remained valid.'
+  fix: 'Only Core fetch/body uncertainty becomes bodyless bounded no-store503 after a fresh same-company issued SID fence. Missing/revoked/mismatched session or coordinator outage remainsnull/401. Deadline/body bounds remain. Actual real-node-HTTP before-header/partial-body committed POST/replay and denied-session controls, UI503 stable operation retry and retained BFF/access/API controls pass171 focused web tests plus type-check.'
+  next: 'Shipping fix committed at eb5d1fd46454fd67009abaa3d1d75d0c222ce762, Build37872637990 active/Gov37872638636 PASS. Reviewer independently closed original P2 probe with149 tests PASS, no mutable-tree approval. Added actual owned web-loopback proxy control for Core200/SQL commit then header/body response loss; shipping503/sameSID/exact replay/one-audit assertions, guarded private override and finally restoration. JS syntax and2 guard tests13 refusal paths PASS; close mandatory current actual/exact gates and frozen review. No merge approval yet.'
+
+administrator_transport_runtime_328:
+  head: 3284b2eaf2add03c030b29eec7537c95ad1b1580
+  build: 37872830827
+  governance: 37872830828
+  actual: 113634717739
+  result: 'Terminal actual browser-mode-readiness failure before provider sign-in/new proxy controls; all retained/new actual SQL and six other Build jobs/Governance PASS, quality follows actual red. No screenshots or full approval. Independent frozen shipping/proof delta and171 focused web plus8 reviewer probes/type-check/2 guard tests PASS; actual new transport proof remains required.'
+  fix: 'Setup previously used Docker cp into shipping web tmpfs/read-only rootfs, an unsupported Docker cp corner case consistent with immediate failure. Replace with public script bytes through structured spawnSync stdin to unprivileged docker exec Node writeFileSync. Add fixed setup substages and bounded CLI refusal categories without raw diagnostics. JS syntax/2 guard tests13 refusal paths/diff PASS; no local Linux Docker, so renewed mandatory actual execution confirms correction.'
+  installer_review: 'Frozen723 integration/runtime/docs now independently APPROVED, receipt6072831478. Artifact checksum/native76/retained actual stack and rendered previews/browser inspected.239 remains Draft for clean Windows/signing; no238/233 acceptance.'
+  next: 'Close renewed exact-head mandatory actual Core/SQL/Chromium transport proof and frozen independent closure; fix any actionable red SAME269. No merge yet.'
+
+administrator_verified_228:
+  head: 228df11ea878da129c84742c266f10bd042b6723
+  build: 37823779384
+  governance: 37823779368
+  actual: 113471219460
+  quality: 113474198004
+  result: 'All8 exact gates PASS, including all new SQL and two-session shipping Chromium role controls plus retained gates. Broad e937 stale-stage failure did not reproduce with fixed detailed substages/pre-stale SQL positive; every assertion retained. Current artifact proof additionally awaits real UI completion notices before later changes and captures sanitized member controls; renewed exact run/frozen review required.'
+  local_additional: '18 administrator UI plus20 retained access UI and type-check PASS, including historical lost receipt after another actor changes role/version and next mutation using the fresh version. Python/JS guard controls remain verified.'
+
+administrator_runtime_checkpoint:
+  head: e9370b9d34d884b73e5c16b02fdff2d803833831
+  build: 37822504244
+  governance: 37822504403
+  actual: 113466853376
+  sql: 'PASS complete new role/audit/version/replay/shared-access and opposite-admin/native lock barriers/queued external actor revocation/privilege rollback and stored-byte Unicode/alias/fingerprint scenarios, plus all retained SQL/ERP/member controls.'
+  browser: 'Terminal red administrator-shipping-role-stale409-private-clear after two Code/S256 sessions, shipping grant/remove/fresh authority/private clearing/committed lost-response and historical replay assertions passed. Added fixed substage markers and pre-stale SQL positive, retaining every assertion; current exact rerun required.'
+  other_gates: 'All six other Build jobs and Governance PASS. Quality red follows actionable browser failure; no runner-noise retry.'
+
+administrator_browser_checkpoint:
+  sql_head: e51fc2b924a960879277b7daaccf42e1745a5c36
+  sql_build: 37821635626
+  sql_governance: 37821635882
+  sql_actual: 113463873920
+  failure: 'SQL fixture setup duplicate PK: default collation ignores supplementary suffix so viewer and viewer-emoji were equivalent. Fixture now uses distinct supplementary prefix. All six other jobs/Governance and retained SQL/member proof passed; no new administrator scenarios executed yet.'
+  implementation: 'Added actual shipping Chromium grant/remove with separate target provider Code/S256 session and immediate fresh role gain/loss under same SID, member private clearing, committed lost reply/stable and historical replay, stale409/reload and retained original fingerprints. New standalone CI guard checks9 unowned flags/paths/hosts. SQL adds cross-tenant target, queued external actor revocation and inactive-global-target denial.'
+  local: 'Python compilation/4 guard tests/15 refusal paths, JS syntax/1 guard test/9 refusal paths, workflow YAML and diff checks PASS. Actual current-head hosted SQL/Chromium and frozen independent review remain mandatory.'
+
+administrator_sql_checkpoint:
+  verified_ui_head: 3e50621fa7eafcd9802aa02974e4a05a1009488c
+  ui_build: 37820209367
+  ui_governance: 37820209365
+  ui_actual: 113458996444
+  ui_quality: 113461955053
+  result: 'Current UI all8 exact gates PASS. New mandatory owned SQL fixture authored: role/audit/version/replay/shared-access/opposite-admin barriers, effective permission and rollback/restored positives, raw malformed role/alias and supplementary Unicode preservation. Python compile and4 boundary tests/15 refusal paths PASS; actual fixture execution remains required. Chromium admin scenarios remain to implement.'
 
 implementation_checkpoint:
   completed: 'Versioned optimistic membership token and append-only audit migration; fresh scoped admin/self/last-admin/stale/replay/global-inactive guards, company SQL app lock/serializable transaction and bounded strict API. Opt-in includeAccessVersion preserves legacy directory shape.'
@@ -176,3 +255,43 @@ company_selection_reviewed_764:
   state: ready_for_review
   review: 'Independent full frozen shipping f03/proof-workflow-docs764 security and runtime APPROVED. All8 exact jobs PASS; actual SQL stored-byte Unicode/identity/ambiguity and strengthened two-company Chromium controls PASS; exact sanitized artifact independently inspected. Earlier scalar and vacuous-chat findings closed. Review resumed after historical quota interruption.'
   next: 'Final documentation delta review and exact current PR gates, then merge267 and close exact main CI. No customer ERP/production/full233 acceptance;239 stays Draft for clean Windows/signing.'
+
+verified_company_selection_267:
+  shipping_head: f03f082800d3324e0574b0b510d74bf6c9d93785
+  final_pr_head: 9385acb554b73f5a125767215386a861615df412
+  merge: a75f31a2761ffe0afcbf067425eb8324789b3554
+  pr_build: 37813468995
+  pr_governance: 37813469019
+  pr_actual: 113435971711
+  pr_quality: 113440765045
+  main_build: 37815044494
+  main_governance: 37815044554
+  main_actual: 113441393702
+  main_quality: 113444186237
+  main_artifact: 11567296114
+  main_artifact_bytes: 72696
+  state: done
+  review: Full independent frozen shipping f03/proof764/final938 docs APPROVED, receipt6065013062.
+    Exact PR/main all8 gates PASS, including native identity/ambiguity/stored-byte Unicode
+    and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
+    separation/revoke-restore.266 closed. Full233/customer/production and installer
+    clean Windows/signing remain.
+
+company_administrator_foundation:
+  base: a75f31a2761ffe0afcbf067425eb8324789b3554
+  service: 'Fresh scoped exact admin assignment/removal, active target, no self/last-admin/alias, shared access version/company serializable lock, immutable full role snapshots and exact actor/request replay. Constant raw SQL role bytes/strict scalar validation preserve audit fidelity.'
+  migration: 20261008173733_AddCompanyAdministratorAudit
+  local: '45 administrator-focused tests PASS (44 new plus retained last-admin control), including service/API/immutable effective rights/relational query translation and malformed Unicode. Full725 Persistence passed before four final Unicode/query controls; model has no pending changes; changed C# format/diff PASS.'
+  remaining: 'BFF/UI, actual new SQL/Chromium mutations and permission/concurrency proof, independent frozen review and exact PR/main gates. Foundation is not268 completion.'
+
+company_administrator_ui_checkpoint:
+  foundation_head: 69b24e29b7571a7cf8160271631533d5d101173a
+  build: 37818966435
+  governance: 37818966438
+  actual_stack: 113455083869
+  required_quality: 113457936779
+  hosted_dotnet_tests: 1130
+  foundation: 'All8 exact gates PASS,729 Persistence/370 Contracts/25 configuration/6 observability, actual migration and retained SQL/OIDC/Chromium. This retained proof does not exercise the new role mutation and cannot close268.'
+  ui: 'Strict issued-session same-origin administrator BFF validates canonical selectors,2048-byte requests and decoded duplicate keys,4096-byte response/10sec/final shared helper fence, exact scoped receipt echo and bounded conflicts. No private diagnostics/cookies proxy. Member panel grant/remove uses shared version, stable lost-reply replay, current-user/inactive protection and fresh authority reconciliation; stale/denied/expired/scope controls clear private state.'
+  local: '79 focused web PASS (42 new BFF,17 new admin UI,20 retained access UI); type-check/diff PASS. Common bounded JSON helper preserves existing default decoder; optional strict parser only used for new mutation/response.'
+  remaining: 'Actual owned SQL role mutation/audit/permission/concurrency/Unicode controls and actual shipping Chromium grant-remove/lost reply/session authority proof, independent frozen security/runtime review and final exact PR/main delivery.'

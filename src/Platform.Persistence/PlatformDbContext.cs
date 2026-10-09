@@ -12,6 +12,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<CompanyRecord> Companies => Set<CompanyRecord>();
     public DbSet<CompanyMembershipRecord> CompanyMemberships => Set<CompanyMembershipRecord>();
     public DbSet<CompanyMembershipAccessAuditRecord> CompanyMembershipAccessAudits => Set<CompanyMembershipAccessAuditRecord>();
+    public DbSet<CompanyAdministratorAuditRecord> CompanyAdministratorAudits => Set<CompanyAdministratorAuditRecord>();
     public DbSet<RoleAssignmentRecord> RoleAssignments => Set<RoleAssignmentRecord>();
     public DbSet<DataSourceRecord> DataSources => Set<DataSourceRecord>();
     public DbSet<DataSourceSecretBindingRecord> DataSourceSecretBindings => Set<DataSourceSecretBindingRecord>();
@@ -31,6 +32,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.HasDefaultSchema(DefaultSchema);
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureCompanyMembershipAccess();
+        modelBuilder.ConfigureCompanyAdministratorAudit();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));

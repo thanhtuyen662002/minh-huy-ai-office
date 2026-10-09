@@ -152,14 +152,15 @@ describe("opaque browser BFF", () => {
     fetcher.mockResolvedValue(new Response(new ReadableStream({
       start(controller) { controller.enqueue(new Uint8Array(BROWSER_CORE_RESPONSE_BYTES + 1)); }, cancel,
     }), { headers: { "Content-Type": "application/json", "Content-Length": "1" } }));
-    expect((await context(request())).status).toBe(401); expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledOnce();
+    expect((await context(request())).status).toBe(503); expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledTimes(2);
   });
   it("cancels a stalled Core body on caller abort without returning private data", async () => {
     const cancel = vi.fn(), controller = new AbortController();
     fetcher.mockResolvedValue(new Response(new ReadableStream({ cancel }), { headers: { "Content-Type": "application/json" } }));
     const pending = fetchCoreApi("/api/auth/context", company, { signal: controller.signal });
     await new Promise<void>((resolve) => setImmediate(resolve)); controller.abort();
-    expect(await pending).toBeNull(); expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledOnce();
+    const response = await pending; expect(response?.status).toBe(503); expect(await response?.text()).toBe("");
+    expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledTimes(2);
   });
   it("does not extend the Core deadline while reading a stalled body", async () => {
     const cancel = vi.fn(), deadline = new AbortController();
@@ -167,7 +168,8 @@ describe("opaque browser BFF", () => {
     fetcher.mockResolvedValue(new Response(new ReadableStream({ cancel })));
     try {
       const pending = context(request()); await new Promise<void>((resolve) => setImmediate(resolve)); deadline.abort();
-      expect((await pending).status).toBe(401); expect(cancel).toHaveBeenCalledOnce(); expect(timeout).toHaveBeenCalledWith(10_000);
+      expect((await pending).status).toBe(503); expect(cancel).toHaveBeenCalledOnce(); expect(read).toHaveBeenCalledTimes(2);
+      expect(timeout).toHaveBeenCalledWith(10_000);
     } finally { timeout.mockRestore(); }
   });
   it("copies a bodyless Core response without inventing content or upstream cookies", async () => {
