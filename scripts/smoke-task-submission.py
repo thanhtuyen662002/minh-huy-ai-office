@@ -359,11 +359,14 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     assert snapshot() == settled, "Restored original event changed execution effects"
     print("PASS native quota excludes only validated committed acceptance and refuses malformed original task evidence, with restored positive")
 
-    legacy_input = {"dataSourceId": source, "question": question, "maxAttempts": 3}
+    # The public legacy DTO accepts source/question; attempts are server-owned.
+    # Stored-event attempts corruption is covered above against the real graph.
+    legacy_input = {"dataSourceId": source, "question": question}
     legacy_auth = {**auth, "Idempotency-Key": "web-intent-v1-" + uuid.UUID(operation).hex}
-    assert call("/api/tasks", legacy_input, legacy_auth)[2]["taskId"] == expected_task
-    for delta in ({"question": "different"}, {"maxAttempts": 2}):
-        assert call("/api/tasks", {**legacy_input, **delta}, legacy_auth)[2]["code"] == "operation-conflict"
+    replay_status, _, replay_body = call("/api/tasks", legacy_input, legacy_auth)
+    assert replay_status == 202 and replay_body["taskId"] == expected_task
+    conflict_status, _, conflict_body = call("/api/tasks", {**legacy_input, "question": "different"}, legacy_auth)
+    assert conflict_status == 409 and conflict_body.get("code") == "operation-conflict", "Legacy changed question did not conflict"
     assert call("/api/tasks", legacy_input, {**auth, "Idempotency-Key": "web-intent-v1-" + uuid.UUID(expired_op).hex})[2]["code"] == "intent-expired"
     assert snapshot() == settled
     legacy_op = str(uuid.uuid4())
