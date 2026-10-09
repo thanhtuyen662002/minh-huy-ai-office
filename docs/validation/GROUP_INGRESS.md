@@ -186,3 +186,14 @@ late historical gaps, contiguous cursor and retained Core restart. It preserves
 portal task/user counts. Four new local fixture-boundary/vector/privacy tests
 and all14 stack guard tests PASS. Native execution is pending; no SQL acceptance
 or listener/queue/private-inbox delivery is claimed from script existence.
+
+Independent native fixture review found four incorrect/incomplete oracles. The
+repair uses canonical COALESCE empty-array digests and an actual empty-source
+positive; correct Edit3/Recall4/original1 kinds plus exact per-message revisions,
+content hashes/backfill flags and unchanged original-gap bytes; the complete
+ordered1..cursor vector (rejects1,3 atcursor2); and unconditional private-file
+unlink in a nestedfinally when default restore or readiness fails. All16 local
+fixture guard/vector/privacy/oracle/cleanup tests PASS. This repair still needs
+frozen review and actual exact-head native execution. Scoped HTTP repair was
+independently approved with32 controls, including the true configured-key
+positive without a key-provider mock (PR283 comment6090044353).

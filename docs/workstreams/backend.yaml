@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
+head: e228622a298753fc9e64f62bd19dd7b5399df0e7
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -763,3 +763,13 @@ group_ingress_native_gate_checkpoint:
   predecessor: b7cc518b81cb876ba4ba62742b222c754526cfcd
   result: 'Mandatory owned shipping HMAC HTTP-to-runtimeSQL proof now wired into retained complete local stack job. Explicit Development-only private0600 random key override, exact fixture guard before resources, fixed diagnostics/privateSQLstdin, original ship default-off restored. Concurrent100 replay/original graph snapshots/rollback/column escalation/queued current authority6/edit-recall-history gaps/order/Core restart fixtures encoded; all14 local ownership/vector/privacy guards PASS. No native execution result yet.'
   next: 'Own exact native CI, inspect fixed failing phase and repair samePR immediately; bounded HTTP repairreview b7 ongoing. Then complete fencedlistener/encryptedspool/outbox recovery and scoped reads/private inbox. No277 delivery from nativeproof existence, no live connector/account/send.'
+
+group_native_oracle_review_repair:
+  predecessor: e228622a298753fc9e64f62bd19dd7b5399df0e7
+  build: 37997151788
+  governance: 37997151780
+  actual: 114046156901
+  state: 'six prerequisitesPASS/actualpending; no native result claimed'
+  http_review: 'Independent frozenb7 APPROVED6090044353:32 independent HTTP/configuredENV-key controls PASS; auth/timestamp original cases closed. No full277 approval.'
+  native_review: 'Independent e228 identified four fixtureP2: empty SQL NULL digest, wrong Media2/Edit3 used instead of Edit3/Recall4, weak cursor oracle accepts1,3 atcursor2, privateoverride retained on restore/readiness failure. Repair canonical COALESCE empty[] and native emptypositive; exact3/4/1 per-message revisions/hashes/history/gapbytes; exactordered1..cursor; nestedfinally fileunlink regardlessrestorefailure.16 ownership/vector/privacy/oracle/cleanup guards PASS; repaired frozen review/new exactCI required.'
+  next: 'Own repaired native review/exactCI and samePR defects; authorizedprotectedread implementation ongoing locally. No actual277/brain/notes/IT report/live claims. Full233/62 remains active.'

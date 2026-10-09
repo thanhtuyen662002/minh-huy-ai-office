@@ -30,6 +30,10 @@ def signing_bytes(service, epoch, signed_at, nonce, body):
         + hashlib.sha256(body).hexdigest().upper()).encode("ascii")
 
 
+def require_contiguous_cursor(sequences, cursor):
+    assert 0 < cursor <= 4096 and sequences == list(range(1, cursor + 1)), "Group source skipped a committed sequence or stored beyond its cursor"
+
+
 def require_owned(directory, api):
     if not (os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
@@ -97,8 +101,8 @@ def verify(*, directory, manifest, compose, environment, api):
         tables = [("GroupMessages", "Id"), ("GroupMessageRevisions", "CommittedSequence"),
             ("GroupIngressReceipts", "EventIdentityHash"), ("GroupIngressOutbox", "Id"),
             ("GroupSourceStates", "BindingId"), ("GroupCoverageGaps", "Id")]
-        values = [sql(f"SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
-            f"(SELECT * FROM {schema}{table} WHERE {scope} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+        values = [sql(f"SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+            f"(SELECT * FROM {schema}{table} WHERE {scope} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
             for table, order in tables]
         assert all(re.fullmatch(r"[0-9A-F]{64}", value) for value in values), "Invalid group snapshot"
         return values
@@ -220,6 +224,10 @@ def verify(*, directory, manifest, compose, environment, api):
         """)
         compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
         ready()
+        empty_snapshot = snapshot()
+        assert counts() == [0, 0, 0, 0], "Owned new source was not empty"
+        empty_digest = hashlib.sha256("[]".encode("utf-16-le")).hexdigest().upper()
+        assert empty_snapshot == [empty_digest] * 6, "Empty owned source did not have canonical complete-byte fingerprints"
         owner_graph = sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
         payload = event()
@@ -302,14 +310,22 @@ def verify(*, directory, manifest, compose, environment, api):
             print("PASS actual group observed queued source-lock " + name + " revoke denies unchanged graph/restored positive")
 
         message = str(uuid.uuid4())
-        for kind, text, historical in [(2, "Owned edit", False), (3, "", False), (1, "Late owned original", True)]:
+        before_edit = int(sql(f"SELECT CommittedSequence FROM {schema}GroupSourceStates WHERE {scope};"))
+        gap_after_edit = None
+        for kind, text, historical in [(3, "Owned edit", False), (4, "", False), (1, "Late owned original", True)]:
             require_receipt(*call(event(message=message, kind=kind, text=text, historical=historical)))
-        assert sql(f"SELECT COUNT(*) FROM {schema}GroupCoverageGaps WHERE {scope} AND Reason='original-message-unseen';") == "1"
+            if kind == 3: gap_after_edit = snapshot()[5]
+        assert gap_after_edit == snapshot()[5], "Recall or late original erased/changed the original-unseen coverage gap"
+        history = json.loads(sql(f"SELECT r.Revision,r.Kind,r.ContentSha256,r.IsHistoricalBackfill FROM {schema}GroupMessageRevisions r"
+            f" JOIN {schema}GroupMessages m ON m.TenantId=r.TenantId AND m.CompanyId=r.CompanyId AND m.BindingId=r.BindingId AND m.Id=r.MessageId"
+            f" WHERE r.TenantId='{tenant}' AND r.CompanyId='{company}' AND r.BindingId='{source}' AND m.ExternalMessageId=N'{message}' ORDER BY r.Revision FOR JSON PATH;"))
+        assert history == [{"Revision": index, "Kind": kind, "ContentSha256": hashlib.sha256(text.encode()).hexdigest().upper(), "IsHistoricalBackfill": historical}
+            for index, (kind, text, historical) in enumerate([(3, "Owned edit", False), (4, "", False), (1, "Late owned original", True)], start=1)]
+        assert sql(f"SELECT COUNT(*) FROM {schema}GroupCoverageGaps WHERE {scope} AND Reason='original-message-unseen' AND AfterCommittedSequence={before_edit};") == "1"
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupMessageRevisions WHERE {scope} AND IsHistoricalBackfill=1;") == "1"
         sequence = int(sql(f"SELECT CommittedSequence FROM {schema}GroupSourceStates WHERE {scope};"))
-        assert sql(f"SELECT COUNT(*) FROM {schema}GroupMessageRevisions WHERE {scope};") == str(sequence)
-        assert sql(f"SELECT COUNT(DISTINCT CommittedSequence) FROM {schema}GroupMessageRevisions WHERE {scope};") == str(sequence)
-        assert sql(f"SELECT MIN(CommittedSequence) FROM {schema}GroupMessageRevisions WHERE {scope};") == "1"
+        sequences = sql(f"SELECT STRING_AGG(CONVERT(varchar(max),CommittedSequence),',') WITHIN GROUP(ORDER BY CommittedSequence) FROM {schema}GroupMessageRevisions WHERE {scope};")
+        require_contiguous_cursor([int(value) for value in sequences.split(',')], sequence)
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
         retained = snapshot()
@@ -320,8 +336,12 @@ def verify(*, directory, manifest, compose, environment, api):
     finally:
         # Remove configuration from this host before the existing browser gate.
         # Durable synthetic source evidence stays in the owned disposable SQL.
-        compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api")
-        ready()
-        override.unlink()
+        try:
+            compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api")
+            ready()
+        finally:
+            # This invocation exclusively created this exact file. Even a
+            # terminal restore failure must not retain private random keys.
+            override.unlink()
     assert call(event())[0] == 404
     print("PASS owned group API private configuration removed; shipping default-off restored; no live connector or send attempted")

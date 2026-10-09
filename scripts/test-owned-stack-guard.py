@@ -1,8 +1,10 @@
 """Verify the adversarial fixture boundary without files, Docker or network."""
 import importlib.util
 import os
+import re
 from pathlib import Path
 import unittest
+import tempfile
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -141,6 +143,35 @@ class OwnedStackGuardTests(unittest.TestCase):
             "\nE3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855").encode("ascii")
         self.assertEqual(expected, group_smoke.signing_bytes(service, 1, 1791580000, nonce, b""))
         self.assertNotEqual(expected, group_smoke.signing_bytes(service, 1, 1791580000, nonce, b" "))
+
+    def test_group_cursor_oracle_refuses_skipped_future_and_duplicate_commits(self):
+        group_smoke.require_contiguous_cursor([1, 2], 2)
+        for sequences, cursor in [([1, 3], 2), ([1, 1], 2), ([2, 3], 2), ([1], 2), ([1, 2, 3], 2), ([], 0)]:
+            with self.subTest(sequences=sequences, cursor=cursor), self.assertRaises(AssertionError):
+                group_smoke.require_contiguous_cursor(sequences, cursor)
+
+    def test_group_private_override_is_removed_even_when_restore_process_or_readiness_fails(self):
+        class DisabledResponse:
+            status = 404
+            headers = {"Cache-Control": "no-store"}
+            def read(self): return b""
+            def __enter__(self): return self
+            def __exit__(self, *args): pass
+        for restore_failure in (True, False):
+            with self.subTest(restore_failure=restore_failure), tempfile.TemporaryDirectory(prefix="aioffice-group-guard-") as root:
+                directory = Path(root) / "aioffice-local"; directory.mkdir()
+                marker = directory / "retained-unowned-marker"; marker.write_text("retained", encoding="utf-8")
+                environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": root}
+                manifest = {"AIOFFICE_TENANT_ID": "11111111-1111-4111-8111-111111111111", "AIOFFICE_COMPANY_ID": "22222222-2222-4222-8222-222222222222"}
+                with patch.dict(os.environ, environment, clear=True), patch.object(group_smoke.urllib.request, "urlopen", return_value=DisabledResponse()), \
+                    patch.object(group_smoke, "owned_sql", side_effect=RuntimeError("Owned SQL admission failure.")), \
+                    patch.object(group_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=1 if restore_failure else 0, stdout="", stderr="")), \
+                    patch.object(group_smoke.time, "monotonic", side_effect=[0, 61]):
+                    expected = "Owned group API recreation failed." if restore_failure else "Owned group API readiness deadline exceeded."
+                    with self.assertRaisesRegex(RuntimeError, "^" + re.escape(expected) + "$"):
+                        group_smoke.verify(directory=directory, manifest=manifest, compose=["docker", "compose"], environment=environment, api="http://127.0.0.1:8080")
+                self.assertFalse((directory / "group-ingress-owned.override.json").exists())
+                self.assertEqual("retained", marker.read_text(encoding="utf-8"))
 
     def test_group_sql_private_bytes_stay_in_stdin_and_diagnostics_remain_fixed(self):
         private = "SELECT N'PRIVATE_GROUP_FIXTURE';"
