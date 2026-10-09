@@ -13,7 +13,11 @@ participants are opaque connector identities, never portal users. Source group,
 internal technical destination, service principal, per-capability grant and audience
 route are separate typed records. Ingest, extract and notify require separate grants.
 Missing notification routing must not prevent safe ingestion/notes; it must prevent
-notification. The MVP requires the same tenant/company for source and destination;
+notification. SQL enrollment must enforce source/destination role exclusivity, and
+notification SQL must resolve the complete current customer-role collision set,
+including customer bindings not present in a particular report. These are mandatory
+#277 integration requirements; a contract alone cannot discover registry roles.
+The MVP requires the same tenant/company for source and destination;
 cross-company disclosure needs a later explicit reviewed contract.
 
 Backend service authentication resolves a fresh principal and credential epoch; SQL
@@ -65,6 +69,13 @@ possible. [Message](https://zca-js.tdung.com/en/listeners/message) and
 evidence, not controlled runtime acceptance. Keep all live capability observations
 unverified until an authorized controlled account test records exact version,
 environment and evidence. No account login or live sends occurred.
+
+The executable qualification policy copies observations, binds exact tenant/company/
+account/provider/version/commit, requires explicit recent controlled evidence for
+each mandatory capability, and refuses all synthetic qualification for live profiles.
+Initial freshness ceiling is30days; runtime membership/grant/route checks remain
+mandatory immediately before ingest/send. Optional edit/recall/reply support may stay
+unverified; consumers must record the resulting coverage/invalidation limits.
 
 Required observations cover group text, provider message/revision/sender/reply IDs,
 self/echo correlation, listener collision/gaps, edit/recall, membership, text sending,

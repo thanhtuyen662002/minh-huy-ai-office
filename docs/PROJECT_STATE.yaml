@@ -5,18 +5,18 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: codex/276-group-routing-contracts
-current_pr: null
-current_target_head: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+current_pr: 282
+current_target_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
 last_verified_commit: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
 
 critical_paths:
   backend:
     issue: 276
-    pr: null
+    pr: 282
     branch: codex/276-group-routing-contracts
-    head: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+    head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
     state: in_progress
-    next: '272/274 delivered and main09b7 verified. User attachment now read; automatic scoped SQL notes and IT-only notification supersede manual approval/customer reporting. Claim276 with tested routing/service contracts and honest connector qualification, then277 SQL ingress,278 real SQL brain/automatic notes,279 SQL reporter.281 docs correction full review6088335989; integrated38c3 CI remains owned. No live account/sends/deployment.'
+    next: '276/282 active lease after272/274 delivery and attachment reading. Concrete routing/service policies plus controlled-vs-synthetic qualification and frozen batch/note/report refs implemented locally;66 new/full462 Contracts PASS. Initial840 frozen routing33 independent tests/no blocker; full current qualification/workflow review and exact gates remain.281 docs correction fullreview6088335989/integrated38c3 all8 approved and mergedmain1b0; exact main pending. Then277 SQL ingress,278 real SQL brain/automatic notes,279 IT-only reporter. No live activation.'
 
   erp_data:
     issue: 264
@@ -79,7 +79,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'User sequence fulfilled:272/274 merged and main09b7 all8/actualSQL-Chromium/all4images verified before attachment reading. Implement276 executable source/destination/service contracts and qualification, then277 durable source/revisions/queue,278 SQL brain/automatic business notes and279 automatic IT-only reporting. Integrate independently reviewed docs-only281 after refreshed38c3 gates. No runtime human approval/customer outbound; all62/233 remain active;273 queued/239actualWindows-signingDraft.'
+next_action: 'Continue owned276/282 full frozen contract/qualification review and exactCI, preserving core progress while live connector is unqualified.281 docs correction mergedmain1b0 after approved38c3/all8; close exactmain then absorb accepted plan. Deliver276 before277 SQL ingress/revisions/queue,278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No runtime human approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
 
 
 blocked_by:

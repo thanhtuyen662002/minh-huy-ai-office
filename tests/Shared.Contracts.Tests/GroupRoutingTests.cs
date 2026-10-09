@@ -42,6 +42,8 @@ public sealed class GroupRoutingTests
         var exact = new GroupExternalIdentity("synthetic", "account ", " group😀 ");
         Assert.Equal(exact.IndexKey(), (exact with { }).IndexKey());
         Assert.Equal(" group😀 ", exact.GroupId);
+        // Independent Python hashlib/struct little-endian UTF8 vector.
+        Assert.Equal("E6A0749FB48B2CC0E601E3412D462580886A13C3E34971A794B21C63C5E68599", exact.IndexKey());
     }
 
     [Fact]

@@ -2,9 +2,9 @@ workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
 current_issue: 276
-current_pr: null
+current_pr: 282
 current_branch: codex/276-group-routing-contracts
-head: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
 state: in_progress
 lease_owner: root-backend-276
 lease_heartbeat_at: '2026-10-09'
@@ -195,7 +195,17 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: '272/274 delivered after exactPR/main all8 and all4 current main images. Attachment read only afterward. Claim276 executable routing/service contracts plus honest connector qualification; then277 SQL ingress,278 SQL memory/automatic notes,279 IT-only reporting.281 correction fullreview6088335989; refreshed integrated38c3 gates pending. No live sends/activation; full62/233 active.'
+next_action: '276/282 owned: finalize current executable qualification/workflow refs and full frozen review/exact gates. Initial840 Build37985083444/Gov37985083618/all8/actual114004956035/quality114009006648 PASS; independent initial33 routing tests/no blocker. Local66 new/full462 Contracts PASS.281 corrected plan38c3 all8/independent6088335989 approved and merged1b0; close main37985845222/Gov37985845186 then absorb. Continue277-279 actual SQL brain/automatic IT flow; no live activation/full62 completion.'
+
+group_contracts_checkpoint:
+  initial_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
+  initial_build: 37985083444
+  initial_governance: 37985083618
+  initial_actual: 114004956035
+  initial_quality: 114009006648
+  initial_result: 'All8 exact PASS, preserving existing real SQL/OIDC/worker/Chromium. Independent frozen initial routing review has no blocker;33 tests including7 independent probes and Python-derived hash/32-33 bounds PASS. This is initial contracts only, not SQL memory or a group connector feature.'
+  local: 'Concrete controlled-account vs synthetic qualification, strict version/account/scope/evidence freshness; frozen exact committed batch references, scoped model proposal shape, NotesCommitted refs, source metadata, IT-only report intent and no-blind-retry state policy.66 new/full462 Contracts PASS. Full current frozen review, format/YAML/diff and renewed exactCI remain required.'
+  next: 'Checkpoint same282, full frozen contracts/qualification/workflow review and final exactPR/main. Then277 source SQL stores/queue,278 real SQL brain/automatic notes and279 committedSQL IT-only reporting. No schema or shipped group endpoint/DI/worker path yet; no live qualification, sends or account login.'
 
 task_submission_delivered_274:
   final_pr: f3cf3cc7eb8daa2737473f67d298b86858ee00c1
