@@ -495,5 +495,15 @@ group_contracts_final_ci_0a:
   build: 37988231713
   governance: 37988231840
   actual: 114015962681
-  result: 'Seven prerequisites/Governance PASS; all native SQL/receipt/permission/recovery controls PASS. Retained Chromium terminal at broad owned-session-expiry-private-clear before new final browser acceptance. No final all8/main delivery claimed. Same282 adds fixed substage-only diagnostics without assertion/timeout/authority changes;6 guard tests/JS syntax/diff PASS. Own renewed exactCI and fix actual cause before merge.'
+  result: 'Six Build prerequisites and Governance PASS; all native SQL/receipt/permission/recovery controls PASS. Retained Chromium terminal at broad owned-session-expiry-private-clear before new final browser acceptance. No final all8/main delivery claimed. Same282 adds fixed substage-only diagnostics without assertion/timeout/authority changes;6 guard tests/JS syntax/diff PASS. Own renewed exactCI and fix actual cause before merge.'
   stacked_child: '277/PR283 explicit stacked from parent contracts;12-table SQL/protection foundation b124 local9/full869 Persistence PASS; runtime call path remains. Child cannot merge before accepted parent.'
+
+
+group_ci_registry_cache_repair:
+  predecessor: 7ca0a8fc96c70f4582380501e619bfae62646870
+  build: 37989859863
+  governance: 37989860318
+  actual_attempts: [114020948833, 114022285746]
+  result: 'Six Build prerequisites/Gov PASS; actual attempt1 and the single retry attempt2 refuse DockerHub unauthenticated pull429 before native/browser. No renewed expiry diagnosis or final gate acceptance. Same282 adds fixed Google-managed DockerHub daemon cache only to empty hosted Linux CI jobs; canonical images, product configs, tests and security assertions remain.5 Python guard tests/syntax/YAML/diff PASS; all5 exact cache manifest HEAD probes200. Actual runner cache/new SQL-browser closure remains.'
+  documentation: https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images
+  next: 'Own exact new282 gates. Confirm hosted cache resolves image bootstrap then diagnose retained Chromium fixed expiry substage and repair on same282. Independent bounded CI/docs review required. No merge until final PR/main; stacked277/283 cannot merge first.'

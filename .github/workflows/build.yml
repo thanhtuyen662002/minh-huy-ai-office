@@ -79,6 +79,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -93,6 +94,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -146,6 +148,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
       - name: Validate production deployment contract
         shell: bash
         run: |

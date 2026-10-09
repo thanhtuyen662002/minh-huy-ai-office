@@ -1,0 +1,15 @@
+name: Configure hosted Docker Hub cache
+description: Use the Google-managed cache on an empty disposable hosted Linux daemon.
+runs:
+  using: composite
+  steps:
+    - name: Verify cache configuration guard
+      shell: bash
+      run: python3 scripts/test-ci-docker-cache.py
+    - name: Configure hosted daemon cache
+      shell: bash
+      env:
+        AIOFFICE_DOCKER_CACHE_RUNNER: ${{ runner.environment }}
+      run: |
+        sudo --preserve-env=CI,GITHUB_ACTIONS,RUNNER_OS,AIOFFICE_DOCKER_CACHE_RUNNER \
+          python3 scripts/configure-ci-docker-cache.py
