@@ -150,6 +150,8 @@ jobs:
             ${{ runner.temp }}/aioffice-browser-proof/administrators.png
             ${{ runner.temp }}/aioffice-browser-proof/task-history.png
             ${{ runner.temp }}/aioffice-browser-proof/task-submission.png
+            ${{ runner.temp }}/aioffice-browser-proof/group-inbox.png
+            ${{ runner.temp }}/aioffice-browser-proof/group-inbox-mobile.png
           if-no-files-found: error
           retention-days: 7
       - name: Remove only this ephemeral CI stack

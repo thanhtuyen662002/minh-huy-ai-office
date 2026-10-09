@@ -320,3 +320,6 @@ A new mandatory owned Chromium inbox candidate runs while the native proof's exc
 ### Inbox layout bounds repair
 
 Independent bca layout proof with the shipping component/Tailwind reproduced horizontal overflow from legitimate unbroken200-unit source labels and256-unit sender IDs at375 and1440 widths. Source list items/buttons and detail containers now use maximum-width/minimum-width containment; source labels and bidi sender IDs wrap without changing original scalar values. Mobile direct-reader navigation remains independent of task submission. Original independent mobile/layout probes must close before shipping UI approval.
+
+
+Owned inbox browser candidate additionally opens the mobile navigation directly at375px after a separate fresh issued session, verifies viewport containment, and records two sanitized synthetic inbox screenshots in the existing CI artifact. No private configurations or browser traces are uploaded. This remains an unexecuted browser oracle until its exact CI runs.

@@ -113,7 +113,14 @@ export async function verifyOwnedGroupInbox(directory, fixture) {
     await page.getByRole("button", { name: "Hộp thư nguồn", exact: true }).first().click(); await open();
     const artifacts = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof"); await mkdir(artifacts, { recursive: true });
     await page.screenshot({ path: join(artifacts, "group-inbox.png"), fullPage: true });
+    stage = "mobile-direct-reader-navigation";
+    await page.setViewportSize({ width: 375, height: 900 });
+    await page.getByRole("button", { name: "Trợ lý AI", exact: true }).click(); proof(await article().count() === 0);
+    await page.getByRole("button", { name: "Mở Hộp thư nguồn trên di động", exact: true }).click(); await open();
+    proof(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await page.screenshot({ path: join(artifacts, "group-inbox-mobile.png"), fullPage: true });
     console.log("PASS owned group Chromium held actual private BFF body discarded on logout, old SID401 and fresh issued session/source read after reload without writes");
+    console.log("PASS owned group Chromium mobile direct read-only inbox navigation and private source projection within viewport");
   } finally {
     release?.();
     const previousStage = stage;
