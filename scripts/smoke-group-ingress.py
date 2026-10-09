@@ -243,6 +243,148 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         assert locker.returncode == 0 and snapshot() == before, "Queued denial changed group bytes"
         require_receipt(*call(payload))
 
+    def read_release_range(payload, original):
+        # Hold only the final gap query. The real GET has already acquired its
+        # post-key Serializable member/grant/message/winner locks at this point.
+        gate = "dbo.GroupReadGate_" + uuid.uuid4().hex
+        base_cursor = int(sql(f"SELECT CommittedSequence FROM aioffice.GroupSourceStates WHERE {scope};"))
+        base_counts = counts()
+        grant_query = f"SELECT * FROM aioffice.GroupReaderGrants WHERE {scope} AND UserId='{owner}'"
+
+        def fingerprint(query):
+            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE(("
+                + query + " FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+            assert re.fullmatch(r"[0-9A-F]{64}", value), "Invalid owned final read fingerprint"
+            return value
+
+        def prefix():
+            result = [fingerprint(f"SELECT * FROM aioffice.{table} WHERE {scope} ORDER BY Id")
+                for table in ("GroupMessages", "GroupCoverageGaps")]
+            result += [fingerprint(f"SELECT * FROM aioffice.{table} WHERE {scope} AND CommittedSequence<={base_cursor} ORDER BY CommittedSequence")
+                for table in ("GroupMessageRevisions", "GroupIngressOutbox")]
+            qualified = scope.replace("TenantId", "r.TenantId").replace("CompanyId", "r.CompanyId").replace("BindingId", "r.BindingId")
+            result.append(fingerprint(f"SELECT r.* FROM aioffice.GroupIngressReceipts r WHERE {qualified} AND EXISTS("
+                "SELECT 1 FROM aioffice.GroupMessageRevisions v WHERE v.TenantId=r.TenantId AND v.CompanyId=r.CompanyId"
+                f" AND v.BindingId=r.BindingId AND v.MessageId=r.MessageId AND v.Revision=r.Revision AND v.CommittedSequence<={base_cursor}) ORDER BY r.EventIdentityHash"))
+            return result
+
+        base_prefix, base_grant = prefix(), fingerprint(grant_query)
+        recall_payload = event(message=payload["event"]["messageId"], kind=4, text="")
+        query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
+          UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
+          SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WITH(TABLOCKX,HOLDLOCK);
+          DECLARE @deadline datetime2=DATEADD(second,25,SYSUTCDATETIME());
+          WHILE (SELECT Released FROM {gate} WITH(READUNCOMMITTED))=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.050';
+          COMMIT TRANSACTION;"""
+        locker = executor = None
+        gate_attempted = False
+        failure = None
+        pending_read = pending_recall = pending_revoke = None
+        read_started = None
+
+        def observed(predicate, seconds):
+            deadline = time.monotonic() + seconds
+            if read_started is not None: deadline = min(deadline, read_started + 6)
+            while time.monotonic() < deadline:
+                if predicate(): return
+                if locker.poll() is not None or any(pending is not None and pending.done() for pending in (pending_read, pending_recall, pending_revoke)):
+                    raise AssertionError("Owned final read ended before observed SQL fence")
+                time.sleep(.05)
+            raise AssertionError("Owned final read SQL fence was not observed")
+
+        def on_table(table):
+            return (f"l.resource_database_id=DB_ID() AND ((l.resource_type='OBJECT' AND l.resource_associated_entity_id=OBJECT_ID(N'aioffice.{table}')) OR"
+                f" (l.resource_type IN('KEY','PAGE','RID','HOBT') AND l.resource_associated_entity_id IN(SELECT hobt_id FROM sys.partitions WHERE object_id=OBJECT_ID(N'aioffice.{table}'))))")
+
+        def waiter(table, login, statement, modes, held_modes, key_only=False):
+            # Match the exact waiting resource to a granted lock held by this
+            # final reader, and identify the executing INSERT/UPDATE privately.
+            return f"""SELECT COUNT(DISTINCT r.session_id) FROM sys.dm_exec_requests r
+              JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+              JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
+              JOIN sys.dm_tran_locks held ON held.request_session_id=(SELECT ReaderSpid FROM {gate})
+                AND held.resource_database_id=l.resource_database_id AND held.resource_type=l.resource_type
+                AND held.resource_associated_entity_id=l.resource_associated_entity_id
+                AND held.resource_description=l.resource_description AND held.request_status='GRANT'
+              CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) text
+              WHERE s.login_name=N'{login}' AND r.blocking_session_id=(SELECT ReaderSpid FROM {gate})
+                AND r.wait_type LIKE N'LCK_M_%' AND l.request_status IN('WAIT','CONVERT') AND {on_table(table)}
+                AND l.request_mode IN({modes}) AND held.request_mode IN({held_modes})
+                {"AND l.resource_type='KEY'" if key_only else ""}
+                AND SUBSTRING(text.text,r.statement_start_offset/2+1,
+                  (CASE WHEN r.statement_end_offset=-1 THEN DATALENGTH(text.text) ELSE r.statement_end_offset END-r.statement_start_offset)/2+1)
+                  LIKE N'%{statement}%{table}%';"""
+
+        try:
+            gate_attempted = True
+            sql(f"CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL,ReaderSpid int NULL); INSERT {gate} VALUES(0,NULL,NULL);")
+            locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
+                'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
+            locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
+            executor = ThreadPoolExecutor(max_workers=3)
+            observed(lambda: sql(f"SELECT COUNT(*) FROM sys.dm_tran_locks WHERE request_session_id=(SELECT OwnerSpid FROM {gate})"
+                " AND resource_database_id=DB_ID() AND resource_type='OBJECT' AND resource_associated_entity_id=OBJECT_ID(N'aioffice.GroupCoverageGaps') AND request_mode='X' AND request_status='GRANT';") == "1", 8)
+            read_started = time.monotonic()
+            pending_read = executor.submit(read_source, original["messageId"])
+            reader_query = f"""SELECT r.session_id FROM sys.dm_exec_requests r JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+              JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
+              WHERE s.login_name=N'aioffice_runtime' AND s.transaction_isolation_level=4
+                AND r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) AND r.wait_type LIKE N'LCK_M_%'
+                AND l.request_status IN('WAIT','CONVERT') AND {on_table('GroupCoverageGaps')}"""
+            observed(lambda: sql(f"SELECT COUNT(*) FROM ({reader_query}) q;") == "1", 3)
+            sql(f"UPDATE {gate} SET ReaderSpid=({reader_query});")
+            pending_recall = executor.submit(call, recall_payload)
+            pending_revoke = executor.submit(sql, f"UPDATE aioffice.GroupReaderGrants SET IsEnabled=0 WHERE {scope} AND UserId='{owner}';")
+            observed(lambda: int(sql(waiter("GroupMessageRevisions", "aioffice_runtime", "INSERT", "'RangeI-N'", "'RangeS-S','RangeS-U'", True))) == 1, 3)
+            observed(lambda: int(sql(waiter("GroupReaderGrants", "sa", "UPDATE", "'X','U','IX'", "'S','RangeS-S','RangeS-U'"))) == 1, 3)
+            assert not pending_read.done() and not pending_recall.done() and not pending_revoke.done()
+            sql(f"UPDATE {gate} SET Released=1;")
+            status, view = pending_read.result(timeout=10)
+            assert status == 200 and view["text"] == payload["text"] and view["revision"] == 1
+            assert sql(f"SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE session_id=(SELECT ReaderSpid FROM {gate}) AND transaction_isolation_level=2 AND open_transaction_count=0;") == "1"
+            receipt = require_receipt(*pending_recall.result(timeout=10)); pending_revoke.result(timeout=10)
+            assert receipt["messageId"] == original["messageId"] and receipt["revision"] == 2 and receipt["committedSequence"] == base_cursor + 1
+            require_private_denial(original["messageId"])
+        except BaseException as error:
+            failure = error
+        finally:
+            def attempt(action):
+                nonlocal failure
+                try: action()
+                except BaseException as error:
+                    if failure is None: failure = error
+
+            def drain_locker():
+                if locker is None: return
+                if locker.stdin is not None:
+                    attempt(lambda: locker.stdin.close())
+                    locker.stdin = None
+                try: locker.communicate(timeout=8)
+                except BaseException as error:
+                    attempt(locker.kill)
+                    attempt(lambda: locker.communicate(timeout=5))
+                    raise error
+
+            # Every resource gets its own cleanup attempt. Preserve the first
+            # failure while still draining and restoring exact owned state.
+            if gate_attempted: attempt(lambda: sql(f"UPDATE {gate} SET Released=1;"))
+            attempt(drain_locker)
+            if executor is not None: attempt(lambda: executor.shutdown(wait=True, cancel_futures=True))
+            attempt(lambda: sql(f"UPDATE aioffice.GroupReaderGrants SET IsEnabled=1 WHERE {scope} AND UserId='{owner}';"))
+            if gate_attempted: attempt(lambda: sql(f"DROP TABLE IF EXISTS {gate};"))
+        if failure is not None: raise failure
+        assert locker.returncode == 0
+        status, view = read_source(original["messageId"])
+        assert status == 200 and view["kind"] == 4 and view["text"] is None and view["revision"] == 2
+        assert counts() == [base_counts[0], base_counts[1] + 1, base_counts[2] + 1, base_counts[3] + 1]
+        assert int(sql(f"SELECT CommittedSequence FROM aioffice.GroupSourceStates WHERE {scope};")) == base_cursor + 1
+        assert prefix() == base_prefix and fingerprint(grant_query) == base_grant, "Final read race altered retained source/grant bytes"
+        committed = snapshot()
+        replay = require_receipt(*call(recall_payload))
+        assert replay["wasAlreadyCommitted"] and replay == {**receipt, "wasAlreadyCommitted": True} and snapshot() == committed
+        print("PASS actual group post-key Serializable read release holds winner insert range and current ReaderGrant through commit; observed recall/revoke wait, fresh denial/restored Recall-null")
+
     assert call(event())[0] == 404, "Shipping group ingress was not disabled by default"
     assert not override.exists(), "Owned group override already exists"
     private_environment = {"AIOffice__GroupIntake__Enabled": "true", "AIOffice__GroupIntake__OwnedSyntheticFixture": "true",
@@ -466,6 +608,7 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         assert snapshot() == browser_before, "Read-only shipping inbox changed durable group bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        read_release_range(payload, original)
 
     finally:
         # Remove configuration from this host before the existing browser gate.

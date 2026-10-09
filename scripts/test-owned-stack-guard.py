@@ -1,5 +1,6 @@
 """Verify the adversarial fixture boundary without files, Docker or network."""
 import importlib.util
+import ast
 import os
 import re
 from pathlib import Path
@@ -29,6 +30,56 @@ class OwnedStackGuardTests(unittest.TestCase):
     root = (Path.cwd() / "guard-test-no-resources").resolve()
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}
+
+    def test_final_group_read_race_cleanup_attempts_all_owned_resources_and_preserves_first_failure(self):
+        # Execute only the shipping helper's orchestration with inert dependencies.
+        # No files, SQL, processes, threads or HTTP are created by these controls.
+        tree = ast.parse(Path(group_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == "read_release_range")
+        module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
+
+        class InjectedFailure(Exception): pass
+        for fault in ("observation", "popen", "stdin_write", "stdin_close", "executor", "release", "drain", "shutdown", "restore", "drop"):
+            with self.subTest(fault=fault):
+                effects = []
+                def effect(name):
+                    effects.append(name)
+                    if name == fault: raise InjectedFailure(name)
+                class Input:
+                    def write(self, query): effect("stdin_write")
+                    def close(self): effect("stdin_close")
+                class Process:
+                    stdin = Input()
+                    returncode = 0
+                    def communicate(self, timeout): effect("drain")
+                    def kill(self): effect("kill")
+                    def poll(self): return None
+                def popen(*args, **kwargs): effect("popen"); return Process()
+                class Executor:
+                    def __init__(self, **kwargs): effect("executor")
+                    def shutdown(self, **kwargs): effect("shutdown")
+                def sql(query):
+                    if "SELECT CommittedSequence" in query: return "1"
+                    if "HASHBYTES" in query: return "AB" * 32
+                    if "CREATE TABLE" in query: effect("create"); return ""
+                    if "SET Released=1" in query: effect("release"); return ""
+                    if "UPDATE aioffice.GroupReaderGrants" in query: effect("restore"); return ""
+                    if "DROP TABLE" in query: effect("drop"); return ""
+                    if "sys.dm_tran_locks" in query: effect("observation"); raise InjectedFailure("observation")
+                    self.fail("Unexpected inert fixture SQL")
+                namespace = {"re": re, "sql": sql, "counts": lambda: [1, 1, 1, 1], "event": lambda **kwargs: {},
+                    "uuid": SimpleNamespace(uuid4=lambda: SimpleNamespace(hex="probe")),
+                    "subprocess": SimpleNamespace(Popen=popen, PIPE=None), "ThreadPoolExecutor": Executor,
+                    "time": SimpleNamespace(monotonic=lambda: 0), "compose": ["owned-compose"], "environment": {},
+                    "scope": "TenantId='owned' AND CompanyId='owned' AND BindingId='owned'", "owner": "owned"}
+                exec(compile(module, "owned_inert_read_race", "exec"), namespace)
+                with self.assertRaises(InjectedFailure) as failure:
+                    namespace["read_release_range"]({"event": {"messageId": "owned"}}, {})
+                self.assertEqual(fault if fault in ("popen", "stdin_write", "stdin_close", "executor") else "observation", str(failure.exception))
+                self.assertIn("release", effects); self.assertIn("restore", effects); self.assertIn("drop", effects)
+                if fault != "popen": self.assertIn("drain", effects)
+                if fault not in ("popen", "stdin_write", "stdin_close", "executor"): self.assertIn("shutdown", effects)
 
     def test_exact_owned_ci_fixture(self):
         with patch.dict(os.environ, self.environment, clear=True):
