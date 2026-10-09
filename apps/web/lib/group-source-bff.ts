@@ -10,6 +10,17 @@ const number = (value: string, minimum: number, maximum: number) => /^(0|[1-9][0
   && Number.isSafeInteger(Number(value)) && Number(value) >= minimum && Number(value) <= maximum;
 const canonical = (value: string) => isCanonicalCompanyId(value) && value === value.toLowerCase();
 
+async function bounded<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {
+  let abort: (() => void) | undefined;
+  try {
+    return await Promise.race([operation, new Promise<never>((_resolve, reject) => {
+      abort = () => reject(new Error("Inbox read ended."));
+      signal.addEventListener("abort", abort, { once: true });
+      if (signal.aborted) abort();
+    })]);
+  } finally { if (abort) signal.removeEventListener("abort", abort); }
+}
+
 /** Read-only private inbox; provider HMAC/client headers never become browser authority. */
 export async function groupSourceBff(request: Request, route: Route): Promise<Response> {
   if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
@@ -25,7 +36,7 @@ export async function groupSourceBff(request: Request, route: Route): Promise<Re
     : `/api/group-sources/${route.sourceId}/messages${route.kind === "message" ? `/${route.messageId}` : `?limit=${limit}${before === null ? "" : `&beforeSequence=${before}`}`}`;
   const signal = AbortSignal.any([request.signal, AbortSignal.timeout(10000)]);
   try {
-    const response = await fetchCoreApi(path, companyId, { signal });
+    const response = await bounded(fetchCoreApi(path, companyId, { signal }), signal);
     if (!response) return unauthenticatedResponse();
     if (response.status !== 200) {
       void response.body?.cancel().catch(() => {});
@@ -40,6 +51,8 @@ export async function groupSourceBff(request: Request, route: Route): Promise<Re
     if (signal.aborted) return failure(503);
     // The shared helper fences after network buffering; this fence also covers
     // private body parsing in password development mode and final release.
-    return await officeSessionIsCurrent(companyId) ? Response.json(view, { headers }) : unauthenticatedResponse();
+    const current = await bounded(officeSessionIsCurrent(companyId), signal);
+    if (signal.aborted) return failure(503);
+    return current ? Response.json(view, { headers }) : unauthenticatedResponse();
   } catch { return failure(503); }
 }

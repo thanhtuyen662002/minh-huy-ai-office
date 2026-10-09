@@ -73,6 +73,18 @@ it("drops streamed source text after logout while buffering and cancels stalled 
   const stalled = invoke("message", req(undefined, abort.signal)); await vi.waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(2)); abort.abort();
   expect((await stalled).status).toBe(503); expect(cancel).toHaveBeenCalled();
 });
+it.each(["initial", "final"])("bounds caller cancellation during the %s coordinator await without private release", async phase => {
+  let release!: (value: typeof session) => void;
+  const held = new Promise<typeof session>(resolve => { release = resolve; });
+  mocks.read.mockReset();
+  if (phase === "final") mocks.read.mockResolvedValueOnce(session).mockResolvedValueOnce(session);
+  mocks.read.mockReturnValueOnce(held); mocks.fetch.mockResolvedValue(Response.json(privateMessage));
+  const abort = new AbortController(), pending = invoke("message", req(undefined, abort.signal));
+  await vi.waitFor(() => expect(mocks.read).toHaveBeenCalledTimes(phase === "initial" ? 1 : 3));
+  abort.abort(); const response = await pending;
+  expect(response.status).toBe(503); expect(await response.text()).not.toContain("tồn kho");
+  release(session); await Promise.resolve();
+});
 it.each([
   { ...privateMessage, source: { ...scope, companyId: sourceId } }, { ...privateMessage, source: { ...scope, sourceBindingId: messageId } },
   { ...privateMessage, messageId: sourceId }, { ...privateMessage, text: "\ud800" }, { ...privateMessage, committedSequence: 9007199254740992 },

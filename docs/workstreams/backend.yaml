@@ -861,3 +861,11 @@ group_private_inbox_bff_checkpoint:
   local: '41 routes/issuedSID/stream/currentrelease/scope/projection controlsPASS; TypeScript noEmitPASS. No shippingUI/nativeBFF result yet.'
   result: 'Read-only localgroup source/index/detail strictboundedDTO/UTF8/duplicatekeys/128KiB/10s/canonicalselectors/currentSID. OriginalUnicode retained, Recallnull, exactscope/currentcursor metadata; no HMACauthority forwarding/error/privateheader relay. ExistingSession/Core authority reused.'
   next: 'FrozenBFF review andprivateinbox UI; own6cd exactBuild38002804580/Gov38002804587, inspectnativecatalog andretainedreceipt diagnostic terminal. SQLrange/listener/spool/queue remain277.'
+
+
+group_inbox_bff_cancellation_repair:
+  predecessor: 071afc8d3ef38cee4302a88b5e452aed5632a361
+  finding: 'IndependentP2 finalissuedSID await then canceledcaller stillprivate200 reproduced.'
+  result: 'Initial/final coordinator promises bounded bylinkedcaller/deadline; finalsignal check afterawait beforeprivateJSON. Listenercleanup andread-only latecompletion refusal.'
+  local: '43BFF testsPASS includinginitial/final heldSID callerabort/immediate503/no privatebody; TypeScript noEmitPASS.'
+  next: 'Close originalindependentprobe; own6cd exactnativeCI, inboxUI/native proof andremaining277acceptance.'
