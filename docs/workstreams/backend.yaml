@@ -662,3 +662,13 @@ group_ci_explicit_cached_images:
   result: 'Daemon cache bootstrap passed, but actual identity-db and service-initialization Redis both hit anonymous DockerHub429 before SQL/browser on attempt1 and the single retry. Same282 now explicitly pulls fixed job-specific references from the Google-managed cache, checks cache RepoDigests and identical image IDs after tagging canonical names, and starts the same disposable Redis after cache setup. Product images/configs, tests, restart control and all required gates remain; no local/customer daemon touched.'
   local: '8 cache ownership/shape/idempotence/fixed-profile/digest/identity/failure controls and YAML/diff PASS. Hosted direct-cache pulls and retained expiry diagnosis remain unexecuted; independent delta review required.'
   next: 'Own new exact282 CI, repair real failures on samePR, and obtain bounded frozen CI delta review. Do not merge before all8 final PR/main; explicitly stacked277 remains Draft and cannot merge first.'
+
+
+group_ci_issued_redis_repair:
+  predecessor: 735bf47d908ea0b408b5494ba30fb7a1e075d7c2
+  build: 37992224211
+  governance: 37992224209
+  web: 114029064753
+  result: 'Managed direct-cache bootstrap, deployment and FE runtime PASS. Web1275 tests PASS but retained actual restored-RDB restart refused a container name instead of required64hex issuedID. Independent reviewer also reproduced unowned name-cleanup risk. Same282 captures successful docker run fullID as step output before readiness; unchanged physical Redis restart test and cleanup consume only that issuedID. Empty/invalid output cannot remove a preexisting container; no name fallback.'
+  local: '8 cache tests/YAML/diff PASS; frozen delta independent review and hosted actualRedis/full gates remain required. Prior actual114029064733 still running and deliberately retained for expiry diagnosis before the next push.'
+  next: 'Close both review findings on frozen issuedID repair; preserve current actual proof until terminal, then push and own exact gates. Do not merge until final all8 PR/main and current independent approval.'
