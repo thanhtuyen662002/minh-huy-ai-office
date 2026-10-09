@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: 1b471e9b8e8d7c347b401ef448136138edbc2494
-last_verified_commit: 4a3f7d7efda1513b39252da4f346f769664f7f81
+current_target_head: 276885809cd6a13fd31c0201efe159c669fec8fe
+last_verified_commit: 276885809cd6a13fd31c0201efe159c669fec8fe
 
 critical_paths:
   backend:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: 1b471e9b8e8d7c347b401ef448136138edbc2494
+    head: 276885809cd6a13fd31c0201efe159c669fec8fe
     state: in_progress
-    next: '272/274 active:1b ALL15 actual revocations/allinitialnative PASS. ExtraGET sanitized wait is earlier LCK_M_S/nonTaskEvents/nonPayload, not private data. Independently reviewed owned TRUNCATE/ROLLBACK trial requires BOTH shipping runtime permission proofs1 whileSchM held before exactoriginal HTTPprivatequerywait; keep403/restored200/RCSI1/fullbyte checks. Fourprivate/newChromium/fourimages/fullacceptance/finalPR-main remain. Shipping/statica843 APPROVED6086781182; no fullruntime approval. User current merge BEFORE second-brain attachment.'
+    next: '272/274 candidate276 all8 Build37978945377/Gov37978945389/actual113984241483/quality113988410306 PASS. Allinitialnative/ALL15 queued/four finalprivate reads and realCore202loss/FEFFprepare/newSID/twoowners-companies/lateprivate/revoke-restored Chromium PASS; all4images11641216062 inspected. FULL frozen shipping/security/runtime/images APPROVED6087833026. Close final6docsreview/exactfinalPR, merge andmain; thenreadsecond-brainattachment. Full233/customer-production/239Windows-signing remain.'
 
   erp_data:
     issue: 264
@@ -78,7 +78,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Continue same272/274 native SQL and realCore202/worker/twoCodeS256Chromium/fullreview/exactPR-main. After current work is delivered/merged, read user attachment CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md in Downloads and scope second-brain integration; user explicitly requested this order, attachment not read yet.275-279 docs-only track/273 queued/239 actualWindows-signingDraft. Full62requirements/customer-production remain.'
+next_action: 'Finalize272/274 final6docsreview/exactfinalPR gates after fullfrozen276 approval6087833026/actualSQL-Chromium-all4imagesPASS; merge andcloseexactmain. Thenread userattachment CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md in Downloads andimplementsecond-brainintegration; explicitusersequence, attachmentnotreadyet.275-279 docs-only/273queued/239actualWindows-signingDraft. Full62/customer-production remain.'
 
 
 blocked_by:

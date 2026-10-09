@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: 1b471e9b8e8d7c347b401ef448136138edbc2494
+head: 276885809cd6a13fd31c0201efe159c669fec8fe
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -181,7 +181,21 @@ submission_concurrent_unknown_contract:
   result: 'Six prerequisites/Gov PASS. Native immutable/Unicode PASS, then concurrent sameop returned503; original strict two-immediate202 assertion stopped before TRUNCATE/private4. No cause or shipping defect inferred from generic unavailable body; no private/browser acceptance.'
   repair: 'Only exact canonical bounded503 error permits fresh200 GET binding original company/op/source/question/fingerprint and statePrepared/Accepted, then ONE deliberate samepath/samefingerprint replay per uncertain original response requiring202. Other statuses/bodies/reconciliation failures remain terminal. Keep original pre-concurrency global deltas/onegraph/workerAttempt1/dispatch/checkpoint/zero settlements. Report bounded initialHTTP statuses. Shipping budgets/SQL/authority unchanged.'
   local: '10Python/AST/diff PASS. Independent bd3 four-file frozen proof/docs APPROVED6087479625 plus SQL160 syntax control; current uncertainty-contract delta review and actual private/browser trial pending.'
-next_action: 'Close same274 bounded exact unknown/concurrent recovery and definition-preserving private-read trial. Require actual initialpermission completion then originalprivatequery barrier, all4 finalreads/new realCore202/twoCodeS256/fourimages/fullindependent acceptance/exactfinalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
+submission_full_runtime_276:
+  head: 276885809cd6a13fd31c0201efe159c669fec8fe
+  build: 37978945377
+  governance: 37978945389
+  actual: 113984241483
+  quality: 113988410306
+  artifact: 11641216062
+  artifact_bytes: 806962
+  dotnet: 1287
+  web: 1276
+  result: 'All8 exactBuild/Gov PASS. Allinitialnative/Unicode/FEFF/onegraph/rights/indirect escalation/corruption/expiry/rollback/quota/legacy and ALL15 actual queued revocations PASS. Concurrentinitial202/202; bounded503 branch independently26controlsPASS. Definition-preserving TRUNCATE actual bothruntimepermission1/privateTaskEvents-PayloadJsonSchS/empty403/restored200/RCSI1/fullbytes all4PASS. Compiledfallbackunused.'
+  browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
+  images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
+  review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
+next_action: 'Close final6docs independent delta review and exactfinalPR gates; merge approved272/274 andcloseexactmain. Thenreadsecond-brainattachment perusersequence andimplementtrackedintegration.239actualWindows-signingDraft/full62/233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
