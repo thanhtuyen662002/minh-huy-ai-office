@@ -5,7 +5,7 @@ import { resolve, join } from "node:path";
 import { mkdir } from "node:fs/promises";
 
 export async function verifyCompanyAdministrators({ directory, manifest, browser, ownerPage, ownerContext, sql,
-  app, identity, company, tenant, owner, setStage }) {
+  app, identity, company, tenant, owner, coreReplyFault, setStage }) {
   const requireProof = condition => { if (!condition) throw new Error("Administrator browser proof failed."); };
   requireProof(process.env.CI === "true" && process.env.GITHUB_ACTIONS === "true" && process.env.RUNNER_TEMP
     && resolve(directory) === join(resolve(process.env.RUNNER_TEMP), "aioffice-local")
@@ -173,6 +173,34 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     await ownerPage.getByText("Đã gỡ quyền quản trị công ty.", { exact: true }).waitFor();
     requireProof(state() === "1:8:0" && auditCount() === "6" && !(await current(secondary)).body.roles.includes("admin")
       && await cookie(ownerContext) === ownerSid && await cookie(secondaryContext) === secondarySid);
+    requireProof(coreReplyFault);
+    for (const [boundary, expectedVersion, isAdministrator, version, count] of [
+      ["headers", "8", true, "9", "7"], ["body", "9", false, "10", "8"],
+    ]) {
+      stage("actual-core-committed-" + boundary + "-reply-loss");
+      coreReplyFault.arm({ boundary, path: `/api/company/members/${member}/administrator`, company, user: member, expectedVersion, isAdministrator });
+      try {
+        const lostReply = ownerPage.waitForResponse(response => response.url() === app + path && response.request().method() === "POST");
+        await button(!isAdministrator).click(); const unknown = await lostReply;
+        requireProof(unknown.status() === 503 && unknown.headers()["cache-control"] === "no-store" && !unknown.headers()["set-cookie"]);
+        const original = unknown.request().postDataJSON(), fault = coreReplyFault.read();
+        requireProof(fault.count === 1 && fault.upstreamStatus === 200 && fault.operationId === original.operationId
+          && fault.membershipVersion === version && original.expectedVersion === expectedVersion && original.isAdministrator === isAdministrator);
+        await ownerPage.getByRole("button", { name: `Thử lại thao tác với ${name}`, exact: true }).waitFor();
+        requireProof(state() === `1:${version}:${Number(isAdministrator)}` && auditCount() === count
+          && (await current(ownerPage)).status === 200 && await cookie(ownerContext) === ownerSid
+          && (await current(secondary)).body.roles.includes("admin") === isAdministrator);
+        const replayed = ownerPage.waitForResponse(response => response.url() === app + path && response.request().method() === "POST");
+        await ownerPage.getByRole("button", { name: `Thử lại thao tác với ${name}`, exact: true }).click();
+        const replay = await replayed, receipt = await replay.json();
+        requireProof(replay.status() === 200 && JSON.stringify(replay.request().postDataJSON()) === JSON.stringify(original)
+          && receipt.operationId === original.operationId && receipt.membershipVersion === version && receipt.isAdministrator === isAdministrator);
+        await button(isAdministrator).waitFor();
+        await ownerPage.getByText(isAdministrator ? "Đã cấp quyền quản trị công ty." : "Đã gỡ quyền quản trị công ty.", { exact: true }).waitFor();
+        requireProof(state() === `1:${version}:${Number(isAdministrator)}` && auditCount() === count && coreReplyFault.read().count === 1
+          && await cookie(ownerContext) === ownerSid && await cookie(secondaryContext) === secondarySid);
+      } finally { coreReplyFault.disarm(); }
+    }
     for (let index = 0; index < preserved.length; index++) {
       stage("preserved-" + preserved[index][0]);
       requireProof(fingerprint(...preserved[index]) === before[index]);
@@ -181,7 +209,7 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     const artifact = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof");
     await mkdir(artifact, { recursive: true });
     await ownerPage.screenshot({ path: join(artifact, "administrators.png"), fullPage: true });
-    console.log("PASS actual Chromium administrator grant/remove, two provider sessions/fresh authority under unchanged SIDs, lost-response historical replay/stale409/private clearing and preserved identities/other roles/member state/tasks");
+    console.log("PASS actual Chromium administrator grant/remove, two provider sessions/fresh authority under unchanged SIDs, actual committed Core-to-BFF header/body reply loss with stable one-audit replay, historical replay/stale409/private clearing and preserved identities/other roles/member state/tasks");
   } finally {
     await secondaryContext.close();
   }
