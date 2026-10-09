@@ -519,6 +519,22 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
         locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
         executor, pending = None, None
+        def private_wait_diagnostic():
+            # Only engine enums and fixed predicate bits; no private SQL/input.
+            value = sql(f"""USE AIOfficeLocal; SELECT TOP(5) UPPER(CONCAT(COALESCE(r.wait_type,N'NONE'),N'|',
+              CASE WHEN r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) THEN 1 ELSE 0 END,N'|',
+              COALESCE(l.resource_type,N'NONE'),N'|',COALESCE(l.request_mode,N'NONE'),N'|',COALESCE(l.request_status,N'NONE'),N'|',
+              CASE WHEN l.resource_associated_entity_id={object_id} THEN 1 ELSE 0 END,N'|',
+              CASE WHEN t.text LIKE N'%TaskEvents%' THEN 1 ELSE 0 END,N'|',
+              CASE WHEN t.text LIKE N'%PayloadJson%' THEN 1 ELSE 0 END,N'|',
+              CASE WHEN t.text LIKE N'%TaskSubmissionIntents%' AND t.text LIKE N'%HAS_PERMS_BY_NAME%' THEN 1 ELSE 0 END))
+              FROM sys.dm_exec_requests r JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+              LEFT JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
+              OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
+              WHERE s.login_name=N'aioffice_runtime' AND r.database_id=DB_ID()
+              ORDER BY CASE WHEN r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) THEN 0 ELSE 1 END,
+                CASE WHEN l.resource_type=N'OBJECT' AND l.resource_associated_entity_id={object_id} THEN 0 ELSE 1 END;""")
+            return value.replace("\n", ";") if len(value) <= 512 and re.fullmatch(r"[A-Z_0-9|\r\n-]*", value) else "UNAVAILABLE"
         def await_condition(predicate, phase):
             deadline = time.monotonic() + 8
             while time.monotonic() < deadline:
@@ -526,7 +542,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
                 if locker.poll() is not None or pending is not None and pending.done():
                     raise AssertionError("Native submission " + phase + " ended before observed private read")
                 time.sleep(.05)
-            raise AssertionError("Native submission " + phase + " was not observed")
+            raise AssertionError("Native submission " + phase + " was not observed; private-lock-enums=" + private_wait_diagnostic())
         try:
             await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_tran_locks
               WHERE request_session_id=(SELECT OwnerSpid FROM {gate}) AND resource_type=N'OBJECT' AND resource_database_id=DB_ID()

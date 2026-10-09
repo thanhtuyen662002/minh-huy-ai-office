@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/272-task-submission-recovery
     head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
     state: in_progress
-    next: '272/274 active:b3 exactresource native queued membership/global-user/sourceEnabled prepare/new/replay ALL9PASS plus initialcontrols/FEFF/legacy. SQL547 at invalid sourceRead0/write0 fixture; use valid write-only temporarymode with originalwrite/fullsource-byte restoration. Remaining6queued/fourprivate-read/Chromium/fourimages/fullreview/finalPR-main required. Full1287.NET/1276web/GovPASS, full shipping/statica843 APPROVED6086781182, FEFFP2CLOSED. User current merge BEFORE second-brain attachment.'
+    next: '272/274 active:de7 ALL15 actual observed prepare/new/replay authority/source/binding revocations PASS, including sourceRead/fullrow restoration; all initialnative/FEFF/legacy PASS. First extra ownerGET private-read observer notseen after ownedTaskEvents SchM. Add sanitized target/query bit diagnostic, identify exact blocker and preserve actual final-read fence. Fourprivate/newChromium/fourimages/fullacceptance/finalPR-main remain. Shipping/statica843 APPROVED6086781182 and de7proofdeltaapproved; no fullruntime approval. User current merge BEFORE second-brain attachment.'
 
   erp_data:
     issue: 264

@@ -155,7 +155,16 @@ submission_valid_read_grant_revocation_fixture:
   result: 'All initialnative/FEFF/legacy PASS. Actual exactresource observed queued prepare/new execution/committed replay membership/global-user/source-enabled revocations ALL9 PASS: empty403/noeffects/restoredpositives. Terminal SQL547 at sourceAllowRead0 with originalAllowWrite0, correctly refused by CK_DataSources_AccessMode. Remaining6queued/fourprivate-read/newbrowser not executed.'
   repair: 'Keep source access constraint enabled. Capture originalAllowWrite bit and exact fullsource rowSHA256; temporarily switch owned disposable source to valid write-only AllowRead0/AllowWrite1. All queued read attempts must403/noeffects. Finally restore AllowRead1/originalAllowWrite and compare exact originalfullrow hash after each kind. No shipping/permission grant bypass or customer operation.'
   review: 'Independent b3 four-fileproof/docs delta APPROVED; actualdiagnostic/exact held-waiting transactionresource join verified and3queries SQL160 syntaxPASS;10Python/AST/YAML/diffPASS. Full shipping/statica843 approval retained; runtime/fourimages remain mandatory.'
-next_action: 'Push same274 valid source-read revocation fixture, execute remaining6queued/four private-read plus all realCore202/twoCodeS256/fourimages. Fix each actual failure, full independent acceptance and exact finalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
+submission_all_admission_fences_actual:
+  predecessor: de7eb7964bc71f0e318ef55ee2308cc0970e7bcc
+  build: 37974972671
+  governance: 37974972705
+  actual: 113970848005
+  quality: 113974324850
+  result: 'Six prerequisites/Gov PASS. All initialnative/FEFF/legacy and ALL15 actual observed prepare/new execution/committed replay revocations PASS, including valid write-only sourceRead denial/exact fullsource-row restoration and binding loss. First additional ownerGET private original-request observer terminalred: ownedTaskEvents SchM seen but exact runtime SchS/privatePayload query not observed. Four private-read/newbrowser acceptance not executed; no shipping defect inferred from observer alone.'
+  diagnostic: 'Add bounded uppercase lock enums and fixed boolean targetobject/TaskEvents/PayloadJson/intentpermission query classification at failed private observer; never print query text/input. Keep predicate and all deny/restoration/noeffects assertions unchanged until actual metadata identifies the failing filter or earlier blocker.'
+  review: 'Independent scoped frozende7 proof/docs APPROVED;10Python/AST/YAML/diff PASS, constraint/no-auto-rowversion/admission denial and fullsource restoration verified. Shipping byte-equal approveda843. Full runtime/fourimages unapproved.'
+next_action: 'Push same274 private-lock observation diagnostic; inspect exact owned SQL metadata and repair actual after-private-data gate without weakening it. Execute all4 private-read/new realCore202/twoCodeS256/fourimages, full independent acceptance and exact finalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
