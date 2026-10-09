@@ -1,6 +1,6 @@
 # Durable submission recovery acceptance
 
-Issue272 / PR274 under full product233. Candidate `276885809cd6a13fd31c0201efe159c669fec8fe` implements immutable preparation, explicit same-operation execution and read-only recovery. Final documentation review, final PR gates, merge and main closure remain required. This report does not mark the full product production complete.
+Issue272 / PR274 under full product233. Candidate `276885809cd6a13fd31c0201efe159c669fec8fe` implements immutable preparation, explicit same-operation execution and read-only recovery. It subsequently delivered at main `09b7d36b23b554fcaa2b3534ddc6faa166cac651`; see final delivery below. This report does not mark the full product production complete.
 
 ## Exact passing candidate
 
@@ -42,3 +42,18 @@ All new and retained controls passed in113984241483 on2026-10-09; new browser ca
 Artifact11641216062, `browser-workspace-276885809cd6a13fd31c0201efe159c669fec8fe`,806962 bytes, contains workspace.png, administrators.png, task-history.png and task-submission.png. Root and independent reviewer inspected all4, including original1440x5809 submission image: controls/text are readable, long scalar fixture wraps, no horizontal clipping or credentials. These are synthetic owned-fixture screens, covered by full frozen approval6087833026.
 
 Live Medcom/Novo inventory/stock-movement adapters and reconciliation, qualified customer read-only credentials, production identity/deployment/backup and actual Windows lifecycle/signing remain separate acceptance. Santino is deferred. All62 requirements and233 remain active. After this PR is merged and main verified, read the user-provided second-brain document and track its integration through the normal issue/Draft/CI/review process.
+
+## Final delivery: 2026-10-10 local time
+
+Final PR head `f3cf3cc7eb8daa2737473f67d298b86858ee00c1` has independent final6doc
+review [6087900218](https://github.com/thanhtuyen662002/minh-huy-ai-office/pull/274#issuecomment-6087900218),
+exact Build37980837971/Gov37980837996/all8/actual113990625301/quality113994648735 PASS.
+PR274 merged2026-10-09T19:46:10Z, issue272 closed, at main09b7. Fetched main tree
+matches finalf3. [Main Build37982478564](https://github.com/thanhtuyen662002/minh-huy-ai-office/actions/runs/37982478564)
+and Governance37982478631/all8/actual113996168399/quality114000211598 PASS.
+Current1287.NET/1276web-realRedis, all15 queued cases, all4 final private reads,
+all new/retained SQL and shipping Chromium cases PASS. Main browser new cases
+completed19:56:14Z–19:56:39Z. Root inspected all4 original main images from
+artifact11641407860/807412bytes: readable/sanitized/no horizontal clipping.
+No272 acceptance remains. User attachment was read only after this closure;
+#276–#279 track the next automatic SQL brain and IT-only notification work.

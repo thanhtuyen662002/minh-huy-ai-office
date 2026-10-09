@@ -1,17 +1,17 @@
 workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 272
-current_pr: 274
-current_branch: codex/272-task-submission-recovery
-head: 276885809cd6a13fd31c0201efe159c669fec8fe
+current_issue: 276
+current_pr: null
+current_branch: codex/276-group-routing-contracts
+head: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
 state: in_progress
-lease_owner: root-backend-272
+lease_owner: root-backend-276
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
-last_completed_issue: 270
-last_merged_pr: 271
-last_merge_commit: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+last_completed_issue: 272
+last_merged_pr: 274
+last_merge_commit: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
 submission_contract_checkpoint:
   predecessor: 6ee5a7b17057f19803285f8b359b62224183e573
   predecessor_build: 37906607394
@@ -195,7 +195,24 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Close final6docs independent delta review and exactfinalPR gates; merge approved272/274 andcloseexactmain. Thenreadsecond-brainattachment perusersequence andimplementtrackedintegration.239actualWindows-signingDraft/full62/233 active.'
+next_action: '272/274 delivered after exactPR/main all8 and all4 current main images. Attachment read only afterward. Claim276 executable routing/service contracts plus honest connector qualification; then277 SQL ingress,278 SQL memory/automatic notes,279 IT-only reporting.281 correction fullreview6088335989; refreshed integrated38c3 gates pending. No live sends/activation; full62/233 active.'
+
+task_submission_delivered_274:
+  final_pr: f3cf3cc7eb8daa2737473f67d298b86858ee00c1
+  reviews: [6087833026, 6087900218]
+  pr_build: 37980837971
+  pr_governance: 37980837996
+  pr_actual: 113990625301
+  pr_quality: 113994648735
+  main: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+  main_build: 37982478564
+  main_governance: 37982478631
+  main_actual: 113996168399
+  main_quality: 114000211598
+  main_artifact: 11641407860
+  artifact_bytes: 807412
+  state: done
+  result: '272 CLOSED/274 MERGED2026-10-09T19:46:10Z. All8 exact PR/main PASS,1287.NET/1276web-realRedis. All15 observed queued authority/source/binding and all4 private detail/list final reads PASS; actual Core202 header/body loss, exact FEFFprepare loss/reload/newSID GET recovery, twoowners-companies/adminforeign404/lateprivate/revoke-restored/noextra-graph-dispatch-charge PASS. Root inspected all4 current main images readable/sanitized/unclipped. No272 acceptance remains. Full233 remains.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
