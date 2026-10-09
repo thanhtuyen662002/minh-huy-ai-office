@@ -451,6 +451,22 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         ready()
         assert require_receipt(*call(payload)) == {**original, "wasAlreadyCommitted": True} and snapshot() == retained
         print("PASS actual group append-only edit/recall/late-history gap, contiguous commit cursor, retained restart and no fake portal task/user")
+        # Execute shipping inbox while this invocation's exact private Core key
+        # override is live. The child owns a separate real Code/S256 browser
+        # session and returns only fixed diagnostics; no key is passed to Node.
+        browser_before = snapshot()
+        result = subprocess.run(["node", "scripts/smoke-browser-group-inbox.mjs", str(directory)],
+            input=json.dumps({"sourceId": source, "messageId": original["messageId"],
+                "sequence": original["committedSequence"], "text": payload["text"]}),
+            capture_output=True, text=True, env=environment, timeout=240)
+        for line in (result.stdout + result.stderr).splitlines():
+            if line.startswith("PASS owned group Chromium ") or re.fullmatch(r"FAIL owned group Chromium inbox gate: [a-z-]+", line):
+                print(line)
+        assert result.returncode == 0, "Owned shipping group inbox browser gate failed"
+        assert snapshot() == browser_before, "Read-only shipping inbox changed durable group bytes"
+        assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+
     finally:
         # Remove configuration from this host before the existing browser gate.
         # Durable synthetic source evidence stays in the owned disposable SQL.

@@ -7,6 +7,24 @@ import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs"
 import { startOwnedCoreReplyProxy, committedReplyEvidence } from "./owned-browser-core-proxy.mjs";
 import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
+import { requireOwnedGroupInbox, verifyOwnedGroupInbox } from "./smoke-browser-group-inbox.mjs";
+
+test("group inbox browser refuses unowned flags/directories before fixture files, Docker, SQL or network", async () => {
+  const root = resolve("guard-test-no-resources"), owned = join(root, "aioffice-local");
+  const previous = Object.fromEntries(["CI", "GITHUB_ACTIONS", "RUNNER_TEMP"].map(key => [key, process.env[key]]));
+  try {
+    for (const scenario of [{ CI: "false" }, { GITHUB_ACTIONS: "false" }, { RUNNER_TEMP: "" }, { directory: root }, { directory: join(owned, "nested") }]) {
+      const { directory = owned, ...flags } = scenario;
+      Object.assign(process.env, { CI: "true", GITHUB_ACTIONS: "true", RUNNER_TEMP: root }, flags);
+      await assert.rejects(verifyOwnedGroupInbox(directory, null), /^Error: Owned group inbox proof refused\.$/);
+    }
+    requireOwnedGroupInbox(owned, { CI: "true", GITHUB_ACTIONS: "true", RUNNER_TEMP: root });
+    Object.assign(process.env, { CI: "true", GITHUB_ACTIONS: "true", RUNNER_TEMP: root });
+    await assert.rejects(verifyOwnedGroupInbox(owned, { sourceId: "invalid" }), /^Error: Owned group inbox proof refused\.$/);
+  } finally {
+    for (const [key, value] of Object.entries(previous)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+  }
+});
 
 test("submission browser proof refuses unowned paths/flags/hosts before resources", async () => {
   const root = resolve("guard-test-no-resources"), owned = join(root, "aioffice-local");

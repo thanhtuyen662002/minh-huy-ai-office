@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 93cbbfb5d061bd23731867399fc4cbdb432c33e7
+current_target_head: 6cd8d5773ca4a6b11bc313da138ddb2859b6ee6e
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: afb2114a50ff26fc1d3bd3bff13cd321ec1db6ba
+    head: 6cd8d5773ca4a6b11bc313da138ddb2859b6ee6e
     state: in_progress
-    next: '276 delivered exactmain4cf all8.277/283 cd173 exactall8 retry2 Build37999783297/Gov37999783280/actual114055909438/quality114059401788 PASS; root inspected13newnative group phases andretained Chromium. Original403 permissionmismatch CLOSED, fullprotectedatomic SQL/replay100/rollback/currentauthority/history/cursor/Core restart proven. PrivateGETafb independent originalP2closed59+17 approved; exactBuild38001296429/Gov38001296406/actual114059737157 allgroup/nativeprivateGET PASS, retainedChromium receipt red after202; fixeddiagnostic newhead required. Newsource/message metadata local96PASS independent68+5+17approved/nativepending; releaseSQLrange/BFF/UI/listener/spool/broker remain277. Then278 scopedSQLbrain/automaticnotes and279 IT-onlySQLreporter; full233/62 active.'
+    next: '276 delivered exactmain4cf all8.277/283 cd173 exactall8 retry2 Build37999783297/Gov37999783280/actual114055909438/quality114059401788 PASS; root inspected13newnative group phases andretained Chromium. Original403 permissionmismatch CLOSED, fullprotectedatomic SQL/replay100/rollback/currentauthority/history/cursor/Core restart proven. PrivateGETafb independent originalP2closed59+17 approved; exact6cd Build38002804580/Gov38002804587/all8/actual114064637065/quality114067255299PASS; nativecatalog/privateGET/all13group andretained Chromium inspected. PriorAFB receiptred notreproduced, causenotproven. Newsource/message metadata local96PASS independent68+5+17approved/nativePASS; BFF43+7approved/inbox14localPASS/mobilefix andnewownedbrowsercandidate pendingreview/native; releaseSQLrange/BFF/UI/listener/spool/broker remain277. Then278 scopedSQLbrain/automaticnotes and279 IT-onlySQLreporter; full233/62 active.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own same283 exactCI closure:afb nativeprivateGET PASS butretainedbrowser receiptred; newcatalog93 approved/nativepending andfixedboundeddiagnostic required. Native cd ingress13phases/all8 verified;277 stillneedsSQLread release/range, BFF/privateinbox, fencedlistener/encryptedspool/broker recovery. Then278 SQLbrain/automaticnotes and279 IT-onlynotifier. All62/233 ACTIVE;239Windows/signingDraft anddedicatedread-onlyERP credentials external; no liveactivation/customeroutput.'
+next_action: 'Own same283 nextreviewed inbox/BFF/mobile/nativebrowser exactCI.6cd all8 nativecatalog/GET andretained Chromium verified; be9 BFF43+7approved, inbox14local/candidatependingnative. Native cd ingress13phases/all8 verified;277 stillneedsSQLread release/range, BFF/privateinbox, fencedlistener/encryptedspool/broker recovery. Then278 SQLbrain/automaticnotes and279 IT-onlynotifier. All62/233 ACTIVE;239Windows/signingDraft anddedicatedread-onlyERP credentials external; no liveactivation/customeroutput.'
 
 
 blocked_by:

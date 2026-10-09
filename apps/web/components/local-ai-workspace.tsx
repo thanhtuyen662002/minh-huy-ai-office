@@ -654,9 +654,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             {companyChoiceError ? <div role="alert" className="mb-4 rounded-xl border border-amber-200 p-3 text-sm dark:border-amber-400/30">
               {companyChoiceError} <button type="button" onClick={() => void loadCompanies()} className="ml-2 underline">Làm mới công ty</button>
             </div> : null}
-            <div className="mb-5 flex gap-2 lg:hidden">
+            <div className="mb-5 flex flex-wrap gap-2 lg:hidden">
               <button type="button" onClick={() => setSurface("assistant")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Trợ lý AI</button>
               <button type="button" onClick={() => setSurface("data-sources")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Nguồn dữ liệu</button>
+              <button type="button" aria-label="Mở Hộp thư nguồn trên di động" onClick={() => setSurface("group-inbox")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Hộp thư nguồn</button>
               <button type="button" aria-label="Mở Công việc trên di động" onClick={() => setSurface("tasks")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Công việc</button>
               {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Thành viên</button> : null}
             </div>
@@ -726,8 +727,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                           <button type="button" disabled={busy || submission.working} onClick={() => void retrySubmission()} className="rounded-lg border px-3 py-2 disabled:opacity-50">{submission.pending.phase === "prepared" ? "Gửi yêu cầu đã lưu" : "Thử lại đúng yêu cầu"}</button>
                           <button type="button" disabled={busy || submission.working} onClick={() => void submission.reconcile()} className="rounded-lg border px-3 py-2 disabled:opacity-50">Kiểm tra trạng thái yêu cầu</button>
                         </> : null}
-                        <button type="button" onClick={() => setSurface("group-inbox")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Hộp thư nguồn</button>
-              <button type="button" onClick={() => setSurface("tasks")} className="rounded-lg border px-3 py-2">Mở Công việc và yêu cầu đã lưu</button>
+                        <button type="button" onClick={() => setSurface("tasks")} className="rounded-lg border px-3 py-2">Mở Công việc và yêu cầu đã lưu</button>
                       </div>
                       {submission.pending.phase !== "accepted" ? <>
                         <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
