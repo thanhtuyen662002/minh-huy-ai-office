@@ -100,12 +100,38 @@ def verify(*, directory, manifest, compose, environment, http, sql, identity_adm
         "Users": "TenantId,Id", "RoleAssignments": "TenantId,CompanyId,UserId,RoleKey", "CompanyMemberships": "TenantId,CompanyId,UserId",
         "CompanyMembershipAccessAudits": "TenantId,CompanyId,Id", "CompanyAdministratorAudits": "TenantId,CompanyId,Id",
         "DataSourceSecretBindings": "TenantId,CompanyId,Id", "CustomerAiCreditSettlements": "SettlementId"}
+    def fingerprint(table, order):
+        value = sql(f"""USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
+          CONVERT(varbinary(max),COALESCE((SELECT * FROM {table} ORDER BY {order}
+            FOR JSON PATH, INCLUDE_NULL_VALUES),N'[]'))),2);""")
+        assert re.fullmatch(r"[0-9A-F]{64}", value), "Owned archive fingerprint was not an actual SHA256"
+        return value
+
+    # An empty FOR JSON scalar can yield NULL instead of hashable JSON. Prove
+    # canonical empty input, actual row/null/value changes and empty restoration
+    # on an isolated owned table, never by fabricating credit-settlement rows.
+    fingerprint_table = "dbo.ArchiveFingerprint_" + uuid.uuid4().hex
+    sql(f"USE AIOfficeLocal; CREATE TABLE {fingerprint_table}(Id int NOT NULL PRIMARY KEY,Value nvarchar(20) NULL);")
+    try:
+        empty_hash = hashlib.sha256("[]".encode("utf-16-le")).hexdigest().upper()
+        assert fingerprint(fingerprint_table, "Id") == empty_hash
+        sql(f"USE AIOfficeLocal; INSERT {fingerprint_table}(Id,Value) VALUES(1,NULL);")
+        null_row_hash = fingerprint(fingerprint_table, "Id"); assert null_row_hash != empty_hash
+        sql(f"USE AIOfficeLocal; UPDATE {fingerprint_table} SET Value=N'changed' WHERE Id=1;")
+        assert fingerprint(fingerprint_table, "Id") not in (empty_hash, null_row_hash)
+        sql(f"USE AIOfficeLocal; DELETE FROM {fingerprint_table};")
+        assert fingerprint(fingerprint_table, "Id") == empty_hash
+        assert sql("USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.CustomerAiCreditSettlements;") == "0"
+        assert fingerprint("aioffice.CustomerAiCreditSettlements", "SettlementId") == empty_hash
+    finally:
+        sql(f"USE AIOfficeLocal; DROP TABLE {fingerprint_table};")
+    print("PASS actual owned empty/null-row/changed-row/restored-empty SHA256 fingerprints and unchanged empty credit settlements")
+
     def snapshot():
         values = []
         for table, order in original_snapshot_tables.items():
             # Hash in SQL; neither durable JSON nor identity/secret metadata is printed.
-            values.append(sql(f"""USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
-              CONVERT(varbinary(max),(SELECT * FROM aioffice.{table} ORDER BY {order} FOR JSON PATH))),2);"""))
+            values.append(fingerprint("aioffice." + table, order))
         return values
     before = snapshot()
     pages = [get(f"/api/tasks?offset={offset}&limit=1")[1] for offset in range(3)]

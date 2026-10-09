@@ -63,7 +63,8 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
   const snapshot = () => Object.entries(tables).map(([table, order], index) => {
     stage("owned-fingerprint-" + index);
     const value = sql(`USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
-      CONVERT(varbinary(max),(SELECT * FROM aioffice.${table} ORDER BY ${order} FOR JSON PATH))),2);`);
+      CONVERT(varbinary(max),COALESCE((SELECT * FROM aioffice.${table} ORDER BY ${order}
+        FOR JSON PATH, INCLUDE_NULL_VALUES),N'[]'))),2);`);
     if (!/^[0-9A-F]{64}$/.test(value)) {
       // Fixed table index and bounded classification only: never emit durable
       // JSON, hash content, SQL text, private identifiers or CLI diagnostics.
@@ -83,6 +84,12 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     await openCompleted(ownerPage);
     const ownerList = await get(ownerPage, "/api/local/tasks" + query); requireProof(ownerList.status === 200 && ownerList.cache === "no-store");
     requireProof(JSON.parse(ownerList.text).items.length === 3 && JSON.parse(ownerList.text).items.every(item => fixture.taskIds.slice(0, 3).includes(item.taskId)));
+    const uppercaseList = await get(ownerPage, "/api/local/tasks?companyId=" + selected.toUpperCase());
+    requireProof(uppercaseList.status === 200 && uppercaseList.cache === "no-store"
+      && JSON.stringify(JSON.parse(uppercaseList.text)) === JSON.stringify(JSON.parse(ownerList.text)));
+    const uppercaseDetail = await get(ownerPage, `/api/local/tasks/${fixture.taskIds[0].toUpperCase()}/history?companyId=${selected.toUpperCase()}`);
+    requireProof(uppercaseDetail.status === 200 && uppercaseDetail.cache === "no-store"
+      && JSON.parse(uppercaseDetail.text).task.taskId === fixture.taskIds[0] && JSON.parse(uppercaseDetail.text).result.answer === answer);
     requireProof((await get(ownerPage, `/api/local/tasks/${fixture.taskIds[3]}/history` + query)).status === 404);
     for (const status of ["Chờ xử lý", "Thất bại"]) {
       await ownerPage.getByRole("row").filter({ has: ownerPage.getByRole("cell", { name: status, exact: true }) })

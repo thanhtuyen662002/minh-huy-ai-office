@@ -375,3 +375,15 @@ task_history_11608_runtime_and_guid_review:
   browser: 'Retained Chromium PASS. New history terminal red at owned-fixture-snapshots before archive navigation. File/JSON/shape/identities pass, no CLI refusal; bounded fixed table-index/length/null/hex classification added to diagnose the actual fingerprint without printing content. Do not accept NULL or weaken fingerprint verification.'
   independent: '51 focused.NET/70 web and4 browser+6 native guards independently PASS at frozen116. Concrete P2: accepted uppercase GUID selectors were compared as raw strings with lowercase Core Guid JSON, returning502 for same identity. Normalize validated route selectors and use GUID-case-insensitive receipt scope equality;29 real-helper tests incl3 uppercase positives/typecheck now PASS locally. Full frozen security/runtime/images approval remains absent.'
   next: 'Push same271 verified fix/diagnostics; own exact CI and resolve actual fingerprint/browser defects. Inspect three current images and complete independent frozen review before ready/merge. Queued272 owns stable submission operation after unknown accepted reply, depends on270 accepted main. Full233 active;239 Draft.'
+
+task_history_empty_fingerprint_repair:
+  head: cd707a2d8bbc22003c6d19b23650dca30fa73e5a
+  build: 37897889287
+  governance: 37897889296
+  actual: 113713344197
+  quality: 113715932905
+  result: 'Seven prerequisites/Governance and ALL native history SQL/retained Chromium PASS. New archive browser terminal red at exact bounded diagnostic history-owned-fingerprint-11-length-4-null: empty CustomerAiCreditSettlements producedNULL. No archive UI navigation/images yet. Not infrastructure noise.'
+  fix: 'Both native/browser ordered full-row fingerprints now hash COALESCE(JSON,N[]), include null column values consistently and require an actual64-uppercase-hex SHA256. Never accept rawNULL. New actual native isolated-table proof compares empty input to Python SHA256 of UTF16LE[], detects inserted null row/changed value and restored empty, verifies zero credit settlements and the same empty digest without inserting settlement rows. Browser also verifies uppercase valid selectors through real BFF/Core after owner navigation.'
+  independent: 'Frozen cd shipping/security/static review has no remaining concrete blocker; GUID P2 independently CLOSED with original502 probes now200,51.NET/73shippingweb+2reviewer/45retainedsession/typecheck/4Node+6Python PASS. Full approval remains conditional on actual new browser/fingerprints/images/exact gates.'
+  local: '4 browser guard/preparation and6 native guard/transport controls, JS/Python syntax/YAML/diff PASS. New canonical empty native/runtime proof has not executed yet; do not infer acceptance.'
+  next: 'Push same271 proof repair, own exact CI and fix real defects through actual archive navigation/reload/two-users/two-companies/late-detail/native-revoke/no-effects and all3 images. Independent frozen final review then PR/main. Full233 active;272 queued dependency.'
