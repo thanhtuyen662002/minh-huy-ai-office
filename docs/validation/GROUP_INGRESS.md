@@ -71,6 +71,38 @@ JSON, signature/skew boundaries, current snapshots and private key refusal.
 These use owned in-memory fixtures; actual SQL rights and concurrent commit
 acceptance remain required. No API, store, listener or sender is exposed yet.
 
+## Transactional source store checkpoint
+
+Only the server-authenticated identity can call the store. A serializable pinned
+SQL transaction takes the source application lock before current registry/lease
+admission, then commits the protected immutable revision, exact logical-event
+receipt, source counter and reference-only outbox together. The counter is read
+fresh after the prior commit lock; a tracked snapshot or allocated identity is
+not a committed cursor. Current authority, qualification, listener epoch/expiry
+and effective rights are rechecked before saving and before committing.
+
+Receipt identity binds the original event metadata and text. Transport signature
+nonce/time and listener owner/epoch are excluded from the logical fingerprint,
+so an identical protected spool event can reconcile after a listener restart.
+A changed logical event under the same event ID is refused. Duplicate ACKs
+resolve the original source/revision reference and do not renew pending time,
+resolve another content key, create an outbox or allocate another sequence.
+
+Edit/recall history is append-only; an original-unseen gap is persisted when the
+first observed event is an edit/recall. A later original can be retained without
+erasing that gap. The authorized current-source projection and extractor must
+apply edit/recall precedence: a late original is not an undo of an edit or recall.
+Historical backfill remains explicit on every revision; later batch processing
+must separate it from notification-eligible live input. No current-content or
+notification projection is delivered by this store checkpoint.
+
+Twenty-one store controls PASS, including one protected graph, one hundred
+sequential replays and changed listener recovery, six changed-envelope refusals,
+stale/foreign leases, final authority/key/expiry denial before effects, immutable
+edit/recall/late-original gaps, overflow and an independently committed context
+against an old tracked cursor. These in-memory controls do not prove actual SQL
+concurrent commits or rollback after a failed SQL write; those gates remain.
+
 ## Remaining acceptance
 
 This checkpoint has no shipped group API, worker/listener/spool, broker consumer

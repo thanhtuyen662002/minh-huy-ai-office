@@ -195,9 +195,10 @@ public sealed class GroupServiceAuthenticatorTests
             Assert.Throws<UnauthorizedAccessException>(() => GroupRegistryReader.Decode(bytes, 512));
     }
 
-    private sealed class Fixture : IDisposable
+    internal sealed class Fixture : IDisposable
     {
-        internal readonly PlatformDbContext Db = new(new DbContextOptionsBuilder<PlatformDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        internal readonly DbContextOptions<PlatformDbContext> Options = new DbContextOptionsBuilder<PlatformDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        internal readonly PlatformDbContext Db;
         internal readonly GroupScope Scope = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         internal readonly GroupExternalIdentity External = new("synthetic", "account ", "group😀 ");
         internal readonly GroupServiceRecord Service;
@@ -209,6 +210,7 @@ public sealed class GroupServiceAuthenticatorTests
         internal static readonly DateTimeOffset Now = new(2026, 10, 10, 0, 0, 0, TimeSpan.Zero);
         internal Fixture(string? change = null)
         {
+            Db = new(Options);
             var company = new CompanyRecord { TenantId = Scope.TenantId, Id = Scope.CompanyId, Code = "owned", Name = "Owned fixture", IsActive = change != "company" };
             Account = new()
             {
@@ -267,7 +269,7 @@ public sealed class GroupServiceAuthenticatorTests
         }
         public void Dispose() => Db.Dispose();
     }
-    private sealed class OwnedSecrets : ISecretResolver
+    internal sealed class OwnedSecrets : ISecretResolver
     {
         internal readonly byte[] Key = Enumerable.Repeat((byte)0x31, 32).ToArray();
         internal int Calls;

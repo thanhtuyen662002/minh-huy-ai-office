@@ -694,3 +694,11 @@ group_parent_ci_integration:
   parent_review: 6089491503
   result: 'Explicitly absorb parent282 hosted fixed-cache and issued-ID Redis workflow repairs; preserve both parent failure/evidence blocks and child277 lease/authentication state. Parent735 actualSQL/Chromium114029064733 PASS including actual session expiry/restored reauthentication; final5e all8/main pending. No child277 runtime acceptance inferred.'
   next: 'Own child exact CI after auth905 checkpoint and implement transactional source store; parent must merge and exactmain close before child can merge.'
+
+
+group_transactional_source_checkpoint:
+  predecessor: d4308350d4c2f25910df51d4590343eee9ddb266
+  parent: 5e04cfabc24059b3bb0cae5121625ede14ed2a79
+  local: '21 store controls and full926 Persistence PASS, zero skipped. Source transaction-owned application lock precedes fresh registry/qualification/listener admission. Fresh committed counter, strict original receipt/message identity, exact logical-envelope dedupe without transport epoch/nonce/time, protected immutable revision/receipt/reference-only outbox and source pending state are committed atomically; final current authority/lease/rights fences before save/commit. Edit/recall original-unseen gaps and historical metadata retained; no portal task or sender effect.'
+  limitation: '100 replays are sequential owned in-memory controls, not concurrent SQL proof. Final pre-save key/authority/expiry refusal and stale tracked-cursor across contexts verified; actual SQL concurrent commit order, failed-write rollback, effective rights and queued revocation remain. No exposed API/current-source projection/listener/spool/publication/private inbox yet. Late originals must not undo edits/recalls in subsequent projection/extractor.'
+  next: 'Frozen independent store review and same277 service API/controlled realSQL acceptance, then listener/spool/outbox recovery and authorized private read. Close exact child CI; parent acceptance/main closure must precede child merge. Full277/275/233 remain unfinished.'
