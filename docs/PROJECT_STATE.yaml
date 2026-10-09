@@ -5,17 +5,17 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: codex/270-task-history
-current_pr: null
+current_pr: 271
 current_target_head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
 last_verified_commit: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
 
 critical_paths:
   backend:
     issue: 270
-    pr: null
+    pr: 271
     branch: codex/270-task-history
     head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
-    state: claimed
+    state: in_progress
     next: 'Acquire linked Draft lease; bounded owner-only history/detail and final fresh authority; archive reads never rerun ERP or charge. Follow issue270 contract review6073185825, preserve trusted historical-owner result policy.'
 
   erp_data:
@@ -342,3 +342,9 @@ verified_company_selection_267:
     and strengthened actual two-company Chromium switch/reload/private chat-draft-member-source-task
     separation/revoke-restore.266 closed. Full233/customer/production and installer
     clean Windows/signing remain.
+
+task_history_backend_checkpoint:
+  issue: 270
+  pr: 271
+  local: '49 focused service/API/existing pilot tests PASS, Core build PASS, targeted whitespace/diff PASS. Generated additive owner/time migration preserves old owner index. Initial/final fresh company-user membership fences, owner-only bounded list, allowlisted archive detail, exact stored UTF16 binary bounds, malformed/duplicate/unknown request/checkpoint denial and completed-but-unavailable truthfulness implemented. Existing opaque result fields remain; final fence added and source-grant revoked historical-owner positive verified.'
+  remaining: 'Issued-SID BFF/Cong viec UI, actual relational execution and native external revocation/restore, actual Chromium owner/company/reload/new-sign-in recovery and no-dispatch/charge fingerprints, full frozen independent review/exact PR/main gates. Not ready for merge.'

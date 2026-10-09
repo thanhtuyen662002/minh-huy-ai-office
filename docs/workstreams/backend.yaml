@@ -2,10 +2,10 @@ workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
 current_issue: 270
-current_pr: null
+current_pr: 271
 current_branch: codex/270-task-history
 head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
-state: claimed
+state: in_progress
 lease_owner: root-backend-270
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
@@ -308,3 +308,9 @@ administrator_delivered_269:
   main_quality: 113645840920
   main_artifact: 11592885599
   result: 'Merged and issue268 CLOSED. Exact PR/main all8 PASS,1130.NET/1028web incl20 actual Redis. All new/retained SQL/OIDC/Chromium and committed Core-to-BFF header/body loss with stable one-audit replay PASS. Root inspected both sanitized main images: readable, no clipping/secrets. Full frozen final approval. No268 work remains; earlier checkpoints retained as history.'
+
+task_history_backend_checkpoint:
+  issue: 270
+  pr: 271
+  local: '49 focused service/API/existing pilot tests PASS, Core build PASS, targeted whitespace/diff PASS. Generated additive owner/time migration preserves old owner index. Initial/final fresh company-user membership fences, owner-only bounded list, allowlisted archive detail, exact stored UTF16 binary bounds, malformed/duplicate/unknown request/checkpoint denial and completed-but-unavailable truthfulness implemented. Existing opaque result fields remain; final fence added and source-grant revoked historical-owner positive verified.'
+  remaining: 'Issued-SID BFF/Cong viec UI, actual relational execution and native external revocation/restore, actual Chromium owner/company/reload/new-sign-in recovery and no-dispatch/charge fingerprints, full frozen independent review/exact PR/main gates. Not ready for merge.'

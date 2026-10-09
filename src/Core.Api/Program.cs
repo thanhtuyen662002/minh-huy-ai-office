@@ -228,6 +228,38 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
         }
     }).RequireAuthorization();
 
+    app.MapGet("/api/tasks", async (HttpRequest request, IRequestAuthorizationContextAccessor accessor,
+        [FromServices] TaskHistoryService history, [FromQuery] int? offset, [FromQuery] int? limit, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+        if (request.Query.Any(pair => pair.Key is not ("offset" or "limit") || pair.Value.Count != 1)
+            || request.Query.Any(pair => !System.Text.RegularExpressions.Regex.IsMatch(pair.Value.ToString(), "^(0|[1-9][0-9]*)$")))
+            return Results.BadRequest(new { error = "Invalid task history page." });
+        try { return Results.Ok(await history.ListAsync(context, offset ?? 0, limit ?? 25, cancellationToken)); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid task history page." }); }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
+        { return Results.Json(new { error = "Task history is unavailable." }, statusCode: 503); }
+    }).RequireAuthorization();
+
+    app.MapGet("/api/tasks/{taskId:guid}/history", async (Guid taskId, HttpRequest request,
+        IRequestAuthorizationContextAccessor accessor, [FromServices] TaskHistoryService history, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+        if (request.Query.Count != 0) return Results.BadRequest(new { error = "Invalid task history selector." });
+        try
+        {
+            var detail = await history.GetAsync(context, taskId, cancellationToken);
+            return detail is null ? Results.NotFound() : Results.Ok(detail);
+        }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid task identity." }); }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
+        { return Results.Json(new { error = "Task history is unavailable." }, statusCode: 503); }
+    }).RequireAuthorization();
+
     app.MapGet("/api/tasks/{taskId:guid}", async (
         Guid taskId,
         IRequestAuthorizationContextAccessor accessor,
@@ -251,7 +283,9 @@ else
         statusCode: StatusCodes.Status503ServiceUnavailable,
         title: "Pilot task execution is not configured.");
     app.MapPost("/api/tasks", PilotTaskUnavailable);
+    app.MapGet("/api/tasks", PilotTaskUnavailable);
     app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
+    app.MapGet("/api/tasks/{taskId:guid}/history", PilotTaskUnavailable);
     app.MapGet("/api/company/members", () => Results.Json(new { error = "Company directory is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/access", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/administrator", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
