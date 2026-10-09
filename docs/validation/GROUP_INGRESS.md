@@ -1,7 +1,7 @@
 # Group ingress: implementation and evidence
 
 Issue277/PR283 implements the automatic customer-source ingress accepted by
-issue276. It is explicitly stacked on PR282 until that parent is delivered.
+issue276. Contracts PR282 is delivered on main4cfeda58; PR283 now targets main.
 The active PR HANDOFF records the exact candidate and workflow IDs.
 
 ## First SQL checkpoint
@@ -109,17 +109,55 @@ Historical backfill remains explicit on every revision; later batch processing
 must separate it from notification-eligible live input. No current-content or
 notification projection is delivered by this store checkpoint.
 
-Twenty-one store controls PASS, including one protected graph, one hundred
+Twenty-four store controls PASS, including one protected graph, one hundred
 sequential replays and changed listener recovery, six changed-envelope refusals,
 stale/foreign leases, final authority/key/expiry denial before effects, immutable
 edit/recall/late-original gaps, overflow and an independently committed context
 against an old tracked cursor. These in-memory controls do not prove actual SQL
 concurrent commits or rollback after a failed SQL write; those gates remain.
 
+## Internal HTTP and timestamp repair checkpoint
+
+POST `/internal/group-ingress/events` is a separate HMAC service endpoint. It is
+default-off: the host must explicitly set `AIOffice:GroupIntake:Enabled=true` and
+configure the platform SQL connection. Live controlled qualification is the
+default policy. The synthetic policy additionally requires a Development host
+and both `OwnedSyntheticFixture=true` and `OwnedDisposableFixture=true` under
+that same server section. Client headers/body cannot select this policy.
+
+The five canonical `X-AIOffice-Group-*` headers carry Service, Epoch, Signed-At,
+Nonce and Signature. No query scope selector is accepted. Declared and streamed
+bodies have the same64KiB bound. Current SQL service/source grants determine
+scope; tenant/user headers provide no authority. A200 response contains only
+committed receipt metadata after the store transaction commits; it does not
+claim extraction, broker delivery or IT notification. Disabled/errors/success
+all receive no-store. Responses expose bounded categories, never source text,
+secret references or database exception details.
+
+`AIOffice:GroupIntake:SourceKeys` is a private host configuration array with
+TenantId, CompanyId, SourceBindingId, KeyId, SecretRef and IsWriteKey fields.
+It enrolls exact scopes and retained keys; values/credentials stay outside Git.
+The runtime registry remains operator-owned. This endpoint does not create or
+renew a listener lease; an authorized fenced listener remains required.
+
+Independent auth probes now close all four previously accepted invalid cases.
+The store also refreshes immutable write timestamps after asynchronous key and
+final authorization checks. Mutable first/last pending anchors account for the
+first source SaveChanges/final-proof delay inside the same transaction. Owned
+40second key/write delays retain a30second quiet period after that work; they
+are not a measurement of actual physical SQL commit latency. The downstream
+scheduler must read committed state and preserve its maximum-window semantics.
+
+Twenty-three real Core HTTP/DI controls and two store delay regressions PASS;
+full959 Persistence tests PASS, zero skipped. HTTP tests use owned in-memory
+persistence and explicit Development policy. Actual SQL/concurrency/rollback
+acceptance for this new path remains required. Independent timestamp/API review
+is pending on the new frozen checkpoint; earlier061 CI all8 PASS and retained
+realCore202 header/body-loss proof do not execute this new group HTTP path.
+
 ## Remaining acceptance
 
-This checkpoint has no shipped group API, worker/listener/spool, broker consumer
-or private inbox UI. Actual SQL application/effective-rights proof, commit-order
+There is no worker/listener/spool, broker consumer or private inbox UI yet. Actual SQL application/effective-rights proof, commit-order
 and duplicate100/revision/recall controls, rollback/no-outbox proof, protected
 source reads, fenced listener/restart, broker interruption/recovery and issued
 session denial/restored positives remain required. No runtime receipt, group

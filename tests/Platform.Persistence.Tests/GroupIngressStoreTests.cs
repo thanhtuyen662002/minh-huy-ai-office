@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 using Xunit;
 
@@ -66,7 +67,7 @@ public sealed class GroupIngressStoreTests
             _ => payload with { Event = payload.Event with { OccurredAtUtc = Fixture.Now.AddSeconds(-1) } }
         };
         var changed = await fixture.VerifyAsync(payload);
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Store.AcceptAsync(changed));
+        var error = await Assert.ThrowsAsync<GroupIngressConflictException>(() => fixture.Store.AcceptAsync(changed));
         Assert.Equal("Group ingress event conflicts with its committed identity.", error.Message);
         Assert.Single(await fixture.Auth.Db.GroupIngressReceipts.ToListAsync()); Assert.Single(await fixture.Auth.Db.GroupMessageRevisions.ToListAsync());
         Assert.Equal(1, fixture.Keys.Calls);
@@ -147,10 +148,10 @@ public sealed class GroupIngressStoreTests
         using var fixture = new Fixture(); await fixture.Store.AcceptAsync(await fixture.VerifyAsync()); fixture.AllowRevisions();
         var differentEvent = fixture.Auth.Payload() with { Event = fixture.Auth.Payload().Event with { RevisionEventId = "different-original" } };
         var changed = await fixture.VerifyAsync(differentEvent);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Store.AcceptAsync(changed));
+        await Assert.ThrowsAsync<GroupIngressConflictException>(() => fixture.Store.AcceptAsync(changed));
         var invalidRecall = differentEvent with { Event = differentEvent.Event with { Kind = GroupSourceEventKind.Recall } };
         var recalled = await fixture.VerifyAsync(invalidRecall);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Store.AcceptAsync(recalled));
+        await Assert.ThrowsAsync<GroupIngressConflictException>(() => fixture.Store.AcceptAsync(recalled));
         Assert.Single(await fixture.Auth.Db.GroupMessageRevisions.ToListAsync()); Assert.Single(await fixture.Auth.Db.GroupIngressOutbox.ToListAsync());
     }
 
@@ -191,6 +192,34 @@ public sealed class GroupIngressStoreTests
         fixture.Clock.Now = Fixture.Now.AddSeconds(121);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.AcceptAsync(verified));
         Assert.Equal(0, fixture.Keys.Calls); await fixture.AssertEmptyAsync();
+    }
+
+    [Fact]
+    public async Task SlowKeyResolutionUsesFreshWriteTimestampAndFutureQuietDeadline()
+    {
+        using var fixture = new Fixture(); var verified = await fixture.VerifyAsync();
+        fixture.Keys.BeforeResolution = () => { fixture.Clock.Now = Fixture.Now.AddSeconds(40); return Task.CompletedTask; };
+        var receipt = await fixture.Store.AcceptAsync(verified);
+        Assert.Equal(fixture.Clock.Now, receipt.CommittedAtUtc);
+        Assert.Equal(receipt.CommittedAtUtc, (await fixture.Auth.Db.GroupMessageRevisions.SingleAsync()).CommittedAtUtc);
+        Assert.Equal(receipt.CommittedAtUtc, (await fixture.Auth.Db.GroupIngressReceipts.SingleAsync()).CommittedAtUtc);
+        var state = await fixture.Auth.Db.GroupSourceStates.SingleAsync();
+        Assert.Equal(fixture.Clock.Now, state.FirstPendingAtUtc); Assert.Equal(fixture.Clock.Now, state.LastPendingAtUtc);
+        Assert.Equal(fixture.Clock.Now.AddSeconds(30), GroupBatchTiming.InitialTuning.ComputeDue(state.FirstPendingAtUtc!.Value, state.LastPendingAtUtc!.Value));
+    }
+
+    [Fact]
+    public async Task PendingWindowAccountsForSourceSaveAndFinalProofLatency()
+    {
+        using var fixture = new Fixture(); var verified = await fixture.VerifyAsync();
+        using var delayed = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(fixture.Auth.Options).AddInterceptors(new AdvanceAfterSave(fixture.Clock)).Options);
+        var store = new GroupIngressStore(delayed, fixture.Keys, new(), GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true), fixture.Clock);
+        await store.AcceptAsync(verified);
+        var state = await fixture.Auth.Db.GroupSourceStates.AsNoTracking().SingleAsync();
+        Assert.Equal(Fixture.Now.AddSeconds(40), fixture.Clock.Now);
+        Assert.Equal(fixture.Clock.Now, state.FirstPendingAtUtc); Assert.Equal(fixture.Clock.Now, state.LastPendingAtUtc);
+        Assert.Equal(fixture.Clock.Now.AddSeconds(30), GroupBatchTiming.InitialTuning.ComputeDue(state.FirstPendingAtUtc!.Value, state.LastPendingAtUtc!.Value));
+        Assert.Single(await fixture.Auth.Db.GroupMessageRevisions.ToListAsync()); Assert.Single(await fixture.Auth.Db.GroupIngressOutbox.ToListAsync());
     }
 
     private static GroupIngressPayload WithText(GroupIngressPayload payload, string text) => payload with
@@ -245,6 +274,15 @@ public sealed class GroupIngressStoreTests
     {
         internal DateTimeOffset Now = Fixture.Now;
         public override DateTimeOffset GetUtcNow() => Now;
+    }
+    private sealed class AdvanceAfterSave(OwnedClock clock) : SaveChangesInterceptor
+    {
+        private bool advanced;
+        public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
+        {
+            if (!advanced) { clock.Now = Fixture.Now.AddSeconds(40); advanced = true; }
+            return ValueTask.FromResult(result);
+        }
     }
     private sealed class OwnedKeys : IGroupSourceKeyProvider
     {

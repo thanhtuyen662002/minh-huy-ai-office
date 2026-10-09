@@ -11,6 +11,8 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed record GroupIngressCommittedReceipt(GroupScope Source, Guid MessageId,
     long Revision, long CommittedSequence, DateTimeOffset CommittedAtUtc, bool WasAlreadyCommitted);
 
+public sealed class GroupIngressConflictException() : InvalidOperationException("Group ingress event conflicts with its committed identity.");
+
 // A connector ACK is created only after the immutable source, receipt, cursor
 // and reference-only outbox have committed on the same pinned SQL transaction.
 public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKeyProvider keys,
@@ -98,10 +100,14 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             var sequence = checked(state.CommittedSequence + 1);
             if (state.ScheduledThroughSequence < 0 || state.ScheduledThroughSequence > state.CommittedSequence ||
                 (state.FirstPendingAtUtc is null) != (state.LastPendingAtUtc is null) || state.FirstPendingAtUtc > state.LastPendingAtUtc) throw Unavailable();
+            var startsPendingWindow = state.FirstPendingAtUtc is null;
 
             using var key = await keys.ResolveWriteAsync(source, cancellationToken);
             var protectedContent = protector.Protect(new(source, message.Id, revision, verified.Service.SourceVersion, verified.Service.DeletionGeneration), payload.Text, key.Key, key.KeyId);
             await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
+            // Source timestamps describe the admitted write, after key/proof
+            // latency, rather than the earlier request admission time.
+            now = clock.GetUtcNow().ToUniversalTime();
             Add(new GroupMessageRevisionRecord
             {
                 TenantId = source.TenantId,
@@ -164,6 +170,16 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             state.LastPendingAtUtc = state.LastPendingAtUtc > now ? state.LastPendingAtUtc : now;
             await database.SaveChangesAsync(cancellationToken);
             await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
+            // The mutable scheduling anchor also accounts for source-write and
+            // final-proof latency. Immutable source receipts retain write time.
+            var pendingAt = clock.GetUtcNow().ToUniversalTime();
+            if (state.LastPendingAtUtc < pendingAt)
+            {
+                state.LastPendingAtUtc = pendingAt;
+                if (startsPendingWindow) state.FirstPendingAtUtc = pendingAt;
+                await database.SaveChangesAsync(cancellationToken);
+                await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
+            }
             await transaction.CommitAsync(cancellationToken);
             return new(source, message.Id, revision, sequence, now, false);
         }
@@ -260,5 +276,5 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
     private sealed record StoredMessage(Guid Id, string IdentityHash, byte[]? MessageBytes);
     private sealed record StoredReceipt(Guid MessageId, long Revision, string EnvelopeSha256, byte[]? EventBytes);
     private static InvalidOperationException Unavailable() => new("Group ingress is unavailable.");
-    private static InvalidOperationException Conflict() => new("Group ingress event conflicts with its committed identity.");
+    private static GroupIngressConflictException Conflict() => new();
 }

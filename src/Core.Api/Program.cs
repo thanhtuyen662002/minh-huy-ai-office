@@ -32,6 +32,7 @@ builder.Services.AddHealthChecks();
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
+var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString));
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
         .GetSection(RabbitMqWorkOptions.SectionName)
@@ -110,6 +111,7 @@ static IResult AuthenticationUnavailable() => Results.Problem(statusCode: Status
 
 app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, component = "Core.Api", environment = deploymentEnvironment.ToString(), status = "ok" }));
 app.MapHealthChecks("/health");
+app.MapGroupIngress(groupIngressEnabled);
 
 if (authenticationConfigured)
 {

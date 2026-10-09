@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/277-group-durable-ingress
     head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
     state: in_progress
-    next: '276/282 contracts delivered after full/final frozen reviews and exactPR/main all8 PASS; acceptedmain4cf integrated.277/283 full934 Persistence localPASS but actualSQL/source/listener/recovery/private inbox incomplete. Four independent auth blockers closed5/5; store timing-review repair and service API ongoing. Current061 exactCI must diagnose retained202 substage and repair on samePR. Continue actual277 then278 SQL brain/automatic notes and279 SQL-driven INTERNAL IT-only reports; no live activation or whole workflow completion inferred.'
+    next: '276/282 contracts delivered after full/final frozen reviews and exactPR/main all8 PASS; acceptedmain4cf integrated.277/283 full934 Persistence localPASS but actualSQL/source/listener/recovery/private inbox incomplete. Four independent auth blockers closed5/5; store timing-review repair and service API ongoing. Exact061 all8/native/retained202 headers-body Chromium PASS; new API/timing repair959 localPASS; own frozen review/newCI and actualSQL acceptance. Continue actual277 then278 SQL brain/automatic notes and279 SQL-driven INTERNAL IT-only reports; no live activation or whole workflow completion inferred.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close owned276/282 final integration/documentation review and exact final PR/main gates after full ee30 approval6088762933. Accepted281/main1b0 all8 verified and integrated locally. Immediately continue277 SQL ingress/revisions/coverage/queue,278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No per-item approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
+next_action: '276/282 delivered and exactmain4cf all8 verified;277/283 retargeted main and integrated. Close new frozen API/timing review/new exactCI and implement actualSQL ingress/revisions/coverage/queue/listener/recovery/private inbox. Then278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No per-item approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
 
 
 blocked_by:

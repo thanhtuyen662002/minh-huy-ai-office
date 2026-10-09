@@ -741,3 +741,14 @@ group_contracts_delivered_276:
   state: done
   result: '276 CLOSED/282 MERGED2026-10-09T21:35:43Z after frozen full contracts/qualification and final bounded integration/CI reviews; exact finalPR/main all8 PASS. All retained nativeSQL/queued current authority/receipt recovery and actual Redis expiry/private clear/provider reauthentication/realCore202 header-body loss/one-effect Chromium PASS. Contracts and honest unverified qualification registry delivered; no actual277-279 source/brain/notes/sends or live qualification claimed.'
   next: 'Acceptedmain4cf merged into277; preserve child lease and its own auth/store/diagnostic checkpoints, retarget283 to main. Finish timing-review repair/service API/actualSQL/listener/recovery/private reads and current exactCI. Full233/62 remains active;239Windows/signingDraft untouched.'
+
+group_ingress_api_timing_checkpoint:
+  predecessor: 770bcfd803a728244f1148cf0e7a303c7253dbca
+  remote_predecessor: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
+  predecessor_build: 37994641440
+  predecessor_governance: 37994641394
+  predecessor_actual: 114037433525
+  predecessor_quality: 114040960406
+  result: 'Exact061 all8 PASS; root inspected native and Chromium log including retained realCore202 headers/body-loss. Parent276 delivered exactmain4cf all8 and integrated. New default-off strict HMAC HTTP API23 controls plus fresh store write/pending timestamps2 delay controls; full959 Persistence PASS/zero skipped. Owned in-memory evidence only, not new-path SQL/connector delivery.'
+  review: 'Original four auth cases closed by independent5/5 probes at061;65 retained PASS. Original40second key-delay pending anchor P2 repaired locally; frozen timestamp/API review still required.'
+  next: 'Own new exactCI/review and implement actualSQL source commit/duplicate100/rollback/effective-rights/revocation gates, fenced listener/encrypted spool/recovery, protected reads and shipping private inbox.277/278/279 and full233 active; no live activation/customer sender.'
