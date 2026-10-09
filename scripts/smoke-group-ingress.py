@@ -59,19 +59,21 @@ def owned_sql(compose, environment, query):
 def permission_diagnostic_query():
     registry = ["GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants"]
     append_only = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts"]
-    mutable = {"GroupListenerLeases": ["TenantId", "CompanyId", "ConnectorAccountId"],
-        "GroupSourceStates": ["TenantId", "CompanyId", "BindingId"],
-        "GroupCoverageGaps": ["TenantId", "CompanyId", "BindingId", "Id", "AfterCommittedSequence", "Reason", "OpenedAtUtc"],
-        "GroupIngressOutbox": ["TenantId", "CompanyId", "BindingId", "Id", "MessageId", "Revision", "CommittedSequence"]}
+    mutable = {"GroupListenerLeases": ["OwnerId", "Epoch", "ExpiresAtUtc", "HeartbeatAtUtc"],
+        "GroupSourceStates": ["CommittedSequence", "ScheduledThroughSequence", "FirstPendingAtUtc", "LastPendingAtUtc"],
+        "GroupCoverageGaps": ["ReconnectedAtUtc"],
+        "GroupIngressOutbox": ["AvailableAtUtc", "PublishAttempts", "PublishedAtUtc"]}
     predicates = []
     for table in [*registry, *append_only, *mutable]:
         name = "aioffice." + table
         predicates += [f"OBJECT_ID(N'{name}',N'U') IS NOT NULL",
             f"EXISTS(SELECT 1 FROM sys.objects WHERE object_id=OBJECT_ID(N'{name}') AND principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_operator_owner'))"]
-        for permission, expected in [("SELECT", 1), ("INSERT", 0 if table in registry else 1), ("UPDATE", 1 if table in mutable else 0),
+        for permission, expected in [("SELECT", 1), ("INSERT", 0 if table in registry else 1), ("UPDATE", 0),
                 ("DELETE", 0), ("ALTER", 0), ("CONTROL", 0), ("TAKE OWNERSHIP", 0)]:
-            predicates.append(f"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'{permission}')={expected}")
-        columns = " AND c.name IN(" + ",".join("N'" + column + "'" for column in mutable[table]) + ")" if table in mutable else ""
+            if permission == "UPDATE" and table in mutable:
+                predicates.append(" AND ".join(f"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'UPDATE',N'{column}',N'COLUMN')=1" for column in mutable[table]))
+            else: predicates.append(f"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'{permission}')={expected}")
+        columns = " AND c.name NOT IN(" + ",".join("N'" + column + "'" for column in mutable[table]) + ")" if table in mutable else ""
         predicates.append(f"NOT EXISTS(SELECT 1 FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'{name}'){columns}"
             f" AND ISNULL(HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0)")
     checks = [f"SELECT N'group_permission_{index:03}' AS CheckId,CASE WHEN({predicate}) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END AS Result"
@@ -273,6 +275,31 @@ def verify(*, directory, manifest, compose, environment, api):
         first_snapshot = snapshot()
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupMessageRevisions WHERE {scope} AND ContentKeyId='owned-source-v1'"
             " AND DATALENGTH(ProtectedContent)>29 AND SUBSTRING(ProtectedContent,1,1)=0x01;") == "1", "Source protection envelope was not committed"
+        # Mixed table GRANT/immutable-column DENY must permit only the intended
+        # runtime fields. Execute real rolled-back UPDATEs as the runtime login,
+        # then test both loss of an allowed column and escalation of a key.
+        assert sql("EXECUTE AS LOGIN=N'aioffice_runtime'; BEGIN TRANSACTION;"
+            f" UPDATE {schema}GroupListenerLeases SET HeartbeatAtUtc=HeartbeatAtUtc WHERE {registry_scope} AND ConnectorAccountId='{account}';"
+            f" UPDATE {schema}GroupSourceStates SET CommittedSequence=CommittedSequence WHERE {scope};"
+            f" UPDATE {schema}GroupCoverageGaps SET ReconnectedAtUtc=ReconnectedAtUtc WHERE {scope};"
+            f" UPDATE {schema}GroupIngressOutbox SET PublishAttempts=PublishAttempts WHERE {scope};"
+            " ROLLBACK TRANSACTION; REVERT; SELECT N'ALLOWED';") == "ALLOWED"
+        assert snapshot() == first_snapshot
+        sql("DENY UPDATE ON OBJECT::aioffice.GroupIngressOutbox(PublishedAtUtc) TO aioffice_runtime;")
+        try: no_effect(event())
+        finally: sql("REVOKE UPDATE ON OBJECT::aioffice.GroupIngressOutbox(PublishedAtUtc) FROM aioffice_runtime;")
+        sql("REVOKE UPDATE ON OBJECT::aioffice.GroupSourceStates(BindingId) FROM aioffice_binding_runtime;"
+            " GRANT UPDATE ON OBJECT::aioffice.GroupSourceStates(BindingId) TO aioffice_runtime;")
+        try:
+            assert sql("EXECUTE AS LOGIN=N'aioffice_runtime'; BEGIN TRANSACTION;"
+                f" UPDATE {schema}GroupSourceStates SET BindingId=BindingId WHERE {scope};"
+                " ROLLBACK TRANSACTION; REVERT; SELECT N'ALLOWED';") == "ALLOWED"
+            no_effect(event())
+        finally:
+            sql("REVOKE UPDATE ON OBJECT::aioffice.GroupSourceStates(BindingId) FROM aioffice_runtime;"
+                " DENY UPDATE ON OBJECT::aioffice.GroupSourceStates(BindingId) TO aioffice_binding_runtime;")
+        assert require_receipt(*call(payload)) == {**original, "wasAlreadyCommitted": True} and snapshot() == first_snapshot
+        print("PASS actual group precise mutable-column writes, missing writable permission and immutable-key escalation refusal/restored positive")
         # Concurrent calls are separately signed. They must reconcile one
         # logical event without renewing pending anchors or changing any bytes.
         with ThreadPoolExecutor(max_workers=8) as executor:

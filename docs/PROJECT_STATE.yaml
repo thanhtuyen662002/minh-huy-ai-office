@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
+current_target_head: 8140802c2d69a944f683e33a78b77bf9304c42b6
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
+    head: 8140802c2d69a944f683e33a78b77bf9304c42b6
     state: in_progress
-    next: '276/282 contracts delivered after full/final frozen reviews and exactPR/main all8 PASS; acceptedmain4cf integrated.277/283 full934 Persistence localPASS but actualSQL/source/listener/recovery/private inbox incomplete. Four independent auth blockers closed5/5; store timing-review repair and service API ongoing. Exact061 all8/native/retained202 headers-body Chromium PASS; new API/timing repair959 localPASS; own frozen review/newCI and actualSQL acceptance. Continue actual277 then278 SQL brain/automatic notes and279 SQL-driven INTERNAL IT-only reports; no live activation or whole workflow completion inferred.'
+    next: '276/282 delivered exactmain4cf all8 and integrated;277/283 serviceHTTP/auth/time repairs independently approved. Remote42cc firstactualgroupACK403 diagnosed fourtableUPDATE predicates conflictingimmutablecolumnDENY. Repair exactmutablecolumn allowlist/allremainingimmutable;113 focused/.NET and17guardsPASS, newnativeclosure/review required. Reader814 finalauthority-recall P2 independently closed33controls; actualSQL release/range, privateAPI/UI, listener/spool/broker recovery remain. Then278 SQLbrain/automaticnotes and279 IT-onlySQLreporter; no customeroutput/liveactivation/productioncomplete claim.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '276/282 delivered and exactmain4cf all8 verified;277/283 retargeted main and integrated. Close new frozen API/timing review/new exactCI and implement actualSQL ingress/revisions/coverage/queue/listener/recovery/private inbox. Then278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No per-item approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
+next_action: 'Own same283 exactnative column-permission repair/review/CI. ActualSQL groupACK/100 replay/rollback/rights/revocations/history remain required; protectedreader814 scopedapproved but nativeSQL locks/privateAPI/UI absent. Complete277 listener/spool/broker/recovery/privateinbox, then278 scopedSQLbrain/automaticnotes and279 IT-onlySQLnotifier. All62/233 active;273 queued/239actualWindows-signingDraft; no liveactivation/customeroutput.'
 
 
 blocked_by:

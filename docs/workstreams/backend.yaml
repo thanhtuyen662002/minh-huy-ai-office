@@ -796,3 +796,14 @@ group_protected_read_final_release_repair:
   review: 'Independent frozen reader20 retained/11 own safe probes PASS; concreteP2 finalauthorityawait recall releasesoldbody, expecteddenialFAIL and staleold/freshrecall positive reproduced. Short postkey Serializable release accepted as design; repairedheadreview/nativeSQL stillrequired.'
   local: '21 readercontrols PASS including finalauthorityrecall refusal andfreshRecall/null restoration. Finalauthorityfirst thenwinner/message/receipt/gap underownedtransaction; commit readlinearization, isolation restored; no privatekey awaitunderlocks. NoAPI/DI/UI registration.'
   next: 'Close active42cc actual114050684002 runtime403diagnosis beforepush; repair samePR specificfence. Frozen repairedreader review andactualSQL lock/range/revoke proof mandatory, then privateHTTP/inbox and277 listener/spool/broker recovery.'
+
+group_native_column_permission_repair:
+  predecessor: 8140802c2d69a944f683e33a78b77bf9304c42b6
+  failed_candidate: 42cc94dc173bbf6cf77f94bfb05d3ad2f1ff55dc
+  failed_build: 37998551981
+  failed_governance: 37998552028
+  failed_actual: 114050684002
+  failed_quality: 114053755099
+  result: 'TerminalfirstACK403 atauth/permissions-initial; predicate085/095/105/115 failed: tableUPDATE requirement conflictswithdeliberateimmutablecolumnDENY. Fixedallowlist everymutablecolumnUPDATE1 andallremainingcolumnsUPDATE0; missing/unknown refuses, unexpectedcolumns immutable. No migrationrightsbroadened. Native actualrolledback mutablewrites plusallowedcolumnloss/immutablekeyescalation noeffects/restoredpositives added.'
+  local: '113 model/auth/HTTP/store/reader PASS zero skipped;17 ownedguards PASS;compile/solutionwhitespace/diff PASS. Reader814 repair independent33 approved; nativeSQL range/API/UI remainsunapproved.'
+  next: 'Push samePR repairednativecandidate and ownexactCI. Freeze permissiondelta review. Execute mandatoryactualgroupHTTP/SQL gate then scopedprivateHTTP/UI/range proof, fencedlistener/encryptedspool/broker recovery;277-279/full233 remainactive.'
