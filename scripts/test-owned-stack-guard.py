@@ -31,6 +31,16 @@ class OwnedStackGuardTests(unittest.TestCase):
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}
 
+    def test_group_browser_diagnostics_retain_only_fixed_stage_or_bounded_http_status(self):
+        prefix = "FAIL owned group Chromium inbox gate: "
+        for stage in ("native-reader-grant-ui-refusal", "native-reader-grant-private-http-401", "native-reader-grant-catalog-http-503",
+                "native-reader-grant-private-http-200"):
+            self.assertEqual(stage, group_smoke.browser_failure_stage(prefix + stage))
+        for stage in ("native-reader-grant-private-http-600", "native-reader-grant-private-http-99", "other-http-401",
+                "native-reader-grant-private-http-401 PRIVATE_BODY", "PRIVATE_CREDENTIAL", "a" * 81, "native-reader-grant-ui-refusal\nPRIVATE_BODY"):
+            self.assertIsNone(group_smoke.browser_failure_stage(prefix + stage))
+        self.assertIsNone(group_smoke.browser_failure_stage("OTHER PRIVATE_BODY"))
+
     def test_final_group_read_race_cleanup_attempts_all_owned_resources_and_preserves_first_failure(self):
         # Execute only the shipping helper's orchestration with inert dependencies.
         # No files, SQL, processes, threads or HTTP are created by these controls.

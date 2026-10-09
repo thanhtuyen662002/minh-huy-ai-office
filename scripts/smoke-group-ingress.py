@@ -39,6 +39,11 @@ def decode_bounded_history(text, byte_count):
     return json.loads(text)
 
 
+def browser_failure_stage(line):
+    match = re.fullmatch(r"FAIL owned group Chromium inbox gate: ([a-z-]{1,80}|native-reader-grant-(?:private|catalog)-http-[1-5][0-9]{2})", line)
+    return match.group(1) if match else None
+
+
 def require_owned(directory, api):
     if not (os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
@@ -379,6 +384,15 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         assert status == 200 and view["kind"] == 4 and view["text"] is None and view["revision"] == 2
         assert counts() == [base_counts[0], base_counts[1] + 1, base_counts[2] + 1, base_counts[3] + 1]
         assert int(sql(f"SELECT CommittedSequence FROM aioffice.GroupSourceStates WHERE {scope};")) == base_cursor + 1
+        qualified = scope.replace("TenantId", "v.TenantId").replace("CompanyId", "v.CompanyId").replace("BindingId", "v.BindingId")
+        assert sql(f"""SELECT COUNT(*) FROM aioffice.GroupMessageRevisions v
+          JOIN aioffice.GroupIngressReceipts r ON r.TenantId=v.TenantId AND r.CompanyId=v.CompanyId AND r.BindingId=v.BindingId
+            AND r.MessageId=v.MessageId AND r.Revision=v.Revision
+          JOIN aioffice.GroupIngressOutbox o ON o.TenantId=v.TenantId AND o.CompanyId=v.CompanyId AND o.BindingId=v.BindingId
+            AND o.MessageId=v.MessageId AND o.Revision=v.Revision AND o.CommittedSequence=v.CommittedSequence
+          WHERE {qualified} AND v.MessageId='{original['messageId']}' AND v.Revision=2 AND v.CommittedSequence={base_cursor + 1} AND v.Kind=4
+            AND CONVERT(varbinary(max),v.ExternalRevisionEventId)=CONVERT(varbinary(max),N'{recall_payload['event']['revisionEventId']}')
+            AND CONVERT(varbinary(max),r.ExternalRevisionEventId)=CONVERT(varbinary(max),v.ExternalRevisionEventId);""") == "1", "Final read race lost exact Recall receipt/revision/outbox link"
         assert prefix() == base_prefix and fingerprint(grant_query) == base_grant, "Final read race altered retained source/grant bytes"
         committed = snapshot()
         replay = require_receipt(*call(recall_payload))
@@ -602,7 +616,7 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
                 "sequence": original["committedSequence"], "text": payload["text"]}),
             capture_output=True, text=True, env=environment, timeout=240)
         for line in (result.stdout + result.stderr).splitlines():
-            if line.startswith("PASS owned group Chromium ") or re.fullmatch(r"FAIL owned group Chromium inbox gate: [a-z-]+", line):
+            if line.startswith("PASS owned group Chromium ") or browser_failure_stage(line):
                 print(line)
         assert result.returncode == 0, "Owned shipping group inbox browser gate failed"
         assert snapshot() == browser_before, "Read-only shipping inbox changed durable group bytes"
