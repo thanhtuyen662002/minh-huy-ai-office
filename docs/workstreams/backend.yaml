@@ -314,3 +314,12 @@ task_history_backend_checkpoint:
   pr: 271
   local: '49 focused service/API/existing pilot tests PASS, Core build PASS, targeted whitespace/diff PASS. Generated additive owner/time migration preserves old owner index. Initial/final fresh company-user membership fences, owner-only bounded list, allowlisted archive detail, exact stored UTF16 binary bounds, malformed/duplicate/unknown request/checkpoint denial and completed-but-unavailable truthfulness implemented. Existing opaque result fields remain; final fence added and source-grant revoked historical-owner positive verified.'
   remaining: 'Issued-SID BFF/Cong viec UI, actual relational execution and native external revocation/restore, actual Chromium owner/company/reload/new-sign-in recovery and no-dispatch/charge fingerprints, full frozen independent review/exact PR/main gates. Not ready for merge.'
+
+task_history_ui_checkpoint:
+  prior_head: 3301d18ffd7155cb896fbda8da7292d316f455ed
+  prior_build: 37879045956
+  prior_governance: 37879046019
+  prior_actual: 113654483822
+  prior_result: 'Migration BOM format defect at88ef Build37878689371/dotnet113653087126 corrected on same271; generated migration now required UTF8 without BOM and tracked LF, focused format PASS.3301.NET/migration/web/Compose/FE/deployment PASS, actual still live. No actual history acceptance yet.'
+  local: '70 new parser/issued-SID real-helper BFF/panel/workspace tests PASS plus40 retained session lifecycle/races PASS at previous69-new delta; typecheck PASS. New BFF requires exact typed scoped JSON/strict UTF8, drops Core private error diagnostics, final shared SID/body/deadline fence retained. Supported owner Công viec list/detail/refresh/paging and remount recovery; completed-but-unavailable/connection/pending/failed states truthful. Reads are GET-only. Company/user/generation/operation serial fence plus local and actual-hook composed aborts prevent late old-session repaint; logout/fresh validation clear private UI.'
+  remaining: 'Mandatory new owned SQL execution, native queued final-authority revocation and restored positives, stored raw Unicode/unknown metadata, two-provider-user/two-company actual Chromium reload/new-sign-in recovery and no-extra-task/dispatch/charge fingerprints. Full frozen independent review and exact final PR/main CI. Not ready for merge; full233 remains active.'
