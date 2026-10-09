@@ -916,3 +916,10 @@ group_native_read_release_range_candidate:
   review: 'Independent cleanupP2 reproduced releaseSQL failure skipsdrain/restore/drop andPopen leaksgate. Repairguards setup/everycleanupattempt preservingfirstfailure; originalclosure stillrequired.'
   local: '18guardsPASS incl10 inertsetup/cleanup faults; compile/diffPASS. No actualSQLrange orfull277 acceptance.'
   next: 'Freeze scopedrange review; keep owning610 native diagnosis. Push rangeonlyafter currentexactCIterminal andapprovedcandidate; execute mandatorynative, fixsamePR. Continue listener/spool/queue then278/279/full233.'
+
+group_listener_ownership_policy_checkpoint:
+  current_remote_head: 61097496a9cb136e530f164b9b09a6ee274edd3e
+  state: 'puretransition contract only; SQL/auth/API/coverage/runtimeintegration remains'
+  result: 'Accountscope/uniqueprocessowner/server30second lease/retainedmonotonic epoch. AcquireACKrecovery noextension; exactexpiry takeover, oldowner/epoch refusal; renew/stop/currentstate validation, fixedcoverage markers, stopACKrecovery, overflowfailclosed.'
+  local: '24 focusedSharedContracts controlsPASS, format/diffPASS; no listener operationalproof.'
+  next: 'Independentreview contract then integrate currentqualified serviceHMAC/freshaccount/sourcegrants andownedSQL serialized lease/atomic coverage, defaultoff API andactual collision/expiry/revoke/restart gate. Continue current610 CI closure/rangereview; no full277/233 completion.'
