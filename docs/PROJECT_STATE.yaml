@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/272-task-submission-recovery
-current_pr: 274
-current_target_head: 276885809cd6a13fd31c0201efe159c669fec8fe
-last_verified_commit: 276885809cd6a13fd31c0201efe159c669fec8fe
+current_branch: codex/276-group-routing-contracts
+current_pr: 282
+current_target_head: ee30ad80680c1cd457cb5b3518111efaa17575ae
+last_verified_commit: 1b0b7c53273a9405ff8d60b9c1976c6f6cc34519
 
 critical_paths:
   backend:
-    issue: 272
-    pr: 274
-    branch: codex/272-task-submission-recovery
-    head: 276885809cd6a13fd31c0201efe159c669fec8fe
+    issue: 276
+    pr: 282
+    branch: codex/276-group-routing-contracts
+    head: ee30ad80680c1cd457cb5b3518111efaa17575ae
     state: in_progress
-    next: '272/274 candidate276 all8 Build37978945377/Gov37978945389/actual113984241483/quality113988410306 PASS. Allinitialnative/ALL15 queued/four finalprivate reads and realCore202loss/FEFFprepare/newSID/twoowners-companies/lateprivate/revoke-restored Chromium PASS; all4images11641216062 inspected. FULL frozen shipping/security/runtime/images APPROVED6087833026. Close final6docsreview/exactfinalPR, merge andmain; thenreadsecond-brainattachment. Full233/customer-production/239Windows-signing remain.'
+    next: '276/282 active. Full frozen ee30 contracts/qualification review APPROVED6088762933:475 independent tests including13 own probes;66 new/full462 repository Contracts PASS. Accepted main281/1b0 exact all8 Build37985845222/Gov37985845186/actual114007505342/quality114011846100 PASS. Integrated1b0 locally; final documentation/integration review and exact final PR/main gates remain. Then277 SQL ingress,278 real SQL brain/automatic notes,279 IT-only reporter. No live qualification/activation or runtime delivery from contracts.'
 
   erp_data:
     issue: 264
@@ -35,6 +35,8 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR281 requirement correction deliveredmain1b0b7c53273a9405ff8d60b9c1976c6f6cc34519 after full13-doc review6088335989 and byte-equal accepted integration38c3. Exact main Build37985845222/Gov37985845186/all8/actual114007505342/quality114011846100 PASS; plan only, no group feature delivered. Source messages automatically create SQL notes and notify separately configured internal IT destinations; no per-item human approval or customer output.'
+  - 'PR274/issue272 deliveredmain09b7d36b23b554fcaa2b3534ddc6faa166cac651 at2026-10-09T19:46:10Z. Full frozen shipping6087833026/final6docs6087900218 approved. FinalPR f3cf3cc7eb8daa2737473f67d298b86858ee00c1 Build37980837971/Gov37980837996/all8/actual113990625301/quality113994648735 PASS. Main Build37982478564/Gov37982478631/all8/actual113996168399/quality114000211598 PASS;1287.NET/1276web. All15 queued/four finalprivate reads and actual receipt-loss/reload/newSID/isolation/revoke-restored Chromium passed; root inspected all4images11641407860.272 CLOSED; full233 remains.'
   - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR/main gates. Main Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
   - 'PR271/issue270 deliveredmain420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca with full frozen reviews6077185197/6077227682 and exactPR/main Build37905169739/Gov37905169543/all8/actual113736786869/quality113739461629 PASS. All3 sanitized main images11604905419 inspected.'
   - 'PR269 / issue268 deliveredmain3fcfa9a8541491c6a4d349bc31fd02d87d12284e with full frozen review6073002478/final6073139900 and exact PR/main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 all8 PASS. Main sanitized artifact11592885599 visually inspected.'
@@ -78,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Finalize272/274 final6docsreview/exactfinalPR gates after fullfrozen276 approval6087833026/actualSQL-Chromium-all4imagesPASS; merge andcloseexactmain. Thenread userattachment CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md in Downloads andimplementsecond-brainintegration; explicitusersequence, attachmentnotreadyet.275-279 docs-only/273queued/239actualWindows-signingDraft. Full62/customer-production remain.'
+next_action: 'Close owned276/282 final integration/documentation review and exact final PR/main gates after full ee30 approval6088762933. Accepted281/main1b0 all8 verified and integrated locally. Immediately continue277 SQL ingress/revisions/coverage/queue,278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No per-item approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
 
 
 blocked_by:
@@ -485,3 +487,45 @@ task_history_delivered_271:
   artifact_bytes: 261799
   state: done
   result: '270 CLOSED/271 MERGED2026-10-09T08:28:30Z. Full frozen shipping/security/runtime/all3images and final5docs independently APPROVED. Exact PR/main all8 gates PASS, all new/retained SQL/OIDC/twoCodeS256Chromium storedbyte/maxUnicode/nativequeued3authority/ownercompany/reload-newSID/lateprivatebody/revoke-restored/noextra-task-dispatch-charge controls PASS. Root inspected all3 current main images readable/reachable/unclipped/no secrets. No270 acceptance remains; full233 remains.'
+
+
+group_contracts_final_ci_0a:
+  head: 0a26c03676cdee426333ffbed1bbbe1169ac8f34
+  reviews: [6088762933, 6088892125]
+  build: 37988231713
+  governance: 37988231840
+  actual: 114015962681
+  result: 'Six Build prerequisites and Governance PASS; all native SQL/receipt/permission/recovery controls PASS. Retained Chromium terminal at broad owned-session-expiry-private-clear before new final browser acceptance. No final all8/main delivery claimed. Same282 adds fixed substage-only diagnostics without assertion/timeout/authority changes;6 guard tests/JS syntax/diff PASS. Own renewed exactCI and fix actual cause before merge.'
+  stacked_child: '277/PR283 explicit stacked from parent contracts;12-table SQL/protection foundation b124 local9/full869 Persistence PASS; runtime call path remains. Child cannot merge before accepted parent.'
+
+
+group_ci_registry_cache_repair:
+  predecessor: 7ca0a8fc96c70f4582380501e619bfae62646870
+  build: 37989859863
+  governance: 37989860318
+  actual_attempts: [114020948833, 114022285746]
+  result: 'Six Build prerequisites/Gov PASS; actual attempt1 and the single retry attempt2 refuse DockerHub unauthenticated pull429 before native/browser. No renewed expiry diagnosis or final gate acceptance. Same282 adds fixed Google-managed DockerHub daemon cache only to empty hosted Linux CI jobs; canonical images, product configs, tests and security assertions remain.5 Python guard tests/syntax/YAML/diff PASS; all5 exact cache manifest HEAD probes200. Actual runner cache/new SQL-browser closure remains.'
+  documentation: https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images
+  next: 'Own exact new282 gates. Confirm hosted cache resolves image bootstrap then diagnose retained Chromium fixed expiry substage and repair on same282. Independent bounded CI/docs review required. No merge until final PR/main; stacked277/283 cannot merge first.'
+
+
+group_ci_explicit_cached_images:
+  predecessor: 7b77519637e2781a98a993168a81451231a93bae
+  build: 37991243593
+  governance: 37991243590
+  actual_attempts: [114025657740, 114028349805]
+  web_attempts: [114025657661, 114028350297]
+  review: 6089346345
+  result: 'Daemon cache bootstrap passed, but actual identity-db and service-initialization Redis both hit anonymous DockerHub429 before SQL/browser on attempt1 and the single retry. Same282 now explicitly pulls fixed job-specific references from the Google-managed cache, checks cache RepoDigests and identical image IDs after tagging canonical names, and starts the same disposable Redis after cache setup. Product images/configs, tests, restart control and all required gates remain; no local/customer daemon touched.'
+  local: '8 cache ownership/shape/idempotence/fixed-profile/digest/identity/failure controls and YAML/diff PASS. Hosted direct-cache pulls and retained expiry diagnosis remain unexecuted; independent delta review required.'
+  next: 'Own new exact282 CI, repair real failures on samePR, and obtain bounded frozen CI delta review. Do not merge before all8 final PR/main; explicitly stacked277 remains Draft and cannot merge first.'
+
+
+group_ci_issued_redis_repair:
+  predecessor: 735bf47d908ea0b408b5494ba30fb7a1e075d7c2
+  build: 37992224211
+  governance: 37992224209
+  web: 114029064753
+  result: 'Managed direct-cache bootstrap, deployment and FE runtime PASS. Web1275 tests PASS but retained actual restored-RDB restart refused a container name instead of required64hex issuedID. Independent reviewer also reproduced unowned name-cleanup risk. Same282 captures successful docker run fullID as step output before readiness; unchanged physical Redis restart test and cleanup consume only that issuedID. Empty/invalid output cannot remove a preexisting container; no name fallback.'
+  local: '8 cache tests/YAML/diff PASS; frozen delta independent review and hosted actualRedis/full gates remain required. Prior actual114029064733 still running and deliberately retained for expiry diagnosis before the next push.'
+  next: 'Close both review findings on frozen issuedID repair; preserve current actual proof until terminal, then push and own exact gates. Do not merge until final all8 PR/main and current independent approval.'

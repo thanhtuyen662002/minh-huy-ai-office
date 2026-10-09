@@ -1,17 +1,17 @@
 workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 272
-current_pr: 274
-current_branch: codex/272-task-submission-recovery
-head: 276885809cd6a13fd31c0201efe159c669fec8fe
+current_issue: 276
+current_pr: 282
+current_branch: codex/276-group-routing-contracts
+head: ee30ad80680c1cd457cb5b3518111efaa17575ae
 state: in_progress
-lease_owner: root-backend-272
-lease_heartbeat_at: '2026-10-09'
-last_checkpoint_at: '2026-10-09'
-last_completed_issue: 270
-last_merged_pr: 271
-last_merge_commit: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+lease_owner: root-backend-276
+lease_heartbeat_at: '2026-10-10'
+last_checkpoint_at: '2026-10-10'
+last_completed_issue: 272
+last_merged_pr: 274
+last_merge_commit: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
 submission_contract_checkpoint:
   predecessor: 6ee5a7b17057f19803285f8b359b62224183e573
   predecessor_build: 37906607394
@@ -195,7 +195,40 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Close final6docs independent delta review and exactfinalPR gates; merge approved272/274 andcloseexactmain. Thenreadsecond-brainattachment perusersequence andimplementtrackedintegration.239actualWindows-signingDraft/full62/233 active.'
+next_action: '276/282 full frozen ee30 review6088762933 APPROVED with475 tests; exact ee30 Build37986918810/Gov37986918797/all8/actual114011097674/quality114014463755 PASS. Accepted281/main1b0 all8 verified and integrated locally. Final documentation/integration review then refreshed final PR/main gates. Immediately continue277 SQL source/queue,278 actual SQL brain/automatic notes and279 SQL-driven IT-only reporting. Full62 active;239 Draft.'
+
+group_contracts_checkpoint:
+  initial_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
+  initial_build: 37985083444
+  initial_governance: 37985083618
+  initial_actual: 114004956035
+  initial_quality: 114009006648
+  initial_result: 'All8 exact PASS, preserving existing real SQL/OIDC/worker/Chromium. Independent frozen initial routing review has no blocker;33 tests including7 independent probes and Python-derived hash/32-33 bounds PASS. This is initial contracts only, not SQL memory or a group connector feature.'
+  approved_head: ee30ad80680c1cd457cb5b3518111efaa17575ae
+  approved_review: 6088762933
+  build: 37986918810
+  governance: 37986918797
+  actual: 114011097674
+  quality: 114014463755
+  local: 'Concrete controlled-account vs synthetic qualification, strict version/account/scope/evidence freshness; frozen exact committed batch references, scoped model proposal shape, NotesCommitted refs, source metadata, IT-only report intent and no-blind-retry state policy.66 new/full462 Contracts PASS; independent475 including13 own probes/hash golden/YAML/diff PASS. Full frozen ee30 review APPROVED; exact all8 PASS. No SQL/worker/connector feature delivery inferred.'
+  next: 'Final accepted-main integration/documentation review and refreshed final exactPR/main. Then277 source SQL stores/queue,278 real SQL brain/automatic notes and279 committedSQL IT-only reporting. No schema or shipped group endpoint/DI/worker path yet; no live qualification, sends or account login.'
+
+task_submission_delivered_274:
+  final_pr: f3cf3cc7eb8daa2737473f67d298b86858ee00c1
+  reviews: [6087833026, 6087900218]
+  pr_build: 37980837971
+  pr_governance: 37980837996
+  pr_actual: 113990625301
+  pr_quality: 113994648735
+  main: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+  main_build: 37982478564
+  main_governance: 37982478631
+  main_actual: 113996168399
+  main_quality: 114000211598
+  main_artifact: 11641407860
+  artifact_bytes: 807412
+  state: done
+  result: '272 CLOSED/274 MERGED2026-10-09T19:46:10Z. All8 exact PR/main PASS,1287.NET/1276web-realRedis. All15 observed queued authority/source/binding and all4 private detail/list final reads PASS; actual Core202 header/body loss, exact FEFFprepare loss/reload/newSID GET recovery, twoowners-companies/adminforeign404/lateprivate/revoke-restored/noextra-graph-dispatch-charge PASS. Root inspected all4 current main images readable/sanitized/unclipped. No272 acceptance remains. Full233 remains.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
@@ -599,3 +632,43 @@ task_history_delivered_271:
   artifact_bytes: 261799
   state: done
   result: '270 CLOSED/271 MERGED2026-10-09T08:28:30Z. Full frozen shipping/security/runtime/all3images and final5docs independently APPROVED. Exact PR/main all8 gates PASS, all new/retained SQL/OIDC/twoCodeS256Chromium storedbyte/maxUnicode/nativequeued3authority/ownercompany/reload-newSID/lateprivatebody/revoke-restored/noextra-task-dispatch-charge controls PASS. Root inspected all3 current main images readable/reachable/unclipped/no secrets. No270 acceptance remains; full233 remains.'
+
+
+group_contracts_final_ci_repair:
+  predecessor: 0a26c03676cdee426333ffbed1bbbe1169ac8f34
+  build: 37988231713
+  governance: 37988231840
+  actual: 114015962681
+  result: 'Six Build prerequisites and Governance plus all native SQL PASS. Retained Chromium terminal at owned-session-expiry-private-clear; broad stage cannot identify failing assertion. Add12 fixed substages only, preserving all checks/timeouts/no secret diagnostics.6 browser guards/JS syntax/diff PASS; renewed actual diagnosis required on same282.277/283 is explicitly stacked and cannot merge before parent.'
+
+
+group_ci_registry_cache_repair:
+  predecessor: 7ca0a8fc96c70f4582380501e619bfae62646870
+  build: 37989859863
+  governance: 37989860318
+  actual_attempts: [114020948833, 114022285746]
+  result: 'Six Build prerequisites/Gov PASS; actual attempt1 and the single retry attempt2 refuse DockerHub unauthenticated pull429 before native/browser. No renewed expiry diagnosis or final gate acceptance. Same282 adds fixed Google-managed DockerHub daemon cache only to empty hosted Linux CI jobs; canonical images, product configs, tests and security assertions remain.5 Python guard tests/syntax/YAML/diff PASS; all5 exact cache manifest HEAD probes200. Actual runner cache/new SQL-browser closure remains.'
+  documentation: https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images
+  next: 'Own exact new282 gates. Confirm hosted cache resolves image bootstrap then diagnose retained Chromium fixed expiry substage and repair on same282. Independent bounded CI/docs review required. No merge until final PR/main; stacked277/283 cannot merge first.'
+
+
+group_ci_explicit_cached_images:
+  predecessor: 7b77519637e2781a98a993168a81451231a93bae
+  build: 37991243593
+  governance: 37991243590
+  actual_attempts: [114025657740, 114028349805]
+  web_attempts: [114025657661, 114028350297]
+  review: 6089346345
+  result: 'Daemon cache bootstrap passed, but actual identity-db and service-initialization Redis both hit anonymous DockerHub429 before SQL/browser on attempt1 and the single retry. Same282 now explicitly pulls fixed job-specific references from the Google-managed cache, checks cache RepoDigests and identical image IDs after tagging canonical names, and starts the same disposable Redis after cache setup. Product images/configs, tests, restart control and all required gates remain; no local/customer daemon touched.'
+  local: '8 cache ownership/shape/idempotence/fixed-profile/digest/identity/failure controls and YAML/diff PASS. Hosted direct-cache pulls and retained expiry diagnosis remain unexecuted; independent delta review required.'
+  next: 'Own new exact282 CI, repair real failures on samePR, and obtain bounded frozen CI delta review. Do not merge before all8 final PR/main; explicitly stacked277 remains Draft and cannot merge first.'
+
+
+group_ci_issued_redis_repair:
+  predecessor: 735bf47d908ea0b408b5494ba30fb7a1e075d7c2
+  build: 37992224211
+  governance: 37992224209
+  web: 114029064753
+  result: 'Managed direct-cache bootstrap, deployment and FE runtime PASS. Web1275 tests PASS but retained actual restored-RDB restart refused a container name instead of required64hex issuedID. Independent reviewer also reproduced unowned name-cleanup risk. Same282 captures successful docker run fullID as step output before readiness; unchanged physical Redis restart test and cleanup consume only that issuedID. Empty/invalid output cannot remove a preexisting container; no name fallback.'
+  local: '8 cache tests/YAML/diff PASS; frozen delta independent review and hosted actualRedis/full gates remain required. Prior actual114029064733 still running and deliberately retained for expiry diagnosis before the next push.'
+  next: 'Close both review findings on frozen issuedID repair; preserve current actual proof until terminal, then push and own exact gates. Do not merge until final all8 PR/main and current independent approval.'

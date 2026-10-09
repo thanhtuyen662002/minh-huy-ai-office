@@ -46,17 +46,27 @@ jobs:
     name: Web tests, type-check and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      session-redis:
-        image: redis:8-alpine
-        ports: [6379:6379]
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 2s
-          --health-timeout 2s
-          --health-retries 20
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: web
+      - name: Start owned disposable session Redis
+        id: session_redis
+        shell: bash
+        run: |
+          set -euo pipefail
+          container_id="$(docker run --detach --name aioffice-ci-session-redis \
+            --publish 127.0.0.1:6379:6379 redis:8-alpine)"
+          [[ "$container_id" =~ ^[a-f0-9]{64}$ ]]
+          echo "container_id=${container_id}" >> "$GITHUB_OUTPUT"
+          for attempt in $(seq 1 30); do
+            if docker exec "$container_id" redis-cli ping | grep -qx PONG; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -65,13 +75,22 @@ jobs:
       - name: Test
         env:
           AIOFFICE_TEST_SESSION_REDIS_URL: redis://127.0.0.1:6379
-          AIOFFICE_TEST_SESSION_REDIS_CONTAINER: ${{ job.services.session-redis.id }}
+          AIOFFICE_TEST_SESSION_REDIS_CONTAINER: ${{ steps.session_redis.outputs.container_id }}
           AIOFFICE_TEST_SESSION_REDIS_DISPOSABLE: 'true'
         run: npm run web:test
       - name: Type-check
         run: npm run web:typecheck
       - name: Build
         run: npm run web:build
+      - name: Remove only owned disposable session Redis
+        if: always()
+        shell: bash
+        env:
+          AIOFFICE_CI_REDIS_ID: ${{ steps.session_redis.outputs.container_id }}
+        run: |
+          if [[ "$AIOFFICE_CI_REDIS_ID" =~ ^[a-f0-9]{64}$ ]]; then
+            docker container rm --force "$AIOFFICE_CI_REDIS_ID"
+          fi
 
   web-runtime:
     name: FE container runtime smoke
@@ -79,6 +98,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: web-runtime
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -93,6 +115,9 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: local-runtime
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -146,6 +171,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: deployment
       - name: Validate production deployment contract
         shell: bash
         run: |
