@@ -46,6 +46,31 @@ content release. No encryption key or live credential is shipped by this change.
 - Changed-file C# formatting, pending-model check and diff check PASS.
 - Forward SQL generated from accepted task-intent migration without applying it.
 
+## Service authentication checkpoint
+
+The server verifies bounded strict JSON and an HMAC over the exact request body,
+service ID, credential epoch, timestamp and nonce. SQL derives scope from the
+current operator registry and requires the separate Ingest capability. A portal
+JWT or request-supplied tenant, grant, qualification or secret reference cannot
+construct the authenticated identity. Full original UTF16 bytes are checked
+after index lookup; the original physical-group catalog independently refuses
+role/account/company aliases even if an index is malformed. Secret resolution
+and the final authenticated result are fenced by current SQL authority and the
+effective-permissions proof on the same pinned transaction connection.
+
+Live policy requires current controlled connector receive qualification. An
+explicit owned Development fixture can exercise a synthetic connector and
+cannot qualify or activate live use. Edit/recall also require current evidence
+for those capabilities. Source content keys resolve only from exact configured
+tenant/company/group/key enrollments, with explicit retained read keys and no
+cross-source fallback. Key buffers are copied and cleared on disposal.
+
+Thirty-six focused authentication/key controls PASS, including physical-role
+aliases, exact case/padding identities, malformed stored UTF16, strict nested
+JSON, signature/skew boundaries, current snapshots and private key refusal.
+These use owned in-memory fixtures; actual SQL rights and concurrent commit
+acceptance remain required. No API, store, listener or sender is exposed yet.
+
 ## Remaining acceptance
 
 This checkpoint has no shipped group API, worker/listener/spool, broker consumer

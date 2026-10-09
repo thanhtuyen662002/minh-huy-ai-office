@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 06fbacdc3704bc643548d7b3c1fed9a18fca51fe
+head: b124c0f9f33abfa9c3ec1b6485180f131df9725c
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -641,3 +641,11 @@ group_ingress_277:
   result: 'Additive12-table operator-owned scope/role/service/read-grant registry, fenced listener/source state, append-only source revisions/receipts, explicit gaps and reference-only outbox model. AES256-GCM original source context-bound to tenant/company/group/message/revision/source/deletion/key-ID. Effective registry/append-only/immutable-column proof composes global binding-store verifier. No API/DI/worker or runtime group receipt yet.'
   local: '9 new/full869 Persistence PASS/0skipped; changed C# format, EF pending-model check and generated forward SQL/diff PASS. ActualSQL/queue/restart/session/UI proof and frozen independent review remain. Parent final0a review6088892125 approved; exactCI/main closure root-owned.'
   next: 'Finish same277 fresh service authentication/SQL directory, transaction-locked committed-order receipt/revision/outbox store and encrypted key path; then API/listener/spool/RabbitMQ/recovery/read UI and actual owned evidence. Continue to full acceptance; no merge from this model checkpoint.'
+
+
+group_service_authentication_checkpoint:
+  predecessor: b124c0f9f33abfa9c3ec1b6485180f131df9725c
+  foundation_review: 6089109653
+  local: '36 authentication/key controls and full905 Persistence PASS, zero skipped. Strict exact-body HMAC, bounded unique/unmapped JSON, SQL-derived current source/Ingest service identity, exact stored UTF16 and independent original physical-role catalog, pinned effective-permission/final authority fence and exact scoped external key resolution implemented. No portal/fake user identity or source key in SQL/Git.'
+  limitation: 'Owned in-memory tests do not prove realSQL execution/concurrency. No group API/store/listener/spool/outbox worker/private inbox yet. Live policy refuses synthetic qualification; explicit owned Development fixture cannot activate live use.'
+  next: 'Independent bounded service/auth/key review, absorb parent282 CI cache repair, and implement transactional commit-order/message/revision/receipt/reference-outbox store, then fenced listener and actualSQL acceptance on same277/283. Child must remain stacked until parent is accepted; full233 remains active.'
