@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
 import urllib.parse
@@ -11,11 +12,24 @@ import urllib.request
 import uuid
 
 
+def _owned_sql_stdin(compose, environment, query):
+    # Hex-encoded malformed/oversize nvarchar can exceed Linux's single-argv
+    # limit. Keep the exact fixture bytes and feed SQL through stdin instead.
+    result = subprocess.run([*compose, "exec", "-T", "sql", "sh", "-c",
+        'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
+        input="SET NOCOUNT ON; " + query, capture_output=True, text=True, env=environment, timeout=30)
+    if result.returncode:
+        match = re.search(r"\bMsg (\d{1,5}), Level\b", result.stdout + result.stderr)
+        raise RuntimeError("Owned archive SQL fixture command failed" + (" (SQL message " + match[1] + ")" if match else "") + ".")
+    return result.stdout.strip()
+
+
 def verify(*, directory, manifest, compose, environment, http, sql, identity_admin, identity, api, auth, retained_task):
     if not (os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
             and api == "http://127.0.0.1:8080"):
         raise RuntimeError("Archive proof requires the owned disposable GitHub CI fixture.")
+    sql = lambda query: _owned_sql_stdin(compose, environment, query)
     tenant, company, owner, source = (str(uuid.UUID(manifest[f"AIOFFICE_{key}_ID"])) for key in ("TENANT", "COMPANY", "USER", "DATA_SOURCE"))
     retained_task = str(uuid.UUID(retained_task))
     archive_company, other_user = str(uuid.uuid4()), str(uuid.uuid4())

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 spec = importlib.util.spec_from_file_location("owned_stack_smoke", Path(__file__).with_name("smoke-local-stack.py"))
 smoke = importlib.util.module_from_spec(spec)
@@ -59,6 +60,18 @@ class OwnedStackGuardTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "^Archive proof requires the owned disposable GitHub CI fixture\\.$"):
                     history_smoke.verify(directory=directory, manifest=None, compose=None, environment=None,
                         http=None, sql=None, identity_admin=None, identity=None, api=api, auth=None, retained_task=None)
+
+    def test_archive_large_sql_uses_stdin_without_query_in_argv_or_diagnostics(self):
+        query = "SELECT N'PRIVATE_" + "x" * 200000 + "';"
+        with patch.object(history_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="PASS\n", stderr="")) as command:
+            self.assertEqual("PASS", history_smoke._owned_sql_stdin(["docker", "compose"], {}, query))
+            args, kwargs = command.call_args
+            self.assertTrue(all("PRIVATE_" not in item for item in args[0]))
+            self.assertEqual("SET NOCOUNT ON; " + query, kwargs["input"])
+            self.assertIn("/dev/stdin", args[0][-1])
+        with patch.object(history_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=1, stdout="Msg 207, Level 16 PRIVATE_DIAGNOSTIC", stderr="PRIVATE_TOKEN")):
+            with self.assertRaisesRegex(RuntimeError, r"^Owned archive SQL fixture command failed \(SQL message 207\)\.$"):
+                history_smoke._owned_sql_stdin(["docker", "compose"], {}, query)
 
 
 if __name__ == "__main__":
