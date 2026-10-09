@@ -107,7 +107,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     }
 
     stage("real-prepare-loss");
-    const question = "Yêu cầu nhập xuất khôi phục 😀 �", initial = snapshot(), initialCounts = effectCounts(), count = sent.length;
+    const question = "\uFEFFYêu cầu nhập xuất khôi phục 😀 �\uFEFF", initial = snapshot(), initialCounts = effectCounts(), count = sent.length;
     await composer(question); coreReplyFault.arm({ kind: "intent-prepare", company, source, question, boundary: "body" });
     const lostPrepare = waitResponse("/api/local/tasks/intents", 503);
     await page.getByRole("button", { name: "Gửi", exact: true }).click(); await lostPrepare;

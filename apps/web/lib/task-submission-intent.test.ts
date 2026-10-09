@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { expect, it } from "vitest";
 import { parseSubmissionInput, parseSubmissionIntent, parseSubmissionJson, parseSubmissionReceipt, receiptMatches,
-  submissionFingerprint, verifiedSubmissionIntent, verifiedSubmissionPage } from "./task-submission-intent";
+  submissionFingerprint, trimSubmissionQuestion, verifiedSubmissionIntent, verifiedSubmissionPage } from "./task-submission-intent";
 
 const operationId = "11111111-1111-4111-8111-111111111111", dataSourceId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const companyId = "22222222-2222-4222-8222-222222222222";
@@ -15,9 +15,28 @@ it.each([
   ["Tồn kho 😀 �", inputFingerprint],
   ["ồ", "653C057F6AFF5A8FF5FEAFA8B8CFAABAE942E33F0605BC03D14876C53B223DE5"],
   ["o\u0302\u0300", "7176B4A97A12F1F815F8133B9E33C7D021885765A6A5D560976A42104F0ED186"],
+  ["\uFEFFTồn kho", "E2EF248C20E0EB874C04B4EF807C1974CAD0362DB7B05176F28F89F07CF21C85"],
+  ["Tồn kho\uFEFF", "BC6E27B7AE04ADD265986A280FC9B696F384B7BC98A144D26B096442BFF2FF93"],
+  ["\uFEFF", "947D796F0BCAF215F9640FF6BB313E1CA628F341A6744D31582C65BB95134A31"],
 ])("matches independent Python and C# byte-layout vector for %s", async (question, expected) => {
   expect(await submissionFingerprint({ ...input, question })).toBe(expected);
   expect(await submissionFingerprint({ ...input, operationId: crypto.randomUUID(), dataSourceId: dataSourceId.toUpperCase(), question })).toBe(expected);
+});
+it("matches Core edge whitespace while retaining FEFF and preserving exact recovery hashes", async () => {
+  const whitespace = "\u0009\u000A\u000B\u000C\u000D\u0020\u0085\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u2028\u2029\u202F\u205F\u3000";
+  for (const edge of whitespace) {
+    expect(trimSubmissionQuestion(edge + "\uFEFF" + edge)).toBe("\uFEFF");
+    expect(parseSubmissionInput({ ...input, question: edge + "q" })).toBeNull();
+    expect(parseSubmissionInput({ ...input, question: "q" + edge })).toBeNull();
+  }
+  for (const question of ["\uFEFFTồn kho", "Tồn kho\uFEFF", "\uFEFF"]) {
+    const recovered = { ...intent, question, inputFingerprint: await submissionFingerprint({ ...input, question }) };
+    expect(await verifiedSubmissionIntent(recovered)).toEqual(recovered);
+    expect(await verifiedSubmissionPage({ companyId, items: [recovered], offset: 0, limit: 25, hasMore: false })).toMatchObject({ items: [recovered] });
+    expect(await verifiedSubmissionIntent({ ...recovered, question: "different" })).toBeNull();
+  }
+  expect(parseSubmissionInput({ ...input, question: "\uFEFF".repeat(4000) })).not.toBeNull();
+  expect(parseSubmissionInput({ ...input, question: "\uFEFF".repeat(4001) })).toBeNull();
 });
 it("does not normalize exact source, case, Unicode composition or internal whitespace", async () => {
   for (const changed of [{ ...input, dataSourceId: companyId }, { ...input, question: "tồn kho 😀 �" }, { ...input, question: "Tồn  kho 😀 �" }])

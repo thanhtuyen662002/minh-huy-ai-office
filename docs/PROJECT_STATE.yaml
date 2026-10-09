@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: da42aeee5cc26f16446c335570de1cf96688199f
+current_target_head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
 last_verified_commit: 4a3f7d7efda1513b39252da4f346f769664f7f81
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: da42aeee5cc26f16446c335570de1cf96688199f
+    head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
     state: in_progress
-    next: '272/274 active:da42 native immutable/one-graph/rights/indirect escalation/Unicode/original-event corruption/rollback/quota PASS; actual113950547760 terminal at legacy fixture maxAttempts outside public DTO. Correct proof to exact source/question plus409 changed question; stored maxAttempts corruption controls retained. Push repair with four actual queued private-read fences, execute queued15/native/new Chromium and obtain full independent review. Partial reviewer evidence is not approval. Main9155 all8 PASS. User requested current merge BEFORE reading second-brain attachment.'
+    next: '272/274 active:6075 initial native immutable/one graph/permissions/escalation/Unicode/original-event/rollback/quota/legacy adoption PASS; actual113958003013 terminal at runtime queued lock observation. Add sanitized engine-only diagnostic and keep mandatory fences. Independent full static found P2 FEFF parser/Core mismatch; fix parser/composer to Core whitespace, retain exact scalar/hash with106web+Core/26Contracts/typecheck PASS. Push, close actual queued19/Chromium/full independent review before finalPR-main. User requested current merge BEFORE reading second-brain attachment.'
 
   erp_data:
     issue: 264

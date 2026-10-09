@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: da42aeee5cc26f16446c335570de1cf96688199f
+head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -127,7 +127,17 @@ submission_legacy_fixture_contract_repair:
   quality: 113953125333
   repair: 'Use exact public legacy source/question DTO; assert replay202/stable task and changed-question409/operation-conflict with unchanged effects. Retain actual stored-event maxAttempts corruption/refusal/restoration proof separately. Shipping code unchanged. Four actual queued private-read controls from local e039 checkpoint join this push.'
   review: 'Independent frozen da42 audit found no concrete shipping blocker so far; own68 Persistence/44 Core API/23 Contracts/162 Node24 web tests PASS. Reviewer hit usage limit before full audit completion. Full independent security/runtime/four-image approval remains required; do not reinterpret partial evidence as approval.'
-next_action: 'Push same274 legacy fixture repair plus four private-read fences and close exact native/Chromium CI; fix every terminal defect. Obtain full frozen independent shipping/security/runtime/four-image review and finalPR-main delivery. Only after current merge read user second-brain attachment and scope integration.239 actualWindows-signingDraft/full233 active.'
+submission_core_unicode_parity_repair:
+  predecessor: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
+  build: 37971210517
+  governance: 37971210465
+  actual: 113958003013
+  quality: 113961239472
+  native: 'Six prerequisites/Gov PASS; all initial native immutable/one graph/permissions/indirect escalation/corruption/expiry/rollback/quota PLUS legacy replay/conflict/expiry/exact adoption PASS. Actual terminal at first runtime queued company lock not observed; no queued15/four read/browser acceptance. Add bounded engine lock enum/boolean diagnostic only, no query text/input or admission bypass.'
+  review: 'Full independent frozen da42/6075 static audit complete with one concrete P2: ECMAScript trim strips U+FEFF while Core accepts it. Original Core TestServer accepts leading/trailing/soleFEFF; real detail/list BFF refuses503. No additional shipping/static blocker; own135.NET/237web/10Python/6Node PASS. Full approval withheld until repair/runtime/four images.'
+  repair: 'Parser and composer use Core Unicode White_Space edge policy preserving FEFF exact bytes. Permanent3 Python/C#/Node golden vectors, real Core API/GET/no-task control, parser/page/hash/bounds controls,3 actualHTTP BFF exact private read positives/changed bytes refusal and3 shipping composer prepare-loss/reload/deliberate-send controls. Add actual native leading/trailing/soleFEFF and hosted browser exactFEFF recovery question.'
+  local: '106 Node24 parser/BFF/workspace PASS,1 new Core API and26 Contracts PASS, typecheck/changed.NET format/10Python/6Node/syntax/diff PASS. Hosted new repair/final fences/runtime/images remain unverified.'
+next_action: 'Push same274 FEFF repair and bounded native lock diagnostic. Own exact CI and fix observed queued admission failure; then full actual SQL/private-read and realCore202/twoCodeS256/fourimages. Obtain frozen independent P2 closure/full approval, finalPR-main. After current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

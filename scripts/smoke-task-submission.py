@@ -136,7 +136,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     maximum = "😀" * 1999 + "�x"
     assert len(maximum.encode("utf-16-le")) == 8000
     unicode_rows = []
-    for text in (maximum, "ồ", "o\u0302\u0300"):
+    for text in (maximum, "ồ", "o\u0302\u0300", "\uFEFFTồn kho", "Tồn kho\uFEFF", "\uFEFF"):
         unicode_op = str(uuid.uuid4())
         status, _, detail = call("/api/tasks/intents", {**request, "operationId": unicode_op, "question": text})
         assert status == 200 and detail["question"] == text and detail["inputFingerprint"] == input_fingerprint(source, text)
@@ -146,7 +146,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     rejected_op = str(uuid.uuid4())
     assert call("/api/tasks/intents", {**request, "operationId": rejected_op, "question": maximum + "x"})[0] == 400
     assert call("/api/tasks/intents/" + rejected_op)[0] == 404 and snapshot() == before
-    print("PASS native exact4000UTF16 supplementary/U+FFFD roundtrip, adjacent overflow refusal and composed/decomposed fingerprints without normalization or execution")
+    print("PASS native exact4000UTF16 supplementary/U+FFFD/FEFF roundtrip, adjacent overflow refusal and composed/decomposed fingerprints without normalization or execution")
 
     expected_task = task_identity(tenant, company, owner, operation)
     expected_step = deterministic_identity(["pilot-step-v1", uuid.UUID(expected_task).hex, "pilot.readonly-data-source-v1"])
@@ -409,6 +409,19 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
         locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
         executor, pending = None, None
+        def runtime_wait_diagnostic():
+            # Engine lock enums and boolean matches only; never query text/input.
+            value = sql(f"""USE AIOfficeLocal; SELECT TOP(5) CONCAT(COALESCE(r.wait_type,N'NONE'),N'|',
+              CASE WHEN r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) THEN 1 ELSE 0 END,N'|',
+              COALESCE(l.resource_type,N'NONE'),N'|',COALESCE(l.request_mode,N'NONE'),N'|',COALESCE(l.request_status,N'NONE'),N'|',
+              CASE WHEN t.text LIKE N'%sp_getapplock%' THEN 1 ELSE 0 END)
+              FROM sys.dm_exec_requests r JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+              LEFT JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
+              OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
+              WHERE s.login_name=N'aioffice_runtime' AND r.database_id=DB_ID()
+              ORDER BY CASE WHEN r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) THEN 0 ELSE 1 END,
+                CASE WHEN l.resource_type=N'APPLICATION' THEN 0 ELSE 1 END;""")
+            return value.replace("\n", ";") if len(value) <= 512 and re.fullmatch(r"[A-Z_0-9|\r\n]*", value) else "UNAVAILABLE"
         def await_condition(predicate, phase, seconds):
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
@@ -416,7 +429,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
                 if locker.poll() is not None or pending is not None and pending.done():
                     raise AssertionError("Native submission " + phase + " ended before observed queued admission")
                 time.sleep(.05)
-            raise AssertionError("Native submission " + phase + " was not observed")
+            raise AssertionError("Native submission " + phase + " was not observed; runtime-lock-enums=" + runtime_wait_diagnostic())
         try:
             await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_tran_locks
               WHERE request_session_id=(SELECT OwnerSpid FROM {gate}) AND resource_type=N'APPLICATION'

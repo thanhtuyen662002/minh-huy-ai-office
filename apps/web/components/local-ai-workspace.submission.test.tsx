@@ -40,6 +40,23 @@ function compose(container: HTMLElement, value = question) {
 beforeEach(() => { vi.stubGlobal("crypto", webcrypto); vi.stubGlobal("BroadcastChannel", undefined); });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
+it.each(["\uFEFFTồn kho", "Tồn kho\uFEFF", "\uFEFF"])("composer/reload/deliberate send preserve exact Core-valid FEFF question %j", async exactQuestion => {
+  const server = backend("prepare"); let view = await open();
+  compose(view.container, " \u00A0" + exactQuestion + "\u3000 ");
+  await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" });
+  const preparedBody = server.posts()[0][1]!.body;
+  expect(JSON.parse(preparedBody as string).question).toBe(exactQuestion);
+  view.unmount(); view = await open(); fireEvent.click(screen.getByRole("button", { name: "Công việc" }));
+  const saved = await screen.findByRole("button", { name: /Lấy yêu cầu đã lưu/ });
+  expect(server.posts()).toHaveLength(1); fireEvent.click(saved);
+  await screen.findByRole("button", { name: "Gửi yêu cầu đã lưu" }); expect(server.posts()).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "Gửi yêu cầu đã lưu" }));
+  await screen.findByText(answer, {}, { timeout: 4000 }); expect(server.posts()).toHaveLength(2);
+  expect(server.posts()[0][1]!.body).toBe(preparedBody);
+  expect(server.posts()[1][0]).toContain(JSON.parse(preparedBody as string).operationId);
+  expect(Object.keys(JSON.parse(server.posts()[1][1]!.body as string))).toEqual(["inputFingerprint"]);
+});
+
 it("the real workspace/session hook captures one operation across synchronous duplicate submits", async () => {
   const server = backend(), view = await open(), form = compose(view.container);
   fireEvent.submit(form); await screen.findByText(answer, {}, { timeout: 4000 });

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 const mocks = vi.hoisted(() => ({ runtime: vi.fn(), cookies: vi.fn(), read: vi.fn(), fetch: vi.fn() }));
 vi.mock("./browser-auth-runtime", () => ({ getBrowserAuthRuntime: mocks.runtime }));
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
@@ -40,6 +41,33 @@ beforeEach(() => {
   vi.stubGlobal("fetch", mocks.fetch);
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.useRealTimers(); });
+
+it.each(["\uFEFFTồn kho", "Tồn kho\uFEFF", "\uFEFF"])("real HTTP detail/list preserve Core-valid scalar FEFF and reject changed bytes: %j", async question => {
+  const bytes = Buffer.from(question, "utf8"), sizes = Buffer.alloc(8);
+  sizes.writeUInt32LE(3); sizes.writeUInt32LE(bytes.length, 4);
+  const inputFingerprint = createHash("sha256").update("aioffice-task-intent-v1\0" + source.replaceAll("-", ""))
+    .update(sizes).update(bytes).digest("hex").toUpperCase();
+  let storedQuestion = question;
+  const server = createServer((req, res) => {
+    const stored = { ...intent, question: storedQuestion, inputFingerprint };
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(req.url?.includes("?offset=") ? { ...page, items: [stored] } : stored));
+  });
+  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const address = server.address(); if (!address || typeof address === "string") throw new Error("Missing bound transport");
+    mocks.runtime.mockReturnValue({ settings: { localHttp: false, publicOrigin: "https://office.example.test" },
+      coreApiOrigin: `http://127.0.0.1:${address.port}`, sessions: { read: mocks.read } });
+    mocks.fetch.mockImplementation(networkFetch);
+    for (const mode of ["detail", "list"] as const) {
+      const response = await invoke(mode); expect(response.status).toBe(200); expect(response.headers.get("Cache-Control")).toBe("no-store");
+      const body = await response.json(); expect(mode === "detail" ? body.question : body.items[0].question).toBe(question);
+      expect(mode === "detail" ? body.inputFingerprint : body.items[0].inputFingerprint).toBe(inputFingerprint);
+    }
+    storedQuestion = "different";
+    expect((await invoke("detail")).status).toBe(503); expect((await invoke("list")).status).toBe(503);
+  } finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); }
+});
 
 it.each(["prepare", "submit", "list", "detail"] as const)("uses real issued-session helper and final private release fence for %s", async mode => {
   const response = await invoke(mode); expect(response.status).toBe(mode === "submit" ? 202 : 200);

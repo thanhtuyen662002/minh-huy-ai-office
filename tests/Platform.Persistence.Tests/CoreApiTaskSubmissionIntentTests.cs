@@ -15,6 +15,28 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
 {
     [Fact]
+    public async Task IntentApiPreservesLeadingTrailingAndSoleFeffScalarContent()
+    {
+        var owner = MemberDirectoryFixture.Authority(); await using var fixture = new MemberApiFixture(owner);
+        var source = await SeedIntentApiAsync(fixture, owner); using var client = IntentClient(fixture, owner);
+        foreach (var question in new[] { "\uFEFFTồn kho", "Tồn kho\uFEFF", "\uFEFF" })
+        {
+            var input = SubmissionIntentFixture.Request(source) with { Question = question };
+            var response = await client.PostAsJsonAsync("/api/tasks/intents", input);
+            await AssertIntentResponseAsync(response, HttpStatusCode.OK);
+            var detail = (await response.Content.ReadFromJsonAsync<TaskSubmissionIntentDetail>())!;
+            Assert.Equal(question, detail.Question);
+            Assert.Equal(TaskSubmissionIntentIdentity.Fingerprint(input), detail.InputFingerprint);
+            var recovered = await client.GetFromJsonAsync<TaskSubmissionIntentDetail>($"/api/tasks/intents/{input.OperationId:D}");
+            Assert.Equal(detail, recovered);
+        }
+        await AssertIntentResponseAsync(await client.GetAsync("/api/tasks/intents?offset=0&limit=25"), HttpStatusCode.OK);
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var database = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+        Assert.Empty(await database.Tasks.ToArrayAsync());
+    }
+
+    [Fact]
     public async Task IntentApiPreparesWithoutTaskThenExplicitSubmitReturnsBoundTyped202AndReadOnlyRecovery()
     {
         var owner = MemberDirectoryFixture.Authority(); await using var fixture = new MemberApiFixture(owner);

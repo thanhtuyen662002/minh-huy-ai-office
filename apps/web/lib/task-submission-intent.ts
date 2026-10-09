@@ -13,8 +13,10 @@ function object(value: unknown, fields: readonly string[]): value is Record<stri
   return keys.length === fields.length && keys.every(key => typeof key === "string" && fields.includes(key)
     && "value" in Object.getOwnPropertyDescriptor(value, key)!);
 }
+/** Match Core's Char.IsWhiteSpace/String.Trim, preserving scalar U+FEFF content. */
+export const trimSubmissionQuestion = (value: string): string => value.replace(/^\p{White_Space}+|\p{White_Space}+$/gu, "");
 export function submissionQuestion(value: unknown): value is string {
-  if (typeof value !== "string" || !value.trim() || value.trim() !== value || value.length > 4000) return false;
+  if (typeof value !== "string" || !value || trimSubmissionQuestion(value) !== value || value.length > 4000) return false;
   for (let index = 0; index < value.length; index++) {
     const code = value.charCodeAt(index);
     if (code >= 0xd800 && code <= 0xdbff) {

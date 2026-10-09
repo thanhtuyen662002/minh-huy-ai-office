@@ -16,7 +16,11 @@ Add a versioned SQL intent table with tenant/company/owner/operation composite i
 
 The version1 fingerprint is uppercase SHA256 over this explicit byte sequence: ASCII `aioffice-task-intent-v1`, byte0, the lowercase source GUID in32-character `N` form, fixed maxAttempts as uint32 little endian, strict UTF8 question byte length as uint32 little endian, then those exact strict UTF8 question bytes. Scalar validation precedes encoding. This avoids differences between JavaScript JSON serialization and .NET escaping. The operation selects identity; the fingerprint binds input. Same operation/exact input replays; any changed input conflicts, never chooses a new task.
 
+Web question edge trimming follows Core's Unicode White_Space policy. ECMAScript String.trim also removes U+FEFF, which Core accepts as scalar content; using it would silently alter composer input or refuse a valid stored intent and its entire recovery page. Preserve leading/trailing/sole U+FEFF exactly and verify its original hash; whitespace, control, scalar and4000-unit bounds remain in force.
+
 Use a fixed server key `web-intent-v1-` plus the lowercase operation UUID in `N` form. Preserve the existing PilotTaskIdentity namespaces, authority scope, hash byte layout, step/message identities and legacy Core POST/Idempotency-Key contract. New browser routes use the explicit prepared-operation contract. Legacy callers retain their existing API; they gain no new authority.
+
+The public legacy input contains only dataSourceId/question. Its attempts value is supplied by the server; adding maxAttempts to the HTTP body does not change that public request. Reserved-key compatibility proof compares the actual admitted source/question, while stored original-event attempts corruption is independently refused during authoritative graph recovery.
 
 ## Preparation, lookup and execution
 
@@ -51,5 +55,7 @@ The owned SQL/Chromium proof must consume real committed Core receipts before dr
 The first successful admission must be checked before becoming a replay baseline: exact global deltas and owned graph cardinalities reject orphan/extra tasks, dispatches, executions and checkpoints; this zero-credit probe must leave settlement bytes unchanged. Stored-event restoration in the owned proof uses bounded fixed-width hex output and compares its exact length to SQL DATALENGTH before writing it back. This avoids sqlcmd's documented default256-character truncation for varchar(max), without changing shipping stored-input limits. See [sqlcmd format options](https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16#format-options).
 
 Native revocation controls observe the actual runtime waiting on the shipping transaction-owned company application lock before external authority/source changes. They require fresh empty403, unchanged intent/execution bytes and restored positives for prepare, new execution and committed replay. Permission escalation controls demonstrate real runtime impersonation, owner modules and triggers and require every intent boundary to refuse the unsafe store.
+
+Owner list/detail also require a final authority fence after reading private original-request evidence. The owned proof keeps RCSI enabled, holds an operator transaction schema lock on TaskEvents, observes the exact runtime private-read Sch-S wait and only then revokes membership/global user before releasing it. Empty403, restored200, rolled-back fixture schema and identical durable bytes are required for all four cases.
 
 Full independent frozen shipping/security/runtime/images review and exact PR/main gates remain required. Installer239 stays Draft for actual Windows/signing;273 tracks initial company sign-in without default membership. Customer inventory/stock-movement proof and every broader233 requirement remain active.

@@ -15,6 +15,7 @@ import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { SubmissionRecoveryPanel } from "./submission-recovery-panel";
 import { useTaskSubmission } from "./use-task-submission";
+import { trimSubmissionQuestion } from "../lib/task-submission-intent";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
 import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
@@ -424,7 +425,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
     const form = event.currentTarget;
     const data = new FormData(form);
-    const question = String(data.get("question") ?? "").trim();
+    const question = trimSubmissionQuestion(String(data.get("question") ?? ""));
 
     if (!selectedSourceId) {
       setNotice("Hãy chọn nguồn dữ liệu trước.");
