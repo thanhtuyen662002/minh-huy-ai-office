@@ -201,6 +201,20 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     await switchCompany(page, company); await page.getByRole("button", { name: "Công việc", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor(); equal(snapshot(), baseline);
     console.log("PASS actual successful private intent held across provider company switch is discarded, restored GET-only recovery preserves all effect and intent bytes");
+    stage("external-member-loss-private-clear-restored-recovery");
+    try {
+      sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0 WHERE ${scope} AND UserId='${owner}';`);
+      await page.getByRole("button", { name: "Tải lại yêu cầu", exact: true }).click();
+      await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).waitFor();
+      proof(await page.getByText(lateQuestion, { exact: true }).count() === 0
+        && await page.getByRole("region", { name: "Yêu cầu đã lưu", exact: true }).count() === 0 && sent.length === readCount);
+    } finally { sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${scope} AND UserId='${owner}';`); }
+    const restored = page.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
+    await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click(); proof((await restored).status() === 303);
+    await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor();
+    proof(sent.length === readCount); equal(snapshot(), baseline);
+    console.log("PASS shipping owner recovery clears private data after external membership loss and restores GET-only under a new issued session with unchanged durable bytes");
     await page.getByRole("button", { name: "Trợ lý AI", exact: true }).first().click();
   } finally {
     page.off("request", observe); release?.(); if (heldPattern) await page.unroute(heldPattern).catch(() => {});

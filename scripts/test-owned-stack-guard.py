@@ -99,6 +99,28 @@ class OwnedStackGuardTests(unittest.TestCase):
         with self.assertRaises(UnicodeEncodeError):
             submission_smoke.input_fingerprint(source, "bad\ud800")
 
+    def test_submission_first_commit_oracle_rejects_every_extra_effect_and_altered_credit(self):
+        before = [10, 20, 30, 40, 50, 60, 0]
+        after = [11, 21, 33, 41, 51, 61, 0]
+        credit = "AB" * 32
+        submission_smoke.require_single_execution_delta(before, after, credit, credit)
+        for index in range(7):
+            with self.subTest(extra_effect=index):
+                extra = after.copy(); extra[index] += 1
+                with self.assertRaises(AssertionError):
+                    submission_smoke.require_single_execution_delta(before, extra, credit, credit)
+        with self.assertRaises(AssertionError):
+            submission_smoke.require_single_execution_delta(before, after, credit, "CD" * 32)
+        with self.assertRaises(AssertionError):
+            submission_smoke.require_single_execution_delta(before[:-1], after[:-1], credit, credit)
+
+    def test_submission_original_event_transport_refuses_silent_sqlcmd_truncation(self):
+        original = "7B00" * 300
+        self.assertEqual(original, submission_smoke.require_stored_event_hex(original, 600))
+        for value, size in [(original[:256], 600), (original[:-1], 600), ("NULL", 600), ("gg" * 600, 600), ("AA" * 4001, 4001)]:
+            with self.subTest(length=len(value), expected_bytes=size), self.assertRaises(AssertionError):
+                submission_smoke.require_stored_event_hex(value, size)
+
 
 if __name__ == "__main__":
     unittest.main()

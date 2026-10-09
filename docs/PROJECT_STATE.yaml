@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: 766a7876807d8114970073b4035ad4448c814e28
+current_target_head: 8e51b2264c94f20f839defbcb96a4c78bcf0e6cc
 last_verified_commit: 4a3f7d7efda1513b39252da4f346f769664f7f81
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: 766a7876807d8114970073b4035ad4448c814e28
+    head: 8e51b2264c94f20f839defbcb96a4c78bcf0e6cc
     state: in_progress
-    next: '272/274 active:130b native immutable preparation PASS, concurrent first202/Location assertion terminalred actual113941667480/Build37966385867; other6/Governance PASS. Split bounded HTTP/Location diagnosis; independent proof P2 fixed with initial graph/global row deltas and unchanged zero-credit settlement before replay baselines. Guarded realCore202 header/body andprepare loss plus shipping recovery/newSID/twoCodeS256/source/latecompany proof added, local6Node/8Python/syntax PASS; hosted execution mandatory. Main9155 all8 Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS.'
+    next: '272/274 active:8e51 native concurrent same-op/one graph-worker-zero-credit, append-only/column escalation, corruption, expiry, rollback and99/100/101 quota PASS; actual113945721532 red at original-event restoration. Fix bounded SQL hex transport/default256 truncation with independent byte-length check; new10Python/6Node PASS. Add actual observed queued15 authority cases, indirect impersonation/module/trigger denial, original-byte/4000Unicode/legacy controls and shipping member-clear restoration. New native/browser controls require exact CI and full frozen review. Main9155 all8 PASS. User requested finish/merge current work BEFORE reading attached CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md and integrating second brain.'
 
   erp_data:
     issue: 264
@@ -78,7 +78,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close accepted main9155 exact CI, continue same272/274 native SQL and realCore202 reply-loss/worker/twoCodeS256Chromium/fullreview/exactPR-main.275-279 approved docs-only customer-group priority for next non-competing capacity, no feature acceptance.273 queued;23922f internallyapproved/all9 but actualWindows-signingDraft. Full62requirements/customer-production remain.'
+next_action: 'Continue same272/274 native SQL and realCore202/worker/twoCodeS256Chromium/fullreview/exactPR-main. After current work is delivered/merged, read user attachment CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md in Downloads and scope second-brain integration; user explicitly requested this order, attachment not read yet.275-279 docs-only track/273 queued/239 actualWindows-signingDraft. Full62requirements/customer-production remain.'
 
 
 blocked_by:

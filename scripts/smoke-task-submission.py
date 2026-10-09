@@ -31,6 +31,17 @@ def deterministic_identity(parts):
     return str(uuid.UUID(bytes_le=bytes(digest)))
 
 
+def require_single_execution_delta(before, after, before_credit, after_credit):
+    assert len(before) == len(after) == 7, "Invalid execution effect cardinalities"
+    assert [end - start for start, end in zip(before, after, strict=True)] == [1, 1, 3, 1, 1, 1, 0], "Admission created unexpected graph or credit rows"
+    assert before_credit == after_credit, "Pilot submission altered credit settlements"
+
+
+def require_stored_event_hex(value, byte_count):
+    assert 0 < byte_count <= 4000 and len(value) == byte_count * 2 and re.fullmatch(r"[0-9A-F]+", value), "Owned original event transport was truncated or malformed"
+    return value
+
+
 def verify(*, directory, manifest, compose, environment, http, sql, runtime_statement, identity, api, auth):
     if not (os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
@@ -39,7 +50,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     # Exact fixture bytes stay out of argv and diagnostic output.
     def owned_sql(query):
         result = subprocess.run([*compose, "exec", "-T", "sql", "sh", "-c",
-            'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
+            'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -w 65535 -i /dev/stdin'],
             input="SET NOCOUNT ON; " + query, capture_output=True, text=True, env=environment, timeout=30)
         if result.returncode:
             match = re.search(r"\bMsg (\d{1,5}), Level\b", result.stdout + result.stderr)
@@ -85,8 +96,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
         # Validate the first commit BEFORE it becomes the replay baseline.
         # This pilot performs one zero-credit read probe and adds request + two
         # terminal status events; no unrelated/orphan graph or charge is allowed.
-        assert [after - before for before, after in zip(previous_counts, effect_counts(), strict=True)] == [1, 1, 3, 1, 1, 1, 0], "Admission created unexpected graph or credit rows"
-        assert snapshot()[-1] == previous_snapshot[-1], "Pilot submission altered credit settlements"
+        require_single_execution_delta(previous_counts, effect_counts(), previous_snapshot[-1], snapshot()[-1])
         for table in tables:
             if table == "CustomerAiCreditSettlements": continue
             task_filter = f"Id='{task}'" if table == "Tasks" else f"TaskId='{task}'"
@@ -99,6 +109,15 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             if sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.Tasks WHERE {scope} AND Id='{task}' AND Status=N'Completed';") == "1": return
             time.sleep(.5)
         raise AssertionError("Owned submission worker did not complete")
+
+    def original_event_hex(task):
+        predicate = scope + f" AND TaskId='{task}' AND Sequence=1"
+        size = int(sql(f"USE AIOfficeLocal; SELECT DATALENGTH(PayloadJson) FROM aioffice.TaskEvents WHERE {predicate};"))
+        # sqlcmd truncates varchar(max) output to256 by default. This owned
+        # short-question fixture fits a bounded fixed varchar; independently
+        # compare SQL byte length before ever restoring it. Shipping limits stay.
+        value = sql(f"USE AIOfficeLocal; SELECT CONVERT(varchar(8000),CONVERT(varbinary(max),PayloadJson),2) FROM aioffice.TaskEvents WHERE {predicate};")
+        return require_stored_event_hex(value, size)
 
     before = snapshot()
     initial_counts = effect_counts()
@@ -113,6 +132,21 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     assert call(path + "/submit", {"inputFingerprint": "0" * 64})[0] == 409
     assert snapshot() == before, "Preparation/recovery/conflict created execution effects"
     print("PASS native immutable prepare/replay/fixed lifetime/strict Unicode/GET-only recovery with zero execution effects")
+
+    maximum = "😀" * 1999 + "�x"
+    assert len(maximum.encode("utf-16-le")) == 8000
+    unicode_rows = []
+    for text in (maximum, "ồ", "o\u0302\u0300"):
+        unicode_op = str(uuid.uuid4())
+        status, _, detail = call("/api/tasks/intents", {**request, "operationId": unicode_op, "question": text})
+        assert status == 200 and detail["question"] == text and detail["inputFingerprint"] == input_fingerprint(source, text)
+        assert call("/api/tasks/intents/" + unicode_op)[2] == detail
+        unicode_rows.append(detail)
+    assert unicode_rows[1]["inputFingerprint"] != unicode_rows[2]["inputFingerprint"], "Preparation normalized distinct canonical Unicode inputs"
+    rejected_op = str(uuid.uuid4())
+    assert call("/api/tasks/intents", {**request, "operationId": rejected_op, "question": maximum + "x"})[0] == 400
+    assert call("/api/tasks/intents/" + rejected_op)[0] == 404 and snapshot() == before
+    print("PASS native exact4000UTF16 supplementary/U+FFFD roundtrip, adjacent overflow refusal and composed/decomposed fingerprints without normalization or execution")
 
     expected_task = task_identity(tenant, company, owner, operation)
     expected_step = deterministic_identity(["pilot-step-v1", uuid.UUID(expected_task).hex, "pilot.readonly-data-source-v1"])
@@ -155,6 +189,53 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     assert call(path)[0] == 200 and snapshot() == settled
     print("PASS native intent every-column/append-only runtime rights and real unsafe column-grant refusal/restored positive")
 
+    def intent_snapshot():
+        value = sql("""USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),
+            COALESCE((SELECT * FROM aioffice.TaskSubmissionIntents ORDER BY TenantId,CompanyId,UserId,OperationId
+            FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);""")
+        assert re.fullmatch(r"[0-9A-F]{64}", value)
+        return value
+
+    def unsafe_store_denied():
+        original_intents = intent_snapshot()
+        assert call(path)[0] == 403 and call("/api/tasks/intents?offset=0&limit=25")[0] == 403
+        assert call(path + "/submit", {"inputFingerprint": fingerprint})[0] == 403
+        assert call("/api/tasks/intents", {**request, "operationId": str(uuid.uuid4())})[0] == 403
+        assert snapshot() == settled and intent_snapshot() == original_intents
+
+    # Prove the indirect permission is real as the actual runtime, then prove
+    # all intent boundaries close before reading, preparing or replaying.
+    module = "aioffice.SubmissionModule_" + uuid.uuid4().hex
+    trigger = "aioffice.SubmissionTrigger_" + uuid.uuid4().hex
+    try:
+        sql("USE AIOfficeLocal; GRANT IMPERSONATE ON USER::aioffice_binding_operator_owner TO aioffice_runtime;")
+        runtime_statement("EXECUTE AS USER=N'aioffice_binding_operator_owner'; UPDATE aioffice.TaskSubmissionIntents SET Question=Question WHERE 1=0; REVERT;", expected="ALLOWED")
+        unsafe_store_denied()
+    finally:
+        sql("USE AIOfficeLocal; REVOKE IMPERSONATE ON USER::aioffice_binding_operator_owner FROM aioffice_runtime;")
+    assert call(path)[0] == 200 and snapshot() == settled
+    try:
+        definition = f"CREATE PROCEDURE {module} AS UPDATE aioffice.TaskSubmissionIntents SET Question=Question WHERE 1=0;"
+        sql("USE AIOfficeLocal; EXEC(N'" + definition.replace("'", "''") + f"'); GRANT EXECUTE ON OBJECT::{module} TO aioffice_runtime;")
+        runtime_statement("EXEC " + module)
+        unsafe_store_denied()
+        definition = f"ALTER PROCEDURE {module} WITH EXECUTE AS OWNER AS UPDATE aioffice.TaskSubmissionIntents SET Question=Question WHERE 1=0;"
+        sql("USE AIOfficeLocal; EXEC(N'" + definition.replace("'", "''") + "');")
+        runtime_statement("EXEC " + module, expected="ALLOWED")
+        unsafe_store_denied()
+    finally:
+        sql(f"USE AIOfficeLocal; DROP PROCEDURE IF EXISTS {module};")
+    assert call(path)[0] == 200 and snapshot() == settled
+    try:
+        definition = f"CREATE TRIGGER {trigger} ON aioffice.DataSources WITH EXECUTE AS OWNER AFTER UPDATE AS BEGIN SET NOCOUNT ON; UPDATE aioffice.TaskSubmissionIntents SET Question=Question WHERE 1=0; END;"
+        sql("USE AIOfficeLocal; EXEC(N'" + definition.replace("'", "''") + "');")
+        runtime_statement("UPDATE aioffice.DataSources SET Purpose=Purpose WHERE 1=0", expected="ALLOWED")
+        unsafe_store_denied()
+    finally:
+        sql(f"USE AIOfficeLocal; DROP TRIGGER IF EXISTS {trigger};")
+    assert call(path)[0] == 200 and snapshot() == settled
+    print("PASS native real impersonation/ordinary owner-chain/EXECUTE AS OWNER/trigger escalation closes all intent boundaries with unchanged bytes and restored positives")
+
     # Privileged corruption is restricted to owned disposable rows and always restored.
     row_scope = owner_scope + f" AND OperationId='{operation}'"
     original_question = "CONVERT(nvarchar(max),0x" + question.encode("utf-16-le").hex() + ")"
@@ -168,6 +249,24 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskSubmissionIntents SET Question={original_question},InputFingerprint='{fingerprint}' WHERE {row_scope};")
     assert call(path)[2]["accepted"]["taskId"] == expected_task and snapshot() == settled
     print("PASS native raw malformedUTF16/hash corruption cannot execute or expose repaired private input, with restored committed acceptance")
+
+    original_event = original_event_hex(expected_task)
+    original_request = {"idempotencyKey": "web-intent-v1-" + uuid.UUID(operation).hex, "dataSourceId": source, "question": question, "maxAttempts": 3}
+    invalid_events = [json.dumps({**original_request, **delta}) for delta in (
+        {"idempotencyKey": "web-intent-v1-" + uuid.uuid4().hex}, {"dataSourceId": str(uuid.uuid4())},
+        {"question": "different"}, {"maxAttempts": 2}, {"unexpected": True})]
+    invalid_events += ["{" + json.dumps(original_request)[1:-1] + ',"question":"different"}', "\ud800"]
+    for payload in invalid_events:
+        try:
+            raw = payload.encode("utf-16-le", errors="surrogatepass").hex()
+            sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskEvents SET PayloadJson=CONVERT(nvarchar(max),0x{raw}) WHERE {task_scope} AND Sequence=1;")
+            status, _, invalid = call(path)
+            assert status == 200 and invalid["state"] == 3 and all(invalid[key] is None for key in ("dataSourceId", "question", "inputFingerprint", "createdAtUtc", "expiresAtUtc", "accepted"))
+            assert call(path + "/submit", {"inputFingerprint": fingerprint})[2]["code"] == "intent-unavailable"
+        finally:
+            sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskEvents SET PayloadJson=CONVERT(nvarchar(max),0x{original_event}) WHERE {task_scope} AND Sequence=1;")
+        assert call(path)[2]["state"] == 1 and snapshot() == settled
+    print("PASS native original request key/source/question/maxAttempts/unknown/duplicate/rawUTF16 conflicts cannot become acceptance, with restored exact original bytes")
 
     # Expiry limits uncommitted execution; an already committed operation remains authoritative.
     expired_op = str(uuid.uuid4())
@@ -249,13 +348,116 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     assert call("/api/tasks/intents", {**request, "operationId": committed_op}, other_auth)[2]["state"] == 1
     settled = snapshot()
     # Existence of a Task is insufficient: invalid original request consumes quota.
-    event = sql(f"USE AIOfficeLocal; SELECT CONVERT(varchar(max),CONVERT(varbinary(max),PayloadJson),2) FROM aioffice.TaskEvents WHERE {scope} AND TaskId='{committed_task}' AND Sequence=1;")
-    assert re.fullmatch(r"[0-9A-F]+", event)
+    event = original_event_hex(committed_task)
     try:
         sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskEvents SET PayloadJson=N'{{}}' WHERE {scope} AND TaskId='{committed_task}' AND Sequence=1;")
         assert call(committed_path, authority=other_auth)[2]["state"] == 3
         assert call("/api/tasks/intents", {**request, "operationId": str(uuid.uuid4())}, other_auth)[2]["code"] == "intent-limit"
     finally:
         sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskEvents SET PayloadJson=CONVERT(nvarchar(max),0x{event}) WHERE {scope} AND TaskId='{committed_task}' AND Sequence=1;")
-    assert call(committed_path, authority=other_auth)[2]["state"] == 1 and snapshot() == settled
+    assert call(committed_path, authority=other_auth)[2]["state"] == 1, "Restored exact original event did not recover acceptance"
+    assert snapshot() == settled, "Restored original event changed execution effects"
     print("PASS native quota excludes only validated committed acceptance and refuses malformed original task evidence, with restored positive")
+
+    legacy_input = {"dataSourceId": source, "question": question, "maxAttempts": 3}
+    legacy_auth = {**auth, "Idempotency-Key": "web-intent-v1-" + uuid.UUID(operation).hex}
+    assert call("/api/tasks", legacy_input, legacy_auth)[2]["taskId"] == expected_task
+    for delta in ({"question": "different"}, {"maxAttempts": 2}):
+        assert call("/api/tasks", {**legacy_input, **delta}, legacy_auth)[2]["code"] == "operation-conflict"
+    assert call("/api/tasks", legacy_input, {**auth, "Idempotency-Key": "web-intent-v1-" + uuid.UUID(expired_op).hex})[2]["code"] == "intent-expired"
+    assert snapshot() == settled
+    legacy_op = str(uuid.uuid4())
+    legacy_task = task_identity(tenant, company, owner, legacy_op)
+    legacy_counts = effect_counts()
+    assert call("/api/tasks", legacy_input, {**auth, "Idempotency-Key": "web-intent-v1-" + uuid.UUID(legacy_op).hex})[2]["taskId"] == legacy_task
+    await_completed(legacy_task)
+    require_one_graph(legacy_counts, settled, legacy_task)
+    settled = snapshot()
+    assert call("/api/tasks/intents", {**request, "operationId": legacy_op, "question": "different"})[2]["code"] == "operation-conflict"
+    assert call("/api/tasks/intents/" + legacy_op)[0] == 404
+    adopted = call("/api/tasks/intents", {**request, "operationId": legacy_op})[2]
+    assert adopted["state"] == 1 and adopted["accepted"]["taskId"] == legacy_task and adopted["question"] == question
+    assert call("/api/tasks/intents/" + legacy_op + "/submit", {"inputFingerprint": fingerprint})[2]["taskId"] == legacy_task and snapshot() == settled
+    print("PASS native legacy reserved-key replay/conflicting body/expiry denial and exact compatible preexisting-task adoption without additional effects")
+
+    # Observe actual runtime requests queued on the SAME shipping company lock,
+    # then revoke authority outside that transaction before releasing admission.
+    # No sleep-based assumption about which side of the fresh check won.
+    def queued_admission(kind, revoke, restore):
+        nonlocal settled
+        queued_op = operation if kind == "replay" else str(uuid.uuid4())
+        queued_path = "/api/tasks/intents" if kind == "prepare" else "/api/tasks/intents/" + queued_op + "/submit"
+        payload = {**request, "operationId": queued_op} if kind == "prepare" else {"inputFingerprint": fingerprint}
+        if kind == "execute":
+            assert call("/api/tasks/intents", {**request, "operationId": queued_op})[0] == 200
+        before_effects, before_intents = snapshot(), intent_snapshot()
+        gate = "dbo.SubmissionGate_" + uuid.uuid4().hex
+        resource = f"aioffice:membership:{tenant}:{company}"
+        sql(f"USE AIOfficeLocal; CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
+        query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
+          UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
+          DECLARE @result int; EXEC @result=sys.sp_getapplock @Resource=N'{resource}',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=0;
+          IF @result<0 THROW 51000,'Owned submission gate unavailable.',1;
+          DECLARE @deadline datetime2=DATEADD(second,30,SYSUTCDATETIME());
+          WHILE (SELECT Released FROM {gate} WITH(READUNCOMMITTED))=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.050';
+          COMMIT TRANSACTION;"""
+        locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
+            'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
+        locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
+        executor, pending = None, None
+        def await_condition(predicate, phase, seconds):
+            deadline = time.monotonic() + seconds
+            while time.monotonic() < deadline:
+                if predicate(): return
+                if locker.poll() is not None or pending is not None and pending.done():
+                    raise AssertionError("Native submission " + phase + " ended before observed queued admission")
+                time.sleep(.05)
+            raise AssertionError("Native submission " + phase + " was not observed")
+        try:
+            await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_tran_locks
+              WHERE request_session_id=(SELECT OwnerSpid FROM {gate}) AND resource_type=N'APPLICATION'
+                AND resource_database_id=DB_ID() AND request_mode=N'X' AND request_status=N'GRANT';""")) > 0, "owned company lock", 8)
+            executor = ThreadPoolExecutor(max_workers=1); pending = executor.submit(call, queued_path, payload)
+            await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_requests r
+              JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+              JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
+              CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+              WHERE s.login_name=N'aioffice_runtime' AND r.blocking_session_id=(SELECT OwnerSpid FROM {gate})
+                AND r.wait_type=N'LCK_M_X' AND l.resource_type=N'APPLICATION' AND l.resource_database_id=DB_ID()
+                AND l.request_mode=N'X' AND l.request_status IN(N'WAIT',N'CONVERT') AND t.text LIKE N'%sp_getapplock%';""")) > 0, "runtime queued company lock", 3)
+            sql(f"USE AIOfficeLocal; {revoke}; UPDATE {gate} SET Released=1;")
+            status, _, body = pending.result(timeout=15)
+            assert status == 403 and body in ("", None), f"Observed queued {kind} expected empty403, got HTTP{int(status)}"
+        finally:
+            sql(f"USE AIOfficeLocal; UPDATE {gate} SET Released=1;")
+            try: locker.communicate(timeout=8)
+            except subprocess.TimeoutExpired:
+                locker.kill(); locker.communicate(timeout=5)
+            if executor is not None: executor.shutdown(wait=True, cancel_futures=True)
+            sql(f"USE AIOfficeLocal; {restore}; DROP TABLE {gate};")
+        assert locker.returncode == 0 and snapshot() == before_effects and intent_snapshot() == before_intents
+        counts = effect_counts()
+        status, _, positive = call(queued_path, payload)
+        assert status == (200 if kind == "prepare" else 202), "Queued admission restored positive failed"
+        if kind == "execute":
+            await_completed(positive["taskId"])
+            require_one_graph(counts, before_effects, positive["taskId"])
+            settled = snapshot()
+        else:
+            assert snapshot() == before_effects
+            if kind == "replay": assert positive["taskId"] == expected_task and intent_snapshot() == before_intents
+
+    member = f"TenantId='{tenant}' AND CompanyId='{company}' AND UserId='{owner}'"
+    user = f"TenantId='{tenant}' AND Id='{owner}'"
+    source_scope = scope + f" AND Id='{source}'"
+    binding_scope = scope + " AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2"
+    revocations = [("membership", "CompanyMemberships", member, "IsActive"), ("global-user", "Users", user, "IsActive"),
+        ("source-enabled", "DataSources", source_scope, "IsEnabled"), ("source-read", "DataSources", source_scope, "AllowRead"),
+        ("binding", "DataSourceSecretBindings", binding_scope, "IsEnabled")]
+    for name, table, predicate, column in revocations:
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.{table} WHERE {predicate} AND {column}=1;") == "1"
+        for kind in ("prepare", "execute", "replay"):
+            queued_admission(kind, f"UPDATE aioffice.{table} SET {column}=0 WHERE {predicate}",
+                f"UPDATE aioffice.{table} SET {column}=1 WHERE {predicate}")
+        print("PASS native observed queued prepare/new execution/committed replay " + name + " revocation denies without effects and restores positive")
