@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
@@ -36,7 +37,7 @@ public sealed class GroupIngressRuntimePolicy
 }
 
 public sealed class GroupServiceAuthenticator(PlatformDbContext database,
-    CompositeSecretResolver secrets, GroupIngressRuntimePolicy policy, TimeProvider clock)
+    CompositeSecretResolver secrets, GroupIngressRuntimePolicy policy, TimeProvider clock, ILogger<GroupServiceAuthenticator>? logger = null)
 {
     public const int MaximumBodyBytes = 65536;
     public static readonly TimeSpan MaximumClockSkew = TimeSpan.FromMinutes(2);
@@ -57,14 +58,23 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         // ReadOnlyMemory can alias caller-owned mutable bytes. Parse and sign
         // one private snapshot across all asynchronous secret/SQL work.
         var captured = body.ToArray();
-        try { return await AuthenticateCapturedAsync(signature, captured, cancellationToken); }
+        var phase = "parse";
+        try { return await AuthenticateCapturedAsync(signature, captured, cancellationToken, value => phase = value); }
+        catch (UnauthorizedAccessException)
+        {
+            // Fixed server phases only: never log events, keys, references,
+            // identities, exception bodies or attacker-controlled input.
+            logger?.LogWarning("group-auth-refusal: {Phase}", phase);
+            throw;
+        }
         finally { CryptographicOperations.ZeroMemory(captured); }
     }
 
     private async Task<VerifiedGroupIngress> AuthenticateCapturedAsync(GroupServiceSignature signature,
-        ReadOnlyMemory<byte> body, CancellationToken cancellationToken)
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken, Action<string> phase)
     {
         var payload = Parse(body);
+        phase("signing-time");
         var now = clock.GetUtcNow();
         if (signature.ServiceId == Guid.Empty || signature.CredentialEpoch <= 0 || signature.Nonce == Guid.Empty ||
             !IsHash(signature.SignatureHex)) throw GroupServiceDirectory.Denied();
@@ -77,13 +87,17 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         var directory = new GroupServiceDirectory(database);
         var permissions = new GroupIngressPermissionVerifier(database);
         await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
+        phase("permissions-initial");
         await permissions.RequireSafeRuntimeAsync(cancellationToken);
+        phase("registry-initial");
         var authority = await directory.RequireIngestAsync(new(signature.ServiceId, signature.CredentialEpoch), payload.Event.Identity, cancellationToken);
+        phase("qualification-initial");
         RequireQualification(authority.Account, payload.Event.Kind, now, policy);
         var verified = new AuthenticatedGroupService(authority, signedAt);
         byte[] key;
         try
         {
+            phase("service-key");
             var value = await secrets.ResolveAsync(SecretReference.Parse(authority.CredentialReference), cancellationToken);
             if (value.Length != 44) throw GroupServiceDirectory.Denied();
             key = Convert.FromBase64String(value);
@@ -94,11 +108,15 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         { throw GroupServiceDirectory.Denied(); }
         try
         {
+            phase("hmac");
             var expected = HMACSHA256.HashData(key, signingBytes);
             if (!CryptographicOperations.FixedTimeEquals(expected, Convert.FromHexString(signature.SignatureHex)))
                 throw GroupServiceDirectory.Denied();
+            phase("registry-final");
             var current = await directory.RequireCurrentAsync(verified, cancellationToken);
+            phase("permissions-final");
             await permissions.RequireSafeRuntimeAsync(cancellationToken);
+            phase("expiry-final");
             var finalNow = clock.GetUtcNow();
             RequireFreshSigningTime(signedAt, finalNow);
             RequireQualification(current.Account, payload.Event.Kind, finalNow, policy);

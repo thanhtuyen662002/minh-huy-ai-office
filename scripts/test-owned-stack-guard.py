@@ -173,6 +173,14 @@ class OwnedStackGuardTests(unittest.TestCase):
                 self.assertFalse((directory / "group-ingress-owned.override.json").exists())
                 self.assertEqual("retained", marker.read_text(encoding="utf-8"))
 
+    def test_group_history_transport_refuses_default_sqlcmd_max_type_truncation(self):
+        original = '["' + 'x'*400 + '"]'
+        expected_bytes = len(original.encode('utf-16-le'))
+        self.assertEqual(['x'*400], group_smoke.decode_bounded_history(original, expected_bytes))
+        for text, size in [(original[:256], expected_bytes), (original[:-1], expected_bytes), (original, 8002), ('', 0)]:
+            with self.subTest(length=len(text), size=size), self.assertRaises(AssertionError):
+                group_smoke.decode_bounded_history(text, size)
+
     def test_group_sql_private_bytes_stay_in_stdin_and_diagnostics_remain_fixed(self):
         private = "SELECT N'PRIVATE_GROUP_FIXTURE';"
         with patch.object(group_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="PASS\n", stderr="")) as command:

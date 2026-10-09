@@ -197,3 +197,15 @@ fixture guard/vector/privacy/oracle/cleanup tests PASS. This repair still needs
 frozen review and actual exact-head native execution. Scoped HTTP repair was
 independently approved with32 controls, including the true configured-key
 positive without a key-provider mock (PR283 comment6090044353).
+
+Exact e228 native job114046156901 failed the first new group committed ACK with
+403 after retained native controls passed, before duplicate/history execution.
+This is an actionable refusal, not infrastructure. Fixed server-only auth/store
+phase labels and fixed owned permission predicate IDs diagnose that fence;
+no input, identity, credential, source text or exception/log dump is emitted.
+The repaired history projection also converts bounded JSON to nvarchar4000 and
+verifies exact original UTF16 byte length against SQL before parsing (sqlcmd's
+default256 limit for max types otherwise truncates the408character fixture).
+All17 local ownership/privacy/transport/oracle/cleanup guards and88 focused
+shipping auth/HTTP/store controls PASS. Native current-fence diagnosis, frozen
+final review and exact-head execution remain required.

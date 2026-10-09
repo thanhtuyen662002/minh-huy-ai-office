@@ -773,3 +773,11 @@ group_native_oracle_review_repair:
   http_review: 'Independent frozenb7 APPROVED6090044353:32 independent HTTP/configuredENV-key controls PASS; auth/timestamp original cases closed. No full277 approval.'
   native_review: 'Independent e228 identified four fixtureP2: empty SQL NULL digest, wrong Media2/Edit3 used instead of Edit3/Recall4, weak cursor oracle accepts1,3 atcursor2, privateoverride retained on restore/readiness failure. Repair canonical COALESCE empty[] and native emptypositive; exact3/4/1 per-message revisions/hashes/history/gapbytes; exactordered1..cursor; nestedfinally fileunlink regardlessrestorefailure.16 ownership/vector/privacy/oracle/cleanup guards PASS; repaired frozen review/new exactCI required.'
   next: 'Own repaired native review/exactCI and samePR defects; authorizedprotectedread implementation ongoing locally. No actual277/brain/notes/IT report/live claims. Full233/62 remains active.'
+
+group_native_runtime_refusal_diagnostic:
+  predecessor: 5b8f9f3ed2d72a28194d3289601c598491482bf3
+  failed_candidate: e228622a298753fc9e64f62bd19dd7b5399df0e7
+  failed_build: 37997151788
+  failed_actual: 114046156901
+  result: 'Actual retained nativeSQL passed; newgroup first committedACK expected200 got403 at2026-10-09T22:13:56Z beforeduplicate/history. Actionable runtime refusal, not infrastructure. Root inspected log; precise fence not yetidentified. Add fixed-only auth/store refusal phases and owned failing-permission predicate IDs; no inputs/keys/refs/exceptionbodies/logdump.88 focused auth/HTTP/store PASS. Repair history408char defaultsqlcmd-y256 transport using fixednvarchar4000 with exactUTF16 length oracle;17 guard/privacy/transport/cursor/cleanup tests PASS. No acceptance claimed.'
+  next: 'Push diagnostic+fixture repairs; own exact nativeCI identify403 fence then repair samePR immediately. Untracked protectedSourceReader compiles but lacks tests/API/DI/nativeproof; continue afterruntimecause closure. Full277 listener/spool/queue/readUI and278/279 remain.'

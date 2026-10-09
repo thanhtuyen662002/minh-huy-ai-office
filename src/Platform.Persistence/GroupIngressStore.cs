@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
@@ -16,7 +17,7 @@ public sealed class GroupIngressConflictException() : InvalidOperationException(
 // A connector ACK is created only after the immutable source, receipt, cursor
 // and reference-only outbox have committed on the same pinned SQL transaction.
 public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKeyProvider keys,
-    GroupSourceContentProtector protector, GroupIngressRuntimePolicy policy, TimeProvider clock)
+    GroupSourceContentProtector protector, GroupIngressRuntimePolicy policy, TimeProvider clock, ILogger<GroupIngressStore>? logger = null)
 {
     public async Task<GroupIngressCommittedReceipt> AcceptAsync(VerifiedGroupIngress verified, CancellationToken cancellationToken = default)
     {
@@ -30,16 +31,19 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
         var directory = new GroupServiceDirectory(database);
         var permissions = new GroupIngressPermissionVerifier(database);
         await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
+        var phase = "permissions-initial";
         try
         {
             await permissions.RequireSafeRuntimeAsync(cancellationToken);
             // Wait for prior source commits before reading registry/lease rows.
             // An external revoke completed while queued must win admission.
             await LockSourceAsync(source, cancellationToken);
+            phase = "registry-initial";
             var authority = await directory.RequireCurrentAsync(verified.Service, cancellationToken);
             now = clock.GetUtcNow().ToUniversalTime();
             GroupServiceAuthenticator.RequireFreshSigningTime(verified.Service.SignedAtUtc, now);
             GroupServiceAuthenticator.RequireQualification(authority.Account, metadata.Kind, now, policy);
+            phase = "listener";
             await RequireListenerAsync(authority.Account.Id, verified, now, cancellationToken);
             var eventHash = GroupIngressIdentity.EventIndex(source, metadata.RevisionEventId);
             var envelopeHash = EnvelopeHash(metadata, payload.Text);
@@ -102,8 +106,10 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
                 (state.FirstPendingAtUtc is null) != (state.LastPendingAtUtc is null) || state.FirstPendingAtUtc > state.LastPendingAtUtc) throw Unavailable();
             var startsPendingWindow = state.FirstPendingAtUtc is null;
 
+            phase = "source-key";
             using var key = await keys.ResolveWriteAsync(source, cancellationToken);
             var protectedContent = protector.Protect(new(source, message.Id, revision, verified.Service.SourceVersion, verified.Service.DeletionGeneration), payload.Text, key.Key, key.KeyId);
+            phase = "final-authority";
             await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
             // Source timestamps describe the admitted write, after key/proof
             // latency, rather than the earlier request admission time.
@@ -168,7 +174,9 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             state.CommittedSequence = sequence;
             state.FirstPendingAtUtc ??= now;
             state.LastPendingAtUtc = state.LastPendingAtUtc > now ? state.LastPendingAtUtc : now;
+            phase = "source-write";
             await database.SaveChangesAsync(cancellationToken);
+            phase = "final-authority";
             await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
             // The mutable scheduling anchor also accounts for source-write and
             // final-proof latency. Immutable source receipts retain write time.
@@ -185,6 +193,8 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
         }
         catch (Exception error) when (error is DbUpdateException or SqlException or OverflowException)
         { DetachStaged(); throw Unavailable(); }
+        catch (UnauthorizedAccessException)
+        { logger?.LogWarning("group-store-refusal: {Phase}", phase); DetachStaged(); throw; }
         catch { DetachStaged(); throw; }
 
         void Add(object entity) { database.Add(entity); staged.Add(entity); }

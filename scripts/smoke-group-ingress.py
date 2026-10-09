@@ -34,6 +34,11 @@ def require_contiguous_cursor(sequences, cursor):
     assert 0 < cursor <= 4096 and sequences == list(range(1, cursor + 1)), "Group source skipped a committed sequence or stored beyond its cursor"
 
 
+def decode_bounded_history(text, byte_count):
+    assert 0 < byte_count <= 8000 and len(text.encode("utf-16-le")) == byte_count, "Owned group history transport was truncated or malformed"
+    return json.loads(text)
+
+
 def require_owned(directory, api):
     if not (os.environ.get("CI") == "true" and os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
@@ -49,6 +54,29 @@ def owned_sql(compose, environment, query):
         match = re.search(r"\bMsg (\d{1,5}),", result.stdout + result.stderr)
         raise RuntimeError("Owned group SQL fixture command failed" + (f" (SQL message {match[1]})" if match else "") + ".")
     return result.stdout.strip()
+
+
+def permission_diagnostic_query():
+    registry = ["GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants"]
+    append_only = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts"]
+    mutable = {"GroupListenerLeases": ["TenantId", "CompanyId", "ConnectorAccountId"],
+        "GroupSourceStates": ["TenantId", "CompanyId", "BindingId"],
+        "GroupCoverageGaps": ["TenantId", "CompanyId", "BindingId", "Id", "AfterCommittedSequence", "Reason", "OpenedAtUtc"],
+        "GroupIngressOutbox": ["TenantId", "CompanyId", "BindingId", "Id", "MessageId", "Revision", "CommittedSequence"]}
+    predicates = []
+    for table in [*registry, *append_only, *mutable]:
+        name = "aioffice." + table
+        predicates += [f"OBJECT_ID(N'{name}',N'U') IS NOT NULL",
+            f"EXISTS(SELECT 1 FROM sys.objects WHERE object_id=OBJECT_ID(N'{name}') AND principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_operator_owner'))"]
+        for permission, expected in [("SELECT", 1), ("INSERT", 0 if table in registry else 1), ("UPDATE", 1 if table in mutable else 0),
+                ("DELETE", 0), ("ALTER", 0), ("CONTROL", 0), ("TAKE OWNERSHIP", 0)]:
+            predicates.append(f"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'{permission}')={expected}")
+        columns = " AND c.name IN(" + ",".join("N'" + column + "'" for column in mutable[table]) + ")" if table in mutable else ""
+        predicates.append(f"NOT EXISTS(SELECT 1 FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'{name}'){columns}"
+            f" AND ISNULL(HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0)")
+    checks = [f"SELECT N'group_permission_{index:03}' AS CheckId,CASE WHEN({predicate}) THEN N'PASS' ELSE N'FAIL_OR_UNKNOWN' END AS Result"
+        for index, predicate in enumerate(predicates, start=1)]
+    return "EXECUTE AS LOGIN=N'aioffice_runtime'; " + " UNION ALL ".join(checks) + "; REVERT;"
 
 
 def verify(*, directory, manifest, compose, environment, api):
@@ -231,7 +259,16 @@ def verify(*, directory, manifest, compose, environment, api):
         owner_graph = sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
         payload = event()
-        original = require_receipt(*call(payload))
+        first_status, first_value = call(payload)
+        if first_status != 200:
+            # Only fixed server phase labels escape the private container log.
+            diagnostic = subprocess.run([*compose, "logs", "--no-color", "--tail", "80", "core-api"],
+                capture_output=True, text=True, env=environment, timeout=20)
+            for category, phase in re.findall(r"group-(auth|store)-refusal: ([a-z-]{1,32})", diagnostic.stdout + diagnostic.stderr):
+                print("Owned group refusal phase:" + category + "/" + phase)
+            for line in sql(permission_diagnostic_query()).splitlines():
+                if re.fullmatch(r"group_permission_\d{3}\s+FAIL_OR_UNKNOWN", line.strip()): print(line.strip())
+        original = require_receipt(first_status, first_value)
         assert counts() == [1, 1, 1, 1] and original["committedSequence"] == original["revision"] == 1
         first_snapshot = snapshot()
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupMessageRevisions WHERE {scope} AND ContentKeyId='owned-source-v1'"
@@ -316,9 +353,12 @@ def verify(*, directory, manifest, compose, environment, api):
             require_receipt(*call(event(message=message, kind=kind, text=text, historical=historical)))
             if kind == 3: gap_after_edit = snapshot()[5]
         assert gap_after_edit == snapshot()[5], "Recall or late original erased/changed the original-unseen coverage gap"
-        history = json.loads(sql(f"SELECT r.Revision,r.Kind,r.ContentSha256,r.IsHistoricalBackfill FROM {schema}GroupMessageRevisions r"
+        history_lines = sql(f"DECLARE @history nvarchar(max)=(SELECT r.Revision,r.Kind,r.ContentSha256,r.IsHistoricalBackfill FROM {schema}GroupMessageRevisions r"
             f" JOIN {schema}GroupMessages m ON m.TenantId=r.TenantId AND m.CompanyId=r.CompanyId AND m.BindingId=r.BindingId AND m.Id=r.MessageId"
-            f" WHERE r.TenantId='{tenant}' AND r.CompanyId='{company}' AND r.BindingId='{source}' AND m.ExternalMessageId=N'{message}' ORDER BY r.Revision FOR JSON PATH;"))
+            f" WHERE r.TenantId='{tenant}' AND r.CompanyId='{company}' AND r.BindingId='{source}' AND m.ExternalMessageId=N'{message}' ORDER BY r.Revision FOR JSON PATH);"
+            " SELECT CONVERT(nvarchar(4000),CASE WHEN DATALENGTH(@history)<=8000 THEN @history END); SELECT DATALENGTH(@history);").splitlines()
+        assert len(history_lines) == 2, "Invalid owned group history transport"
+        history = decode_bounded_history(history_lines[0].strip(), int(history_lines[1]))
         assert history == [{"Revision": index, "Kind": kind, "ContentSha256": hashlib.sha256(text.encode()).hexdigest().upper(), "IsHistoricalBackfill": historical}
             for index, (kind, text, historical) in enumerate([(3, "Owned edit", False), (4, "", False), (1, "Late owned original", True)], start=1)]
         assert sql(f"SELECT COUNT(*) FROM {schema}GroupCoverageGaps WHERE {scope} AND Reason='original-message-unseen' AND AfterCommittedSequence={before_edit};") == "1"
