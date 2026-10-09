@@ -7,7 +7,9 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 internal static class TaskHistoryMetadata
 {
     internal const int MaximumRequestBytes = 65536;
-    internal const int MaximumCheckpointBytes = 262144;
+    // The worker uses default JSON escaping: each legitimate UTF16 answer
+    // unit can occupy six stored characters, plus bounded catalog metadata.
+    internal const int MaximumCheckpointBytes = 1048576;
     private static readonly UnicodeEncoding StrictUtf16 = new(false, false, true);
 
     internal static string? Decode(byte[]? bytes, string? text, int maximumBytes)

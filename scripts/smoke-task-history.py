@@ -128,8 +128,20 @@ def verify(*, directory, manifest, compose, environment, http, sql, identity_adm
         {**request, "question": "PRIVATE\ud800"}, {**request, "question": "x" * 33000},
         json.dumps(request).replace('"maxAttempts": 3', '"maxAttempts": 3,"question":"PRIVATE_DUPLICATE"')]
     corrupt_checkpoints = ["{}", {**checkpoint, "answer": "PRIVATE\ud800"}, {**checkpoint, "secretRef": "PRIVATE_SECRET"},
-        {**checkpoint, "usage": {"inputTokens": 2, "outputTokens": 3, "totalTokens": 4}}, "x" * 140000]
+        {**checkpoint, "usage": {"inputTokens": 2, "outputTokens": 3, "totalTokens": 4}}, "x" * 525000]
     try:
+        # Real worker default escaping expands otherwise valid answers. Match
+        # the supported64000-unit text limit, then reject the adjacent overflow.
+        for length in (64000, 64001):
+            full_answer = "ồ" * length
+            escaped = json.dumps({**checkpoint, "answer": full_answer}, ensure_ascii=True, separators=(",", ":"))
+            assert len(escaped.encode("utf-16-le")) > 262144
+            sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskCheckpoints SET PayloadJson={stored(escaped)} WHERE {task_scope} AND Version=1;")
+            status, body = detail(); assert status == 200 and body["task"]["status"] == 6
+            if length == 64000:
+                assert body["result"]["answer"] == full_answer and not body["resultUnavailable"]
+            else:
+                assert body["result"] is None and body["resultUnavailable"]
         for invalid in corrupt_requests:
             sql(f"USE AIOfficeLocal; UPDATE aioffice.TaskEvents SET PayloadJson={stored(invalid)} WHERE {task_scope} AND Sequence=1;")
             assert get("/api/tasks")[0] == 200
@@ -146,7 +158,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, identity_adm
           UPDATE aioffice.TaskCheckpoints SET PayloadJson={stored(checkpoint)} WHERE {task_scope} AND Version=1;
           UPDATE aioffice.Tasks SET Status=N'Completed' WHERE {scope} AND Id='{task_ids[0]}';""")
     assert detail()[1]["result"]["answer"] == checkpoint["answer"] and snapshot() == before
-    print("PASS actual stored UTF16 surrogate/oversize/duplicate/unknown archive metadata refusal with unchanged completed status and restored valid supplementary/U+FFFD result")
+    print("PASS actual full supported worker-escaped Unicode result, adjacent answer overflow and stored UTF16 surrogate/oversize/duplicate/unknown refusal with unchanged completed status and restored supplementary/U+FFFD result")
 
     binding = f"TenantId='{tenant}' AND CompanyId='{company}' AND CanonicalReference=N'secretref://env/PILOT_ERP_CONNECTION' COLLATE Latin1_General_100_BIN2"
     enabled = sql(f"USE AIOfficeLocal; SELECT CONVERT(int,IsEnabled) FROM aioffice.DataSourceSecretBindings WHERE {binding};")

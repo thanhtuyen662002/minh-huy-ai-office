@@ -14,14 +14,17 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     finally { clearTimeout(timer); }
   }
   const guid = value => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value);
-  stage("owned-fixture-metadata");
+  stage("owned-fixture-read");
   const bytes = await readFile(join(directory, "history-fixture.json")); requireProof(bytes.length <= 4096);
+  stage("owned-fixture-json");
   const fixture = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  stage("owned-fixture-shape");
   requireProof(Object.keys(fixture).sort().join(",") === "companyId,otherUserId,otherUsername,taskIds"
     && guid(fixture.companyId) && guid(fixture.otherUserId) && /^archive-proof-[0-9a-f]{32}$/.test(fixture.otherUsername)
     && Array.isArray(fixture.taskIds) && fixture.taskIds.length === 4 && fixture.taskIds.every(guid)
     && new Set(fixture.taskIds).size === 4);
   const originalCompany = manifest.AIOFFICE_COMPANY_ID, tenant = manifest.AIOFFICE_TENANT_ID, owner = manifest.AIOFFICE_USER_ID;
+  stage("owned-fixture-identities");
   requireProof([originalCompany, tenant, owner].every(guid) && fixture.companyId !== originalCompany && fixture.otherUserId !== owner);
   const selected = fixture.companyId, query = `?companyId=${selected}`, scope = `TenantId='${tenant}' AND CompanyId='${selected}'`;
   const ownerMember = scope + ` AND UserId='${owner}'`;
@@ -59,7 +62,9 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     CompanyMembershipAccessAudits: "TenantId,CompanyId,Id", CompanyAdministratorAudits: "TenantId,CompanyId,Id", CustomerAiCreditSettlements: "SettlementId" };
   const snapshot = () => Object.entries(tables).map(([table, order]) => sql(`USE AIOfficeLocal; SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',
     CONVERT(varbinary(max),(SELECT * FROM aioffice.${table} ORDER BY ${order} FOR JSON PATH))),2);`));
+  stage("owned-fixture-snapshots");
   const before = snapshot(); requireProof(before.every(value => /^[0-9A-F]{64}$/.test(value)));
+  stage("owned-second-browser-context");
   const secondaryContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   let held, release, fulfilled, routePattern;
   try {

@@ -11,13 +11,13 @@ internal static class TaskHistoryFixture
     internal static readonly Guid SourceId = Guid.Parse("12345678-1234-1234-1234-123456789abc");
     internal static string Request(string question = "Tra cứu tồn kho 😀 �") => JsonSerializer.Serialize(
         new PilotTaskRequestEvent("history-request", SourceId, question, 3), new JsonSerializerOptions(JsonSerializerDefaults.Web));
-    internal static string Checkpoint(string question = "Tra cứu tồn kho 😀 �") => JsonSerializer.Serialize(new
+    internal static string Checkpoint(string question = "Tra cứu tồn kho 😀 �", string answer = "Kết quả đã lưu 😀 �\nDòng tiếp theo.") => JsonSerializer.Serialize(new
     {
         status = "completed",
         dataSourceId = SourceId,
         logicalName = "Owned fixture",
         questionLength = question.Length,
-        answer = "Kết quả đã lưu 😀 �\nDòng tiếp theo.",
+        answer,
         provider = "fixture",
         model = "fixture-v1",
         usage = new { inputTokens = 2, outputTokens = 3, totalTokens = 5 },
@@ -112,6 +112,27 @@ public sealed class TaskHistoryServiceTests
     }
 
     [Theory]
+    [InlineData(64000, true)]
+    [InlineData(64001, false)]
+    public async Task WorkerEscapedUnicodeAnswerPreservesTheFullSupportedLengthAndRejectsOverflow(int length, bool available)
+    {
+        await using var db = new PlatformDbContext(MemberDirectoryFixture.Options()); var owner = MemberDirectoryFixture.Authority();
+        MemberDirectoryFixture.Seed(db, owner);
+        var answer = new string('ồ', length);
+        // Use the real worker's default JSON escaping. Raw nvarchar storage is
+        // substantially larger than the validated answer's UTF16 length.
+        var checkpoint = TaskHistoryFixture.Checkpoint(answer: answer);
+        Assert.True(System.Text.Encoding.Unicode.GetByteCount(checkpoint) > 262144);
+        var id = TaskHistoryFixture.Add(db, owner, TaskExecutionStatus.Completed, checkpoint: checkpoint);
+        await db.SaveChangesAsync(); var before = Fingerprint(db);
+        var detail = (await new TaskHistoryService(db, new EfAuthorizationDirectory(db)).GetAsync(owner, id))!;
+        Assert.Equal(TaskExecutionStatus.Completed, detail.Task.Status);
+        Assert.Equal(!available, detail.ResultUnavailable);
+        if (available) Assert.Equal(answer, detail.Result!.Answer); else Assert.Null(detail.Result);
+        Assert.Equal(before, Fingerprint(db));
+    }
+
+    [Theory]
     [InlineData("{}")]
     [InlineData("not json")]
     [InlineData("{\"idempotencyKey\":\"a\",\"dataSourceId\":\"12345678-1234-1234-1234-123456789abc\",\"question\":\"x\",\"maxAttempts\":3,\"secretRef\":\"PRIVATE_SECRET\"}")]
@@ -145,7 +166,7 @@ public sealed class TaskHistoryServiceTests
             "unknown" => "{\"answer\":\"PRIVATE_UNTRUSTED\"}",
             "duplicate" => valid.Insert(1, "\"answer\":\"PRIVATE_UNTRUSTED\","),
             "extra" => valid.Insert(1, "\"secretRef\":\"PRIVATE_SECRET\","),
-            "oversize" => new string('x', 140000),
+            "oversize" => new string('x', 525000),
             "bad-usage" => valid.Replace("\"totalTokens\":5", "\"totalTokens\":4"),
             "bad-unicode" => valid.Replace("\"answer\":\"", "\"answer\":\"PRIVATE\ud800"),
             _ => valid.Replace(TaskHistoryFixture.SourceId.ToString(), Guid.NewGuid().ToString())

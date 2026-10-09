@@ -387,3 +387,14 @@ task_history_rcsi_barrier_repair:
   result: 'Seven gates/Governance PASS; actual owner/company/admin/equal-time pages, stored raw UTF16 surrogate/oversize/duplicate/unknown refusal and restored Unicode positives, historical source-grant revoked owner reads and unchanged fingerprints PASS. Native final-read barrier terminal red because unchanged RCSI readers bypass the fixture row X lock. Chromium not executed; no full acceptance.'
   fix: 'Owned disposable fixture holds transaction-owned Sch-M via adding a nullable random column to the private TaskEvents/TaskCheckpoints table, then rolls it back. Observe exact granted target Sch-M and runtime queued Sch-S plus blocker/query/table before external membership revoke; initial directory tables remain available. Preserve original RCSI and shipping code. Confirm empty403/restored200, absent fixture column and unchanged graph/credit fingerprints.6 guard/transport tests and Python syntax/diff PASS locally; actual execution remains mandatory.'
   next: 'Push same271 checkpoint, close exact SQL/Chromium CI and fix terminal defects. Then inspect three current images and obtain independent full frozen review before readiness/merge. Full233 active;239 Draft.'
+
+task_history_native_authority_verified:
+  head: 7cdd034548355febb0c3afff8ca0141b10c8791d
+  build: 37881893324
+  governance: 37881893349
+  actual: 113663202086
+  quality: 113664871706
+  result: 'All native SQL history controls PASS, including unchanged RCSI with observed private-table Sch-M/queued runtime Sch-S, external membership revoke, empty403 for list/archive/existing result, restored200, fixture column rollback and stable graph/credit fingerprints. Retained SQL and Chromium controls PASS. Seven gates/Governance PASS; new history browser proof terminal red in fixture preparation before shipping archive navigation. No new browser acceptance or frozen review.'
+  unicode_repair: 'Reproduced a legitimate64000-unit fully escaped Unicode answer as incorrectly unavailable under the256KiB checkpoint ceiling. Raise bounded stored checkpoint limit to1MiB to include worker JSON expansion plus bounded catalog; answer remains64000. New local maximum/adjacent-overflow controls now pass, all26 history service tests PASS and changed C# format PASS. Actual SQL proof includes both exact lengths plus >1MiB payload denial; not executed yet.'
+  browser_diagnostics: 'Split fixed fixture stages for file/JSON/shape/identity/snapshots/browser context without printing data. Positive fixture/fingerprint preparation reaches mocked browser;4 browser guard tests and6 native guard/transport tests, JS/Python syntax/diff PASS. Diagnose the actual stage on same271; do not bypass it.'
+  next: 'Push verified checkpoint and own exact SQL/Chromium closure. Inspect sanitized images and full frozen independent review before ready/merge; full233 active.'
