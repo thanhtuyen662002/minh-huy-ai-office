@@ -83,7 +83,7 @@ export function GroupInboxPanel({ tenantId, companyId, userId, generation, isCur
   }, [scope]);
   // Hide prior-scope private data during render, before effect cleanup can run.
   const visible = state.scope === scope ? state : empty(scope);
-  return <section aria-label="Hộp thư nguồn" aria-busy={visible.loading} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#11182a]">
+  return <section aria-label="Hộp thư nguồn" aria-busy={visible.loading} className="min-w-0 max-w-full space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#11182a]">
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Hộp thư nguồn</h2>
       <button type="button" className={button} onClick={() => void read({ kind: "sources", offset: visible.offset })}>Tải lại nguồn</button></div>
     <p className="text-sm text-slate-500">Tin được tiếp nhận tự động. Bạn chỉ thấy các nguồn có quyền đọc; nội dung được kiểm tra lại khi mở.</p>
@@ -91,7 +91,7 @@ export function GroupInboxPanel({ tenantId, companyId, userId, generation, isCur
     {visible.error ? <p role="alert" className="text-sm text-rose-600">{visible.error}</p> : null}
     {visible.sources ? <div className="space-y-3">
       {visible.sources.items.length === 0 ? <p>Chưa có nguồn được cấp quyền trong trang này.</p> : <ul className="flex flex-wrap gap-2" aria-label="Nguồn được cấp quyền">
-        {visible.sources.items.map(item => <li key={item.source.sourceBindingId}><button type="button" className={button}
+        {visible.sources.items.map(item => <li key={item.source.sourceBindingId} className="min-w-0 max-w-full"><button type="button" className={`${button} max-w-full whitespace-normal break-all text-left`}
           aria-pressed={visible.sourceId === item.source.sourceBindingId} onClick={() => void read({ kind: "messages", sourceId: item.source.sourceBindingId })}>
           {item.displayName || "Nhóm nguồn"}</button></li>)}</ul>}
       <div className="flex items-center gap-2"><button type="button" className={button} disabled={visible.offset === 0 || visible.loading}
@@ -110,8 +110,8 @@ export function GroupInboxPanel({ tenantId, companyId, userId, generation, isCur
       {visible.messages.nextBeforeSequence !== null ? <button type="button" className={button}
         onClick={() => void read({ kind: "messages", sourceId: visible.messages!.source.sourceBindingId, before: visible.messages!.nextBeforeSequence! })}>Tin trước đó</button> : null}
     </div> : null}
-    {visible.detail ? <article aria-label="Nội dung tin" className="space-y-3 rounded-xl bg-slate-50 p-4 dark:bg-white/5">
-      <h3 className="font-semibold">{label(visible.detail.kind)}</h3><p className="text-sm">Người gửi: <bdi>{visible.detail.senderId}</bdi> · {time(visible.detail.occurredAtUtc)}</p>
+    {visible.detail ? <article aria-label="Nội dung tin" className="min-w-0 max-w-full space-y-3 rounded-xl bg-slate-50 p-4 dark:bg-white/5">
+      <h3 className="font-semibold">{label(visible.detail.kind)}</h3><p className="break-words text-sm">Người gửi: <bdi className="break-all">{visible.detail.senderId}</bdi> · {time(visible.detail.occurredAtUtc)}</p>
       {visible.detail.hasCoverageGap && !visible.messages?.hasCoverageGap ? <p role="note">Nguồn có khoảng gián đoạn; lịch sử có thể chưa đầy đủ.</p> : null}
       {visible.detail.kind === 4 ? <p>Tin đã được thu hồi. Nội dung không còn hiển thị.</p>
         : <p className="whitespace-pre-wrap break-words">{visible.detail.text || (visible.detail.kind === 2 ? "Nội dung đa phương tiện được giữ làm bằng chứng; chưa có văn bản để hiển thị." : "Tin không có văn bản.")}</p>}
