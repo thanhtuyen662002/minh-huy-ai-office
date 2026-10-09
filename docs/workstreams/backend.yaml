@@ -637,5 +637,7 @@ task_history_delivered_271:
 group_ingress_277:
   stacked_on_pr: 282
   stacked_on_head: 06fbacdc3704bc643548d7b3c1fed9a18fca51fe
-  state: claimed
-  result: 'Owns277 only; no competing Draft. Additive SQL model/authority first, then runtime call path and actual owned SQL/queue/session/browser proof. No group memory/feature delivery from this lease checkpoint.'
+  state: in_progress
+  result: 'Additive12-table operator-owned scope/role/service/read-grant registry, fenced listener/source state, append-only source revisions/receipts, explicit gaps and reference-only outbox model. AES256-GCM original source context-bound to tenant/company/group/message/revision/source/deletion/key-ID. Effective registry/append-only/immutable-column proof composes global binding-store verifier. No API/DI/worker or runtime group receipt yet.'
+  local: '9 new/full869 Persistence PASS/0skipped; changed C# format, EF pending-model check and generated forward SQL/diff PASS. ActualSQL/queue/restart/session/UI proof and frozen independent review remain. Parent final0a review6088892125 approved; exactCI/main closure root-owned.'
+  next: 'Finish same277 fresh service authentication/SQL directory, transaction-locked committed-order receipt/revision/outbox store and encrypted key path; then API/listener/spool/RabbitMQ/recovery/read UI and actual owned evidence. Continue to full acceptance; no merge from this model checkpoint.'

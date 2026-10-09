@@ -27,6 +27,18 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<TaskStepExecutionRecord> TaskStepExecutions => Set<TaskStepExecutionRecord>();
     public DbSet<TaskDispatchRecord> TaskDispatches => Set<TaskDispatchRecord>();
     public DbSet<CustomerSlaPolicyRevisionRecord> CustomerSlaPolicyRevisions => Set<CustomerSlaPolicyRevisionRecord>();
+    public DbSet<GroupConnectorAccountRecord> GroupConnectorAccounts => Set<GroupConnectorAccountRecord>();
+    public DbSet<GroupServiceRecord> GroupServices => Set<GroupServiceRecord>();
+    public DbSet<GroupBindingRecord> GroupBindings => Set<GroupBindingRecord>();
+    public DbSet<GroupServiceGrantRecord> GroupServiceGrants => Set<GroupServiceGrantRecord>();
+    public DbSet<GroupReaderGrantRecord> GroupReaderGrants => Set<GroupReaderGrantRecord>();
+    public DbSet<GroupListenerLeaseRecord> GroupListenerLeases => Set<GroupListenerLeaseRecord>();
+    public DbSet<GroupSourceStateRecord> GroupSourceStates => Set<GroupSourceStateRecord>();
+    public DbSet<GroupMessageRecord> GroupMessages => Set<GroupMessageRecord>();
+    public DbSet<GroupMessageRevisionRecord> GroupMessageRevisions => Set<GroupMessageRevisionRecord>();
+    public DbSet<GroupIngressReceiptRecord> GroupIngressReceipts => Set<GroupIngressReceiptRecord>();
+    public DbSet<GroupCoverageGapRecord> GroupCoverageGaps => Set<GroupCoverageGapRecord>();
+    public DbSet<GroupIngressOutboxRecord> GroupIngressOutbox => Set<GroupIngressOutboxRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +47,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
         modelBuilder.ConfigureTaskSubmissionIntents();
+        modelBuilder.ConfigureGroupIngress();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));
