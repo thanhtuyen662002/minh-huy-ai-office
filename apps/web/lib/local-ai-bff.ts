@@ -94,6 +94,21 @@ export async function readLocalAccessToken() {
   return token && token.length <= 16_384 ? token : null;
 }
 
+/** Recheck the incoming issued SID after asynchronous private receipt validation. */
+export async function officeSessionIsCurrent(companyId: string): Promise<boolean> {
+  if (!isOfficeAiUiEnabled() || !isCanonicalCompanyId(companyId)) return false;
+  try {
+    if (!isBrowserAiUiEnabled()) return !!await readLocalAccessToken();
+    const runtime = getBrowserAuthRuntime(); if (!runtime) return false;
+    const store = await cookies();
+    const binding = store.get(browserBindingCookieName(runtime.settings))?.value;
+    const sid = store.get(browserSessionCookieName(runtime.settings))?.value;
+    if (!binding || !sid) return false;
+    const current = await runtime.sessions.read(binding, sid);
+    return !!current && current.companyId.toLowerCase() === companyId.toLowerCase();
+  } catch { return false; }
+}
+
 export async function fetchCoreApi(
   path: string,
   companyId: string,

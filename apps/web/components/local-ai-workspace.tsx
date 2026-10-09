@@ -4,7 +4,6 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import {
   LocalAiCheckpoint,
   LocalDataSource,
-  parseAcceptedTask,
   parseAiCheckpoint,
   parseDataSources,
   parseTaskSnapshot,
@@ -14,6 +13,9 @@ import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
+import { SubmissionRecoveryPanel } from "./submission-recovery-panel";
+import { useTaskSubmission } from "./use-task-submission";
+import { trimSubmissionQuestion } from "../lib/task-submission-intent";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
 import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
@@ -74,6 +76,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const [sourceSaving, setSourceSaving] = useState(false);
   const [editorError, setEditorError] = useState("");
   const sourceSave = useRef<object | null>(null);
+  const submissionReset = useRef<(() => void) | null>(null), taskRun = useRef<object | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -89,6 +92,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const selectedSource = sources.find((source) => source.id === selectedSourceId) ?? null;
 
   const clearPrivateState = useCallback(() => {
+    submissionReset.current?.(); taskRun.current = null;
     setCompanies([]);
     setCompanyChoiceError("");
     setSources([]);
@@ -109,6 +113,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
     validate, pause, restore, beginMutation, ready } = useLocalSession(companyId, clearPrivateState);
+  const submission = useTaskSubmission({ companyId, generation: sessionGeneration, isCurrent, ready, validate, request,
+    onUnauthorized: () => reset("signed-out") });
+  submissionReset.current = submission.reset;
 
   // Another validation can invalidate this session between validate resolving
   // and its caller resuming. Recheck the generation after every awaited result.
@@ -414,12 +421,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   async function askAi(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !ready()) return;
-    const generation = sessionGeneration.current;
+    if (busy || taskRun.current || !ready()) return;
 
     const form = event.currentTarget;
     const data = new FormData(form);
-    const question = String(data.get("question") ?? "").trim();
+    const question = trimSubmissionQuestion(String(data.get("question") ?? ""));
 
     if (!selectedSourceId) {
       setNotice("Hãy chọn nguồn dữ liệu trước.");
@@ -434,6 +440,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       return;
     }
 
+    // Capture and lock before any await. Source/form changes cannot alter retries.
+    const attempt = submission.begin(selectedSourceId, question);
+    if (!attempt) { setNotice("Kiểm tra yêu cầu đang giữ trước khi tạo yêu cầu khác; câu hỏi cần có nội dung hợp lệ."); return; }
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
@@ -441,33 +451,24 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     };
     setMessages((current) => [...current, userMessage]);
     form.reset();
+    await executeSubmission(attempt);
+  }
+
+  async function retrySubmission() {
+    if (taskRun.current || !ready()) return;
+    const attempt = submission.retry(); if (attempt) await executeSubmission(attempt);
+  }
+
+  async function executeSubmission(attempt: NonNullable<ReturnType<typeof submission.begin>>) {
+    const generation = attempt.generation, run = {}; taskRun.current = run;
     setBusy(true);
     setNotice("");
-    setTaskStage("Đang gửi công việc…");
+    setTaskStage("Đang xác nhận yêu cầu…");
 
     try {
-      if (!await validate(generation) || !isCurrent(generation)) return;
-      const submitResponse = await request(generation,
-        `/api/local/tasks?companyId=${encodeURIComponent(companyId)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dataSourceId: selectedSourceId, question }),
-        },
-      );
-      if (!isCurrent(generation)) return;
-      if (submitResponse.status === 401) {
-        reset("signed-out");
-        return;
-      }
-      const submitPayload = await readJson(submitResponse);
-      if (!isCurrent(generation)) return;
-      if (!await validate(generation) || !isCurrent(generation)) return;
-      if (!submitResponse.ok) {
-        throw new Error(errorText(submitPayload, "Không gửi được công việc."));
-      }
-      const accepted = parseAcceptedTask(submitPayload);
-      if (!accepted) throw new Error("Core API không trả về TaskId hợp lệ.");
+      const accepted = await submission.send(attempt);
+      if (!isCurrent(generation) || taskRun.current !== run) return;
+      if (!accepted) { setTaskStage(""); return; }
 
       setTaskStage("Đã vào hàng đợi · AI đang xử lý");
 
@@ -489,7 +490,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         if (!isCurrent(generation)) return;
         if (!await validate(generation) || !isCurrent(generation)) return;
         const snapshot = parseTaskSnapshot(resultPayload);
-        if (!snapshot) continue;
+        if (!snapshot || snapshot.taskId.toLowerCase() !== accepted.taskId.toLowerCase()) continue;
 
         setTaskStage(`Đang xử lý · lần chạy ${snapshot.attempt}`);
 
@@ -513,16 +514,12 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       }
 
       throw new Error("Công việc chưa hoàn tất trong thời gian chờ của giao diện.");
-    } catch (error) {
+    } catch {
       if (!isCurrent(generation)) return;
-      const message = error instanceof Error ? error.message : "AI Office gặp lỗi khi xử lý.";
-      setMessages((current) => [
-        ...current,
-        { id: crypto.randomUUID(), role: "assistant", text: `Không thể hoàn tất: ${message}` },
-      ]);
+      setNotice("Yêu cầu đã được nhận. Chưa đọc được kết quả tại đây; mở Công việc để xem trạng thái đã lưu.");
       setTaskStage("");
     } finally {
-      if (isCurrent(generation)) setBusy(false);
+      if (taskRun.current === run) { taskRun.current = null; if (isCurrent(generation)) setBusy(false); }
     }
   }
 
@@ -658,11 +655,17 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             <div className="mb-5 flex gap-2 lg:hidden">
               <button type="button" onClick={() => setSurface("assistant")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Trợ lý AI</button>
               <button type="button" onClick={() => setSurface("data-sources")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Nguồn dữ liệu</button>
+              <button type="button" aria-label="Mở Công việc trên di động" onClick={() => setSurface("tasks")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Công việc</button>
               {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Thành viên</button> : null}
             </div>
 
-            {surface === "tasks" && auth ? <TaskHistoryPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-              isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} /> : surface === "members" ? (auth?.roles.includes("admin") ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+            {surface === "tasks" && auth ? <div key={`${companyId}:${auth.userId}:${sessionGeneration.current}`} className="space-y-5">
+              <SubmissionRecoveryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} disabled={busy || submission.working}
+                isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")}
+                onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
+              <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+                isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} />
+            </div> : surface === "members" ? (auth?.roles.includes("admin") ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
               isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} /> : null) : surface === "assistant" ? (
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
                 <section className="flex min-h-[calc(100vh-9rem)] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#11182a]">
@@ -710,15 +713,31 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
                   <form onSubmit={askAi} className="border-t border-slate-100 p-4 dark:border-white/10 sm:p-5">
                     {notice ? <p role="status" className="mb-3 text-sm text-rose-600 dark:text-rose-300">{notice}</p> : null}
+                    {submission.pending ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-indigo-200 p-3 text-sm dark:border-indigo-400/30">
+                      {!messages.some(message => message.role === "user" && message.text === submission.pending!.input.question)
+                        ? <p className="whitespace-pre-wrap break-words">{submission.pending.input.question}</p> : null}
+                      <p role="status" className="mt-2">{submission.pending.notice}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {["prepared", "unknown", "denied"].includes(submission.pending.phase) ? <>
+                          <button type="button" disabled={busy || submission.working} onClick={() => void retrySubmission()} className="rounded-lg border px-3 py-2 disabled:opacity-50">{submission.pending.phase === "prepared" ? "Gửi yêu cầu đã lưu" : "Thử lại đúng yêu cầu"}</button>
+                          <button type="button" disabled={busy || submission.working} onClick={() => void submission.reconcile()} className="rounded-lg border px-3 py-2 disabled:opacity-50">Kiểm tra trạng thái yêu cầu</button>
+                        </> : null}
+                        <button type="button" onClick={() => setSurface("tasks")} className="rounded-lg border px-3 py-2">Mở Công việc và yêu cầu đã lưu</button>
+                      </div>
+                      {submission.pending.phase !== "accepted" ? <>
+                        <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
+                        <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
+                      </> : null}
+                    </div> : null}
                     <div className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2 focus-within:border-indigo-400 dark:border-white/10 dark:bg-white/5">
                       <textarea
                         name="question"
                         rows={2}
-                        disabled={busy}
+                        disabled={busy || submission.working || !!submission.pending && submission.pending.phase !== "accepted"}
                         placeholder="Hỏi AI Office về nguồn dữ liệu đã chọn…"
                         className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400"
                       />
-                      <button type="submit" disabled={busy || !selectedSourceId} className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40">
+                      <button type="submit" disabled={busy || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40">
                         Gửi
                       </button>
                     </div>

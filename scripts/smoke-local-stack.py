@@ -1179,6 +1179,11 @@ def main():
     history_spec.loader.exec_module(history_proof)
     history_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
         http=http, sql=sql, identity_admin=identity_admin, identity=identity, api=api, auth=member_auth, retained_task=task)
+    submission_spec = importlib.util.spec_from_file_location("task_submission_proof", Path("scripts/smoke-task-submission.py"))
+    submission_proof = importlib.util.module_from_spec(submission_spec)
+    submission_spec.loader.exec_module(submission_proof)
+    submission_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
+        http=http, sql=sql, runtime_statement=runtime_statement, identity=identity, api=api, auth=member_auth)
     print("PASS complete local stack integration")
 
 

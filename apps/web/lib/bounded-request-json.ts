@@ -3,7 +3,7 @@ export const MUTATION_BODY_TIMEOUT_MS = 10_000;
 type JsonResult = { ok: true; value: unknown } | { ok: false; status: 400 | 408 | 413 };
 
 /** Bound the actual stream, including stalled reads and cleanup. Content-Length is not authority. */
-export async function readBoundedRequestJson(request: Request, maxBytes: number, parseJson: (source: string) => unknown = JSON.parse): Promise<JsonResult> {
+export async function readBoundedRequestJson(request: Pick<Request, "headers" | "body" | "signal">, maxBytes: number, parseJson: (source: string) => unknown = JSON.parse): Promise<JsonResult> {
   if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json"
     || request.signal.aborted) return { ok: false, status: 400 };
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;

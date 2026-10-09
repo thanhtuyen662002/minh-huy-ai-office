@@ -1,12 +1,14 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LocalAiWorkspace } from "./local-ai-workspace";
+import { webcrypto } from "node:crypto";
+import { ownedSubmissionFixture } from "./task-submission-test-fixture";
 // The first two cases preserve the independent reviewer's exact synthetic
 // reproductions. The matrix below exercises every awaited validation caller.
 const company = "22222222-2222-2222-2222-222222222222";
 const auth = (userId: string) => ({ tenantId: "tenant", companyId: company, userId, roles: ["member"] });
 const sources = (name: string) => [{ id: "33333333-3333-3333-3333-333333333333", logicalName: name, kind: "SqlServer", environment: "Test", purpose: "synthetic", allowRead: true, allowWrite: false, maxConcurrency: 1, isEnabled: true }];
-beforeEach(() => vi.stubGlobal("BroadcastChannel", undefined));
+beforeEach(() => { vi.stubGlobal("BroadcastChannel", undefined); vi.stubGlobal("crypto", webcrypto); });
 afterEach(() => { vi.unstubAllGlobals(); });
 it("does not commit A sources when invalidation lands after validate resolves but before its caller resumes", async () => {
   let active = "A";
@@ -88,14 +90,16 @@ function deferred() {
 }
 it.each([
   "sources-pre", "sources-post", "connection-pre", "connection-post",
-  "submit-pre", "submit-post", "poll-pre", "poll-post",
+  "prepare-pre", "prepare-post", "submit-pre", "submit-post", "poll-pre", "poll-post",
 ] as const)("fences the %s validation continuation when focus accepts B in the same microtask turn", async (boundary) => {
   const [operation, phase] = boundary.split("-");
-  const target = operation === "poll" ? phase === "pre" ? 6 : 7 : phase === "pre" ? 4 : 5;
+  // Three startup context checks; then prepare pre/post, submit pre/post and poll pre/post.
+  const target = (operation === "poll" ? 8 : operation === "submit" ? 6 : 4) + (phase === "post" ? 1 : 0);
   const validationA = deferred(); const validationB = deferred(); const sourceB = deferred();
   let active = "A"; let contexts = 0; let sourceCalls = 0; let bSourcesRequested = false;
-  let connections = 0; let submissions = 0; let polls = 0;
-  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+  let connections = 0; let prepares = 0; let submissions = 0; let polls = 0;
+  const submitFixture = ownedSubmissionFixture(company, taskId);
+  vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     if (url.startsWith("/api/local/session?")) {
       contexts++;
       if (contexts === target) return validationA.promise;
@@ -112,7 +116,10 @@ it.each([
       polls++;
       return Response.json({ taskId, taskStatus: 2, stepStatus: 2, dispatchState: 2, attempt: 1, resultPayloadJson: JSON.stringify(checkpoint), failureReason: null });
     }
-    if (url.startsWith("/api/local/tasks?")) { submissions++; return Response.json({ taskId }, { status: 202 }); }
+    if (url.startsWith("/api/local/tasks/intents")) {
+      if (url.includes("/submit?")) submissions++; else prepares++;
+      return submitFixture(url, init);
+    }
     throw new Error(`Unexpected fixture request: ${url}`);
   }));
   const { container } = render(<LocalAiWorkspace companyId={company} companyName="Synthetic" />);
@@ -137,6 +144,7 @@ it.each([
   expect(container.textContent).not.toContain("Đã vào hàng đợi");
   if (operation === "connection" && phase === "pre") expect(connections).toBe(0);
   if (operation === "submit" && phase === "pre") expect(submissions).toBe(0);
+  if (operation === "prepare" && phase === "pre") expect(prepares).toBe(0);
   if (operation === "poll" && phase === "pre") expect(polls).toBe(0);
   await act(async () => sourceB.resolve(Response.json(sources("PUBLIC-B"))));
   await screen.findByRole("option", { name: "PUBLIC-B" });

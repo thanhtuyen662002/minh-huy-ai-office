@@ -2,6 +2,8 @@ import { StrictMode, useLayoutEffect } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LocalAiWorkspace } from "./local-ai-workspace";
+import { webcrypto } from "node:crypto";
+import { ownedSubmissionFixture } from "./task-submission-test-fixture";
 
 // Synthetic server/context fixtures, not a browser cookie or OIDC acceptance test.
 const companyA = "22222222-2222-2222-2222-222222222222";
@@ -18,6 +20,7 @@ function deferred() {
   return { promise, resolve };
 }
 function fixture(override: (url: string, init?: RequestInit) => Promise<Response> | Response | undefined = () => undefined) {
+  const submissions = new Map<string, ReturnType<typeof ownedSubmissionFixture>>();
   const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
     const custom = override(url, init);
     if (custom !== undefined) return custom;
@@ -28,7 +31,8 @@ function fixture(override: (url: string, init?: RequestInit) => Promise<Response
     if (url === "/api/local/session/logout") return Response.json({ ok: true });
     if (url === "/api/local/session/login") return Response.json({ ok: true });
     if (url.startsWith(`/api/local/tasks/${taskId}?`)) return snapshot();
-    if (url.startsWith("/api/local/tasks?")) return Response.json({ taskId }, { status: 202 });
+    if (!submissions.has(company)) submissions.set(company, ownedSubmissionFixture(company, taskId));
+    const submission = await submissions.get(company)!(url, init); if (submission) return submission;
     throw new Error("Unexpected synthetic route");
   });
   vi.stubGlobal("fetch", fetcher);
@@ -53,7 +57,7 @@ const privateGone = () => {
 // Node's native BroadcastChannel dispatches Node Events, incompatible with
 // jsdom Events. Use the browser storage fallback here; test channel delivery
 // explicitly with the transport fixture below rather than mixing runtimes.
-beforeEach(() => vi.stubGlobal("BroadcastChannel", undefined));
+beforeEach(() => { vi.stubGlobal("BroadcastChannel", undefined); vi.stubGlobal("crypto", webcrypto); });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 it("removes draft and private controls synchronously while logout is pending", async () => {
@@ -132,8 +136,8 @@ it("cancels polling timers and aborts outstanding requests on unmount under Stri
   await ready();
   vi.useFakeTimers();
   submit(container);
-  await act(async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); });
-  expect(fetcher.mock.calls.some(([url]) => url.startsWith("/api/local/tasks?"))).toBe(true);
+  // Native WebCrypto and streamed JSON are asynchronous beyond microtasks.
+  await vi.waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("/submit?"))).toBe(true));
   unmount();
   const count = fetcher.mock.calls.length;
   await act(async () => { await vi.advanceTimersByTimeAsync(15000); });
