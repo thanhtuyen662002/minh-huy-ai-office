@@ -498,19 +498,25 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
         print("PASS native observed queued prepare/new execution/committed replay " + name + " revocation denies without effects and restores positive")
 
     # Block a real original-request read AFTER the initial authority checks.
-    # RCSI bypasses row locks, so use an operator transaction's Sch-M and observe
-    # the exact runtime Sch-S wait/query before revoking membership/global user.
+    # RCSI bypasses row locks. A transaction-only TRUNCATE retains the table
+    # definition while holding Sch-M; rollback restores every original row.
+    # Prove BOTH initial permission queries complete under that lock before
+    # observing the exact runtime private query and revoking authority.
     def queued_private_read(read_path, table, predicate):
         assert sql("SELECT is_read_committed_snapshot_on FROM sys.databases WHERE name=N'AIOfficeLocal';") == "1"
         object_id = int(sql("USE AIOfficeLocal; SELECT OBJECT_ID(N'aioffice.TaskEvents');"))
         assert object_id > 0
         gate = "dbo.SubmissionReadGate_" + uuid.uuid4().hex
-        column = "SubmissionReadBarrier_" + uuid.uuid4().hex
         before_effects, before_intents = snapshot(), intent_snapshot()
+        permission_queries = []
+        for name in ("BindingStorePermissionVerifier", "TaskSubmissionIntentPermissionVerifier"):
+            source_text = Path("src/Platform.Persistence/" + name + ".cs").read_text(encoding="utf-8")
+            permission_queries.append(source_text.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0])
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM sys.foreign_keys WHERE referenced_object_id={object_id} AND parent_object_id<>{object_id};") == "0"
         sql(f"USE AIOfficeLocal; CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
         query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
           UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
-          ALTER TABLE aioffice.TaskEvents ADD [{column}] bit NULL;
+          TRUNCATE TABLE aioffice.TaskEvents;
           DECLARE @deadline datetime2=DATEADD(second,30,SYSUTCDATETIME());
           WHILE (SELECT Released FROM {gate} WITH(READUNCOMMITTED))=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.050';
           ROLLBACK TRANSACTION;"""
@@ -527,7 +533,8 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
               CASE WHEN l.resource_associated_entity_id={object_id} THEN 1 ELSE 0 END,N'|',
               CASE WHEN t.text LIKE N'%TaskEvents%' THEN 1 ELSE 0 END,N'|',
               CASE WHEN t.text LIKE N'%PayloadJson%' THEN 1 ELSE 0 END,N'|',
-              CASE WHEN t.text LIKE N'%TaskSubmissionIntents%' AND t.text LIKE N'%HAS_PERMS_BY_NAME%' THEN 1 ELSE 0 END))
+              CASE WHEN t.text LIKE N'%TaskSubmissionIntents%' AND t.text LIKE N'%HAS_PERMS_BY_NAME%' THEN 1 ELSE 0 END,N'|',
+              CASE WHEN t.text LIKE N'%DataSourceSecretBindings%' AND t.text LIKE N'%HAS_PERMS_BY_NAME%' THEN 1 ELSE 0 END))
               FROM sys.dm_exec_requests r JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
               LEFT JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
               OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
@@ -547,6 +554,9 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_tran_locks
               WHERE request_session_id=(SELECT OwnerSpid FROM {gate}) AND resource_type=N'OBJECT' AND resource_database_id=DB_ID()
                 AND resource_associated_entity_id={object_id} AND request_mode=N'Sch-M' AND request_status=N'GRANT';""")) > 0, "owned private schema lock")
+            proof = sql("USE AIOfficeLocal; SET LOCK_TIMEOUT 5000; EXECUTE AS LOGIN=N'aioffice_runtime'; "
+                + "\n".join(permission_queries) + " REVERT;")
+            assert [line.strip() for line in proof.splitlines()] == ["1", "1"], "Private barrier blocked or altered initial runtime permission proofs"
             executor = ThreadPoolExecutor(max_workers=1); pending = executor.submit(call, read_path)
             await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_requests r
               JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
@@ -566,7 +576,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             if executor is not None: executor.shutdown(wait=True, cancel_futures=True)
             sql(f"USE AIOfficeLocal; UPDATE aioffice.{table} SET IsActive=1 WHERE {predicate}; DROP TABLE {gate};")
         assert locker.returncode == 0 and call(read_path)[0] == 200
-        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM sys.columns WHERE object_id={object_id} AND name=N'{column}';") == "0"
+        assert sql("SELECT is_read_committed_snapshot_on FROM sys.databases WHERE name=N'AIOfficeLocal';") == "1"
         assert snapshot() == before_effects and intent_snapshot() == before_intents
 
     for table, predicate in (("CompanyMemberships", member), ("Users", user)):

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
+current_target_head: 1b471e9b8e8d7c347b401ef448136138edbc2494
 last_verified_commit: 4a3f7d7efda1513b39252da4f346f769664f7f81
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
+    head: 1b471e9b8e8d7c347b401ef448136138edbc2494
     state: in_progress
-    next: '272/274 active:de7 ALL15 actual observed prepare/new/replay authority/source/binding revocations PASS, including sourceRead/fullrow restoration; all initialnative/FEFF/legacy PASS. First extra ownerGET private-read observer notseen after ownedTaskEvents SchM. Add sanitized target/query bit diagnostic, identify exact blocker and preserve actual final-read fence. Fourprivate/newChromium/fourimages/fullacceptance/finalPR-main remain. Shipping/statica843 APPROVED6086781182 and de7proofdeltaapproved; no fullruntime approval. User current merge BEFORE second-brain attachment.'
+    next: '272/274 active:1b ALL15 actual revocations/allinitialnative PASS. ExtraGET sanitized wait is earlier LCK_M_S/nonTaskEvents/nonPayload, not private data. Independently reviewed owned TRUNCATE/ROLLBACK trial requires BOTH shipping runtime permission proofs1 whileSchM held before exactoriginal HTTPprivatequerywait; keep403/restored200/RCSI1/fullbyte checks. Fourprivate/newChromium/fourimages/fullacceptance/finalPR-main remain. Shipping/statica843 APPROVED6086781182; no fullruntime approval. User current merge BEFORE second-brain attachment.'
 
   erp_data:
     issue: 264

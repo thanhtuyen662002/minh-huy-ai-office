@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: 6075a6bcfd2f7da437a4691ec5f0f3b67b67ad8b
+head: 1b471e9b8e8d7c347b401ef448136138edbc2494
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -164,7 +164,15 @@ submission_all_admission_fences_actual:
   result: 'Six prerequisites/Gov PASS. All initialnative/FEFF/legacy and ALL15 actual observed prepare/new execution/committed replay revocations PASS, including valid write-only sourceRead denial/exact fullsource-row restoration and binding loss. First additional ownerGET private original-request observer terminalred: ownedTaskEvents SchM seen but exact runtime SchS/privatePayload query not observed. Four private-read/newbrowser acceptance not executed; no shipping defect inferred from observer alone.'
   diagnostic: 'Add bounded uppercase lock enums and fixed boolean targetobject/TaskEvents/PayloadJson/intentpermission query classification at failed private observer; never print query text/input. Keep predicate and all deny/restoration/noeffects assertions unchanged until actual metadata identifies the failing filter or earlier blocker.'
   review: 'Independent scoped frozende7 proof/docs APPROVED;10Python/AST/YAML/diff PASS, constraint/no-auto-rowversion/admission denial and fullsource restoration verified. Shipping byte-equal approveda843. Full runtime/fourimages unapproved.'
-next_action: 'Push same274 private-lock observation diagnostic; inspect exact owned SQL metadata and repair actual after-private-data gate without weakening it. Execute all4 private-read/new realCore202/twoCodeS256/fourimages, full independent acceptance and exact finalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
+submission_private_read_definition_preserving_trial:
+  predecessor: 1b471e9b8e8d7c347b401ef448136138edbc2494
+  build: 37976553735
+  governance: 37976553727
+  actual: 113976216439
+  diagnostic: 'Exact1b six prerequisites/Governance PASS; actual113976216439 terminal at same extraGET observer. ALL15 revocations and allinitialnative PASS. Sanitized LCK_M_S|blocker1|OBJECT|SCH-S|GRANT|target0|TaskEvents0|PayloadJson0|intentProof0 proves a different earlier request, not original private query. Four private-read/browser acceptance absent.'
+  trial: 'Replace ALTER ADD with owned transaction-only TRUNCATE TaskEvents/ROLLBACK, require no inboundFK and BOTH shipping global/intent permission proofs1 as actualruntime with5s lock timeout while observedSchM is held BEFORE HTTP GET. Keep exact privateTaskEvents/PayloadJson SchS predicate, finalempty403/restored200/fullintent-execution-settlement bytes and RCSI1 checks. Add fixed globalbinding-proof diagnostic bit; no raw SQL/input, shipping change or production operation.'
+  local: '10Python guard/oracle tests, Python AST/YAML/diff PASS. Independent scoped trial design/diff review has no blocker; preserve exact two1 permission results, only strip numeric display padding. Actual native trial still pending; compiled real SQL reader-closing fallback remains available if metadata proof blocks.'
+next_action: 'Close exact1b diagnostic and same274 definition-preserving private-read trial. Require actual initialpermission completion then originalprivatequery barrier, all4 finalreads/new realCore202/twoCodeS256/fourimages/fullindependent acceptance/exactfinalPR-main. Only after current merge read second-brain attachment.239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
