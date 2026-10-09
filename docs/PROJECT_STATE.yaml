@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/276-group-routing-contracts
-current_pr: 282
-current_target_head: ee30ad80680c1cd457cb5b3518111efaa17575ae
-last_verified_commit: 1b0b7c53273a9405ff8d60b9c1976c6f6cc34519
+current_branch: codex/277-group-durable-ingress
+current_pr: 283
+current_target_head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
+last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
   backend:
-    issue: 276
-    pr: 282
-    branch: codex/276-group-routing-contracts
-    head: ee30ad80680c1cd457cb5b3518111efaa17575ae
+    issue: 277
+    pr: 283
+    branch: codex/277-group-durable-ingress
+    head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
     state: in_progress
-    next: '276/282 active. Full frozen ee30 contracts/qualification review APPROVED6088762933:475 independent tests including13 own probes;66 new/full462 repository Contracts PASS. Accepted main281/1b0 exact all8 Build37985845222/Gov37985845186/actual114007505342/quality114011846100 PASS. Integrated1b0 locally; final documentation/integration review and exact final PR/main gates remain. Then277 SQL ingress,278 real SQL brain/automatic notes,279 IT-only reporter. No live qualification/activation or runtime delivery from contracts.'
+    next: '276/282 contracts delivered after full/final frozen reviews and exactPR/main all8 PASS; acceptedmain4cf integrated.277/283 full934 Persistence localPASS but actualSQL/source/listener/recovery/private inbox incomplete. Four independent auth blockers closed5/5; store timing-review repair and service API ongoing. Current061 exactCI must diagnose retained202 substage and repair on samePR. Continue actual277 then278 SQL brain/automatic notes and279 SQL-driven INTERNAL IT-only reports; no live activation or whole workflow completion inferred.'
 
   erp_data:
     issue: 264
@@ -529,3 +529,20 @@ group_ci_issued_redis_repair:
   result: 'Managed direct-cache bootstrap, deployment and FE runtime PASS. Web1275 tests PASS but retained actual restored-RDB restart refused a container name instead of required64hex issuedID. Independent reviewer also reproduced unowned name-cleanup risk. Same282 captures successful docker run fullID as step output before readiness; unchanged physical Redis restart test and cleanup consume only that issuedID. Empty/invalid output cannot remove a preexisting container; no name fallback.'
   local: '8 cache tests/YAML/diff PASS; frozen delta independent review and hosted actualRedis/full gates remain required. Prior actual114029064733 still running and deliberately retained for expiry diagnosis before the next push.'
   next: 'Close both review findings on frozen issuedID repair; preserve current actual proof until terminal, then push and own exact gates. Do not merge until final all8 PR/main and current independent approval.'
+
+
+group_contracts_delivered_276:
+  pr: 282
+  head: 5e04cfabc24059b3bb0cae5121625ede14ed2a79
+  reviews: [6088762933,6088892125,6089109985,6089491503]
+  pr_build: 37993213419
+  pr_governance: 37993213376
+  pr_actual: 114032470855
+  pr_quality: 114036373283
+  main: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
+  main_build: 37994392711
+  main_governance: 37994392804
+  main_actual: 114036573516
+  main_quality: 114040168330
+  state: done
+  result: '276 CLOSED/282 MERGED with exact finalPR/main all8 and retained actualSQL/Redis/Chromium PASS. Typed contracts and unverified qualification registry only; actual277-279 source/brain/notes/reports and full233 remain. Four auth counterexamples independently closed at061; store timing/HTTP ongoing and actual277 runtime unproved.'

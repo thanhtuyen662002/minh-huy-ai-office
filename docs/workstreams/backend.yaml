@@ -4,14 +4,14 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: b124c0f9f33abfa9c3ec1b6485180f131df9725c
+head: 06125d38cb2ce88c183be7fc06c63f8d56fd0cf6
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
-last_completed_issue: 272
-last_merged_pr: 274
-last_merge_commit: 09b7d36b23b554fcaa2b3534ddc6faa166cac651
+last_completed_issue: 276
+last_merged_pr: 282
+last_merge_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 submission_contract_checkpoint:
   predecessor: 6ee5a7b17057f19803285f8b359b62224183e573
   predecessor_build: 37906607394
@@ -722,3 +722,22 @@ group_ingress_retained_ci_diagnostic:
   result: 'Six Build prerequisites/Gov PASS; all native SQL/queued/receipt/permission/rollback controls and retained provider/member/history/session-expiry browser PASS. Browser terminal at broad submission-real-core202-headers; proxy safe refusal categories claim/response/authority only. No child all8 or new group runtime acceptance. Same283 adds fixed phase-only diagnostics to existing realCore202 headers/body loss flow, preserving all assertions/timeouts/effects without private diagnostics.'
   local: '6 owned browser guards and Node24 syntax/diff PASS. Auth immutable-input/fresh-time/synthetic-Live repairs d731 local934 Persistence PASS; independent counterexample closure remains. No retry classified as infrastructure for this real terminal assertion failure.'
   next: 'Push same277/283 checkpoint, own exactCI and diagnose fixed202 substage immediately; fix real cause on samePR. Continue group API/SQL/listener acceptance and current review. Parent282 merged4cf after5e all8; exactmain gates remain active.'
+
+
+group_contracts_delivered_276:
+  approved_shipping: ee30ad80680c1cd457cb5b3518111efaa17575ae
+  final_pr: 5e04cfabc24059b3bb0cae5121625ede14ed2a79
+  reviews: [6088762933,6088892125,6089109985,6089491503]
+  pr_build: 37993213419
+  pr_governance: 37993213376
+  pr_actual: 114032470855
+  pr_quality: 114036373283
+  main: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
+  main_build: 37994392711
+  main_governance: 37994392804
+  main_actual: 114036573516
+  main_quality: 114040168330
+  delivery_receipt: 6089818956
+  state: done
+  result: '276 CLOSED/282 MERGED2026-10-09T21:35:43Z after frozen full contracts/qualification and final bounded integration/CI reviews; exact finalPR/main all8 PASS. All retained nativeSQL/queued current authority/receipt recovery and actual Redis expiry/private clear/provider reauthentication/realCore202 header-body loss/one-effect Chromium PASS. Contracts and honest unverified qualification registry delivered; no actual277-279 source/brain/notes/sends or live qualification claimed.'
+  next: 'Acceptedmain4cf merged into277; preserve child lease and its own auth/store/diagnostic checkpoints, retarget283 to main. Finish timing-review repair/service API/actualSQL/listener/recovery/private reads and current exactCI. Full233/62 remains active;239Windows/signingDraft untouched.'
