@@ -19,6 +19,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<DataSourceRegistrationAuditRecord> DataSourceRegistrationAudits => Set<DataSourceRegistrationAuditRecord>();
     public DbSet<DataSourceFailoverOperationPolicyRecord> DataSourceFailoverOperationPolicies => Set<DataSourceFailoverOperationPolicyRecord>();
     public DbSet<TaskRecord> Tasks => Set<TaskRecord>();
+    public DbSet<TaskSubmissionIntentRecord> TaskSubmissionIntents => Set<TaskSubmissionIntentRecord>();
     public DbSet<TaskStepRecord> TaskSteps => Set<TaskStepRecord>();
     public DbSet<TaskDependencyRecord> TaskDependencies => Set<TaskDependencyRecord>();
     public DbSet<TaskEventRecord> TaskEvents => Set<TaskEventRecord>();
@@ -33,6 +34,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
+        modelBuilder.ConfigureTaskSubmissionIntents();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));

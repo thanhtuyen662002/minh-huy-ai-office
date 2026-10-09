@@ -34,3 +34,15 @@ Paginated GitHub branches and up to400 merged PR heads were refreshed against ac
 | `codex/270-task-history` | `70465e72cee05459dc541cef1a1fa836a6603ba5` | PR271 owns issue270; all8 exact Build37900176803/Gov37900176836/actual113720632034/quality113723223489 PASS, including new native SQL and two-user/two-company shipping Chromium. Root inspected all3 current sanitized images11602387209. Full frozen implementation/security/runtime/all3 images independently APPROVED6077185197; final documentation review/exact PR-main delivery remain. |
 
 Queued272 depends on accepted270 main and has no competing implementation lease. Preserve historical refs; new review and compatibility evidence are required for any future use. Full product233 remains active.
+
+## Latest candidate and lease snapshot
+
+Observed2026-10-09 against accepted main9155b987d028ad097e36b5cfebdc2ee8efe6fcb5. The earlier branch counts remain dated historical evidence. PR271 subsequently delivered atmain420 with reviews6077185197/6077227682 and exact PR/main all8; docs-only PR280 delivered atmain9155 with independent6085798484 and exact PR/main all8. No275-279 implementation was delivered by that plan.
+
+| Current PR | Observed HEAD | Scope and next gate |
+| --- | --- | --- |
+| 274 / codex/272-task-submission-recovery | 276885809cd6a13fd31c0201efe159c669fec8fe | Full frozen shipping/security/runtime/all4images independently APPROVED6087833026; exact Build37978945377/Gov37978945389/all8/actual113984241483/quality113988410306 PASS. All new native/Chromium recovery and authority controls passed; artifact11641216062 inspected by root/reviewer. Final documentation review/exact PR gates then merge/main closure remain. |
+| 239 / lead/238-windows-installer | 22f2866e5e4f95589d81484636ad665c5b4b4a6a | Internally approved/all9; keep Draft for actual clean Windows/UAC/reboot/retention/repair/backup/signing acceptance. |
+| 281 / lead/275-auto-it-routing-correction | 0df0c7df4dfe017dbdeb0039c8e49ceb618919ca | Metadata/checks observed only; docs-only candidate has no independent content review or integration approval from this run. Content review is deferred until current274 delivery and user-requested attachment reading. No auto-IT feature delivery is inferred. |
+
+User sequence remains current274 merge/main verification, then reading the attached second-brain document and tracked integration. Full233/customer/production acceptance remains active. No archival ref was deleted, force updated or merged.

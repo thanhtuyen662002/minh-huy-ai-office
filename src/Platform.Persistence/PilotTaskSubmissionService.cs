@@ -1,7 +1,5 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
@@ -18,9 +16,10 @@ public sealed class PilotTaskSubmissionService
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly PlatformDbContext dbContext;
-    private readonly IAuthorizationDirectory authorizationDirectory;
     private readonly TimeProvider timeProvider;
-    private readonly DataSourceSecretBindingService bindings;
+    private readonly TaskSubmissionAdmission admission;
+    private readonly IAuthorizationDirectory directory;
+    private readonly DataSourceSecretBindingService sourceBindings;
 
     public PilotTaskSubmissionService(
         PlatformDbContext dbContext,
@@ -29,9 +28,11 @@ public sealed class PilotTaskSubmissionService
         DataSourceSecretBindingService? bindingService = null)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.authorizationDirectory = authorizationDirectory ?? throw new ArgumentNullException(nameof(authorizationDirectory));
+        ArgumentNullException.ThrowIfNull(authorizationDirectory);
         this.timeProvider = timeProvider ?? TimeProvider.System;
-        bindings = bindingService ?? new(dbContext, authorizationDirectory);
+        directory = authorizationDirectory;
+        sourceBindings = bindingService ?? new(dbContext, authorizationDirectory);
+        admission = new(dbContext, authorizationDirectory, sourceBindings);
     }
 
     /// <summary>
@@ -78,27 +79,41 @@ public sealed class PilotTaskSubmissionService
         ArgumentNullException.ThrowIfNull(request);
         request.Validate();
 
-        var authorized = await authorizationDirectory.ResolveAsync(authority, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new UnauthorizedAccessException("An active server-derived company membership is required.");
+        if (TaskHistoryMetadata.Decode(null, request.Question, CustomerPilotTaskRequest.MaximumQuestionLength * 2) is null)
+            throw new ArgumentException("Question must contain valid Unicode scalar text.", nameof(request));
 
+        if (dbContext.ChangeTracker.HasChanges()) throw new InvalidOperationException("Task submission is unavailable.");
+        await admission.RequireAuthorityAsync(authority, cancellationToken);
+        PilotTaskSubmissionAccepted accepted;
+        await using (var transaction = await DataSourceRegistrationTransaction.BeginAsync(dbContext, cancellationToken))
+        {
+            await admission.LockCompanyAsync(authority, cancellationToken);
+            await new TaskSubmissionIntentService(dbContext, directory, timeProvider, sourceBindings)
+                .RequireLegacyCompatibilityAsync(authority, request, cancellationToken);
+            accepted = await SubmitWithinTransactionAsync(authority, request, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        // A denial here may follow a real commit. Callers must reconcile the
+        // original operation; it cannot prove that the task was never accepted.
+        await admission.RequireExecutionAsync(authority, request.DataSourceId, cancellationToken);
+        return accepted;
+    }
 
-        var trustedAuthority = authorized.Context;
+    internal async Task<PilotTaskSubmissionAccepted> SubmitWithinTransactionAsync(AuthorizationContext trustedAuthority,
+        PilotTaskSubmissionRequest request, CancellationToken cancellationToken)
+    {
+        if (dbContext.Database.IsRelational() && dbContext.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Task submission requires a transaction.");
+        request.Validate();
+        await admission.RequireExecutionAsync(trustedAuthority, request.DataSourceId, cancellationToken);
         var taskId = PilotTaskIdentity.ForTask(trustedAuthority, request.IdempotencyKey);
-
-        // The deterministic identity makes an HTTP retry a normal read even when the original
-        // request has already reached the database. The durable event below is still compared so
-        // reusing a key with different business input fails closed.
-        var existing = await FindTaskAsync(trustedAuthority, taskId, cancellationToken).ConfigureAwait(false);
+        var existing = await FindTaskAsync(trustedAuthority, taskId, cancellationToken);
         if (existing is not null)
         {
-            await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken);
-            return await ReadExistingAsync(trustedAuthority, existing, request, cancellationToken)
-                .ConfigureAwait(false);
+            var replay = await ReadExistingAsync(trustedAuthority, existing, request, cancellationToken);
+            await admission.RequireExecutionAsync(trustedAuthority, request.DataSourceId, cancellationToken);
+            return replay;
         }
-
-        await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken)
-            .ConfigureAwait(false);
 
         var nowUtc = timeProvider.GetUtcNow();
         var stepId = PilotTaskIdentity.ForStep(taskId);
@@ -158,60 +173,21 @@ public sealed class PilotTaskSubmissionService
             OccurredAtUtc = nowUtc
         };
 
-        // Keep the entire task graph and outbox item in one database transaction. A worker can
-        // safely publish only after the transaction commits; a failed request leaves no partial
-        // task, step or dispatch for a later consumer to interpret.
-        await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        // The caller owns the single serializable transaction and company lock.
+        // There is no dispatch publication until the complete graph commits.
         try
         {
-            // Re-check after acquiring the transaction. A concurrent request with the same
-            // deterministic identity may have committed between the first read and this point.
-            existing = await FindTaskAsync(trustedAuthority, taskId, cancellationToken).ConfigureAwait(false);
-            if (existing is not null)
-            {
-                await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken);
-                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-                return await ReadExistingAsync(trustedAuthority, existing, request, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
+            await admission.RequireExecutionAsync(trustedAuthority, request.DataSourceId, cancellationToken);
             dbContext.Tasks.Add(task);
             dbContext.TaskSteps.Add(step);
             dbContext.TaskStepExecutions.Add(execution);
             dbContext.TaskDispatches.Add(dispatch);
             dbContext.TaskEvents.Add(durableEvent);
-            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (DbUpdateException exception)
-        {
-            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
-            DetachUncommittedGraph(task, step, execution, dispatch, durableEvent);
-
-            // Two requests with the same authority and idempotency key can pass the initial
-            // read concurrently. The database key is the final fence; once the losing
-            // transaction rolls back, resolve the winner and apply the same durable replay
-            // comparison instead of surfacing a transient duplicate-key 500.
-            var concurrent = await FindTaskAsync(trustedAuthority, taskId, cancellationToken)
-                .ConfigureAwait(false);
-            if (concurrent is not null)
-            {
-                await ValidateDataSourceAsync(trustedAuthority, request.DataSourceId, cancellationToken);
-                return await ReadExistingAsync(
-                        trustedAuthority,
-                        concurrent,
-                        request,
-                        cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
-            throw new InvalidOperationException(
-                "The pilot task could not be persisted.",
-                exception);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+            DetachUncommittedGraph(task, step, execution, dispatch, durableEvent);
             throw;
         }
 
@@ -247,6 +223,7 @@ public sealed class PilotTaskSubmissionService
         Guid taskId,
         CancellationToken cancellationToken) =>
         await dbContext.Tasks
+            .AsNoTracking()
             .SingleOrDefaultAsync(
                 task => task.TenantId == authority.TenantId
                     && task.CompanyId == authority.CompanyId
@@ -254,7 +231,7 @@ public sealed class PilotTaskSubmissionService
                 cancellationToken)
             .ConfigureAwait(false);
 
-    private async Task<PilotTaskSubmissionAccepted> ReadExistingAsync(
+    internal async Task<PilotTaskSubmissionAccepted> ReadExistingAsync(
         AuthorizationContext authority,
         TaskRecord task,
         PilotTaskSubmissionRequest request,
@@ -266,38 +243,16 @@ public sealed class PilotTaskSubmissionService
         }
 
         var expectedStepId = PilotTaskIdentity.ForStep(task.Id);
-        var durableEvent = await dbContext.TaskEvents
-            .AsNoTracking()
-            .SingleOrDefaultAsync(
-                item => item.TenantId == authority.TenantId
-                    && item.CompanyId == authority.CompanyId
-                    && item.TaskId == task.Id
-                    && item.StepId == expectedStepId
-                    && item.Sequence == 1
-                    && item.EventType == PilotTaskRequestEvent.EventType,
-                cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("The durable pilot task request event is missing.");
-
-        PilotTaskRequestEvent persisted;
-        try
-        {
-            persisted = JsonSerializer.Deserialize<PilotTaskRequestEvent>(durableEvent.PayloadJson, JsonOptions)
-                ?? throw new JsonException("The durable pilot task request event is empty.");
-            persisted.Validate();
-        }
-        catch (JsonException exception)
-        {
-            throw new InvalidOperationException("The durable pilot task request event is malformed.", exception);
-        }
-
-        if (!string.Equals(persisted.IdempotencyKey, request.IdempotencyKey, StringComparison.Ordinal)
-            || persisted.DataSourceId != request.DataSourceId
-            || !string.Equals(persisted.Question, request.Question, StringComparison.Ordinal)
-            || persisted.MaxAttempts != request.MaxAttempts)
-        {
+        if (!Enum.IsDefined(task.Status) || task.CreatedAtUtc == default || task.UpdatedAtUtc < task.CreatedAtUtc
+            || !await dbContext.TaskSteps.AsNoTracking().AnyAsync(row => row.TenantId == authority.TenantId
+                && row.CompanyId == authority.CompanyId && row.TaskId == task.Id && row.Id == expectedStepId, cancellationToken)
+            || !await dbContext.TaskStepExecutions.AsNoTracking().AnyAsync(row => row.TenantId == authority.TenantId
+                && row.CompanyId == authority.CompanyId && row.TaskId == task.Id && row.StepId == expectedStepId, cancellationToken))
+            throw new InvalidOperationException("The durable pilot task graph is unavailable.");
+        var persisted = await PilotTaskStoredRequest.ReadAsync(dbContext, authority, task.Id, cancellationToken)
+            ?? throw new InvalidOperationException("The durable pilot task request event is malformed or missing.");
+        if (!PilotTaskStoredRequest.Matches(persisted, request))
             throw new InvalidOperationException("The idempotency key was reused with conflicting pilot task input.");
-        }
 
         var dispatch = await dbContext.TaskDispatches
             .AsNoTracking()
@@ -310,6 +265,12 @@ public sealed class PilotTaskSubmissionService
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException("The durable pilot task dispatch is missing.");
 
+        var firstMessage = PilotTaskIdentity.ForMessage(task.Id, expectedStepId);
+        if (!Enum.IsDefined(dispatch.State) || !await dbContext.TaskDispatches.AsNoTracking().AnyAsync(row =>
+            row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId && row.TaskId == task.Id
+            && row.StepId == expectedStepId && row.Attempt == 1 && row.MessageId == firstMessage, cancellationToken))
+            throw new InvalidOperationException("The durable pilot task dispatch is unavailable.");
+
         return new PilotTaskSubmissionAccepted(
             task.Id,
             expectedStepId,
@@ -319,76 +280,6 @@ public sealed class PilotTaskSubmissionService
             task.CreatedAtUtc);
     }
 
-    private async Task ValidateDataSourceAsync(
-        AuthorizationContext authority,
-        Guid dataSourceId,
-        CancellationToken cancellationToken)
-    {
-        await bindings.RequireSourceAsync(authority, dataSourceId, readOnly: true, cancellationToken);
-        var dataSource = await dbContext.DataSources
-            .AsNoTracking()
-            .SingleOrDefaultAsync(
-                item => item.TenantId == authority.TenantId
-                    && item.CompanyId == authority.CompanyId
-                    && item.Id == dataSourceId,
-                cancellationToken)
-            .ConfigureAwait(false);
-
-        // Deliberately use one generic failure for missing, cross-company and disabled sources so
-        // a caller cannot turn this endpoint into a data-source existence oracle.
-        if (dataSource is null
-            || !dataSource.IsEnabled
-            || !dataSource.AllowRead
-            || dataSource.MaxConcurrency is < 1 or > 1024
-            || !SecretReference.TryParse(dataSource.ConnectionSecretReference, out _))
-        {
-            throw new UnauthorizedAccessException("The requested data source is not available for read-only pilot execution.");
-        }
-    }
-
-    private async ValueTask<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-    {
-        if (dbContext.Database.IsRelational())
-        {
-            return await dbContext.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        return new NoopDbContextTransaction();
-    }
-
-    /// <summary>
-    /// EF Core's in-memory provider has no transaction implementation. Tests still exercise the
-    /// complete graph atomically from the service's perspective without weakening the SQL Server
-    /// production path, which always uses a real transaction.
-    /// </summary>
-    private sealed class NoopDbContextTransaction : IDbContextTransaction
-    {
-        public Guid TransactionId { get; } = Guid.NewGuid();
-
-        public void Dispose() { }
-
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-
-        public void Commit() { }
-
-        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public void Rollback() { }
-
-        public Task RollbackAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task CreateSavepointAsync(string name, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task RollbackToSavepointAsync(string name, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task ReleaseSavepointAsync(string name, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public void CreateSavepoint(string name) { }
-
-        public void RollbackToSavepoint(string name) { }
-
-        public void ReleaseSavepoint(string name) { }
-    }
 }
 
 /// <summary>

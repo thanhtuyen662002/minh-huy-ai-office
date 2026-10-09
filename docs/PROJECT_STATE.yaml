@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/270-task-history
-current_pr: 271
-current_target_head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
-last_verified_commit: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+current_branch: codex/272-task-submission-recovery
+current_pr: 274
+current_target_head: 276885809cd6a13fd31c0201efe159c669fec8fe
+last_verified_commit: 276885809cd6a13fd31c0201efe159c669fec8fe
 
 critical_paths:
   backend:
-    issue: 270
-    pr: 271
-    branch: codex/270-task-history
-    head: 70465e72cee05459dc541cef1a1fa836a6603ba5
+    issue: 272
+    pr: 274
+    branch: codex/272-task-submission-recovery
+    head: 276885809cd6a13fd31c0201efe159c669fec8fe
     state: in_progress
-    next: 'Frozen704 full270 security/runtime/all3images APPROVED6077185197 with exactall8PASS. Finaldocsreview/renewedexactCI then merge-mainclosure;272 depends onaccepted270main.'
+    next: '272/274 candidate276 all8 Build37978945377/Gov37978945389/actual113984241483/quality113988410306 PASS. Allinitialnative/ALL15 queued/four finalprivate reads and realCore202loss/FEFFprepare/newSID/twoowners-companies/lateprivate/revoke-restored Chromium PASS; all4images11641216062 inspected. FULL frozen shipping/security/runtime/images APPROVED6087833026. Close final6docsreview/exactfinalPR, merge andmain; thenreadsecond-brainattachment. Full233/customer-production/239Windows-signing remain.'
 
   erp_data:
     issue: 264
@@ -35,6 +35,8 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR/main gates. Main Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
+  - 'PR271/issue270 deliveredmain420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca with full frozen reviews6077185197/6077227682 and exactPR/main Build37905169739/Gov37905169543/all8/actual113736786869/quality113739461629 PASS. All3 sanitized main images11604905419 inspected.'
   - 'PR269 / issue268 deliveredmain3fcfa9a8541491c6a4d349bc31fd02d87d12284e with full frozen review6073002478/final6073139900 and exact PR/main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 all8 PASS. Main sanitized artifact11592885599 visually inspected.'
   - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
@@ -76,7 +78,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Finalize271 reviewed docs/renewed exactCI then merge/exactmain: frozen704 full270 security-runtime-all3 images APPROVED6077185197 andall8currentPASS. Preserve approvedinstaller22f239DraftexternalWindows-signing; integrateaccepted270onlyaftermainclosure.272 queued next; full233/customer/production remain.'
+next_action: 'Finalize272/274 final6docsreview/exactfinalPR gates after fullfrozen276 approval6087833026/actualSQL-Chromium-all4imagesPASS; merge andcloseexactmain. Thenread userattachment CODEX_AI_OFFICE_AUTO_IT_PROMPT_V2.md in Downloads andimplementsecond-brainintegration; explicitusersequence, attachmentnotreadyet.275-279 docs-only/273queued/239actualWindows-signingDraft. Full62/customer-production remain.'
 
 
 blocked_by:
@@ -464,3 +466,22 @@ task_history_704_actual_verified:
   result: 'All8 exact gates/Governance PASS. ALL native stored-byte/max64000/corrupt metadata/owner-company/pagination/canonicalempty/natively queued3finalauthority/noeffects SQL controls PASS. Shipping two CodeS256 users, defaultviewer then actualprovider archiveadmin switch, reciprocal404, completed/pending/failed/detail/uppercaseGUID/reload/newSID, held successful late-detail company fence and external member revoke/private clear/restored recovery/no-extra-task-dispatch-charge PASS. Retained stack/security/Chromium PASS.'
   review: 'Independent full prior shipping/static has no remaining concrete finding; GUID P2 CLOSED, frozen704 fixture/pagination/docs delta no blocker. Independent78 web including4 own controls/5Node/6Python/typecheck PASS. Root inspected all3 current images: readable/reachable/unclipped/no secrets. Full frozen current implementation/security/runtime/all3 images independently APPROVED, receipt6077185197. Final documentation delta review and exact final PR/main closure remain.'
   next: 'Finalize durable docs with independent frozen delta review and exact final CI, then approved PR/main closure. Preserve separate239Draft for actual Windows/signing;272 depends on accepted270main. Full233 remains active.'
+
+
+task_history_delivered_271:
+  approved_shipping: 70465e72cee05459dc541cef1a1fa836a6603ba5
+  final_pr: a6959144edc9625db7a1d96f801c9740094f97bc
+  reviews: [6077185197, 6077227682]
+  pr_build: 37904275976
+  pr_governance: 37904276005
+  pr_actual: 113733861162
+  pr_quality: 113736329253
+  main: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+  main_build: 37905169739
+  main_governance: 37905169543
+  main_actual: 113736786869
+  main_quality: 113739461629
+  main_artifact: 11604905419
+  artifact_bytes: 261799
+  state: done
+  result: '270 CLOSED/271 MERGED2026-10-09T08:28:30Z. Full frozen shipping/security/runtime/all3images and final5docs independently APPROVED. Exact PR/main all8 gates PASS, all new/retained SQL/OIDC/twoCodeS256Chromium storedbyte/maxUnicode/nativequeued3authority/ownercompany/reload-newSID/lateprivatebody/revoke-restored/noextra-task-dispatch-charge controls PASS. Root inspected all3 current main images readable/reachable/unclipped/no secrets. No270 acceptance remains; full233 remains.'
