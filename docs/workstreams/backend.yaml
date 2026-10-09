@@ -1,12 +1,12 @@
 workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 276
-current_pr: 282
-current_branch: codex/276-group-routing-contracts
-head: ee30ad80680c1cd457cb5b3518111efaa17575ae
+current_issue: 277
+current_pr: null
+current_branch: codex/277-group-durable-ingress
+head: 06fbacdc3704bc643548d7b3c1fed9a18fca51fe
 state: in_progress
-lease_owner: root-backend-276
+lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
 last_completed_issue: 272
@@ -62,7 +62,7 @@ submission_workspace_checkpoint:
   predecessor_build: 37932277918
   predecessor_governance: 37932277840
   predecessor_actual: 113825656769
-  result: 'Node24 repaired predecessor web and six other prerequisites/Governance PASS; actual stack remains active at checkpoint preparation. Composer is wired to immutable prepare/explicit-submit, honest unknown/retry/reconcile/new-operation warning, stable polling run ownership, and private reset fences. The CÃ´ng viá»‡c surface now restores bounded owner intents through fresh GET/detail/hash/final-authority checks; selecting a prepared request never sends it. Accepted/expired/unavailable states are truthful. Mobile archive access is available; private input never enters browser storage.'
+  result: 'Node24 repaired predecessor web and six other prerequisites/Governance PASS; actual stack remains active at checkpoint preparation. Composer is wired to immutable prepare/explicit-submit, honest unknown/retry/reconcile/new-operation warning, stable polling run ownership, and private reset fences. The CÃƒÂ´ng viÃ¡Â»â€¡c surface now restores bounded owner intents through fresh GET/detail/hash/final-authority checks; selecting a prepared request never sends it. Accepted/expired/unavailable states are truthful. Mobile archive access is available; private input never enters browser storage.'
   local: 'Full actual Node24 web suite1246 PASS/20 realRedis skipped locally; hosted Redis gate remains required.39 hook,27 recovery-panel and9 actual-workspace/session-hook controls PASS. Retained51 session/privacy/history/race controls PASS, including new prepare and submit pre/post validation fences. Type-check, JS syntax and4 browser guard controls PASS. Native Request/jsdom AbortSignal regression remains fixed without weakening bounds or tests.'
   proof_delta: 'Retained actual OIDC browser submission waits now observe the shipping intent submit path; legacy API compatibility probes remain. New intent actual nativeSQL/concurrent quota/revocation/append-only and actual Core202 lost-response/browser recovery acceptance are still required.'
   next: 'Push same274 tested UI checkpoint and close exact CI, add mandatory owned native intent SQL and real committed Core header/body loss/worker/reload/newSID/twoCodeS256/late-body proof, inspect images and obtain full frozen independent review before PR/main delivery.'
@@ -145,7 +145,7 @@ submission_actual_application_resource_observation:
   quality: 113965481677
   result: 'All six prerequisites/Gov PASS; full1287.NET/1276web including realRedis PASS. All initialnative controls plus FEFF roundtrips/legacy PASS. Terminal at queued-lock observer: sanitized actualLCK_M_X|blocker1|APPLICATION|X|WAIT|callerText0 proves actual block; nested system procedure text lacks caller name. No queued revocation/new browser acceptance yet.'
   repair: 'Match exact runtime waiting X lock against operator granted transaction X lock by resource type/database/exactresource description plus sameblocking session/LCK_M_X. Replace brittle caller-text match with direct resource causality, retain all revocation/noeffects/restoredpositive assertions. Bounded diagnostic reports engine enums/booleans only.'
-  review: 'Independent full shipping/static frozena843 APPROVED and originalFEFF realHTTP503â†’200 repro CLOSED; receipt6086781182.106web/26Contracts/Core1/repro/10Python/6Node/YAML independentlyPASS. Runtime/fourimages and laterproofdelta remain mandatory, not approved.'
+  review: 'Independent full shipping/static frozena843 APPROVED and originalFEFF realHTTP503Ã¢â€ â€™200 repro CLOSED; receipt6086781182.106web/26Contracts/Core1/repro/10Python/6Node/YAML independentlyPASS. Runtime/fourimages and laterproofdelta remain mandatory, not approved.'
 submission_valid_read_grant_revocation_fixture:
   predecessor: b3d0cc1a8237b83aa5a870ae2a2eeeecb2c204cf
   build: 37973684669
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: '276/282 full frozen ee30 review6088762933 APPROVED with475 tests; exact ee30 Build37986918810/Gov37986918797/all8/actual114011097674/quality114014463755 PASS. Accepted281/main1b0 all8 verified and integrated locally. Final documentation/integration review then refreshed final PR/main gates. Immediately continue277 SQL source/queue,278 actual SQL brain/automatic notes and279 SQL-driven IT-only reporting. Full62 active;239 Draft.'
+next_action: 'Explicit stacked277 from282/06fb; parent final review/CI remains root-owned and child cannot merge first. Build scoped group SQL authority, immutable source revisions and atomic committed-order ingress/outbox; then fenced listener/encrypted spool, service ingress, broker restart and authorized private inbox read/UI.276 contracts are executable; no277 runtime acceptance yet. Preserve owner-task privacy and no-click downstream278/279.'
 
 group_contracts_checkpoint:
   initial_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
@@ -522,7 +522,7 @@ task_history_ui_checkpoint:
   prior_governance: 37879046019
   prior_actual: 113654483822
   prior_result: 'Migration BOM format defect at88ef Build37878689371/dotnet113653087126 corrected on same271; generated migration now required UTF8 without BOM and tracked LF, focused format PASS.3301.NET/migration/web/Compose/FE/deployment PASS, actual still live. No actual history acceptance yet.'
-  local: '70 new parser/issued-SID real-helper BFF/panel/workspace tests PASS plus40 retained session lifecycle/races PASS at previous69-new delta; typecheck PASS. New BFF requires exact typed scoped JSON/strict UTF8, drops Core private error diagnostics, final shared SID/body/deadline fence retained. Supported owner CÃ´ng viec list/detail/refresh/paging and remount recovery; completed-but-unavailable/connection/pending/failed states truthful. Reads are GET-only. Company/user/generation/operation serial fence plus local and actual-hook composed aborts prevent late old-session repaint; logout/fresh validation clear private UI.'
+  local: '70 new parser/issued-SID real-helper BFF/panel/workspace tests PASS plus40 retained session lifecycle/races PASS at previous69-new delta; typecheck PASS. New BFF requires exact typed scoped JSON/strict UTF8, drops Core private error diagnostics, final shared SID/body/deadline fence retained. Supported owner CÃƒÂ´ng viec list/detail/refresh/paging and remount recovery; completed-but-unavailable/connection/pending/failed states truthful. Reads are GET-only. Company/user/generation/operation serial fence plus local and actual-hook composed aborts prevent late old-session repaint; logout/fresh validation clear private UI.'
   remaining: 'Mandatory new owned SQL execution, native queued final-authority revocation and restored positives, stored raw Unicode/unknown metadata, two-provider-user/two-company actual Chromium reload/new-sign-in recovery and no-extra-task/dispatch/charge fingerprints. Full frozen independent review and exact final PR/main CI. Not ready for merge; full233 remains active.'
 
 task_history_sql_proof_checkpoint:
@@ -632,3 +632,10 @@ task_history_delivered_271:
   artifact_bytes: 261799
   state: done
   result: '270 CLOSED/271 MERGED2026-10-09T08:28:30Z. Full frozen shipping/security/runtime/all3images and final5docs independently APPROVED. Exact PR/main all8 gates PASS, all new/retained SQL/OIDC/twoCodeS256Chromium storedbyte/maxUnicode/nativequeued3authority/ownercompany/reload-newSID/lateprivatebody/revoke-restored/noextra-task-dispatch-charge controls PASS. Root inspected all3 current main images readable/reachable/unclipped/no secrets. No270 acceptance remains; full233 remains.'
+
+
+group_ingress_277:
+  stacked_on_pr: 282
+  stacked_on_head: 06fbacdc3704bc643548d7b3c1fed9a18fca51fe
+  state: claimed
+  result: 'Owns277 only; no competing Draft. Additive SQL model/authority first, then runtime call path and actual owned SQL/queue/session/browser proof. No group memory/feature delivery from this lease checkpoint.'
