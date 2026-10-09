@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: 88c890ca07c724f5dacee4f358cb6467a821108d
+head: 766a7876807d8114970073b4035ad4448c814e28
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -80,7 +80,20 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '272/274 composer and bounded owner recovery integrated; actual Node24 fullweb1246 PASS/20 localRedis skipped, typecheck/4guards PASS. Push UI checkpoint and own exact gates; add mandatory new nativeSQL and realCore committedheader-body loss/onegraph-worker-noextracharge/twoCodeS256Chromium proof/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
+submission_initial_native_proof_checkpoint:
+  verified_ui: 4a3f7d7efda1513b39252da4f346f769664f7f81
+  build: 37933006487
+  governance: 37933006445
+  actual: 113828701575
+  quality: 113831464753
+  artifact: 11617472248
+  artifact_bytes: 284906
+  result: 'Exact UI all8 PASS including retained actual SQL/worker/OIDC/twoCodeS256Chromium using the new shipping intent-submit path; root visually inspected all3 current images readable/reachable/unclipped/no secrets. New native proof adds immutable Unicode/fixed TTL/no-effects, concurrent same-op independent identities/one worker attempt, every-column append-only/real column escalation refusal, raw stored corruption, expired-vs-committed recovery, actual outbox rollback, two-provider owner/company isolation, concurrent99/100/101 quota and only validated acceptance exclusion.8 local guard/vector/transport controls and Python syntax/diff PASS; new native proof has not executed on hosted SQL yet.'
+  accepted_main: 9155b987d028ad097e36b5cfebdc2ee8efe6fcb5
+  integrated_at: 766a7876807d8114970073b4035ad4448c814e28
+  main_ci: 'Docs280 independent scoped review6085798484 and all8 exact PR PASS; main Build37965672759 actual113939282835 pending/Gov37965672896 PASS. No executable shipping change or275-279 completion. Existing272/239 leases preserved.'
+  remaining: 'Execute and fix new native proof on exact same274 CI. Add indirect SQL escalation, actually queued new/replay authority loss, reserved legacy conflicts and realCore committed202/prepare reply-loss plus shipping recovery/reload/newSID/twoCodeS256/late-body/no-extra-effects proof. Full frozen independent review and exactPR-main remain mandatory.'
+next_action: 'Push native-proof checkpoint and close exact274/main9155 CI; fix all real failures on same274. Continue mandatory queued/indirect/realCore202/Chromium acceptance and full frozen review before readiness/merge.275-279 docs priority for next non-competing capacity;273 queued;239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

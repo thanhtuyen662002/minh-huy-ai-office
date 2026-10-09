@@ -15,6 +15,9 @@ administrator_spec.loader.exec_module(administrator_smoke)
 history_spec = importlib.util.spec_from_file_location("history_smoke", Path(__file__).with_name("smoke-task-history.py"))
 history_smoke = importlib.util.module_from_spec(history_spec)
 history_spec.loader.exec_module(history_smoke)
+submission_spec = importlib.util.spec_from_file_location("submission_smoke", Path(__file__).with_name("smoke-task-submission.py"))
+submission_smoke = importlib.util.module_from_spec(submission_spec)
+submission_spec.loader.exec_module(submission_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
@@ -72,6 +75,29 @@ class OwnedStackGuardTests(unittest.TestCase):
         with patch.object(history_smoke.subprocess, "run", return_value=SimpleNamespace(returncode=1, stdout="Msg 207, Level 16 PRIVATE_DIAGNOSTIC", stderr="PRIVATE_TOKEN")):
             with self.assertRaisesRegex(RuntimeError, r"^Owned archive SQL fixture command failed \(SQL message 207\)\.$"):
                 history_smoke._owned_sql_stdin(["docker", "compose"], {}, query)
+
+    def test_submission_proof_refuses_unowned_before_resources(self):
+        cases = [(self.owned, {"CI": "false"}, "http://127.0.0.1:8080", "http://127.0.0.1:8081"),
+            (self.owned, {"GITHUB_ACTIONS": "false"}, "http://127.0.0.1:8080", "http://127.0.0.1:8081"),
+            (self.owned, {"RUNNER_TEMP": ""}, "http://127.0.0.1:8080", "http://127.0.0.1:8081"),
+            (self.root, {}, "http://127.0.0.1:8080", "http://127.0.0.1:8081"),
+            (self.owned / "nested", {}, "http://127.0.0.1:8080", "http://127.0.0.1:8081"),
+            (self.owned, {}, "https://customer.example.invalid", "http://127.0.0.1:8081"),
+            (self.owned, {}, "http://127.0.0.1:8080", "https://customer.example.invalid")]
+        for directory, override, api, identity in cases:
+            with self.subTest(directory=str(directory), override=override, api=api, identity=identity), patch.dict(os.environ, {**self.environment, **override}, clear=True):
+                with self.assertRaisesRegex(RuntimeError, "^Submission proof requires the owned disposable GitHub CI fixture\\.$"):
+                    submission_smoke.verify(directory=directory, manifest=None, compose=None, environment=None,
+                        http=None, sql=None, runtime_statement=None, identity=identity, api=api, auth=None)
+
+    def test_submission_fingerprint_independent_python_vectors_and_scalar_rejection(self):
+        source = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+        for question, expected in [("Tồn kho 😀 �", "6354CD8F9D07F489B9F1B213CE89B4FE5EF4016DFC44329AE740B0C39BDE0656"),
+            ("ồ", "653C057F6AFF5A8FF5FEAFA8B8CFAABAE942E33F0605BC03D14876C53B223DE5"),
+            ("o\u0302\u0300", "7176B4A97A12F1F815F8133B9E33C7D021885765A6A5D560976A42104F0ED186")]:
+            self.assertEqual(expected, submission_smoke.input_fingerprint(source, question))
+        with self.assertRaises(UnicodeEncodeError):
+            submission_smoke.input_fingerprint(source, "bad\ud800")
 
 
 if __name__ == "__main__":

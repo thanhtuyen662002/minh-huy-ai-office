@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: 88c890ca07c724f5dacee4f358cb6467a821108d
-last_verified_commit: d4f53451aa9833449d2cd9b74118d77918bb6280
+current_target_head: 766a7876807d8114970073b4035ad4448c814e28
+last_verified_commit: 4a3f7d7efda1513b39252da4f346f769664f7f81
 
 critical_paths:
   backend:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: 88c890ca07c724f5dacee4f358cb6467a821108d
+    head: 766a7876807d8114970073b4035ad4448c814e28
     state: in_progress
-    next: '272/274 active:88c890 Node24 repaired web/other six prerequisites/Governance PASS, actual113825656769 active. Composer and bounded owner recovery now integrated: full localNode24 web1246 PASS/20 realRedis skipped, typecheck/4guards PASS. Push UI checkpoint, own exact CI and add mandatory new actualSQL/Core202/worker/twoCodeS256Chromium/fullreview.270 delivered;273 queued after272.'
+    next: '272/274 active:4a3f7d7 exact Build37933006487/Gov37933006445/all8/actual113828701575/quality113831464753 PASS; shipping composer/recovery and all3 images11617472248 inspected. Accepted main9155 docs280 integrated at766a787; main Build37965672759 actual113939282835 pending/Gov37965672896 PASS. New native prepare/concurrent/quota/permission/corruption/expiry/outbox rollback proof has8 local guards/syntax PASS; hosted execution and remaining queued/indirect/realCore202/Chromium/fullreview mandatory.'
 
   erp_data:
     issue: 264
@@ -35,6 +35,7 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR gates. Main Build37965672759/actual113939282835 pending; Gov37965672896 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
   - 'PR271/issue270 deliveredmain420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca with full frozen reviews6077185197/6077227682 and exactPR/main Build37905169739/Gov37905169543/all8/actual113736786869/quality113739461629 PASS. All3 sanitized main images11604905419 inspected.'
   - 'PR269 / issue268 deliveredmain3fcfa9a8541491c6a4d349bc31fd02d87d12284e with full frozen review6073002478/final6073139900 and exact PR/main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 all8 PASS. Main sanitized artifact11592885599 visually inspected.'
   - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'
@@ -77,7 +78,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '272 next from fullyacceptedmain420: linkedDraft durable server-intent/stable-operation recovery, full actualrealCore loss/SQL-worker-Chromium/review/exactPR-main.270/271 delivered; installer23922f internallyapproved/all9 butexternalWindows-signingDraft, integrateacceptedmain later.273 initialnondefault-company sign-in queuedafter272. Full62requirements/customer-production remain.'
+next_action: 'Close accepted main9155 exact CI, continue same272/274 native SQL and realCore202 reply-loss/worker/twoCodeS256Chromium/fullreview/exactPR-main.275-279 approved docs-only customer-group priority for next non-competing capacity, no feature acceptance.273 queued;23922f internallyapproved/all9 but actualWindows-signingDraft. Full62requirements/customer-production remain.'
 
 
 blocked_by:
