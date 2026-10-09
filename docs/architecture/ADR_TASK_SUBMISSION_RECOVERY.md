@@ -1,6 +1,6 @@
 # Durable task submission and uncertain acceptance
 
-Issue272/PR274, under full product233. Contract and persistence foundation implemented; API/BFF/UI and actual acceptance are in progress. Accepted dependency:270/271 at main `420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca`, exact PR/main gates and full frozen reviews6077185197/6077227682. No full272 delivery or new intent runtime acceptance is claimed by this ADR.
+Issue272/PR274, under full product233. Contract, persistence and strict API/BFF implemented; composer/recovery UI and actual acceptance are in progress. Accepted dependency:270/271 at main `420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca`, exact PR/main gates and full frozen reviews6077185197/6077227682. No full272 delivery or new intent runtime acceptance is claimed by this ADR.
 
 ## Problem and lifetime
 
@@ -35,6 +35,8 @@ Admission locks and fresh authority/source checks must serialize the relevant pr
 Same-origin validation precedes bounded body consumption. The32KiB strict UTF8 limit preserves a fully escaped4000-unit request plus operation metadata. Reject unknown/decoded duplicate fields, duplicate selectors, empty/noncanonical GUIDs and malformed scalar input. Maintain shared body/deadline/final-issued-SID fences and no-store on every result. Only known bounded failures leave the BFF; Core diagnostics, cookies and raw events never do.
 
 Preparation and accepted receipts bind company, operation, source and fingerprint; accepted receipts also bind task/step/message identities. Typed exact parsers verify that binding before the composer accepts a result. Task status and dispatch state can advance as the worker runs; replay must preserve identities and input, not freeze mutable runtime status. Private generation/serial fences and cancellation prevent old responses repainting a replacement company or user.
+
+Implemented routes are Core `/api/tasks/intents` (prepare POST and owner list GET), `/api/tasks/intents/{operationId}` (owner GET) and `/api/tasks/intents/{operationId}/submit` (deliberate POST), with matching `/api/local/tasks/intents` browser routes. Submit accepts only `inputFingerprint`. The BFF first reads and verifies that owner's immutable server intent to bind source/question/hash; it then deliberately posts the fingerprint to Core. It compares all receipt bindings and any previous committed task/step/message/creation identity. Worker status may advance. No caller replacement body reaches execution. Every asynchronous hash/typed-receipt validation is followed by another fresh incoming issued-SID fence before private release. Core/new BFF bodies are bounded to32KiB; response bounds are4KiB receipt,64KiB intent and1MiB owner page, within the retained shared8MiB/10-second guard. Duplicate decoded fields at every nested object and invalid UTF8/scalars fail closed.
 
 ## Mandatory acceptance
 

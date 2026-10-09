@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: b51865e4324eb768fbaf9cdac19aee5cafce82d5
+head: d4f7955b34e4c82b402d60b58bd93dfa4c186bb6
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -30,6 +30,15 @@ submission_persistence_checkpoint:
   local: '46 new Persistence service/admission/permission/model controls plus all815 Persistence and393 Contracts PASS. Changed-code format, pending-model check, generated forward SQL and diff checks PASS. Sequential100 quota tests are synthetic; actual SQL concurrent99/100/101/permissions/revocation and realCore receipt-loss/browser proof remain mandatory.'
   limitation: 'New intent service is not yet API/BFF/UI exposed. Nullable unavailable timestamps prevent malformed persisted dates escaping into private DTOs. Independent contract reviewer hit usage limit; no shipping approval claimed.'
   next: 'Push verified same274 foundation, close its exact CI while implementing strict bounded API then issued-SID BFF/composer/server recovery and mandatory owned SQL/Chromium proof. Do not merge until full272 acceptance/review/exactPR-main.'
+submission_api_bff_checkpoint:
+  predecessor: d4f7955b34e4c82b402d60b58bd93dfa4c186bb6
+  predecessor_build: 37927791317
+  predecessor_governance: 37927791362
+  predecessor_actual: 113810816313
+  predecessor_quality: 113813480062
+  result: 'Persistence predecessor exact all8 PASS, including actual additive migration and retained SQL/OIDC/worker/Chromium flows; new intent acceptance remains required. Strict Core prepare/list/detail/submit API and matching browser BFF implemented with32KiB scalar/decoded-duplicate/selector bounds, typed exact owner input/hash and202 receipt, server GET binding before deliberate POST, known bounded failures and an additional issued-SID fence after asynchronous hash validation. Legacy reserved-key conflict is bounded409 and existing accepted DTO/header remains.'
+  local: '44 new HTTP controls PASS; full858 Persistence PASS before the final additional legacy HTTP control, then all44 current HTTP PASS.87 new web contract/BFF controls and62 retained helper/transport controls PASS149 total; type-check and changed C# format/diff PASS. Two actual Node HTTP202 header/partial-body loss controls verify bounded503, unchanged operation/SID and deliberate replay; these are transport controls, not actual Core/SQL acceptance.'
+  next: 'Push tested same274 API/BFF checkpoint and close exact CI while integrating synchronous composer mutex, pending/reconciliation UX and fresh owner GET afterreload/newSID. Mandatory owned SQL concurrency/permissions and realCore202 committed reply-loss/worker/twoCodeS256Chromium still required; independent frozen review remains pending reviewer availability.'
 scope:
   - durable-owner-company-submission-intent-and-exact-operation-replay
   - final-fresh-admission-source-authority-and-safe-typed-receipts
@@ -44,7 +53,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '272/274 persistence foundation locally verified; implement strict bounded API and issued-SID BFF/composer/server recovery. Close current exact CI and mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
+next_action: '272/274 strict API/BFF locally verified; integrate synchronous composer mutex and serverpending/reconciliation UX, fresh owner GET afterreload/newSID. Close current exact CI and mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

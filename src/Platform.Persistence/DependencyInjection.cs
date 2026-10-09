@@ -39,6 +39,7 @@ public static class DependencyInjection
             services.AddScoped<PilotTaskResultProjection>();
             services.AddScoped<PilotTaskResultService>();
             services.AddScoped<TaskHistoryService>();
+            services.AddScoped<TaskSubmissionIntentService>();
             services.AddScoped<CustomerAuditProjection>();
             services.AddScoped<ToolExecutionAuditService>();
             services.AddScoped<AuthorizedToolExecutionGate>();

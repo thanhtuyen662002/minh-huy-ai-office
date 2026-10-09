@@ -168,6 +168,7 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
 {
     app.MapCompanyMembershipAccess();
     app.MapCompanyAdministrator();
+    app.MapTaskSubmissionIntents();
     app.MapGet("/api/company/members", async (IRequestAuthorizationContextAccessor accessor,
         [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, [FromQuery] bool? includeAccessVersion, CancellationToken cancellationToken) =>
     {
@@ -222,10 +223,14 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
         }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
+        catch (TaskSubmissionIntentConflictException error)
+        { return Results.Conflict(new { error = "Task submission conflicts with current state.", code = error.Code }); }
         catch (InvalidOperationException exception) when (exception.Message.Contains("idempotency key", StringComparison.OrdinalIgnoreCase))
         {
             return Results.Conflict(new { error = exception.Message });
         }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException or Microsoft.EntityFrameworkCore.DbUpdateException)
+        { return Results.Json(new { error = "Task submission is unavailable. Reconcile the same operation." }, statusCode: 503); }
     }).RequireAuthorization();
 
     app.MapGet("/api/tasks", async (HttpRequest request, IRequestAuthorizationContextAccessor accessor,
@@ -283,6 +288,7 @@ else
         statusCode: StatusCodes.Status503ServiceUnavailable,
         title: "Pilot task execution is not configured.");
     app.MapPost("/api/tasks", PilotTaskUnavailable);
+    app.MapUnavailableTaskSubmissionIntents();
     app.MapGet("/api/tasks", PilotTaskUnavailable);
     app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
     app.MapGet("/api/tasks/{taskId:guid}/history", PilotTaskUnavailable);
