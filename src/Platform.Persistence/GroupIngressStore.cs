@@ -36,6 +36,7 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             await LockSourceAsync(source, cancellationToken);
             var authority = await directory.RequireCurrentAsync(verified.Service, cancellationToken);
             now = clock.GetUtcNow().ToUniversalTime();
+            GroupServiceAuthenticator.RequireFreshSigningTime(verified.Service.SignedAtUtc, now);
             GroupServiceAuthenticator.RequireQualification(authority.Account, metadata.Kind, now, policy);
             await RequireListenerAsync(authority.Account.Id, verified, now, cancellationToken);
             var eventHash = GroupIngressIdentity.EventIndex(source, metadata.RevisionEventId);
@@ -53,7 +54,7 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
                     .Select(x => new { x.CommittedSequence, x.CommittedAtUtc, x.ContentSha256, x.Kind, x.IsHistoricalBackfill }).SingleOrDefaultAsync(cancellationToken) ?? throw Unavailable();
                 if (original.CommittedSequence <= 0 || original.CommittedAtUtc.Offset != TimeSpan.Zero || original.ContentSha256 != metadata.ContentSha256 ||
                     original.Kind != metadata.Kind || original.IsHistoricalBackfill != metadata.IsHistoricalBackfill) throw Unavailable();
-                await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, clock.GetUtcNow().ToUniversalTime(), cancellationToken);
+                await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return new(source, previous.MessageId, previous.Revision, original.CommittedSequence, original.CommittedAtUtc, true);
             }
@@ -63,8 +64,15 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             var missingOriginal = message is null && (metadata.Kind is GroupSourceEventKind.Edit or GroupSourceEventKind.Recall);
             if (message is null)
             {
-                message = new() { TenantId = source.TenantId, CompanyId = source.CompanyId, BindingId = source.SourceBindingId,
-                    Id = Guid.NewGuid(), ExternalMessageId = metadata.MessageId, IdentityHash = GroupIngressIdentity.MessageIndex(source, metadata.MessageId) };
+                message = new()
+                {
+                    TenantId = source.TenantId,
+                    CompanyId = source.CompanyId,
+                    BindingId = source.SourceBindingId,
+                    Id = Guid.NewGuid(),
+                    ExternalMessageId = metadata.MessageId,
+                    IdentityHash = GroupIngressIdentity.MessageIndex(source, metadata.MessageId)
+                };
                 Add(message);
             }
             var lastRevision = await database.GroupMessageRevisions.AsNoTracking().Where(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId &&
@@ -93,32 +101,69 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
 
             using var key = await keys.ResolveWriteAsync(source, cancellationToken);
             var protectedContent = protector.Protect(new(source, message.Id, revision, verified.Service.SourceVersion, verified.Service.DeletionGeneration), payload.Text, key.Key, key.KeyId);
-            await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, clock.GetUtcNow().ToUniversalTime(), cancellationToken);
+            await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
             Add(new GroupMessageRevisionRecord
             {
-                TenantId = source.TenantId, CompanyId = source.CompanyId, BindingId = source.SourceBindingId, MessageId = message.Id,
-                Revision = revision, CommittedSequence = sequence, ExternalRevisionEventId = metadata.RevisionEventId,
-                SenderId = metadata.SenderId, ReplyToMessageId = metadata.ReplyToMessageId, Kind = metadata.Kind,
-                ContentSha256 = metadata.ContentSha256, ContentKeyId = key.KeyId, ProtectedContent = protectedContent,
-                SourceVersion = verified.Service.SourceVersion, DeletionGeneration = verified.Service.DeletionGeneration,
-                OccurredAtUtc = metadata.OccurredAtUtc, CommittedAtUtc = now, IsHistoricalBackfill = metadata.IsHistoricalBackfill
+                TenantId = source.TenantId,
+                CompanyId = source.CompanyId,
+                BindingId = source.SourceBindingId,
+                MessageId = message.Id,
+                Revision = revision,
+                CommittedSequence = sequence,
+                ExternalRevisionEventId = metadata.RevisionEventId,
+                SenderId = metadata.SenderId,
+                ReplyToMessageId = metadata.ReplyToMessageId,
+                Kind = metadata.Kind,
+                ContentSha256 = metadata.ContentSha256,
+                ContentKeyId = key.KeyId,
+                ProtectedContent = protectedContent,
+                SourceVersion = verified.Service.SourceVersion,
+                DeletionGeneration = verified.Service.DeletionGeneration,
+                OccurredAtUtc = metadata.OccurredAtUtc,
+                CommittedAtUtc = now,
+                IsHistoricalBackfill = metadata.IsHistoricalBackfill
             });
             Add(new GroupIngressReceiptRecord
             {
-                TenantId = source.TenantId, CompanyId = source.CompanyId, BindingId = source.SourceBindingId, EventIdentityHash = eventHash,
-                ExternalRevisionEventId = metadata.RevisionEventId, EnvelopeSha256 = envelopeHash, MessageId = message.Id, Revision = revision,
-                ServiceId = verified.Service.ServiceId, CredentialEpoch = verified.Service.CredentialEpoch, ListenerEpoch = payload.ListenerEpoch, CommittedAtUtc = now
+                TenantId = source.TenantId,
+                CompanyId = source.CompanyId,
+                BindingId = source.SourceBindingId,
+                EventIdentityHash = eventHash,
+                ExternalRevisionEventId = metadata.RevisionEventId,
+                EnvelopeSha256 = envelopeHash,
+                MessageId = message.Id,
+                Revision = revision,
+                ServiceId = verified.Service.ServiceId,
+                CredentialEpoch = verified.Service.CredentialEpoch,
+                ListenerEpoch = payload.ListenerEpoch,
+                CommittedAtUtc = now
             });
-            Add(new GroupIngressOutboxRecord { TenantId = source.TenantId, CompanyId = source.CompanyId, BindingId = source.SourceBindingId,
-                Id = Guid.NewGuid(), MessageId = message.Id, Revision = revision, CommittedSequence = sequence, AvailableAtUtc = now });
-            if (missingOriginal) Add(new GroupCoverageGapRecord { TenantId = source.TenantId, CompanyId = source.CompanyId,
-                BindingId = source.SourceBindingId, Id = Guid.NewGuid(), AfterCommittedSequence = state.CommittedSequence,
-                Reason = "original-message-unseen", OpenedAtUtc = now });
+            Add(new GroupIngressOutboxRecord
+            {
+                TenantId = source.TenantId,
+                CompanyId = source.CompanyId,
+                BindingId = source.SourceBindingId,
+                Id = Guid.NewGuid(),
+                MessageId = message.Id,
+                Revision = revision,
+                CommittedSequence = sequence,
+                AvailableAtUtc = now
+            });
+            if (missingOriginal) Add(new GroupCoverageGapRecord
+            {
+                TenantId = source.TenantId,
+                CompanyId = source.CompanyId,
+                BindingId = source.SourceBindingId,
+                Id = Guid.NewGuid(),
+                AfterCommittedSequence = state.CommittedSequence,
+                Reason = "original-message-unseen",
+                OpenedAtUtc = now
+            });
             state.CommittedSequence = sequence;
             state.FirstPendingAtUtc ??= now;
             state.LastPendingAtUtc = state.LastPendingAtUtc > now ? state.LastPendingAtUtc : now;
             await database.SaveChangesAsync(cancellationToken);
-            await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, clock.GetUtcNow().ToUniversalTime(), cancellationToken);
+            await RequireFinalAuthorityAsync(directory, permissions, verified, authority.Account.Id, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(source, message.Id, revision, sequence, now, false);
         }
@@ -131,12 +176,17 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
     }
 
     private async Task RequireFinalAuthorityAsync(GroupServiceDirectory directory, GroupIngressPermissionVerifier permissions,
-        VerifiedGroupIngress verified, Guid account, DateTimeOffset now, CancellationToken cancellationToken)
+        VerifiedGroupIngress verified, Guid account, CancellationToken cancellationToken)
     {
         var current = await directory.RequireCurrentAsync(verified.Service, cancellationToken);
+        await permissions.RequireSafeRuntimeAsync(cancellationToken);
+        var now = clock.GetUtcNow().ToUniversalTime();
+        GroupServiceAuthenticator.RequireFreshSigningTime(verified.Service.SignedAtUtc, now);
         GroupServiceAuthenticator.RequireQualification(current.Account, verified.Payload.Event.Kind, now, policy);
         await RequireListenerAsync(account, verified, now, cancellationToken);
-        await permissions.RequireSafeRuntimeAsync(cancellationToken);
+        var finalNow = clock.GetUtcNow().ToUniversalTime();
+        GroupServiceAuthenticator.RequireFreshSigningTime(verified.Service.SignedAtUtc, finalNow);
+        GroupServiceAuthenticator.RequireQualification(current.Account, verified.Payload.Event.Kind, finalNow, policy);
     }
 
     private async Task RequireListenerAsync(Guid account, VerifiedGroupIngress verified, DateTimeOffset now, CancellationToken cancellationToken)
@@ -144,6 +194,7 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
         var source = verified.Source;
         var lease = await database.GroupListenerLeases.AsNoTracking().SingleOrDefaultAsync(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId &&
             x.ConnectorAccountId == account, cancellationToken);
+        now = clock.GetUtcNow().ToUniversalTime();
         if (lease is null || lease.OwnerId != verified.Payload.ListenerOwnerId || lease.Epoch != verified.Payload.ListenerEpoch ||
             lease.ExpiresAtUtc <= now || lease.HeartbeatAtUtc > now || lease.HeartbeatAtUtc.Offset != TimeSpan.Zero || lease.ExpiresAtUtc.Offset != TimeSpan.Zero)
             throw GroupServiceDirectory.Denied();
@@ -169,8 +220,15 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             SELECT Id,IdentityHash,CASE WHEN DATALENGTH(ExternalMessageId)<=512 THEN CONVERT(varbinary(512),ExternalMessageId) END AS MessageBytes
             FROM aioffice.GroupMessages WHERE TenantId={source.TenantId} AND CompanyId={source.CompanyId} AND BindingId={source.SourceBindingId} AND IdentityHash={hash}
             """).SingleOrDefaultAsync(cancellationToken);
-        return row is null ? null : new() { TenantId = source.TenantId, CompanyId = source.CompanyId, BindingId = source.SourceBindingId,
-            Id = row.Id, IdentityHash = row.IdentityHash, ExternalMessageId = GroupRegistryReader.Decode(row.MessageBytes, 512) };
+        return row is null ? null : new()
+        {
+            TenantId = source.TenantId,
+            CompanyId = source.CompanyId,
+            BindingId = source.SourceBindingId,
+            Id = row.Id,
+            IdentityHash = row.IdentityHash,
+            ExternalMessageId = GroupRegistryReader.Decode(row.MessageBytes, 512)
+        };
     }
 
     private async Task<GroupIngressReceiptRecord?> ReceiptAsync(GroupScope source, string hash, CancellationToken cancellationToken)
@@ -181,8 +239,13 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             SELECT MessageId,Revision,EnvelopeSha256,CASE WHEN DATALENGTH(ExternalRevisionEventId)<=512 THEN CONVERT(varbinary(512),ExternalRevisionEventId) END AS EventBytes
             FROM aioffice.GroupIngressReceipts WHERE TenantId={source.TenantId} AND CompanyId={source.CompanyId} AND BindingId={source.SourceBindingId} AND EventIdentityHash={hash}
             """).SingleOrDefaultAsync(cancellationToken);
-        return row is null ? null : new() { MessageId = row.MessageId, Revision = row.Revision, EnvelopeSha256 = row.EnvelopeSha256,
-            ExternalRevisionEventId = GroupRegistryReader.Decode(row.EventBytes, 512) };
+        return row is null ? null : new()
+        {
+            MessageId = row.MessageId,
+            Revision = row.Revision,
+            EnvelopeSha256 = row.EnvelopeSha256,
+            ExternalRevisionEventId = GroupRegistryReader.Decode(row.EventBytes, 512)
+        };
     }
 
     internal static string EnvelopeHash(GroupSourceEventMetadata metadata, string text)

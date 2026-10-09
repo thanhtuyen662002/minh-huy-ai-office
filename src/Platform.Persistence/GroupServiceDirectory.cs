@@ -12,13 +12,14 @@ internal sealed record GroupIngestAuthority(GroupServicePrincipal Principal,
 // JWT, customer participant or model proposal cannot construct this identity.
 public sealed class AuthenticatedGroupService
 {
-    internal AuthenticatedGroupService(GroupIngestAuthority authority)
+    internal AuthenticatedGroupService(GroupIngestAuthority authority, DateTimeOffset signedAtUtc)
     {
         ServiceId = authority.Principal.ServiceId; CredentialEpoch = authority.Principal.CredentialEpoch;
         Source = authority.Source.Scope; External = authority.Source.ExternalIdentity;
         SourceVersion = authority.Source.Version; DeletionGeneration = authority.Source.DeletionGeneration;
         AccountVersion = authority.Account.Version; GrantVersion = authority.Grant.Version;
         CredentialReference = authority.CredentialReference;
+        SignedAtUtc = signedAtUtc;
     }
     public Guid ServiceId { get; }
     public long CredentialEpoch { get; }
@@ -29,6 +30,7 @@ public sealed class AuthenticatedGroupService
     internal long AccountVersion { get; }
     internal long GrantVersion { get; }
     internal string CredentialReference { get; }
+    internal DateTimeOffset SignedAtUtc { get; }
 }
 
 internal sealed class GroupServiceDirectory(PlatformDbContext database)

@@ -71,6 +71,19 @@ JSON, signature/skew boundaries, current snapshots and private key refusal.
 These use owned in-memory fixtures; actual SQL rights and concurrent commit
 acceptance remain required. No API, store, listener or sender is exposed yet.
 
+Independent review found mutable caller-memory, expired final signing/evidence
+and a known-synthetic artifact labeled ControlledAccount counterexample. The
+repair owns one bounded body snapshot before any await, parses/signs that same
+snapshot and clears it afterwards. Final authentication rechecks signing time
+and current qualification after asynchronous work. The verified service carries
+its signed time into every protected store admission/final fence. Live policy
+explicitly refuses the known synthetic provider/artifact regardless of registry
+labels; an owned controlled fixture retains a positive policy control.
+
+Eight new regression controls plus full934 Persistence tests PASS, zero skipped.
+These local results require independent counterexample closure and exact CI;
+they are not evidence of actual connector qualification or SQL runtime success.
+
 ## Transactional source store checkpoint
 
 Only the server-authenticated identity can call the store. A serializable pinned

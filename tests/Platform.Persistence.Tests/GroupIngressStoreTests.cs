@@ -183,6 +183,16 @@ public sealed class GroupIngressStoreTests
         Assert.Equal(new long[] { 1, 2, 3 }, await fixture.Auth.Db.GroupIngressOutbox.OrderBy(x => x.CommittedSequence).Select(x => x.CommittedSequence).ToArrayAsync());
     }
 
+    [Fact]
+    public async Task PreviouslyAuthenticatedButNowExpiredSignatureCannotResolveSourceKeyOrCommit()
+    {
+        using var fixture = new Fixture(); var verified = await fixture.VerifyAsync();
+        fixture.Lease.ExpiresAtUtc = Fixture.Now.AddHours(1); await fixture.Auth.Db.SaveChangesAsync();
+        fixture.Clock.Now = Fixture.Now.AddSeconds(121);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.AcceptAsync(verified));
+        Assert.Equal(0, fixture.Keys.Calls); await fixture.AssertEmptyAsync();
+    }
+
     private static GroupIngressPayload WithText(GroupIngressPayload payload, string text) => payload with
     {
         Text = text,

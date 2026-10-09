@@ -195,22 +195,76 @@ public sealed class GroupServiceAuthenticatorTests
             Assert.Throws<UnauthorizedAccessException>(() => GroupRegistryReader.Decode(bytes, 512));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallerBufferMutationCannotAuthenticateAParsedPayloadAgainstAnotherSignedBody(bool signReplacement)
+    {
+        using var fixture = new Fixture();
+        var original = fixture.Body();
+        var text = fixture.Payload().Text.Replace("original", "changed!", StringComparison.Ordinal);
+        var changed = fixture.Payload() with { Text = text, Event = fixture.Payload().Event with { ContentSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))) } };
+        var replacement = JsonSerializer.SerializeToUtf8Bytes(changed, GroupServiceAuthenticator.JsonOptions);
+        Assert.Equal(original.Length, replacement.Length);
+        var signature = fixture.Sign(body: signReplacement ? replacement : original);
+        fixture.Secrets.BeforeResolution = () => replacement.CopyTo(original, 0);
+        if (signReplacement)
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Authenticator.AuthenticateAsync(signature, original));
+        else Assert.Equal(fixture.Payload(), (await fixture.Authenticator.AuthenticateAsync(signature, original)).Payload);
+        Assert.Equal(replacement, original);
+    }
+
+    [Theory]
+    [InlineData("signature")]
+    [InlineData("qualification")]
+    public async Task FinalAuthenticationFenceUsesCurrentClockAfterAsynchronousSecretWork(string expiry)
+    {
+        using var fixture = new Fixture(controlled: true);
+        if (expiry == "qualification") fixture.AllowControlledReceive(Fixture.Now - GroupConnectorQualification.MaximumObservationAge + TimeSpan.FromSeconds(1));
+        fixture.Secrets.BeforeResolution = () => fixture.Clock.Current = Fixture.Now.AddSeconds(2);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Authenticator.AuthenticateAsync(fixture.Sign(expiry == "signature" ? -119 : 0), fixture.Body()));
+        Assert.Empty(await fixture.Db.GroupIngressReceipts.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ControlledMetadataCannotPromoteKnownSyntheticProviderOrArtifactToLive(bool knownPackage)
+    {
+        using var fixture = new Fixture(controlled: knownPackage);
+        fixture.Account.PackageVersion = "owned-fixture";
+        fixture.AllowControlledReceive(Fixture.Now);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.CreateAuthenticator(GroupIngressRuntimePolicy.Live).AuthenticateAsync(fixture.Sign(), fixture.Body()));
+        Assert.Equal(0, fixture.Secrets.Calls);
+    }
+
+    [Fact]
+    public async Task CurrentControlledReceiveFixtureHasPositiveLivePolicyAdmission()
+    {
+        using var fixture = new Fixture(controlled: true);
+        Assert.Equal(fixture.Scope, (await fixture.Authenticator.AuthenticateAsync(fixture.Sign(), fixture.Body())).Source);
+    }
+
     internal sealed class Fixture : IDisposable
     {
         internal readonly DbContextOptions<PlatformDbContext> Options = new DbContextOptionsBuilder<PlatformDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         internal readonly PlatformDbContext Db;
         internal readonly GroupScope Scope = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        internal readonly GroupExternalIdentity External = new("synthetic", "account ", "group😀 ");
+        internal readonly GroupExternalIdentity External;
         internal readonly GroupServiceRecord Service;
         internal readonly GroupConnectorAccountRecord Account;
         internal readonly GroupBindingRecord Binding;
         internal readonly GroupServiceGrantRecord Grant;
         internal readonly OwnedSecrets Secrets = new();
-        internal GroupServiceAuthenticator Authenticator => CreateAuthenticator(GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true));
+        internal readonly OwnedClock Clock = new();
+        private readonly bool controlled;
+        internal GroupServiceAuthenticator Authenticator => CreateAuthenticator(controlled ? GroupIngressRuntimePolicy.Live : GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true));
         internal static readonly DateTimeOffset Now = new(2026, 10, 10, 0, 0, 0, TimeSpan.Zero);
-        internal Fixture(string? change = null)
+        internal Fixture(string? change = null, bool controlled = false)
         {
             Db = new(Options);
+            this.controlled = controlled;
+            External = new(controlled ? "owned-control" : "synthetic", "account ", "group😀 ");
             var company = new CompanyRecord { TenantId = Scope.TenantId, Id = Scope.CompanyId, Code = "owned", Name = "Owned fixture", IsActive = change != "company" };
             Account = new()
             {
@@ -220,7 +274,7 @@ public sealed class GroupServiceAuthenticatorTests
                 Provider = External.Provider,
                 ExternalAccountId = External.AccountId,
                 IdentityHash = GroupIngressIdentity.AccountIndex(External.Provider, External.AccountId),
-                PackageVersion = "owned-fixture",
+                PackageVersion = controlled ? "controlled-fixture" : "owned-fixture",
                 GitCommit = new string('0', 40),
                 QualificationJson = "{\"environment\":1,\"observations\":[]}",
                 IsEnabled = true
@@ -255,8 +309,18 @@ public sealed class GroupServiceAuthenticatorTests
                 case "capability": Grant.Capability = GroupServiceCapability.Extract; break;
             }
             Db.AddRange(company, Account, Service, Binding, Grant); Db.SaveChanges();
+            if (controlled) AllowControlledReceive(Now);
         }
-        internal GroupServiceAuthenticator CreateAuthenticator(GroupIngressRuntimePolicy policy) => new(Db, new([Secrets]), policy, new OwnedClock());
+        internal GroupServiceAuthenticator CreateAuthenticator(GroupIngressRuntimePolicy policy) => new(Db, new([Secrets]), policy, Clock);
+        internal void AllowControlledReceive(DateTimeOffset observedAt)
+        {
+            var observations = new[] { GroupConnectorCapability.GroupTextReceive, GroupConnectorCapability.MessageIdentity,
+                GroupConnectorCapability.SenderIdentity, GroupConnectorCapability.SelfOriginCorrelation, GroupConnectorCapability.ListenerCollisionDetection,
+                GroupConnectorCapability.GapDetection, GroupConnectorCapability.MembershipVerification }.Select(capability =>
+                new GroupConnectorObservation(capability, GroupConnectorSupport.Supported, Guid.NewGuid(), observedAt)).ToArray();
+            Account.QualificationJson = JsonSerializer.Serialize(new { Environment = GroupQualificationEnvironment.ControlledAccount, Observations = observations }, GroupServiceAuthenticator.JsonOptions);
+            Db.SaveChanges();
+        }
         internal GroupIngressPayload Payload() => new(new(External, "message", "revision", "sender", null, GroupSourceEventKind.NewText,
             Now, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("original 😀\uFEFF "))), false), "original 😀\uFEFF ", true, false, false,
             Guid.Parse("10000000-0000-0000-0000-000000000001"), 1);
@@ -273,9 +337,14 @@ public sealed class GroupServiceAuthenticatorTests
     {
         internal readonly byte[] Key = Enumerable.Repeat((byte)0x31, 32).ToArray();
         internal int Calls;
+        internal Action? BeforeResolution;
         public string Provider => "env";
         public ValueTask<string> ResolveAsync(SecretReference reference, CancellationToken cancellationToken = default)
-        { Assert.Equal("secretref://env/OWNED_GROUP_KEY", reference.Value); Calls++; return ValueTask.FromResult(Convert.ToBase64String(Key)); }
+        { Assert.Equal("secretref://env/OWNED_GROUP_KEY", reference.Value); Calls++; BeforeResolution?.Invoke(); return ValueTask.FromResult(Convert.ToBase64String(Key)); }
     }
-    private sealed class OwnedClock : TimeProvider { public override DateTimeOffset GetUtcNow() => Fixture.Now; }
+    internal sealed class OwnedClock : TimeProvider
+    {
+        internal DateTimeOffset Current = Fixture.Now;
+        public override DateTimeOffset GetUtcNow() => Current;
+    }
 }

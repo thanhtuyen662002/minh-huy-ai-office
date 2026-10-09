@@ -53,6 +53,17 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
     public async Task<VerifiedGroupIngress> AuthenticateAsync(GroupServiceSignature signature,
         ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
     {
+        if (signature is null || body.Length is < 1 or > MaximumBodyBytes) throw GroupServiceDirectory.Denied();
+        // ReadOnlyMemory can alias caller-owned mutable bytes. Parse and sign
+        // one private snapshot across all asynchronous secret/SQL work.
+        var captured = body.ToArray();
+        try { return await AuthenticateCapturedAsync(signature, captured, cancellationToken); }
+        finally { CryptographicOperations.ZeroMemory(captured); }
+    }
+
+    private async Task<VerifiedGroupIngress> AuthenticateCapturedAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken)
+    {
         var payload = Parse(body);
         var now = clock.GetUtcNow();
         if (signature.ServiceId == Guid.Empty || signature.CredentialEpoch <= 0 || signature.Nonce == Guid.Empty ||
@@ -60,7 +71,8 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         DateTimeOffset signedAt;
         try { signedAt = DateTimeOffset.FromUnixTimeSeconds(signature.SignedAtUnixSeconds); }
         catch (ArgumentOutOfRangeException) { throw GroupServiceDirectory.Denied(); }
-        if ((now - signedAt).Duration() > MaximumClockSkew) throw GroupServiceDirectory.Denied();
+        RequireFreshSigningTime(signedAt, now);
+        var signingBytes = SigningBytes(signature, body.Span);
 
         var directory = new GroupServiceDirectory(database);
         var permissions = new GroupIngressPermissionVerifier(database);
@@ -68,7 +80,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         await permissions.RequireSafeRuntimeAsync(cancellationToken);
         var authority = await directory.RequireIngestAsync(new(signature.ServiceId, signature.CredentialEpoch), payload.Event.Identity, cancellationToken);
         RequireQualification(authority.Account, payload.Event.Kind, now, policy);
-        var verified = new AuthenticatedGroupService(authority);
+        var verified = new AuthenticatedGroupService(authority, signedAt);
         byte[] key;
         try
         {
@@ -82,11 +94,14 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         { throw GroupServiceDirectory.Denied(); }
         try
         {
-            var expected = HMACSHA256.HashData(key, SigningBytes(signature, body.Span));
+            var expected = HMACSHA256.HashData(key, signingBytes);
             if (!CryptographicOperations.FixedTimeEquals(expected, Convert.FromHexString(signature.SignatureHex)))
                 throw GroupServiceDirectory.Denied();
-            await directory.RequireCurrentAsync(verified, cancellationToken);
+            var current = await directory.RequireCurrentAsync(verified, cancellationToken);
             await permissions.RequireSafeRuntimeAsync(cancellationToken);
+            var finalNow = clock.GetUtcNow();
+            RequireFreshSigningTime(signedAt, finalNow);
+            RequireQualification(current.Account, payload.Event.Kind, finalNow, policy);
             await transaction.CommitAsync(cancellationToken);
             return new(verified, payload);
         }
@@ -95,6 +110,12 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
 
     internal static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => Encoding.ASCII.GetBytes(
         FormattableString.Invariant($"aioffice-group-ingest-v1\n{signature.ServiceId:D}\n{signature.CredentialEpoch}\n{signature.SignedAtUnixSeconds}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
+
+    internal static void RequireFreshSigningTime(DateTimeOffset signedAtUtc, DateTimeOffset nowUtc)
+    {
+        if (signedAtUtc.Offset != TimeSpan.Zero || nowUtc.Offset != TimeSpan.Zero || (nowUtc - signedAtUtc).Duration() > MaximumClockSkew)
+            throw GroupServiceDirectory.Denied();
+    }
 
     internal static GroupIngressPayload Parse(ReadOnlyMemory<byte> body)
     {
@@ -144,7 +165,8 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
                 if (account.Provider != "synthetic" || account.PackageVersion != "owned-fixture" ||
                     stored.Environment != GroupQualificationEnvironment.Synthetic) throw GroupServiceDirectory.Denied();
             }
-            else if (!qualification.AllowsLiveProfile(GroupConnectorProfile.Receive, account.TenantId, account.CompanyId,
+            else if (account.Provider == "synthetic" || account.PackageVersion == "owned-fixture" ||
+                !qualification.AllowsLiveProfile(GroupConnectorProfile.Receive, account.TenantId, account.CompanyId,
                 account.Id, account.ExternalAccountId, artifact, now)) throw GroupServiceDirectory.Denied();
             var extra = kind == GroupSourceEventKind.Edit ? GroupConnectorCapability.EditEvents :
                 kind == GroupSourceEventKind.Recall ? GroupConnectorCapability.RecallEvents : (GroupConnectorCapability?)null;
