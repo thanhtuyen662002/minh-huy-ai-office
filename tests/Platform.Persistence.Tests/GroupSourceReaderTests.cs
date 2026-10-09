@@ -122,6 +122,22 @@ public sealed class GroupSourceReaderTests
         Assert.Equal(GroupSourceEventKind.Recall, recalled.Kind); Assert.Null(recalled.Text);
     }
 
+    [Fact]
+    public async Task RecallCommittedDuringFinalAuthorityAwaitRejectsEarlierBodyAndFreshReadShowsRecall()
+    {
+        using var fixture = new Fixture(); var receipt = await fixture.CommitAsync();
+        fixture.Directory.BeforeResolve = async call =>
+        {
+            if (call == 3) await fixture.CommitAsync(fixture.Payload(GroupSourceEventKind.Recall, "final-authority-recall", ""));
+        };
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.ReadAsync(receipt.MessageId));
+        Assert.Equal(3, fixture.Directory.Resolves);
+        fixture.Directory.BeforeResolve = null;
+        var recalled = (await fixture.ReadAsync(receipt.MessageId))!;
+        Assert.Equal(GroupSourceEventKind.Recall, recalled.Kind); Assert.Null(recalled.Text);
+        Assert.Equal(2, await fixture.Auth.Db.GroupMessageRevisions.CountAsync());
+    }
+
     private sealed class Fixture : IDisposable
     {
         internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new();
@@ -171,8 +187,14 @@ public sealed class GroupSourceReaderTests
     private sealed class OwnedDirectory : IAuthorizationDirectory
     {
         internal bool Enabled = true;
-        public Task<AuthorizationDirectoryEntry?> ResolveAsync(AuthorizationContext context, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Enabled ? new AuthorizationDirectoryEntry(context, ["admin"]) : null);
+        internal int Resolves;
+        internal Func<int, Task>? BeforeResolve;
+        public async Task<AuthorizationDirectoryEntry?> ResolveAsync(AuthorizationContext context, CancellationToken cancellationToken = default)
+        {
+            Resolves++;
+            if (BeforeResolve is not null) await BeforeResolve(Resolves);
+            return Enabled ? new AuthorizationDirectoryEntry(context, ["admin"]) : null;
+        }
     }
     private sealed class OwnedKeys : IGroupSourceKeyProvider
     {

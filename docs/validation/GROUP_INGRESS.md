@@ -237,3 +237,10 @@ receipt/message/sender corruption refusal, recall/edit/late-original precedence
 and recall committed during key await with restored recalled projection. This
 class has no shipping DI/API/list/read UI registration yet; frozen review and
 actual SQL/issued-session private-read/late-body evidence remain required.
+
+
+## Protected read final release repair
+
+Independent frozen `ccd9b98` review reproduced a committed recall during the final awaited authority check returning the old private body. The final read now starts a short owned Serializable transaction **after** key resolution/decryption, checks current member/grant/source authority before winner/message/receipt/gap, and commits as its documented read linearization boundary. No external key await occurs under final read locks. The pinned SQL session returns to ReadCommitted on disposal. A late recall must be observed before the winner snapshot or its insertion must wait until read commit; SQL lock/range evidence is still required.
+
+Local: all 21 reader controls PASS, including final-authority recall refusal followed by a fresh Recall/null positive read. Existing key-await revocation and recall controls remain. Reader is not API/DI/UI exposed yet. Actual runtime diagnostic at remote `42cc94d`, Build37998551981/Governance37998552028/actual114050684002, remains pending; six prerequisite gates passed. No source feature delivery claimed.

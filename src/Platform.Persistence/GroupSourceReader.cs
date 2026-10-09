@@ -67,10 +67,13 @@ public sealed class GroupSourceReader(PlatformDbContext database, IAuthorization
             if (Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))) != revision.ContentSha256 ||
                 GroupIngressStore.EnvelopeHash(metadata, text) != receipt.EnvelopeSha256 || revision.Kind == GroupSourceEventKind.Recall && text.Length != 0)
                 throw Unavailable();
-            var gap = await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId &&
-                x.BindingId == sourceId, cancellationToken);
-            // An edit/recall committed during asynchronous decryption wins over
-            // an earlier original. Recheck the actual winner and original bytes.
+            // Resolve no private key while holding registry/member/revision locks.
+            // The short final transaction is the read's linearization boundary:
+            // authority is checked before the current winner, and both remain
+            // locked through commit. A recall during the final directory await
+            // must be observed before any private body can be released.
+            await using var release = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
+            await RequireUnchangedAccessAsync(authority, sourceId, before, cancellationToken);
             var final = await WinnerAsync(scope, messageId, cancellationToken) ?? throw Unavailable();
             if (final.Revision != revision.Revision || final.CommittedSequence != revision.CommittedSequence || final.Kind != revision.Kind ||
                 final.ContentSha256 != revision.ContentSha256 || final.ProtectedContent is null ||
@@ -83,7 +86,9 @@ public sealed class GroupSourceReader(PlatformDbContext database, IAuthorization
             var finalReceipt = await ReceiptAsync(scope, eventId, cancellationToken) ?? throw Unavailable();
             if (finalReceipt.EnvelopeSha256 != receipt.EnvelopeSha256 || finalReceipt.MessageId != messageId || finalReceipt.Revision != revision.Revision ||
                 Text(finalReceipt.EventBytes, finalReceipt.EventText) != eventId) throw Unavailable();
-            await RequireUnchangedAccessAsync(authority, sourceId, before, cancellationToken);
+            var gap = await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId &&
+                x.BindingId == sourceId, cancellationToken);
+            await release.CommitAsync(cancellationToken);
             return new(scope, messageId, externalMessage, revision.Revision, revision.CommittedSequence, revision.Kind, sender, reply,
                 revision.OccurredAtUtc, revision.Kind == GroupSourceEventKind.Recall ? null : text, revision.IsHistoricalBackfill, gap);
         }

@@ -790,3 +790,9 @@ group_protected_read_checkpoint:
   state: 'diagnosticCI sixprereqsPASS/nativepending; protectedread newlocal20controlsPASS'
   result: 'New GroupSourceReader dedicatedReaderGrant/currentmember/sourceversion/deletion/fullphysicalrolefences, pinnedReadCommitted originalUTF16 projection, exactretainedkey/AEAD/messageSHA/immutableenvelope validation, recall/editprecedence andfinalcurrentwinner/grant/bytes fence.20 in-memory privacy/corruption/currentrevoke/recall-await controls PASS; noAPI/DI/UI/nativeSQL evidence yet.'
   next: 'Own diagnostic42ccnativeCI and fixcurrent403fence. Freeze protectedread review; register boundedportalHTTP/list/BFF/UI withprivate clearing andactual issued-session readrace proof. Complete277listener/spool/queue then278/279; no currentwholefeature/production completion.'
+
+group_protected_read_final_release_repair:
+  predecessor: ccd9b98df821d162a66546404a24fd4a9be36bf5
+  review: 'Independent frozen reader20 retained/11 own safe probes PASS; concreteP2 finalauthorityawait recall releasesoldbody, expecteddenialFAIL and staleold/freshrecall positive reproduced. Short postkey Serializable release accepted as design; repairedheadreview/nativeSQL stillrequired.'
+  local: '21 readercontrols PASS including finalauthorityrecall refusal andfreshRecall/null restoration. Finalauthorityfirst thenwinner/message/receipt/gap underownedtransaction; commit readlinearization, isolation restored; no privatekey awaitunderlocks. NoAPI/DI/UI registration.'
+  next: 'Close active42cc actual114050684002 runtime403diagnosis beforepush; repair samePR specificfence. Frozen repairedreader review andactualSQL lock/range/revoke proof mandatory, then privateHTTP/inbox and277 listener/spool/broker recovery.'
