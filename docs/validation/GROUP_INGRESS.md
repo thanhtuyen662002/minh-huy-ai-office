@@ -323,3 +323,9 @@ Independent bca layout proof with the shipping component/Tailwind reproduced hor
 
 
 Owned inbox browser candidate additionally opens the mobile navigation directly at375px after a separate fresh issued session, verifies viewport containment, and records two sanitized synthetic inbox screenshots in the existing CI artifact. No private configurations or browser traces are uploaded. This remains an unexecuted browser oracle until its exact CI runs.
+
+### First native inbox execution and refusal diagnostics
+
+Exact1a7c7cf4ea5f1f895cdfe40d0ea41b6959e5dcda Build38004179619/actual114069045285 is terminal red at the coarse `native-reader-grant-revocation` browser stage; quality114071849894 fails. Governance38004179640 and six prerequisites PASS. Root inspected all13 retained native group-ingress PASS markers. The owned browser reached real Code/S256, shipping source/metadata/private Unicode and foreign-scope controls; native grant revoke/clearing/restoration, logout, mobile and screenshots are not yet verified. The precise failing substep and product cause are unknown.
+
+The oracle now separates fixed stages for SQL update/disabled-row proof, the refresh click, inbox-scoped refusal alert, private/catalog removal, private HTTP403/no-store, unchanged SID and filtered catalog HTTP200/no-store. It emits only fixed stage names and HTTP status; it never emits source contents, credentials, SQL text or exception bodies. This is diagnosis, not a claimed shipping fix. A new shipping workspace/current-session hook test proves source403 clears the body/catalog while an otherwise current member stays signed in, followed by empty catalog and restored-grant discovery. Local15 inbox/workspace controls,7 Node boundary guards, syntax and TypeScript PASS; native rerun remains mandatory.

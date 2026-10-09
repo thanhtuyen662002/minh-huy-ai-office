@@ -26,3 +26,34 @@ it("ordinary mobile readers can open inbox directly without preparing a task; lo
   expect(pendingSignal.aborted).toBe(true); await act(async () => finish(Response.json(page)));
   expect(screen.queryByRole("button", { name: "PRIVATE_GRANTED_SOURCE" })).toBeNull(); expect(screen.queryByRole("region", { name: "Hộp thư nguồn" })).toBeNull();
 });
+
+it("source ReaderGrant refusal clears the shipping inbox while the same issued-session member remains signed in", async () => {
+  const messageId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const occurredAtUtc = "2026-10-10T00:00:00Z";
+  let granted = true;
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
+    if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/group-sources?")) return Response.json({ ...page, items: granted ? page.items : [] });
+    if (url.includes(`/messages/${messageId}?`)) return granted ? Response.json({ source, messageId, externalMessageId: "m ",
+      revision: 1, committedSequence: 1, kind: 1, senderId: "sender ", replyToMessageId: null, occurredAtUtc,
+      text: "PRIVATE_GROUP_BODY", isHistoricalBackfill: false, hasCoverageGap: false }) : Response.json({}, { status: 403 });
+    if (url.includes("/messages?")) return Response.json({ source, items: [{ messageId, revision: 1, lastChangedSequence: 1, kind: 1,
+      occurredAtUtc, isHistoricalBackfill: false }], nextBeforeSequence: null, hasCoverageGap: false });
+    throw new Error("Unexpected owned fixture route");
+  });
+  vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
+  render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Mở Hộp thư nguồn trên di động" }));
+  fireEvent.click(await screen.findByRole("button", { name: "PRIVATE_GRANTED_SOURCE" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Đọc tin 1" }));
+  await screen.findByText("PRIVATE_GROUP_BODY");
+  granted = false; fireEvent.click(screen.getByRole("button", { name: "Cập nhật tin" }));
+  await screen.findByRole("alert");
+  expect(screen.queryByText("PRIVATE_GROUP_BODY")).toBeNull(); expect(screen.queryByText("PRIVATE_GRANTED_SOURCE")).toBeNull();
+  expect(screen.getByRole("button", { name: "Đăng xuất" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại nguồn" })); await screen.findByText(/Chưa có nguồn được cấp quyền/);
+  granted = true; fireEvent.click(screen.getByRole("button", { name: "Tải lại nguồn" }));
+  await screen.findByRole("button", { name: "PRIVATE_GRANTED_SOURCE" });
+  expect(screen.getByRole("button", { name: "Đăng xuất" })).toBeTruthy();
+});

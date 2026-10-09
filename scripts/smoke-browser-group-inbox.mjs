@@ -86,10 +86,18 @@ export async function verifyOwnedGroupInbox(directory, fixture) {
     proof((await get(`/api/local/group-sources/${randomUUID()}/messages/${fixture.messageId}${query}`)).status === 403);
     proof((await get(`/api/local/group-sources/${fixture.sourceId}/messages/${randomUUID()}${query}`)).status === 404);
     try {
-      stage = "native-reader-grant-revocation"; sql(`UPDATE aioffice.GroupReaderGrants SET IsEnabled=0 WHERE ${grant};`);
-      await page.getByRole("button", { name: "Cập nhật tin", exact: true }).click(); await page.getByRole("alert").waitFor();
-      proof(await article().count() === 0 && await sourceButton().count() === 0 && (await get(privatePath)).status === 403 && await sid() === originalSid);
-      proof((await get("/api/local/group-sources" + query)).body.items.every(item => item.source.sourceBindingId !== fixture.sourceId));
+      stage = "native-reader-grant-update"; sql(`UPDATE aioffice.GroupReaderGrants SET IsEnabled=0 WHERE ${grant};`);
+      stage = "native-reader-grant-update-proof"; proof(sql(`SELECT COUNT(*) FROM aioffice.GroupReaderGrants WHERE ${grant} AND IsEnabled=0;`) === "1");
+      stage = "native-reader-grant-refresh-click"; await page.getByRole("button", { name: "Cập nhật tin", exact: true }).click();
+      stage = "native-reader-grant-ui-refusal"; await page.getByRole("region", { name: "Hộp thư nguồn", exact: true }).getByRole("alert").waitFor();
+      stage = "native-reader-grant-private-cleared"; proof(await article().count() === 0);
+      stage = "native-reader-grant-catalog-cleared"; proof(await sourceButton().count() === 0);
+      stage = "native-reader-grant-private-http"; const denied = await get(privatePath);
+      stage = `native-reader-grant-private-http-${denied.status}`; proof(denied.status === 403 && denied.cache === "no-store");
+      stage = "native-reader-grant-same-sid"; proof(await sid() === originalSid);
+      stage = "native-reader-grant-catalog-http"; const catalog = await get("/api/local/group-sources" + query);
+      stage = `native-reader-grant-catalog-http-${catalog.status}`; proof(catalog.status === 200 && catalog.cache === "no-store"
+        && catalog.body.items.every(item => item.source.sourceBindingId !== fixture.sourceId));
     } finally { sql(`UPDATE aioffice.GroupReaderGrants SET IsEnabled=1 WHERE ${grant};`); }
     stage = "grant-restored-private-positive";
     await page.getByRole("button", { name: "Tải lại nguồn", exact: true }).click(); await open(); proof(await sid() === originalSid);

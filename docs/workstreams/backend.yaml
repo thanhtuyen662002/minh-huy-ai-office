@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: e228622a298753fc9e64f62bd19dd7b5399df0e7
+head: 1a7c7cf4ea5f1f895cdfe40d0ea41b6959e5dcda
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -894,3 +894,14 @@ group_inbox_layout_repair:
   finding: 'Independentbca source200/sender256 legitimateunbrokenlabels cause1915/2428px documentwidth at375/1440.'
   result: 'Source li/button anddetail max/minwidth constraints, label/sender breakcontainment preserve exacttext; originalindependentlayout closure required.'
   next: 'Close mobile/layout review plusbrowserfixture frozenreview; push eligiblesame283 head andownexactCI.'
+
+group_inbox_first_native_refusal_checkpoint:
+  head: 1a7c7cf4ea5f1f895cdfe40d0ea41b6959e5dcda
+  build: 38004179619
+  governance: 38004179640
+  actual: 114069045285
+  quality: 114071849894
+  state: 'terminalred atcoarse native-reader-grant-revocation; sixprereqs/GovPASS'
+  evidence: 'Root inspected all13nativeingress PASS andreached issuedCodeS256/shippinginbox privateUnicode/foreignscope; precisegrant substepunknown, no productcauseproven, no nativeUI acceptance orscreenshots.'
+  local: '15 shippinginbox/workspace controlsPASS inclcurrentmember source403 clear/staySignedIn/emptycatalog/restore;7Nodeguards/syntax/TypeScriptPASS. Independent originalmobile/layout P2closed, be9 BFF43+7approved; newdiagnostics pendingreview/native.'
+  next: 'Push independently reviewed diagnosticcheckpoint SAME283 andownexactCI throughnativegrant/logout/mobile/images. Repair separately reviewed nativeSQL readrelease cleanup/INSERT range oracle; fencedlistener/spool/broker recovery still277, then278/279/full233.'
