@@ -116,16 +116,31 @@ export async function fetchCoreApi(
       headers.set("Accept", "application/json");
       const deadline = AbortSignal.timeout(10_000);
       const signal = init.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
-      const response = await fetch(`${runtime.coreApiOrigin}${path}`, {
-        ...init, headers, cache: "no-store", redirect: "error",
-        signal,
-      });
-      // fetch resolves at headers. Consume the bounded body before the final
-      // shared authority fence, so a slow stream cannot carry post-logout data.
-      const bytes = await readBrowserCoreBody(response, signal);
+      let response: Response;
+      let bytes: Uint8Array<ArrayBuffer>;
+      try {
+        response = await fetch(`${runtime.coreApiOrigin}${path}`, {
+          ...init, headers, cache: "no-store", redirect: "error",
+          signal,
+        });
+        // fetch resolves at headers. Consume the bounded body before the final
+        // shared authority fence, so a slow stream cannot carry post-logout data.
+        bytes = await readBrowserCoreBody(response, signal);
+      } catch {
+        // Core may have committed a mutation before its reply was lost. A
+        // still-issued session permits a retry with the same operation ID;
+        // session loss or coordinator failure remains an authentication denial.
+        const current = await runtime.sessions.read(binding, sid);
+        if (!current || current.companyId.toLowerCase() !== companyId.toLowerCase()) return null;
+        return new Response(null, {
+          status: 503,
+          headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+        });
+      }
       // Discard a reply whose browser authority expired or was revoked while
       // Core was running. Core independently resolves fresh membership/roles.
-      if (!await runtime.sessions.read(binding, sid)) return null;
+      const current = await runtime.sessions.read(binding, sid);
+      if (!current || current.companyId.toLowerCase() !== companyId.toLowerCase()) return null;
       return new Response([204, 205, 304].includes(response.status) ? null : bytes, {
         status: response.status,
         headers: { "Content-Type": response.headers.get("content-type") ?? "application/json; charset=utf-8", "Cache-Control": "no-store" },

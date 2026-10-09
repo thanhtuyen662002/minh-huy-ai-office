@@ -4,7 +4,7 @@ status: active-development
 current_issue: 268
 current_pr: 269
 current_branch: codex/268-member-administrators
-head: 228df11ea878da129c84742c266f10bd042b6723
+head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
 state: in_progress
 lease_owner: root-backend-268
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,18 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: '228 full new/retained SQL and Chromium all8 PASS. Push sanitized member screenshot and meaningful historical replay/current-version UI test checkpoint, close renewed exact8 gates and inspect/fix real red SAME269. Full frozen independent security/runtime review and final PR/main delivery remain. Installer239 final723 all9 PASS but remaining review/clean Windows/signing keepsDraft. Full233 active.'
+next_action: '9c all8 PASS; full independent review found sole P2 committed Core-to-BFF reply loss becoming401 and dropping stable retry. Close new verified fix exact8 gates and independent frozen blocker/runtime review, then final PR/main delivery. Installer239 final723 all9 PASS but final review/clean Windows/signing keepsDraft. Full233 active.'
+
+administrator_transport_review_9c:
+  head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
+  build: 37825083397
+  governance: 37825083434
+  actual: 113475736811
+  quality: 113478951911
+  artifact: 11570349874
+  result: 'All8 exact gates PASS, actual new/retained SQL and two Code/S256 browser flows PASS; two sanitized images independently inspected. Independent full shipping/proof/workflow/docs review withheld approval for sole P2: real committed Core transport loss returned401 through shared helper although SID remained valid.'
+  fix: 'Only Core fetch/body uncertainty becomes bodyless bounded no-store503 after a fresh same-company issued SID fence. Missing/revoked/mismatched session or coordinator outage remainsnull/401. Deadline/body bounds remain. Actual real-node-HTTP before-header/partial-body committed POST/replay and denied-session controls, UI503 stable operation retry and retained BFF/access/API controls pass171 focused web tests plus type-check.'
+  next: 'Push this small verified same-PR checkpoint; close renewed exact8 CI and independent frozen P2/delta review. Assess additional actual SQL/Chromium Core-to-BFF transport loss evidence. No merge approval yet.'
 
 administrator_verified_228:
   head: 228df11ea878da129c84742c266f10bd042b6723

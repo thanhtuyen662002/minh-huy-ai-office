@@ -2,9 +2,9 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { expect, it, vi } from "vitest";
 import { CompanyMemberPanel } from "./company-member-panel";
 const company = "22222222-2222-2222-2222-222222222222", user = "33333333-3333-3333-3333-333333333333", owner = "11111111-1111-1111-1111-111111111111";
-type Options = { lostReply?: boolean; status?: number; code?: string; self?: boolean; active?: boolean; invalidResult?: boolean; noVersion?: boolean };
+type Options = { lostReply?: boolean; lostCoreReply?: boolean; status?: number; code?: string; self?: boolean; active?: boolean; invalidResult?: boolean; noVersion?: boolean };
 function fixture(options: Options = {}) {
-  const state = { current: true, authorized: true, administrator: false, version: 7, lose: !!options.lostReply };
+  const state = { current: true, authorized: true, administrator: false, version: 7, lose: !!(options.lostReply || options.lostCoreReply) };
   const receipts = new Map<string, object>();
   const validate = vi.fn(async () => state.current && state.authorized), unauthorized = vi.fn();
   const request = vi.fn(async (_generation: number, url: string, init?: RequestInit) => {
@@ -15,7 +15,11 @@ function fixture(options: Options = {}) {
         state.administrator = input.isAdministrator; state.version++;
         receipts.set(input.operationId, { companyId: company, userId: user, operationId: input.operationId, membershipVersion: String(state.version), isAdministrator: input.isAdministrator });
       }
-      if (state.lose) { state.lose = false; throw new Error("Lost committed reply"); }
+      if (state.lose) {
+        state.lose = false;
+        if (options.lostCoreReply) return Response.json({ error: "The operation result could not be confirmed." }, { status: 503 });
+        throw new Error("Lost committed reply");
+      }
       return Response.json(options.invalidResult ? { ...receipts.get(input.operationId), companyId: owner } : receipts.get(input.operationId));
     }
     return Response.json({ companyId: company, items: [{ userId: user, displayName: "PRIVATE MEMBER", userActive: true,
@@ -36,12 +40,13 @@ it("grants/removes through exact versioned operations and reloads authoritative 
   const operations = bodies(f.request); expect(operations.map(item => [item.expectedVersion, item.isAdministrator])).toEqual([["7", true], ["8", false]]);
   expect(operations[0].operationId).not.toBe(operations[1].operationId);
 });
-it("lost committed reply retains the same operation and blocks further edits until replay", async () => {
-  const f = fixture({ lostReply: true }); await screen.findByText("PRIVATE MEMBER");
+it.each(["browser", "core"])("lost committed %s reply retains the same operation and blocks further edits until replay", async boundary => {
+  const f = fixture(boundary === "core" ? { lostCoreReply: true } : { lostReply: true }); await screen.findByText("PRIVATE MEMBER");
   fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" })); await screen.findByRole("alert");
   expect(screen.queryByText("PRIVATE MEMBER")).toBeNull(); expect((screen.getByRole("button", { name: "Tải lại thành viên" }) as HTMLButtonElement).disabled).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" })); await screen.findByText("Đã cấp quyền quản trị công ty.");
   expect(bodies(f.request)).toHaveLength(2); expect(bodies(f.request)[0]).toEqual(bodies(f.request)[1]); expect(f.receipts.size).toBe(1); expect(f.state.version).toBe(8);
+  expect(f.unauthorized).not.toHaveBeenCalled();
 });
 it("historical lost-reply receipt reloads current roles and uses the later version for the next change", async () => {
   const f = fixture({ lostReply: true }); await screen.findByText("PRIVATE MEMBER");

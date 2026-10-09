@@ -1,6 +1,6 @@
 # Existing member administrator changes
 
-Issue #268 / Draft PR #269, under full product #233. The service/API/migration and BFF/member-panel flow are implemented. Actual new role-mutation SQL/Chromium proof passed at228; the current artifact/test checkpoint requires renewed exact-head execution, independent security review and final PR/main delivery.
+Issue #268 / Draft PR #269, under full product #233. The service/API/migration and BFF/member-panel flow are implemented. Actual new role-mutation SQL/Chromium proof and all eight exact gates passed at9c. Full independent review found a committed Core-to-BFF transport-loss retry defect; its verified fix requires renewed exact-head execution and independent closure before final PR/main delivery.
 
 ## Authority and concurrency
 
@@ -19,6 +19,8 @@ Before reading receipts and before saving, the pinned connection repeats global 
 The strict authenticated `/api/company/members/{userId}/administrator` endpoint shares the existing company boundary and no-store middleware. It bounds JSON bytes, rejects missing/extra/duplicate/malformed fields and returns bounded status/conflict messages. Existing member listing and access request/response shapes are unchanged. No API-only checkpoint establishes browser or production acceptance.
 
 ## Remaining delivery
+
+Core may commit a mutation before the BFF receives headers or finishes reading the response body. The shared browser helper now distinguishes this uncertain result from loss of session authority: only a freshly issued SID still bound to the selected company yields a bodyless no-store503. Revocation, expiry, company mismatch or a shared-store failure still yields401 without releasing private bytes. The existing ten-second deadline and eight-MiB shared response bound remain. Real HTTP tests destroy the committed response before headers and during a partial body, exercise same-operation replay and denied final authority; UI tests prove503 retains the operation and blocks further edits until replay.171 focused BFF/API/UI/compatibility tests and type-check pass. Full9c review approval was withheld for this defect; renewed exact CI and frozen independent closure remain required.
 
 The mandatory owned stack invokes an administrator SQL fixture for atomic role/version/audit writes, full role snapshots including supplementary Unicode, historical/no-op/duplicate replay, cross-company/cross-tenant/self/inactive denial, shared access-role and opposite-administrator lock barriers, queued external actor revocation, column/module/role-trigger/impersonation escalation, audit constraint rollback with restored positive, and stored-byte malformed/alias denials. Each barrier requires both real runtime sessions waiting on the SQL application lock before release. Existing identities, non-admin roles, membership state/timestamps and durable tasks are fingerprinted. The fixture refuses unowned CI paths/flags before touching resources. New SQL scenarios pass at e937 and228; current-head hosted execution remains required.
 

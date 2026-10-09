@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/268-member-administrators
 current_pr: 269
-current_target_head: 228df11ea878da129c84742c266f10bd042b6723
+current_target_head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
 last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 268
     pr: 269
     branch: codex/268-member-administrators
-    head: 228df11ea878da129c84742c266f10bd042b6723
+    head: 9c0e2815927e1f3258b8fe280c1487a1a7a209ec
     state: in_progress
-    next: "269 service/API/audit/BFF/UI implemented;228 all8 including new SQL/two-session Chromium PASS. Close current artifact/test checkpoint, full independent frozen review and exact PR/main delivery.266 is delivered."
+    next: "269 all9c eight gates and actual SQL/two-session Chromium PASS. Full review found one P2: committed Core reply loss became401 and discarded stable UI retry. Fix preserves bounded503 only after a fresh same-company SID fence;171 focused web/type-check PASS. Close new exact CI and independent frozen blocker review before PR/main delivery."
 
   frontend:
     issue: null
@@ -91,7 +91,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '268/269228 full new SQL and two-session shipping Chromium all8 PASS. Push sanitized administrator screenshot and historical replay/fresh-version UI test checkpoint; close renewed exact8 CI, inspect/fix red SAME269, obtain full frozen independent security/runtime review then exact PR/main delivery. Installer723 all9 PASS but final runtime review quota limited; stays Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: '2699c all8 PASS but independent full review withheld approval for committed Core-to-BFF reply loss incorrectly becoming401. Shipping fix and real HTTP before-header/partial-body replay and revoked/outage/company-change controls plus UI503 stable retry pass171 focused web/type-check. Close renewed exact8 CI, independently close P2 on frozen HEAD and assess actual transport proof, then final PR/main delivery. Installer723 stays Draft for clean Windows/signing and final review. Full233/customer/production remain.'
 
 
 blocked_by:
