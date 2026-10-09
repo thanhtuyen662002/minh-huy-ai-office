@@ -161,34 +161,53 @@ def verify(*, directory, manifest, compose, environment, http, sql, identity_adm
     assert snapshot() == before
     print("PASS actual revoked-source-grant historical-owner result/archive reads without ERP rerun, dispatch or credit settlement")
 
-    # A native SQL row lock proves each real request passed its initial
-    # directory read and is waiting on private data, before external revocation.
-    def final_fence(path, table, row_scope, selected_company, authority):
+    # RCSI readers bypass row locks. A transaction-owned schema modification
+    # lock on the private table blocks its Sch-S read without changing database
+    # isolation. The nullable fixture column is rolled back before every reply.
+    def final_fence(path, table, selected_company, authority):
+        assert table in ("TaskEvents", "TaskCheckpoints")
+        assert sql("SELECT is_read_committed_snapshot_on FROM sys.databases WHERE name=N'AIOfficeLocal';") == "1"
+        private_object_id = int(sql(f"USE AIOfficeLocal; SELECT OBJECT_ID(N'aioffice.{table}');"))
+        assert private_object_id > 0
         gate = "dbo.ArchiveGate_" + uuid.uuid4().hex
+        column = "ArchiveBarrier_" + uuid.uuid4().hex
         member = f"TenantId='{tenant}' AND CompanyId='{selected_company}' AND UserId='{owner}'"
         sql(f"USE AIOfficeLocal; CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
         query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
           UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
-          UPDATE aioffice.{table} WITH(ROWLOCK) SET PayloadJson=PayloadJson WHERE {row_scope};
+          ALTER TABLE aioffice.{table} ADD [{column}] bit NULL;
           DECLARE @deadline datetime2=DATEADD(second,30,SYSUTCDATETIME());
           WHILE (SELECT Released FROM {gate} WITH(READUNCOMMITTED))=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.100';
           ROLLBACK TRANSACTION;"""
         locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
             'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -Q "$1"',
             "sql", query], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
-        def await_condition(predicate, seconds=6):
+        pending = None
+        def await_condition(predicate, phase, seconds=8):
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 if predicate(): return
+                if locker.poll() is not None:
+                    raise AssertionError("Native archive " + phase + " barrier session ended early")
+                if pending is not None and pending.done():
+                    raise AssertionError("Native archive private read completed before the required queued barrier")
                 time.sleep(.1)
-            raise AssertionError("Native archive read barrier was not reached")
+            raise AssertionError("Native archive " + phase + " barrier was not reached")
         executor = None
         try:
-            await_condition(lambda: sql(f"SELECT COUNT(*) FROM sys.dm_tran_locks l WHERE l.request_session_id=(SELECT OwnerSpid FROM AIOfficeLocal.{gate}) AND l.request_mode=N'X' AND l.resource_database_id=DB_ID(N'AIOfficeLocal');") != "0")
+            await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_tran_locks l
+              WHERE l.request_session_id=(SELECT OwnerSpid FROM {gate}) AND l.request_mode=N'Sch-M'
+                AND l.request_status=N'GRANT' AND l.resource_type=N'OBJECT' AND l.resource_database_id=DB_ID()
+                AND l.resource_associated_entity_id={private_object_id};""")) > 0, "owned schema-lock")
             executor = ThreadPoolExecutor(max_workers=1); pending = executor.submit(get, path, authority)
-            await_condition(lambda: sql(f"""SELECT COUNT(*) FROM sys.dm_exec_requests r JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+            await_condition(lambda: int(sql(f"""USE AIOfficeLocal; SELECT COUNT(*) FROM sys.dm_exec_requests r
+              JOIN sys.dm_exec_sessions s ON s.session_id=r.session_id
+              JOIN sys.dm_tran_locks l ON l.request_session_id=r.session_id
               CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t WHERE s.login_name=N'aioffice_runtime'
-                AND r.blocking_session_id=(SELECT OwnerSpid FROM AIOfficeLocal.{gate}) AND t.text LIKE N'%{table}%';""") == "1")
+                AND r.blocking_session_id=(SELECT OwnerSpid FROM {gate}) AND r.wait_type=N'LCK_M_SCH_S'
+                AND l.request_mode=N'Sch-S' AND l.request_status IN(N'WAIT',N'CONVERT')
+                AND l.resource_type=N'OBJECT' AND l.resource_database_id=DB_ID()
+                AND l.resource_associated_entity_id={private_object_id} AND t.text LIKE N'%{table}%';""")) > 0, "queued private-read")
             sql(f"USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0 WHERE {member}; UPDATE {gate} SET Released=1;")
             status, body = pending.result(timeout=15); assert status == 403 and body in ("", None)
         finally:
@@ -199,10 +218,10 @@ def verify(*, directory, manifest, compose, environment, http, sql, identity_adm
             if executor is not None: executor.shutdown(wait=True, cancel_futures=True)
             sql(f"USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE {member}; DROP TABLE {gate};")
         assert locker.returncode == 0 and get(path, authority)[0] == 200, "Archive barrier/restored positive failed"
-    final_fence("/api/tasks", "TaskEvents", task_scope + " AND Sequence=1", archive_company, headers)
-    final_fence(f"/api/tasks/{task_ids[0]}/history", "TaskCheckpoints", task_scope + " AND Version=1", archive_company, headers)
-    retained_scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND TaskId='{retained_task}'"
-    final_fence(f"/api/tasks/{retained_task}", "TaskCheckpoints", retained_scope, company, auth)
+        assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID(N'aioffice.{table}') AND name=N'{column}';") == "0"
+    final_fence("/api/tasks", "TaskEvents", archive_company, headers)
+    final_fence(f"/api/tasks/{task_ids[0]}/history", "TaskCheckpoints", archive_company, headers)
+    final_fence(f"/api/tasks/{retained_task}", "TaskCheckpoints", company, auth)
     assert snapshot() == before
     print("PASS native queued SQL list/archive/legacy-result final membership revocation, empty403 and restored positive with unchanged task/identity/role/audit graph")
     # Only disposable fixture identifiers/usernames cross into the subsequent

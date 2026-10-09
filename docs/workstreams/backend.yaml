@@ -343,3 +343,13 @@ task_history_actual_d249_failure:
   fix: 'Owned native SQL commands now carry exact large fixture bytes through structured subprocess stdin to sqlcmd /dev/stdin. No fixture shrink or raw CLI diagnostic output; safe bounded SQL message number only.6 guard/transport unit tests and Python syntax PASS, including large payload excluded from argv and private error redaction. Renewed mandatory hosted execution required.'
   browser: 'Added guarded actual two Code/S256 shipping archive proof consuming only protected disposable fixture identifiers, list/detail completed/pending/failed, reload/new issued SID recovery, reciprocal owner404 even for admin, two-way company switch with held real successful detail and attempted late delivery, external membership loss/private clear/restored positive, stable task/event/step/checkpoint/dispatch/identity/role/audit/credit fingerprints, sanitized task-history.png artifact. JS syntax/3 guard tests20 refusal cases/workflow YAML/diff PASS; no actual new browser acceptance yet.'
   next: 'Push same271 verified proof/transport checkpoint, own exact-head CI through new SQL/Chromium controls and fix all real failures. Then inspect all three current images and obtain full frozen independent security/runtime review before readiness or merge. Full233 active;239 Draft.'
+
+task_history_rcsi_barrier_repair:
+  prior_head: 2a35d8caa6e3fb2fcfcb57cae24e97b4ba86cb86
+  build: 37881175769
+  governance: 37881175753
+  actual: 113660977545
+  quality: 113662614845
+  result: 'Seven gates/Governance PASS; actual owner/company/admin/equal-time pages, stored raw UTF16 surrogate/oversize/duplicate/unknown refusal and restored Unicode positives, historical source-grant revoked owner reads and unchanged fingerprints PASS. Native final-read barrier terminal red because unchanged RCSI readers bypass the fixture row X lock. Chromium not executed; no full acceptance.'
+  fix: 'Owned disposable fixture holds transaction-owned Sch-M via adding a nullable random column to the private TaskEvents/TaskCheckpoints table, then rolls it back. Observe exact granted target Sch-M and runtime queued Sch-S plus blocker/query/table before external membership revoke; initial directory tables remain available. Preserve original RCSI and shipping code. Confirm empty403/restored200, absent fixture column and unchanged graph/credit fingerprints.6 guard/transport tests and Python syntax/diff PASS locally; actual execution remains mandatory.'
+  next: 'Push same271 checkpoint, close exact SQL/Chromium CI and fix terminal defects. Then inspect three current images and obtain independent full frozen review before readiness/merge. Full233 active;239 Draft.'
