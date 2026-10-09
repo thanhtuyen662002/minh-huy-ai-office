@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/272-task-submission-recovery
     head: 766a7876807d8114970073b4035ad4448c814e28
     state: in_progress
-    next: '272/274 active:4a3f7d7 exact Build37933006487/Gov37933006445/all8/actual113828701575/quality113831464753 PASS; shipping composer/recovery and all3 images11617472248 inspected. Accepted main9155 docs280 integrated at766a787; main Build37965672759 actual113939282835 pending/Gov37965672896 PASS. New native prepare/concurrent/quota/permission/corruption/expiry/outbox rollback proof has8 local guards/syntax PASS; hosted execution and remaining queued/indirect/realCore202/Chromium/fullreview mandatory.'
+    next: '272/274 active:130b native immutable preparation PASS, concurrent first202/Location assertion terminalred actual113941667480/Build37966385867; other6/Governance PASS. Split bounded HTTP/Location diagnosis; independent proof P2 fixed with initial graph/global row deltas and unchanged zero-credit settlement before replay baselines. Guarded realCore202 header/body andprepare loss plus shipping recovery/newSID/twoCodeS256/source/latecompany proof added, local6Node/8Python/syntax PASS; hosted execution mandatory. Main9155 all8 Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS.'
 
   erp_data:
     issue: 264
@@ -35,7 +35,7 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
-  - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR gates. Main Build37965672759/actual113939282835 pending; Gov37965672896 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
+  - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR/main gates. Main Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
   - 'PR271/issue270 deliveredmain420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca with full frozen reviews6077185197/6077227682 and exactPR/main Build37905169739/Gov37905169543/all8/actual113736786869/quality113739461629 PASS. All3 sanitized main images11604905419 inspected.'
   - 'PR269 / issue268 deliveredmain3fcfa9a8541491c6a4d349bc31fd02d87d12284e with full frozen review6073002478/final6073139900 and exact PR/main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 all8 PASS. Main sanitized artifact11592885599 visually inspected.'
   - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'

@@ -91,9 +91,18 @@ submission_initial_native_proof_checkpoint:
   result: 'Exact UI all8 PASS including retained actual SQL/worker/OIDC/twoCodeS256Chromium using the new shipping intent-submit path; root visually inspected all3 current images readable/reachable/unclipped/no secrets. New native proof adds immutable Unicode/fixed TTL/no-effects, concurrent same-op independent identities/one worker attempt, every-column append-only/real column escalation refusal, raw stored corruption, expired-vs-committed recovery, actual outbox rollback, two-provider owner/company isolation, concurrent99/100/101 quota and only validated acceptance exclusion.8 local guard/vector/transport controls and Python syntax/diff PASS; new native proof has not executed on hosted SQL yet.'
   accepted_main: 9155b987d028ad097e36b5cfebdc2ee8efe6fcb5
   integrated_at: 766a7876807d8114970073b4035ad4448c814e28
-  main_ci: 'Docs280 independent scoped review6085798484 and all8 exact PR PASS; main Build37965672759 actual113939282835 pending/Gov37965672896 PASS. No executable shipping change or275-279 completion. Existing272/239 leases preserved.'
+  main_ci: 'Docs280 independent scoped review6085798484 and all8 exact PR/main PASS; main Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS. No executable shipping change or275-279 completion. Existing272/239 leases preserved.'
   remaining: 'Execute and fix new native proof on exact same274 CI. Add indirect SQL escalation, actually queued new/replay authority loss, reserved legacy conflicts and realCore committed202/prepare reply-loss plus shipping recovery/reload/newSID/twoCodeS256/late-body/no-extra-effects proof. Full frozen independent review and exactPR-main remain mandatory.'
-next_action: 'Push native-proof checkpoint and close exact274/main9155 CI; fix all real failures on same274. Continue mandatory queued/indirect/realCore202/Chromium acceptance and full frozen review before readiness/merge.275-279 docs priority for next non-competing capacity;273 queued;239 actualWindows-signingDraft/full233 active.'
+submission_native_diagnosis_and_browser_checkpoint:
+  predecessor: 130b593629971d66002baaab6960bba94e3754cf
+  build: 37966385867
+  governance: 37966385873
+  actual: 113941667480
+  quality: 113944479705
+  result: 'Six prerequisite gates/Governance PASS; retained native stack/history PASS and new immutable Unicode/fixed TTL/GET no-effects PASS. First concurrent202/Location combined assertion terminalred; later native/browser acceptance not executed. Split numeric HTTP failure from fixed Location mismatch without private diagnostics.'
+  review: 'Independent frozen130b review found one P2 proof false positive: extra graphs or charges could become initial settled baseline. Fixed with total global row deltas1/1/3/1/1/1/0, exact owned graph cardinalities and unchanged zero-credit settlement fingerprint BEFORE each initial/rollback/secondary execution baseline. This is proof coverage, not a reproduced shipping defect.'
+  browser: 'Owned proxy now recognizes only fully received actual Core typed committed202/fixed-lifetime prepare200, then drops headers or partial body. New actual shipping browser proof covers explicit same-fingerprint retry/stable SID/no extra effects, prepare loss/reload/new CodeS256 issuedSID/GET-only restoration, source disabled historical read versus fresh send denial/restoration, reciprocal owner404/two companies/second CodeS256 admin, held successful private intent across company switch. Adds sanitized task-submission.png.6 Node guard/receipt controls and8 Python guards/vectors/syntax PASS; actual new browser has not executed.'
+next_action: 'Push same274 native diagnosis/first-commit proof-oracle repair and actual browser proof; close exact CI and immediately fix actionable failures. Remaining queued/indirect/legacy controls and full frozen review before readiness/merge.275-279 docs priority;273 queued;239 actualWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

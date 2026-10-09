@@ -8,6 +8,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs";
 import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
+import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
 
 let stage = "disposable-fixture-guard", browser, safeFailureLogs, restoreCoreTransport;
 const requireProof = condition => { if (!condition) throw new Error("Browser proof failed."); };
@@ -532,6 +533,8 @@ try {
   console.log("PASS actual Chromium authoritative company choices, two-way provider switching, reload/private-data separation and target membership revoke/restore");
   await verifyTaskHistory({ directory, manifest, browser, ownerPage: page, ownerContext: context, sql, app, identity,
     setStage: value => { stage = value; } });
+  await verifyTaskSubmission({ directory, manifest, browser, ownerPage: page, ownerContext: context, sql, app, identity,
+    coreReplyFault, setStage: value => { stage = value; } });
   stage = "sanitized-ui-artifact";
   requireProof(!JSON.stringify(await current()).includes(manifest.AIOFFICE_OWNER_PASSWORD));
   const artifact = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof"); await mkdir(artifact, { recursive: true });

@@ -77,6 +77,22 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
             values.append(value)
         return values
 
+    def effect_counts():
+        counts = [f"(SELECT COUNT_BIG(*) FROM aioffice.{table})" for table in tables]
+        return [int(value) for value in sql("USE AIOfficeLocal; SELECT CONCAT(" + ",N',',".join(counts) + ");").split(",")]
+
+    def require_one_graph(previous_counts, previous_snapshot, task):
+        # Validate the first commit BEFORE it becomes the replay baseline.
+        # This pilot performs one zero-credit read probe and adds request + two
+        # terminal status events; no unrelated/orphan graph or charge is allowed.
+        assert [after - before for before, after in zip(previous_counts, effect_counts(), strict=True)] == [1, 1, 3, 1, 1, 1, 0], "Admission created unexpected graph or credit rows"
+        assert snapshot()[-1] == previous_snapshot[-1], "Pilot submission altered credit settlements"
+        for table in tables:
+            if table == "CustomerAiCreditSettlements": continue
+            task_filter = f"Id='{task}'" if table == "Tasks" else f"TaskId='{task}'"
+            expected = "3" if table == "TaskEvents" else "1"
+            assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.{table} WHERE {scope} AND {task_filter};") == expected, "Unexpected owned task graph cardinality"
+
     def await_completed(task):
         deadline = time.monotonic() + 60
         while time.monotonic() < deadline:
@@ -85,6 +101,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
         raise AssertionError("Owned submission worker did not complete")
 
     before = snapshot()
+    initial_counts = effect_counts()
     status, _, prepared = call("/api/tasks/intents", request)
     assert status == 200 and prepared["state"] == 0 and prepared["inputFingerprint"] == fingerprint
     assert prepared["question"] == question and prepared["dataSourceId"] == source and prepared["accepted"] is None
@@ -103,7 +120,8 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     with ThreadPoolExecutor(max_workers=2) as executor:
         accepted = list(executor.map(lambda _: call(path + "/submit", {"inputFingerprint": fingerprint}), range(2)))
     for status, headers, receipt in accepted:
-        assert status == 202 and headers.get("Location") == f"/api/tasks/{expected_task}/history"
+        assert status == 202, f"Concurrent owned submit expected202, got HTTP{int(status)}"
+        assert headers.get("Location") == f"/api/tasks/{expected_task}/history", "Concurrent owned submit Location identity mismatch"
         assert (receipt["companyId"], receipt["operationId"], receipt["dataSourceId"], receipt["inputFingerprint"],
             receipt["taskId"], receipt["stepId"], receipt["messageId"]) == (company, operation, source, fingerprint, expected_task, expected_step, expected_message)
     task_scope = scope + f" AND TaskId='{expected_task}'"
@@ -111,6 +129,7 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskStepExecutions WHERE {task_scope} AND Attempt=1 AND LastFailureClass IS NULL;") == "1"
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskDispatches WHERE {task_scope} AND MessageId='{expected_message}' AND Attempt=1;") == "1"
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskCheckpoints WHERE {task_scope};") == "1"
+    require_one_graph(initial_counts, before, expected_task)
     settled = snapshot()
     assert call(path)[2]["state"] == 1
     assert call(path + "/submit", {"inputFingerprint": fingerprint})[2]["taskId"] == expected_task
@@ -183,8 +202,10 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
         assert call(rollback_path)[2]["state"] == 0 and snapshot() == settled
     finally:
         sql(f"USE AIOfficeLocal; ALTER TABLE aioffice.TaskDispatches DROP CONSTRAINT [{constraint}];")
+    rollback_counts = effect_counts()
     assert call(rollback_path + "/submit", {"inputFingerprint": fingerprint})[2]["taskId"] == rollback_task
     await_completed(rollback_task)
+    require_one_graph(rollback_counts, settled, rollback_task)
     settled = snapshot()
     assert call(rollback_path + "/submit", {"inputFingerprint": fingerprint})[2]["taskId"] == rollback_task and snapshot() == settled
     print("PASS native actual outbox-write failure rolls back the whole graph and restored same-operation retry creates one completed task")
@@ -219,8 +240,10 @@ def verify(*, directory, manifest, compose, environment, http, sql, runtime_stat
     committed_op = operations[0]
     committed_path = "/api/tasks/intents/" + committed_op
     committed_task = task_identity(tenant, company, other_user, committed_op)
+    secondary_counts = effect_counts()
     assert call(committed_path + "/submit", {"inputFingerprint": fingerprint}, other_auth)[2]["taskId"] == committed_task
     await_completed(committed_task)
+    require_one_graph(secondary_counts, settled, committed_task)
     assert call("/api/tasks/intents", {**request, "operationId": str(uuid.uuid4())}, other_auth)[0] == 200
     assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.TaskSubmissionIntents WHERE {other_scope};") == "101"
     assert call("/api/tasks/intents", {**request, "operationId": committed_op}, other_auth)[2]["state"] == 1
