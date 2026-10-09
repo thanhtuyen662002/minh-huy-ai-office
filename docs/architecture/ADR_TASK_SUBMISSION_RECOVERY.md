@@ -1,6 +1,6 @@
 # Durable task submission and uncertain acceptance
 
-Issue272, under full product233. Design checkpoint before implementation. Accepted dependency:270/271 at main `420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca`, exact PR/main gates and full frozen reviews6077185197/6077227682. No shipping272 behavior or new runtime acceptance is claimed by this ADR.
+Issue272/PR274, under full product233. Contract and persistence foundation implemented; API/BFF/UI and actual acceptance are in progress. Accepted dependency:270/271 at main `420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca`, exact PR/main gates and full frozen reviews6077185197/6077227682. No full272 delivery or new intent runtime acceptance is claimed by this ADR.
 
 ## Problem and lifetime
 

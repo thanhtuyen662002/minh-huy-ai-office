@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/272-task-submission-recovery
 current_pr: 274
-current_target_head: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
-last_verified_commit: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+current_target_head: b51865e4324eb768fbaf9cdac19aee5cafce82d5
+last_verified_commit: b51865e4324eb768fbaf9cdac19aee5cafce82d5
 
 critical_paths:
   backend:
     issue: 272
     pr: 274
     branch: codex/272-task-submission-recovery
-    head: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+    head: b51865e4324eb768fbaf9cdac19aee5cafce82d5
     state: in_progress
-    next: '272/274 active: strict version1 immutable input/operation contract and23 golden/scalar/identity controls implemented; full393 Contracts PASS. Continue additive append-only intent migration/service with fresh serialized admission and owner recovery.270 delivered;273 queued after272.'
+    next: '272/274 active: contract b518 exact all8 PASS; additive immutable intent migration/service, fresh serialized admission, strict owner recovery and legacy reserved-key fences implemented;815 Persistence/393 Contracts local PASS. Continue strict API/BFF/composer and actual SQL/Chromium proof.270 delivered;273 queued after272.'
 
   erp_data:
     issue: 264

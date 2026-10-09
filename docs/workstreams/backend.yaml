@@ -4,7 +4,7 @@ status: active-development
 current_issue: 272
 current_pr: 274
 current_branch: codex/272-task-submission-recovery
-head: 420db0672fb4b61f28f7ad0de5e63d3bd2ca97ca
+head: b51865e4324eb768fbaf9cdac19aee5cafce82d5
 state: in_progress
 lease_owner: root-backend-272
 lease_heartbeat_at: '2026-10-09'
@@ -20,6 +20,16 @@ submission_contract_checkpoint:
   result: 'Claim-only exact all8 PASS with shipping/proof equal acceptedmain420; no272 runtime acceptance. New strict required/unmapped request DTOs, scoped typed intent/accepted receipt, fixed24h/100 bounds, stable reserved key and explicit byte SHA256 fingerprint implemented.23 new independent golden-vector/scalar/maxUTF16/legacyidentity/JSON controls and full393 Contracts PASS; changed-file whitespace/diff checks PASS.'
   review: 'Frozen6ee preimplementation ADR independently has no design blocker. Clarified fixed TTL/no renewal, preserve earlier intents on newoperation, committed-evidence quota, append-only effective SQL rights and strict stored bytes/hash including reserved-key legacy conflicts. Full shipping/runtime acceptance remains.'
   next: 'Continue same274 additive immutable intent migration/service/API and fresh serialized authority/source admission, then BFF/UI and mandatory owned realCore202 receipt-loss/reload/newSID/SQL-worker-Chromium one-effect proof. Capture exact contract checkpoint and CI in HANDOFF afterpush; do not stop at contract scaffold.'
+submission_persistence_checkpoint:
+  predecessor: b51865e4324eb768fbaf9cdac19aee5cafce82d5
+  predecessor_build: 37907520578
+  predecessor_governance: 37907520539
+  predecessor_actual: 113744473404
+  predecessor_quality: 113746874008
+  result: 'Contract predecessor all8 exact PASS. Additive owner/membership-keyed immutable intent migration/SQL DENY rights and fresh global/table verifier; strict bounded stored UTF16/hash/version/lifetime restoration, fixed no-renewal24h,100-active quota under shared company/serializable lock, deliberate execution in one existing graph transaction, exact authoritative task/event/step/execution/first-dispatch recovery and historical owner GET implemented. Legacy header callers keep identity/DTO and cannot replace prepared reserved-key input or expired uncommitted intent.'
+  local: '46 new Persistence service/admission/permission/model controls plus all815 Persistence and393 Contracts PASS. Changed-code format, pending-model check, generated forward SQL and diff checks PASS. Sequential100 quota tests are synthetic; actual SQL concurrent99/100/101/permissions/revocation and realCore receipt-loss/browser proof remain mandatory.'
+  limitation: 'New intent service is not yet API/BFF/UI exposed. Nullable unavailable timestamps prevent malformed persisted dates escaping into private DTOs. Independent contract reviewer hit usage limit; no shipping approval claimed.'
+  next: 'Push verified same274 foundation, close its exact CI while implementing strict bounded API then issued-SID BFF/composer/server recovery and mandatory owned SQL/Chromium proof. Do not merge until full272 acceptance/review/exactPR-main.'
 scope:
   - durable-owner-company-submission-intent-and-exact-operation-replay
   - final-fresh-admission-source-authority-and-safe-typed-receipts
@@ -34,7 +44,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Acquire272 Draft lease from fullyacceptedmain420; implement ADR_TASK_SUBMISSION_RECOVERY durable immutable intents/noTask preparation, explicit same-operation submit, owner GET recovery afterreload-newSID, fresh authority/source and typed receipts. Mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
+next_action: '272/274 persistence foundation locally verified; implement strict bounded API and issued-SID BFF/composer/server recovery. Close current exact CI and mandatory realCore committedheader-body loss/onegraph-worker-noextracharge/nativeSQL/Chromium/fullfrozenreview/exactPR-main.273 queuedafter272;239 externalWindows-signingDraft/full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107

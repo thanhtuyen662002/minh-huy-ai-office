@@ -62,8 +62,8 @@ public sealed record TaskSubmissionIntentDetail(
     Guid? DataSourceId,
     string? Question,
     string? InputFingerprint,
-    DateTimeOffset CreatedAtUtc,
-    DateTimeOffset ExpiresAtUtc,
+    DateTimeOffset? CreatedAtUtc,
+    DateTimeOffset? ExpiresAtUtc,
     TaskSubmissionAcceptedReceipt? Accepted);
 
 public sealed record TaskSubmissionIntentPage(
