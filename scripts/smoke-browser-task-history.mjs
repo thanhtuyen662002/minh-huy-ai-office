@@ -108,21 +108,31 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     await openHistory(ownerPage); await openCompleted(ownerPage);
     console.log("PASS actual shipping owner history completed/pending/failed/detail, reload and new issued-session recovery without task rerun");
 
-    stage("second-provider-code-s256-owner-isolation");
+    stage("second-provider-default-company-sign-in");
     const secondary = await secondaryContext.newPage(); secondary.setDefaultTimeout(15_000); secondary.setDefaultNavigationTimeout(20_000);
-    await secondary.goto(app + query);
+    await secondary.goto(app);
     const otherAuth = secondary.waitForRequest(request => request.url().startsWith(identity + "/realms/aioffice-local/protocol/openid-connect/auth?"));
     await secondary.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click();
     const authorization = new URL((await otherAuth).url()); requireProof(authorization.searchParams.get("code_challenge_method") === "S256"
-      && authorization.searchParams.get("response_type") === "code");
+      && authorization.searchParams.get("response_type") === "code" && authorization.searchParams.get("code_challenge"));
+    stage("second-provider-credential-form");
     await secondary.locator("#username").waitFor({ state: "visible" }); requireProof(new URL(secondary.url()).origin === identity);
     const otherCallback = secondary.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     await secondary.locator("#username").fill(fixture.otherUsername); await secondary.locator("#password").fill(manifest.AIOFFICE_OWNER_PASSWORD);
+    stage("second-provider-default-company-callback");
     await secondary.locator("#kc-login").click(); requireProof((await otherCallback).status() === 303);
     await secondary.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    const initial = await get(secondary, "/api/local/session?companyId=" + originalCompany), initialSid = await cookie(secondaryContext);
+    requireProof(initial.status === 200 && initial.cache === "no-store" && JSON.parse(initial.text).userId === fixture.otherUserId
+      && JSON.parse(initial.text).companyId === originalCompany && !JSON.parse(initial.text).roles.includes("admin")
+      && initialSid && initialSid !== await cookie(ownerContext));
+    stage("second-provider-shipping-company-switch");
+    await switchCompany(secondary, selected);
+    stage("second-provider-code-s256-owner-isolation");
     const otherCurrent = await get(secondary, "/api/local/session" + query), otherSid = await cookie(secondaryContext);
-    requireProof(otherCurrent.status === 200 && JSON.parse(otherCurrent.text).userId === fixture.otherUserId
-      && JSON.parse(otherCurrent.text).roles.includes("admin") && otherSid && otherSid !== await cookie(ownerContext));
+    requireProof(otherCurrent.status === 200 && otherCurrent.cache === "no-store" && JSON.parse(otherCurrent.text).userId === fixture.otherUserId
+      && JSON.parse(otherCurrent.text).companyId === selected && JSON.parse(otherCurrent.text).roles.includes("admin")
+      && otherSid && otherSid !== initialSid && otherSid !== await cookie(ownerContext));
     await secondary.getByRole("button", { name: "Công việc", exact: true }).click(); await secondary.getByRole("cell", { name: "Other owner task", exact: true }).waitFor();
     const otherList = await get(secondary, "/api/local/tasks" + query); requireProof(otherList.status === 200 && JSON.parse(otherList.text).items.length === 1
       && JSON.parse(otherList.text).items[0].taskId === fixture.taskIds[3] && !otherList.text.includes(question));

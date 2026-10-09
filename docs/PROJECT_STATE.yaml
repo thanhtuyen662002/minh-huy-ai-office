@@ -14,9 +14,9 @@ critical_paths:
     issue: 270
     pr: 271
     branch: codex/270-task-history
-    head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+    head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
     state: in_progress
-    next: 'Acquire linked Draft lease; bounded owner-only history/detail and final fresh authority; archive reads never rerun ERP or charge. Follow issue270 contract review6073185825, preserve trusted historical-owner result policy.'
+    next: 'Same271 actual CI closure after secondary owned default-company login and real provider picker repair.6ea all native plus owner archive/reload/newSID PASS; secondary URL-scope fixture failed. Frozen review/all3 images/exact final PR-main gates required;272 depends on270 accepted main.'
 
   erp_data:
     issue: 264
@@ -76,7 +76,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '269 delivered with full frozen approval and exact PR/main all8 SQL/OIDC/Chromium PASS. Acquire270 Draft from accepted main3fc and implement durable owner task recovery; exact-head CI and independent review required. Installer723 scoped APPROVED,239 remainsDraft for clean Windows/signing and needs accepted-main integration. Full233 and qualified customer/production evidence remain.'
+next_action: 'Own current271 closure: repair secondary owned fixture through default-company Code/S256 signin then shipping provider picker, preserve server-selected scope, close actual history/native/fingerprints/all3 images/frozen review/exact final PR-main. Installer22f internally approved/all9 PASS,239 Draft for clean Windows/signing; integrate271 only after acceptedmain.272 queued after270; full233/customer/production remain.'
 
 
 blocked_by:
@@ -439,3 +439,14 @@ installer_verified_accepted_administrators_22f:
   review_receipt: 6076386907
   result: 'Frozen22f integration/runtime/docs/artifacts independently APPROVED. Exact9 gates PASS, pinned self-contained bundle/76 core/20 simulated responsive layout cases/34 isolated Windows checks and all retained SQL/OIDC/Chromium including accepted administrator/Core committed reply loss PASS. NonSetup source/apps/tests equal acceptedmain3fc, Setup bytes equal approved723; additive solution/native ninth gate preserved. Root and independent inspected current previews and both sanitized browser images; readable/no secrets. Actual NotSigned, no privileged/clean installation claim.'
   next: 'Preserve internally accepted22f on separate239 Draft; no current CI/code repair remains. Clean Windows/UAC/reboot/resume/startup/repair/backup/signing remain external before238 delivery. Integrate271 only after full accepted delivery/exact main. Full233 active.'
+
+task_history_secondary_fixture_repair:
+  head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
+  build: 37898919779
+  governance: 37898919807
+  actual: 113716646268
+  quality: 113718556596
+  result: 'Seven prerequisites/Governance PASS. ALL native history SQL including canonical empty/null-row/changed/restored SHA256 and zero actual settlement controls PASS. Retained Chromium and shipping owner completed/pending/failed/detail/uppercase GUID/reload/newSID recovery PASS. New browser terminal red at secondary provider isolation; later company/late-reply/revoke/images not executed.'
+  cause_and_fix: 'Fresh Home deliberately ignores URL company selectors and uses configured default until issuedSID selects company. Owned second identity had archive membership only, so default-company callback denied. Independent original Home controls confirm server authority. Give disposable second identity default-company viewer membership before fingerprints; actual ordinary Code/S256 UI login must confirm that viewer/current company, then real shipping picker performs Code/S256 switch to archive admin with newSID. Both full-row fingerprints include those original fixture memberships/roles; no product scope change or assertion bypass.'
+  local: '74 new web including pagination/second-page detail/same-page refresh/read-only request assertions and typecheck PASS.51 focused.NET and45 retained session race controls previously independently PASS. Renewed guard/syntax checks and mandatory hosted execution required for fixture change.'
+  next: 'Own same271 exact current native/Chromium closure, split fixed secondary form/callback/picker stages to diagnose real failures without private logs, inspect all3 current images and full frozen review before readiness/merge/main. Full233 active;239 external Windows/signing Draft;272 dependency retained.'

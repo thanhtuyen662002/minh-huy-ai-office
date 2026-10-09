@@ -4,7 +4,7 @@ status: active-development
 current_issue: 270
 current_pr: 271
 current_branch: codex/270-task-history
-head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
 state: in_progress
 lease_owner: root-backend-270
 lease_heartbeat_at: '2026-10-09'
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'Acquire linked270 Draft PR from accepted main3fc, then implement bounded owner-only history and sanitized archive detail with final fresh authority; unit/API/BFF/UI plus mandatory owned SQL/Chromium and frozen review. Existing result historical-owner policy remains; no implicit source rerun or admin-wide discovery. Installer239 remainsDraft; full233 active.'
+next_action: 'Close same271 actual SQL/Chromium after owned secondary default-company signin and real provider picker repair.6ea native and owner recovery PASS, secondary fixture failed; no full approval. Inspect three current images, frozen independent review and exact final PR/main gates before merge.272 depends on270 accepted main;239 remainsDraft; full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
@@ -387,3 +387,14 @@ task_history_empty_fingerprint_repair:
   independent: 'Frozen cd shipping/security/static review has no remaining concrete blocker; GUID P2 independently CLOSED with original502 probes now200,51.NET/73shippingweb+2reviewer/45retainedsession/typecheck/4Node+6Python PASS. Full approval remains conditional on actual new browser/fingerprints/images/exact gates.'
   local: '4 browser guard/preparation and6 native guard/transport controls, JS/Python syntax/YAML/diff PASS. New canonical empty native/runtime proof has not executed yet; do not infer acceptance.'
   next: 'Push same271 proof repair, own exact CI and fix real defects through actual archive navigation/reload/two-users/two-companies/late-detail/native-revoke/no-effects and all3 images. Independent frozen final review then PR/main. Full233 active;272 queued dependency.'
+
+task_history_secondary_fixture_repair:
+  head: 6ea2f0b207914e8c78bc9361501923e742e30ef4
+  build: 37898919779
+  governance: 37898919807
+  actual: 113716646268
+  quality: 113718556596
+  result: 'Seven prerequisites/Governance PASS. ALL native history SQL including canonical empty/null-row/changed/restored SHA256 and zero actual settlement controls PASS. Retained Chromium and shipping owner completed/pending/failed/detail/uppercase GUID/reload/newSID recovery PASS. New browser terminal red at secondary provider isolation; later company/late-reply/revoke/images not executed.'
+  cause_and_fix: 'Fresh Home deliberately ignores URL company selectors and uses configured default until issuedSID selects company. Owned second identity had archive membership only, so default-company callback denied. Independent original Home controls confirm server authority. Give disposable second identity default-company viewer membership before fingerprints; actual ordinary Code/S256 UI login must confirm that viewer/current company, then real shipping picker performs Code/S256 switch to archive admin with newSID. Both full-row fingerprints include those original fixture memberships/roles; no product scope change or assertion bypass.'
+  local: '74 new web including pagination/second-page detail/same-page refresh/read-only request assertions and typecheck PASS.51 focused.NET and45 retained session race controls previously independently PASS. Renewed guard/syntax checks and mandatory hosted execution required for fixture change.'
+  next: 'Own same271 exact current native/Chromium closure, split fixed secondary form/callback/picker stages to diagnose real failures without private logs, inspect all3 current images and full frozen review before readiness/merge/main. Full233 active;239 external Windows/signing Draft;272 dependency retained.'

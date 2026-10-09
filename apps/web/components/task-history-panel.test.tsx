@@ -35,6 +35,30 @@ it("keeps completed status and gives an actionable unavailable result", async ()
 it("empty archive offers the existing assistant workflow", async () => {
   fixture(() => Response.json({ ...page, items: [] })); await screen.findByText(/Chưa có công việc trong trang này/);
 });
+it("pages owner history, opens the later task and refreshes that page through reads only", async () => {
+  const firstItems = Array.from({ length: 25 }, (_, index) => ({ ...task,
+    taskId: `30000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`, summary: `First page task ${index + 1}` }));
+  const later = { ...task, taskId: "44444444-4444-4444-4444-444444444444", summary: "Second page task" };
+  const laterResult = { ...saved, answer: "Saved second-page answer" };
+  const { request } = fixture(url => Response.json(url.includes("/history?")
+    ? { ...detail, task: later, result: laterResult }
+    : new URL(url, "http://fixture.invalid").searchParams.get("offset") === "25"
+      ? { ...page, offset: 25, items: [later] } : { ...page, items: firstItems, hasMore: true }));
+  await screen.findByText("First page task 1");
+  expect((screen.getByRole("button", { name: "Trang trước" }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Trang sau" })); await screen.findByText(later.summary);
+  expect(screen.queryByText("First page task 1")).toBeNull(); expect(screen.getByText("Trang 2")).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Trang sau" }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Xem công việc Second page task" })); await screen.findByText(laterResult.answer);
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại công việc" }));
+  await waitFor(() => expect(screen.queryByText(laterResult.answer)).toBeNull()); await screen.findByText(later.summary);
+  expect(screen.getByText("Trang 2")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Trang trước" })); await screen.findByText("First page task 1");
+  expect(screen.queryByText(later.summary)).toBeNull(); expect(screen.getByText("Trang 1")).toBeTruthy();
+  expect(request.mock.calls.filter(([, url]) => !url.includes("/history?")).map(([, url]) => new URL(url, "http://fixture.invalid").searchParams.get("offset")))
+    .toEqual(["0", "25", "25", "0"]);
+  expect(request.mock.calls.every(([, , init]) => (!init?.method || init.method === "GET") && init?.cache === "no-store")).toBe(true);
+});
 it("aborts and fences an old detail when a newer list refresh completes first", async () => {
   let finish!: (response: Response) => void, oldSignal: AbortSignal | null | undefined;
   const pending = new Promise<Response>(resolve => { finish = resolve; });

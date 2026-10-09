@@ -50,9 +50,14 @@ def verify(*, directory, manifest, compose, environment, http, sql, identity_adm
         INSERT aioffice.Users(TenantId,Id,IdentityProvider,Subject,DisplayName)
           VALUES('{tenant}','{other_user}',N'local-keycloak',N'{subject}',N'Disposable archive owner');
         INSERT aioffice.CompanyMemberships(TenantId,CompanyId,UserId) VALUES
-          ('{tenant}','{archive_company}','{owner}'),('{tenant}','{archive_company}','{other_user}');
-        INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES('{tenant}','{archive_company}','{other_user}',N'admin');
+          ('{tenant}','{archive_company}','{owner}'),('{tenant}','{archive_company}','{other_user}'),
+          ('{tenant}','{company}','{other_user}');
+        INSERT aioffice.RoleAssignments(TenantId,CompanyId,UserId,RoleKey) VALUES
+          ('{tenant}','{archive_company}','{other_user}',N'admin'),('{tenant}','{company}','{other_user}',N'viewer');
         COMMIT TRANSACTION;""")
+    # Fresh browsers start in the configured company, never a URL-selected
+    # company. Give this disposable identity a viewer bootstrap membership;
+    # the later shipping picker must perform a real provider switch to archive.
     headers = {**auth, "X-AIOffice-Company-Id": archive_company}
     other_headers = {"Authorization": "Bearer " + other_token, "X-AIOffice-Company-Id": archive_company}
     task_ids = [str(uuid.uuid4()) for _ in range(4)]
