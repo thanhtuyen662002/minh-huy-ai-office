@@ -1,23 +1,23 @@
 workstream: backend
-role: 'Backend Platform; root-owned company selection API/BFF/UI plus lead durable integration state'
+role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 268
-current_pr: 269
-current_branch: codex/268-member-administrators
-head: d85be6c6df108c1f4a411889792a4727e41ab107
-state: ready_for_review
-lease_owner: root-backend-268
+current_issue: 270
+current_pr: null
+current_branch: codex/270-task-history
+head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+state: claimed
+lease_owner: root-backend-270
 lease_heartbeat_at: '2026-10-09'
 last_checkpoint_at: '2026-10-09'
-last_completed_issue: 266
-last_merged_pr: 267
-last_merge_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
+last_completed_issue: 268
+last_merged_pr: 269
+last_merge_commit: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
 scope:
-  - existing-company-administrator-role-mutation
-  - shared-membership-version-and-company-transaction
-  - immutable-versioned-role-audit-and-replay
-  - strict-issued-session-api-bff-and-member-panel
-  - actual-role-authority-sql-chromium-denial-and-recovery
+  - owner-scoped-durable-task-history-and-result-recovery
+  - final-fresh-membership-fence-for-history-and-existing-result
+  - bounded-stored-json-byte-validation-and-additive-owner-time-index
+  - issued-session-bff-and-private-company-user-generation-ui-lifetime
+  - actual-sql-chromium-owner-isolation-and-no-new-effects-proof
   - lead-owned-durable-frontier-refresh
 
 verification:
@@ -27,7 +27,7 @@ verification:
   base_actual_stack: 112894592064
   result: 'Approved browser261 is merged and exact main gates PASS. Earlier identity256/257 closed after independent review and main37556114743/37556114601 PASS. Installer239 is a separate lead lease with21d exact gates/review PASS; clean Windows/signing remain.'
 blocked_by: []
-next_action: 'd85 full independent frozen scoped security/runtime/images APPROVED receipt6073002478 and all8 PASS including actual Core-to-BFF header/body fault/one-audit replay. Close final docs review/current exact gates, merge and exact main CI. Queued270 task-history recovery follows accepted main with one new Draft lease. Installer723 full scoped review APPROVED but clean Windows/signing keepsDraft. Full233 active.'
+next_action: 'Acquire linked270 Draft PR from accepted main3fc, then implement bounded owner-only history and sanitized archive detail with final fresh authority; unit/API/BFF/UI plus mandatory owned SQL/Chromium and frozen review. Existing result historical-owner policy remains; no implicit source rerun or admin-wide discovery. Installer239 remainsDraft; full233 active.'
 
 administrator_verified_d85:
   head: d85be6c6df108c1f4a411889792a4727e41ab107
@@ -295,3 +295,16 @@ company_administrator_ui_checkpoint:
   ui: 'Strict issued-session same-origin administrator BFF validates canonical selectors,2048-byte requests and decoded duplicate keys,4096-byte response/10sec/final shared helper fence, exact scoped receipt echo and bounded conflicts. No private diagnostics/cookies proxy. Member panel grant/remove uses shared version, stable lost-reply replay, current-user/inactive protection and fresh authority reconciliation; stale/denied/expired/scope controls clear private state.'
   local: '79 focused web PASS (42 new BFF,17 new admin UI,20 retained access UI); type-check/diff PASS. Common bounded JSON helper preserves existing default decoder; optional strict parser only used for new mutation/response.'
   remaining: 'Actual owned SQL role mutation/audit/permission/concurrency/Unicode controls and actual shipping Chromium grant-remove/lost reply/session authority proof, independent frozen security/runtime review and final exact PR/main delivery.'
+
+administrator_delivered_269:
+  pr_head: ef8731fd22c4464746edd5c364e8d19c81b2d998
+  pr_build: 37874870695
+  pr_governance: 37874870540
+  review_receipts: [6073002478, 6073139900]
+  main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+  main_build: 37875625822
+  main_governance: 37875625829
+  main_actual: 113643444397
+  main_quality: 113645840920
+  main_artifact: 11592885599
+  result: 'Merged and issue268 CLOSED. Exact PR/main all8 PASS,1130.NET/1028web incl20 actual Redis. All new/retained SQL/OIDC/Chromium and committed Core-to-BFF header/body loss with stable one-audit replay PASS. Root inspected both sanitized main images: readable, no clipping/secrets. Full frozen final approval. No268 work remains; earlier checkpoints retained as history.'

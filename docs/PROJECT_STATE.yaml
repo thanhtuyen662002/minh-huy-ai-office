@@ -4,35 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/268-member-administrators
-current_pr: 269
-current_target_head: d85be6c6df108c1f4a411889792a4727e41ab107
-last_verified_commit: a75f31a2761ffe0afcbf067425eb8324789b3554
+current_branch: codex/270-task-history
+current_pr: null
+current_target_head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+last_verified_commit: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
 
 critical_paths:
   backend:
-    issue: 268
-    pr: 269
-    branch: codex/268-member-administrators
-    head: d85be6c6df108c1f4a411889792a4727e41ab107
-    state: ready_for_review
-    next: "269 d85 full independent scoped approval receipt6073002478 and all8 PASS, including actual Core/SQL/Chromium committed header/body reply loss and one-audit stable replay. Close final documentation review/exact gates, merge and exact main CI; then acquire queued270 task-history lease from accepted main."
-
-  frontend:
-    issue: null
+    issue: 270
     pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "260/261 merged at39e with full frozen947 approval and exact PR/main CI/actual Chromium PASS. Browser PKCE is the local shipping default. Full member administration, multi-company selection and approved production connectivity remain."
-
-  runtime_ai:
-    issue: null
-    pr: null
-    branch: null
-    head: null
-    state: retired
-    next: "PR224 proves bounded catalog grounding and PR226 provides capability-bound read-only execution. User selected inventory/stock movements. Qualify its authorized ERP schema/version and least-privilege source from private configuration before customer business-row execution; create the adapter lease only when that dependency is available."
+    branch: codex/270-task-history
+    head: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+    state: claimed
+    next: 'Acquire linked Draft lease; bounded owner-only history/detail and final fresh authority; archive reads never rerun ERP or charge. Follow issue270 contract review6073185825, preserve trusted historical-owner result policy.'
 
   erp_data:
     issue: 264
@@ -51,6 +35,7 @@ critical_paths:
     next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
 
 recent_authoritative_merges:
+  - 'PR269 / issue268 deliveredmain3fcfa9a8541491c6a4d349bc31fd02d87d12284e with full frozen review6073002478/final6073139900 and exact PR/main Build37875625822/Gov37875625829/actual113643444397/quality113645840920 all8 PASS. Main sanitized artifact11592885599 visually inspected.'
   - 'PR267 / issue266 deliveredmaina75 with full frozen reviews and exact PR/main Build37815044494/Gov37815044554/actual113441393702/quality113444186237 PASS.'
   - 'PR265 / issue264 merged at002e5cd9c1fd95eabc02dd3580bb8e964409764b; exact PR Build37800895363/Gov37800895171 and main Build37801975078/Gov37801976469/all8/actual113396238709/quality113399168935 PASS after full independent review.'
   - 'PR263 / issue262 member access merged at0d03c529689d3607b99dcbf0cf4bcf00e62bd951; full independent review and exact PR/main Build37746848054/Governance37746848190/actual113210254492/quality113212217055 PASS.'
@@ -91,7 +76,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '269 d85 fully independently APPROVED/all8 PASS receipt6073002478; final722 docs have no factual blocker but retained actual Redis tamper fixture is terminal red because random tag suffix replacement can be identical. Test-only fix flips a decoded authenticated bit and asserts change in both actual controls;54 local unit/type-check PASS,20 Redis locally skipped. Close renewed hosted20 Redis/actual SQL-Chromium/all8 and independent final delta, then merge/exact main. Queued270 follows accepted main; no premature lease. Installer723 independently APPROVED receipt6072831478, Draft for clean Windows/signing. Full233/customer/production remain.'
+next_action: '269 delivered with full frozen approval and exact PR/main all8 SQL/OIDC/Chromium PASS. Acquire270 Draft from accepted main3fc and implement durable owner task recovery; exact-head CI and independent review required. Installer723 scoped APPROVED,239 remainsDraft for clean Windows/signing and needs accepted-main integration. Full233 and qualified customer/production evidence remain.'
 
 
 blocked_by:
