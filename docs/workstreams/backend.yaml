@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 54b7ae68b341656798a878e3c1247c8449c6de54
+head: 00337c2514748d16d8438998f8b19b85c9ab0058
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1043,3 +1043,12 @@ group_spool_file_candidate:
   result: 'Host-owned private scoped directory/exclusive file owner, binary bounded protected records, count1024/64MiB defaults/hard4096/256MiB, flushed staging/atomic same-directory promotion and complete-stage reopen recovery. Corrupt/torn/foreign/conflicting entries preserved/refused; no eviction. Internal exact reference/commit reply ACK deletion requires trusted transport still absent.'
   local: '19 actual owned-temp filesystem plus50 spool foundation controls PASS69/0skip; format/build0warnings/diff/YAML PASS. Reopen lifecycle is not forced process death/power-loss or actual client/SQL/broker acceptance. Linux700/600, Windows host-private-root ACL provisioning required.'
   next: 'Close/push003 native fixture repair and own exact hosted listener CI through terminal; freeze FS review while implementing trusted lease/enrollment/HMAC recovery transport and reference-only broker. No production/provider activation;277/278/279/full233 ACTIVE.'
+
+group_listener_catalog_retry:
+  head: 00337c2514748d16d8438998f8b19b85c9ab0058
+  build: 38012373146
+  governance: 38012373142
+  actual: 114095008504
+  receipt: 6092052885
+  review: 'Scoped proof repair APPROVED24guards/8 independent controls/4 SQL160 query syntax checks/Python/YAML/diff; old absent catalog assertion reproduced, restored/ineffective permission controls retained. No product/migration/grant change.'
+  next: 'Own exact003 native terminal and repair samePR. Foundationbe3 scoped APPROVED62 tests0skip and both original P2 CLOSED; FS20cd independent review pending. Continue trusted recovery/client/reference broker/278/279/full233.'
