@@ -17,7 +17,7 @@ public sealed class GroupIngressModelTests
     {
         using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
         var entities = model.GetEntityTypes().Where(x => x.ClrType.Name.StartsWith("Group", StringComparison.Ordinal)).ToArray();
-        Assert.Equal(19, entities.Length);
+        Assert.Equal(29, entities.Length);
         foreach (var entity in entities)
         {
             Assert.Equal(new[] { "TenantId", "CompanyId" }, entity.FindPrimaryKey()!.Properties.Take(2).Select(x => x.Name));
@@ -70,7 +70,8 @@ public sealed class GroupIngressModelTests
         var allocation = new AddGroupBatchAllocation();
         var claims = new AddGroupBatchClaims();
         var expiry = new AddGroupBatchClaimExpiryFence();
-        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).Concat(inbox.UpOperations).Concat(allocation.UpOperations).Concat(claims.UpOperations).Concat(expiry.UpOperations).ToArray(), model).Select(x => x.CommandText));
+        var notes = new AddGroupWorkNotes();
+        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).Concat(inbox.UpOperations).Concat(allocation.UpOperations).Concat(claims.UpOperations).Concat(expiry.UpOperations).Concat(notes.UpOperations).ToArray(), model).Select(x => x.CommandText));
         foreach (var table in new[] { "GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants" })
         {
             Assert.Contains($"GRANT SELECT ON OBJECT::[aioffice].[{table}]", sql);

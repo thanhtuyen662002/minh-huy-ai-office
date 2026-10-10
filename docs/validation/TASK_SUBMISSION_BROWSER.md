@@ -57,3 +57,10 @@ completed19:56:14Z–19:56:39Z. Root inspected all4 original main images from
 artifact11641407860/807412bytes: readable/sanitized/no horizontal clipping.
 No272 acceptance remains. User attachment was read only after this closure;
 #276–#279 track the next automatic SQL brain and IT-only notification work.
+# Issue278 exact c8 failure and document observation repair
+
+Exactc8b67775c91822ef9f0e28e2a3651669002d5641 Build38061609455/native114240837316/Quality114245095778 is terminal RED; six prerequisites and Governance38061609472 are SUCCESS. SQL/worker completed, including original held-key current-authority revocation and durable expiry/rollback proof. Root log inspection finds88/93 required markers exactly once,144 PASS and3 terminal failure markers. The five missing markers are browser completion/owner/company/restored receipt/membership recovery. No browser artifact is available. Root hosted.NET verified2365 passed [6,520,25,1814], zero skipped; this does not make the overall run green.
+
+Chromium failed at `submission-historical-source-restored-replay-request-aborted`. Independent frozen review reproduces a diagnostic gap: Code/S256 navigation replaces the document, removing the passive fetch lifecycle observer installed in the original window. The CDP observer survives, but the missing window evidence collapses timeout versus owner abort into the generic refusal. Product abort cause remains UNPROVEN; this is not evidence that a receipt was valid.
+
+Reinstall the same guarded bounded passive observer after the new issued SID fence and before historical replay. It forwards exact fetch arguments/response, reads no private body/header/credential, sends/retries/cancels nothing and retains its eight-request bound.26 actual helper/AST controls pass, including original/new document timeout and owner-abort classifications; every aborted receipt still fails. Original20s finished/body gates, body<=4096/strictUTF8/202/original operation/fingerprint/SID, one graph, worker and idle oracles remain unchanged. Renewed exact-head native/browser/all8/original images are required; this repair is not runtime acceptance.

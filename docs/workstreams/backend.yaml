@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Exact remotec8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316 IN_PROGRESS, four prerequisites and Governance38061609472 SUCCESS, web/.NET active at capture. Prior2199 terminalRED and787 WITHHELD remain historical; both bounded repairs approved, renewed native/all93/all8/six original images still unaccepted. Separate private brain content protection implemented: purpose-bound AES256-GCM request/glossary payloads with exact scope/kind/record/revision/sourceVersion/deletionGeneration/keyID, strict UTF8<=64000, fixed errors and temporary byte zeroing.8 new/13 focused controls PASS0skip; freeze and independently review this separate checkpoint before any later push. No notes schema/store/effect/release/DI or actual model qualification inferred. Continue versioned protected scoped SQL notes/glossary, qualified context/tokenizer, source-lock-before-savepoint rollback/expiry witness/native MARS, atomic evidence dispositions completion NotesCommitted, DI/UI and frozen real100/30 model evaluation.278/279/full233 ACTIVE; primary Gateway config absent in checked local scopes, server store access unknown, real model NOT_RUN_UNEVALUATED.'
+next_action: 'Own278/Draft288. Remote c8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316/Quality114245095778 terminal RED, six prerequisites and Governance38061609472 SUCCESS. Root hosted.NET2365 [6,520,25,1814] PASS0skip; native SQL/worker including held-key revoke/expiry PASS, root88/93 markers/144PASS/3 failure markers. Browser historical restored original receipt ERR_ABORTED; product cause UNPROVEN. Fresh CodeS256 document loses passive observer; guarded reinstall and26 helper controls PASS retain strict receipt/body/SID/graph/worker gates. Local c2d47c85f6d5c89cdde241d4be6f69391f96e1dc crypto scoped APPROVED6098855148/root fully fetched, UNPUSHED. New versioned ten-table scoped protected brain/editor/glossary/chunk receipt/disposition/outbox schema and effective permission verifier/native proof source implemented; full1831 Persistence PASS0skip,61 Python PASS, EF no model drift/idempotent generation. New schema actual SQL NOT_RUN; freeze/independently review combined migration/native/diagnostic checkpoint before next approved exact push. Then own renewed all94/native/all8/six original browser images; fix any red SAME288 immediately. Continue current private reader, qualified context/tokenizer, source-lock-before-savepoint rollback/witness-only expiry/native MARS, atomic notes/evidence/raw coverage/completion/NotesCommitted, worker DI/UI and frozen actual100/30 model evaluation.278/279/full233 ACTIVE; checked local Gateway config absent, server access unknown, real model NOT_RUN_UNEVALUATED.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1671,9 +1671,10 @@ group_278_brain_content_protection_checkpoint:
   build: 38061609455
   actual: 114240837316
   governance: 38061609472
-  remote_state: IN_PROGRESS_native_four_prerequisites_and_governance_SUCCESS
-  exact_native_acceptance: UNVERIFIED_pending_all93_all8_six_original_browser_images
-  local_state: purpose_bound_private_brain_payload_primitive_pending_frozen_review
+  remote_state: terminal_RED_browser_six_prerequisites_and_governance_SUCCESS
+  exact_native_acceptance: WITHHELD_root88_of93_browser_ABORTED_no_artifact
+  local_state: c2d47c85f6d5c89cdde241d4be6f69391f96e1dc_scoped_APPROVED_6098855148_root_fully_fetched_UNPUSHED
+  primitive_review_root_fully_fetched: 6098855148
   new_controls: 8
   focused_controls_including_retained_source: 13
   maximum_clear_utf8_bytes: 64000
@@ -1684,3 +1685,38 @@ group_278_brain_content_protection_checkpoint:
   notes_schema_store_effects_release_DI: incomplete
   actual_model_evaluation: NOT_RUN_UNEVALUATED
   next: 'Own exactc8 CI terminal/all93/all8/original images; freeze/review content primitive without next push before closure. Implement versioned scoped protected notes/glossary and store-owned effect rollback/expiry retirement, qualified context/DI/UI and actual frozen model qualification.278/279/full233 ACTIVE.'
+
+
+group_278_work_schema_and_document_observation_checkpoint:
+  parent_local_head: c2d47c85f6d5c89cdde241d4be6f69391f96e1dc
+  remote_head: c8b67775c91822ef9f0e28e2a3651669002d5641
+  build: 38061609455
+  actual: 114240837316
+  quality: 114245095778
+  governance: 38061609472
+  remote_state: terminal_RED_browser_original_restored_receipt_ABORTED
+  six_prerequisites_and_governance: SUCCESS
+  root_hosted_dotnet_passed: 2365
+  root_hosted_dotnet_skipped: 0
+  root_native_markers_exact_once: 88
+  root_native_markers_required: 93
+  root_native_pass_lines: 144
+  root_native_failure_markers: 3
+  source_held_key_revocation_and_expiry_actual: PASS
+  browser_artifact: NONE
+  browser_abort_product_cause: UNPROVEN
+  browser_observation_repair: guarded_reinstall_after_new_CodeS256_document_and_issued_SID_fence
+  strict_original_receipt_body_scope_worker_graph_oracles: retained
+  browser_helper_controls: 26
+  schema_tables: 10
+  migration: 20261010150902_AddGroupWorkNotes
+  full_local_persistence_passed: 1831
+  full_local_persistence_skipped: 0
+  python_guard_controls: 61
+  ef_model_drift: NONE
+  new_schema_actual_sql: NOT_RUN
+  frozen_independent_review: PENDING
+  renewed_native_required_markers: 94
+  private_reader_note_store_effect_rollback_raw_completion_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Review frozen whole changed scope, retain original independent controls, push approved exact checkpoint only. Own renewed all94/native/all8/six original images and fix SAME288 terminal failures; continue first effect consumer source-lock/savepoint rollback/expiry witness/native MARS, scoped current brain/context/notes/outbox/automatic DI/UI and frozen real100/30 model qualification.278/279/full233 remain ACTIVE.'

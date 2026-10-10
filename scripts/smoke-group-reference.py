@@ -229,6 +229,8 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "source-deny": "PASS owned source runtime current Extract denies before protected keys",
             "source-foreign": "PASS owned source runtime foreign selected identity refuses before protected keys",
             "source-expiry": "PASS owned source runtime controlled key-await expiry commits SQL witness and refuses context after clock rollback",
+            "work-schema": "PASS owned work schema runtime migrated empty scoped brain and effective least privilege",
+            "work-unsafe": "PASS owned work schema runtime unsafe effective permission refusal",
             "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
             "allocation-deny": "PASS owned allocation runtime refusal allocation-deny",
             "allocation-unsafe": "PASS owned allocation runtime refusal allocation-unsafe",
@@ -540,6 +542,34 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual allocation original replay requires current Extract and restores SQL isolation without portal key model or note effects", flush=True)
+
+        # Additive brain schema proof only: current role rights and empty scoped
+        # metadata. No business records or provider calls qualify through it.
+        run("work-schema")
+
+        def work_permission_catalog(table):
+            assert table in ("GroupCustomerRequests", "GroupEditorGrants")
+            return sql(f"SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+                f"(SELECT class,major_id,minor_id,grantee_principal_id,grantor_principal_id,type,state FROM sys.database_permissions "
+                f"WHERE class=1 AND major_id=OBJECT_ID(N'aioffice.{table}') AND grantee_principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_runtime') "
+                "ORDER BY minor_id,type FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+
+        def unsafe_work_column(table, column):
+            assert sql(f"EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'UPDATE',N'{column}',N'COLUMN'); REVERT;") == "1"
+            run("work-unsafe")
+
+        for table, column in [("GroupCustomerRequests", "RequestCode"), ("GroupEditorGrants", "IsEnabled")]:
+            original_permissions = work_permission_catalog(table)
+            assert re.fullmatch(r"[0-9A-F]{64}", original_permissions)
+            temporary_sql(sql, f"GRANT UPDATE ON OBJECT::aioffice.{table}({column}) TO aioffice_binding_runtime;",
+                f"DENY UPDATE ON OBJECT::aioffice.{table}({column}) TO aioffice_binding_runtime;",
+                lambda table=table, column=column: unsafe_work_column(table, column))
+            assert sql(f"EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'UPDATE',N'{column}',N'COLUMN'); REVERT;") == "0"
+            assert work_permission_catalog(table) == original_permissions
+            run("work-schema")
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        print("PASS actual work schema migrated empty scoped brain least privilege rejects effective identity and editor escalation with exact permission restore", flush=True)
 
         # Claims add metadata only to the independently allocated owned source.
         # Every original raw/inbox/allocation byte must remain unchanged.

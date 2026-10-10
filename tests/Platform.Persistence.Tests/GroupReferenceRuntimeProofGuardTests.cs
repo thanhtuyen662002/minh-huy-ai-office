@@ -48,6 +48,7 @@ public sealed class GroupReferenceRuntimeProofGuardTests
     [Theory]
     [InlineData("deny", true, false, false)]
     [InlineData("unsafe", true, false, false)]
+    [InlineData("work-unsafe", true, false, false)]
     [InlineData("rollback", false, true, false)]
     [InlineData("publish", false, false, false)]
     [InlineData("unknown", false, false, false)]

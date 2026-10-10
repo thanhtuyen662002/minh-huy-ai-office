@@ -44,6 +44,63 @@ recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def work_schema_fixture(self, fail=False):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in
+            ("work_permission_catalog", "unsafe_work_column")]
+        loops = [node for node in ast.walk(tree) if isinstance(node, ast.For) and isinstance(node.target, ast.Tuple)
+            and [getattr(x, "id", None) for x in node.target.elts] == ["table", "column"]
+            and any(isinstance(x, ast.Constant) and x.value == "GroupCustomerRequests" for x in ast.walk(node.iter))]
+        self.assertEqual(2, len(functions)); self.assertEqual(1, len(loops))
+        allowed = {"GroupCustomerRequests": "RequestCode", "GroupEditorGrants": "IsEnabled"}
+        permissions = {name: False for name in allowed}; calls = []
+        def sql(command):
+            calls.append(command)
+            table = next((name for name in allowed if name in command), None)
+            self.assertIsNotNone(table)
+            if "sys.database_permissions" in command:
+                self.assertIn("grantee_principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_runtime')", command)
+                self.assertIn("ORDER BY minor_id,type", command)
+                return ("B" if permissions[table] else "A") * 64
+            if command.startswith("GRANT UPDATE"): permissions[table] = True; return ""
+            if command.startswith("DENY UPDATE"): permissions[table] = False; return ""
+            self.assertTrue(command.startswith("EXECUTE AS LOGIN=N'aioffice_runtime';"))
+            self.assertTrue(command.endswith(" REVERT;")); self.assertIn("N'COLUMN'", command)
+            self.assertIn("N'" + allowed[table] + "'", command)
+            return "1" if permissions[table] else "0"
+        runs = []
+        def run(mode):
+            runs.append(mode)
+            if mode == "work-unsafe":
+                self.assertEqual(1, sum(permissions.values()))
+                if fail: raise RuntimeError("Owned fixture failure")
+            else:
+                self.assertEqual("work-schema", mode); self.assertFalse(any(permissions.values()))
+        namespace = {"sql": sql, "run": run, "re": re, "temporary_sql": reference_smoke.temporary_sql}
+        exec(compile(ast.Module(body=functions, type_ignores=[]), '<actual-work-schema-functions>', 'exec'), namespace)
+        return namespace, permissions, calls, runs, compile(ast.Module(body=loops, type_ignores=[]), '<actual-work-schema-loop>', 'exec')
+
+    def test_work_schema_effective_column_escalations_require_exact_catalog_restore_and_positive(self):
+        namespace, permissions, calls, runs, loop = self.work_schema_fixture()
+        exec(loop, namespace)
+        self.assertEqual(["work-unsafe", "work-schema", "work-unsafe", "work-schema"], runs)
+        self.assertFalse(any(permissions.values()))
+        self.assertEqual(2, sum(command.startswith("GRANT UPDATE") for command in calls))
+        self.assertEqual(2, sum(command.startswith("DENY UPDATE") for command in calls))
+        self.assertEqual(4, sum("sys.database_permissions" in command for command in calls))
+
+    def test_work_schema_failed_unsafe_control_restores_original_permission_and_cannot_run_positive(self):
+        namespace, permissions, calls, runs, loop = self.work_schema_fixture(fail=True)
+        with self.assertRaisesRegex(RuntimeError, "^Owned fixture failure$"): exec(loop, namespace)
+        self.assertFalse(any(permissions.values())); self.assertEqual(["work-unsafe"], runs)
+        self.assertEqual(1, sum(command.startswith("DENY UPDATE") for command in calls))
+
+    def test_work_schema_catalog_refuses_foreign_table_before_sql(self):
+        namespace, _, calls, _, _ = self.work_schema_fixture()
+        for table in ("Tasks", "GroupGlossaryRevisions", "GroupCustomerRequests; PRIVATE", None):
+            with self.assertRaises(AssertionError): namespace["work_permission_catalog"](table)
+        self.assertEqual([], calls)
+
     def test_source_checkpoint_type_binding_waits_for_container_without_image_fallback(self):
         tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
         functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in
