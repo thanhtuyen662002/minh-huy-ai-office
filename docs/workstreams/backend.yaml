@@ -1,17 +1,17 @@
 workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
-current_issue: 286
+current_issue: 278
 current_pr: null
-current_branch: codex/286-restored-browser-receipt
-head: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
+current_branch: codex/278-group-automatic-notes
+head: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 state: in_progress
-lease_owner: root-backend-286
+lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
-last_completed_issue: 276
-last_merged_pr: 285
-last_merge_commit: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
+last_completed_issue: 277
+last_merged_pr: 287
+last_merge_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 submission_contract_checkpoint:
   predecessor: 6ee5a7b17057f19803285f8b359b62224183e573
   predecessor_build: 37906607394
@@ -67,11 +67,11 @@ submission_workspace_checkpoint:
   proof_delta: 'Retained actual OIDC browser submission waits now observe the shipping intent submit path; legacy API compatibility probes remain. New intent actual nativeSQL/concurrent quota/revocation/append-only and actual Core202 lost-response/browser recovery acceptance are still required.'
   next: 'Push same274 tested UI checkpoint and close exact CI, add mandatory owned native intent SQL and real committed Core header/body loss/worker/reload/newSID/twoCodeS256/late-body proof, inspect images and obtain full frozen independent review before PR/main delivery.'
 scope:
-  - durable-owner-company-submission-intent-and-exact-operation-replay
-  - final-fresh-admission-source-authority-and-safe-typed-receipts
-  - issued-session-composer-unknown-outcome-and-server-reconciliation
-  - owned-real-Core-header-body-loss-SQL-worker-Chromium-one-effect-proof
-  - lead-owned-accepted-delivery-frontier
+  - lead-owned-accepted-main-and-integration-frontier
+  - bounded-structured-generation-on-the-shipping-AI-gateway
+  - durable-source-batches-and-authorized-scoped-SQL-brain
+  - automatic-notes-evidence-revisions-and-atomic-outbox
+  - no-click-native-runtime-and-real-model-evaluation
 
 verification:
   base: 39e668ebebe1f8bd19803199b8db393f12a4edb6
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Freeze/review286 actual historical restored-source caller using unchanged strict original-response reader; local36 Node controls PASS including13 new positive/refusals. Merged285/mainaeb native application/literal Rabbit restart PASS but Chromium direct json await failed before receipt equality, cause unproven. Own one Draft and exact PR/main all8 closure before277 delivery.278 private design/proposed120 primary40 independent labels remain unevaluated, no implementation lease;279/full233 ACTIVE.'
+next_action: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1440,3 +1440,16 @@ group_connector_c619_full_approval:
   receipt: 6095552242
   scope: 'Full frozen core277 APPROVED after independent exact all8/Gov/actual/quality,2027.NET/1334web incl20 actual Redis, current native/Chromium logs and all six original artifact11664207582 images. Literal pending persistent RabbitMQ restart and strict same-snapshot/final SQL graph closes sole full542 gap. No additional concrete core277 blocker.'
   remaining: 'Accurate final doc-only review, approved final push and exact finalPR/main gates before integration. Live provider/account/production volume,278/279/installer239/readonly customer ERP/deployment/full233 remain active.'
+
+group_automatic_notes_278_checkpoint:
+  accepted_dependency_main: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
+  accepted_dependency_issue: 277
+  independent_main_receipt: 6096704767
+  main_build: 38044971534
+  main_governance: 38044971530
+  main_actual: 114192556176
+  main_quality: 114195330891
+  main_artifact: 11667314210
+  state: initial_lease_no_implementation_yet
+  model_evaluation: proposed120_primary_40_independent_UNEVALUATED
+  next: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
