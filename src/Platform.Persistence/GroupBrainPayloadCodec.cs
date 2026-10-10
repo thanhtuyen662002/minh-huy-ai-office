@@ -35,10 +35,27 @@ public sealed class GroupBrainGlossaryPayload
     public override string ToString() => "Group brain glossary payload (private content).";
 }
 
+public enum GroupHostAttentionReason { UnsupportedMedia = 1, SecretQuarantine = 2, ExtractionFailed = 3 }
+public sealed record GroupHostAttentionReference(Guid MessageId, long Revision);
+
+// Host observation only. It has no model interpretation, quote, reported
+// business fact, IT confirmation or future SQL/provider authority.
+public sealed class GroupBrainHostAttentionPayload
+{
+    internal GroupBrainHostAttentionPayload(GroupHostAttentionReason reason, bool gap, GroupHostAttentionReference[] references)
+    { Reason = reason; HasCoverageGap = gap; SourceReferences = Array.AsReadOnly(references); }
+    public GroupHostAttentionReason Reason { get; }
+    public bool HasCoverageGap { get; }
+    public string? QuarantinePolicyVersion => Reason == GroupHostAttentionReason.SecretQuarantine ? GroupSecretQuarantine.PolicyVersion : null;
+    public IReadOnlyList<GroupHostAttentionReference> SourceReferences { get; }
+    public override string ToString() => "Group brain host attention payload (private metadata).";
+}
+
 public static class GroupBrainPayloadCodec
 {
     public const string AiNoteVersion = "group-brain-ai-note-v1";
     public const string GlossaryVersion = "group-brain-glossary-v1";
+    public const string HostAttentionVersion = "group-brain-host-attention-v1";
     public const int MaximumPayloadUtf8Bytes = GroupBrainContentProtector.MaximumClearUtf8Bytes;
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     // This serialization goes only into protected private storage/context,
@@ -78,6 +95,62 @@ public static class GroupBrainPayloadCodec
         var result = JsonSerializer.Serialize(new { version = GlossaryVersion, term, explanation }, Serialization);
         _ = DecodeGlossary(result); return result;
     }
+
+    // Format primitive only: the later fixed host consumer must establish the
+    // original source disposition/current scope and retry-exhaustion authority.
+    public static string EncodeHostAttention(GroupHostAttentionReason reason, bool hasCoverageGap,
+        IReadOnlyList<GroupHostAttentionReference>? references)
+    {
+        if (references is null) throw Unavailable();
+        var selected = references.Take(11).ToArray();
+        if (selected.Length is < 1 or > 10 || selected.Any(x => x is null)) throw Unavailable();
+        var reasonText = reason switch
+        {
+            GroupHostAttentionReason.UnsupportedMedia => "unsupported_media",
+            GroupHostAttentionReason.SecretQuarantine => "secret_quarantine",
+            GroupHostAttentionReason.ExtractionFailed => "extraction_failed",
+            _ => throw Unavailable()
+        };
+        var result = JsonSerializer.Serialize(new
+        {
+            version = HostAttentionVersion,
+            interpretation_role = "host_metadata_attention",
+            reason = reasonText,
+            has_coverage_gap = hasCoverageGap,
+            quarantine_policy_version = reason == GroupHostAttentionReason.SecretQuarantine ? GroupSecretQuarantine.PolicyVersion : null,
+            source_refs = selected.Select(x => new { message_id = x.MessageId.ToString("D"), revision = x.Revision })
+        }, Serialization);
+        _ = DecodeHostAttention(result); return result;
+    }
+
+    public static GroupBrainHostAttentionPayload DecodeHostAttention(string? payload) => Decode(payload, root =>
+    {
+        Shape(root, "version", "interpretation_role", "reason", "has_coverage_gap", "quarantine_policy_version", "source_refs");
+        if (Text(root, "version", 80) != HostAttentionVersion || Text(root, "interpretation_role", 80) != "host_metadata_attention") throw Unavailable();
+        var reason = Text(root, "reason", 40) switch
+        {
+            "unsupported_media" => GroupHostAttentionReason.UnsupportedMedia,
+            "secret_quarantine" => GroupHostAttentionReason.SecretQuarantine,
+            "extraction_failed" => GroupHostAttentionReason.ExtractionFailed,
+            _ => throw Unavailable()
+        };
+        if (root.GetProperty("has_coverage_gap").ValueKind is not (JsonValueKind.True or JsonValueKind.False)) throw Unavailable();
+        var policy = root.GetProperty("quarantine_policy_version");
+        if (reason == GroupHostAttentionReason.SecretQuarantine
+            ? policy.ValueKind != JsonValueKind.String || Text(root, "quarantine_policy_version", 80) != GroupSecretQuarantine.PolicyVersion
+            : policy.ValueKind != JsonValueKind.Null) throw Unavailable();
+        var references = new List<GroupHostAttentionReference>(); var unique = new HashSet<Guid>();
+        foreach (var item in Items(root.GetProperty("source_refs"), 10))
+        {
+            Shape(item, "message_id", "revision");
+            var idText = Text(item, "message_id", 36);
+            if (!Guid.TryParseExact(idText, "D", out var id) || id == Guid.Empty || id.ToString("D") != idText || !unique.Add(id)
+                || !item.GetProperty("revision").TryGetInt64(out var revision) || revision <= 0) throw Unavailable();
+            references.Add(new(id, revision));
+        }
+        if (references.Count == 0) throw Unavailable();
+        return new GroupBrainHostAttentionPayload(reason, root.GetProperty("has_coverage_gap").GetBoolean(), references.ToArray());
+    });
 
     public static GroupBrainAiNotePayload DecodeAiNote(string? payload) => Decode(payload, root =>
     {

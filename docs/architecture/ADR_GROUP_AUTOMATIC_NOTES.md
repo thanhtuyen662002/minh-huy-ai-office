@@ -17,6 +17,14 @@ The following stages are required next and are not established by an allocation 
 
 Historical content is context, not a live notification trigger. Mixed context needs per-note live provenance. Customer facts, AI interpretation and IT-confirmed state are separate; model text cannot assign IT state, SLA, destination or authority. Reader/audience does not imply editor. A later internal-only reporter consumes committed references in issue279.
 
+### Host observations and private attention payloads
+
+Use a separate closed `group-brain-host-attention-v1` private metadata payload for unsupported media, versioned secret quarantine and exhausted extraction. It has exact source revision refs and a coverage-gap observation, without source quotes, model/exception text or any commitment. Parsing is format validation only. A fixed host consumer must fence original source dispositions/current authority and establish bounded retry exhaustion before writing.
+
+Extend revision origin/verification through a later versioned expand migration with an explicit HostAttention/HostObserved pair. Existing AI and IT pairs remain exact; readers must understand the added pair before new writes activate. Host attention never claims AI understood a media body or IT confirmed a business state. Current primitive preparation neither changes the schema nor admits that new pair.
+
+Partial listener gaps must not stall received known work: record valid interpretations with honest incomplete coverage, and retain gap attention under its own durable identity. Do not terminally discard known text to produce only a gap warning. Media captions and unknown media need separate provenance; zero-message gaps do not invent message IDs. These combined commit/completion semantics remain to be implemented and natively qualified after this payload preparation.
+
 ## Schema and permissions
 
 Use an additive EF migration. Allocation and raw ledger are append-only, operator-owned tables with full tenant/company/source composite keys and restrictive foreign keys. Runtime may SELECT/INSERT, never mutate or delete these receipts. Existing SourceStates retains only its reviewed mutable columns. New runtime proves the extended effective rights before operating; old runtime remains compatible with the additive tables. Down migration refuses destructive evidence rollback.
