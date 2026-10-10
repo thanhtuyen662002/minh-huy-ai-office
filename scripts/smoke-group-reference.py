@@ -268,6 +268,9 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "brain-policy-deny": "PASS owned brain runtime selected identity or glossary policy refuses before keys",
             "brain-deny": "PASS owned brain runtime current Extract refuses before keys",
             "brain-expiry": "PASS owned brain runtime controlled key-await expiry commits SQL witness and denies after clock rollback",
+            "no-work-expiry": "PASS owned NoWork runtime flushed two SQL effects rollback with source lock retained clean detach witness only and clock rollback denial",
+            "no-work-commit": "PASS owned NoWork runtime actual atomic SQL receipt disposition exact original replay and new nonce duplicate refusal",
+            "no-work-mars": "PASS owned NoWork runtime MARS refuses before connection keys or effects",
             "work-schema": "PASS owned work schema runtime migrated empty scoped brain and effective least privilege",
             "work-unsafe": "PASS owned work schema runtime unsafe effective permission refusal",
             "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
@@ -845,6 +848,44 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual brain reader controlled key-await expiry persists only SQL witness unchanged notes outbox source and portal and denies after clock rollback", flush=True)
+
+        # Append fixed-effect probes only after every retained reader oracle.
+        # Synthetic classification proves SQL mechanics, never model quality.
+        def original_four_receipts():
+            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+                f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=4 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+            assert re.fullmatch(r"[0-9A-F]{64}", value)
+            return value
+        original_four = original_four_receipts()
+        run("no-work-expiry")
+        assert brain_graph() == brain_stable
+        assert original_four_receipts() == original_four
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=5 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "5|1"
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual NoWork store flushed SQL rollback retains source lock clean tracker and only expiry witness unchanged brain source allocation portal", flush=True)
+
+        run("no-work-commit")
+        assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [1, 1, 1, 2, 1, 0, 0, 0, 1, 1]
+        no_work_stable = brain_graph(); no_work_claims = claim_graph()
+        assert [value for index, value in enumerate(no_work_stable) if index not in (3, 4)] == [
+            value for index, value in enumerate(brain_stable) if index not in (3, 4)]
+        assert original_four_receipts() == original_four
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=6 AND ExpiryObservedAtUtc IS NULL));") == "6|1"
+        run("no-work-mars")
+        assert brain_graph() == no_work_stable and claim_graph() == no_work_claims
+        assert original_four_receipts() == original_four and original_three_receipts() == original_three
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual NoWork store SQL atomic selected receipt disposition original replay duplicate nonce refusal and MARS before connection unchanged remaining graph", flush=True)
     except BaseException as error:
         failure = error
     finally:

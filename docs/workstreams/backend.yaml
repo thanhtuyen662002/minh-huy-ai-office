@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 0201fc5e53b3d9d96d655faa077330ca12732629
+head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Remote0201fc5e53b3d9d96d655faa077330ca12732629 native brain proof scoped7-file APPROVED6099748082/root FULL fetched before push. Build38068576171 IN_PROGRESS; Governance38068576300 SUCCESS; native114261152085 still pending. Web114261152125 terminal red: original future transaction +11 seconds raced wall-clock +10 allowance; retain original oracle and freeze Date in that test only, no production auth change. Own SAME288 renewed CI; do not merge partial278. Parentb195 Build38066869303/Gov38066869297/all8/native114256181577/quality114259553934 SUCCESS; root all94 exactonce150PASS0fail/2431.NET0skip and all6ORIGINAL11675436987 inspected. Local closed protected AI-note/glossary codec has38 focused and1918 full Persistence PASS0fail0skip; no provider/effect/IT authority, exact Unicode/evidence preserved, whole decoded known-secret policy and64k UTF8 bound. Independent frozen codec/clock-test review pending. New native brain acceptance still requires97exactonce/all8/Gov/all6 originals. Continue qualified same-group context/relevance/tokenizer and first owned note-effect source-lock/savepoint rollback/clean detach/witness-only expiry/native MARS, atomic notes/evidence/raw coverage/completion/NotesCommitted and automatic DI/UI. ExistingGateway real100/30 model evaluation NOT_RUN_UNEVALUATED; required primary variables absent checked scopes, server access unknown.278/279/full233 ACTIVE. Scoped internal SQL source/brain dependency preparation175 controls PASS0skip, including4 actual nonSQL/missingSQLtransaction entry refusals. Native invocation/effect rollback/savepoint retention/MARS remain NOT_QUALIFIED; freeze/review this refactor before push and continue first owned effect consumer. Closed codec e0c51 scoped6099923155 and locked dependency0b68 scoped6099975987 approvals FULL fetched by root; both UNPUSHED pending current0201 native closure. Fixed selected NoWork consumer prepared: source lock before savepoint, receipt/dispositions flush, exact dependency/refusal/replay, rollback/detach before witness-only expiry;8 actual entry controls and1930 full Persistence PASS0skip. Native successful effects/rollback/MARS unqualified; freeze/review before delivery. Complete protected notes/host attention/raw coverage/completion/outbox/DI/UI/model gates afterward.'
+next_action: 'Own278/Draft288 remote0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4; scoped e0/0b approvals6099923155/6099975987 FULL fetched before push. Build38070427348/native114266525657 pending; Governance38070427346 and six prerequisites including repaired Web SUCCESS. Parent0201 native114261152085 SUCCESS/root97exactonce153PASS0failure/full2431.NET0skip/all6ORIGINAL11676735449 inspected; overallRED web clock race and quality dependency, fixed SAME288 without production auth change. Frozen7335 NoWork consumer scoped5-file APPROVED6100082455/root FULL fetched;193 independent controls and1930 root full Persistence PASS0skip. Prepared owned NoWork native expiry-after-flush/source-lock-before-savepoint/rollback-clean-detach/witness-only-clock-rollback, actual atomic receipt/disposition/original replay/newnonce refusal and MARS-before-open. Build0warnings/0errors, three actual unowned modes refused before config,64 Python controls PASS; changed native effects NOT_RUN_UNQUALIFIED. Freeze/review whole native checkpoint before delivery, retain97 original markers plus2 new fixed gates requiring99exactonce/all8/Gov/all6 originals. Continue protected notes/host attention/evidence/raw coverage/completion/NotesCommitted, qualified same-group context/relevance/tokenizer and automatic DI/UI. Existing Gateway real100/30 model evaluation NOT_RUN_UNEVALUATED; checked config absent/server access unknown.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1863,4 +1863,36 @@ group_278_no_work_consumer_preparation:
   independent_frozen_consumer_review: PENDING
   protected_notes_host_attention_raw_completion_outbox_DI_UI: incomplete
   real_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_no_work_native_preparation:
+  remote_head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  build: 38070427348
+  governance: 38070427346
+  governance_state: SUCCESS
+  actual: 114266525657
+  native_state: PENDING
+  parent_0201_native: SUCCESS_root_97exactonce_153PASS_0failure
+  parent_0201_hosted_dotnet_passed: 2431
+  parent_0201_original_browser_artifact: 11676735449
+  parent_0201_root_original_images_inspected: 6
+  parent_0201_overall: RED_original_OIDC_wallclock_race_and_quality_dependency
+  scoped_codec_review_root_full_fetched: 6099923155
+  scoped_locked_review_root_full_fetched: 6099975987
+  scoped_consumer_review_root_full_fetched: 6100082455
+  local_consumer_parent: 7335b34f02734988f4197f3a7874d260e9be62d6
+  consumer_independent_controls_passed: 193
+  root_full_persistence_passed: 1930
+  root_full_persistence_failed: 0
+  root_full_persistence_skipped: 0
+  native_preparation_build_warnings: 0
+  native_preparation_build_errors: 0
+  actual_unowned_modes_refused_before_configuration: 3
+  retained_python_guard_controls_passed: 64
+  native_NoWork_effects_rollback_lock_retention_replay_MARS: NOT_RUN_UNQUALIFIED
+  native_checkpoint_independent_frozen_review: PENDING
+  new_fixed_actual_NoWork_markers: 2
+  required_future_native_markers_exact_once: 99
+  protected_notes_attention_raw_completion_outbox_context_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE
