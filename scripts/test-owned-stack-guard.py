@@ -61,6 +61,73 @@ class OwnedStackGuardTests(unittest.TestCase):
                     company=str(uuid.uuid4()), service=str(uuid.uuid4()), key=b"bad",
                     sql=forbidden, restart=forbidden, ready=forbidden, identity_index=forbidden)
 
+    def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
+        # Execute only the actual cleanup block with inert resources: no CI
+        # flags, sockets, child processes, private configuration or SQL.
+        tree = ast.parse(Path(spool_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        start = next(index for index, node in enumerate(verify.body) if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "committed" for target in node.targets))
+        end = next(index for index in range(start, len(verify.body)) if isinstance(verify.body[index], ast.If)
+            and isinstance(verify.body[index].test, ast.Compare) and isinstance(verify.body[index].test.left, ast.Name)
+            and verify.body[index].test.left.id == "failure")
+        block = compile(ast.fix_missing_locations(ast.Module(verify.body[start:end + 1], type_ignores=[])), "<inert-spool-cleanup>", "exec")
+        for fault in ("proxy-constructor", "thread-constructor", "thread-start", "save", "popen", "drain"):
+            with self.subTest(fault=fault):
+                actions, namespace = [], {}
+                original = RuntimeError("owned-first-failure")
+                class Event:
+                    def set(self): actions.append("release")
+                    def wait(self, timeout): return True
+                class Proxy:
+                    server_port = 12345
+                    def __init__(self, *args):
+                        actions.append("proxy")
+                        if fault == "proxy-constructor": raise original
+                    def serve_forever(self): pass
+                    def shutdown(self): actions.append("shutdown")
+                    def server_close(self):
+                        actions.append("close")
+                        # A later cleanup error must not hide the first fault.
+                        raise RuntimeError("owned-secondary-cleanup-failure")
+                class Thread:
+                    ident = None
+                    alive = False
+                    def __init__(self, *args, **kwargs):
+                        actions.append("thread")
+                        if fault == "thread-constructor": raise original
+                    def start(self):
+                        self.ident, self.alive = 1, True
+                        namespace["captured"]["ack"] = {}
+                        if fault == "thread-start": raise original
+                    def is_alive(self): return self.alive
+                    def join(self, timeout): actions.append("join")
+                class Process:
+                    returncode = None
+                    def __init__(self, *args, **kwargs):
+                        actions.append("popen")
+                        if fault == "popen": raise original
+                    def poll(self): return self.returncode
+                    def kill(self): actions.append("kill"); self.returncode = -9
+                    def communicate(self, timeout):
+                        actions.append("drain")
+                        if fault == "drain" and actions.count("drain") == 1: raise original
+                def save():
+                    if fault == "save": raise original
+                namespace.update(threading=SimpleNamespace(Event=Event, Thread=Thread),
+                    http=SimpleNamespace(server=SimpleNamespace(BaseHTTPRequestHandler=object, ThreadingHTTPServer=Proxy)),
+                    subprocess=SimpleNamespace(Popen=Process, PIPE=None), config={}, save_config=save,
+                    executable="inert-never-executed.dll", child_environment={})
+                with self.assertRaises(RuntimeError) as caught:
+                    exec(block, namespace)
+                self.assertIs(caught.exception, original)
+                self.assertIn("release", actions)
+                if fault != "proxy-constructor": self.assertIn("close", actions)
+                if fault not in ("proxy-constructor", "thread-constructor"):
+                    self.assertIn("shutdown", actions)
+                    self.assertIn("join", actions)
+                if fault == "drain": self.assertEqual(2, actions.count("drain"))
+
     def test_listener_proof_refuses_unowned_before_resources(self):
         cases = [(self.owned, {"CI": "false"}), (self.owned, {"GITHUB_ACTIONS": "false"}),
             (self.owned, {"RUNNER_TEMP": ""}), (self.root, {}), (self.owned / "nested", {}),

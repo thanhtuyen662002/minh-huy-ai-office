@@ -142,12 +142,14 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
             finally:
                 self.close_connection = True
 
-    proxy = http.server.ThreadingHTTPServer(("127.0.0.1", 0), LostReply)
-    proxy.daemon_threads = True
-    serving = threading.Thread(target=proxy.serve_forever, daemon=True)
+    proxy = None
+    serving = None
     process = None
     failure = None
     try:
+        proxy = http.server.ThreadingHTTPServer(("127.0.0.1", 0), LostReply)
+        proxy.daemon_threads = True
+        serving = threading.Thread(target=proxy.serve_forever, daemon=True)
         serving.start()
         config["origin"] = f"http://127.0.0.1:{proxy.server_port}/"
         save_config()
@@ -169,8 +171,10 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
                 if process.poll() is None:
                     process.kill()
                 process.communicate(timeout=5)
-        for cleanup in (stop_child, lambda: proxy.shutdown() if serving.is_alive() else None,
-                proxy.server_close, lambda: serving.join(timeout=2) if serving.ident is not None else None):
+        for cleanup in (stop_child,
+                lambda: proxy.shutdown() if proxy is not None and serving is not None and serving.is_alive() else None,
+                lambda: proxy.server_close() if proxy is not None else None,
+                lambda: serving.join(timeout=2) if serving is not None and serving.ident is not None else None):
             try:
                 cleanup()
             except BaseException as error:

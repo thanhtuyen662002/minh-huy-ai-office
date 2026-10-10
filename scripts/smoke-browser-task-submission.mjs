@@ -105,10 +105,18 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       phase("graph-after-commit"); oneGraph(initialCounts, initialSnapshot, fault.taskId); const committed = snapshot();
       phase("session-unchanged");
       proof(await sid(ownerContext) === originalSid);
-      const retry = waitResponse(`/api/local/tasks/intents/${fault.operationId}/submit`, 202);
-      phase("replay-response");
+      // Observe a refusal as well as202; filtering it out hides the actual
+      // boundary behind a timeout. Keep the202 acceptance requirement.
+      const retry = page.waitForResponse(response => new URL(response.url()).pathname === `/api/local/tasks/intents/${fault.operationId}/submit`
+        && response.request().method() === "POST", { timeout: 20_000 });
+      phase("replay-click");
       await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click();
-      const receipt = await (await retry).json();
+      phase("replay-response");
+      const response = await retry;
+      phase(response.status() === 202 ? "replay-202-body" : response.status() === 503 ? "replay-refused503"
+        : response.status() === 401 ? "replay-refused401" : response.status() === 409 ? "replay-refused409" : "replay-refused-other");
+      proof(response.status() === 202);
+      const receipt = await response.json();
       phase("receipt-equal");
       proof(["companyId", "operationId", "inputFingerprint", "taskId", "stepId", "messageId", "createdAtUtc"].every(key => receipt[key] === (key === "companyId" ? company : fault[key])));
       phase("final-idle"); await idle();
