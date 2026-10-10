@@ -299,3 +299,4 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
     assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
         " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
     print("PASS actual .NET fresh SQL metadata grant revoke403 before spool key retains every encrypted byte/no graph effects; exact restore allows original backlog commit/cursor2 and clean pooled isolation")
+    return source  # Nonsecret identity of this invocation's separate owned SQL source.

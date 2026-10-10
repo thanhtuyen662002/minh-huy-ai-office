@@ -35,12 +35,52 @@ listener_spec.loader.exec_module(listener_smoke)
 spool_spec = importlib.util.spec_from_file_location("spool_smoke", Path(__file__).with_name("smoke-group-spool.py"))
 spool_smoke = importlib.util.module_from_spec(spool_spec)
 spool_spec.loader.exec_module(spool_smoke)
+reference_spec = importlib.util.spec_from_file_location("reference_smoke", Path(__file__).with_name("smoke-group-reference.py"))
+reference_smoke = importlib.util.module_from_spec(reference_spec)
+reference_spec.loader.exec_module(reference_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
     root = (Path.cwd() / "guard-test-no-resources").resolve()
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}
+
+    def test_reference_refuses_unowned_before_configuration_sql_or_processes(self):
+        for directory, override, api in [(self.owned, {"CI": "false"}, "http://127.0.0.1:8080"),
+                (self.owned, {"GITHUB_ACTIONS": "false"}, "http://127.0.0.1:8080"),
+                (self.owned, {"RUNNER_TEMP": ""}, "http://127.0.0.1:8080"),
+                (self.owned / "nested", {}, "http://127.0.0.1:8080"), (self.root, {}, "http://127.0.0.1:8080"),
+                (self.owned, {}, "https://customer.example.invalid")]:
+            with self.subTest(directory=str(directory), override=override, api=api), patch.dict(os.environ, {**self.environment, **override}, clear=True):
+                with patch.object(reference_smoke.subprocess, "run") as process:
+                    with self.assertRaisesRegex(RuntimeError, r"^Group reference proof requires the owned disposable GitHub CI fixture\.$"):
+                        reference_smoke.verify(directory=directory, api=api, manifest=None, tenant=None, company=None,
+                            service=None, source=None, sql=None, compose=None, environment=None, pipeline=None)
+                    process.assert_not_called()
+
+    def test_reference_pipeline_actual_disable_attempts_worker_even_when_core_restore_fails(self):
+        tree = ast.parse(Path(group_smoke.__file__).read_text(encoding="utf-8"))
+        function = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "reference_pipeline")
+        block = compile(ast.Module(body=[function], type_ignores=[]), '<actual-reference-pipeline>', 'exec')
+        class Override:
+            def write_text(self, value, encoding): self.value = json.loads(value)
+            def chmod(self, mode): self.mode = mode
+        for failure in ("core-api", "agent-worker", None):
+            calls = []; override = Override()
+            def compose_run(*args, **kwargs):
+                calls.append((args, kwargs))
+                if failure in args: raise RuntimeError("fixed-owned-restore-failure")
+            namespace = dict(json=json, tenant=str(uuid.uuid4()), company=str(uuid.uuid4()), service=str(uuid.uuid4()),
+                private_environment={"OWNED_SECRET": "private-inert", "AIOffice__GroupIntake__Enabled": "true"},
+                override=override, compose_run=compose_run, ready=lambda: None)
+            exec(block, namespace)
+            if failure:
+                with self.assertRaisesRegex(RuntimeError, '^fixed-owned-restore-failure$'): namespace['reference_pipeline']('disable')
+            else: namespace['reference_pipeline']('disable')
+            self.assertEqual(['core-api', 'agent-worker'], [args[-1] for args, _ in calls])
+            self.assertTrue(calls[0][1]['overridden']); self.assertFalse(calls[1][1])
+            self.assertEqual({'services': {'core-api': {'environment': namespace['private_environment']}}}, override.value)
+            self.assertNotIn('AIOffice__GroupIntake__PipelineEnabled', override.value['services']['core-api']['environment'])
 
     def test_spool_proof_refuses_unowned_before_resources(self):
         cases = [(self.owned, "http://127.0.0.1:8080", {"CI": "false"}),

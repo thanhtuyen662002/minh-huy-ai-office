@@ -956,3 +956,42 @@ a connection, and SQL-backed current-grant/due/inbox/restart-wrap selection. Hos
 services are resolved but never started in these controls. No real broker/native
 SQL or production activation is claimed. Frozen independent review and mandatory
 owned delivery/crash/restart/revocation/rollback acceptance remain next.
+
+### Owned native reference delivery proof candidate
+
+Host-registration aad has scoped independent approval6093691699:63.NET controls
+PASS0skip (55 retained+8 own), including actual33-source bounded pass/wrap/failure
+continuation, changed epoch refusal, default-off before factory access and opaque
+binding replacement denial. Both actual catalog query variants parse SQL160 with
+zero errors and closed connections. The generated migration repair is exactly
+three-byte BOM removal, with all remaining bytes unchanged.
+
+The next nonshipping executable and coordinator consume the separate owned source
+returned by the retained native spool proof, whose two references originated in
+actual Core HTTP/SQL commits. They do not manufacture revision/receipt graphs.
+Guards precede configuration/resources; only fixed disposable SQL runtime
+`sql/AIOfficeLocal/aioffice_runtime` and owned Docker network are accepted. Secrets
+stay in inherited environment; only scoped IDs enter stdin. Container termination
+requires the exact random owned label and validated container ID. Fixed diagnostics
+do not disclose payloads, keys, credentials, SQL exception details or URLs.
+
+Candidate oracles require actual shipping publication, one durable SQL inbox commit
+before deliberately held broker ACK, observed unacknowledged delivery, owned child
+death, real redelivery and original exact receipt with one effect. They also require
+100 concurrent duplicate receipts, native insert rollback, current Extract refusal,
+an observed same-source SQL waiter revoked before release, and effective unsafe
+column refusal with explicit owned restore. Core/Worker default-off DI is then
+enabled only inside this fixture for the second retained event and restarted.
+
+Only this new source's three delivery fields may change. The coordinator preserves
+the complete other five graph tables and every immutable outbox field, every original
+receipt byte, batch cursor and portal cardinalities. The parent's original source
+full6 oracle remains byte-exact. All pipeline disable paths attempt baseline Worker
+restoration even if Core restoration fails. Queue observations use the documented
+[RabbitMQ list_queues fields](https://www.rabbitmq.com/docs/next/man/rabbitmqctl.8)
+and official [CLI JSON formatter](https://github.com/rabbitmq/rabbitmq-cli/blob/master/DESIGN.md).
+
+Local12 guard controls PASS0skip,34 retained/current Python controls PASS and
+clean proof build/changed-file format PASS. This is not native acceptance until the
+owned exact-head run executes each oracle. Frozen scoped review remains required
+before push. Live connector, production volume and full277/278/279/233 remain pending.

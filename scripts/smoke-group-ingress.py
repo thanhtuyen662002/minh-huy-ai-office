@@ -64,7 +64,7 @@ def owned_sql(compose, environment, query):
 
 def permission_diagnostic_query():
     registry = ["GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants"]
-    append_only = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts"]
+    append_only = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts", "GroupIngressInbox"]
     mutable = {"GroupListenerLeases": ["OwnerId", "Epoch", "ExpiresAtUtc", "HeartbeatAtUtc"],
         "GroupSourceStates": ["CommittedSequence", "ScheduledThroughSequence", "FirstPendingAtUtc", "LastPendingAtUtc"],
         "GroupCoverageGaps": ["ReconnectedAtUtc"],
@@ -649,10 +649,47 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             override.chmod(0o600)
             compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
             ready()
-        spool_proof.verify(directory=directory, api=api, tenant=tenant, company=company, service=service,
+        spool_source = spool_proof.verify(directory=directory, api=api, tenant=tenant, company=company, service=service,
             key=group_key, sql=sql, restart=lambda: compose_run("restart", "core-api", overridden=True),
             ready=ready, identity_index=identity_index, enroll_source=enroll_spool_source)
         assert snapshot() == listener_before, "Separate native spool proof changed retained source bytes"
+        assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+
+        reference_spec = importlib.util.spec_from_file_location("group_reference_proof", Path(__file__).with_name("smoke-group-reference.py"))
+        reference_proof = importlib.util.module_from_spec(reference_spec)
+        reference_spec.loader.exec_module(reference_proof)
+
+        def reference_pipeline(operation):
+            worker_environment = {"AIOffice__GroupIntake__Enabled": "true", "AIOffice__GroupIntake__PipelineEnabled": "true"}
+            for name, value in {"TenantId": tenant, "CompanyId": company, "ServiceId": service, "CredentialEpoch": "1"}.items():
+                worker_environment["AIOffice__GroupIntake__Worker__" + name] = value
+            if operation == "enable":
+                override.write_text(json.dumps({"services": {
+                    "core-api": {"environment": {**private_environment, **worker_environment}},
+                    "agent-worker": {"environment": worker_environment}}}), encoding="utf-8")
+                override.chmod(0o600)
+                compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", "agent-worker", overridden=True)
+                ready()
+            elif operation == "restart":
+                compose_run("restart", "core-api", "agent-worker", overridden=True)
+                ready()
+            elif operation == "disable":
+                # Baseline Worker has no group switch. Keep the private Core
+                # enrollment until the parent's existing final restoration.
+                override.write_text(json.dumps({"services": {"core-api": {"environment": private_environment}}}), encoding="utf-8")
+                override.chmod(0o600)
+                try:
+                    compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
+                finally:
+                    compose_run("up", "-d", "--no-deps", "--force-recreate", "agent-worker")
+                ready()
+            else:
+                raise RuntimeError("Owned reference pipeline operation refused.")
+
+        reference_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, source=spool_source, sql=sql, compose=compose, environment=environment, pipeline=reference_pipeline)
+        assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
 
