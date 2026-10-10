@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 5ff28553de183458aea4931b66d2d406790c9a25
     state: in_progress
-    next: 'Own278/Draft288 exact5ff Build38080032149/native114294879898/dotnet114294879800 ACTIVE; Gov38080032175 and five prerequisitesSUCCESS. Full sourceproof6101335600 rootFULLfetched before exactpush; all original missing-column/baseline/latency findings CLOSED. Current native acceptance withheld until rootFULL all102/all8/Gov/sixORIGINALs; immediately repair terminal failure SAME288. WhileCI active, stashed hostreader adapted onto clean epoch9 onlyafter original102, actual currentreader with configuredscopedkeys plus rollback host3/1 specificOriginCK denial and positive3/3 fixtures.88Python/build0W0E/changedformat/nineCLIguards/originalverifyAST+retained102plusrequiredhost103 PASS local; oracle tests not native/model acceptance. Freeze hostdelta review/rootFULLbefore laterpush, keep exact-parent CI closure. Continue production host/combinedmedia-gap/rawcoverage-terminal/context-tokenizer/automaticDI-UI/actual100-30eval/279/full233; actualmodel NOT_RUN_UNEVALUATED, no partialmerge/checkpointstop.'
+    next: 'Own278/Draft288: exact5ff root FULL closure all102 once/158PASS/2636.NET/all8-Gov/sixORIGINAL11680029776 PASS. Local approved host577/plan57a/capacitybbbb receipts6101445392/6101478951/6101577796 FULLfetched, future104 not native-qualified. New combined protected writer shares exact-current transactional engine; legacy20 no-media/no-gap guards retained, combined40/source100/evidence300 and host3/3 metadata separate, gaps/zero-notes/rawcompletion denied pending durable carrier. Fifteen new entry/three projection+13retained31 PASS; full source review then exactpush/own all104/all8/Gov/full logs/six originals closure. Automatic combined SQL replay/expiry/authority proof, rawcoverage/terminal/retry/context/DI-UI/actual100-30eval/279/full233 remain; actualmodel NOT_RUN_UNEVALUATED. No eligible merge or checkpointstop.'
 
   erp_data:
     issue: 264
@@ -1572,4 +1572,28 @@ group_278_automatic_note_capacity_expansion:
   format: actual_changed_CSharp_APPLY_VERIFY_PASS
   frozen_independent_review: PENDING_before_any_push
   native_SQL_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_5ff_native_closure_and_combined_writer:
+  exact_parent_head: 5ff28553de183458aea4931b66d2d406790c9a25
+  build_governance: 38080032149_38080032175_SUCCESS
+  native_quality: 114294879898_114299950359_SUCCESS_all_eight
+  root_FULL_native: all102_exactly_once_158_PASS_zero_failure_markers
+  root_FULL_dotnet: 2636_projects6_520_25_2085_zeroFailSkip
+  root_browser: all_six_ORIGINAL_images11680029776_visually_inspected
+  qualification: frozen_parent_standalone_effect_scope_only_not_host104_or_combined_automatic_or_model
+  source_parent: bbbb4382154906a86e78a8a69b8c852f6f0e5c31
+  source_parent_review: SCOPED_APPROVED6101577796_root_FULL_fetched
+  previous_reviews: host577_6101445392_plan57a_6101478951_root_FULL_fetched
+  combined_writer: sealed_plan_same_atomic_key_fence_savepoint_witness_replay_engine
+  separation: AI1_1_literal_evidence_Host3_3_metadata_evidence_unconfirmed_no_IT_or_retry_authority
+  preservation: one_disposition_per_selected_source_all40_notes_all300_bounded_evidence_rows_sentinel
+  receipt: mixed_Notes_host_only_Attention_same_atomic_metadata_outbox_and_all_items
+  gaps: deny_until_durable_coverage_carrier_no_zero_note_or_raw_completion_authority
+  standalone_AI: original20_no_media_no_gap_entry_guards_unchanged
+  focused_controls: 31_PASS_fifteen_new_actual_entry_three_new_projection_thirteen_retained_legacy_zeroFailSkip
+  full_local_persistence: 2115_PASS_zeroFailSkip_changed_CSharp_format_VERIFY_PASS
+  future_native: existing104_exercises_legacy_wrapper_combined_SQL_effect_replay_expiry_authority_proof_required
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_loader_no_second_client
+  frozen_independent_review: PENDING_before_any_push
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

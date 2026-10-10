@@ -24,14 +24,28 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
     {
         ArgumentNullException.ThrowIfNull(proposal); ArgumentNullException.ThrowIfNull(dependencies);
         ValidateEntry(proposal, dependencies, operationId, cancellationToken);
-        var context = proposal.Preparation.Context; var handle = context.Handle; var scope = context.Scope;
+        return await CommitCoreAsync(GroupNoteEffectPlan.FromProposal(proposal), dependencies, operationId, cancellationToken);
+    }
+
+    public async Task<GroupNoteCommitResult> CommitAutomaticAsync(GroupAutomaticNotePlan plan,
+        GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(plan); ArgumentNullException.ThrowIfNull(dependencies);
+        ValidateAutomaticEntry(plan, dependencies, operationId, cancellationToken);
+        return await CommitCoreAsync(GroupNoteEffectPlan.FromAutomatic(plan), dependencies, operationId, cancellationToken);
+    }
+
+    private async Task<GroupNoteCommitResult> CommitCoreAsync(GroupNoteEffectPlan plan,
+        GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken)
+    {
+        var context = plan.Preparation.Context; var handle = context.Handle; var scope = context.Scope;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
-        var payloads = EncodePayloads(proposal);
+        var payloads = plan.Notes.Select(x => x.Payload).ToArray();
         if (payloads.Sum(x => Encoding.UTF8.GetByteCount(x) + 29) > GroupBrainCurrentReader.MaximumSelectedEnvelopeBytes) throw Unavailable();
         var requestIds = payloads.Select((_, index) => Identity("request", index + 1)).ToArray();
         var outboxId = Identity("outbox", 0);
-        var selected = proposal.SourceDispositions.ToDictionary(x => x.MessageId);
+        var selected = plan.Selected.ToDictionary(x => x.MessageId);
         var sourceHash = Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(string.Join("\n",
             selected.OrderBy(x => x.Key).Select(x => x.Key.ToString("D") + "/" + x.Value.Revision.ToString(CultureInfo.InvariantCulture))))));
         var historical = context.Items.Any(x => x.IsHistoricalBackfill);
@@ -63,7 +77,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                             x.RequestId,
                             x.ContentKeyId,
                             Length = EF.Functions.DataLength(x.ProtectedContent)
-                        }).Take(21).ToArrayAsync(cancellationToken);
+                        }).Take(plan.MaximumNotes + 1).ToArrayAsync(cancellationToken);
                     if (metadata.Length != requestIds.Length || metadata.Select(x => x.RequestId).Distinct().Count() != metadata.Length
                         || metadata.Any(x => x.Length is not (>= 30 and <= GroupBrainContentProtector.MaximumEnvelopeLength)
                             || !ValidKeyId(x.ContentKeyId))) throw Unavailable();
@@ -112,7 +126,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 SourceSetSha256 = sourceHash,
                 SelectedMessageCount = selected.Count,
                 NoteCount = requestIds.Length,
-                Outcome = GroupWorkCommitOutcome.Notes,
+                Outcome = plan.Outcome,
                 ServiceId = handle.Receipt.ServiceId,
                 ClaimEpoch = handle.Receipt.Epoch,
                 CredentialEpoch = handle.Receipt.CredentialEpoch,
@@ -126,7 +140,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
             var writeKey = resolved.Values.Single();
             for (var index = 0; index < requestIds.Length; index++)
             {
-                var id = requestIds[index]; var note = proposal.Notes[index];
+                var id = requestIds[index]; var note = plan.Notes[index];
                 var envelope = protector.Protect(new(scope, GroupBrainContentKind.RequestRevision, id, 1,
                     handle.Receipt.SourceVersion, handle.Receipt.DeletionGeneration), payloads[index], writeKey.Key, writeKey.KeyId);
                 staged.Add(new GroupCustomerRequestRecord
@@ -139,13 +153,12 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                     OriginOperationId = operationId,
                     OriginCandidateOrdinal = index + 1,
                     RequestCode = "REQ-" + id.ToString("N").ToUpperInvariant(),
-                    Kind = Kind(note.Kind),
+                    Kind = note.Kind,
                     SourceVersion = handle.Receipt.SourceVersion,
                     DeletionGeneration = handle.Receipt.DeletionGeneration,
                     CurrentRevision = 1,
                     BusinessVersion = 1,
-                    BusinessStatus = note.Kind == GroupWorkProposalKind.NeedsClarification || note.MissingFields.Count != 0 || note.SuggestedRelationHint is not null
-                        ? GroupNoteBusinessStatus.NeedsClarification : GroupNoteBusinessStatus.New,
+                    BusinessStatus = note.BusinessStatus,
                     CreatedAtUtc = now,
                     UpdatedAtUtc = now
                 });
@@ -156,8 +169,8 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                     BindingId = scope.SourceBindingId,
                     RequestId = id,
                     Revision = 1,
-                    Origin = GroupRequestRevisionOrigin.AiExtracted,
-                    VerificationLevel = GroupRequestVerificationLevel.SourceBackedAiInterpretation,
+                    Origin = note.Origin,
+                    VerificationLevel = note.VerificationLevel,
                     AuthorServiceId = handle.Receipt.ServiceId,
                     SourceBatchId = context.BatchId,
                     ClaimEpoch = handle.Receipt.Epoch,
@@ -178,7 +191,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                     Ordinal = ordinal + 1,
                     MessageId = reference.MessageId,
                     MessageRevision = reference.Revision,
-                    Kind = GroupRequestEvidenceKind.LiteralSourceQuote
+                    Kind = note.EvidenceKind
                 }));
                 staged.Add(new GroupNotesCommittedItemRecord
                 {
@@ -200,7 +213,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 OperationId = operationId,
                 MessageId = x.MessageId,
                 MessageRevision = x.Revision,
-                Outcome = Outcome(x.Disposition)
+                Outcome = x.Outcome
             }));
             staged.Add(new GroupNotesCommittedOutboxRecord
             {
@@ -255,7 +268,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         void ValidateReceipt(GroupWorkCommitReceiptRecord original)
         {
             if (original.BatchId != context.BatchId || original.SourceSetSha256 != sourceHash || original.SelectedMessageCount != selected.Count
-                || original.NoteCount != payloads.Length || original.Outcome != GroupWorkCommitOutcome.Notes
+                || original.NoteCount != payloads.Length || original.Outcome != plan.Outcome
                 || original.ServiceId != handle.Receipt.ServiceId || original.ClaimEpoch <= 0 || original.ClaimEpoch > handle.Receipt.Epoch
                 || original.CredentialEpoch != handle.Receipt.CredentialEpoch || original.GrantVersion != handle.Receipt.GrantVersion
                 || original.SourceVersion != handle.Receipt.SourceVersion || original.DeletionGeneration != handle.Receipt.DeletionGeneration
@@ -270,28 +283,28 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 && x.OperationId == operationId).Take(101).ToArrayAsync(cancellationToken);
             if (dispositions.Length != selected.Count || dispositions.Select(x => x.MessageId).Distinct().Count() != dispositions.Length
                 || dispositions.Any(x => !selected.TryGetValue(x.MessageId, out var source) || source.Revision != x.MessageRevision
-                    || x.Outcome != Outcome(source.Disposition))) throw Unavailable();
+                    || x.Outcome != source.Outcome)) throw Unavailable();
             var requests = await database.GroupCustomerRequests.AsNoTracking().Where(x => x.TenantId == scope.TenantId
                 && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.OriginBatchId == context.BatchId
-                && x.OriginOperationId == operationId).OrderBy(x => x.OriginCandidateOrdinal).Take(21).ToArrayAsync(cancellationToken);
+                && x.OriginOperationId == operationId).OrderBy(x => x.OriginCandidateOrdinal).Take(plan.MaximumNotes + 1).ToArrayAsync(cancellationToken);
             if (requests.Length != requestIds.Length) throw Unavailable();
             var revisions = await database.GroupRequestRevisions.AsNoTracking().Where(x => x.TenantId == scope.TenantId
                 && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && requestIds.Contains(x.RequestId) && x.Revision == 1
                 && EF.Functions.DataLength(x.ProtectedContent) >= 30
-                && EF.Functions.DataLength(x.ProtectedContent) <= GroupBrainContentProtector.MaximumEnvelopeLength).Take(21).ToArrayAsync(cancellationToken);
+                && EF.Functions.DataLength(x.ProtectedContent) <= GroupBrainContentProtector.MaximumEnvelopeLength).Take(plan.MaximumNotes + 1).ToArrayAsync(cancellationToken);
             if (revisions.Length != requestIds.Length || revisions.Sum(x => x.ProtectedContent.Length) > GroupBrainCurrentReader.MaximumSelectedEnvelopeBytes) throw Unavailable();
             var evidence = await database.GroupRequestEvidence.AsNoTracking().Where(x => x.TenantId == scope.TenantId
                 && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && requestIds.Contains(x.RequestId)
-                && x.RequestRevision == 1).Take(101).ToArrayAsync(cancellationToken);
-            if (evidence.Length != proposal.Notes.Sum(x => x.Evidence.Count)) throw Unavailable();
+                && x.RequestRevision == 1).Take(plan.MaximumEvidenceRows + 1).ToArrayAsync(cancellationToken);
+            if (evidence.Length != plan.Notes.Sum(x => x.Evidence.Count)) throw Unavailable();
             for (var index = 0; index < requests.Length; index++)
             {
-                var id = requestIds[index]; var head = requests[index]; var note = proposal.Notes[index];
+                var id = requestIds[index]; var head = requests[index]; var note = plan.Notes[index];
                 if (head.Id != id || head.OriginCandidateOrdinal != index + 1 || head.RequestCode != "REQ-" + id.ToString("N").ToUpperInvariant()
-                    || head.Kind != Kind(note.Kind) || head.SourceVersion != original.SourceVersion || head.DeletionGeneration != original.DeletionGeneration
+                    || head.Kind != note.Kind || head.SourceVersion != original.SourceVersion || head.DeletionGeneration != original.DeletionGeneration
                     || head.CreatedAtUtc != original.CommittedAtUtc) throw Unavailable();
                 var revision = revisions.Single(x => x.RequestId == id);
-                if (revision.Origin != GroupRequestRevisionOrigin.AiExtracted || revision.VerificationLevel != GroupRequestVerificationLevel.SourceBackedAiInterpretation
+                if (revision.Origin != note.Origin || revision.VerificationLevel != note.VerificationLevel
                     || revision.AuthorServiceId != original.ServiceId || revision.AuthorUserId is not null || revision.SourceBatchId != context.BatchId
                     || revision.ClaimEpoch != original.ClaimEpoch || revision.SourceVersion != original.SourceVersion || revision.DeletionGeneration != original.DeletionGeneration
                     || revision.CreatedAtUtc != original.CommittedAtUtc || revision.EnvelopeSha256 != Convert.ToHexString(SHA256.HashData(revision.ProtectedContent))
@@ -302,7 +315,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 var refs = evidence.Where(x => x.RequestId == id).OrderBy(x => x.Ordinal).ToArray();
                 if (refs.Length != note.Evidence.Count || refs.Where((x, ordinal) => x.Ordinal != ordinal + 1
                     || x.MessageId != note.Evidence[ordinal].MessageId || x.MessageRevision != note.Evidence[ordinal].Revision
-                    || x.Kind != GroupRequestEvidenceKind.LiteralSourceQuote).Any()) throw Unavailable();
+                    || x.Kind != note.EvidenceKind).Any()) throw Unavailable();
             }
             var outboxes = await database.GroupNotesCommittedOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
                 && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == context.BatchId
@@ -311,7 +324,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 || outboxes[0].IsHistoricalBackfill != historical || outboxes[0].CommittedAtUtc != original.CommittedAtUtc) throw Unavailable();
             var items = await database.GroupNotesCommittedItems.AsNoTracking().Where(x => x.TenantId == scope.TenantId
                 && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.OutboxId == outboxId)
-                .OrderBy(x => x.Ordinal).Take(21).ToArrayAsync(cancellationToken);
+                .OrderBy(x => x.Ordinal).Take(plan.MaximumNotes + 1).ToArrayAsync(cancellationToken);
             if (items.Length != requestIds.Length || items.Where((x, index) => x.Ordinal != index + 1
                 || x.RequestId != requestIds[index] || x.RequestRevision != 1).Any()) throw Unavailable();
         }
@@ -355,22 +368,22 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         try { if (new SqlConnectionStringBuilder(database.Database.GetConnectionString()).MultipleActiveResultSets) throw Unavailable(); }
         catch (ArgumentException) { throw Unavailable(); }
     }
-    private DateTimeOffset UtcNow() { var now = clock.GetUtcNow(); return now.Offset == TimeSpan.Zero ? now : throw Unavailable(); }
-    private static string[] EncodePayloads(GroupGroundedWorkProposal proposal)
+    private void ValidateAutomaticEntry(GroupAutomaticNotePlan plan, GroupBrainPrivateContext dependencies, Guid operation, CancellationToken token)
     {
-        try { return proposal.Notes.Select(GroupBrainPayloadCodec.EncodeAiNote).ToArray(); }
-        catch (Exception error) when (error is InvalidOperationException or ArgumentException) { throw Unavailable(); }
+        token.ThrowIfCancellationRequested(); worker.Validate(); plan.Scope.Validate();
+        if (plan.Scope.TenantId != worker.TenantId || plan.Scope.CompanyId != worker.CompanyId) throw GroupServiceDirectory.Denied();
+        var context = plan.Preparation.Context;
+        // Gaps need a durable coverage carrier before allowing this effect.
+        // Zero-note/raw completion belongs to a separate reviewed consumer.
+        if (operation == Guid.Empty || dependencies.Handle.Receipt != context.Handle.Receipt || plan.NoteCount is < 1 or > GroupAutomaticNotePlan.MaximumNotes
+            || context.HasCoverageGap || context.Items.Count is < 1 or > 100 || plan.SourceDispositions.Count != context.Items.Count
+            || plan.Preparation.Receipts.Count != context.Items.Count) throw Unavailable();
+        if (!database.Database.IsSqlServer() || database.Database.CurrentTransaction is not null
+            || System.Transactions.Transaction.Current is not null || database.ChangeTracker.HasChanges()) throw Unavailable();
+        try { if (new SqlConnectionStringBuilder(database.Database.GetConnectionString()).MultipleActiveResultSets) throw Unavailable(); }
+        catch (ArgumentException) { throw Unavailable(); }
     }
+    private DateTimeOffset UtcNow() { var now = clock.GetUtcNow(); return now.Offset == TimeSpan.Zero ? now : throw Unavailable(); }
     private static bool ValidKeyId(string? id) => !string.IsNullOrEmpty(id) && id.Length <= 64 && id.All(x => char.IsAsciiLetterOrDigit(x) || x is '-' or '_');
-    private static GroupNoteKind Kind(GroupWorkProposalKind kind) => kind switch
-    {
-        GroupWorkProposalKind.Incident => GroupNoteKind.Incident,
-        GroupWorkProposalKind.ChangeRequest => GroupNoteKind.ChangeRequest,
-        GroupWorkProposalKind.Request => GroupNoteKind.Question,
-        GroupWorkProposalKind.NeedsClarification => GroupNoteKind.NeedsClarification,
-        _ => throw Unavailable()
-    };
-    private static GroupWorkSourceOutcome Outcome(GroupModelSourceDisposition value) => value switch
-    { GroupModelSourceDisposition.Work => GroupWorkSourceOutcome.Work, GroupModelSourceDisposition.NoWork => GroupWorkSourceOutcome.NoWork, _ => throw Unavailable() };
     private static InvalidOperationException Unavailable() => new("Group note commit is unavailable.");
 }
