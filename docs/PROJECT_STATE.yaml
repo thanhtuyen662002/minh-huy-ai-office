@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+current_target_head: 24495763b5ccf6ff6af9e81768067ec215a5a671
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
-    state: queue_restart_acceptance_repair
-    next: 'Exact542 all8/Gov/actual114151648993 SUCCESS; full277 review withheld solely on actual RabbitMQ process restart with a pending persistent reference. Current proof restarts Core/Worker only. Repair owned native queue-survival/shipping-consumer ACK and inflated wording on SAME283, close frozen review, then exact PR/main gates.278/279/provider/customer/installer/full233 remain active.'
+    head: 24495763b5ccf6ff6af9e81768067ec215a5a671
+    state: in_progress_exact_ci
+    next: 'Scoped queue-restart/wording repair APPROVED6094998445 and pushed244; Build38033648198/actual114159514486 native execution active, Gov38033648226 and six prerequisites SUCCESS. Own exact terminal closure, inspect/fix any red SAME283. Actual pending persistent reference must survive new RabbitMQ incarnation before republication and receive shipping consumer ACK with unchanged graph. Full277/final PR/main acceptance remain;278/279/full233 active.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close actual RabbitMQ restart acceptance gap on SAME283 with retained persistent reference before any republication, actual shipping consumer delivery/ACK and unchanged exact SQL graph/cursor/portal effects. Full542 review otherwise verified2027.NET/1334web/all8/six images; no additional shipping blocker. Frozen repair approval and renewed exact PR/main acceptance precede277 merge. Then278/279; full233 remains active.'
+next_action: 'Own exact244 Build38033648198/actual114159514486 through terminal; require actual RabbitMQ restart/persistent original reference before republication/shipping ACK/full graph and strict main Chromium. Scoped repair6094998445 approved; full277 remains withheld until native evidence. Current progress docs stay local while useful CI is active. Final closure review/exact PR/main precede277 merge; then278/279/full233.'
 
 
 blocked_by:
@@ -755,3 +755,14 @@ group_connector_pending_queue_restart_candidate:
   local: '42 retained/new Python guard tests PASS, including18 positive/refusal queue-incarnation/content/effect/ACK/cleanup controls and first-failure restoration. Native proof clean build/changed C# format,17 .NET guard tests and actual new inspect-pending entry refusal before resources PASS.2AST/2YAML/diff PASS. Independent frozen review/native SQL/Docker execution remain.'
   limits: 'Test/evidence repair only; no shipping src/apps/workflow change, live login/send/activation or weakened receipt/scope/authority requirements. Real pending-message broker restart must execute before277 closure.'
   next: 'Freeze/review corrected docs and actual queue-restart proof, push approved SAME283, own renewed exact all8 to terminal, fix any terminal red immediately. Merge277 only after accepted PR/main; then278 automatic brain/notes and279 internal IT reporter; full233 active.'
+
+group_connector_244_dispatch:
+  head: 24495763b5ccf6ff6af9e81768067ec215a5a671
+  build: 38033648198
+  governance: 38033648226
+  actual: 114159514486
+  scoped_approval: 6094998445
+  state: exact_native_ci_active
+  review: 'Frozen db733+sole documented -t option244 APPROVED:53 Python (42 retained+11 independent actual ownership/control/counter/cleanup probes),17.NET guards/new inspect-pending unowned executable boundary/3AST/2YAML/diff PASS. Original lost-reference counterexample CLOSED before republication; four docs truthful. All shipping src/apps/workflow/sln bytes equal542.'
+  exact_progress: 'Remote ref/GitHub PR244 verified; Governance and all six prerequisites SUCCESS. Actual step12 started07:14:38UTC and still non-terminal at07:25:46; Chromium pending. Prior542 green is not new restart acceptance.'
+  next: 'Own exact current CI to terminal; actual new broker-incarnation/persistent exact-reference survival and shipping ACK/full8 graph required. Terminal red immediately inspect/fix SAME283, no useful CI cancelling progress pushes. Full277 closure/finalPR-main review precede eligiblemerge;278/279/full233 active.'
