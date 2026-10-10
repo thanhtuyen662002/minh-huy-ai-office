@@ -38,3 +38,9 @@ These native modes require independent source review and exact-head hosted execu
 ## Next executable action
 
 Independently review the frozen expiry repair, rerun the original two counterexamples unchanged, then push only approved source and own renewed exact native claim CI. Continue scoped source/current-note/glossary brain, owned effect rollback wrapper, chunk/dependency/tokenizer profile, protected notes/evidence/dispositions/terminal receipts/atomic NotesCommitted outbox, worker DI/no-click APIs/UI and actual frozen model evaluation. Keep278,279 and full233 active.
+
+## Latest native failure and scoped source consumer
+
+Pushed3a78 received scoped checkpoint review6097772273, including both original clock-rollback counterexamples rerun unchanged. Exact Build38054218369 failed native114219254243 at claim-crash after~154s; six prerequisite jobs and Governance38054218293 succeeded, with2212.NET tests and no browser artifact. No native claim acceptance was established. Independent source inspection confirmed dotnet namespace PID1 self-SIGKILL followed by the150s cancellation wait. The local repair adds Docker --init and rejects PID1 before stdin/config/SQL; original strict exit137/checkpoint and graph assertions remain. Renewed native proof is required.
+
+The first protected consumer is [scoped batch source reader](GROUP_BATCH_SOURCE_READER.md): a fixed read-only source unit plus explicit metadata-only expiry retirement, no generic/staged business effect. The future note-effect savepoint wrapper and native staged rollback/MARS denial gate remain unimplemented. Local combined checkpoint has1697 full Persistence,32 source-reader,4 process guard,52 Python and11 actual unowned claim/source entry refusals PASS. Frozen combined independent review and new source native modes remain pending.

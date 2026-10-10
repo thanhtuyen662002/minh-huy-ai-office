@@ -1,6 +1,7 @@
 """Shipping group references on the exact owned disposable SQL/RabbitMQ CI stack."""
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+import base64
 import json
 import os
 from pathlib import Path
@@ -158,8 +159,20 @@ def verify_pending_broker_restart(*, directory, api, pause_worker, resume_worker
     assert queue_counts() == (0, 0) and count() == 2 and full_graph() == original
 
 
-def verify(*, directory, api, manifest, tenant, company, service, source, sql, compose, environment, pipeline):
+def require_source_key(source_key):
+    try:
+        if not isinstance(source_key, str) or len(source_key) != 44:
+            raise ValueError()
+        decoded = base64.b64decode(source_key, validate=True)
+        if len(decoded) != 32 or base64.b64encode(decoded).decode("ascii") != source_key:
+            raise ValueError()
+    except Exception:
+        raise RuntimeError("Owned reference source key is unavailable.") from None
+
+
+def verify(*, directory, api, manifest, tenant, company, service, source, sql, compose, environment, pipeline, source_key=None):
     require_owned(directory, api)  # Before configuration, files, credentials, SQL or processes.
+    require_source_key(source_key)
     tenant, company, service, source = (str(uuid.UUID(value)) for value in (tenant, company, service, source))
     installation = uuid.UUID(manifest["AIOFFICE_INSTALLATION_ID"]).hex
     scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
@@ -173,12 +186,16 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
     child_environment.update({"AIOFFICE_OWNED_GROUP_REFERENCE_PROOF": "true",
         "AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION": "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password="
             + password + ";Encrypt=true;TrustServerCertificate=true",
-        "AIOFFICE_GROUP_REFERENCE_PROOF_BROKER_PASSWORD": broker_password})
-    command = ["docker", "run", "--rm", "--name", name, "--label", "aioffice.owned-proof=" + suffix,
+        "AIOFFICE_GROUP_REFERENCE_PROOF_BROKER_PASSWORD": broker_password,
+        "AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY": source_key})
+    # The crash proof must be a child of Docker's init. Namespace PID1 can
+    # ignore its own SIGKILL and wait until cancellation instead of dying.
+    command = ["docker", "run", "--init", "--rm", "--name", name, "--label", "aioffice.owned-proof=" + suffix,
         "--network", "aioffice-" + installation + "_default", "--read-only", "--cap-drop", "ALL",
         "--security-opt", "no-new-privileges:true", "--tmpfs", "/tmp:rw,noexec,nosuid,size=16m", "-i",
         "-e", "CI", "-e", "GITHUB_ACTIONS", "-e", "AIOFFICE_OWNED_GROUP_REFERENCE_PROOF",
-        "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION", "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_BROKER_PASSWORD", image]
+        "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION", "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_BROKER_PASSWORD",
+        "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY", image]
     events = sql(f"SELECT CONVERT(varchar(36),Id) FROM aioffice.GroupIngressOutbox WHERE {scope} ORDER BY CommittedSequence;").splitlines()
     events = [str(uuid.UUID(value.strip())) for value in events]
     assert len(events) == 2 and len(set(events)) == 2, "Expected two actual Core/spool committed references"
@@ -208,6 +225,10 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "claim-deny": "PASS owned claim runtime refusal claim-deny",
             "claim-unsafe": "PASS owned claim runtime refusal claim-unsafe",
             "claim-rollback": "PASS owned claim runtime refusal claim-rollback",
+            "source-read": "PASS owned source runtime actual Core protected originals scoped configured keys and current context without portal identity",
+            "source-deny": "PASS owned source runtime current Extract denies before protected keys",
+            "source-foreign": "PASS owned source runtime foreign selected identity refuses before protected keys",
+            "source-expiry": "PASS owned source runtime controlled key-await expiry commits SQL witness and refuses context after clock rollback",
             "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
             "allocation-deny": "PASS owned allocation runtime refusal allocation-deny",
             "allocation-unsafe": "PASS owned allocation runtime refusal allocation-unsafe",
@@ -586,6 +607,76 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual claim original replay requires current Extract actual expiry increments fenced epoch stale handles refuse and no portal private model note effects", flush=True)
+
+        source_claims = claim_graph()
+        run("source-read")
+        run("source-foreign")
+        assert claim_graph() == source_claims
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        print("PASS actual source reader Core committed protected originals scoped configured keys exact context foreign-ID refusal and unchanged graph", flush=True)
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("source-deny"))
+        assert claim_graph() == source_claims
+        run("source-read")
+        assert claim_graph() == source_claims
+        print("PASS actual source reader current Extract denial before keys exact owned restore and original context", flush=True)
+        hold = subprocess.Popen([*command, "source-key-revoke"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True, env=child_environment)
+        hold.stdin.write(configuration(0)); hold.stdin.close(); hold.stdin = None
+
+        def source_reader_container():
+            inspected = subprocess.run(["docker", "inspect", "--format", '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name],
+                capture_output=True, text=True, timeout=10)
+            if inspected.returncode:
+                return None
+            identity, label = inspected.stdout.strip().split("|", 1)
+            assert re.fullmatch(r"[0-9a-f]{64}", identity) and label == suffix, "Owned source reader container identity mismatch"
+            return identity
+
+        def source_reader_awaiting():
+            identity = source_reader_container()
+            if identity is None:
+                return False
+            signal = subprocess.run(["docker", "exec", identity, "test", "-f", "/tmp/aioffice-source-proof-awaiting"],
+                capture_output=True, text=True, timeout=10)
+            return signal.returncode == 0
+
+        wait(source_reader_awaiting)
+
+        def release_source_reader():
+            identity = source_reader_container()
+            assert identity is not None
+            released = subprocess.run(["docker", "exec", identity, "sh", "-c", ": > /tmp/aioffice-source-proof-release"],
+                capture_output=True, text=True, timeout=10)
+            assert released.returncode == 0, "Owned source reader release failed"
+            output, _ = hold.communicate(timeout=35)
+            assert hold.returncode == 0 and output.splitlines() == [
+                "CHECKPOINT owned source key resolved outside SQL before final fence",
+                "PASS owned source runtime current Extract revocation during key await denies private context before decrypt"]
+
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", release_source_reader)
+        assert claim_graph() == source_claims
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        run("source-read")
+        assert claim_graph() == source_claims
+        print("PASS actual source reader external SQL Extract revocation during configured key await rejects private context before decrypt and exact restore recovers", flush=True)
+        source_claim_identity = [digest("GroupBatchClaimStates", "BatchId",
+            "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"), source_claims[1]]
+        run("source-expiry")
+        assert [digest("GroupBatchClaimStates", "BatchId",
+            "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"),
+            digest("GroupBatchClaimReceipts", "Epoch")] == source_claim_identity
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=3 AND ExpiryObservedAtUtc=ExpiresAtUtc;") == "1"
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual source reader controlled key-await expiry commits witness-only SQL no private release or effects and refuses after clock rollback", flush=True)
     except BaseException as error:
         failure = error
     finally:

@@ -8,6 +8,16 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class GroupReferenceRuntimeProofGuardTests
 {
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void NamespaceInitCannotStandInForActualProcessDeath(int processId) =>
+        Assert.Throws<InvalidOperationException>(() => OwnedGroupReferenceProofGuard.RequireKillableChild(processId));
+
+    [Fact]
+    public void ActualChildCanReachGuardedCrashProof() => OwnedGroupReferenceProofGuard.RequireKillableChild(2);
+
     [Fact]
     public void AllocationRollbackRequiresActualSanitizedCommitBoundaryAndNeverAnUnrelatedOperation()
     {

@@ -708,7 +708,8 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
                 raise RuntimeError("Owned reference pipeline operation refused.")
 
         reference_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
-            service=service, source=spool_source, sql=sql, compose=compose, environment=environment, pipeline=reference_pipeline)
+            service=service, source=spool_source, sql=sql, compose=compose, environment=environment, pipeline=reference_pipeline,
+            source_key=private_environment["OWNED_NATIVE_GROUP_CONTENT_KEY"])
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

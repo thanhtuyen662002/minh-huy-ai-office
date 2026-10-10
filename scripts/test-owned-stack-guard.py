@@ -44,6 +44,64 @@ recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def test_reference_source_key_is_canonical_and_refusal_never_echoes_input(self):
+        reference_smoke.require_source_key(base64.b64encode(bytes([0x32]) * 32).decode("ascii"))
+        for value in (None, "", "owned-private-key-detail", "A" * 44, "A" * 43 + "!", base64.b64encode(bytes(31)).decode("ascii")):
+            with self.subTest(kind=type(value).__name__):
+                with self.assertRaisesRegex(RuntimeError, r"^Owned reference source key is unavailable\.$") as refusal:
+                    reference_smoke.require_source_key(value)
+                self.assertIsNone(refusal.exception.__cause__)
+
+    def test_source_key_gate_checks_owned_container_before_observation_or_release(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in
+            ("source_reader_container", "source_reader_awaiting", "release_source_reader")]
+        self.assertEqual(3, len(functions))
+        compiled = compile(ast.Module(body=functions, type_ignores=[]), '<actual-source-reader-owned-gate>', 'exec')
+        identity, label = "a" * 64, "b" * 32
+        for inspected in (SimpleNamespace(returncode=1, stdout=""),
+                SimpleNamespace(returncode=0, stdout=identity + "|wrong"),
+                SimpleNamespace(returncode=0, stdout="g" * 64 + "|" + label)):
+            calls = []
+            def run(arguments, **kwargs):
+                calls.append(arguments)
+                self.assertEqual(["docker", "inspect"], arguments[:2])
+                return inspected
+            namespace = {"subprocess": SimpleNamespace(run=run), "re": re, "name": "aioffice-owned-source-reader", "suffix": label}
+            exec(compiled, namespace)
+            if inspected.returncode:
+                self.assertFalse(namespace["source_reader_awaiting"]())
+                with self.assertRaises(AssertionError): namespace["release_source_reader"]()
+            else:
+                with self.assertRaises(AssertionError): namespace["source_reader_awaiting"]()
+                with self.assertRaises(AssertionError): namespace["release_source_reader"]()
+            self.assertEqual(2, len(calls))
+
+    def test_source_key_release_reinspects_identity_and_requires_exact_terminal_reply(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in
+            ("source_reader_container", "release_source_reader")]
+        compiled = compile(ast.Module(body=functions, type_ignores=[]), '<actual-source-reader-release>', 'exec')
+        identity, label = "a" * 64, "b" * 32
+        for fault in (None, "release", "reply"):
+            calls = []
+            def run(arguments, **kwargs):
+                calls.append(arguments)
+                if arguments[:2] == ["docker", "inspect"]:
+                    return SimpleNamespace(returncode=0, stdout=identity + "|" + label)
+                self.assertEqual(["docker", "exec", identity, "sh", "-c", ": > /tmp/aioffice-source-proof-release"], arguments)
+                return SimpleNamespace(returncode=1 if fault == "release" else 0)
+            held = SimpleNamespace(returncode=0, communicate=lambda **kwargs: ("unexpected" if fault == "reply" else
+                "CHECKPOINT owned source key resolved outside SQL before final fence\n"
+                "PASS owned source runtime current Extract revocation during key await denies private context before decrypt\n", ""))
+            namespace = {"subprocess": SimpleNamespace(run=run), "re": re, "name": "aioffice-owned-source-reader", "suffix": label, "hold": held}
+            exec(compiled, namespace)
+            if fault:
+                with self.assertRaises(AssertionError): namespace["release_source_reader"]()
+            else:
+                namespace["release_source_reader"]()
+            self.assertEqual(["docker", "inspect"], calls[0][:2]); self.assertEqual(2, len(calls))
+
     root = (Path.cwd() / "guard-test-no-resources").resolve()
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}

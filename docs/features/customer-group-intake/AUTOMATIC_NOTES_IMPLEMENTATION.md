@@ -45,3 +45,9 @@ See ../../validation/GROUP_BATCH_CLAIMS.md. Frozen88cb review WITHHELD one concr
 ## External dependencies
 
 Actual provider configuration location is pending from the owner. Never borrow the coding agent credentials. Dedicated ERP read-only accounts and production hosting remain separate full-product gates. Existing installer239 is a separate unqualified lease. No live connector/model/customer/deployment evidence is asserted by this plan.
+
+## Scoped protected source context checkpoint
+
+The trusted service reader now reads host-selected allocated source heads as of the immutable cutoff, validates original receipts/UTF16/AEAD metadata, resolves existing scoped keys outside SQL and fences exact current dependencies after every key await and before release. Recall, changed-after-cutoff and obsolete generation are metadata-only dispositions. This is a bounded private context slice, not complete raw coverage or note completion. See [verification and remaining gates](../../validation/GROUP_BATCH_SOURCE_READER.md).
+
+No independent AI client/config was added. Read-only [existing Gateway configuration discovery](../../validation/AI_GATEWAY_CONFIGURATION_DISCOVERY.md) found the actual environment loader/deployment path but no usable values in the checked local scopes/default files. Real model evaluation remains UNEVALUATED. Native source modes and the PID1 claim fixture repair are pending renewed exact-head SQL CI; automatic notes/glossary/quarantine/token profile/effect rollback/outbox/DI/UI and278/279/full233 remain.

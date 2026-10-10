@@ -5,6 +5,11 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 public static class OwnedGroupReferenceProofGuard
 {
+    public static void RequireKillableChild(int processId)
+    {
+        if (processId <= 1) throw new InvalidOperationException();
+    }
+
     // Permission proof and current grants share the shipping authorization
     // refusal type. An unrelated operation/transport failure is not evidence.
     public static bool IsExpectedRefusal(string mode, Exception error) => mode switch
