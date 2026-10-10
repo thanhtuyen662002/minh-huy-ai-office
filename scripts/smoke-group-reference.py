@@ -16,6 +16,23 @@ def require_owned(directory, api):
         raise RuntimeError("Group reference proof requires the owned disposable GitHub CI fixture.")
 
 
+def temporary_sql(sql, setup, restore, action):
+    # Setup may apply even if its reply is lost. Restoration owns that boundary,
+    # including setup errors, and never replaces the first meaningful failure.
+    failure = None
+    try:
+        sql(setup)
+        action()
+    except BaseException as error:
+        failure = error
+    finally:
+        for statement in [restore] if isinstance(restore, str) else restore:
+            try: sql(statement)
+            except BaseException as error:
+                if failure is None: failure = error
+    if failure is not None: raise failure
+
+
 def verify(*, directory, api, manifest, tenant, company, service, source, sql, compose, environment, pipeline):
     require_owned(directory, api)  # Before configuration, files, credentials, SQL or processes.
     tenant, company, service, source = (str(uuid.UUID(value)) for value in (tenant, company, service, source))
@@ -41,6 +58,12 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
     events = [str(uuid.UUID(value.strip())) for value in events]
     assert len(events) == 2 and len(set(events)) == 2, "Expected two actual Core/spool committed references"
     hold = None
+    failure = None
+    def cleanup(action):
+        nonlocal failure
+        try: action()
+        except BaseException as error:
+            if failure is None: failure = error
 
     def configuration(index):
         return json.dumps({"tenantId": tenant, "companyId": company, "serviceId": service, "sourceId": source, "eventId": events[index]})
@@ -50,9 +73,18 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             capture_output=True, text=True, timeout=170)
         lines = result.stdout.splitlines()
         expected = {"publish": "PASS owned reference runtime shipping outbox publication",
+            "publish-existing": "PASS owned reference runtime shipping original accepted reference publication",
             "consume-replay": "PASS owned reference runtime redelivery original SQL receipt and broker ACK",
             "duplicates": "PASS owned reference runtime100 concurrent original inbox receipts"}.get(mode, "PASS owned reference runtime refusal " + mode)
         assert result.returncode == 0 and lines == [expected], "Owned reference executable failed at " + mode
+
+    def broker_stats():
+        result = subprocess.run([*command, "statistics"], input=configuration(0), env=child_environment,
+            capture_output=True, text=True, timeout=30)
+        assert result.returncode == 0, "Owned reference broker statistics unavailable"
+        value = json.loads(result.stdout)
+        assert set(value) == {"ack", "deliver", "consumers"} and all(type(number) is int and number >= 0 for number in value.values())
+        return value
 
     def digest(table, order, projection="*"):
         value = sql(f"SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
@@ -108,19 +140,28 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         # Observe the actual runtime waiter on this source's SQL row lock, then
         # revoke Extract before releasing it. No timing-only concurrency claim.
         gate = "dbo.GroupInboxGate_" + suffix
-        sql(f"CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
         query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
           UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
           SELECT BindingId FROM aioffice.GroupSourceStates WITH(UPDLOCK,HOLDLOCK) WHERE {scope};
           DECLARE @deadline datetime2=DATEADD(second,30,SYSUTCDATETIME());
           WHILE (SELECT Released FROM {gate} WITH(READUNCOMMITTED))=0 AND SYSUTCDATETIME()<@deadline WAITFOR DELAY '00:00:00.050';
           COMMIT TRANSACTION;"""
-        locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
-            'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
-        locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
-        executor = ThreadPoolExecutor(max_workers=1)
+        locker = None
+        executor = None
+        failure = None
+        def cleanup(action):
+            nonlocal failure
+            try: action()
+            except BaseException as error:
+                if failure is None: failure = error
+
         try:
+            sql(f"CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
+            locker = subprocess.Popen([*compose, "exec", "-T", "sql", "sh", "-c",
+                'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -I -b -m 1 -h -1 -W -i /dev/stdin'],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=environment)
+            locker.stdin.write(query); locker.stdin.close(); locker.stdin = None
+            executor = ThreadPoolExecutor(max_workers=1)
             wait(lambda: int(sql(f"SELECT COUNT(*) FROM sys.dm_tran_locks WHERE request_session_id=(SELECT OwnerSpid FROM {gate})"
                 " AND resource_database_id=DB_ID() AND resource_type IN(N'KEY',N'PAGE') AND request_status=N'GRANT' AND request_mode IN(N'U',N'X',N'RangeS-U');")) > 0, 8)
             pending = executor.submit(run, "deny", 1)
@@ -136,14 +177,27 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
                 AND l.resource_type IN(N'KEY',N'PAGE') AND l.request_status IN(N'WAIT',N'CONVERT');""")) > 0, 12)
             sql(f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant}; UPDATE {gate} SET Released=1;")
             pending.result(timeout=25)
+        except BaseException as error:
+            failure = error
         finally:
-            try: sql(f"UPDATE {gate} SET Released=1;")
-            finally:
-                try: locker.communicate(timeout=10)
-                except subprocess.TimeoutExpired:
-                    locker.kill(); locker.communicate(timeout=5)
-                executor.shutdown(wait=True, cancel_futures=True)
-                sql(f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant}; DROP TABLE {gate};")
+            cleanup(lambda: sql(f"IF OBJECT_ID(N'{gate}',N'U') IS NOT NULL UPDATE {gate} SET Released=1;"))
+            if locker is not None:
+                if locker.stdin is not None:
+                    cleanup(locker.stdin.close)
+                    locker.stdin = None
+                def drain():
+                    nonlocal failure
+                    try: locker.communicate(timeout=10)
+                    except BaseException as error:
+                        if failure is None: failure = error
+                        cleanup(locker.kill)
+                        cleanup(lambda: locker.communicate(timeout=5))
+                        raise
+                cleanup(drain)
+            if executor is not None: cleanup(lambda: executor.shutdown(wait=True, cancel_futures=True))
+            cleanup(lambda: sql(f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};"))
+            cleanup(lambda: sql(f"IF OBJECT_ID(N'{gate}',N'U') IS NOT NULL DROP TABLE {gate};"))
+        if failure is not None: raise failure
         assert locker.returncode == 0
 
     before = protected_graph()
@@ -177,47 +231,57 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         print("PASS actual reference100 concurrent original SQL inbox receipts with unchanged private graph and batch cursor", flush=True)
 
         unchanged = full_graph()
-        sql(f"ALTER TABLE aioffice.GroupIngressInbox ADD CONSTRAINT CK_CiGroupInboxRollback CHECK(BindingId<>'{source}' OR CommittedSequence<>2);")
-        try: run("rollback", 1)
-        finally: sql("ALTER TABLE aioffice.GroupIngressInbox DROP CONSTRAINT CK_CiGroupInboxRollback;")
+        temporary_sql(sql,
+            f"ALTER TABLE aioffice.GroupIngressInbox ADD CONSTRAINT CK_CiGroupInboxRollback CHECK(BindingId<>'{source}' OR CommittedSequence<>2);",
+            "IF OBJECT_ID(N'aioffice.CK_CiGroupInboxRollback',N'C') IS NOT NULL ALTER TABLE aioffice.GroupIngressInbox DROP CONSTRAINT CK_CiGroupInboxRollback;",
+            lambda: run("rollback", 1))
         assert full_graph() == unchanged
-        sql(f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};")
-        try: run("deny", 1)
-        finally: sql(f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};")
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("deny", 1))
         assert full_graph() == unchanged
         print("PASS actual reference SQL inbox insert rollback and current Extract revoke retain exact full graph/backlog", flush=True)
         queued_extract_revoke()
         assert full_graph() == unchanged
         print("PASS actual reference observed source-locked queued Extract revoke refuses unchanged graph before current restoration", flush=True)
 
-        sql("REVOKE UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) FROM aioffice_binding_runtime;"
-            " GRANT UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) TO aioffice_runtime;")
-        try:
+        def unsafe_column():
             assert sql("EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.GroupIngressInbox',N'OBJECT',N'UPDATE',N'ReceivedAtUtc',N'COLUMN'); REVERT;") == "1"
             run("unsafe", 1)
-        finally:
-            sql("REVOKE UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) FROM aioffice_runtime;"
-                " DENY UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) TO aioffice_binding_runtime;")
+        temporary_sql(sql,
+            "REVOKE UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) FROM aioffice_binding_runtime;"
+                " GRANT UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) TO aioffice_runtime;",
+            ["REVOKE UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) FROM aioffice_runtime;",
+                "DENY UPDATE ON OBJECT::aioffice.GroupIngressInbox(ReceivedAtUtc) TO aioffice_binding_runtime;"], unsafe_column)
         assert full_graph() == unchanged
         print("PASS actual reference unsafe effective inbox column rights refuse before commit with exact owned restore", flush=True)
 
         pipeline("enable")
-        wait(lambda: count() == 2 and queue_counts() == (0, 0), 60)
+        wait(lambda: count() == 2 and queue_counts() == (0, 0) and sql(f"SELECT COUNT(*) FROM aioffice.GroupIngressOutbox WHERE {scope} AND PublishedAtUtc IS NOT NULL;") == "2", 60)
         assert protected_graph() == before
         stable = full_graph()
+        wait(lambda: broker_stats()["ack"] == 2)
+        prior_stats = broker_stats()
+        assert prior_stats["consumers"] == 1 and prior_stats["deliver"] == 3  # Held delivery + redelivery + event2.
         pipeline("restart")
-        wait(lambda: queue_counts() == (0, 0))
+        wait(lambda: broker_stats()["consumers"] == 1)
+        run("publish-existing")  # Actual persistent mandatory publication after restart; no new graph.
+        wait(lambda: broker_stats()["ack"] == prior_stats["ack"] + 1)
+        resumed_stats = broker_stats()
+        assert resumed_stats["deliver"] == prior_stats["deliver"] + 1 and resumed_stats["consumers"] == 1 and queue_counts() == (0, 0)
         assert count() == 2 and full_graph() == stable
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
         print("PASS actual shipping Core producer/Worker consumer DI and broker delivery/restart preserve SQL graph/cursor and no fake portal task", flush=True)
+    except BaseException as error:
+        failure = error
     finally:
-        try:
+        def stop_hold():
             if hold is not None and hold.poll() is None:
                 kill_owned()
                 hold.communicate(timeout=15)
-        finally:
-            try: pipeline("disable")
-            finally: subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30)
+        cleanup(stop_hold)
+        cleanup(lambda: pipeline("disable"))
+        cleanup(lambda: subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30))
+    if failure is not None: raise failure

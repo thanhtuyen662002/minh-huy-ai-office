@@ -677,12 +677,18 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             elif operation == "disable":
                 # Baseline Worker has no group switch. Keep the private Core
                 # enrollment until the parent's existing final restoration.
-                override.write_text(json.dumps({"services": {"core-api": {"environment": private_environment}}}), encoding="utf-8")
-                override.chmod(0o600)
+                failure = None
                 try:
+                    override.write_text(json.dumps({"services": {"core-api": {"environment": private_environment}}}), encoding="utf-8")
+                    override.chmod(0o600)
                     compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
+                except BaseException as error:
+                    failure = error
                 finally:
-                    compose_run("up", "-d", "--no-deps", "--force-recreate", "agent-worker")
+                    try: compose_run("up", "-d", "--no-deps", "--force-recreate", "agent-worker")
+                    except BaseException as error:
+                        if failure is None: failure = error
+                if failure is not None: raise failure
                 ready()
             else:
                 raise RuntimeError("Owned reference pipeline operation refused.")

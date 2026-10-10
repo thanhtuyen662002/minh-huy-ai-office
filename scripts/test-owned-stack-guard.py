@@ -62,25 +62,138 @@ class OwnedStackGuardTests(unittest.TestCase):
         tree = ast.parse(Path(group_smoke.__file__).read_text(encoding="utf-8"))
         function = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "reference_pipeline")
         block = compile(ast.Module(body=[function], type_ignores=[]), '<actual-reference-pipeline>', 'exec')
-        class Override:
-            def write_text(self, value, encoding): self.value = json.loads(value)
-            def chmod(self, mode): self.mode = mode
-        for failure in ("core-api", "agent-worker", None):
-            calls = []; override = Override()
+        for failure in ("write", "chmod", "core-api", "agent-worker", "write-and-worker", None):
+            calls = []; ready_calls = []
+            class Override:
+                def write_text(self, value, encoding):
+                    self.value = json.loads(value)
+                    if failure in ("write", "write-and-worker"): raise RuntimeError("write")
+                def chmod(self, mode):
+                    self.mode = mode
+                    if failure == "chmod": raise RuntimeError("chmod")
+            override = Override()
             def compose_run(*args, **kwargs):
                 calls.append((args, kwargs))
-                if failure in args: raise RuntimeError("fixed-owned-restore-failure")
+                if failure in args or failure == "write-and-worker" and "agent-worker" in args:
+                    raise RuntimeError(args[-1])
             namespace = dict(json=json, tenant=str(uuid.uuid4()), company=str(uuid.uuid4()), service=str(uuid.uuid4()),
                 private_environment={"OWNED_SECRET": "private-inert", "AIOffice__GroupIntake__Enabled": "true"},
-                override=override, compose_run=compose_run, ready=lambda: None)
+                override=override, compose_run=compose_run, ready=lambda: ready_calls.append("ready"))
             exec(block, namespace)
             if failure:
-                with self.assertRaisesRegex(RuntimeError, '^fixed-owned-restore-failure$'): namespace['reference_pipeline']('disable')
+                with self.assertRaisesRegex(RuntimeError, '^' + ("write" if failure == "write-and-worker" else failure) + '$'):
+                    namespace['reference_pipeline']('disable')
             else: namespace['reference_pipeline']('disable')
-            self.assertEqual(['core-api', 'agent-worker'], [args[-1] for args, _ in calls])
-            self.assertTrue(calls[0][1]['overridden']); self.assertFalse(calls[1][1])
+            self.assertEqual(['agent-worker'] if failure in ("write", "chmod", "write-and-worker") else ['core-api', 'agent-worker'],
+                [args[-1] for args, _ in calls])
+            self.assertFalse(calls[-1][1])
+            if len(calls) == 2: self.assertTrue(calls[0][1]['overridden'])
+            self.assertEqual([] if failure else ["ready"], ready_calls)
             self.assertEqual({'services': {'core-api': {'environment': namespace['private_environment']}}}, override.value)
             self.assertNotIn('AIOffice__GroupIntake__PipelineEnabled', override.value['services']['core-api']['environment'])
+
+    def test_reference_temporary_sql_owns_lost_setup_reply_and_independent_restoration(self):
+        class InjectedFailure(Exception): pass
+        for fault in (None, "setup", "action", "restore-first", "restore-second", "setup-and-restore"):
+            with self.subTest(fault=fault):
+                effects = []
+                def sql(statement):
+                    effects.append(statement)
+                    if statement == "setup" and fault in ("setup", "setup-and-restore"): raise InjectedFailure("setup")
+                    if statement == "restore-first" and fault in ("restore-first", "setup-and-restore"): raise InjectedFailure("restore-first")
+                    if statement == "restore-second" and fault == "restore-second": raise InjectedFailure("restore-second")
+                def action():
+                    effects.append("action")
+                    if fault == "action": raise InjectedFailure("action")
+                if fault:
+                    with self.assertRaises(InjectedFailure) as failure:
+                        reference_smoke.temporary_sql(sql, "setup", ["restore-first", "restore-second"], action)
+                    self.assertEqual("setup" if fault == "setup-and-restore" else fault, str(failure.exception))
+                else: reference_smoke.temporary_sql(sql, "setup", ["restore-first", "restore-second"], action)
+                self.assertEqual(["restore-first", "restore-second"], effects[-2:])
+                self.assertEqual(fault not in ("setup", "setup-and-restore"), "action" in effects)
+
+    def test_reference_queued_gate_cleanup_survives_every_setup_and_drain_boundary(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        function = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "queued_extract_revoke")
+        block = compile(ast.Module(body=[function], type_ignores=[]), '<actual-reference-lock-cleanup>', 'exec')
+        class InjectedFailure(Exception): pass
+        for fault in (None, "create", "popen", "stdin-write", "stdin-close", "executor", "observation", "pending",
+                "release", "drain", "drain-and-kill", "shutdown", "restore", "drop", "observation-and-restore"):
+            with self.subTest(fault=fault):
+                effects = []; drain_calls = 0
+                def effect(name):
+                    effects.append(name)
+                    if fault == name or fault == "observation-and-restore" and name in ("observation", "restore"):
+                        raise InjectedFailure(name)
+                class Input:
+                    def write(self, value): effect("stdin-write")
+                    def close(self): effect("stdin-close")
+                class Locker:
+                    stdin = Input(); returncode = 0
+                    def communicate(self, timeout):
+                        nonlocal drain_calls
+                        drain_calls += 1; effects.append("drain")
+                        if drain_calls == 1 and fault in ("drain", "drain-and-kill"): raise InjectedFailure("drain")
+                        return ("", "")
+                    def kill(self):
+                        effects.append("kill")
+                        if fault == "drain-and-kill": raise InjectedFailure("kill")
+                class Pending:
+                    def result(self, timeout): effect("pending")
+                class Executor:
+                    def __init__(self, max_workers): effect("executor")
+                    def submit(self, *args): effect("submit"); return Pending()
+                    def shutdown(self, **kwargs): effect("shutdown")
+                def popen(*args, **kwargs): effect("popen"); return Locker()
+                def sql(query):
+                    if query.startswith("CREATE TABLE"): effect("create"); return ""
+                    if query.startswith("IF OBJECT_ID") and "UPDATE" in query: effect("release"); return ""
+                    if query.startswith("IF OBJECT_ID") and "DROP" in query: effect("drop"); return ""
+                    if "SET IsEnabled=1" in query: effect("restore"); return ""
+                    if "SET IsEnabled=0" in query: effect("revoke"); return ""
+                    if "sys.dm_tran_locks" in query: effect("observation"); return "1"
+                    self.fail("Unexpected owned inert lock SQL")
+                namespace = dict(sql=sql, suffix="a" * 32, scope="owned-scope", grant="owned-grant", compose=["owned-compose"],
+                    environment={}, subprocess=SimpleNamespace(Popen=popen, PIPE=None), ThreadPoolExecutor=Executor,
+                    wait=lambda predicate, seconds: self.assertTrue(predicate()), run=lambda *args: None)
+                exec(block, namespace)
+                if fault:
+                    with self.assertRaises(InjectedFailure) as failure: namespace['queued_extract_revoke']()
+                    expected = "drain" if fault == "drain-and-kill" else "observation" if fault == "observation-and-restore" else fault
+                    self.assertEqual(expected, str(failure.exception))
+                else: namespace['queued_extract_revoke']()
+                self.assertIn("release", effects); self.assertIn("restore", effects); self.assertIn("drop", effects)
+                if fault not in ("create", "popen"): self.assertIn("drain", effects)
+                if fault not in ("create", "popen", "stdin-write", "stdin-close", "executor"): self.assertIn("shutdown", effects)
+                if fault in ("drain", "drain-and-kill"):
+                    self.assertIn("kill", effects); self.assertEqual(2, drain_calls)
+
+    def test_reference_restart_requires_new_broker_delivery_and_ack_with_same_full_sql_graph(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        attempt = next(node for node in verify.body if isinstance(node, ast.Try) and any(isinstance(child, ast.FunctionDef)
+            and child.name == "unsafe_column" for child in node.body))
+        start = next(i for i, node in enumerate(attempt.body) if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name) and node.targets[0].id == "stable") + 1
+        end = next(i for i in range(start, len(attempt.body)) if isinstance(attempt.body[i], ast.Assert)
+            and isinstance(attempt.body[i].test, ast.BoolOp) and "full_graph" in ast.unparse(attempt.body[i])) + 1
+        block = compile(ast.Module(body=attempt.body[start:end], type_ignores=[]), '<actual-reference-restart-oracle>', 'exec')
+        for fault in (None, "no-consumer", "dead-consumer", "no-publication", "wrong-deliver", "pending-queue", "changed-receipt"):
+            with self.subTest(fault=fault):
+                calls = []; state = {"restarted": False, "published": False}
+                def pipeline(operation): calls.append(operation); state["restarted"] = True
+                def run(mode): calls.append(mode); state["published"] = True
+                def stats():
+                    resumed = state["published"] and fault not in ("dead-consumer", "no-publication")
+                    return {"ack": 3 if resumed else 2, "deliver": 4 if resumed and fault != "wrong-deliver" else 3,
+                        "consumers": 0 if state["restarted"] and fault == "no-consumer" else 1}
+                namespace = dict(wait=lambda predicate: self.assertTrue(predicate()), broker_stats=stats, pipeline=pipeline, run=run,
+                    stable=["same-receipt"], count=lambda: 2, full_graph=lambda: ["changed-receipt" if fault == "changed-receipt" else "same-receipt"],
+                    queue_counts=lambda: (1, 0) if fault == "pending-queue" else (0, 0))
+                if fault:
+                    with self.assertRaises(AssertionError): exec(block, namespace)
+                else:
+                    exec(block, namespace); self.assertEqual(["restart", "publish-existing"], calls)
 
     def test_spool_proof_refuses_unowned_before_resources(self):
         cases = [(self.owned, "http://127.0.0.1:8080", {"CI": "false"}),

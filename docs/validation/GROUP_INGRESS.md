@@ -995,3 +995,36 @@ Local12 guard controls PASS0skip,34 retained/current Python controls PASS and
 clean proof build/changed-file format PASS. This is not native acceptance until the
 owned exact-head run executes each oracle. Frozen scoped review remains required
 before push. Live connector, production volume and full277/278/279/233 remain pending.
+
+### Native proof review repairs and terminal predecessor
+
+Independent review of1a0 withheld approval on three concrete proof P2s: SQL setup
+reply loss/locker drain could skip restoration; override write/chmod could skip
+baseline Worker restoration; unchanged SQL after restart did not prove resumed
+delivery. All three now have local repair candidates. Temporary SQL owns setup
+before its reply and restores each statement independently. Locker creation,
+stdin and executor are inside the cleanup boundary; release/drain/kill/shutdown,
+grant restore and gate drop each remain attempted, preserving the first failure.
+Worker baseline restoration owns override writes and chmod as well as Core errors.
+
+The restart oracle requires a live consumer and another real persistent mandatory
+publication of an already accepted original reference. It then requires one new
+broker delivery and ACK, empty queue, the exact original full inbox/outbox graph,
+unchanged cursor and portal counts. Owned management statistics are bounded to
+32KiB and ten seconds across headers and body; only three numeric counters leave
+the native child. The broker itself is retained across the application restart.
+
+Local12 .NET guard tests PASS0skip and37 Python tests PASS. Additional fault
+controls execute the actual cleanup/oracle functions with inert collaborators,
+including lost setup reply, every locker setup/drain boundary, independent restore
+failures, failed override writes/chmod, dead consumer, missing resumed ACK,
+contradictory delivery count, pending queue and changed receipt. Clean build and
+changed-file format PASS. Renewed frozen review and real native execution remain.
+
+Predecessor e341 Build38022812535 is terminal RED; Governance38022812541 PASS.
+Actual114127247688 and quality114130002171 are RED. All three current native spool
+metadata/Renew/interruption markers and retained group/listener/read proof PASS.
+Chromium headers-loss retry PASS; body-loss retry received202 headers and failed
+the bounded completed-stream wait. Later historical/company proofs were not
+re-exercised. The underlying browser/request cause remains unproven. .NET job
+114127247828 failed migration CHARSET; approved aad removes only its UTF8 BOM.

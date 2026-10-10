@@ -18,7 +18,7 @@ try
     // Test-only executable: guard before stdin, configuration, credentials,
     // SQL, broker or any resource. It has no operator/customer credentials.
     OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("publish" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe"))
+    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe"))
         throw new InvalidOperationException();
     phase = "owned-config";
     var json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -89,6 +89,13 @@ try
     if (password is null || password.Length is < 32 or > 128 || password.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not ('_' or '-')))
         throw new InvalidOperationException();
     var options = new RabbitMqWorkOptions { HostName = "rabbitmq", Port = 5672, UserName = "aioffice-local", Password = password, VirtualHost = "/" };
+    if (args[0] == "publish-existing")
+    {
+        if (!(await inbox.ReceiveAsync(reference, lifetime.Token)).WasAlreadyReceived) throw new InvalidOperationException();
+        await new RabbitMqGroupIngressPublisher(Options.Create(options), worker).PublishAsync(reference, lifetime.Token);
+        Console.WriteLine("PASS owned reference runtime shipping original accepted reference publication");
+        return 0;
+    }
     if (args[0] == "publish")
     {
         var dispatcher = new GroupIngressOutboxDispatcher(database, worker, new RabbitMqGroupIngressPublisher(Options.Create(options), worker), TimeProvider.System);
@@ -99,6 +106,37 @@ try
     // Use shipping factory/queue derivation; the barrier exists only here.
     var factory = (ConnectionFactory)typeof(RabbitMqGroupIngressPublisher).GetMethod("CreateFactory", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [options])!;
     var queue = (string)typeof(RabbitMqGroupIngressPublisher).GetMethod("QueueName", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [worker])!;
+    if (args[0] == "statistics")
+    {
+        if (!(await inbox.ReceiveAsync(reference, lifetime.Token)).WasAlreadyReceived) throw new InvalidOperationException();
+        using var statisticsDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        statisticsDeadline.CancelAfter(TimeSpan.FromSeconds(10));
+        using var handler = new HttpClientHandler { AllowAutoRedirect = false, UseProxy = false, UseCookies = false };
+        using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+        using var request = new HttpRequestMessage(HttpMethod.Get, "http://rabbitmq:15672/api/queues/%2F/" + queue);
+        request.Headers.Authorization = new("Basic", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(options.UserName + ":" + password)));
+        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, statisticsDeadline.Token);
+        if (response.StatusCode != System.Net.HttpStatusCode.OK) throw new InvalidOperationException();
+        await using var stream = await response.Content.ReadAsStreamAsync(statisticsDeadline.Token);
+        var metrics = new byte[32769]; var used = 0;
+        while (used < metrics.Length)
+        {
+            var read = await stream.ReadAsync(metrics.AsMemory(used), statisticsDeadline.Token);
+            if (read == 0) break;
+            used += read;
+        }
+        if (used is < 1 or > 32768) throw new InvalidOperationException();
+        using var parsed = JsonDocument.Parse(metrics.AsMemory(0, used));
+        var root = parsed.RootElement;
+        static long Counter(JsonElement element, string property) => element.TryGetProperty(property, out var value) ? value.GetInt64() : 0;
+        var statistics = root.TryGetProperty("message_stats", out var counts) ? counts : default;
+        var ack = statistics.ValueKind == JsonValueKind.Object ? Counter(statistics, "ack") : 0;
+        var deliver = statistics.ValueKind == JsonValueKind.Object ? Counter(statistics, "deliver") : 0;
+        var consumers = Counter(root, "consumers");
+        if (ack < 0 || deliver < 0 || consumers < 0) throw new InvalidOperationException();
+        Console.WriteLine(JsonSerializer.Serialize(new { ack, deliver, consumers }));
+        return 0;
+    }
     await using var broker = await factory.CreateConnectionAsync(lifetime.Token);
     await using var channel = await broker.CreateChannelAsync(cancellationToken: lifetime.Token);
     await channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false, arguments: null, cancellationToken: lifetime.Token);
