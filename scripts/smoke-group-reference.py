@@ -205,7 +205,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
 
     def restart_broker(identity):
         assert service_identity("rabbitmq")[0] == identity
-        result = subprocess.run(["docker", "restart", "--time", "10", identity],
+        result = subprocess.run(["docker", "restart", "-t", "10", identity],
             capture_output=True, text=True, timeout=60)
         assert result.returncode == 0, "Owned reference broker restart failed"
 
