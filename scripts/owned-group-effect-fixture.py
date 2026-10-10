@@ -13,10 +13,15 @@ def prepare_raw_history(*, directory, api, tenant, company, service, sql, identi
     require_owned(directory, api)  # Before configuration/callbacks/resources.
     assert all(callable(value) for value in (sql, identity_index, enroll_source, post_event))
     originals = []
+    def require_ack_time(value):
+        assert isinstance(value, dict) and type(value.get("committedAtUtc")) is str, "Owned raw history Core ACK time failed"
+        try: committed = datetime.fromisoformat(value["committedAtUtc"].replace("Z", "+00:00"))
+        except ValueError: raise AssertionError("Owned raw history Core ACK time failed") from None
+        assert committed.tzinfo is not None and committed.utcoffset() == timezone.utc.utcoffset(committed), "Owned raw history Core ACK time failed"
     def empty_event(payload):
         payload = copy.deepcopy(payload)
         payload["text"] = ""; payload["event"]["contentSha256"] = hashlib.sha256(b"").hexdigest().upper()
-        result = post_event(payload); originals.append((payload, result[1])); return result
+        result = post_event(payload); require_ack_time(result[1]); originals.append((payload, result[1])); return result
     source, events = prepare(directory=directory, api=api, tenant=tenant, company=company, service=service, sql=sql,
         identity_index=identity_index, enroll_source=enroll_source, post_event=empty_event)
     assert len(originals) == 2
@@ -44,7 +49,7 @@ def prepare_raw_history(*, directory, api, tenant, company, service, sql, identi
         assert value["source"] == {"tenantId": tenant, "companyId": company, "sourceBindingId": source}
         assert value["messageId"] == originals[0][1]["messageId"] and type(value["revision"]) is int and value["revision"] == sequence - 1
         assert type(value["committedSequence"]) is int and value["committedSequence"] == sequence and value["wasAlreadyCommitted"] is False
-        datetime.fromisoformat(value["committedAtUtc"].replace("Z", "+00:00"))
+        require_ack_time(value)
         assert time.monotonic() < deadline, "Owned raw history generation deadline exceeded"
     scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
     assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupMessageRevisions WHERE {scope}),N'|',"

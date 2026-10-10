@@ -541,6 +541,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             nonlocal first_ack, count
             status, value = original_post(payload); count += 1
             if count == 1: first_ack = dict(value)
+            if isinstance(fault, tuple) and fault[0] == 'time' and count == fault[1]: value['committedAtUtc'] = fault[2]
             if count > 2:
                 value.update(messageId=first_ack['messageId'], revision=count-1)
                 if count == 3:
@@ -554,6 +555,15 @@ class OwnedStackGuardTests(unittest.TestCase):
             return status, value
         arguments.update(sql=sql, post_event=post)
         return arguments, calls, events
+
+    def test_raw_history_fixture_refuses_non_utc_or_malformed_time_in_all501_ack_positions(self):
+        for sequence in (1, 2, 3, 500, 501):
+            for timestamp in ('2026-10-11', '2026-10-11T00:00:00', '2026-10-11T00:00:00+07:00', 'invalid', 1):
+                arguments, calls, _ = self.raw_history_callbacks(('time', sequence, timestamp))
+                with self.subTest(sequence=sequence, timestamp=timestamp), patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError):
+                    effect_fixture.prepare_raw_history(**arguments)
+                self.assertEqual(sequence, len([value for name, value in calls if name == 'post']))
+                self.assertFalse(any(name == 'raw-counts' for name, _ in calls))
 
     def test_raw_history_fixture_keeps_two_originals_then499_edits_and_bounded_own_live_lease(self):
         arguments, calls, events = self.raw_history_callbacks()

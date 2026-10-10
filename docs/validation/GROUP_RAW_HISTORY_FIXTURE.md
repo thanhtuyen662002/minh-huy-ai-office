@@ -18,6 +18,9 @@ NewText messages. Their plaintext is empty, with the actual empty SHA256 digest.
 Submit499 Edit events for the first wire message, each with a fresh revision event
 identity. Require501 exact non-replay scoped Core ACKs in total: the first message
 has revisions1..500, the second has revision1; committed sequences are1..501.
+Every ACK, including the first two originals, must have a valid timestamp with
+an explicit timezone and zero UTC offset. Date-only, naive, non-UTC, malformed
+or non-string timestamps fail before another event or final SQL acceptance.
 The final six SQL observations require501 revisions,501 receipts,501 outbox rows,
 two messages, CommittedSequence501 and ScheduledThroughSequence0.
 
@@ -31,11 +34,14 @@ production deployment or listener qualification.
 
 ## Verified scope and next action
 
-132 repository Python methods PASS after restoring every original128 method
-unchanged. Four added methods cover501 unique events, exact message/revision/
+133 repository Python methods PASS after restoring every original128 method
+unchanged. Five added methods cover501 unique events, exact message/revision/
 sequence and empty-content shape,20 bounded own live-lease renewals, malformed
 ACKs/lease/counts, both deadline boundaries and unowned/API/directory refusal
-before callbacks or time. These are callback oracle controls without Core,
+before callbacks or time. The additional25 timestamp refusal controls exercise
+both originals and Edit ACK positions3/500/501. Frozen55fd1c3's scoped review
+identified the UTC oracle defect; this repair tightens only the NEW fixture.
+These are callback oracle controls without Core,
 SQL Server, Docker resources or a model. Actual501 Core ingress is
 NOT_RUN_UNQUALIFIED. No native112 or real-model acceptance is claimed.
 

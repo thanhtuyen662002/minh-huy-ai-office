@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
     state: in_progress
-    next: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9 APPROVED6102696398 and proofd286e266 APPROVED6102829342 both ROOT FULLread; raw native111 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,132Python PASS/callback controls only; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
+    next: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9 APPROVED6102696398 and proofd286e266 APPROVED6102829342 both ROOT FULLread; raw native111 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair review pending; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9 APPROVED6102696398 and proofd286e266 APPROVED6102829342 both ROOT FULLread; raw native111 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,132Python PASS/callback controls only; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
+next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9 APPROVED6102696398 and proofd286e266 APPROVED6102829342 both ROOT FULLread; raw native111 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair review pending; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
 
 
 blocked_by:
@@ -1779,7 +1779,7 @@ group_278_raw_history_fixture_preparation:
   parent: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
   parent_proof_review: 6102829342
   parent_review_root_full_read: true
-  local_python: 132_pass_callback_oracle_only
+  local_python: 133_pass_callback_oracle_only_all501_utc_ack25_refusals
   owned_remote111_head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
   build: 38091747428
   governance: 38091747436
