@@ -1,6 +1,6 @@
 # Automatic notes implementation — issue278
 
-Status: bounded structured transport is independently reviewed/pushed22677; durable SQL allocation scoped review6097301006 approved/pushed a50 with exact native CI active; fenced claims are locally verified and awaiting their own frozen review/native execution. Automatic note persistence and actual model evaluation remain incomplete/unevaluated. See ../../validation/GROUP_STRUCTURED_RESPONSES.md for checkpoint evidence.
+Status: allocationa50 has verified native/all8 evidence. Fenced claims/source reader have scoped reviews; their native execution remains unaccepted after earlier686 listener CI failure. Quarantine/listener repair2199a50 is scoped approved6098494666/pushed with exact Build38059643216/native114235105757 IN_PROGRESS, six prerequisites and Governance38059643200 SUCCESS. Private grounded proposal/schema is locally implemented and verified pending its own frozen review. Automatic note persistence and actual model evaluation remain incomplete/unevaluated.
 Dependency: issue277 accepted at merged main `2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd`, independent receipt6096704767; all exact-main gates passed. Full issue233 stays active.
 
 ## Product contract
@@ -44,7 +44,7 @@ See ../../validation/GROUP_BATCH_CLAIMS.md. Frozen88cb review WITHHELD one concr
 
 ## External dependencies
 
-Actual provider configuration location is pending from the owner. Never borrow the coding agent credentials. Dedicated ERP read-only accounts and production hosting remain separate full-product gates. Existing installer239 is a separate unqualified lease. No live connector/model/customer/deployment evidence is asserted by this plan.
+Existing Gateway configuration discovery found the worker environment loader and protected deployment input. Required primary base URL/model/authorization values are absent in checked local scopes/default files; a separately deployed server secret store is inaccessible. Reuse that loader/Gateway, never borrow coding-agent credentials or add an independent AI configuration. Dedicated ERP read-only accounts and production hosting remain separate full-product gates. Existing installer239 is a separate unqualified lease. No live connector/model/customer/deployment evidence is asserted by this plan.
 
 ## Scoped protected source context checkpoint
 
@@ -54,4 +54,8 @@ No independent AI client/config was added. Read-only [existing Gateway configura
 
 ## Versioned preflight/output quarantine checkpoint
 
-The sealed source preparation now calls group-secret-quarantine-v1 before selecting provider candidates. Every selected message retains a host preparation disposition; known credential-like text is excluded with metadata-only reason and protected originals remain unchanged. Provider candidates contain host evidence IDs and original nonquarantined text, not raw external identities. The bounded decoded-JSON output gate inspects nested string values/property names before later grounding/persistence. NoMatch is only a conservative known-form result. See [verification and limits](../../validation/GROUP_SECRET_QUARANTINE.md). This checkpoint does not qualify model tokens, activate a worker/model or commit SQL notes/attention. Local1752 Persistence passed; remote686 native and the new preparation assertion remain unaccepted.278/279/full233 and proposed120/40 evaluation remain outstanding/UNEVALUATED.
+The sealed source preparation calls group-secret-quarantine-v1 before selecting provider candidates. Every selected message retains a host preparation disposition; known credential-like text is excluded with metadata-only reason and protected originals remain unchanged. Provider candidates contain host evidence IDs and original nonquarantined text, not raw external identities. The decoded-JSON gate now preserves key/value assignment relationships after the five original counterexamples in cecee reviewWITHHELD6098304670; repaired2199a50 review6098494666 approved the bounded checkpoint. NoMatch is only a conservative known-form result. See [verification and limits](../../validation/GROUP_SECRET_QUARANTINE.md). Renewed native/preparation assertions remain pending; this does not qualify model tokens, activate a worker/model or commit SQL notes/attention.278/279/full233 and proposed120/40 evaluation remain outstanding/UNEVALUATED.
+
+## Private grounded proposal/schema checkpoint
+
+The existing Gateway StructuredGeneration schema and concrete sealed proposal parser now validate exact host source IDs/revisions, original literal quotes, one model disposition per eligible candidate and bounded many-to-many notes. Tenant/destination/IT business authority remain host-owned; customer deadline wording retains evidence and is not a committed SLA. Interpretations remain explicitly AI-generated, and literal matching does not prove semantic accuracy. The result is private and conveys no future release or SQL effect authority. Local41 new controls and full1809 Persistence passed; frozen independent review, protected same-group brain, qualified context/tokenizer, effect rollback/notes/outbox/DI/UI and actual model evaluation remain. See [boundaries and evidence](../../validation/GROUP_GROUNDED_WORK_PROPOSAL.md).
