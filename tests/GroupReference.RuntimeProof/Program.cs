@@ -4,7 +4,11 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.GroupReference.RuntimeProof;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
@@ -18,7 +22,7 @@ try
     // Test-only executable: guard before stdin, configuration, credentials,
     // SQL, broker or any resource. It has no operator/customer credentials.
     OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe"))
+    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup"))
         throw new InvalidOperationException();
     phase = "owned-config";
     var json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -61,6 +65,47 @@ try
         catch (Exception error) when (OwnedGroupReferenceProofGuard.IsExpectedRefusal(args[0], error)) { refused = true; }
         if (!refused || database.ChangeTracker.HasChanges()) throw new InvalidOperationException();
         Console.WriteLine("PASS owned reference runtime refusal " + args[0]);
+        return 0;
+    }
+    if (args[0] == "recovery-startup")
+    {
+        // Exact recovery-only startup dependency with the actual owned runtime
+        // SQL principal. Resolution remains inert: no provider, keys or volume.
+        var privateRoot = Path.Combine(Path.GetTempPath(), "aioffice-inert-native-recovery-" + Guid.NewGuid().ToString("N"));
+        var settings = new Dictionary<string, string?>
+        {
+            ["AIOffice:GroupIntake:Enabled"] = "true",
+            ["AIOffice:GroupIntake:PipelineEnabled"] = "false",
+            ["AIOffice:GroupIntake:ConnectorRecoveryEnabled"] = "true",
+            ["AIOffice:GroupIntake:Connector:TenantId"] = config.TenantId.ToString("D"),
+            ["AIOffice:GroupIntake:Connector:CompanyId"] = config.CompanyId.ToString("D"),
+            ["AIOffice:GroupIntake:Connector:ServiceId"] = config.ServiceId.ToString("D"),
+            ["AIOffice:GroupIntake:Connector:ConnectorAccountId"] = Guid.NewGuid().ToString("D"),
+            ["AIOffice:GroupIntake:Connector:CredentialEpoch"] = "1",
+            ["AIOffice:GroupIntake:Connector:BackendOrigin"] = "https://owned.invalid/",
+            ["AIOffice:GroupIntake:Connector:PrivateRoot"] = privateRoot,
+            ["AIOffice:GroupIntake:Connector:SigningSecretRef"] = "secretref://env/OWNED_NOT_RESOLVED_SIGNING",
+            ["AIOffice:GroupIntake:Connector:SpoolSecretRef"] = "secretref://env/OWNED_NOT_RESOLVED_SPOOL",
+            ["AIOffice:GroupIntake:Connector:SpoolKeyId"] = "owned-inert-v1",
+            ["AIOffice:GroupIntake:Connector:Provider"] = "owned-inert",
+            ["AIOffice:GroupIntake:Connector:ExternalAccountId"] = "owned-inert-account",
+            ["AIOffice:GroupIntake:Connector:Sources:0:SourceBindingId"] = config.SourceId.ToString("D"),
+            ["AIOffice:GroupIntake:Connector:Sources:0:ExternalGroupId"] = "owned-inert-group"
+        };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        var services = new ServiceCollection(); services.AddLogging();
+        var inertSecrets = new InertStartupProofSecrets();
+        services.AddSingleton(new CompositeSecretResolver([inertSecrets]));
+        services.AddDbContext<PlatformDbContext>(options => options.UseSqlServer(connection));
+        if (services.AddGroupIngressReferenceConsumer(configuration, true) || !services.AddGroupConnectorRecovery(configuration, "Production", true))
+            throw new InvalidOperationException();
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+        using var serviceScope = provider.CreateScope();
+        await serviceScope.ServiceProvider.GetRequiredService<GroupIngressPermissionVerifier>().RequireSafeRuntimeAsync(lifetime.Token);
+        _ = provider.GetRequiredService<GroupConnectorRecoveryRuntime>();
+        if (provider.GetServices<IHostedService>().Single() is not GroupConnectorRecoveryHostedService || Directory.Exists(privateRoot) || inertSecrets.Calls != 0)
+            throw new InvalidOperationException();
+        Console.WriteLine("PASS owned reference runtime recovery-only startup SQL permission and inert DI");
         return 0;
     }
     await new GroupIngressPermissionVerifier(database).RequireSafeRuntimeAsync(lifetime.Token);
@@ -179,3 +224,14 @@ catch
 }
 
 internal sealed record ProofConfiguration(Guid TenantId, Guid CompanyId, Guid ServiceId, Guid SourceId, Guid EventId);
+
+internal sealed class InertStartupProofSecrets : ISecretResolver
+{
+    internal int Calls { get; private set; }
+    public string Provider => EnvironmentVariableSecretResolver.ProviderName;
+    public ValueTask<string> ResolveAsync(SecretReference reference, CancellationToken cancellationToken = default)
+    {
+        Calls++;
+        throw new InvalidOperationException();
+    }
+}

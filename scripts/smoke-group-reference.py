@@ -73,6 +73,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             capture_output=True, text=True, timeout=170)
         lines = result.stdout.splitlines()
         expected = {"publish": "PASS owned reference runtime shipping outbox publication",
+            "recovery-startup": "PASS owned reference runtime recovery-only startup SQL permission and inert DI",
             "publish-existing": "PASS owned reference runtime shipping original accepted reference publication",
             "consume-replay": "PASS owned reference runtime redelivery original SQL receipt and broker ACK",
             "duplicates": "PASS owned reference runtime100 concurrent original inbox receipts"}.get(mode, "PASS owned reference runtime refusal " + mode)
@@ -210,6 +211,10 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         capture_output=True, text=True, timeout=300)
     assert built.returncode == 0, "Owned group reference executable build failed"
     try:
+        startup_graph = full_graph()
+        run("recovery-startup")
+        assert full_graph() == startup_graph and count() == 0
+        print("PASS actual recovery-only Worker startup SQL permission and validated inert DI with unchanged full graph", flush=True)
         run("publish")
         assert queue_counts() == (1, 0) and count() == 0 and protected_graph() == before
         hold = subprocess.Popen([*command, "consume-hold"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,

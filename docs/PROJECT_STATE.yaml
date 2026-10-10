@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 995286fae8447c08cb87611a503b8fe83431103c
+current_target_head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 995286fae8447c08cb87611a503b8fe83431103c
+    head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
     state: in_progress
-    next: 'Remote995 Build38026673330/actual114138866854/quality114140944176 terminal RED; six prerequisites/Gov38026673652 PASS. All six native SQL/RabbitMQ reference stages PASS, including unsafe column refusal/exact restore and shipping DI/broker restart/resumed delivery. Chromium retry after realCore202 headers loss observed202 then ERR_ABORTED. Repair SAME283; strict receipt/effect oracles remain. Local host071 scoped approval withheld for recovery-only startup DI; verifier registration and two startup controls repaired locally,62 host/pipeline PASS. Owned browser signal observation16 Node controls and actual local Chrome stream probe PASS; frozen review/native rerun required.277/278/279/full233 active.'
+    next: 'Reviewed1cb scoped APPROVED6094320091: original startup P2 CLOSED;80 .NET/31 Node PASS0skip. Exact remote/ref verified1cb, Build38028533634 queued/Gov38028533645 active. Own exact native/main Chromium through terminal SAME283;995 six native stages PASS but retry202 ERR_ABORTED cause unproven. Native startup composition follow-on candidate and managed recovery factory/process/SQL/volume proof still required.277/278/279/full233 active.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close recovery-only startup DI frozen review and owned browser abort observation review, push approved repair SAME283, own renewed exact CI.995 six native reference stages PASS; Chromium headers retry202/ERR_ABORTED remains terminal defect. Native managed recovery factory/process/SQL/volume proof and provider qualification still required. Continue277/278/279/full233.'
+next_action: 'Close exact remote1cb Build38028533634/Gov38028533645 through terminal native/main Chromium; diagnose actual abort category and repair SAME283 without weakened oracles. Review native startup composition follow-on; managed recovery factory/process/SQL/volume and provider qualification remain.277/278/279/full233 active.'
 
 
 blocked_by:
@@ -672,3 +672,19 @@ group_reference_995_terminal:
   browser_result: 'Retained sign-in/member/admin/callback/logout/Redis expiry/company selection/owner history/two-user privacy PASS. New main-browser headers-loss replay received202 then net::ERR_ABORTED; stream/receipt/full effect gate remains strict and failed. Abort cause unproven; body replay and later historical/company gates unexecuted.'
   local_observation: 'Nonshipping owned-only observer preserves original fetch/Response/signal; records only fixed abort kind/header timing projection, no body/cookie/header values, retries or timeout change.16 retained/current Node controls PASS0skip; local Chrome actual bounded reader positive/cut/timeout controls PASS with observer. Native next run required; no shipping cause claimed.'
   next: 'Frozen repaired host and observation review, approved push SAME283, native exact CI closure; fix proven browser cause without weakening bounds/oracles. No full277 acceptance.'
+
+group_connector_native_startup_candidate:
+  state: local_candidate_native_execution_pending
+  implementation: 'Additional guarded reference-container mode exercises recovery-only/reference-pipeline-off registration with actual owned runtime SQL principal and GetRequiredService<GroupIngressPermissionVerifier>. ValidateOnBuild/Scopes and inert runtime/host resolution require no keys/HTTP/volume creation; exact full8 source graph and zero inbox effects compared before publication.'
+  local: 'Native reference executable build0warnings0errors, changed format and37 retained Python guards PASS. No local SQL/Docker; actual native permission execution remains mandatory.'
+  limits: 'This covers startup dependency composition, not managed capture/hosted recovery process/volume/HTTP acceptance or provider activation. No full277 acceptance.'
+  next: 'Freeze/review before push, then own native exact CI. Keep1cb observation/host scope independent; push cannot cancel another active actual run.'
+
+group_connector_1cb_dispatch:
+  head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
+  build: 38028533634
+  governance: 38028533645
+  scoped_approval: 6094320091
+  review: 'Original recovery-only startup P2 independently CLOSED with unchanged pipeline false/true probe;80 .NET and31 Node PASS0skip,3 YAML/frozen diff PASS. Original requests/Responses/signals/private values remain unchanged; refusal diagnostics fixed and receipt20s bounds unchanged.'
+  state: exact_ci_active
+  next: 'Own current exact native/main Chromium to terminal and repair proven cause SAME283. No extra push to cancel actual. Native startup follow-on and managed recovery/provider/full277 acceptance remain.'
