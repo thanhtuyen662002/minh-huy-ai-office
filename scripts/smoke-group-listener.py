@@ -94,6 +94,18 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
         assert status == expected and set(value) == {"error"}, f"Listener refusal expectedHTTP{expected}, gotHTTP{status}"
         assert "secretref://" not in value["error"] and snapshot() == before, "Listener refusal leaked authority or changed SQL bytes"
 
+    def temporary_sql(setup, restore, action):
+        failure = None
+        try:
+            sql(setup)
+            action()
+        except BaseException as error: failure = error
+        finally:
+            try: sql(restore)
+            except BaseException as error:
+                if failure is None: failure = error
+        if failure is not None: raise failure
+
     qualification = {"environment": 1, "observations": [{"capability": capability, "support": 1,
         "evidenceId": str(uuid.uuid4()), "observedAtUtc": datetime.now(timezone.utc).isoformat()} for capability in (8, 9)]}
     # Enroll a separate disposable account. Retained ingress's manual fixture
@@ -133,18 +145,24 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
     no_effect(command(2, 2))
     no_effect(command(), domain=b"aioffice-group-ingest-v1")
     no_effect(command(), epoch=2)
-    sql("GRANT UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_runtime;")
-    try: no_effect(command())
-    finally: sql("REVOKE UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) FROM aioffice_runtime;")
+    column_permission = "SELECT state FROM sys.database_permissions WHERE class=1 AND major_id=OBJECT_ID(N'aioffice.GroupListenerCommandReceipts')"
+    column_permission += " AND minor_id=COLUMNPROPERTY(OBJECT_ID(N'aioffice.GroupListenerCommandReceipts'),N'CommandSha256',N'ColumnId')"
+    column_permission += " AND grantee_principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_runtime') AND permission_name=N'UPDATE';"
+    assert sql(column_permission) == "D", "Owned receipt column did not have its original explicit DENY"
+    direct_permission = column_permission.replace("SELECT state", "SELECT COUNT(*)").replace("N'aioffice_binding_runtime'", "N'aioffice_runtime'")
+    assert sql(direct_permission) == "0", "Owned receipt column had an unexpected direct runtime override"
+    temporary_sql("GRANT UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_runtime;",
+        "REVOKE UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) FROM aioffice_runtime;", lambda: no_effect(command()))
+    assert sql(column_permission) == "D" and sql(direct_permission) == "0"
     assert receipt(*call(body, nonce=nonce), already=True) == {**original, "wasAlreadyCommitted": True}
 
     # The second Save is forced to fail after a real Stop lease mutation and
     # coverage staging. Only SQL transaction rollback can preserve all3 tables.
     stop_body, stop_nonce = command(3, 1), str(uuid.uuid4())
     constraint = "CK_CiListenerRollback_" + uuid.uuid4().hex
-    sql(f"ALTER TABLE aioffice.GroupListenerCommandReceipts ADD CONSTRAINT {constraint} CHECK(Nonce<>'{stop_nonce}');")
-    try: no_effect(stop_body, 503, nonce=stop_nonce)
-    finally: sql(f"ALTER TABLE aioffice.GroupListenerCommandReceipts DROP CONSTRAINT {constraint};")
+    temporary_sql(f"ALTER TABLE aioffice.GroupListenerCommandReceipts ADD CONSTRAINT {constraint} CHECK(Nonce<>'{stop_nonce}');",
+        f"IF EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'{constraint}' AND parent_object_id=OBJECT_ID(N'aioffice.GroupListenerCommandReceipts'))"
+        f" ALTER TABLE aioffice.GroupListenerCommandReceipts DROP CONSTRAINT {constraint};", lambda: no_effect(stop_body, 503, nonce=stop_nonce))
     stopped = receipt(*call(stop_body, nonce=stop_nonce))
     assert counts() == [1, 2, 2]
     no_effect(body, nonce=nonce)
@@ -165,8 +183,8 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
         locker = executor = pending = None
         before = snapshot()
         failure = None
-        sql(f"CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
         try:
+            sql(f"CREATE TABLE {gate}(Released bit NOT NULL,OwnerSpid int NULL); INSERT {gate} VALUES(0,NULL);")
             query = f"""SET NOCOUNT ON; USE AIOfficeLocal; SET XACT_ABORT ON;
               UPDATE {gate} SET OwnerSpid=@@SPID; BEGIN TRANSACTION;
               DECLARE @result int; EXEC @result=sys.sp_getapplock @Resource=N'{resource}',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=0;
@@ -210,7 +228,7 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
                 try: action()
                 except BaseException as error:
                     if failure is None: failure = error
-            attempt(lambda: sql(f"UPDATE {gate} SET Released=1;"))
+            attempt(lambda: sql(f"IF OBJECT_ID(N'{gate}',N'U') IS NOT NULL UPDATE {gate} SET Released=1;"))
             if locker is not None:
                 if locker.stdin is not None:
                     attempt(locker.stdin.close); locker.stdin = None
@@ -219,7 +237,7 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
                     if failure is None: failure = error
                     attempt(locker.kill); attempt(lambda: locker.communicate(timeout=8))
             if executor is not None: attempt(lambda: executor.shutdown(wait=True, cancel_futures=True))
-            attempt(lambda: sql(restore)); attempt(lambda: sql(f"DROP TABLE {gate};"))
+            attempt(lambda: sql(restore)); attempt(lambda: sql(f"DROP TABLE IF EXISTS {gate};"))
         if failure is not None: raise failure
         assert snapshot() == before
         return receipt(*call(command(2, 2, second_owner)), process=second_owner, epoch=2, coverage=False)

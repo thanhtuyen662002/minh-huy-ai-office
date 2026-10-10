@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 745d283f99b9e5ab041d9ab1fc6593d1e450db58
+head: 54e656d216754065a38161247b7aaeff4be7caeb
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -995,3 +995,9 @@ group_listener_native_candidate:
   result: 'Separate synthetic account/source explicit Ingest/Reader grants; first scoped lease/gap/captured digest ACK, concurrent100 identical nonce unchanged full SQL bytes; conflicts/domain/owner/epoch/unsafe rights refusal; second-save receipt CHECK failure rolls back all3, restored same-command retry; Core restart retained stopACK/epoch; five actual Serializable matching account app-lock queued registry revokes/no-effects/exact restore/renew; real original ACK expiry under later renewal and expired signed nonce within skew/no extension/fresh epoch+gap; idle session iso2/noTX; parent retained source/portal graph unchanged.'
   local: '22 inert boundary/signature/cleanup tests plus Python syntax/YAML/diff PASS. No local SQL/Chromium listener execution and no native deadlock/rollback claim. Root745 all8 retainednative closure already inspected; API54e transport repair review pending.'
   next: 'Close API privacy review; freeze native proof review, push approved checkpoint and own exact CI terminal. Repair same PR if native fails. Complete prefiltered encrypted spool/reference-only broker,278/279/full233.'
+
+group_listener_native_fixture_cleanup_repair:
+  predecessor: 68b051dd1ebf34650e6734b63c71b3e2359c92a6
+  review: 'Independent68b reproduced appliedCREATE/lostReply before try skips owned release/restore/drop; same setup gap at temporaryGRANT/CHECK.22 inert tests/20 generated SQL160 syntax checks/YAML/diff PASS; no other scoped proof blocker. Source6 full fingerprints versus portal4 cardinalities wording corrected; no portal full-row equality claim.'
+  repair: 'All setup under guarded cleanup; conditional missing/partial gate/CHECK drop, original failure preserved. Temporary direct login GRANT restored to originally absent override, role columnDENY retained; actual migration grants role, not login.23 inert tests incl CREATE-applied/lostreply and4 temporarySQL fault cases PASS; original closure/native mandatory.'
+  remote: 'API54e scoped APPROVED114 independent0skip/19guards; original86ff bodyIO private500/no-store P2 CLOSED, receipt6091749059. Own exact Build38010187105/Gov38010185277/actual114088140386; six prerequisites/Gov PASS, actual pending. No native listener proof yet.'

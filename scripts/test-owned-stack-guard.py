@@ -68,7 +68,7 @@ class OwnedStackGuardTests(unittest.TestCase):
         helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == "queued_revoke")
         module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
         class InjectedFailure(Exception): pass
-        for fault in ("observation", "popen", "stdin_write", "stdin_close", "executor", "release", "drain", "shutdown", "restore", "drop"):
+        for fault in ("create", "observation", "popen", "stdin_write", "stdin_close", "executor", "release", "drain", "shutdown", "restore", "drop"):
             with self.subTest(fault=fault):
                 effects = []
                 def effect(name):
@@ -100,10 +100,33 @@ class OwnedStackGuardTests(unittest.TestCase):
                     "time": SimpleNamespace(monotonic=lambda: 0), "compose": ["owned-compose"], "environment": {}}
                 exec(compile(module, "inert_listener_cleanup", "exec"), namespace)
                 with self.assertRaises(InjectedFailure) as failure: namespace["queued_revoke"]("revoke", "restore")
-                self.assertEqual(fault if fault in ("popen", "stdin_write", "stdin_close", "executor") else "observation", str(failure.exception))
+                self.assertEqual(fault if fault in ("create", "popen", "stdin_write", "stdin_close", "executor") else "observation", str(failure.exception))
                 self.assertIn("release", effects); self.assertIn("restore", effects); self.assertIn("drop", effects)
-                if fault != "popen": self.assertIn("drain", effects)
-                if fault not in ("popen", "stdin_write", "stdin_close", "executor"): self.assertIn("shutdown", effects)
+                if fault not in ("create", "popen"): self.assertIn("drain", effects)
+                if fault not in ("create", "popen", "stdin_write", "stdin_close", "executor"): self.assertIn("shutdown", effects)
+
+    def test_listener_temporary_sql_restores_applied_setup_with_lost_reply_and_keeps_first_error(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == "temporary_sql")
+        module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
+        class InjectedFailure(Exception): pass
+        for fault in ("setup", "body", "restore", "setup-and-restore"):
+            with self.subTest(fault=fault):
+                effects = []
+                def sql(query):
+                    effects.append(query + "-applied")
+                    if query == "setup" and fault in ("setup", "setup-and-restore"): raise InjectedFailure("setup")
+                    if query == "restore" and fault in ("restore", "setup-and-restore"): raise InjectedFailure("restore")
+                def action():
+                    effects.append("body")
+                    if fault == "body": raise InjectedFailure("body")
+                namespace = {"sql": sql}
+                exec(compile(module, "inert_listener_temporary_sql", "exec"), namespace)
+                with self.assertRaises(InjectedFailure) as failure: namespace["temporary_sql"]("setup", "restore", action)
+                self.assertEqual("setup" if fault in ("setup", "setup-and-restore") else fault, str(failure.exception))
+                self.assertIn("restore-applied", effects)
+                self.assertEqual(fault not in ("setup", "setup-and-restore"), "body" in effects)
 
     def test_group_browser_diagnostics_retain_only_fixed_stage_or_bounded_http_status(self):
         prefix = "FAIL owned group Chromium inbox gate: "

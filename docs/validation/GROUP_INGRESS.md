@@ -454,7 +454,8 @@ later current renewal; an expired original signed nonce still within HMAC skew
 cannot reacquire or extend; fresh owner/nonce takes epoch+1 and records uncertainty.
 Sleeping runtime sessions must be ReadCommitted/no transaction. The separate
 source remains free of message/task/outbox artifacts; retained source/portal graph
-fingerprints are checked by the parent.
+source fingerprints and portal Users/Tasks/Dispatches/Checkpoints cardinalities
+are checked by the parent. Portal full-row equality is not asserted.
 
 This is an unexecuted native candidate. Local22 inert guard/vector/cleanup tests,
 Python syntax/YAML/diff PASS do not prove SQL execution, rollback/locking or full277.
@@ -462,3 +463,26 @@ Independent proof review and exact hosted CI remain mandatory. Cleanup attempts
 release/drain/kill/shutdown/registry restoration/gate drop while preserving the
 original failure; only fixed diagnostics leave the owned process. No live account,
 ERP access, provider send or production activation is involved.
+
+### Native fixture setup-reply-loss cleanup repair
+
+Independent68b review reproduced a fixture P2: CREATE/INSERT occurred before the
+cleanup guard, so applied CREATE with a lost SQL reply skipped release/restore/drop.
+The temporary permission GRANT and receipt CHECK setup had the same gap. Each
+setup is now inside a guarded unit; missing/partially created objects are tolerated
+by conditional cleanup and the original error is preserved across cleanup faults.
+The temporary login-column GRANT restores its originally absent direct override;
+the role's original explicit DENY remains unchanged. This distinction follows the
+actual migration's role grantee rather than inventing a login-owned DENY.
+
+Local23 inert tests PASS, including applied CREATE with lost reply and temporary
+setup/body/restore/both failures. Existing10 resource-cleanup fault cases remain.
+These are fixture orchestration controls, not SQL rollback/locking execution.
+Independent original-probe closure and hosted native run remain mandatory.
+
+API54e scoped APPROVED, receipt6091749059: original86ff private500/missing no-store
+P2 CLOSED using unchanged actual Program/TestServer input.114 independent tests0skip
+and19 guards PASS, including two noncooperative held-stream caller abort controls.
+Remote54e Build38010187105/Governance38010185277/actual114088140386 is owned;
+six prerequisites/Governance PASS, actual pending. No native listener commands have
+executed at this checkpoint. Full277/233 remain active.
