@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288 remote0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4 terminalRED Build38070427348/native114266525657/quality114269539108. Sixprerequisites and Governance38070427346 SUCCESS; root full.NET2473[6,520,25,1922]0fail0skip. Native original before-application-restart management snapshot undercount ACK1/deliver2/consumer1 vs EXACT2/3/1: root full111PASS/37missing/8failuremarkers, downstream source/brain/Chromium NOT_RUN/noartifact; cause UNPROVEN. SAME288 test-only repair observes held EXACT0/1/1 beforekill and retains actual replay channel through EXACT1/2/1 beforedisposal, separate30s bound outside unchanged10s handler; retains all original baseline2/3/1/postincrements/literalRabbit/fullgraph oracles. Local12 decoder/65 Python controls PASS; freeze/fullreview beforepush, own renewed exact CI and all99 markers/all8/Gov/all6originals. Frozen7335 scoped6100082455 and c61a native-preparation scoped6100158811 approvals FULL fetched; only source/preparation, NoWork actualeffects NOT_RUN_UNQUALIFIED. Local protected-note creation store is separately UNCOMMITTED/UNREVIEWED,13 actual entry controls/full1943 Persistence PASS0skip before brokerdecoder addition; native notes/attention/raw completion/context/outbox/DI/UI remain incomplete. Existing Gateway real100/30 model evaluation NOT_RUN_UNEVALUATED; checked config absent/server access unknown.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
+next_action: 'Own278/Draft288 remote0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4 terminalRED Build38070427348/native114266525657/quality114269539108. Sixprerequisites and Governance38070427346 SUCCESS; root full.NET2473[6,520,25,1922]0fail0skip. Native original before-application-restart management snapshot undercount ACK1/deliver2/consumer1 vs EXACT2/3/1: root full111PASS/37missing/8failuremarkers, downstream source/brain/Chromium NOT_RUN/noartifact; cause UNPROVEN. SAME288 test-only repair observes held EXACT0/1/1 beforekill and retains actual replay channel through EXACT1/2/1 beforedisposal, separate30s bound outside unchanged10s handler; retains all original baseline2/3/1/postincrements/literalRabbit/fullgraph oracles. Local12 decoder/65 Python controls PASS; freeze/fullreview beforepush, own renewed exact CI and all99 markers/all8/Gov/all6originals. Frozen7335 scoped6100082455 and c61a native-preparation scoped6100158811 approvals FULL fetched; only source/preparation, NoWork actualeffects NOT_RUN_UNQUALIFIED. Local protected-note creation store prepared for frozen review:13 actual entry controls/full1955 current Persistence PASS0fail0skip; fixed protected requests/revisions/evidence/selected dispositions/NotesCommitted outbox, source lock before savepoint, flushed final fences/rollback-detach-witness-only and exact full graph replay; native notes/attention/raw completion/context/outbox/DI/UI remain incomplete. Existing Gateway real100/30 model evaluation NOT_RUN_UNEVALUATED; checked config absent/server access unknown.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1933,4 +1933,31 @@ group_278_broker_observation_lifetime_repair:
   required_future_native_markers_exact_once: 99
   actual_model_evaluation: NOT_RUN_UNEVALUATED
   protected_notes_attention_raw_completion_context_outbox_DI_UI: incomplete
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_protected_note_consumer_preparation:
+  remote_head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  remote_build: 38070427348
+  remote_actual: 114266525657
+  remote_state: terminal_RED_original_reference_counter_undercount_cause_UNPROVEN
+  local_broker_repair_parent: 450738eab84591e121e091927f010af9edfe1f9c
+  broker_repair_frozen_review: pending_receipt_root_fetch
+  prepared_store: fixed_protected_new_requests_revisions_literal_evidence_dispositions_atomic_NotesCommitted
+  operation_identity: scope_batch_operation_and_ordinal_metadata_only_deterministic
+  key_resolution: existing_scoped_source_key_provider_outside_SQL_bounded_late_disposal
+  preflight_and_effects: pinned_Serializable_fresh_exact_source_brain_authority_claim
+  savepoint_order: transaction_source_lock_then_savepoint_then_flush_then_final_fences
+  expired_final_verdict: rollback_all_staged_effects_detach_clean_tracker_witness_only_commit_and_denial
+  replay: exact_original_protected_revision1_evidence_dispositions_outbox_items_and_original_ids_timestamp
+  confirmed_IT_existing_requests: never_written_or_reset_by_consumer
+  initial_business_status: New_or_NeedsClarification_missing_fields_or_unverified_relation
+  actual_entry_controls_passed: 13
+  root_full_current_persistence_passed: 1955
+  root_full_current_persistence_failed: 0
+  root_full_current_persistence_skipped: 0
+  changed_format_build_and_diff: PASS
+  note_checkpoint_independent_frozen_review: PENDING
+  native_protected_writes_replay_flush_rollback_expiry_key_rotation_history: NOT_RUN_UNQUALIFIED
+  host_attention_raw_coverage_completion_context_automatic_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE
