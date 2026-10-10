@@ -500,3 +500,39 @@ The permission algorithm/column-table exception is documented by Microsoft's
 and [DENY reference](https://learn.microsoft.com/en-us/sql/t-sql/statements/deny-transact-sql?view=sql-server-ver17).
 This strengthens an unexecuted fixture; no unsafe effective rights or shipping
 failure has yet been observed on native SQL for this new table.
+
+### Native proof review and predecessor CI closure
+
+Native fixture54b scoped APPROVED, receipt6091892127:23 retained inert guards,
+19 independent cleanup/oracle controls and23 SQL160 syntax checks PASS. Setup
+reply-loss cleanup and effective-column oracle issues CLOSED. This approval does
+not assert native execution. Pushed54b Build38011253824/Gov38011253772, actual
+job114091542726 is owned through terminal.
+
+Predecessor54e exact all8 PASS: Build38010187105/Gov38010185277,
+actual114088140386/quality114090919481. Root inspected all retained native
+group/read-release/issued-inbox/full Chromium markers. This predecessor had no
+native listener fixture; no listener runtime acceptance follows from its green CI.
+
+### Prefiltered encrypted spool foundation
+
+`GroupConnectorSpoolAdmission` is a mechanical filter over trusted backend
+enrollment and lease snapshots, not authentication of customer-supplied DTOs.
+DM/self/report echo is refused before content validation/serialization/keys/storage;
+exact enrolled external identity, current scoped Ingest authority, owned live lease
+and artifact/account qualification are required. Optional edit/recall requires
+fresh capability evidence. No HTTP/client/provider path is enabled by these types.
+
+`GroupSpoolContentProtector` uses dedicated AES256-GCM/domain-separated AAD binding
+tenant/company/source/account/service/credential epoch/source and grant versions/
+deletion generation/external and event hashes/captured body hash/time/key id.
+Strict bounded UTF8/JSON and ciphertext integrity preserve exact Unicode; released
+cleartext buffers are zeroed. Recovery requires fresh matching enrollment and
+current qualified lease before decryption, then reapplies full admission. Only
+transport owner/epoch changes after restart; logical event metadata/text stays
+unchanged and SQL commit authentication/authorization is still mandatory.
+
+This checkpoint does not implement filesystem durability/capacity/ACK deletion,
+provider session/listener, key provisioning, connector HMAC client, broker dispatch
+or worker. Focused unit controls cover prefilter/revocation/tamper/zeroing/restart;
+no live qualification or complete-history claim is made. Full277/278/279/233 remain.

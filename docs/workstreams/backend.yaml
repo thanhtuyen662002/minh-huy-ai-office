@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 54e656d216754065a38161247b7aaeff4be7caeb
+head: 54b7ae68b341656798a878e3c1247c8449c6de54
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1006,3 +1006,13 @@ group_listener_effective_column_proof_repair:
   predecessor: 8b9e6a4ac34f132e691df090e97fb76795489de2
   review: '8b9 cleanup original probes closing; reviewer identified documented inference that direct loginGRANT with same-column roleDENY can leave effective0 and403 prove no escalation.'
   repair: 'Require actual EXECUTE AS runtime HAS_PERMS columnUPDATE1 before403. Temporarily change exact role columnDENY toGRANT, guarded restoreoriginalDENY; assertroleD/directlogin0/effective0 beforeafter.23 inert guardsPASS; native effective rights/runtime proof unexecuted. Freeze independent closure beforepush.'
+
+group_spool_envelope_foundation:
+  remote: 54b7ae68b341656798a878e3c1247c8449c6de54
+  build: 38011253824
+  governance: 38011253772
+  actual: 114091542726
+  review: 'Native54b static scope APPROVED23 guards/19 independent probes/23 SQL160 syntax checks, receipt6091892127; cleanup/effective permission oracle CLOSED. Actual native listener pending. Predecessor54e exactall8 PASS Build38010187105/Gov38010185277/actual114088140386/quality114090919481; root inspected retained SQL/group/range/inbox/Chromium.'
+  result: 'Mechanical trusted-enrollment admission filters DM/self/echo before private content/key/storage, checks exact current Ingest/source/artifact qualification/live lease; AES256-GCM dedicated spool AAD binds scope/account/service/epoch/version/deletion/event/body/time/key. Fresh recovery checks authority/lease/qualification before decrypt, rewraps only transport ownership and zeros released buffers.'
+  local: '42 focused admission/envelope/recovery/tamper/zeroing controls PASS,0 skipped; changed C# formatting/diff/YAML PASS. Not wired into a provider/filesystem/client or API; foundation review pending.'
+  next: 'Own54b native CI to terminal and repair same PR on red. Freeze scoped foundation review, implement bounded durable file spool/ACK recovery and trusted connector HMAC client; reference-only broker/authorized worker/278/279/full233 remain.'
