@@ -19,9 +19,9 @@ public sealed partial class GroupBatchSourceReaderTests
     [Fact]
     public async Task OriginalSourceSelectionRejectsActualIListOverflowBeforeKeys()
     {
-        using var f = new Fixture(); await f.CommitAsync(); var claim = await f.ClaimAsync();
+        using var f = new Fixture(); var source = await f.CommitAsync(); var claim = await f.ClaimAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(() => f.Reader.ReadAsync(claim,
-            new FalseSizedBrainIds(Enumerable.Range(0, 101).Select(_ => Guid.NewGuid()).ToArray())));
+            new FalseSizedBrainIds(new[] { source.MessageId }.Concat(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid())).ToArray())));
         Assert.Equal(0, f.Keys.Reads);
     }
 
