@@ -9,6 +9,16 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed record GroupConnectorSpoolKeyBinding(Guid TenantId, Guid CompanyId, Guid ConnectorAccountId,
     Guid ServiceId, string KeyId, SecretReference Reference);
 
+// Constructed only after the current backend Renew and exact event ACK. A
+// recovery host retains the actual latest lease rather than an older snapshot.
+public sealed class GroupConnectorReplayCommit
+{
+    internal GroupConnectorReplayCommit(GroupIngressCommittedReceipt receipt, GroupListenerLeaseSnapshot lease)
+    { Receipt = receipt; Lease = lease; }
+    public GroupIngressCommittedReceipt Receipt { get; }
+    public GroupListenerLeaseSnapshot Lease { get; }
+}
+
 // This operation joins the exact retained capture to its authenticated HTTP
 // commit reply. A public receipt DTO cannot delete a file through this API.
 // The host must obtain fresh backend enrollment/lease before each invocation.
@@ -80,6 +90,10 @@ public sealed class GroupConnectorSpoolTransport
     // actual owned lease before disk load or encryption-key resolution. A stale
     // mechanical snapshot cannot enter this path. Each call owns one deadline.
     public async Task<GroupIngressCommittedReceipt> ReplayWithCurrentAuthorityAsync(GroupSpoolItemReference reference,
+        GroupConnectorEnrollmentRequest request, GroupListenerLeaseSnapshot ownedLease, CancellationToken cancellationToken = default) =>
+        (await ReplayWithCurrentAuthorityAndLeaseAsync(reference, request, ownedLease, cancellationToken)).Receipt;
+
+    public async Task<GroupConnectorReplayCommit> ReplayWithCurrentAuthorityAndLeaseAsync(GroupSpoolItemReference reference,
         GroupConnectorEnrollmentRequest request, GroupListenerLeaseSnapshot ownedLease, CancellationToken cancellationToken = default)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10), clock);
@@ -100,7 +114,8 @@ public sealed class GroupConnectorSpoolTransport
                 new(ownedLease.OwnerId, GroupListenerOperation.Renew, ownedLease.Epoch), linked.Token);
             var renewed = await transport.SendListenerAsync(renewal, linked.Token);
             linked.Token.ThrowIfCancellationRequested();
-            return await ReplayCoreAsync(reference, current.Enrollment, renewed.Lease, current.CheckedAtUtc, linked.Token);
+            var receipt = await ReplayCoreAsync(reference, current.Enrollment, renewed.Lease, current.CheckedAtUtc, linked.Token);
+            return new(receipt, renewed.Lease);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { throw new GroupConnectorTransportException(); }
         catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or FormatException or NotSupportedException)

@@ -252,6 +252,51 @@ public sealed class GroupConnectorSpoolTransportTests
     }
 
     [Fact]
+    public async Task RecoveryHostRetainsActualRenewedLeaseAcrossOriginalSnapshotExpiry()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var first = fixture.Append(spool); var second = fixture.Append(spool, revisionEventId: "owned-second-capture");
+        fixture.Clock.Current = Fixture.Now.AddSeconds(20);
+        var enrollment = fixture.Enrollment;
+        var calls = new List<string>();
+        using var client = fixture.Client(async (request, token) =>
+        {
+            var path = request.RequestUri!.AbsolutePath; calls.Add(path);
+            if (path.EndsWith("/enrollment", StringComparison.Ordinal)) return fixture.Reply(request,
+                new GroupConnectorEnrollmentSnapshot(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
+                    enrollment.Source, enrollment.Artifact, enrollment.Qualification.Environment, enrollment.Qualification.Observations, 1, fixture.Clock.Current));
+            if (path.EndsWith("/listener", StringComparison.Ordinal))
+            {
+                var command = GroupServiceAuthenticator.ParseListener(await request.Content!.ReadAsByteArrayAsync(token)).Command;
+                Assert.Equal(new GroupListenerCommand(fixture.Lease.OwnerId, GroupListenerOperation.Renew, 1), command);
+                var actual = fixture.Lease with { HeartbeatAtUtc = fixture.Clock.Current, ExpiresAtUtc = fixture.Clock.Current.AddSeconds(30) };
+                return fixture.Reply(request, new GroupListenerCommittedReceipt(actual, true, false, fixture.Clock.Current, false));
+            }
+            Assert.Equal("/internal/group-ingress/events", path);
+            return fixture.Reply(request, fixture.Receipt with { CommittedAtUtc = fixture.Clock.Current });
+        });
+        var transport = fixture.Replay(spool, client);
+        var selector = new GroupConnectorEnrollmentRequest(fixture.Auth.Scope, fixture.Auth.External);
+        var committed = await transport.ReplayWithCurrentAuthorityAndLeaseAsync(first, selector, fixture.Lease);
+        Assert.Equal(Fixture.Now.AddSeconds(50), committed.Lease.ExpiresAtUtc);
+        Assert.Equal(Fixture.Now.AddSeconds(20), committed.Lease.HeartbeatAtUtc);
+        Assert.Equal(fixture.Receipt with { CommittedAtUtc = fixture.Clock.Current }, committed.Receipt);
+        Assert.Equal(second.Context, Assert.Single(spool.Pending()).Context);
+
+        fixture.Clock.Current = Fixture.Now.AddSeconds(31);
+        var retained = fixture.Bytes(); var keyCalls = fixture.Keys.Calls; var before = calls.Count;
+        await Assert.ThrowsAsync<GroupConnectorTransportException>(() =>
+            transport.ReplayWithCurrentAuthorityAndLeaseAsync(second, selector, fixture.Lease));
+        Assert.Equal(retained, fixture.Bytes()); Assert.Equal(keyCalls, fixture.Keys.Calls);
+        Assert.Equal(new[] { "/internal/group-ingress/enrollment" }, calls.Skip(before));
+        var recovered = await transport.ReplayWithCurrentAuthorityAndLeaseAsync(second, selector, committed.Lease);
+        Assert.Equal(Fixture.Now.AddSeconds(61), recovered.Lease.ExpiresAtUtc);
+        Assert.Equal(fixture.Lease.Account, recovered.Lease.Account); Assert.Equal(fixture.Lease.OwnerId, recovered.Lease.OwnerId);
+        Assert.Equal(fixture.Lease.Epoch, recovered.Lease.Epoch); Assert.Empty(spool.Pending());
+        Assert.Equal(keyCalls + 1, fixture.Keys.Calls);
+    }
+
+    [Fact]
     public async Task OperationalOuterDeadlineCancelsNoncooperativeMetadataBeforeBacklogDecryption()
     {
         using var fixture = new Fixture(); using var spool = fixture.Open(); var reference = fixture.Append(spool); var bytes = fixture.Bytes();
@@ -292,9 +337,10 @@ public sealed class GroupConnectorSpoolTransportTests
         }
         internal GroupIngressCommittedReceipt Receipt => new(Auth.Scope, messageId, 1, 1, Now, false);
         internal GroupConnectorFileSpool Open() => GroupConnectorFileSpool.Open(root, Account, Auth.Service.Id);
-        internal GroupSpoolItemReference Append(GroupConnectorFileSpool spool, GroupSourceEventKind kind = GroupSourceEventKind.NewText)
+        internal GroupSpoolItemReference Append(GroupConnectorFileSpool spool, GroupSourceEventKind kind = GroupSourceEventKind.NewText, string? revisionEventId = null)
         {
             var payload = Auth.Payload(); payload = payload with { Event = payload.Event with { Kind = kind } };
+            if (revisionEventId is not null) payload = payload with { Event = payload.Event with { RevisionEventId = revisionEventId } };
             var admitted = GroupConnectorSpoolAdmission.Filter(Enrollment, payload, Lease, Clock.Current, GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true));
             return spool.Append(new GroupSpoolContentProtector().Protect(admitted, Keys.Key, "spool-v1"));
         }

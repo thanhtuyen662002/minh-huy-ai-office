@@ -1062,3 +1062,21 @@ with redeliveries included in delivery totals, plus a new ACK and exact SQL grap
 Latest branch audit still has only Draft283 and239. Main is4cfeda58;239 remains
 22f2866e, all9 gates green but conflicts with main and lacks clean Windows/UAC/
 reboot/startup/repair/backup/signing acceptance. It is not merge eligible.
+
+### Latest-lease recovery follow-on (excluded from approved native checkpoint)
+
+The operational replay API now has an additive result containing the exact event
+receipt and the actual backend-renewed lease. Its receipt-only API delegates to
+the same kernel, preserving all existing call sites and guards. A host processing
+multiple retained items can carry the latest acknowledged lease rather than a
+startup snapshot that may have expired while the backend kept renewing ownership.
+The result is constructed internally only after current enrollment, owned Renew,
+exact committed event response and retained-file acknowledgement. It grants no
+SQL/model/provider authority and does not activate a listener or recovery loop.
+
+Local36 spool-transport controls PASS0skip and changed CSharp format PASS. The new
+two-capture control renews at20seconds, proves the original30second snapshot refuses
+at31seconds before key/Renew and preserves every retained byte, then successfully
+replays with the returned50second lease and verifies the next61second lease.
+Frozen independent review and actual operational loop/restart evidence remain.
+This shipping follow-on is excluded from the ee native/diagnostic push checkpoint.
