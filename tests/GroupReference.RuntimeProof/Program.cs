@@ -58,9 +58,7 @@ try
     {
         var refused = false;
         try { await inbox.ReceiveAsync(reference, lifetime.Token); }
-        catch (UnauthorizedAccessException) when (args[0] == "deny") { refused = true; }
-        catch (DbUpdateException) when (args[0] == "rollback") { refused = true; }
-        catch (InvalidOperationException) when (args[0] == "unsafe") { refused = true; }
+        catch (Exception error) when (OwnedGroupReferenceProofGuard.IsExpectedRefusal(args[0], error)) { refused = true; }
         if (!refused || database.ChangeTracker.HasChanges()) throw new InvalidOperationException();
         Console.WriteLine("PASS owned reference runtime refusal " + args[0]);
         return 0;

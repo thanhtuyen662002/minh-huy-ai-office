@@ -1265,10 +1265,22 @@ group_connector_recovery_session_checkpoint:
   build: 38025424177
   governance: 38025424210
   actual_stack_job: 114135146988
-  remote_state: 'Actively closing; six prerequisites and Governance PASS, actual native/browser running.'
+  remote_state: 'Terminal RED at unsafe-column proof classifier; six prerequisites/Gov PASS, four reference stages PASS through queued revoke. DI/restart/main browser unexecuted.'
   local_parent: 143ef68bb18d41f224de83c0aadde05c4bca3bb6
   parent_review: 6093966487
   state: local_tested_pending_frozen_review
   implementation: 'One process/account owner for capture and recovery; exact open spool binding, fresh backend authority/lease before keys, only exact SQL ACK deletes encrypted capture. At most256 cloned source bindings and32 fair retained items/pass; cancelled waiter cannot clear active owner. No provider/host/DI activation.'
   local: '89 combined spool transport/file controls PASS0skip; changed CSharp format/diff PASS. Actual lease policy new epoch after expiry, reply loss, poison fairness, authority version/revoke, all binding/config failures and four noncooperative/cancel/late phases exercised with isolated HTTP collaborator.'
   next: 'Freeze and obtain scoped review of local session, own ee exact native/full Chromium to terminal, repair terminal defects SAME283. Do not cancel running actual just to push local progress. Native operational host/restart and provider/278/279/full233 remain.'
+
+group_reference_ee_native_refusal_repair:
+  failed_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+  build: 38025424177
+  governance: 38025424210
+  actual: 114135146988
+  quality: 114137785020
+  result: 'Root inspected all retained group/read/listener/current spool PASS, plus native hold/kill/redelivery/ACK,100 duplicates,rollback/revoke/observed queued revoke PASS. Unsafe effective column UPDATE=1 observed; child refused at unsafe before DI/restart/browser.'
+  repair: 'Test-only classifier aligns actual permission verifier UnauthorizedAccessException for deny/unsafe; rollback DbUpdateException only. InvalidOperation/IO/cancellation and unknown modes refuse. No shipping policy/SQL/oracle/restoration changes.'
+  local: '17 .NET guard/classifier controls PASS0skip; changed format PASS. Frozen review and native rerun required.'
+  state: local_tested_pending_frozen_review
+  next: 'Close frozen native classifier and076 session reviews, push approved snapshot SAME283 and own exact all8/DI/broker restart/main Chromium. Provider/278/279/full233 active.'

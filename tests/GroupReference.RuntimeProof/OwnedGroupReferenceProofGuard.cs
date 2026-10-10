@@ -1,9 +1,19 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 public static class OwnedGroupReferenceProofGuard
 {
+    // Permission proof and current grants share the shipping authorization
+    // refusal type. An unrelated operation/transport failure is not evidence.
+    public static bool IsExpectedRefusal(string mode, Exception error) => mode switch
+    {
+        "deny" or "unsafe" => error is UnauthorizedAccessException,
+        "rollback" => error is DbUpdateException,
+        _ => false
+    };
+
     public static void RequireOwned(Func<string, string?> environment)
     {
         if (environment("CI") != "true" || environment("GITHUB_ACTIONS") != "true" ||

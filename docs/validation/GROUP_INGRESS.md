@@ -1104,7 +1104,20 @@ These are isolated controls with actual lease policy and file encryption, not
 native HTTP/SQL/RabbitMQ or provider acceptance. Freeze/review this candidate, then
 prove the host/recovery path against owned runtime resources before acceptance.
 
-Exact remote checkpoint ee3676771d9c8ff0b513ddfeea73d5662bda8d5b is still actively
-closing Build38025424177/Governance38025424210. Governance and all six prerequisites
-PASS; actual114135146988 is running. It excludes local143/session changes. Preserve
-this exact CI ownership; terminal red must be investigated and repaired on283.
+Exact remote checkpoint ee3676771d9c8ff0b513ddfeea73d5662bda8d5b reached terminal
+RED Build38025424177; Governance38025424210 and all six prerequisites PASS.
+Actual114135146988/quality114137785020 FAIL. It excludes local143/session changes.
+Root inspected all retained group/read/listener and three current spool markers
+PASS. New native reference hold/commit/kill/redelivery/exact ACK,100 duplicates,
+rollback/current Extract revoke and observed queued revoke PASS. Unsafe setup
+observed effective column UPDATE=1, then the child failed the unsafe refusal oracle.
+DI/restart and main Chromium have not been re-exercised on this head.
+
+The native harness expected InvalidOperationException for unsafe permission, while
+the actual permission verifier deliberately returns UnauthorizedAccessException.
+The test-only classifier now accepts only that authorization type for deny/unsafe,
+and DbUpdateException for rollback. Unexpected operation, transport or cancellation
+cannot qualify.17 guard/classifier controls PASS0skip and changed format PASS.
+Shipping permissions and all effective-right/full-graph/restore oracles are unchanged.
+The original child exception was not logged; repaired native execution must still
+prove unsafe refusal plus restored DI delivery/restart and complete main browser.

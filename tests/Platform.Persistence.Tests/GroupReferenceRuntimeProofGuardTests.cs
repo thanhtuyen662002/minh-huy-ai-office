@@ -1,12 +1,30 @@
 extern alias GroupReferenceProof;
 
 using GroupReferenceProof::MinhHuy.AIOffice.GroupReference.RuntimeProof;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class GroupReferenceRuntimeProofGuardTests
 {
+    [Theory]
+    [InlineData("deny", true, false, false)]
+    [InlineData("unsafe", true, false, false)]
+    [InlineData("rollback", false, true, false)]
+    [InlineData("publish", false, false, false)]
+    [InlineData("unknown", false, false, false)]
+    public void NativeRefusalRequiresTheActualShippingBoundaryType(string mode, bool authorization, bool update, bool operation)
+    {
+        // This is the actual permission verifier's refusal, including its
+        // deliberate non-disclosure of SQL diagnostics/credential selectors.
+        Assert.Equal(authorization, OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, DataSourceSecretBindingService.Unavailable()));
+        Assert.Equal(update, OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new DbUpdateException("PRIVATE_SQL_FAILURE")));
+        Assert.Equal(operation, OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new InvalidOperationException("PRIVATE_UNRELATED_OPERATION")));
+        Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new IOException("PRIVATE_TRANSPORT")));
+        Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new OperationCanceledException()));
+    }
+
     [Theory]
     [InlineData("CI")]
     [InlineData("GITHUB_ACTIONS")]
