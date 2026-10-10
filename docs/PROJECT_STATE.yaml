@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: b95d25c84681d8e71f91f958af03b55d5eade087
     state: in_progress
-    next: 'Own278/Draft288 exactremoteb95 sourceapproved6101661330 FULLread/pushed: Build38082610088/native114302453580 active104, Gov38082610070/six prerequisitesSUCCESS, rootFULL.NET2666 zeroFailSkip. Close fullnative/all8/six originals before superseding. New7e full10file reviewWITHHELD6101820549 rootFULLread only daemon-child cleanup/duplicateORDER P2; samebranchrepair guarded typed64ID/32label two inspected removal attempts independent image cleanup preservesfirsterror, PASSaftercleanup, unique full33prior snapshot ordering.105Python/adversarialcleanup/originalCSharp13guard104AST remain verified, repairreview pending. Pushonlyfrozenapproved repair and own new105closure; hostonly/max40/authority/gaps/rawcompletion/retries/context/DIUI/model100-30/279/full233 ACTIVE_INCOMPLETE. No eligible partialmerge or checkpointstop.'
+    next: 'Own278/Draft288 remote b95 sourceapproved6101661330/root FULLread; Build38082610088/native114302453580 active104, Gov38082610070/six prerequisites SUCCESS/root FULLdotnet2666. Close terminal all8/full native104/six original images before superseding. Frozen570 cleanup/order repair scoped APPROVED6101872861 root FULLread; push EXACT570 after parent closure and own new native105. Separate sealed automatic NoWork source preserves typed outcomes through shared atomic engine; 27 focused/full2134 persistence zeroFailSkip/format PASS, new frozen review and actual automatic SQL expiry/replay/authority proof pending. Continue hostonly/max40/authority/gaps/rawcompletion/retry/context/DIUI/model100-30/279/full233; no partial merge or checkpoint stop.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote dfba2936c5d9fa42c58b0855717cd6134a7f617e terminalRED Build38075629274/native114281880568/quality114286293916; Gov38075629275/six prerequisitesSUCCESS. Root FULLnative130PASS23missingRequired102/4failures/noChromium and FULL.NET2563=6/520/25/2012 zeroFailSkip. Proven fixture mismatch: retained same-account listener gap propagates to source; NoWork no-gap preparation refuses before consumer. Preserve production no-gap guards and every original97 oracle/gap-bearing source/brain/claims/account gap-lease-command-registry byte. New separate clean owned effect fixture seeds exact30s listener metadata onlyafterCore readiness, two actual Core HMAC originals; actual inbox/allocation/claims1-3 retirement/brainfixture4 and actualreader expiry witness prepare existing NoWork5-6/note7-9 oracles.77Python/18newgap-diagnostic controls/build0W0E/format and unowned guard gates atcheckpoint; these are not SQL/model acceptance. Freeze full repair review/rootFULLbefore laterpush; then capture renewed exactHEAD/runs and own all102/all8/Gov/FULLlogs/all6ORIGINALs. Local ae83 schema-source-BOM repair APPROVED6100882673 and9de9 deterministichostplan APPROVED6100923911 rootFULLfetched; source approval only. Stash retains unreviewed futurehostbrain native3files. Continue fixedhoststore/mixedmedia-gap honesty/rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+next_action: 'Own278/Draft288 remote b95 sourceapproved6101661330/root FULLread; Build38082610088/native114302453580 active104, Gov38082610070/six prerequisites SUCCESS/root FULLdotnet2666. Close terminal all8/full native104/six original images before superseding. Frozen570 cleanup/order repair scoped APPROVED6101872861 root FULLread; push EXACT570 after parent closure and own new native105. Separate sealed automatic NoWork source preserves typed outcomes through shared atomic engine; 27 focused/full2134 persistence zeroFailSkip/format PASS, new frozen review and actual automatic SQL expiry/replay/authority proof pending. Continue hostonly/max40/authority/gaps/rawcompletion/retry/context/DIUI/model100-30/279/full233; no partial merge or checkpoint stop.'
 
 
 blocked_by:
@@ -1627,8 +1627,27 @@ group_278_automatic_native_cleanup_repair:
   SQL_order: unique_fixed_order_columns_full33_prior_graph_queries_preserved
   local_controls: 105_Python_PASS_retained100_plus_five_adversarial_cleanup_controls_unique_order_oracle
   retained_CSharp_reference: unchanged_from_frozen7e_build_format_unowned13_original104_module_preserved
-  frozen_independent_review: PENDING_before_push
+  frozen_independent_review: SCOPED_APPROVED6101872861_root_FULL_fetched_read
   exact_remote_CI: b95_Build38082610088_native114302453580_ACTIVE_Gov_six_prerequisites_SUCCESS_root_FULLdotnet2666_zeroFailSkip
   native_SQL_model: repair_source_only_new_automatic105_NOT_RUN_UNQUALIFIED_model_NOT_RUN_UNEVALUATED
   next: close_exact_parent104_CI_then_FULL_repair_review_push_only_approved_head_own_new105_all8_logs_six_originals
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_automatic_no_work_writer:
+  source_parent: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  parent_repair_review: SCOPED_APPROVED6101872861_root_FULL_fetched_read
+  parent_remote_CI: b95_Build38082610088_native114302453580_ACTIVE104_Gov_six_prerequisites_SUCCESS_root_FULLdotnet2666
+  entry: same_sealed_GroupAutomaticNotePlan_no_notes_no_gap_complete1to100_exact_selected_source_revision_receipts
+  outcomes: NoWork_Recalled_ObsoleteGeneration_ChangedAfterCutoff_preserved_not_silently_relabelled
+  denials: host_attention_media_quarantine_work_notes_foreign_handles_SQL_MARS_dirty_caller_ambient_cancelled_before_effects
+  engine: original_atomic_receipt_disposition_fences_source_APPLOCK_savepoint_witness_detach_monotone_clock
+  replay: exact_original_revision_AND_typed_outcome_no_new_nonce_duplicate
+  legacy: original_ValidateInput_and_source_hash_unchanged_all_model_text_no_media_no_gap_NoWork_only
+  focused: 19_new_actual_entry_plus8_retained_legacy_PASS_zeroFailSkip_positive_guarded_open_not_SQL_acceptance
+  full_local_persistence: 2134_PASS_zeroFailSkip_changed_CSharp_format_VERIFY_PASS
+  frozen_independent_review: PENDING_before_later_push
+  native_SQL: new_automatic_no_note_commit_replay_expiry_authority_NOT_RUN_UNQUALIFIED
+  effects: no_notes_outbox_IT_assignment_status_raw_allocation_completion_schema_or_Gateway_config_change
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_reused
+  next: frozen_source_review_while_closing_b95_then_push570_native105_and_add_actual_no_note_owned_SQL_proof
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

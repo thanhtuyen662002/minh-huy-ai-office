@@ -10,7 +10,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed record GroupNoWorkCommitResult(GroupScope Scope, Guid BatchId, Guid OperationId,
     string SourceSetSha256, int SelectedMessageCount, DateTimeOffset CommittedAtUtc, bool WasAlreadyCommitted);
 
-// First fixed effect consumer: selected model-eligible NoWork receipts only.
+// Fixed no-note consumer: sealed selected source dispositions only.
 // It cannot manufacture notes, host attention, raw completion or an outbox.
 public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
     TimeProvider clock, GroupBatchSourceReader sources, GroupBrainCurrentReader brain)
@@ -21,12 +21,28 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
         GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(proposal); ArgumentNullException.ThrowIfNull(dependencies);
-        var context = proposal.Preparation.Context; var handle = context.Handle; var scope = context.Scope;
         ValidateInput(proposal, dependencies, operationId, cancellationToken);
+        return await CommitCoreAsync(proposal.Preparation.Context, proposal.Preparation.Context.Items.ToDictionary(x => x.MessageId,
+            x => (Revision: x.Revision, Outcome: GroupWorkSourceOutcome.NoWork)), dependencies, operationId, cancellationToken);
+    }
+
+    public async Task<GroupNoWorkCommitResult> CommitAutomaticAsync(GroupAutomaticNotePlan plan,
+        GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(plan); ArgumentNullException.ThrowIfNull(dependencies);
+        ValidateAutomaticInput(plan, dependencies, operationId, cancellationToken);
+        return await CommitCoreAsync(plan.Preparation.Context, plan.SourceDispositions.ToDictionary(x => x.MessageId,
+            x => (Revision: x.Revision, Outcome: x.Outcome)), dependencies, operationId, cancellationToken);
+    }
+
+    private async Task<GroupNoWorkCommitResult> CommitCoreAsync(GroupBatchSourceContext context,
+        IReadOnlyDictionary<Guid, (long Revision, GroupWorkSourceOutcome Outcome)> selected,
+        GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken)
+    {
+        var handle = context.Handle; var scope = context.Scope;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
-        var selected = context.Items.ToDictionary(x => x.MessageId, x => x.Revision);
-        var sourceHash = SourceHash(selected);
+        var sourceHash = SourceHash(selected.ToDictionary(x => x.Key, x => x.Value.Revision));
         var staged = new List<object>(); var savepointCreated = false; DateTimeOffset? effectTime = null;
         try
         {
@@ -85,8 +101,8 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                 BatchId = context.BatchId,
                 OperationId = operationId,
                 MessageId = x.Key,
-                MessageRevision = x.Value,
-                Outcome = GroupWorkSourceOutcome.NoWork
+                MessageRevision = x.Value.Revision,
+                Outcome = x.Value.Outcome
             }));
             database.AddRange(staged);
             await database.SaveChangesAsync(cancellationToken);
@@ -134,8 +150,8 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                     && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == context.BatchId
                     && x.OperationId == operationId).Take(101).ToArrayAsync(cancellationToken);
                 if (rows.Length != selected.Count || rows.Select(x => x.MessageId).Distinct().Count() != rows.Length
-                    || rows.Any(x => x.Outcome != GroupWorkSourceOutcome.NoWork || !selected.TryGetValue(x.MessageId, out var revision)
-                        || revision != x.MessageRevision)) throw Unavailable();
+                    || rows.Any(x => !selected.TryGetValue(x.MessageId, out var value)
+                        || value.Revision != x.MessageRevision || value.Outcome != x.Outcome)) throw Unavailable();
                 if (await database.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId
                     && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.OriginBatchId == context.BatchId
                     && x.OriginOperationId == operationId, cancellationToken)
@@ -171,6 +187,22 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
     }
     private DateTimeOffset UtcNow()
     { var now = clock.GetUtcNow(); return now.Offset == TimeSpan.Zero ? now : throw Unavailable(); }
+    private void ValidateAutomaticInput(GroupAutomaticNotePlan plan, GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested(); worker.Validate(); plan.Scope.Validate();
+        if (plan.Scope.TenantId != worker.TenantId || plan.Scope.CompanyId != worker.CompanyId) throw GroupServiceDirectory.Denied();
+        var context = plan.Preparation.Context;
+        if (operationId == Guid.Empty || dependencies.Handle.Receipt != context.Handle.Receipt || plan.NoteCount != 0
+            || context.HasCoverageGap || context.Items.Count is < 1 or > 100 || plan.SourceDispositions.Count != context.Items.Count
+            || plan.SourceDispositions.Any(x => x.HasHostAttention || x.Outcome is not (GroupWorkSourceOutcome.NoWork
+                or GroupWorkSourceOutcome.Recalled or GroupWorkSourceOutcome.ObsoleteGeneration or GroupWorkSourceOutcome.ChangedAfterCutoff))
+            || plan.SourceDispositions.Select(x => (x.MessageId, x.Revision)).Distinct().Count() != context.Items.Count
+            || plan.SourceDispositions.Any(x => !context.Items.Any(item => item.MessageId == x.MessageId && item.Revision == x.Revision))) throw Unavailable();
+        if (!database.Database.IsSqlServer() || database.Database.CurrentTransaction is not null
+            || System.Transactions.Transaction.Current is not null || database.ChangeTracker.HasChanges()) throw Unavailable();
+        try { if (new SqlConnectionStringBuilder(database.Database.GetConnectionString()).MultipleActiveResultSets) throw Unavailable(); }
+        catch (ArgumentException) { throw Unavailable(); }
+    }
     private static string SourceHash(IReadOnlyDictionary<Guid, long> selected)
     {
         var metadata = string.Join("\n", selected.OrderBy(x => x.Key).Select(x => x.Key.ToString("D") + "/" + x.Value.ToString(CultureInfo.InvariantCulture)));
