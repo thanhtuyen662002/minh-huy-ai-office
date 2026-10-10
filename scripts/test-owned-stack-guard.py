@@ -71,23 +71,42 @@ class OwnedStackGuardTests(unittest.TestCase):
             kwonlyargs=[], kw_defaults=[], defaults=[]), body=boundary.finalbody + [ast.Return(value=ast.Name(id="failure", ctx=ast.Load()))],
             decorator_list=[])
         block = compile(ast.fix_missing_locations(ast.Module(body=[wrapper], type_ignores=[])), '<actual-managed-cleanup>', 'exec')
-        for fault in (None, "kill", "drain", "shutdown", "close", "join"):
+        for fault in (None, "poll", "kill", "drain", "timeout", "timeout-kill", "timeout-drain", "shutdown", "close", "join"):
             for earlier in (False, True):
                 effects = []; first = RuntimeError("earlier-owned-failure") if earlier else None
+                injected = RuntimeError(fault) if fault is not None else None
+                timeout = recovery_smoke.subprocess.TimeoutExpired("owned-child", 5)
+                drain_calls = kill_calls = 0
                 def effect(name):
                     effects.append(name)
-                    if name == fault: raise RuntimeError(name)
-                process = SimpleNamespace(poll=lambda: None, kill=lambda: effect("kill"), communicate=lambda **kwargs: effect("drain"))
+                    if name == fault: raise injected
+                def poll():
+                    effect("poll"); return None
+                def kill():
+                    nonlocal kill_calls
+                    kill_calls += 1; effect("kill")
+                    if fault == "timeout-kill" and kill_calls == 2: raise injected
+                def communicate(*, timeout):
+                    nonlocal drain_calls
+                    self.assertEqual(5, timeout)
+                    drain_calls += 1; effect("drain")
+                    if fault in ("timeout", "timeout-kill", "timeout-drain"):
+                        if drain_calls == 1: raise namespace['owned_timeout']
+                        if fault == "timeout-drain": raise injected
+                process = SimpleNamespace(poll=poll, kill=kill, communicate=communicate)
                 proxy = SimpleNamespace(shutdown=lambda: effect("shutdown"), server_close=lambda: effect("close"))
                 serving = SimpleNamespace(is_alive=lambda: True, ident=1, join=lambda **kwargs: effect("join"))
-                namespace = dict(process=process, proxy=proxy, serving=serving, release=SimpleNamespace(set=lambda: effect("release")))
+                namespace = dict(process=process, proxy=proxy, serving=serving, subprocess=recovery_smoke.subprocess,
+                    owned_timeout=timeout, release=SimpleNamespace(set=lambda: effect("release")))
                 exec(block, namespace)
                 result = namespace['cleanup'](first)
                 self.assertEqual(["shutdown", "close", "join"], effects[-3:])
                 self.assertIn("kill", effects)
-                if fault != "kill": self.assertIn("drain", effects)
+                self.assertIn("drain", effects)
+                self.assertEqual(2 if fault in ("timeout", "timeout-kill", "timeout-drain") else 1, drain_calls)
+                self.assertEqual(2 if fault in ("timeout", "timeout-kill", "timeout-drain") else 1, kill_calls)
                 if earlier: self.assertIs(first, result)
-                else: self.assertEqual(fault, str(result) if result is not None else None)
+                else: self.assertIs(timeout if fault in ("timeout", "timeout-kill", "timeout-drain") else injected, result)
 
     def test_reference_refuses_unowned_before_configuration_sql_or_processes(self):
         for directory, override, api in [(self.owned, {"CI": "false"}, "http://127.0.0.1:8080"),

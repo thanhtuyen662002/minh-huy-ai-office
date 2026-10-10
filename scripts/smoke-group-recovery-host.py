@@ -211,9 +211,27 @@ def verify(*, directory, api, tenant, company, service, key, runtime_password, s
     finally:
         release.set()
         def stop_child():
-            if process is not None:
-                if process.poll() is None: process.kill()
-                process.communicate(timeout=5)
+            if process is None: return
+            child_failure = None
+            running = True
+            try: running = process.poll() is None
+            except BaseException as error: child_failure = error
+            if running:
+                try: process.kill()
+                except BaseException as error:
+                    if child_failure is None: child_failure = error
+            try: process.communicate(timeout=5)
+            except subprocess.TimeoutExpired as error:
+                if child_failure is None: child_failure = error
+                try: process.kill()
+                except BaseException as error:
+                    if child_failure is None: child_failure = error
+                try: process.communicate(timeout=5)
+                except BaseException as error:
+                    if child_failure is None: child_failure = error
+            except BaseException as error:
+                if child_failure is None: child_failure = error
+            if child_failure is not None: raise child_failure
         for cleanup in (stop_child,
                 lambda: proxy.shutdown() if proxy is not None and serving is not None and serving.is_alive() else None,
                 lambda: proxy.server_close() if proxy is not None else None,

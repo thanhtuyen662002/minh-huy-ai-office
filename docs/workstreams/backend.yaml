@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 995286fae8447c08cb87611a503b8fe83431103c
+head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1332,3 +1332,18 @@ group_connector_managed_process_proof_candidate:
   local: 'Clean proof build,76 .NET guard/host/pipeline and39 Python guard/cleanup/slot preservation controls PASS0skip; changed format PASS. Actual native SQL/Docker unavailable locally.'
   limits: 'Recovery host validates DI but SQL permission execution is independently approved4ce native network mode; both native proofs remain pending. No full277/production/provider acceptance.'
   next: 'Frozen scoped proof review, then native execution after active1cb actual terminal. Diagnose and repair main-browser abort SAME283 without relaxed bounds or cancelled useful actual.277/278/279/full233 active.'
+
+group_connector_1cb_terminal:
+  head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
+  build: 38028533634
+  governance: 38028533645
+  actual: 114144426124
+  quality: 114147206284
+  result: 'Exact Build/actual/quality FAILURE; Governance and six prerequisites SUCCESS. Complete local stack, retained group/read/listener/current spool and all six reference native stages PASS. Main browser retained auth/member/admin/session/company/history privacy PASS then sameSID headers-loss retry202 original TimeoutError after early headers; full EOF/receipt/effects gate remains strict. Complete body and product cause remain unproven.'
+  next: 'Repair SAME283 and close renewed exact CI;4ce APPROVED6094370900 actual startup and managed recovery proof native executions still required.277/278/279/full233 active.'
+
+group_connector_managed_cleanup_repair:
+  frozen_predecessor: 598b73c9b19f4d8f20b2eeace689e01eedf6b50b
+  review: 'Frozen598 withheld solely on child poll/kill skipping drain and no timeout recovery.76 .NET/39 Python/8 exact proxy/3 unowned CLI controls PASS; no other reproduced blocker, no native success.'
+  repair: 'Independent guarded poll/kill/drain, conservative kill after poll fault,5s drain TimeoutExpired triggers guarded kill+final5s drain. First fault preserved; proxy shutdown/close/join always attempted.'
+  local: '39 Python PASS, strengthened actual finalbody extraction covers each process/proxy fault, secondary timeout kill/drain and earlier failure. Original reviewer unchanged counterexample closure required before push.'
