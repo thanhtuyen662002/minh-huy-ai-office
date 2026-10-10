@@ -1078,5 +1078,33 @@ Local36 spool-transport controls PASS0skip and changed CSharp format PASS. The n
 two-capture control renews at20seconds, proves the original30second snapshot refuses
 at31seconds before key/Renew and preserves every retained byte, then successfully
 replays with the returned50second lease and verifies the next61second lease.
-Frozen independent review and actual operational loop/restart evidence remain.
-This shipping follow-on is excluded from the ee native/diagnostic push checkpoint.
+Independent frozen143 review has scoped APPROVED6093966487:36 retained plus20
+independent controls PASS0skip, including current Renew refusal before keys, late
+ACK/cancellation preservation and receipt-only/additive equivalence. Actual
+operational loop/restart evidence remains. This shipping follow-on is excluded
+from the ee native/diagnostic push checkpoint.
+
+### Capture/recovery session candidate
+
+One host-owned session now serializes capture and recovery under the same generated
+process owner and actual returned lease. It clones bounded host enrollment, checks
+exact open spool account/service, filters unenrolled/DM/self/echo before HTTP/key
+work and rechecks fresh qualification/expiry and cancellation immediately before
+encrypted append. Success still requires the authenticated SQL event ACK; unknown
+replies preserve the original capture. Recovery traverses32 event hashes fairly,
+does not delete refused/obsolete versions and heartbeat never claims connection.
+
+Local89 combined spool-transport/file controls PASS0skip. New session controls cover
+original reply loss, same-owner retry, actual policy new-owner fencing/expiry/epoch2,
+33-item fair traversal with a retained poison capture, revoked/changed authority
+before decryption, all5 spool ownership mismatches,7 enrollment configuration
+denials, noncooperative metadata/listener/key/event cancellation and late replies,
+cancellation after key decode, and cancellation while waiting behind active capture.
+These are isolated controls with actual lease policy and file encryption, not
+native HTTP/SQL/RabbitMQ or provider acceptance. Freeze/review this candidate, then
+prove the host/recovery path against owned runtime resources before acceptance.
+
+Exact remote checkpoint ee3676771d9c8ff0b513ddfeea73d5662bda8d5b is still actively
+closing Build38025424177/Governance38025424210. Governance and all six prerequisites
+PASS; actual114135146988 is running. It excludes local143/session changes. Preserve
+this exact CI ownership; terminal red must be investigated and repaired on283.

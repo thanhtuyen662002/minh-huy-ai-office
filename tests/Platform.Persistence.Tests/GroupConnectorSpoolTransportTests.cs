@@ -252,6 +252,266 @@ public sealed class GroupConnectorSpoolTransportTests
     }
 
     [Fact]
+    public async Task RecoverySessionRejectsDirectSelfEchoAndUnenrolledTrafficBeforeKeysOrHttp()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        using var client = fixture.Client((_, _) => throw new InvalidOperationException("Private HTTP must not execute"));
+        var sources = new[] { new GroupConnectorEnrollmentRequest(fixture.Auth.Scope, fixture.Auth.External) };
+        var session = fixture.Session(spool, client, sources);
+        sources[0] = sources[0] with { Identity = fixture.Auth.External with { GroupId = "another-group" } };
+        var payload = fixture.Auth.Payload();
+        foreach (var refused in new[] { payload with { IsGroup = false }, payload with { IsSelf = true }, payload with { IsKnownReportEcho = true },
+            payload with { Event = payload.Event with { Identity = fixture.Auth.External with { GroupId = "another-group" } } } })
+        {
+            await Assert.ThrowsAsync<GroupConnectorTransportException>(() => session.CaptureAsync(refused));
+            Assert.Equal(0, fixture.Keys.Calls); Assert.Empty(spool.Pending());
+        }
+    }
+
+    [Fact]
+    public async Task RecoverySessionUnknownCommitRetainsCaptureThenAutomaticallyReconcilesSameOwnerAndEvent()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        var lost = true;
+        using var client = fixture.Backend(commands, events, _ => { if (!lost) return false; lost = false; return true; });
+        var session = fixture.Session(spool, client);
+        var error = await Assert.ThrowsAsync<GroupConnectorTransportException>(() => session.CaptureAsync(fixture.Auth.Payload()));
+        Assert.DoesNotContain("PRIVATE", error.ToString());
+        var retained = Assert.Single(spool.Pending()); var bytes = fixture.Bytes();
+        Assert.Equal(fixture.Auth.Scope, retained.Context.Source);
+        Assert.Equal(new[] { GroupListenerOperation.Acquire, GroupListenerOperation.Renew }, commands.Select(command => command.Operation));
+        Assert.NotEqual(fixture.Lease.OwnerId, commands[0].OwnerId);
+        Assert.Equal(new GroupConnectorRecoveryPass(1, 0, 0), await session.RecoverOnceAsync());
+        Assert.Equal(new[] { GroupListenerOperation.Acquire, GroupListenerOperation.Renew, GroupListenerOperation.Acquire, GroupListenerOperation.Renew },
+            commands.Select(command => command.Operation));
+        Assert.Single(commands.Select(command => command.OwnerId).Distinct());
+        Assert.Equal(2, events.Count); Assert.Equal(events[0], events[1]); Assert.Empty(spool.Pending());
+        Assert.True(bytes.Length > 30);
+    }
+
+    [Fact]
+    public async Task RecoverySessionFairBoundedPassRetainsPoisonWithoutStarvingLaterCapture()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        for (var index = 0; index < 33; index++) fixture.Append(spool, revisionEventId: "owned-capture-" + index);
+        var ordered = spool.Pending().OrderBy(item => item.Context.EventIdentityHash, StringComparer.Ordinal).ToArray();
+        var poison = ordered[0]; var poisonBytes = spool.Load(poison).Envelope.ToArray();
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events, payload =>
+            GroupIngressIdentity.EventIndex(fixture.Auth.Scope, payload.Event.RevisionEventId) == poison.Context.EventIdentityHash);
+        var session = fixture.Session(spool, client);
+        Assert.Equal(new GroupConnectorRecoveryPass(31, 1, 2), await session.RecoverOnceAsync());
+        Assert.Equal(poisonBytes, spool.Load(poison).Envelope);
+        Assert.Equal(new GroupConnectorRecoveryPass(1, 0, 1), await session.RecoverOnceAsync());
+        Assert.Equal(poison.Context, Assert.Single(spool.Pending()).Context);
+        Assert.Equal(new GroupConnectorRecoveryPass(0, 1, 1), await session.RecoverOnceAsync());
+        Assert.Equal(poisonBytes, spool.Load(poison).Envelope);
+        Assert.Equal(32, events.Select(item => item.Event.RevisionEventId).Distinct().Count(item =>
+            GroupIngressIdentity.EventIndex(fixture.Auth.Scope, item) != poison.Context.EventIdentityHash));
+        Assert.Single(commands.Select(command => command.OwnerId).Distinct());
+    }
+
+    [Fact]
+    public async Task RecoverySessionReauthorizesBeforeCaptureKeyAndExpiryPreservesEmptySpool()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        using (var denied = fixture.Client((request, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden) { RequestMessage = request })))
+        {
+            await Assert.ThrowsAsync<GroupConnectorTransportException>(() => fixture.Session(spool, denied).CaptureAsync(fixture.Auth.Payload()));
+            Assert.Equal(0, fixture.Keys.Calls); Assert.Empty(spool.Pending());
+        }
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events);
+        fixture.Keys.BeforeResolution = () => fixture.Clock.Current = Fixture.Now.AddSeconds(31);
+        await Assert.ThrowsAsync<GroupConnectorTransportException>(() => fixture.Session(spool, client).CaptureAsync(fixture.Auth.Payload()));
+        Assert.Equal(1, fixture.Keys.Calls); Assert.Empty(events); Assert.Empty(spool.Pending());
+        Assert.Equal(GroupListenerOperation.Acquire, Assert.Single(commands).Operation);
+    }
+
+    [Fact]
+    public async Task RecoverySessionEmptyHeartbeatDoesNotClaimConnectionOrReadSpoolKey()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events);
+        var session = fixture.Session(spool, client);
+        Assert.Equal(new GroupConnectorRecoveryPass(0, 0, 0), await session.RecoverOnceAsync());
+        fixture.Clock.Current = Fixture.Now.AddSeconds(20);
+        Assert.Equal(new GroupConnectorRecoveryPass(0, 0, 0), await session.RecoverOnceAsync());
+        Assert.Equal(new[] { GroupListenerOperation.Acquire, GroupListenerOperation.Renew }, commands.Select(command => command.Operation));
+        Assert.Equal(0, fixture.Keys.Calls); Assert.Empty(events); Assert.Empty(spool.Pending());
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("company")]
+    [InlineData("account")]
+    [InlineData("service")]
+    [InlineData("disposed")]
+    public void RecoverySessionRequiresExactOpenSpoolOwnershipBeforeKeysOrHttp(string changed)
+    {
+        using var fixture = new Fixture(); var account = fixture.Account;
+        if (changed == "tenant") account = account with { TenantId = Guid.NewGuid() };
+        if (changed == "company") account = account with { CompanyId = Guid.NewGuid() };
+        if (changed == "account") account = account with { ConnectorAccountId = Guid.NewGuid() };
+        using var spool = fixture.Open(account, changed == "service" ? Guid.NewGuid() : fixture.Auth.Service.Id);
+        if (changed == "disposed") spool.Dispose();
+        using var client = fixture.Client((_, _) => throw new InvalidOperationException("HTTP must not execute"));
+        Assert.Throws<GroupConnectorTransportException>(() => fixture.Session(spool, client));
+        Assert.Throws<GroupConnectorTransportException>(() => fixture.Replay(spool, client));
+        Assert.Equal(0, fixture.Keys.Calls); Assert.Equal(0, fixture.Auth.Secrets.Calls);
+    }
+
+    [Theory]
+    [InlineData("duplicate-source")]
+    [InlineData("duplicate-identity")]
+    [InlineData("foreign-company")]
+    [InlineData("foreign-account")]
+    [InlineData("foreign-provider")]
+    [InlineData("empty")]
+    [InlineData("overflow")]
+    public void RecoverySessionRejectsUntrustedEnrollmentConfigurationWithoutResources(string changed)
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var original = new GroupConnectorEnrollmentRequest(fixture.Auth.Scope, fixture.Auth.External);
+        var other = original with
+        {
+            Source = original.Source with { SourceBindingId = Guid.NewGuid() },
+            Identity = original.Identity with { GroupId = "owned-other-group" }
+        };
+        if (changed == "duplicate-source") other = other with { Source = original.Source };
+        if (changed == "duplicate-identity") other = other with { Identity = original.Identity };
+        if (changed == "foreign-company") other = other with { Source = other.Source with { CompanyId = Guid.NewGuid() } };
+        if (changed == "foreign-account") other = other with { Identity = other.Identity with { AccountId = "owned-other-account" } };
+        if (changed == "foreign-provider") other = other with { Identity = other.Identity with { Provider = "other" } };
+        GroupConnectorEnrollmentRequest[] configured = changed == "empty" ? [] : changed == "overflow" ? Enumerable.Repeat(original, 257).ToArray() : [original, other];
+        using var client = fixture.Client((_, _) => throw new InvalidOperationException("HTTP must not execute"));
+        Assert.Throws<GroupConnectorTransportException>(() => fixture.Session(spool, client, configured));
+        Assert.Equal(0, fixture.Keys.Calls); Assert.Equal(0, fixture.Auth.Secrets.Calls); Assert.Empty(spool.Pending());
+    }
+
+    [Fact]
+    public async Task CanceledWaitingRecoveryCannotDiscardLeaseOfRunningCapture()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.Keys.Resolve = () => { started.TrySetResult(); return new(release.Task); };
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events); var session = fixture.Session(spool, client);
+        var capture = session.CaptureAsync(fixture.Auth.Payload());
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        using var cancellation = new CancellationTokenSource();
+        var waiting = session.RecoverOnceAsync(cancellation.Token); cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(GroupListenerOperation.Acquire, Assert.Single(commands).Operation);
+        release.SetResult(Convert.ToBase64String(fixture.Keys.Key));
+        Assert.Equal(fixture.Receipt, await capture.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(new[] { GroupListenerOperation.Acquire, GroupListenerOperation.Renew }, commands.Select(command => command.Operation));
+        Assert.Single(commands.Select(command => command.OwnerId).Distinct()); Assert.Single(events); Assert.Empty(spool.Pending());
+    }
+
+    [Fact]
+    public async Task CancellationAfterKeyDecodeStillRefusesBeforeLocalAppend()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open(); using var cancellation = new CancellationTokenSource();
+        fixture.Keys.BeforeResolution = () => fixture.Clock.BeforeRead = cancellation.Cancel;
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => fixture.Session(spool, client).CaptureAsync(fixture.Auth.Payload(), cancellation.Token));
+        Assert.Equal(1, fixture.Keys.Calls); Assert.Empty(spool.Pending()); Assert.Empty(events);
+        Assert.Equal(GroupListenerOperation.Acquire, Assert.Single(commands).Operation);
+    }
+
+    [Theory]
+    [InlineData("source-version")]
+    [InlineData("grant-version")]
+    [InlineData("deletion")]
+    [InlineData("credential")]
+    [InlineData("grant-revoked")]
+    [InlineData("service-revoked")]
+    public async Task RecoverySessionCurrentAuthorityCannotDecryptAnObsoleteRetainedCapture(string changed)
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open(); var reference = fixture.Append(spool); var bytes = fixture.Bytes();
+        var enrollment = fixture.Enrollment;
+        if (changed == "source-version") enrollment = enrollment with { Source = enrollment.Source with { Version = 2 } };
+        if (changed == "grant-version") enrollment = enrollment with { Grant = enrollment.Grant with { Version = 2 } };
+        if (changed == "deletion") enrollment = enrollment with { Source = enrollment.Source with { DeletionGeneration = 1 } };
+        if (changed == "credential") enrollment = enrollment with { Authentication = enrollment.Authentication with { CredentialEpoch = 2 } };
+        if (changed == "grant-revoked") enrollment = enrollment with { Grant = enrollment.Grant with { IsEnabled = false } };
+        if (changed == "service-revoked") enrollment = enrollment with { Principal = enrollment.Principal with { IsEnabled = false } };
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events, enrollment: enrollment);
+        Assert.Equal(new GroupConnectorRecoveryPass(0, 1, 1), await fixture.Session(spool, client).RecoverOnceAsync());
+        Assert.Equal(0, fixture.Keys.Calls); Assert.Empty(events); Assert.Equal(bytes, fixture.Bytes());
+        Assert.Equal(reference.Context, Assert.Single(spool.Pending()).Context);
+    }
+
+    [Fact]
+    public async Task RestartedSessionWaitsForOldLeaseExpiryThenReplaysSameEventUnderNewEpoch()
+    {
+        using var fixture = new Fixture(); var spool = fixture.Open();
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events, _ => events.Count == 1);
+        await Assert.ThrowsAsync<GroupConnectorTransportException>(() => fixture.Session(spool, client).CaptureAsync(fixture.Auth.Payload()));
+        var reference = Assert.Single(spool.Pending()); var bytes = fixture.Bytes(); var keyCalls = fixture.Keys.Calls;
+        spool.Dispose(); using var reopened = fixture.Open(); var restarted = fixture.Session(reopened, client);
+        Assert.Equal(new GroupConnectorRecoveryPass(0, 1, 1), await restarted.RecoverOnceAsync());
+        Assert.Equal(bytes, fixture.Bytes()); Assert.Equal(keyCalls, fixture.Keys.Calls);
+        fixture.Clock.Current = Fixture.Now.AddSeconds(31);
+        Assert.Equal(new GroupConnectorRecoveryPass(1, 0, 0), await restarted.RecoverOnceAsync());
+        Assert.Equal(2, events.Count); Assert.Equal(events[0].Event, events[1].Event); Assert.Equal(events[0].Text, events[1].Text);
+        Assert.Equal(1, events[0].ListenerEpoch); Assert.Equal(2, events[1].ListenerEpoch);
+        Assert.NotEqual(events[0].ListenerOwnerId, events[1].ListenerOwnerId);
+        Assert.Equal(reference.Context.Source, fixture.Receipt.Source); Assert.Empty(reopened.Pending());
+    }
+
+    [Theory]
+    [InlineData("metadata", false)]
+    [InlineData("metadata", true)]
+    [InlineData("listener", false)]
+    [InlineData("listener", true)]
+    [InlineData("key", false)]
+    [InlineData("key", true)]
+    [InlineData("event", false)]
+    [InlineData("event", true)]
+    public async Task RecoverySessionBoundsNoncooperativeCaptureAndOwnsLateReplies(string phase, bool caller)
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var keyRelease = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (phase == "key") fixture.Keys.Resolve = () => { started.TrySetResult(); return new(keyRelease.Task); };
+        HttpRequestMessage? heldRequest = null;
+        var commands = new List<GroupListenerCommand>(); var events = new List<GroupIngressPayload>();
+        using var client = fixture.Backend(commands, events, intercept: (request, _) =>
+        {
+            var target = phase == "metadata" ? "/enrollment" : phase == "listener" ? "/listener" : phase == "event" ? "/events" : "/unreachable";
+            if (!request.RequestUri!.AbsolutePath.EndsWith(target, StringComparison.Ordinal)) return null;
+            heldRequest = request; started.TrySetResult(); return release.Task;
+        });
+        using var cancellation = new CancellationTokenSource();
+        var capture = fixture.Session(spool, client).CaptureAsync(fixture.Auth.Payload(), cancellation.Token);
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var retained = phase == "event" ? fixture.Bytes() : null;
+        if (caller) cancellation.Cancel(); else fixture.Clock.FireOuterDeadline();
+        if (caller) await Assert.ThrowsAnyAsync<OperationCanceledException>(() => capture.WaitAsync(TimeSpan.FromSeconds(2)));
+        else
+        {
+            var error = await Assert.ThrowsAsync<GroupConnectorTransportException>(() => capture.WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.DoesNotContain("PRIVATE", error.ToString());
+        }
+        if (phase == "key") keyRelease.SetResult(Convert.ToBase64String(fixture.Keys.Key));
+        else if (phase == "event") release.SetResult(fixture.Reply(heldRequest!, fixture.Receipt));
+        else release.SetException(new IOException("PRIVATE_LATE_REPLY"));
+        Assert.Empty(events);
+        if (retained is not null) { Assert.Single(spool.Pending()); Assert.Equal(retained, fixture.Bytes()); }
+        else Assert.Empty(spool.Pending());
+        Assert.Equal(phase is "key" or "event" ? phase == "event" ? 2 : 1 : 0, fixture.Keys.Calls);
+    }
+
+    [Fact]
     public async Task RecoveryHostRetainsActualRenewedLeaseAcrossOriginalSnapshotExpiry()
     {
         using var fixture = new Fixture(); using var spool = fixture.Open();
@@ -336,7 +596,8 @@ public sealed class GroupConnectorSpoolTransportTests
             }
         }
         internal GroupIngressCommittedReceipt Receipt => new(Auth.Scope, messageId, 1, 1, Now, false);
-        internal GroupConnectorFileSpool Open() => GroupConnectorFileSpool.Open(root, Account, Auth.Service.Id);
+        internal GroupConnectorFileSpool Open(GroupListenerAccountScope? account = null, Guid? serviceId = null) =>
+            GroupConnectorFileSpool.Open(root, account ?? Account, serviceId ?? Auth.Service.Id);
         internal GroupSpoolItemReference Append(GroupConnectorFileSpool spool, GroupSourceEventKind kind = GroupSourceEventKind.NewText, string? revisionEventId = null)
         {
             var payload = Auth.Payload(); payload = payload with { Event = payload.Event with { Kind = kind } };
@@ -351,6 +612,37 @@ public sealed class GroupConnectorSpoolTransportTests
                 new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Service.Id, 1, SecretReference.Parse("secretref://env/OWNED_GROUP_KEY")),
                 new([Auth.Secrets]), Clock, live ? GroupIngressRuntimePolicy.Live : GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true), new Handler(reply));
         internal GroupConnectorSpoolTransport Replay(GroupConnectorFileSpool spool, GroupConnectorTransportClient client) => new(spool, client, KeyBinding, new([Keys]), Clock);
+        internal GroupConnectorRecoverySession Session(GroupConnectorFileSpool spool, GroupConnectorTransportClient client,
+            IReadOnlyList<GroupConnectorEnrollmentRequest>? sources = null) => new(spool, client, KeyBinding, new([Keys]), Clock,
+                GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true), sources ?? [new(Auth.Scope, Auth.External)]);
+        internal GroupConnectorTransportClient Backend(List<GroupListenerCommand> commands, List<GroupIngressPayload> events,
+            Func<GroupIngressPayload, bool>? loseReply = null,
+            Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>?>? intercept = null,
+            GroupConnectorEnrollment? enrollment = null)
+        {
+            GroupListenerLeaseSnapshot? currentLease = null;
+            enrollment ??= Enrollment;
+            return Client(async (request, token) =>
+            {
+                if (intercept?.Invoke(request, token) is { } intercepted) return await intercepted;
+                if (request.RequestUri!.AbsolutePath.EndsWith("/enrollment", StringComparison.Ordinal)) return Reply(request,
+                    new GroupConnectorEnrollmentSnapshot(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
+                        enrollment.Source, enrollment.Artifact, enrollment.Qualification.Environment, enrollment.Qualification.Observations, 1, Clock.Current));
+                if (request.RequestUri.AbsolutePath.EndsWith("/listener", StringComparison.Ordinal))
+                {
+                    var command = GroupServiceAuthenticator.ParseListener(await request.Content!.ReadAsByteArrayAsync(token)).Command;
+                    commands.Add(command);
+                    var transition = GroupListenerLeasePolicy.Apply(Account, command, currentLease, Clock.Current);
+                    currentLease = transition.Lease;
+                    return Reply(request, new GroupListenerCommittedReceipt(currentLease, transition.Changed,
+                        transition.CoverageReason is not null, Clock.Current, !transition.Changed));
+                }
+                var payload = GroupServiceAuthenticator.Parse(await request.Content!.ReadAsByteArrayAsync(token)); events.Add(payload);
+                Assert.Equal(currentLease!.OwnerId, payload.ListenerOwnerId); Assert.Equal(currentLease.Epoch, payload.ListenerEpoch);
+                if (loseReply?.Invoke(payload) == true) throw new IOException("PRIVATE_COMMITTED_REPLY_LOST");
+                return Reply(request, Receipt with { CommittedAtUtc = Clock.Current, WasAlreadyCommitted = events.Count > 1 });
+            });
+        }
         internal HttpResponseMessage Reply(HttpRequestMessage request, object receipt) => new(HttpStatusCode.OK)
         {
             RequestMessage = request,
@@ -384,8 +676,10 @@ public sealed class GroupConnectorSpoolTransportTests
     private sealed class ReplayClock : TimeProvider
     {
         internal DateTimeOffset Current = Fixture.Now;
+        internal Action? BeforeRead;
         private readonly List<ControlledTimer> timers = [];
-        public override DateTimeOffset GetUtcNow() => Current;
+        public override DateTimeOffset GetUtcNow()
+        { var before = BeforeRead; BeforeRead = null; before?.Invoke(); return Current; }
         public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
         { var timer = new ControlledTimer(callback, state); timers.Add(timer); return timer; }
         internal void FireOuterDeadline() => timers.First(x => !x.Disposed).Fire();

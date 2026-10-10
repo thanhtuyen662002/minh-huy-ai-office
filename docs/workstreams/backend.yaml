@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: e3417eaffab88d289383d6610407542064ccd7de
+head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1259,3 +1259,16 @@ group_reference_approved_push_checkpoint:
   native_approval: 6093886641
   diagnostic_result: "Scoped APPROVED316;10 retained and34 independent Node controls PASS, exact error whitelist/unknown fallback/private accessor failures remain strict refusal before body."
   next: "Push the approved native/diagnostic snapshot only, capture exact new HEAD/run/job IDs in HANDOFF, own native SQL/RabbitMQ and full Chromium to terminal; repair real failures SAME283. Later local lease-result code is excluded from this checkpoint."
+
+group_connector_recovery_session_checkpoint:
+  remote_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+  build: 38025424177
+  governance: 38025424210
+  actual_stack_job: 114135146988
+  remote_state: 'Actively closing; six prerequisites and Governance PASS, actual native/browser running.'
+  local_parent: 143ef68bb18d41f224de83c0aadde05c4bca3bb6
+  parent_review: 6093966487
+  state: local_tested_pending_frozen_review
+  implementation: 'One process/account owner for capture and recovery; exact open spool binding, fresh backend authority/lease before keys, only exact SQL ACK deletes encrypted capture. At most256 cloned source bindings and32 fair retained items/pass; cancelled waiter cannot clear active owner. No provider/host/DI activation.'
+  local: '89 combined spool transport/file controls PASS0skip; changed CSharp format/diff PASS. Actual lease policy new epoch after expiry, reply loss, poison fairness, authority version/revoke, all binding/config failures and four noncooperative/cancel/late phases exercised with isolated HTTP collaborator.'
+  next: 'Freeze and obtain scoped review of local session, own ee exact native/full Chromium to terminal, repair terminal defects SAME283. Do not cancel running actual just to push local progress. Native operational host/restart and provider/278/279/full233 remain.'

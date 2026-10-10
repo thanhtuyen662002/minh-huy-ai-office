@@ -31,6 +31,10 @@ public sealed class GroupConnectorFileSpool : IDisposable
     private GroupConnectorFileSpool(string folder, GroupListenerAccountScope account, Guid serviceId, GroupSpoolStorageLimits limits, FileStream ownership)
     { this.folder = folder; this.account = account; this.serviceId = serviceId; this.limits = limits; this.ownership = ownership; }
 
+    // Validate immutable host ownership without reading a retained file.
+    internal bool IsBoundTo(GroupListenerAccountScope account, Guid serviceId)
+    { lock (sync) { return ownership is not null && this.account == account && this.serviceId == serviceId; } }
+
     public static GroupConnectorFileSpool Open(string privateRoot, GroupListenerAccountScope account, Guid serviceId, GroupSpoolStorageLimits? limits = null)
     {
         limits ??= new();

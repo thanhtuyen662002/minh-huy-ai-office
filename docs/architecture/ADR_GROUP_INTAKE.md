@@ -165,6 +165,34 @@ binding and must refuse replacement authority. Startup/per-operation effective S
 permission proof remains required. Apply the additive inbox migration before this
 runtime; rollback preserves immutable receipt evidence through forward repair.
 
+### Account-owned capture and spool recovery session
+
+The connector recovery session keeps one generated process OwnerId for both new
+captures and retained replay. A ten-second caller/deadline boundary includes its
+serialization wait, current backend enrollment, actual Acquire/Renew, key access
+and authenticated event receipt. Waiting cancellation cannot clear another active
+operation's lease. Restart replaces the owner, which must wait for the old SQL
+fence to expire; the backend records the resulting coverage uncertainty.
+
+Host configuration fixes the account, service, dedicated spool key and at most256
+source scopes/opaque identities. Validate the open spool's immutable ownership
+before file/key/HTTP access. DM, self, known report echoes and unknown group
+identities refuse before capture work. The backend remains the source of fresh
+qualification and authorization; source versions are never derived from a payload.
+
+Capture persists encrypted content before sending, returns only an authenticated
+SQL receipt and retains the exact original envelope after an unknown result.
+Replay re-fetches metadata and renews the current lease before each private load,
+key access or decryption. Only the exact original event ACK deletes that capture.
+The returned actual renewed lease replaces the earlier RAM snapshot.
+
+Recovery traverses at most32 retained event hashes per pass and wraps its RAM
+position, so a refused item does not permanently starve later captures. Counts are
+metadata only. An empty pass rotates enrollment heartbeats without claiming a
+provider connection or complete history. This library adds no provider, hosted
+service, deployment activation or customer sender. Owned runtime recovery proof
+and separately authorized live qualification remain required.
+
 This registration is an implementation candidate. Local DI/query/SDK controls do
 not qualify actual SQL concurrency, RabbitMQ interruption/restart, provider
 connection, live account membership or a production deployment. Mandatory owned

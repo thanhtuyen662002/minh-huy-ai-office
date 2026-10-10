@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: e3417eaffab88d289383d6610407542064ccd7de
+current_target_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: e3417eaffab88d289383d6610407542064ccd7de
+    head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
     state: in_progress
-    next: 'e341 Build38022812535 terminal RED/Gov38022812541 PASS; actual114127247688/quality114130002171 RED at body-replay202 stream wait, all3 current native spool/header retry PASS. DI/BOM aad APPROVED6093691699; repaired native b5 APPROVED6093886641, all3 original proof P2s CLOSED with24.NET/37+21Python/24SQL160 PASS. 316 diagnostic independently scoped APPROVED/10 retained+34 own Node PASS; underlying hosted cause unproven. Push only approved snapshot, capture exact CI and own new native SQL/RabbitMQ/full Chromium terminal SAME283. Local lease-result follow-on is excluded until tested/reviewed. Provider/278/279/full233 ACTIVE.'
+    next: 'Remote ee367677 Build38025424177/Gov38025424210: Governance and six prerequisites PASS; actual114135146988 actively running. Close exact native SQL/RabbitMQ/full Chromium to terminal SAME283 and repair real defects immediately. Local143 latest-lease result APPROVED6093966487/56 controls, excluded from ee. Capture/recovery session plus exact open spool binding locally89 controls PASS0skip/format PASS, frozen review pending; no provider/host activation or runtime acceptance. Provider/278/279/full233 ACTIVE.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'e341 Build38022812535 terminal RED/Gov38022812541 PASS; actual114127247688/quality114130002171 RED at body-replay202 stream wait, all3 current native spool/header retry PASS. DI/BOM aad APPROVED6093691699; repaired native b5 APPROVED6093886641, all3 original proof P2s CLOSED with24.NET/37+21Python/24SQL160 PASS. 316 diagnostic independently scoped APPROVED/10 retained+34 own Node PASS; underlying hosted cause unproven. Push only approved snapshot, capture exact CI and own new native SQL/RabbitMQ/full Chromium terminal SAME283. Local lease-result follow-on is excluded until tested/reviewed. Provider/278/279/full233 ACTIVE.'
+next_action: 'Close remote ee367677 exact Build38025424177/Gov38025424210/actual114135146988; six prerequisites/Gov PASS, actual running. Repair terminal native/browser defects SAME283. Local143 result APPROVED6093966487/56 controls; new serialized capture/recovery session89 combined controls PASS0skip/format PASS needs frozen review and actual host/restart proof. Local follow-ons excluded from ee. Continue277/278/279/full233; no production completion.'
 
 
 blocked_by:
@@ -623,3 +623,16 @@ group_reference_approved_push_checkpoint:
   native_approval: 6093886641
   diagnostic_result: "Scoped APPROVED316;10 retained and34 independent Node controls PASS, exact error whitelist/unknown fallback/private accessor failures remain strict refusal before body."
   next: "Push the approved native/diagnostic snapshot only, capture exact new HEAD/run/job IDs in HANDOFF, own native SQL/RabbitMQ and full Chromium to terminal; repair real failures SAME283. Later local lease-result code is excluded from this checkpoint."
+
+group_connector_recovery_session_checkpoint:
+  remote_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+  build: 38025424177
+  governance: 38025424210
+  actual_stack_job: 114135146988
+  remote_state: 'Actively closing; six prerequisites and Governance PASS, actual native/browser running.'
+  local_parent: 143ef68bb18d41f224de83c0aadde05c4bca3bb6
+  parent_review: 6093966487
+  state: local_tested_pending_frozen_review
+  implementation: 'One generated process owner serializes capture/recovery; fresh backend Acquire/Renew and current authority before keys; authenticated SQL ACK only; exact open spool binding; immutable cloned at-most256 enrollment;32-item fair traversal retains poison captures; waiting cancellation cannot erase active lease. No provider/DI/host activation.'
+  local: '89 combined spool-transport/file controls PASS0skip; changed CSharp format/diff PASS. Reply loss/restart/new epoch/fair traversal/current version and grant denial/noncooperative four phases/late ACK/post-key and queued cancellation all covered. Native operational host/restart proof remains.'
+  next: 'Freeze/review session on local parent143; keep ee exact CI ownership. Terminal red repaired immediately SAME283. Push follow-on only after scoped approval and current actual terminal. Provider/278/279/full233 remain active.'

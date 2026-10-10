@@ -39,6 +39,8 @@ public sealed class GroupConnectorSpoolTransport
             binding.Reference is null || string.IsNullOrEmpty(binding.KeyId) || binding.KeyId.Length > 64 ||
             binding.KeyId.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '_')) throw new GroupConnectorTransportException();
         transport.RequireSpoolBinding(binding);
+        if (!spool.IsBoundTo(new(binding.TenantId, binding.CompanyId, binding.ConnectorAccountId), binding.ServiceId))
+            throw new GroupConnectorTransportException();
         this.spool = spool; this.transport = transport; this.binding = binding; this.secrets = secrets; this.clock = clock;
     }
 
