@@ -13,6 +13,20 @@ public sealed record GroupServiceSignature(Guid ServiceId, long CredentialEpoch,
 public sealed record GroupIngressPayload(GroupSourceEventMetadata Event, string Text,
     bool IsGroup, bool IsSelf, bool IsKnownReportEcho, Guid ListenerOwnerId, long ListenerEpoch);
 
+public sealed record GroupListenerPayload(GroupExternalIdentity Identity, GroupListenerCommand Command);
+
+public sealed class VerifiedGroupListener
+{
+    internal VerifiedGroupListener(AuthenticatedGroupService service, GroupListenerCommand command)
+    {
+        Service = service; Command = command;
+        Account = new(service.Source.TenantId, service.Source.CompanyId, service.ConnectorAccountId);
+    }
+    internal AuthenticatedGroupService Service { get; }
+    public GroupListenerAccountScope Account { get; }
+    public GroupListenerCommand Command { get; }
+}
+
 public sealed class VerifiedGroupIngress
 {
     internal VerifiedGroupIngress(AuthenticatedGroupService service, GroupIngressPayload payload)
@@ -40,6 +54,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
     CompositeSecretResolver secrets, GroupIngressRuntimePolicy policy, TimeProvider clock, ILogger<GroupServiceAuthenticator>? logger = null)
 {
     public const int MaximumBodyBytes = 65536;
+    public const int MaximumListenerBodyBytes = 8192;
     public static readonly TimeSpan MaximumClockSkew = TimeSpan.FromMinutes(2);
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     internal static readonly JsonSerializerOptions JsonOptions = new()
@@ -70,10 +85,40 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         finally { CryptographicOperations.ZeroMemory(captured); }
     }
 
+    public async Task<VerifiedGroupListener> AuthenticateListenerAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
+    {
+        if (signature is null || body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+        var captured = body.ToArray();
+        var phase = "parse";
+        try
+        {
+            var payload = ParseListener(captured);
+            var service = await AuthenticateAuthorityAsync(signature, captured, payload.Identity, GroupSourceEventKind.NewText,
+                "aioffice-group-listener-v1", cancellationToken, value => phase = value);
+            return new(service, payload.Command);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            logger?.LogWarning("group-listener-auth-refusal: {Phase}", phase);
+            throw;
+        }
+        finally { CryptographicOperations.ZeroMemory(captured); }
+    }
+
     private async Task<VerifiedGroupIngress> AuthenticateCapturedAsync(GroupServiceSignature signature,
         ReadOnlyMemory<byte> body, CancellationToken cancellationToken, Action<string> phase)
     {
         var payload = Parse(body);
+        var service = await AuthenticateAuthorityAsync(signature, body, payload.Event.Identity, payload.Event.Kind,
+            "aioffice-group-ingest-v1", cancellationToken, phase);
+        return new(service, payload);
+    }
+
+    private async Task<AuthenticatedGroupService> AuthenticateAuthorityAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, GroupExternalIdentity external, GroupSourceEventKind kind, string domain,
+        CancellationToken cancellationToken, Action<string> phase)
+    {
         phase("signing-time");
         var now = clock.GetUtcNow();
         if (signature.ServiceId == Guid.Empty || signature.CredentialEpoch <= 0 || signature.Nonce == Guid.Empty ||
@@ -82,7 +127,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         try { signedAt = DateTimeOffset.FromUnixTimeSeconds(signature.SignedAtUnixSeconds); }
         catch (ArgumentOutOfRangeException) { throw GroupServiceDirectory.Denied(); }
         RequireFreshSigningTime(signedAt, now);
-        var signingBytes = SigningBytes(signature, body.Span);
+        var signingBytes = SigningBytes(signature, body.Span, domain);
 
         var directory = new GroupServiceDirectory(database);
         var permissions = new GroupIngressPermissionVerifier(database);
@@ -90,9 +135,9 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         phase("permissions-initial");
         await permissions.RequireSafeRuntimeAsync(cancellationToken);
         phase("registry-initial");
-        var authority = await directory.RequireIngestAsync(new(signature.ServiceId, signature.CredentialEpoch), payload.Event.Identity, cancellationToken);
+        var authority = await directory.RequireIngestAsync(new(signature.ServiceId, signature.CredentialEpoch), external, cancellationToken);
         phase("qualification-initial");
-        RequireQualification(authority.Account, payload.Event.Kind, now, policy);
+        RequireQualification(authority.Account, kind, now, policy);
         var verified = new AuthenticatedGroupService(authority, signedAt);
         byte[] key;
         try
@@ -119,15 +164,34 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
             phase("expiry-final");
             var finalNow = clock.GetUtcNow();
             RequireFreshSigningTime(signedAt, finalNow);
-            RequireQualification(current.Account, payload.Event.Kind, finalNow, policy);
+            RequireQualification(current.Account, kind, finalNow, policy);
             await transaction.CommitAsync(cancellationToken);
-            return new(verified, payload);
+            return verified;
         }
         finally { CryptographicOperations.ZeroMemory(key); }
     }
 
-    internal static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => Encoding.ASCII.GetBytes(
-        FormattableString.Invariant($"aioffice-group-ingest-v1\n{signature.ServiceId:D}\n{signature.CredentialEpoch}\n{signature.SignedAtUnixSeconds}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
+    internal static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-ingest-v1");
+    internal static byte[] ListenerSigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-listener-v1");
+    private static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body, string domain) => Encoding.ASCII.GetBytes(
+        FormattableString.Invariant($"{domain}\n{signature.ServiceId:D}\n{signature.CredentialEpoch}\n{signature.SignedAtUnixSeconds}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
+
+    internal static GroupListenerPayload ParseListener(ReadOnlyMemory<byte> body)
+    {
+        try
+        {
+            if (body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+            _ = StrictUtf8.GetCharCount(body.Span);
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 8 });
+            RequireUniqueProperties(document.RootElement);
+            var payload = document.Deserialize<GroupListenerPayload>(JsonOptions) ?? throw GroupServiceDirectory.Denied();
+            if (payload.Identity is null || payload.Command is null) throw GroupServiceDirectory.Denied();
+            payload.Identity.Validate(); payload.Command.Validate();
+            return payload;
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        { throw GroupServiceDirectory.Denied(); }
+    }
 
     internal static void RequireFreshSigningTime(DateTimeOffset signedAtUtc, DateTimeOffset nowUtc)
     {

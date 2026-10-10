@@ -18,6 +18,7 @@ public sealed class AuthenticatedGroupService
         Source = authority.Source.Scope; External = authority.Source.ExternalIdentity;
         SourceVersion = authority.Source.Version; DeletionGeneration = authority.Source.DeletionGeneration;
         AccountVersion = authority.Account.Version; GrantVersion = authority.Grant.Version;
+        ConnectorAccountId = authority.Account.Id;
         CredentialReference = authority.CredentialReference;
         SignedAtUtc = signedAtUtc;
     }
@@ -28,6 +29,7 @@ public sealed class AuthenticatedGroupService
     internal long SourceVersion { get; }
     internal long DeletionGeneration { get; }
     internal long AccountVersion { get; }
+    internal Guid ConnectorAccountId { get; }
     internal long GrantVersion { get; }
     internal string CredentialReference { get; }
     internal DateTimeOffset SignedAtUtc { get; }
@@ -76,7 +78,7 @@ internal sealed class GroupServiceDirectory(PlatformDbContext database)
     {
         var current = await RequireIngestAsync(new(service.ServiceId, service.CredentialEpoch), service.External, cancellationToken);
         if (current.Source.Scope != service.Source || current.Source.Version != service.SourceVersion ||
-            current.Source.DeletionGeneration != service.DeletionGeneration || current.Account.Version != service.AccountVersion ||
+            current.Source.DeletionGeneration != service.DeletionGeneration || current.Account.Id != service.ConnectorAccountId || current.Account.Version != service.AccountVersion ||
             current.Grant.Version != service.GrantVersion || current.CredentialReference != service.CredentialReference) throw Denied();
         return current;
     }

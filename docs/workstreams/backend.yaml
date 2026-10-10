@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 1a7c7cf4ea5f1f895cdfe40d0ea41b6959e5dcda
+head: 71054612f2e9447596c1d0a1a88c7ccd706cc803
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Explicit stacked277 from282/06fb; parent final review/CI remains root-owned and child cannot merge first. Build scoped group SQL authority, immutable source revisions and atomic committed-order ingress/outbox; then fenced listener/encrypted spool, service ingress, broker restart and authorized private inbox read/UI.276 contracts are executable; no277 runtime acceptance yet. Preserve owner-task privacy and no-click downstream278/279.'
+next_action: 'Parent276 delivered main4cf all8. Exact610 all8 native private inbox verified; own710 Build38007014365/Gov38007014343 through terminal with new mandatory final-read range witness. Complete separately signed listener authentication, durable account lease/coverage, encrypted prefiltered spool and reference-only broker recovery. Preserve current scoped reads and owner-task privacy; then278 automatic notes/279 internal IT reports. Full277/233 acceptance remains open.'
 
 group_contracts_checkpoint:
   initial_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
@@ -923,3 +923,20 @@ group_listener_ownership_policy_checkpoint:
   result: 'Accountscope/uniqueprocessowner/server30second lease/retainedmonotonic epoch. AcquireACKrecovery noextension; exactexpiry takeover, oldowner/epoch refusal; renew/stop/currentstate validation, fixedcoverage markers, stopACKrecovery, overflowfailclosed.'
   local: '24 focusedSharedContracts controlsPASS, format/diffPASS; no listener operationalproof.'
   next: 'Independentreview contract then integrate currentqualified serviceHMAC/freshaccount/sourcegrants andownedSQL serialized lease/atomic coverage, defaultoff API andactual collision/expiry/revoke/restart gate. Continue current610 CI closure/rangereview; no full277/233 completion.'
+
+group_inbox_exact_browser_closure:
+  head: 61097496a9cb136e530f164b9b09a6ee274edd3e
+  build: 38005660521
+  governance: 38005660490
+  actual: 114073742719
+  quality: 114076863489
+  artifact: 11651253546
+  result: 'All8 PASS; root inspected all13 native ingress and3 new actual Chromium source/private Unicode/current grant revoke-clear-restore/same SID, held BFF body logout/obsolete SID/new SID,375 direct navigation gates. Retained full realSQL/Redis/Core202 reply-loss/two-companies/two-owners PASS; root viewed all6 sanitized PNGs, desktop/mobile inbox no horizontal overflow. First1a7 coarse failure not reproduced, cause unproven.'
+  next: 'Own remote710 Build38007014365/Gov38007014343 final-read range candidate through terminal. Independent165 cleanup original failures CLOSED and27 SQL syntax/exact graph probes approved;710 pure policy24 retained/29 independent assertions approved. No native range/listener delivery yet.'
+
+group_listener_authentication_checkpoint:
+  predecessor: 71054612f2e9447596c1d0a1a88c7ccd706cc803
+  state: 'local authentication only; independent review required, no listener API/store/provider operation'
+  result: 'Distinct fixed listener-v1 HMAC domain, strict8192 byte captured body; server-derived qualified account/current enrolled source/Ingest authority, unchanged event-v1 signatures. Shared initial/final permissions/service epoch/source-account-grant/key/signing/qualification fences and exact account ID seal; caller owner is process fence only, no portal User/Task.'
+  local: '127 focused listener/event/store/reader/HTTP tests PASS,0 skipped. InMemory account-ID replacement control is staged authority-seal evidence, not actual SQL operator rewrite. No lease/gap writes, durable listener/coverage or provider calls.'
+  next: 'Freeze and independently review authentication delta; keep710 exact CI owned. Integrate SQL serialized lease and atomic durable coverage/default-off HTTP, then encrypted prefiltered spool/reference-only broker recovery and actual restart/revocation proofs.277/278/279/full233 remain active.'
