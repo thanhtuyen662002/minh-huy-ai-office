@@ -1,10 +1,59 @@
 """Separate no-gap SQL effect fixture; never qualifies listener recovery."""
 from datetime import datetime, timezone
+import copy
 import hashlib
 import os
 from pathlib import Path
 import re
+import time
 import uuid
+
+
+def prepare_raw_history(*, directory, api, tenant, company, service, sql, identity_index, enroll_source, post_event):
+    require_owned(directory, api)  # Before configuration/callbacks/resources.
+    assert all(callable(value) for value in (sql, identity_index, enroll_source, post_event))
+    originals = []
+    def empty_event(payload):
+        payload = copy.deepcopy(payload)
+        payload["text"] = ""; payload["event"]["contentSha256"] = hashlib.sha256(b"").hexdigest().upper()
+        result = post_event(payload); originals.append((payload, result[1])); return result
+    source, events = prepare(directory=directory, api=api, tenant=tenant, company=company, service=service, sql=sql,
+        identity_index=identity_index, enroll_source=enroll_source, post_event=empty_event)
+    assert len(originals) == 2
+    tenant, company, source = (str(uuid.UUID(value)) for value in (tenant, company, source))
+    owner = str(uuid.UUID(originals[0][0]["listenerOwnerId"]))
+    account = sql(f"SELECT LOWER(CONVERT(char(36),ConnectorAccountId)) FROM aioffice.GroupBindings "
+        f"WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{source}';")
+    assert str(uuid.UUID(account)) == account and uuid.UUID(account).int != 0
+    deadline = time.monotonic() + 120
+    for sequence in range(3, 502):
+        assert time.monotonic() < deadline, "Owned raw history generation deadline exceeded"
+        if (sequence - 3) % 25 == 0:
+            # Test-only operator renewal of this already seeded fixture lease.
+            # An expired/foreign owner is refused; no new epoch, listener
+            # command, continuity claim or production listener is invented.
+            assert sql("SET NOCOUNT ON; DECLARE @now datetimeoffset(7)=TODATETIMEOFFSET(SYSUTCDATETIME(),'+00:00');"
+                " UPDATE aioffice.GroupListenerLeases SET HeartbeatAtUtc=@now,ExpiresAtUtc=DATEADD(second,30,@now)"
+                f" WHERE TenantId='{tenant}' AND CompanyId='{company}' AND ConnectorAccountId='{account}'"
+                f" AND OwnerId='{owner}' AND Epoch=1 AND HeartbeatAtUtc<=@now AND ExpiresAtUtc>@now; SELECT @@ROWCOUNT;") == "1"
+        payload = copy.deepcopy(originals[0][0]); payload["event"].update({"kind": 3,
+            "revisionEventId": str(uuid.uuid4()), "occurredAtUtc": datetime.now(timezone.utc).isoformat()})
+        status, value = post_event(payload)
+        assert status == 200 and isinstance(value, dict) and set(value) == {"source", "messageId", "revision",
+            "committedSequence", "committedAtUtc", "wasAlreadyCommitted"}, "Owned raw history Core ACK failed"
+        assert value["source"] == {"tenantId": tenant, "companyId": company, "sourceBindingId": source}
+        assert value["messageId"] == originals[0][1]["messageId"] and type(value["revision"]) is int and value["revision"] == sequence - 1
+        assert type(value["committedSequence"]) is int and value["committedSequence"] == sequence and value["wasAlreadyCommitted"] is False
+        datetime.fromisoformat(value["committedAtUtc"].replace("Z", "+00:00"))
+        assert time.monotonic() < deadline, "Owned raw history generation deadline exceeded"
+    scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupMessageRevisions WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupIngressReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupIngressOutbox WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupMessages WHERE TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'),N'|',"
+        f"(SELECT CommittedSequence FROM aioffice.GroupSourceStates WHERE {scope}),N'|',"
+        f"(SELECT ScheduledThroughSequence FROM aioffice.GroupSourceStates WHERE {scope}));") == "501|501|501|2|501|0"
+    return source, events
 
 
 def require_owned(directory, api):

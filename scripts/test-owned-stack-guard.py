@@ -526,6 +526,79 @@ class OwnedStackGuardTests(unittest.TestCase):
             with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(RuntimeError): effect_fixture.prepare(**arguments)
             self.assertEqual([], calls)
 
+    def raw_history_callbacks(self, fault=None):
+        arguments, calls, events = self.clean_effect_callbacks(); original_sql = arguments['sql']; original_post = arguments['post_event']
+        account = str(uuid.uuid4()); first_ack = None; count = 0
+        def sql(query):
+            if 'LOWER(CONVERT(char(36),ConnectorAccountId))' in query:
+                calls.append(('account', query)); return account
+            if 'UPDATE aioffice.GroupListenerLeases' in query:
+                calls.append(('renew', query)); return '0' if fault == 'lease' else '1'
+            if 'GroupMessageRevisions' in query and 'GroupSourceStates' in query:
+                calls.append(('raw-counts', query)); return '500|501|501|2|501|0' if fault == 'counts' else '501|501|501|2|501|0'
+            return original_sql(query)
+        def post(payload):
+            nonlocal first_ack, count
+            status, value = original_post(payload); count += 1
+            if count == 1: first_ack = dict(value)
+            if count > 2:
+                value.update(messageId=first_ack['messageId'], revision=count-1)
+                if count == 3:
+                    if fault == 'message': value['messageId'] = str(uuid.uuid4())
+                    if fault == 'revision': value['revision'] = True
+                    if fault == 'sequence': value['committedSequence'] = True
+                    if fault == 'scope': value['source']['companyId'] = str(uuid.uuid4())
+                    if fault == 'extra-field': value['private'] = 'PRIVATE'
+                    if fault == 'replay': value['wasAlreadyCommitted'] = True
+                    if fault == 'http': status = 503
+            return status, value
+        arguments.update(sql=sql, post_event=post)
+        return arguments, calls, events
+
+    def test_raw_history_fixture_keeps_two_originals_then499_edits_and_bounded_own_live_lease(self):
+        arguments, calls, events = self.raw_history_callbacks()
+        with patch.dict(os.environ, self.environment, clear=True): source, actual = effect_fixture.prepare_raw_history(**arguments)
+        self.assertEqual(events, actual); self.assertEqual(source, calls[1][1])
+        payloads = [value for name, value in calls if name == 'post']
+        self.assertEqual(501, len(payloads)); self.assertEqual([1, 1], [value['event']['kind'] for value in payloads[:2]])
+        self.assertTrue(all(value['event']['kind'] == 3 and value['event']['messageId'] == payloads[0]['event']['messageId'] for value in payloads[2:]))
+        self.assertNotEqual(payloads[0]['event']['messageId'], payloads[1]['event']['messageId'])
+        self.assertEqual(501, len({value['event']['revisionEventId'] for value in payloads}))
+        self.assertTrue(all(value['text'] == '' and value['event']['contentSha256'] == hashlib.sha256(b'').hexdigest().upper() for value in payloads))
+        renewals = [value for name, value in calls if name == 'renew']; self.assertEqual(20, len(renewals))
+        for query in renewals:
+            self.assertIn('ExpiresAtUtc>@now', query); self.assertIn('HeartbeatAtUtc<=@now', query)
+            self.assertIn("OwnerId='" + payloads[0]['listenerOwnerId'] + "' AND Epoch=1", query)
+            self.assertNotIn('GroupListenerCommandReceipts', query); self.assertNotIn('GroupCoverageGaps', query)
+
+    def test_raw_history_fixture_refuses_expired_foreign_lease_and_every_malformed_edit_ack(self):
+        for fault in ('lease', 'message', 'revision', 'sequence', 'scope', 'extra-field', 'replay', 'http', 'counts'):
+            arguments, calls, _ = self.raw_history_callbacks(fault)
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError):
+                effect_fixture.prepare_raw_history(**arguments)
+            self.assertLessEqual(len([value for name, value in calls if name == 'post']), 501)
+            if fault != 'counts': self.assertFalse(any(name == 'raw-counts' for name, _ in calls))
+
+    def test_raw_history_fixture_deadline_refuses_before_or_after_an_edit_ack(self):
+        for times, posts in (([0, 121], 2), ([0, 1, 121], 3)):
+            arguments, calls, _ = self.raw_history_callbacks()
+            with self.subTest(times=times), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(effect_fixture.time, 'monotonic', side_effect=times), self.assertRaises(AssertionError):
+                effect_fixture.prepare_raw_history(**arguments)
+            self.assertEqual(posts, len([value for name, value in calls if name == 'post']))
+            self.assertFalse(any(name == 'raw-counts' for name, _ in calls))
+
+    def test_raw_history_fixture_owned_guard_precedes_callbacks_or_time(self):
+        arguments, calls, _ = self.raw_history_callbacks()
+        with patch.dict(os.environ, {}, clear=True), patch.object(effect_fixture.time, 'monotonic', side_effect=AssertionError('resource')), self.assertRaises(RuntimeError):
+            effect_fixture.prepare_raw_history(**arguments)
+        self.assertEqual([], calls)
+        for field, value in (("api", "https://example.com"), ("directory", self.owned / "other")):
+            arguments, calls, _ = self.raw_history_callbacks(); arguments[field] = value
+            with patch.dict(os.environ, self.environment, clear=True), patch.object(effect_fixture.time, 'monotonic', side_effect=AssertionError('resource')), self.assertRaises(RuntimeError):
+                effect_fixture.prepare_raw_history(**arguments)
+            self.assertEqual([], calls)
+
     def test_automatic_effect_fixture_guards_before_callbacks_and_invalid_handler(self):
         arguments, calls, _ = self.clean_effect_callbacks()
         with patch.dict(os.environ, {}, clear=True), self.assertRaises(RuntimeError): effect_fixture.prepare_automatic(**arguments)
