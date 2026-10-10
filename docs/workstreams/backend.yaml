@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 20cd591088430635b9bb46635f5441d962eca9ac
+head: 9d498b4574e92aa65d56d9c5c666a1286407326d
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,24 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: '20cd exact all8/native PASS Build38013792478/Gov38013792484/actual114099512222/quality114101762910; root inspected8 retained listener/read-range/inbox/full Chromium markers.71eec original six denial probes CLOSED; one Windows env key-reference alias P2 repaired via semantic provider/resource identity. Freeze alias repair for unchanged review closure, then push approved transport/replay and own CI; build/review guarded actual.NET spool/client/SQL lost-ACK/process death/restart/revoke fixture. Current backend enrollment/lease/reference broker/278/279/full233 remain.'
+next_action: 'Own approved9d Build38015307994/Gov38015307999/actual114104147229 terminal CI, receipt6092460850. Freeze/review guarded native .NET client/encrypted spool/SQL committed-reply loss/process death/restart/revoke candidate:7.NET/26 Python inert guards PASS, actual unexecuted.20cd all8 closure inspected; fresh backend registry/lease/reference broker/278/279/full233 remain.'
+
+group_connector_transport_review_closure:
+  head: 9d498b4574e92aa65d56d9c5c666a1286407326d
+  review: 'Combined transport/exact retained replay scoped APPROVED92 independent controls0skip,76 retained+16 own. Actual Windows case-alias original probe CLOSED; all six earlier listener qualification/future commit/invalid coverage probes CLOSED. No scoped library blocker; distinct spool key, controlled Live exact commit/deletion, policy/account prekey refusal, noncooperative signing-key cancellation, partial success body IO retention, concurrent original capture ACK once and late stream disposal retained. Frozen YAML/diff/clean compile PASS.'
+  receipt: 6092460850
+  build: 38015307994
+  governance: 38015307999
+  actual: 114104147229
+  next: 'Own exact pushed9d terminal CI; new native harness excluded from that head. Full277 remains active.'
+
+group_connector_native_candidate:
+  predecessor: 9d498b4574e92aa65d56d9c5c666a1286407326d
+  state: 'Local unexecuted owned CI harness; frozen independent review and exact actual execution mandatory'
+  result: 'Separate owned synthetic SQL source/account, actual shipping .NET HMAC listener acquire/100 encrypted bounded appends/replay, loopback proxy observes real Core commit then withholds ACK while only that child is killed. Full6 graph/ciphertext preservation through Core restart, real original30s expiry/fresh epoch2 with listener-expired gap, typed originalACK reconciliation/delete/no second effect. Fresh SQL grant revoke403 preserves byte-exact backlog/graph; guarded exact grant restore permits new event/cursor2, clean pooled iso2. Parent original source full6 fingerprints/portal4 cardinalities preserved.'
+  boundary: 'Python exact CI/GitHub/RUNNER_TEMP/aioffice-local/API guard before any resources; executable CI/GitHub/explicit-owned flag/fixed ephemeral child before config/keys/HTTP. Only scoped synthetic source/known metadata snapshots and random owned keys, no production settings/provider/ERP/customer. New capture prefilter before spool/key; private root regular path/bounded config, no diagnostics/source/key output. SDK added only actual-stack job; proof project absent from shipping application containers. Process/proxy/grant cleanup attempts all operations and preserves first failure.'
+  local: '7 inert.NET environment/root guards PASS0skip,26 retained/new Python guards/syntax PASS, native executable build0warnings and direct unowned entry refusal before config/network PASS. Changed-file C# format/workflow YAML/diff PASS. No local SQL/runtime kill/restart execution; three candidate native PASS markers are not execution evidence.'
+  next: 'Freeze independent native fixture review, own9d terminal then push only approved proof checkpoint and own actual SQL/client/process-death gate. Fix same PR on red; complete fresh trusted backend registry/lease provider/reference broker/278/279/full233.'
 
 group_connector_key_alias_repair:
   predecessor: 71eec0efb6ef96a127e18cf076199c1231181adf

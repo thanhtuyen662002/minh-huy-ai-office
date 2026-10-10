@@ -633,6 +633,13 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             restart=lambda: compose_run("restart", "core-api", overridden=True), ready=ready,
             identity_index=identity_index, read_route=read_route)
         assert snapshot() == listener_before, "Separate listener proof changed retained source bytes"
+        spool_spec = importlib.util.spec_from_file_location("group_spool_proof", Path(__file__).with_name("smoke-group-spool.py"))
+        spool_proof = importlib.util.module_from_spec(spool_spec)
+        spool_spec.loader.exec_module(spool_proof)
+        spool_proof.verify(directory=directory, api=api, tenant=tenant, company=company, service=service,
+            key=group_key, sql=sql, restart=lambda: compose_run("restart", "core-api", overridden=True),
+            ready=ready, identity_index=identity_index)
+        assert snapshot() == listener_before, "Separate native spool proof changed retained source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
 

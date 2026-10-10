@@ -636,9 +636,19 @@ also need UTC clock synchronization for conservative short-lease checks.
 
 ### Exact retained replay and transport review repairs
 
+Combined transport/replay frozen `9d498b4574e92aa65d56d9c5c666a1286407326d` scoped APPROVED, public receipt6092460850:92 independent controls PASS/0skip,76 retained+16 own, clean compile/YAML/diff. Unchanged Windows process-env alias probe and all six earlier probes are CLOSED. This approves the default-off library scope, not native execution or full277. Pushed9d Build38015307994/Gov38015307999/actual114104147229 is owned through terminal CI; new native fixture is excluded from9d.
+
 Independent frozen `71eec0e` review closed all six original transport denial probes;90 retained/own controls passed. One new Windows env-reference alias P2 was reproduced: resource names differing only by case resolve the same process variable but record equality treated them as different signing/spool references. The purpose-separation guard now compares provider identity without case, env resources conservatively without case on every host, and other provider resources ordinally. A distinct spool reference remains positive. Local145 retained transport/replay/envelope/file controls PASS; unchanged original alias probe still requires closure.
 
 Pushed file checkpoint `20cd591` exact all8 PASS: Build38013792478/Gov38013792484/actual114099512222/quality114101762910. Root inspected all8 listener markers and retained group/read-range/issued inbox/full Chromium evidence. This CI did not contain the local .NET transport/replay/native harness candidate, so it supplies no native client/spool acceptance.
+
+### Native .NET spool/client fixture candidate
+
+The separate `GroupIntake.RuntimeProof` executable and `smoke-group-spool.py` exercise shipping client/spool libraries against the real owned Core/SQL stack. They are not in application images. Python and executable guards run before resources and constrain the fixture to GitHub CI, the exact ephemeral root, loopback API and synthetic enrollment/random owned keys. No customer settings or provider is accessed; private scratch data and exceptions are not emitted.
+
+The candidate observes Core SQL200 in a loopback proxy, holds all ACK bytes, kills only the owned .NET child after commit, then verifies one encrypted retained file/one graph effect. It checks full six-table durable bytes and ciphertext through Core restart, waits the actual original30second lease expiry, acquires fresh owner/epoch2 with explicit expiry uncertainty, reconciles the original typed commit ACK and removes the exact file without a second effect. A second captured event receives fresh backend403 under SQL grant revocation; exact restore enables backlog/cursor2, with pooled isolation clean. The parent retains original source full fingerprints and portal four-table cardinalities. Cleanup is scoped and preserves the first failure.
+
+Local7 inert .NET guard tests and26 Python guard tests/syntax pass; executable build is clean, direct unowned entry refuses before config/network, and changed-file format/workflow YAML/diff pass. The three new native PASS markers remain **unexecuted** until frozen review and hosted actual-stack CI. This candidate supplies no current backend enrollment-fetch/provider/DI/recovery-poller/broker/full277 acceptance.
 
 Independent frozen `bbec72d` review reproduced missing listener qualification before/after signing-key resolution, future event/listener commit timestamps and impossible Renew coverage accepted as success. Initial Acquire now uses the shared current scoped receive qualification without fabricating a lease, before and after the key await. Both typed replies require commit time no later than host UTC; listener coverage matches the backend reconciliation invariant. Controlled Live preparation remains positive. Original independent probes still require closure before approval.
 

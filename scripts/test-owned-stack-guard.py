@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 import unittest
 import tempfile
+import uuid
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -27,12 +28,38 @@ group_spec.loader.exec_module(group_smoke)
 listener_spec = importlib.util.spec_from_file_location("listener_smoke", Path(__file__).with_name("smoke-group-listener.py"))
 listener_smoke = importlib.util.module_from_spec(listener_spec)
 listener_spec.loader.exec_module(listener_smoke)
+spool_spec = importlib.util.spec_from_file_location("spool_smoke", Path(__file__).with_name("smoke-group-spool.py"))
+spool_smoke = importlib.util.module_from_spec(spool_spec)
+spool_spec.loader.exec_module(spool_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
     root = (Path.cwd() / "guard-test-no-resources").resolve()
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}
+
+    def test_spool_proof_refuses_unowned_before_resources(self):
+        cases = [(self.owned, "http://127.0.0.1:8080", {"CI": "false"}),
+            (self.owned, "http://127.0.0.1:8080", {"GITHUB_ACTIONS": "false"}),
+            (self.owned, "http://127.0.0.1:8080", {"RUNNER_TEMP": ""}),
+            (self.root, "http://127.0.0.1:8080", {}), (self.owned / "nested", "http://127.0.0.1:8080", {}),
+            (self.owned, "https://production.invalid/", {})]
+        def forbidden(*args, **kwargs): self.fail("Unowned spool proof touched resources")
+        for directory, api, override in cases:
+            with self.subTest(directory=str(directory), override=override), patch.dict(os.environ, {**self.environment, **override}, clear=True), \
+                    patch.object(spool_smoke.subprocess, "run", forbidden), patch.object(spool_smoke.subprocess, "Popen", forbidden), \
+                    patch.object(spool_smoke.http.server, "ThreadingHTTPServer", forbidden), patch.object(Path, "mkdir", forbidden):
+                with self.assertRaisesRegex(RuntimeError, "^Spool proof requires the owned disposable GitHub CI fixture\\.$"):
+                    spool_smoke.verify(directory=directory, api=api, tenant="invalid", company="invalid", service="invalid",
+                        key=None, sql=forbidden, restart=forbidden, ready=forbidden, identity_index=forbidden)
+
+    def test_spool_proof_validates_owned_key_before_files_or_sql(self):
+        def forbidden(*args, **kwargs): self.fail("Invalid proof key touched resources")
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(Path, "mkdir", forbidden):
+            with self.assertRaisesRegex(RuntimeError, "^Owned spool signing key is unavailable\\.$"):
+                spool_smoke.verify(directory=self.owned, api="http://127.0.0.1:8080", tenant=str(uuid.uuid4()),
+                    company=str(uuid.uuid4()), service=str(uuid.uuid4()), key=b"bad",
+                    sql=forbidden, restart=forbidden, ready=forbidden, identity_index=forbidden)
 
     def test_listener_proof_refuses_unowned_before_resources(self):
         cases = [(self.owned, {"CI": "false"}), (self.owned, {"GITHUB_ACTIONS": "false"}),

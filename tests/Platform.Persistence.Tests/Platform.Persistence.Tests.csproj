@@ -27,6 +27,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\src\Platform.Configuration\Platform.Configuration.csproj" />
     <ProjectReference Include="..\..\src\Platform.Persistence\Platform.Persistence.csproj" />
+    <ProjectReference Include="..\GroupIntake.RuntimeProof\GroupIntake.RuntimeProof.csproj">
+      <Aliases>GroupRuntimeProof</Aliases>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -123,6 +123,9 @@ jobs:
           node-version: 24
       - name: Install browser proof dependencies
         run: npm ci --no-audit --no-fund
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
       - name: Install required Chromium runtime
         run: npx playwright install --with-deps chromium
       - name: Verify adversarial fixture execution boundary
