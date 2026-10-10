@@ -54,6 +54,62 @@ public sealed class OwnedNoteRuntimeObservationTests
     }
 
     [Theory]
+    [InlineData("exact_witness")]
+    [InlineData("clean_explicit_effect")]
+    [InlineData("mixed_effect")]
+    [InlineData("foreign_scope")]
+    [InlineData("different_batch")]
+    [InlineData("different_epoch")]
+    [InlineData("different_owner")]
+    [InlineData("different_nonce")]
+    [InlineData("different_expiry")]
+    [InlineData("different_issued")]
+    [InlineData("other_property")]
+    [InlineData("prior_witness")]
+    public void ActualSavepointClassifierAllowsOnlyExactWitnessMutation(string fault)
+    {
+        var scope = new GroupScope(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var now = DateTimeOffset.UtcNow; var clock = new GroupNoteRuntimeProof.OwnedClock(now);
+        var claim = new GroupBatchClaimReceipt(scope, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 8,
+            TimeSpan.FromMinutes(2).Ticks, now, now.AddMinutes(2), Guid.NewGuid(), 1, 1, 1, 0, 1);
+        var observation = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { Claim = claim };
+        observation.ObserveCommit("note-key-expiry", Guid.NewGuid(), claim.ExpiresAtUtc);
+        using var database = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var state = new GroupBatchClaimStateRecord
+        {
+            TenantId = fault == "foreign_scope" ? Guid.NewGuid() : scope.TenantId,
+            CompanyId = scope.CompanyId,
+            BindingId = scope.SourceBindingId,
+            BatchId = fault == "different_batch" ? Guid.NewGuid() : claim.BatchId,
+            Epoch = claim.Epoch,
+            OwnerId = claim.OwnerId,
+            OperationId = claim.OperationId,
+            IssuedAtUtc = claim.IssuedAtUtc,
+            ExpiresAtUtc = claim.ExpiresAtUtc,
+            ExpiryObservedAtUtc = fault == "prior_witness" ? claim.ExpiresAtUtc.AddTicks(-1) : null
+        };
+        database.Attach(state);
+        if (fault != "clean_explicit_effect") state.ExpiryObservedAtUtc = claim.ExpiresAtUtc;
+        switch (fault)
+        {
+            case "mixed_effect": database.Add(new GroupWorkCommitReceiptRecord { BatchId = Guid.NewGuid(), OperationId = observation.Operation }); break;
+            case "different_epoch": state.Epoch++; break;
+            case "different_owner": state.OwnerId = Guid.NewGuid(); break;
+            case "different_nonce": state.OperationId = Guid.NewGuid(); break;
+            case "different_expiry": state.ExpiresAtUtc = state.ExpiresAtUtc.AddTicks(1); break;
+            case "different_issued": state.IssuedAtUtc = state.IssuedAtUtc.AddTicks(1); break;
+            case "other_property": database.Entry(state).Property(x => x.OwnerId).IsModified = true; break;
+        }
+        var exact = fault == "exact_witness";
+        Assert.Equal(exact, observation.IsWitnessSavepoint(database));
+        observation.RecordSavepoint(database);
+        Assert.Equal(exact ? 0 : 1, observation.SavepointChecks);
+        Assert.Equal(exact ? 1 : 0, observation.WitnessSavepointChecks);
+        Assert.False(observation.StagedObserved); Assert.False(observation.Flushed); Assert.False(observation.RolledBack);
+    }
+
+    [Theory]
     [InlineData("new_status")]
     [InlineData("new_updated_time")]
     [InlineData("protected_revision")]

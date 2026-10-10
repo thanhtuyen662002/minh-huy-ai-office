@@ -54,6 +54,7 @@ internal static class GroupNoteRuntimeProof
         var store = new GroupNoteCommitStore(db, worker, clock, sources, brain, keys, new());
         if (keys.Reads != 2 || keys.Writes != 0 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
         effect.ObserveCommit(mode, effectOperation, handle.Receipt.ExpiresAtUtc);
+        effect.Claim = handle.Receipt;
         if (mode is "note-expiry" or "note-key-expiry")
         {
             if (mode == "note-key-expiry") keys.BeforeWrite = () => clock.Current = handle.Receipt.ExpiresAtUtc;
@@ -190,8 +191,9 @@ internal static class GroupNoteRuntimeProof
     internal sealed class EffectEvidence(GroupScope scope, OwnedClock clock)
     {
         internal bool Armed, ExpireAfterFlush, StagedObserved, Flushed, RolledBack;
-        internal int SavepointChecks;
+        internal int SavepointChecks, WitnessSavepointChecks;
         internal Guid Operation;
+        internal GroupBatchClaimReceipt? Claim;
         internal DateTimeOffset Expires;
         internal void ObserveCommit(string mode, Guid operation, DateTimeOffset expires)
         {
@@ -202,6 +204,27 @@ internal static class GroupNoteRuntimeProof
             ExpireAfterFlush = mode == "note-expiry";
         }
         internal void Advance() => clock.Current = Expires;
+        internal void RecordSavepoint(PlatformDbContext? database)
+        {
+            // EF also creates an automatic savepoint for witness-only UPDATE.
+            // Allow exactly that tracked mutation; an explicit effect savepoint
+            // with a clean tracker or any mixed/foreign mutation stays forbidden.
+            if (IsWitnessSavepoint(database)) WitnessSavepointChecks++;
+            else SavepointChecks++;
+        }
+        internal bool IsWitnessSavepoint(PlatformDbContext? database)
+        {
+            if (database is null || Claim is null || Claim.Scope != scope) return false;
+            var changed = database.ChangeTracker.Entries().Where(x => x.State is not (EntityState.Unchanged or EntityState.Detached)).ToArray();
+            if (changed.Length != 1 || changed[0].State != EntityState.Modified || changed[0].Entity is not GroupBatchClaimStateRecord state
+                || state.TenantId != scope.TenantId || state.CompanyId != scope.CompanyId || state.BindingId != scope.SourceBindingId
+                || state.BatchId != Claim.BatchId || state.Epoch != Claim.Epoch || state.OwnerId != Claim.OwnerId
+                || state.OperationId != Claim.OperationId || state.IssuedAtUtc != Claim.IssuedAtUtc || state.ExpiresAtUtc != Claim.ExpiresAtUtc
+                || state.ExpiryObservedAtUtc != Expires || Expires != Claim.ExpiresAtUtc) return false;
+            var modified = changed[0].Properties.Where(x => x.IsModified).ToArray();
+            return modified.Length == 1 && modified[0].Metadata.Name == nameof(GroupBatchClaimStateRecord.ExpiryObservedAtUtc)
+                && modified[0].OriginalValue is null;
+        }
         internal async Task RequireLockAsync(DbTransaction transaction, CancellationToken token)
         {
             if (transaction is null || transaction.Connection is null) throw new InvalidOperationException();
@@ -237,7 +260,7 @@ internal static class GroupNoteRuntimeProof
     {
         public override async ValueTask<InterceptionResult> CreatingSavepointAsync(DbTransaction transaction, TransactionEventData data,
             InterceptionResult result, CancellationToken token = default)
-        { if (effect.Armed) { await effect.RequireLockAsync(transaction, token); effect.SavepointChecks++; } return result; }
+        { if (effect.Armed) { await effect.RequireLockAsync(transaction, token); effect.RecordSavepoint(data.Context as PlatformDbContext); } return result; }
         public override async Task RolledBackToSavepointAsync(DbTransaction transaction, TransactionEventData data, CancellationToken token = default)
         {
             if (!effect.Armed || !effect.Flushed || data.Context is not PlatformDbContext db) return;

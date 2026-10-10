@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 450738eab84591e121e091927f010af9edfe1f9c
     state: in_progress
-    next: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Governance38072401239 and all six prerequisites SUCCESS. Root full native106PASS44missing4failure/noartifact, full.NET2493[6,520,25,1942]0fail0skip. First held-child statistics command nonzero; actualstderr/exit absent, complete cause UNPROVEN. Deterministic code conflict: concurrent stats reused held docker name; repaired separate validated owned name preserves all other arguments/oracles. Frozens33a scopedWITHHELD6100516983 rootFULLfetched two proofP2: unarmed key-expiry and unfrozen newlycommitted graph. SAME288 repair arms actualstage/flush/savepoint/rollback observations independently from expiryclock; full seven-effect digest must match after readback/EACH replay/refusal. Root11 actual probe/graph mutation controls plus13 store entries PASS24zeroFailSkip;67 Python, six actual unowned guards PASS. Prior storeddac scopedAPPROVED6100428398 FULLfetched, full1955 prior Persistence PASS. Freeze repaired scope, obtain renewed independent review/rootFULLreceipt, push exact approved HEAD and own new CI/all102exactmarkers/all8/Gov/full logs/all6 ORIGINAL images. Continue attention/raw coverage-completion/context-tokenizer/automatic DI/UI/real100-30 evaluation/279/full233; actualnotesSQL/model NOT_RUN_UNQUALIFIED. No partial merge/checkpoint stop.'
+    next: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired while retaining every original exact oracle; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched closes originaltwo noteproofP2s/statsname/leadnextaction; one EF automaticmetadata-witnesssavepoint falsefailure reproduced. Furtherrepair requiresExclusive sourceAPPLOCK for every savepoint, permitsONLY one exact originalclaim Modified witness property null-to-exactexpiry, separatelycountsmetadata; clean effect/mixed/foreign/otherproperty savepoints remainforbidden.23 actualprobe/graph/classifiercontrols plus13entry PASS36zeroFailSkip;67Python/sixunownedCLI/build0W0E/format/YAML2/diff beforefreeze. Local7243d6b closedhostattentionpayload29new+38retainedcodec PASS67, noSQL/provider/migration/DIactivation, unreviewed. Obtain combinedfrozen codec+metadata-repair review/rootFULLreceipt, push exactapprovedhead andown renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Governance38072401239 and all six prerequisites SUCCESS. Root full native106PASS44missing4failure/noartifact, full.NET2493[6,520,25,1942]0fail0skip. First held-child statistics command nonzero; actualstderr/exit absent, complete cause UNPROVEN. Deterministic code conflict: concurrent stats reused held docker name; repaired separate validated owned name preserves all other arguments/oracles. Frozens33a scopedWITHHELD6100516983 rootFULLfetched two proofP2: unarmed key-expiry and unfrozen newlycommitted graph. SAME288 repair arms actualstage/flush/savepoint/rollback observations independently from expiryclock; full seven-effect digest must match after readback/EACH replay/refusal. Root11 actual probe/graph mutation controls plus13 store entries PASS24zeroFailSkip;67 Python, six actual unowned guards PASS. Prior storeddac scopedAPPROVED6100428398 FULLfetched, full1955 prior Persistence PASS. Freeze repaired scope, obtain renewed independent review/rootFULLreceipt, push exact approved HEAD and own new CI/all102exactmarkers/all8/Gov/full logs/all6 ORIGINAL images. Continue attention/raw coverage-completion/context-tokenizer/automatic DI/UI/real100-30 evaluation/279/full233; actualnotesSQL/model NOT_RUN_UNQUALIFIED. No partial merge/checkpoint stop.'
+next_action: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired while retaining every original exact oracle; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched closes originaltwo noteproofP2s/statsname/leadnextaction; one EF automaticmetadata-witnesssavepoint falsefailure reproduced. Furtherrepair requiresExclusive sourceAPPLOCK for every savepoint, permitsONLY one exact originalclaim Modified witness property null-to-exactexpiry, separatelycountsmetadata; clean effect/mixed/foreign/otherproperty savepoints remainforbidden.23 actualprobe/graph/classifiercontrols plus13entry PASS36zeroFailSkip;67Python/sixunownedCLI/build0W0E/format/YAML2/diff beforefreeze. Local7243d6b closedhostattentionpayload29new+38retainedcodec PASS67, noSQL/provider/migration/DIactivation, unreviewed. Obtain combinedfrozen codec+metadata-repair review/rootFULLreceipt, push exactapprovedhead andown renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
 
 
 blocked_by:
@@ -1369,3 +1369,20 @@ group_278_host_attention_payload_preparation:
   host_SQL_commit_replay_rollback_completion_pipeline: NOT_RUN_UNQUALIFIED
   actual_model_evaluation: NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_metadata_witness_savepoint_repair:
+  withheld_frozen_head: 884af2a4dcfd446cf152979f253192b4c9d81c9c
+  withheld_review: 6100627326_root_FULL_fetched
+  closed_prior_findings: original_two_note_oracles_statistics_name_lead_next_action
+  reproduced_remaining_P2: actual_EF_automatic_witness_savepoint_false_failure
+  repaired_classification: exact_original_scoped_claim_one_Modified_ExpiryObserved_null_to_exact_expiry_only
+  lock_observation: actual_Exclusive_source_APPLOCK_before_every_metadata_or_effect_savepoint
+  forbidden_key_expiry: clean_effect_savepoint_mixed_foreign_other_fields_stage_flush_rollback
+  new_metadata_classifier_controls: 12_PASS
+  complete_local_probe_graph_classifier_controls: 23_PASS
+  combined_store_entry_and_observer_controls: 36_PASS_zero_failures_skips
+  host_codec_local_head: 7243d6b0a74adb95b8456a062135d28302b614b6
+  host_codec_controls: 67_PASS_29new_38retained
+  combined_native_repair_and_codec_review: PENDING
+  future_required_markers: 102_exactly_once_all_originals_retained
+  native_notes_model_full_278_279_233: ACTIVE_INCOMPLETE_NOT_RUN_UNQUALIFIED
