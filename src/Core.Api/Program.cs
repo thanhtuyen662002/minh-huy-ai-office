@@ -113,6 +113,7 @@ static IResult AuthenticationUnavailable() => Results.Problem(statusCode: Status
 app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, component = "Core.Api", environment = deploymentEnvironment.ToString(), status = "ok" }));
 app.MapHealthChecks("/health");
 app.MapGroupIngress(groupIngressEnabled);
+app.MapGroupListener(groupIngressEnabled);
 app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);
 
 if (authenticationConfigured)

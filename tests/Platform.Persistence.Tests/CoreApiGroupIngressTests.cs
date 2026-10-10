@@ -205,13 +205,13 @@ public sealed class CoreApiGroupIngressTests
         Assert.DoesNotContain("SqlException", text); Assert.DoesNotContain("StackTrace", text);
     }
 
-    private sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new();
         private readonly string variable = "AIOFFICE_GROUP_HTTP_" + Guid.NewGuid().ToString("N");
         internal readonly GroupListenerLeaseRecord Lease;
         internal WebApplicationFactory<Program> Factory { get; }
-        internal Fixture(bool sourceKeyAvailable = true, string? invalidEnrollment = null)
+        internal Fixture(bool sourceKeyAvailable = true, string? invalidEnrollment = null, bool seedLease = true)
         {
             Lease = new()
             {
@@ -223,7 +223,7 @@ public sealed class CoreApiGroupIngressTests
                 HeartbeatAtUtc = GroupServiceAuthenticatorTests.Fixture.Now,
                 ExpiresAtUtc = GroupServiceAuthenticatorTests.Fixture.Now.AddMinutes(2)
             };
-            Auth.Db.Add(Lease); Auth.Db.SaveChanges();
+            if (seedLease) { Auth.Db.Add(Lease); Auth.Db.SaveChanges(); }
             Environment.SetEnvironmentVariable(variable, "owned-group-http-not-a-real-connection");
             Factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {

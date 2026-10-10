@@ -48,6 +48,7 @@ public sealed class GroupListenerStore(PlatformDbContext database, GroupIngressR
                 return original;
             }
             var transition = GroupListenerLeasePolicy.Apply(account, verified.Command, current, now);
+            GroupAccountCoverageGapRecord? coverage = null;
             if (transition.Changed)
             {
                 foreach (var entry in database.ChangeTracker.Entries<GroupListenerLeaseRecord>().Where(x =>
@@ -67,7 +68,7 @@ public sealed class GroupListenerStore(PlatformDbContext database, GroupIngressR
                 if (transition.CoverageReason is not null)
                 {
                     if (transition.CoverageOpenedAtUtc is not { } opened || opened > now) throw Unavailable();
-                    var gap = new GroupAccountCoverageGapRecord
+                    coverage = new GroupAccountCoverageGapRecord
                     {
                         TenantId = account.TenantId,
                         CompanyId = account.CompanyId,
@@ -77,8 +78,12 @@ public sealed class GroupListenerStore(PlatformDbContext database, GroupIngressR
                         OpenedAtUtc = opened,
                         RecordedAtUtc = now
                     };
-                    database.Add(gap); staged.Add(gap);
                 }
+                // Obtain the lease write lock before staging any account-gap
+                // INSERT. A source read holds revision ranges before checking
+                // account gaps; ingress may already hold a lease read lock.
+                // Keep this lock order explicit instead of relying on EF's
+                // ordering of unrelated inserts and updates in one batch.
                 await database.SaveChangesAsync(cancellationToken);
             }
             await RequireAuthorityAsync(verified, directory, permissions, cancellationToken);
@@ -105,6 +110,7 @@ public sealed class GroupListenerStore(PlatformDbContext database, GroupIngressR
                 CoverageRecorded = transition.CoverageReason is not null,
                 CommittedAtUtc = committedAt
             };
+            if (coverage is not null) { database.Add(coverage); staged.Add(coverage); }
             database.Add(receipt); staged.Add(receipt);
             await database.SaveChangesAsync(cancellationToken);
             await RequireAuthorityAsync(verified, directory, permissions, cancellationToken);

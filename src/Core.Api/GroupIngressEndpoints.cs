@@ -27,6 +27,7 @@ internal static class GroupIngressEndpoints
         builder.Services.AddSingleton<IGroupSourceKeyProvider>(sourceKeys);
         builder.Services.AddScoped<GroupServiceAuthenticator>();
         builder.Services.AddScoped<GroupIngressStore>();
+        builder.Services.AddScoped<GroupListenerStore>();
         builder.Services.AddScoped<GroupSourceReader>();
         return true;
     }
@@ -44,7 +45,7 @@ internal static class GroupIngressEndpoints
             {
                 if (request.Query.Count != 0) throw new ArgumentException();
                 var signature = Signature(request);
-                body = await ReadBodyAsync(request, deadline.Token);
+                body = await ReadBodyAsync(request, GroupServiceAuthenticator.MaximumBodyBytes, deadline.Token);
                 var verified = await authentication.AuthenticateAsync(signature, body, deadline.Token);
                 return (IResult)Results.Ok(await store.AcceptAsync(verified, deadline.Token));
             }
@@ -60,7 +61,7 @@ internal static class GroupIngressEndpoints
         });
     }
 
-    private static GroupServiceSignature Signature(HttpRequest request)
+    internal static GroupServiceSignature Signature(HttpRequest request)
     {
         static string Header(HttpRequest request, string name, int maximum)
         {
@@ -75,9 +76,8 @@ internal static class GroupIngressEndpoints
             Header(request, "X-AIOffice-Group-Signature", 64));
     }
 
-    private static async Task<byte[]> ReadBodyAsync(HttpRequest request, CancellationToken cancellationToken)
+    internal static async Task<byte[]> ReadBodyAsync(HttpRequest request, int maximum, CancellationToken cancellationToken)
     {
-        const int maximum = GroupServiceAuthenticator.MaximumBodyBytes;
         if (!request.HasJsonContentType()) throw new BadHttpRequestException("JSON is required.", 415);
         if (request.ContentLength > maximum) throw new BadHttpRequestException("Request is too large.", 413);
         var scratch = new byte[maximum + 1]; var length = 0;

@@ -261,6 +261,20 @@ public sealed class GroupListenerStoreTests
         // this InMemory hook verifies final proof/no ACK, not SQL rollback.
     }
 
+    [Theory]
+    [InlineData(GroupListenerOperation.Acquire)]
+    [InlineData(GroupListenerOperation.Stop)]
+    public async Task LeaseWritePrecedesAccountCoverageAndReceiptWhileRemainingInSameOwnedUnit(GroupListenerOperation operation)
+    {
+        using var fixture = new Fixture();
+        if (operation == GroupListenerOperation.Stop) await fixture.ApplyAsync();
+        var verified = await fixture.VerifyAsync(new(fixture.Owner, operation, operation == GroupListenerOperation.Stop ? 1 : 0));
+        var order = new RequireLeaseBeforeCoverage();
+        using var ordered = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(fixture.Auth.Options).AddInterceptors(order).Options);
+        var receipt = await new GroupListenerStore(ordered, Fixture.Policy, fixture.Auth.Clock).ApplyAsync(verified);
+        Assert.True(receipt.CoverageRecorded); Assert.Equal(2, order.Saves);
+    }
+
     private sealed class Fixture : IDisposable
     {
         internal static readonly DateTimeOffset Now = GroupServiceAuthenticatorTests.Fixture.Now;
@@ -288,6 +302,27 @@ public sealed class GroupListenerStoreTests
         private int calls;
         public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
         { if (++calls == target) change(); return ValueTask.FromResult(result); }
+    }
+    private sealed class RequireLeaseBeforeCoverage : SaveChangesInterceptor
+    {
+        internal int Saves { get; private set; }
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            var changes = eventData.Context!.ChangeTracker.Entries().Where(x => x.State is EntityState.Added or EntityState.Modified).ToArray();
+            if (++Saves == 1)
+            {
+                Assert.NotEmpty(changes);
+                Assert.All(changes, x => Assert.IsType<GroupListenerLeaseRecord>(x.Entity));
+            }
+            else
+            {
+                Assert.Equal(2, Saves);
+                Assert.Contains(changes, x => x.Entity is GroupAccountCoverageGapRecord && x.State == EntityState.Added);
+                Assert.Contains(changes, x => x.Entity is GroupListenerCommandReceiptRecord && x.State == EntityState.Added);
+                Assert.DoesNotContain(changes, x => x.Entity is GroupListenerLeaseRecord);
+            }
+            return ValueTask.FromResult(result);
+        }
     }
     private sealed class FailSave : SaveChangesInterceptor
     {

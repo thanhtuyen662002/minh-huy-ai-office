@@ -98,7 +98,9 @@ or model cannot create listener authority.
 Serialize the service/credential-epoch/nonce lock before the account lock, both
 transaction-owned, before reading current registry and retained lease. Persist the
 lease transition, account coverage marker and append-only command receipt in one
-SQL transaction. Replaying the same nonce/body reconciles its original ACK without
+SQL transaction. Save the lease mutation before staging account-gap/receipt
+inserts to keep lease-before-gap lock order explicit across listener, source read
+and ingress; both saves remain in that one owned transaction. Replaying the same nonce/body reconciles its original ACK without
 extending expiry or creating coverage. Conflicting nonce reuse refuses. Expired,
 stopped or superseded live ownership cannot be resurrected by an old Acquire/Renew;
 fresh operations need fresh signed command identities. Stop replay only reconciles

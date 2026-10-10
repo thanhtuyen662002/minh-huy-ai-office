@@ -377,3 +377,35 @@ Local all1064 Persistence tests PASS/0 skips.21 store tests include100 exact rep
 ### Original ACK versus shortened current lease repair
 
 Independent c87 review closed the signed Acquire31s seam but reproduced a current-state P2: shorten the still-valid retained lease from30 to10seconds with the same owner/epoch/heartbeat, then replay its original command at1second; the old30second ACK escaped. Reconciliation now requires current expiry at least the original receipt expiry. Later legitimate renewal remains allowed; a shortened, stopped, expired or superseded current lease refuses. A new actual-authenticator/store regression preserves both original receipt and shortened authoritative row while requiring denial. This repairs the local unexposed store candidate; independent original-probe closure and native execution remain required.
+
+## Listener persistence review closure and bounded HTTP candidate
+
+Independent745 scoped APPROVED:85 retained/own tests,0 skips;19 guards, YAML/diff,
+SQL160 migration/current permission syntax, no pending EF model changes. Both the
+original signed Acquire31s replay seam and shortened-current-lease P2 are CLOSED.
+Review receipt6091578126 records the exact scope. No listener HTTP/native store,
+provider operation or full277 acceptance follows from persistence review.
+
+Exactac58 Build38007947431/Governance38007947436/all8 PASS;
+actual114080999519/quality114083329396. Root inspected retained group ingestion,
+strict matching read-release KEY range, issued inbox and full Chromium markers.
+Exact745 Build38008927610/Governance38008927679/actual114084138463 remains owned;
+six prerequisites/Governance PASS and actual pending at this checkpoint.
+
+The local default-off `/internal/group-ingress/listener` uses the enabled+DB guard,
+separately authenticated HMAC, canonical single headers/no query, strict JSON MIME
+and actual8192-byte capture. Its linked10second deadline covers body/auth/store;
+owned timeout returns503 and asks reconciliation of the same command. Original
+caller cancellation cannot produce a successful ACK. Errors contain fixed text,
+all responses are no-store, captured bodies are zeroed, and SQL commit precedes ACK.
+
+Lease mutation is explicitly saved before staging account-gap and command-receipt
+inserts. Both saves remain inside the same pinned owned SQL transaction. This
+avoids relying on EF ordering of unrelated tables where reader revision locks,
+ingress lease reads and listener account-gap writes could form a cycle. Such a
+cycle is an inferred lock-order risk, not an observed native deadlock.
+
+Local108 focused HTTP/auth/store/retained-event tests PASS,0 skips, including20 new
+HTTP controls and2 explicit write-order controls. Native SQL nonce/account lock,
+rollback, revocation, expiry, restart/isolation and provider/spool/broker proofs
+remain mandatory before277 acceptance. No live connector or send was attempted.

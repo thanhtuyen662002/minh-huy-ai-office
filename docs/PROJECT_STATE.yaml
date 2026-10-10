@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: ac58d68380869a02fe8c44e2e2380d8434d438b6
+current_target_head: 745d283f99b9e5ab041d9ab1fc6593d1e450db58
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: ac58d68380869a02fe8c44e2e2380d8434d438b6
+    head: 745d283f99b9e5ab041d9ab1fc6593d1e450db58
     state: in_progress
-    next: '276 delivered main4cf all8.710 Build38007014365/Gov38007014343/all8/actual114078024682/quality114080654106 PASS; root inspected mandatory native matching Recall INSERT KEY range/revoke/isolation/one-effect proof and retained inbox/Chromium. Approved ac58 separate-domain authentication139 independent/retained tests and19 guards; own exact Build38007947431/Gov38007947436/actual114080999519. New local lease/append-only command receipt/account coverage migration/store1064 Persistence PASS, no API/native listener proof. Freeze review, integrate default-off HTTP/native atomic/race gates, then spool/broker/278/279/full233.'
+    next: '276 deliveredmain4cf. ac58 all8/native114080999519/quality114083329396 PASS, root inspected. Listener persistence745 independently approved85 tests/19guards/SQL syntax; own exact Build38008927610/Gov38008927679/actual114084138463. Local bounded default-off listener HTTP and explicit lease-before-gap write order108 tests PASS; freeze independent review then native lock/rollback/revoke/restart, encrypted spool/reference-only broker,278/279/full233.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own ac58 Build38007947431/Gov38007947436/actual114080999519 through terminal.710 native read-release range/ReaderGrant/isolation/exact graph and all8 verified. Independently review new local1064-test listener store/migration/sealed nonce replay receipts/account coverage, integrate bounded default-off API and mandatory real SQL lock/rollback/revoke/restart gate. Complete encrypted prefiltered spool/reference-only broker recovery then278 automatic SQL brain/notes and279 internal IT reporter; full233/62 remains ACTIVE.'
+next_action: 'Own exact745 Build38008927610/Gov38008927679/actual114084138463 through terminal. Freeze/review local default-off listener API/write-order108 tests; execute mandatory actual SQL listener concurrency/expiry/nonce replay/current revoke/atomic rollback/restart/isolation gate. Complete encrypted prefiltered spool/reference-only broker and278 automatic SQL brain/notes/279 internal IT reports; full233/62 ACTIVE.'
 
 
 blocked_by:
