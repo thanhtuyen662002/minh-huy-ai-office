@@ -38,23 +38,26 @@ try
         origin.UserInfo.Length != 0 || origin.AbsolutePath != "/" || origin.Query.Length != 0 || origin.Fragment.Length != 0) throw new InvalidOperationException();
     var external = new GroupExternalIdentity("synthetic", "spool-account-" + config.AccountId.ToString("D"), "spool-group-" + config.SourceId.ToString("D"));
     var account = new GroupListenerAccountScope(config.TenantId, config.CompanyId, config.AccountId);
-    var artifact = new GroupConnectorArtifact("synthetic", "owned-fixture", new string('0', 40));
-    var enrollment = new GroupConnectorEnrollment(new(config.ServiceId, 1), new(config.TenantId, config.CompanyId, config.ServiceId, 1, true),
-        new(config.TenantId, config.CompanyId, config.ServiceId, config.SourceId, GroupServiceCapability.Ingest, 1, true),
-        new(scope, config.AccountId, external, "Owned native spool source", 1, 0, true),
-        new(config.TenantId, config.CompanyId, config.AccountId, external.AccountId, artifact, GroupQualificationEnvironment.Synthetic, []), artifact);
+    var enrollmentRequest = new GroupConnectorEnrollmentRequest(scope, external);
     var policy = GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true);
-    var secrets = new CompositeSecretResolver([new EnvironmentVariableSecretResolver()]);
+    var countedSecrets = new OwnedProofSecrets();
+    var secrets = new CompositeSecretResolver([countedSecrets]);
     using var client = new GroupConnectorTransportClient(origin,
         new(config.TenantId, config.CompanyId, config.ServiceId, 1, SecretReference.Parse("secretref://env/AIOFFICE_GROUP_PROOF_SIGNING_KEY")), secrets, TimeProvider.System, policy);
     void Save(string name, object value) => File.WriteAllBytes(Path.Combine(root, name), JsonSerializer.SerializeToUtf8Bytes(value, jsonOptions));
     GroupListenerLeaseSnapshot Lease() => (JsonSerializer.Deserialize<GroupListenerCommittedReceipt>(Read("lease.json"), jsonOptions)
         ?? throw new InvalidOperationException()).Lease;
+    async Task<GroupConnectorEnrollment> CurrentAsync()
+    {
+        var current = await client.FetchEnrollmentAsync(enrollmentRequest);
+        if (current.Enrollment.Source.ConnectorAccountId != config.AccountId) throw new InvalidOperationException();
+        return current.Enrollment;
+    }
     stage = args[0];
     if (args[0] == "acquire")
     {
         var command = new GroupListenerCommand(config.OwnerId, GroupListenerOperation.Acquire, 0);
-        using var prepared = await client.PrepareListenerAsync(enrollment, command);
+        using var prepared = await client.PrepareListenerAsync(await CurrentAsync(), command);
         Save("lease.json", await client.SendListenerAsync(prepared));
     }
     else
@@ -63,6 +66,10 @@ try
         GroupConnectorSpoolAdmission? admission = null;
         if (args[0] is "capture" or "capture-send")
         {
+            var enrollment = await CurrentAsync();
+            using var renewal = await client.PrepareListenerAsync(enrollment, new(lease.OwnerId, GroupListenerOperation.Renew, lease.Epoch));
+            var currentLease = await client.SendListenerAsync(renewal);
+            lease = currentLease.Lease; Save("lease.json", currentLease);
             const string text = "owned native spool 😀\uFEFF ";
             var payload = new GroupIngressPayload(new(external, "spool-message-" + config.EventId, "spool-event-" + config.EventId,
                 "owned-sender", null, GroupSourceEventKind.NewText, config.OccurredAtUtc, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))), false),
@@ -90,16 +97,18 @@ try
             new(config.TenantId, config.CompanyId, config.AccountId, config.ServiceId, "spool-v1", SecretReference.Parse("secretref://env/AIOFFICE_GROUP_PROOF_SPOOL_KEY")), secrets, TimeProvider.System);
         if (args[0] == "deny")
         {
-            try { await replay.ReplayAsync(reference, enrollment, lease); throw new InvalidOperationException(); }
+            var keyCalls = countedSecrets.SpoolKeyCalls;
+            try { await replay.ReplayWithCurrentAuthorityAsync(reference, enrollmentRequest, lease); throw new InvalidOperationException(); }
             catch (GroupConnectorTransportException denied) when (denied.StatusCode == HttpStatusCode.Forbidden)
             {
-                if (!before.SequenceEqual(File.ReadAllBytes(itemPath)) || spool.Pending().Count != 1) throw new InvalidOperationException();
-                Console.WriteLine("PASS owned native fresh backend403 preserves exact spool bytes");
+                if (!before.SequenceEqual(File.ReadAllBytes(itemPath)) || spool.Pending().Count != 1 || countedSecrets.SpoolKeyCalls != keyCalls)
+                    throw new InvalidOperationException();
+                Console.WriteLine("PASS owned native fresh backend403 precedes spool key and preserves exact bytes");
             }
         }
         else
         {
-            var committed = await replay.ReplayAsync(reference, enrollment, lease);
+            var committed = await replay.ReplayWithCurrentAuthorityAsync(reference, enrollmentRequest, lease);
             if (spool.Pending().Count != 0 || File.Exists(itemPath)) throw new InvalidOperationException();
             Save("commit.json", committed);
             Console.WriteLine("PASS owned native authenticated SQL commit deletes exact retained capture");
@@ -116,3 +125,15 @@ catch
 
 internal sealed record ProofConfiguration(Guid TenantId, Guid CompanyId, Guid SourceId, Guid AccountId,
     Guid ServiceId, Guid OwnerId, Guid EventId, DateTimeOffset OccurredAtUtc, string Origin);
+
+internal sealed class OwnedProofSecrets : ISecretResolver
+{
+    private readonly EnvironmentVariableSecretResolver resolver = new();
+    internal int SpoolKeyCalls { get; private set; }
+    public string Provider => EnvironmentVariableSecretResolver.ProviderName;
+    public ValueTask<string> ResolveAsync(SecretReference reference, CancellationToken cancellationToken = default)
+    {
+        if (reference.Resource == "AIOFFICE_GROUP_PROOF_SPOOL_KEY") SpoolKeyCalls++;
+        return resolver.ResolveAsync(reference, cancellationToken);
+    }
+}

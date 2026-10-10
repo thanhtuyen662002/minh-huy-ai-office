@@ -3,6 +3,8 @@ import importlib.util
 import ast
 import base64
 import json
+import io
+from email.message import Message
 import os
 import re
 from pathlib import Path
@@ -170,6 +172,102 @@ class OwnedStackGuardTests(unittest.TestCase):
                     self.assertIn("shutdown", actions)
                     self.assertIn("join", actions)
                 if fault == "drain": self.assertEqual(2, actions.count("drain"))
+
+    def test_spool_proxy_forwards_actual_metadata_and_lease_bytes_but_only_withholds_event_ack(self):
+        tree = ast.parse(Path(spool_smoke.__file__).read_text(encoding="utf-8"))
+        handler = next(node for node in ast.walk(tree) if isinstance(node, ast.ClassDef) and node.name == "LostReply")
+        block = compile(ast.fix_missing_locations(ast.Module([handler], type_ignores=[])), "<inert-spool-proxy>", "exec")
+        tenant, company, source = (str(uuid.uuid4()) for _ in range(3))
+        for path in ("enrollment", "listener", "events"):
+            with self.subTest(path=path):
+                actions, captured = [], {}
+                raw = json.dumps({"source": {"tenantId": tenant, "companyId": company, "sourceBindingId": source},
+                    "owned-inert-body": "\u00e9"}, separators=(",", ":")).encode()
+                class Response:
+                    status = 200
+                    headers = {"Cache-Control": "no-store", "Content-Type": "application/json; charset=utf-8"}
+                    def read(self, limit): self_test.assertEqual(8193, limit); return raw
+                    def __enter__(self): return self
+                    def __exit__(self, *args): actions.append("response-close")
+                class Opener:
+                    def open(self, request, timeout):
+                        actions.append(("upstream", request.full_url, request.data, timeout))
+                        return Response()
+                self_test = self
+                namespace = dict(http=SimpleNamespace(server=SimpleNamespace(BaseHTTPRequestHandler=object)),
+                    urllib=spool_smoke.urllib, json=json, tenant=tenant, company=company, source=source,
+                    api="http://127.0.0.1:8080", captured=captured,
+                    committed=SimpleNamespace(set=lambda: actions.append("committed")),
+                    release=SimpleNamespace(wait=lambda timeout: actions.append(("withheld", timeout))))
+                exec(block, namespace)
+                proxy = namespace["LostReply"]()
+                proxy.path = "/internal/group-ingress/" + path
+                proxy.headers = Message(); proxy.headers["Content-Length"] = "2"
+                for name in ("Service", "Epoch", "Signed-At", "Nonce", "Signature"):
+                    proxy.headers["X-AIOffice-Group-" + name] = "owned-inert-" + name
+                proxy.rfile = io.BytesIO(b"{}")
+                proxy.wfile = io.BytesIO()
+                proxy.send_response = lambda code: actions.append(("status", code))
+                proxy.send_header = lambda name, value: actions.append(("header", name, value))
+                proxy.end_headers = lambda: actions.append("headers-end")
+                with patch.object(spool_smoke.urllib.request, "build_opener", return_value=Opener()) as opener:
+                    proxy.do_POST()
+                self.assertEqual({}, opener.call_args.args[0].proxies)
+                self.assertIsNone(opener.call_args.args[1].redirect_request(None, None, None, None, None, None))
+                self.assertTrue(proxy.close_connection); self.assertNotIn("failed", captured)
+                self.assertIn(("upstream", "http://127.0.0.1:8080" + proxy.path, b"{}", 12), actions)
+                if path == "events":
+                    self.assertEqual(b"", proxy.wfile.getvalue())
+                    self.assertEqual(json.loads(raw), captured["ack"])
+                    self.assertIn("committed", actions); self.assertIn(("withheld", 15), actions)
+                    self.assertFalse(any(isinstance(action, tuple) and action[0] == "status" for action in actions))
+                else:
+                    self.assertEqual(raw, proxy.wfile.getvalue()); self.assertNotIn("ack", captured)
+                    self.assertNotIn("committed", actions); self.assertEqual(1, captured[proxy.path])
+                    self.assertIn(("header", "Content-Length", str(len(raw))), actions)
+                    self.assertIn(("header", "Cache-Control", "no-store"), actions)
+
+    def test_spool_proxy_refuses_unknown_path_or_oversized_metadata_before_upstream(self):
+        tree = ast.parse(Path(spool_smoke.__file__).read_text(encoding="utf-8"))
+        handler = next(node for node in ast.walk(tree) if isinstance(node, ast.ClassDef) and node.name == "LostReply")
+        block = compile(ast.fix_missing_locations(ast.Module([handler], type_ignores=[])), "<inert-spool-proxy-refusal>", "exec")
+        for path, length in (("enrollment?source=other", 2), ("enrollment", 8193), ("listener", 8193), ("events", 65537)):
+            with self.subTest(path=path, length=length):
+                captured = {}
+                namespace = dict(http=SimpleNamespace(server=SimpleNamespace(BaseHTTPRequestHandler=object)),
+                    urllib=spool_smoke.urllib, captured=captured,
+                    committed=SimpleNamespace(set=lambda: None))
+                exec(block, namespace)
+                proxy = namespace["LostReply"](); proxy.path = "/internal/group-ingress/" + path
+                proxy.headers = Message(); proxy.headers["Content-Length"] = str(length)
+                with patch.object(spool_smoke.urllib.request, "build_opener", side_effect=AssertionError("unexpected upstream")) as opener:
+                    proxy.do_POST()
+                opener.assert_not_called()
+                self.assertEqual({"failed": True, "failure_stage": "request-contract"}, captured)
+                self.assertTrue(proxy.close_connection)
+
+    def test_spool_latest_lease_oracle_rejects_foreign_account_owner_epoch_and_long_lease(self):
+        tree = ast.parse(Path(spool_smoke.__file__).read_text(encoding="utf-8"))
+        helper = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "load_lease")
+        block = compile(ast.fix_missing_locations(ast.Module([helper], type_ignores=[])), "<inert-native-lease>", "exec")
+        tenant, company, account, owner = (str(uuid.uuid4()) for _ in range(4))
+        good = {"lease": {"account": {"tenantId": tenant, "companyId": company, "connectorAccountId": account},
+            "ownerId": owner, "epoch": 1, "heartbeatAtUtc": "2026-10-10T00:00:00Z", "expiresAtUtc": "2026-10-10T00:00:30Z"}}
+        class Root:
+            def __truediv__(self, name): self_test.assertEqual("lease.json", name); return self
+            def read_text(self, encoding): return json.dumps(value)
+        self_test = self
+        namespace = dict(root=Root(), json=json, datetime=spool_smoke.datetime,
+            tenant=tenant, company=company, account=account)
+        exec(block, namespace)
+        value = good
+        self.assertEqual(good, namespace["load_lease"](owner, 1))
+        for field, changed in (("account", {**good["lease"]["account"], "connectorAccountId": str(uuid.uuid4())}),
+                ("ownerId", str(uuid.uuid4())), ("epoch", 2), ("expiresAtUtc", "2026-10-10T00:00:31Z"),
+                ("expiresAtUtc", "2026-10-10T00:00:00Z"), ("heartbeatAtUtc", "2026-10-10T00:00:00+01:00")):
+            with self.subTest(field=field, changed=changed):
+                value = {"lease": {**good["lease"], field: changed}}
+                with self.assertRaises(AssertionError): namespace["load_lease"](owner, 1)
 
     def test_listener_proof_refuses_unowned_before_resources(self):
         cases = [(self.owned, {"CI": "false"}), (self.owned, {"GITHUB_ACTIONS": "false"}),

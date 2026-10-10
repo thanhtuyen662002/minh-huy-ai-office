@@ -64,6 +64,17 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
             # Child emits only fixed phase labels; never expose captured streams.
             raise RuntimeError("Owned group spool executable failed at " + mode + ".")
 
+    def load_lease(expected_owner, expected_epoch):
+        receipt = json.loads((root / "lease.json").read_text(encoding="utf-8"))
+        lease = receipt["lease"]
+        assert lease["account"] == {"tenantId": tenant, "companyId": company, "connectorAccountId": account}
+        assert lease["ownerId"] == expected_owner and lease["epoch"] == expected_epoch
+        heartbeat = datetime.fromisoformat(lease["heartbeatAtUtc"].replace("Z", "+00:00"))
+        expiry = datetime.fromisoformat(lease["expiresAtUtc"].replace("Z", "+00:00"))
+        assert heartbeat.utcoffset().total_seconds() == 0 and expiry.utcoffset().total_seconds() == 0
+        assert 0 < (expiry - heartbeat).total_seconds() <= 30
+        return receipt
+
     tables = [("GroupMessages", "Id"), ("GroupMessageRevisions", "CommittedSequence"),
         ("GroupIngressReceipts", "EventIdentityHash"), ("GroupIngressOutbox", "Id"),
         ("GroupSourceStates", "BindingId"), ("GroupCoverageGaps", "Id")]
@@ -99,8 +110,7 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
     save_config()
     enroll_source(source)  # Dedicated owned source-content key before listener/ingress.
     run("acquire")
-    lease = json.loads((root / "lease.json").read_text(encoding="utf-8"))
-    assert lease["lease"]["epoch"] == 1 and lease["lease"]["ownerId"] == owner
+    lease = load_lease(owner, 1)
     assert sql(f"SELECT COUNT(*) FROM aioffice.GroupListenerLeases WHERE {account_scope} AND OwnerId='{owner}' AND Epoch=1;") == "1"
     assert counts() == [0] * 4
 
@@ -115,10 +125,12 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
         def do_POST(self):
             phase = "request-contract"
             try:
-                if self.path != "/internal/group-ingress/events":
+                limits = {"/internal/group-ingress/events": 65536,
+                    "/internal/group-ingress/enrollment": 8192, "/internal/group-ingress/listener": 8192}
+                if self.path not in limits:
                     raise RuntimeError()
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 1 <= length <= 65536:
+                if not 1 <= length <= limits[self.path]:
                     raise RuntimeError()
                 headers = {"Content-Type": "application/json"}
                 for name in ("Service", "Epoch", "Signed-At", "Nonce", "Signature"):
@@ -138,14 +150,28 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
                 with opener.open(request, timeout=12) as response:
                     phase = "response-contract"
                     raw = response.read(8193)
-                    if response.status != 200 or len(raw) > 8192 or "no-store" not in response.headers.get("Cache-Control", ""):
+                    if response.status != 200 or not 1 <= len(raw) <= 8192 or "no-store" not in response.headers.get("Cache-Control", "") or \
+                            response.headers.get("Content-Type", "").split(";")[0].strip().lower() != "application/json":
                         raise RuntimeError()
-                    value = json.loads(raw)
-                    if value["source"] != {"tenantId": tenant, "companyId": company, "sourceBindingId": source}:
-                        raise RuntimeError()
-                    captured["ack"] = value
-                committed.set()  # Real Core SQL committed; no client ACK bytes.
-                release.wait(15)
+                    if self.path == "/internal/group-ingress/events":
+                        value = json.loads(raw)
+                        if value["source"] != {"tenantId": tenant, "companyId": company, "sourceBindingId": source}:
+                            raise RuntimeError()
+                        captured["ack"] = value
+                if self.path == "/internal/group-ingress/events":
+                    committed.set()  # Real Core SQL committed; no client ACK bytes.
+                    release.wait(15)
+                else:
+                    # Preserve actual backend metadata/lease bytes. Only the
+                    # committed event ACK is withheld from the shipping client.
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Cache-Control", "no-store")
+                    self.send_header("Content-Length", str(len(raw)))
+                    self.end_headers()
+                    captured[self.path] = captured.get(self.path, 0) + 1
+                    self.wfile.write(raw)
+                    self.wfile.flush()
             except urllib.error.HTTPError as error:
                 captured["failed"] = True
                 captured["failure_stage"] = "upstream403" if error.code == 403 else "upstream503" if error.code == 503 else "upstream-other"
@@ -200,10 +226,18 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
                     failure = error
     if failure is not None:
         raise failure
+    assert captured.get("/internal/group-ingress/enrollment") == 2 and captured.get("/internal/group-ingress/listener") == 2, \
+        "Native capture/recovery did not use actual current metadata and renewed lease"
+    # The capture process saved the actual Renew receipt before the event
+    # commit. Wait for that latest lease, not the earlier Acquire deadline.
+    renewed = load_lease(owner, 1)
+    assert datetime.fromisoformat(renewed["lease"]["heartbeatAtUtc"].replace("Z", "+00:00")) >= \
+        datetime.fromisoformat(lease["lease"]["heartbeatAtUtc"].replace("Z", "+00:00"))
+    lease = renewed
     retained_path, ciphertext = retained()
     original = snapshot()
     assert counts() == [1] * 4 and captured["ack"]["committedSequence"] == 1
-    print("PASS actual .NET encrypted spool100 and forced listener process death after observed SQL commit retain lost-ACK ciphertext/one graph effect")
+    print("PASS actual .NET current SQL metadata/renewed lease/encrypted spool100 and forced listener process death after observed SQL commit retain lost-ACK ciphertext/one graph effect")
 
     restart()
     ready()
@@ -217,8 +251,8 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
     config["ownerId"] = str(uuid.uuid4())
     save_config()
     run("acquire")
-    new_lease = json.loads((root / "lease.json").read_text(encoding="utf-8"))["lease"]
-    assert new_lease["epoch"] == 2 and new_lease["ownerId"] != owner
+    new_lease = load_lease(config["ownerId"], 2)["lease"]
+    assert new_lease["ownerId"] != owner
     assert sql(f"SELECT COUNT(*) FROM aioffice.GroupAccountCoverageGaps WHERE {account_scope} AND ListenerEpoch=2 AND Reason='listener-expired';") == "1"
     run("replay")
     recovered = json.loads((root / "commit.json").read_text(encoding="utf-8"))
@@ -258,4 +292,4 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
     assert json.loads((root / "commit.json").read_text(encoding="utf-8"))["committedSequence"] == 2
     assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
         " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
-    print("PASS actual .NET fresh SQL grant revoke403 retains every encrypted byte/no graph effects; exact restore allows original backlog commit/cursor2 and clean pooled isolation")
+    print("PASS actual .NET fresh SQL metadata grant revoke403 before spool key retains every encrypted byte/no graph effects; exact restore allows original backlog commit/cursor2 and clean pooled isolation")

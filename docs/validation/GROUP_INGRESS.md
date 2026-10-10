@@ -700,3 +700,37 @@ clock refusal and noncooperative outer deadline. These use owned SQLite/HTTP
 fixtures or injected transport; fresh enrollment/native SQL execution and frozen
 security review remain pending. This unit is excluded from823 and its native
 source-key repair. No provider/DI recovery loop/broker/full277 acceptance.
+
+### Reviewed enrollment and native current-authority extension
+
+Frozen `f45984358ee0fc69c25ad2997106d825ccf564c5` metadata/API/recovery
+unit is independently scoped APPROVED, receipt6093046005. The reviewer ran310
+retained controls plus16 own boundary probes,0 skipped: maximum escaped identity/
+display/all13 observations fit8KiB, observations are immutable copies, malformed
+or oversized metadata is refused, metadata aging after Renew prevents private
+load/key resolution, and age/cancellation after event reply preserves the exact
+capture. This approval covers default-off library/HTTP security; actual native
+SQL metadata/provider/DI recovery loop/broker/full277 remain outstanding.
+
+The follow-on test-only native executable fetches current enrollment through the
+shipping client instead of constructing authority from fixture configuration.
+Initial Acquire uses that result; capture fetches current enrollment and saves
+the actual Renew receipt. Operational replay fetches current metadata and renews
+before loading/decrypting. A counted environment resolver proves actual backend
+grant403 occurs before spool-key resolution, with unchanged encrypted bytes and
+full six-table SQL fingerprints; exact restored grant permits the original item.
+
+The owned loss proxy forwards only fixed enrollment/listener/event paths and
+canonical signed headers. Metadata and listener responses forward bounded actual
+Core200/no-store JSON bytes unchanged. Only an observed real event commit holds
+all client ACK bytes. The parent requires two actual metadata and two actual
+Renew forwards before forced child death, reloads the last saved actual scoped
+lease and waits its expiry before acquiring a different owner/epoch2. Existing
+exact original ACK, full6/restart/cipher preservation, one-effect and clean pooled
+isolation oracles remain. No fixture response fabricates backend authority.
+
+Local32 Python guard tests include actual-handler inert byte forwarding versus
+held event ACK, pre-upstream path/size refusal and exact scoped lease/owner/epoch/
+duration oracles. Seven .NET owned guard tests, clean executable Release build
+and changed-file formatting pass. These controls do not execute native SQL or
+forced process death; frozen extension review and exact hosted proof are pending.
