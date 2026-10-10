@@ -1627,6 +1627,61 @@ class HostBrainFixtureMetadataTests(unittest.TestCase):
                 reference_smoke.validated_host_brain_fixture(raw)
 
 
+class NoteCapacityOracleTests(unittest.TestCase):
+    def run_probe(self, fault=None, changed=False):
+        statements, comparisons = [], []
+        def sql(statement):
+            statements.append(statement)
+            self.assertIn("SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION;", statement)
+            self.assertIn("ROLLBACK; SELECT N'owned-capacity-accepted';", statement)
+            self.assertIn("IF @@TRANCOUNT>0 ROLLBACK;", statement)
+            self.assertIn("IF @@ROWCOUNT<>1 THROW 51901", statement)
+            value = (20, 21, 40, 0, 41)[(len(statements) - 1) % 5]
+            if fault == "unrelated-547": return "wrong-constraint-denied"
+            if fault == "missing-row": return "owned-capacity-source-missing"
+            if fault == "accept-out-of-bounds": return "owned-capacity-accepted"
+            if fault == "deny-valid": return "owned-capacity-ck-denied"
+            return "owned-capacity-accepted" if value in (20, 21, 40) else "owned-capacity-ck-denied"
+        def compare():
+            comparisons.append(1)
+            if changed: raise AssertionError("changed retained graph")
+        with tempfile.TemporaryDirectory(prefix="aioffice-capacity-oracle-") as root:
+            directory = Path(root) / "aioffice-local"; directory.mkdir()
+            with patch.dict(os.environ, {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": root}, clear=True):
+                reference_smoke.verify_owned_note_capacity(directory=directory, api="http://127.0.0.1:8080",
+                    tenant=str(uuid.uuid4()), company=str(uuid.uuid4()), source=str(uuid.uuid4()),
+                    host_operation=str(uuid.uuid4()), host_request=str(uuid.uuid4()), sql=sql, assert_unchanged=compare)
+        return statements, comparisons
+
+    def test_shipping_probe_covers_twenty_boundary_cases_specific_constraints_and_retained_graph(self):
+        statements, comparisons = self.run_probe()
+        self.assertEqual(20, len(statements)); self.assertEqual(20, len(comparisons))
+        for offset, constraint in enumerate(("CK_GroupWorkCommitReceipts_Counts", "CK_GroupCustomerRequests_Values",
+                "CK_GroupNotesCommittedOutbox_Values", "CK_GroupNotesCommittedItems_Values")):
+            for statement in statements[offset * 5:(offset + 1) * 5]:
+                self.assertIn(f"ERROR_NUMBER()=547 AND CHARINDEX(N'{constraint}',ERROR_MESSAGE())>0", statement)
+                self.assertIn("ELSE THROW;", statement)
+
+    def test_shipping_probe_refuses_wrong_error_missing_row_acceptance_and_graph_mutation(self):
+        for fault in ("unrelated-547", "missing-row", "accept-out-of-bounds", "deny-valid"):
+            with self.subTest(fault=fault), self.assertRaises(AssertionError): self.run_probe(fault=fault)
+        with self.assertRaisesRegex(AssertionError, "changed retained graph"): self.run_probe(changed=True)
+
+    def test_unowned_and_noncanonical_scope_denied_before_callbacks(self):
+        calls = []
+        arguments = dict(directory=Path("unowned"), api="http://127.0.0.1:8080", tenant=str(uuid.uuid4()),
+            company=str(uuid.uuid4()), source=str(uuid.uuid4()), host_operation=str(uuid.uuid4()), host_request=str(uuid.uuid4()),
+            sql=lambda _: calls.append("sql"), assert_unchanged=lambda: calls.append("graph"))
+        with patch.dict(os.environ, {}, clear=True), self.assertRaises(RuntimeError):
+            reference_smoke.verify_owned_note_capacity(**arguments)
+        with tempfile.TemporaryDirectory(prefix="aioffice-capacity-oracle-") as root:
+            arguments["directory"] = Path(root) / "aioffice-local"
+            arguments["tenant"] = "noncanonical' SQL"
+            with patch.dict(os.environ, {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": root}, clear=True), self.assertRaises((AssertionError, ValueError)):
+                reference_smoke.verify_owned_note_capacity(**arguments)
+        self.assertEqual([], calls)
+
+
 class EffectPreparationOracleTests(unittest.TestCase):
     def run_actual_prefix(self, *, mutate=None, fault=None):
         # Execute the shipping prefix, stopping before protected brain inserts.

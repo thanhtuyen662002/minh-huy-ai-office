@@ -11,7 +11,7 @@ internal static class GroupWorkNoteModelConfiguration
         {
             entity.ToTable("GroupWorkCommitReceipts", table =>
             {
-                table.HasCheckConstraint("CK_GroupWorkCommitReceipts_Counts", "[SelectedMessageCount] BETWEEN 1 AND 100 AND (([Outcome]=2 AND [NoteCount]=0) OR ([Outcome] IN (1,3) AND [NoteCount] BETWEEN 1 AND 20))");
+                table.HasCheckConstraint("CK_GroupWorkCommitReceipts_Counts", "[SelectedMessageCount] BETWEEN 1 AND 100 AND (([Outcome]=2 AND [NoteCount]=0) OR ([Outcome] IN (1,3) AND [NoteCount] BETWEEN 1 AND 40))");
                 table.HasCheckConstraint("CK_GroupWorkCommitReceipts_Authority", "[ClaimEpoch]>0 AND [CredentialEpoch]>0 AND [GrantVersion]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [AccountVersion]>0 AND DATEPART(tz,[CommittedAtUtc])=0");
                 table.HasCheckConstraint("CK_GroupWorkCommitReceipts_SourceSet", "DATALENGTH([SourceSetSha256])=64 AND [SourceSetSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
             });
@@ -25,7 +25,7 @@ internal static class GroupWorkNoteModelConfiguration
         {
             entity.ToTable("GroupCustomerRequests", table =>
             {
-                table.HasCheckConstraint("CK_GroupCustomerRequests_Values", "[OriginCandidateOrdinal] BETWEEN 1 AND 20 AND [Kind] IN (1,2,3,4,5) AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [CurrentRevision]>0 AND [BusinessVersion]>0 AND [BusinessStatus] IN (1,2,3,4,5)");
+                table.HasCheckConstraint("CK_GroupCustomerRequests_Values", "[OriginCandidateOrdinal] BETWEEN 1 AND 40 AND [Kind] IN (1,2,3,4,5) AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [CurrentRevision]>0 AND [BusinessVersion]>0 AND [BusinessStatus] IN (1,2,3,4,5)");
                 table.HasCheckConstraint("CK_GroupCustomerRequests_Code", "DATALENGTH([RequestCode])=36 AND LEFT([RequestCode],4)='REQ-' AND SUBSTRING([RequestCode],5,32) NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
                 table.HasCheckConstraint("CK_GroupCustomerRequests_Times", "DATEPART(tz,[CreatedAtUtc])=0 AND DATEPART(tz,[UpdatedAtUtc])=0 AND [UpdatedAtUtc]>=[CreatedAtUtc] AND ([CommittedDueAtUtc] IS NULL OR DATEPART(tz,[CommittedDueAtUtc])=0) AND ([ConfirmedAtUtc] IS NULL OR (DATEPART(tz,[ConfirmedAtUtc])=0 AND [ConfirmedAtUtc]>=[CreatedAtUtc]))");
                 table.HasCheckConstraint("CK_GroupCustomerRequests_ITConfirmation", "([ConfirmedByUserId] IS NOT NULL AND [ConfirmedAtUtc] IS NOT NULL) OR ([ConfirmedByUserId] IS NULL AND [ConfirmedAtUtc] IS NULL AND [BusinessStatus] IN (1,3) AND [AssignedToUserId] IS NULL AND [CommittedDueAtUtc] IS NULL)");
@@ -71,7 +71,7 @@ internal static class GroupWorkNoteModelConfiguration
         });
         model.Entity<GroupNotesCommittedOutboxRecord>(entity =>
         {
-            entity.ToTable("GroupNotesCommittedOutbox", table => table.HasCheckConstraint("CK_GroupNotesCommittedOutbox_Values", "[NoteCount] BETWEEN 1 AND 20 AND [PublishAttempts]>=0 AND DATEPART(tz,[CommittedAtUtc])=0 AND DATEPART(tz,[AvailableAtUtc])=0 AND [AvailableAtUtc]>=[CommittedAtUtc] AND ([PublishedAtUtc] IS NULL OR (DATEPART(tz,[PublishedAtUtc])=0 AND [PublishedAtUtc]>=[CommittedAtUtc]))"));
+            entity.ToTable("GroupNotesCommittedOutbox", table => table.HasCheckConstraint("CK_GroupNotesCommittedOutbox_Values", "[NoteCount] BETWEEN 1 AND 40 AND [PublishAttempts]>=0 AND DATEPART(tz,[CommittedAtUtc])=0 AND DATEPART(tz,[AvailableAtUtc])=0 AND [AvailableAtUtc]>=[CommittedAtUtc] AND ([PublishedAtUtc] IS NULL OR (DATEPART(tz,[PublishedAtUtc])=0 AND [PublishedAtUtc]>=[CommittedAtUtc]))"));
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.Id });
             entity.HasOne<GroupWorkCommitReceiptRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.BatchId, x.OperationId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.BindingId, x.BatchId, x.OperationId }).IsUnique();
@@ -79,7 +79,7 @@ internal static class GroupWorkNoteModelConfiguration
         });
         model.Entity<GroupNotesCommittedItemRecord>(entity =>
         {
-            entity.ToTable("GroupNotesCommittedItems", table => table.HasCheckConstraint("CK_GroupNotesCommittedItems_Values", "[Ordinal] BETWEEN 1 AND 20 AND [RequestRevision]>0"));
+            entity.ToTable("GroupNotesCommittedItems", table => table.HasCheckConstraint("CK_GroupNotesCommittedItems_Values", "[Ordinal] BETWEEN 1 AND 40 AND [RequestRevision]>0"));
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.OutboxId, x.Ordinal });
             entity.HasOne<GroupNotesCommittedOutboxRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, Id = x.OutboxId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupRequestRevisionRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.RequestId, Revision = x.RequestRevision }).OnDelete(DeleteBehavior.Restrict);

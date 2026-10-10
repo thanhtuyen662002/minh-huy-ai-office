@@ -19,6 +19,57 @@ def require_owned(directory, api):
         raise RuntimeError("Group reference proof requires the owned disposable GitHub CI fixture.")
 
 
+def verify_owned_note_capacity(*, directory, api, tenant, company, source, host_operation, host_request, sql, assert_unchanged):
+    # Operator-only disposable constraint probes; every attempted insertion,
+    # including an unexpected acceptance, rolls back. No consumer authority.
+    require_owned(directory, api)
+    for value in (tenant, company, source, host_operation, host_request):
+        assert isinstance(value, str) and str(uuid.UUID(value)) == value and uuid.UUID(value).int != 0
+    scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
+    receipt_columns = ("TenantId,CompanyId,BindingId,BatchId,OperationId,SourceSetSha256,SelectedMessageCount,NoteCount,Outcome,"
+        "ServiceId,ClaimEpoch,CredentialEpoch,GrantVersion,SourceVersion,DeletionGeneration,AccountVersion,CommittedAtUtc")
+    cases = [("GroupWorkCommitReceipts", "CK_GroupWorkCommitReceipts_Counts"),
+        ("GroupCustomerRequests", "CK_GroupCustomerRequests_Values"),
+        ("GroupNotesCommittedOutbox", "CK_GroupNotesCommittedOutbox_Values"),
+        ("GroupNotesCommittedItems", "CK_GroupNotesCommittedItems_Values")]
+    for table, constraint in cases:
+        for value in (20, 21, 40, 0, 41):
+            operation, request, outbox = (str(uuid.uuid4()) for _ in range(3))
+            note_count = value if table == "GroupWorkCommitReceipts" else 1
+            inserts = [f"INSERT INTO aioffice.GroupWorkCommitReceipts({receipt_columns})"
+                f" SELECT TenantId,CompanyId,BindingId,BatchId,'{operation}',SourceSetSha256,SelectedMessageCount,{note_count},Outcome,"
+                "ServiceId,ClaimEpoch,CredentialEpoch,GrantVersion,SourceVersion,DeletionGeneration,AccountVersion,CommittedAtUtc"
+                f" FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND OperationId='{host_operation}';"
+                " IF @@ROWCOUNT<>1 THROW 51901,N'owned-capacity-source-missing',1;"]
+            if table == "GroupCustomerRequests":
+                inserts.append("INSERT INTO aioffice.GroupCustomerRequests(TenantId,CompanyId,BindingId,Id,OriginBatchId,OriginOperationId,"
+                    "OriginCandidateOrdinal,RequestCode,Kind,SourceVersion,DeletionGeneration,CurrentRevision,BusinessStatus,BusinessVersion,CreatedAtUtc,UpdatedAtUtc)"
+                    f" SELECT TenantId,CompanyId,BindingId,'{request}',OriginBatchId,'{operation}',{value},'REQ-{uuid.UUID(request).hex.upper()}',"
+                    "Kind,SourceVersion,DeletionGeneration,CurrentRevision,BusinessStatus,BusinessVersion,CreatedAtUtc,UpdatedAtUtc"
+                    f" FROM aioffice.GroupCustomerRequests WHERE {scope} AND Id='{host_request}';"
+                    " IF @@ROWCOUNT<>1 THROW 51901,N'owned-capacity-source-missing',1;")
+            if table in ("GroupNotesCommittedOutbox", "GroupNotesCommittedItems"):
+                outbox_count = value if table == "GroupNotesCommittedOutbox" else 1
+                inserts.append("INSERT INTO aioffice.GroupNotesCommittedOutbox(TenantId,CompanyId,BindingId,Id,BatchId,OperationId,"
+                    "NoteCount,IsHistoricalBackfill,CommittedAtUtc,AvailableAtUtc,PublishAttempts)"
+                    f" SELECT TenantId,CompanyId,BindingId,'{outbox}',BatchId,OperationId,{outbox_count},0,CommittedAtUtc,CommittedAtUtc,0"
+                    f" FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND OperationId='{operation}';"
+                    " IF @@ROWCOUNT<>1 THROW 51901,N'owned-capacity-source-missing',1;")
+            if table == "GroupNotesCommittedItems":
+                inserts.append("INSERT INTO aioffice.GroupNotesCommittedItems(TenantId,CompanyId,BindingId,OutboxId,Ordinal,RequestId,RequestRevision)"
+                    f" SELECT TenantId,CompanyId,BindingId,'{outbox}',{value},RequestId,Revision"
+                    f" FROM aioffice.GroupRequestRevisions WHERE {scope} AND RequestId='{host_request}' AND Revision=1;"
+                    " IF @@ROWCOUNT<>1 THROW 51901,N'owned-capacity-source-missing',1;")
+            accepted = value in (20, 21, 40)
+            statement = ("SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION;" + "".join(inserts)
+                + " ROLLBACK; SELECT N'owned-capacity-accepted'; END TRY BEGIN CATCH IF @@TRANCOUNT>0 ROLLBACK;"
+                + f" IF ERROR_NUMBER()=547 AND CHARINDEX(N'{constraint}',ERROR_MESSAGE())>0"
+                + " SELECT N'owned-capacity-ck-denied'; ELSE THROW; END CATCH;")
+            result = sql(statement)
+            assert result == ("owned-capacity-accepted" if accepted else "owned-capacity-ck-denied")
+            assert_unchanged()
+
+
 def validated_brain_fixture(raw):
     # Pure closed metadata/cipher fixture decoding; never accepts SQL, private
     # clear text or a key. Called only after the outer owned-resource guard.
@@ -1279,4 +1330,12 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
     assert [digest("GroupBatchClaimReceipts", "BatchId,Epoch"), digest("GroupBatchClaimStates", "BatchId")] == claims_before_host
     unchanged_note_source_graph()
     print("PASS actual host brain reader expanded SQL origin three protected observed reasons exact metadata evidence current keys unchanged prior graphs and no reader effects", flush=True)
+    assert_retained()
+    def capacity_unchanged():
+        assert brain_graph() == published_host_graph and prior_host_objects() == old_host_objects
+        assert [digest("GroupBatchClaimReceipts", "BatchId,Epoch"), digest("GroupBatchClaimStates", "BatchId")] == claims_before_host
+        unchanged_note_source_graph()
+    verify_owned_note_capacity(directory=directory, api=api, tenant=tenant, company=company, source=source,
+        host_operation=host_operation, host_request=host_fixture["notes"][0]["requestId"], sql=sql, assert_unchanged=capacity_unchanged)
+    print("PASS actual automatic note SQL capacity all four constraints accept twenty twenty-one forty reject zero forty-one specific checks rolled back all graphs unchanged", flush=True)
     assert_retained()
