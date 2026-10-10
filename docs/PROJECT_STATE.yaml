@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: b95d25c84681d8e71f91f958af03b55d5eade087
     state: in_progress
-    next: 'Own278/Draft288 exactb95 approved6101661330 FULLread and pushed: Build38082610088/native114302453580 active, Gov38082610070/six prerequisitesSUCCESS, rootFULL.NET2666 zeroFailSkip. Close native104/fulllogs/all8/six originals before later push. New actual mixed automatic native proof uses separate fresh Media/quarantine source slot4 and shared writer21 effects, postflush/keyexpiry/replay/noIT/full prior graphs; build100Python/13unowned/originalverifyAST passed but SQL NOT_RUN. Freeze review then push only approved checkpoint/own new105 closure. Host-only/max40/current-authority races/rawcoverage/gaps/terminal/retry/tokenizer/DI-UI/model100-30/reporter279/full233 remain ACTIVE; modelNOT_RUN_UNEVALUATED, no partialmerge or checkpointstop.'
+    next: 'Own278/Draft288 exactremoteb95 sourceapproved6101661330 FULLread/pushed: Build38082610088/native114302453580 active104, Gov38082610070/six prerequisitesSUCCESS, rootFULL.NET2666 zeroFailSkip. Close fullnative/all8/six originals before superseding. New7e full10file reviewWITHHELD6101820549 rootFULLread only daemon-child cleanup/duplicateORDER P2; samebranchrepair guarded typed64ID/32label two inspected removal attempts independent image cleanup preservesfirsterror, PASSaftercleanup, unique full33prior snapshot ordering.105Python/adversarialcleanup/originalCSharp13guard104AST remain verified, repairreview pending. Pushonlyfrozenapproved repair and own new105closure; hostonly/max40/authority/gaps/rawcompletion/retries/context/DIUI/model100-30/279/full233 ACTIVE_INCOMPLETE. No eligible partialmerge or checkpointstop.'
 
   erp_data:
     issue: 264
@@ -1616,4 +1616,19 @@ group_278_automatic_mixed_native_proof_source:
   frozen_independent_review: PENDING_before_push
   native_SQL_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
   next: close_exact_parent_CI_then_review_push_native105_all8_FULL_logs_six_originals_host_only_max40_authority_races_remaining
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_automatic_native_cleanup_repair:
+  source_parent: 7e0a005822d63f76d51bfd233d2de4872d3174e6
+  full_ten_file_review: WITHHELD6101820549_root_FULL_fetched_read_two_P2_only
+  findings: daemon_child_after_Docker_caller_timeout_and_duplicate_BindingId_snapshot_order
+  repair: guarded_typed_container_inspect_exact_owned64ID_32label_two_bounded_removal_attempts_partial_startup_rechecked
+  independent_cleanup: image_removal_attempted_regardless_errors_first_failure_preserved_PASS_only_after_cleanup
+  SQL_order: unique_fixed_order_columns_full33_prior_graph_queries_preserved
+  local_controls: 105_Python_PASS_retained100_plus_five_adversarial_cleanup_controls_unique_order_oracle
+  retained_CSharp_reference: unchanged_from_frozen7e_build_format_unowned13_original104_module_preserved
+  frozen_independent_review: PENDING_before_push
+  exact_remote_CI: b95_Build38082610088_native114302453580_ACTIVE_Gov_six_prerequisites_SUCCESS_root_FULLdotnet2666_zeroFailSkip
+  native_SQL_model: repair_source_only_new_automatic105_NOT_RUN_UNQUALIFIED_model_NOT_RUN_UNEVALUATED
+  next: close_exact_parent104_CI_then_FULL_repair_review_push_only_approved_head_own_new105_all8_logs_six_originals
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

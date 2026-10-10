@@ -77,7 +77,9 @@ class OwnedStackGuardTests(unittest.TestCase):
         for table, _ in automatic_smoke.SOURCE_TABLES:
             query = next(value for value in queries if "FROM aioffice." + table + " WHERE " in value)
             self.assertIn("SELECT *", query); self.assertIn("INCLUDE_NULL_VALUES", query)
-            self.assertIn(first, query); self.assertIn(second, query); self.assertIn("ORDER BY BindingId,", query)
+            self.assertIn(first, query); self.assertIn(second, query); self.assertIn("ORDER BY BindingId", query)
+            order = query.split(" ORDER BY ", 1)[1].split(" FOR JSON", 1)[0].split(',')
+            self.assertEqual(len(order), len(set(order)))
         for table in ("GroupBindings", "GroupConnectorAccounts", "GroupListenerLeases", "GroupAccountCoverageGaps",
                 "GroupListenerCommandReceipts", "GroupServices", "Users", "Tasks", "TaskDispatches", "TaskCheckpoints"):
             self.assertTrue(any("FROM aioffice." + table + " WHERE " in query for query in queries))
@@ -122,6 +124,8 @@ class OwnedStackGuardTests(unittest.TestCase):
             calls.append((command, kwargs))
             if command[:2] == ["docker", "build"]: return SimpleNamespace(returncode=0, stdout="", stderr="")
             if command[:3] == ["docker", "image", "rm"]: return SimpleNamespace(returncode=0, stdout="", stderr="")
+            if command[:2] == ["docker", "inspect"]:
+                return SimpleNamespace(returncode=1, stdout="", stderr="Error: No such object: " + command[-1])
             mode = command[-1]; phase = list(automatic_smoke.RUNTIME_LINES).index(mode)
             expected = automatic_smoke.RUNTIME_LINES[mode]
             return SimpleNamespace(returncode=1 if fault == "child-error" else 0,
@@ -154,6 +158,91 @@ class OwnedStackGuardTests(unittest.TestCase):
                 automatic_smoke.verify(**arguments)
             self.assertEqual("", output.getvalue())
             if calls: self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_automatic_container_cleanup_guards_before_inspect_and_denies_foreign_or_unverified_identity(self):
+        suffix = uuid.uuid4().hex; name = "aioffice-automatic-note-proof-" + suffix
+        arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", name=name, suffix=suffix, reference=reference_smoke)
+        def forbidden(*args, **kwargs): self.fail("Unowned cleanup touched Docker")
+        with patch.dict(os.environ, {}, clear=True), patch.object(automatic_smoke.subprocess, "run", forbidden), self.assertRaises(RuntimeError):
+            automatic_smoke.close_owned_container(**arguments)
+        for result in (SimpleNamespace(returncode=0, stdout="a" * 64 + "|foreign", stderr=""),
+                SimpleNamespace(returncode=0, stdout="not-an-id|" + suffix, stderr=""),
+                SimpleNamespace(returncode=1, stdout="", stderr="Daemon unavailable PRIVATE")):
+            calls = []
+            with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run",
+                    lambda command, **kwargs: calls.append(command) or result), self.assertRaises(AssertionError):
+                automatic_smoke.close_owned_container(**arguments)
+            self.assertEqual(2, len(calls)); self.assertTrue(all(command[:2] == ["docker", "inspect"] for command in calls))
+
+    def test_automatic_container_cleanup_removes_only_inspected_ID_and_rechecks_partial_startup(self):
+        suffix = uuid.uuid4().hex; name = "aioffice-automatic-note-proof-" + suffix; identity = "a" * 64
+        arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", name=name, suffix=suffix, reference=reference_smoke)
+        for delayed in (False, True):
+            calls = []; inspections = 0
+            def process(command, **kwargs):
+                nonlocal inspections
+                calls.append((command, kwargs))
+                if command[:2] == ["docker", "inspect"]:
+                    inspections += 1
+                    if (delayed and inspections == 1) or (not delayed and inspections == 2):
+                        return SimpleNamespace(returncode=1, stdout="", stderr="Error: No such object: " + name)
+                    return SimpleNamespace(returncode=0, stdout=identity + "|" + suffix, stderr="")
+                self.assertEqual(["docker", "rm", "--force", identity], command)
+                return SimpleNamespace(returncode=0, stdout=identity, stderr="")
+            with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process):
+                automatic_smoke.close_owned_container(**arguments)
+            self.assertEqual(2, inspections); self.assertEqual(1, sum(command[1] == "rm" for command, _ in calls))
+            self.assertTrue(all(kwargs["timeout"] <= 15 and kwargs["capture_output"] for _, kwargs in calls))
+
+    def test_automatic_timeout_cleanup_attempts_container_then_image_and_preserves_first_failure(self):
+        arguments, original_process, calls, _ = self.automatic_runtime_oracle()
+        first = automatic_smoke.subprocess.TimeoutExpired(["owned-child"], 170)
+        identity = "a" * 64; active = False
+        def process(command, **kwargs):
+            nonlocal active
+            if command[:2] == ["docker", "run"]:
+                calls.append((command, kwargs)); active = True; raise first
+            if command[:2] == ["docker", "inspect"] and active:
+                calls.append((command, kwargs))
+                return SimpleNamespace(returncode=0, stdout=identity + "|" + command[-1].removeprefix("aioffice-automatic-note-proof-"), stderr="")
+            if command[:3] == ["docker", "rm", "--force"]:
+                calls.append((command, kwargs)); self.assertEqual(identity, command[-1]); active = False
+                return SimpleNamespace(returncode=0, stdout=identity, stderr="")
+            if command[:3] == ["docker", "image", "rm"]:
+                calls.append((command, kwargs)); raise RuntimeError("owned cleanup secondary failure")
+            return original_process(command, **kwargs)
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), \
+                self.assertRaises(automatic_smoke.subprocess.TimeoutExpired) as raised:
+            automatic_smoke.verify(**arguments)
+        self.assertIs(first, raised.exception); self.assertFalse(active)
+        self.assertEqual(["run", "inspect", "rm", "inspect", "image"], [command[1] for command, _ in calls[1:]])
+
+    def test_automatic_cleanup_retries_owned_removal_after_failure_without_replacing_first_error(self):
+        suffix = uuid.uuid4().hex; name = "aioffice-automatic-note-proof-" + suffix; identity = "a" * 64
+        first = RuntimeError("owned first removal error"); calls = []
+        def process(command, **kwargs):
+            calls.append(command)
+            if command[:2] == ["docker", "inspect"]:
+                return SimpleNamespace(returncode=0, stdout=identity + "|" + suffix, stderr="")
+            if len(calls) == 2: raise first
+            self.assertEqual(["docker", "rm", "--force", identity], command)
+            return SimpleNamespace(returncode=0, stdout=identity, stderr="")
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), self.assertRaises(RuntimeError) as raised:
+            automatic_smoke.close_owned_container(directory=self.owned, api="http://127.0.0.1:8080", name=name, suffix=suffix, reference=reference_smoke)
+        self.assertIs(first, raised.exception); self.assertEqual(["inspect", "rm", "inspect", "rm"], [command[1] for command in calls])
+
+    def test_automatic_runtime_reports_success_only_after_verified_container_and_image_cleanup(self):
+        arguments, process, calls, _ = self.automatic_runtime_oracle()
+        first = RuntimeError("owned image removal failed")
+        def fail_cleanup(command, **kwargs):
+            if command[:3] == ["docker", "image", "rm"]:
+                calls.append((command, kwargs)); raise first
+            return process(command, **kwargs)
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", fail_cleanup), \
+                patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(RuntimeError) as raised:
+            automatic_smoke.verify(**arguments)
+        self.assertIs(first, raised.exception); self.assertEqual("", output.getvalue())
+        self.assertEqual(2, sum(command[:2] == ["docker", "inspect"] for command, _ in calls))
 
     def clean_effect_callbacks(self, fault=None):
         tenant, company, service = (str(uuid.uuid4()) for _ in range(3))

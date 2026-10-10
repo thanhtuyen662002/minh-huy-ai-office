@@ -81,3 +81,24 @@ coverage/terminal completion, retry exhaustion truth, context/tokenizer limits,
 automatic DI/API/UI, real100/30 provider evaluation and internal reporter279
 remain incomplete. Reuse the existing AI Gateway configuration; real-model
 evaluation remains `NOT_RUN_UNEVALUATED`. No merge approval is implied.
+
+## Frozen proof repair
+
+Independent full ten-file review of7e0a005822d63f76d51bfd233d2de4872d3174e6
+withheld6101820549; root fetched/read its FULL receipt. Two proof findings are
+repaired on the same branch: possible daemon-side child survival after Docker
+caller timeout/loss, and duplicate `BindingId` source-state ordering.
+
+Cleanup now requires the owned fixture guard, closed generated name, typed
+container inspection and exact64-character ID/32-character ownership label. Two
+independent bounded attempts inspect before removing only that verified ID,
+including partial creation or lost replies. Unverified absence/identity refuses.
+Image removal is independently attempted despite prior errors; the original
+failure is preserved. Aggregate success appears only after cleanup completes.
+The fixed snapshot order is unique and retains every prior full-row predicate.
+
+105 Python controls pass: the retained100 plus five adversarial cleanup controls
+covering guard/foreign identity, delayed creation, caller timeout, removal failure
+and success-after-cleanup ordering. The existing full-row oracle now verifies
+unique ordering too. These remain inert controls, not native SQL acceptance.
+Frozen independent repair review and exact-head native105 closure remain required.
