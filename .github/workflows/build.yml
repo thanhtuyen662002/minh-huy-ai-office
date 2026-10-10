@@ -131,7 +131,7 @@ jobs:
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
-          node --test scripts/test-browser-administrators-guard.mjs
+          node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh
         run: ./scripts/test-local-config.ps1

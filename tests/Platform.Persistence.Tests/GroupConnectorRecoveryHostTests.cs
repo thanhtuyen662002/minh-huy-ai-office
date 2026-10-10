@@ -1,6 +1,7 @@
 extern alias RuntimeWorker;
 
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,6 +42,30 @@ public sealed class GroupConnectorRecoveryHostTests
     };
     private static string MissingRoot() => Path.Combine(Path.GetTempPath(), "aioffice-inert-recovery-" + Guid.NewGuid().ToString("N"));
     private static IConfigurationRoot Configuration(Dictionary<string, string?> settings) => new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RecoveryStartupResolvesPermissionVerifierIndependentlyOfReferencePipeline(bool pipeline)
+    {
+        var root = MissingRoot(); var settings = Settings(root);
+        settings["AIOffice:GroupIntake:PipelineEnabled"] = pipeline ? "true" : "false";
+        foreach (var key in new[] { "TenantId", "CompanyId", "ServiceId", "CredentialEpoch" })
+            settings["AIOffice:GroupIntake:Worker:" + key] = settings[Prefix + key];
+        var services = new ServiceCollection(); services.AddLogging();
+        services.AddSingleton(new CompositeSecretResolver([new NoSecrets()]));
+        services.AddDurableRabbitMqWorkExecution<PilotDataSourceProbeExecutor, PilotDataSourceToolMetadataProvider, PilotDataSourceToolPermissionProvider>(
+            options => options.UseInMemoryDatabase("owned-recovery-startup-" + Guid.NewGuid().ToString("N")), _ => { });
+        var configuration = Configuration(settings);
+        Assert.Equal(pipeline, services.AddGroupIngressReferenceConsumer(configuration, true));
+        Assert.True(services.AddGroupConnectorRecovery(configuration, "Production", true));
+        using var provider = services.BuildServiceProvider(); using var scope = provider.CreateScope();
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<BindingStorePermissionVerifier>());
+        // Resolve the exact startup dependency without SQL or host activation.
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<GroupIngressPermissionVerifier>());
+        Assert.Single(services, item => item.ServiceType == typeof(GroupIngressPermissionVerifier));
+        Assert.False(Directory.Exists(root));
+    }
 
     [Theory]
     [InlineData(null)]
@@ -141,6 +166,7 @@ public sealed class GroupConnectorRecoveryHostTests
     {
         var root = MissingRoot(); var configuration = Configuration(Settings(root)); var keys = new NoSecrets();
         var services = new ServiceCollection(); services.AddLogging(); services.AddSingleton(new CompositeSecretResolver([keys]));
+        services.AddDbContext<PlatformDbContext>(options => options.UseInMemoryDatabase("owned-inert-recovery-" + Guid.NewGuid().ToString("N")));
         Assert.True(services.AddGroupConnectorRecovery(configuration, "Production", true));
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
         var runtime = provider.GetRequiredService<GroupConnectorRecoveryRuntime>();

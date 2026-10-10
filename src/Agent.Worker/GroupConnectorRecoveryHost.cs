@@ -55,6 +55,7 @@ public static class GroupConnectorRecoveryRegistration
                 configured.CredentialEpoch != binding.Signing.CredentialEpoch) throw Unavailable();
         services.AddSingleton(binding);
         services.TryAddSingleton<TimeProvider>(TimeProvider.System);
+        services.TryAddScoped<GroupIngressPermissionVerifier>();
         services.AddSingleton<GroupConnectorRecoveryRuntime>();
         services.AddHostedService<GroupConnectorRecoveryHostedService>();
         return true;

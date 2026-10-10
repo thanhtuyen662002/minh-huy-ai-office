@@ -2,6 +2,7 @@
 import { resolve, join } from "node:path";
 import { readFile, mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
+import { observeSubmissionLifecycle, submissionAbortStage } from "./owned-browser-submission-lifecycle.mjs";
 
 export async function verifyTaskSubmission({ directory, manifest, browser, ownerPage: page, ownerContext, sql, app, identity, coreReplyFault, setStage }) {
   const proof = condition => { if (!condition) throw new Error("Task submission browser proof failed."); };
@@ -85,12 +86,17 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   async function idle() { await page.getByRole("button", { name: "Gửi", exact: true }).waitFor();
     await page.waitForFunction(() => [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Gửi" && !button.disabled), null, { timeout: 60_000 }); }
   async function requiredReceipt(response, phase) {
-    const streamFailure = fallback => {
+    const streamFailure = async fallback => {
       // Playwright's client finished promise need not settle on requestfailed.
       // Read the actual browser failure, exposing only exact fixed categories.
       // This remains a refusal; never replace the receipt or retry a request.
       let failure;
       try { failure = response.request().failure()?.errorText; } catch { /* Unknown browser boundary. */ }
+      if (failure === "net::ERR_ABORTED") {
+        try {
+          return submissionAbortStage(await page.evaluate(url => window.__aiofficeOwnedSubmissionLifecycle?.read(url) ?? null, response.url()));
+        } catch { return "replay-request-aborted"; }
+      }
       return new Map([
         ["net::ERR_ABORTED", "replay-request-aborted"],
         ["net::ERR_CONNECTION_RESET", "replay-request-reset"],
@@ -102,8 +108,8 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     phase("replay-stream-finished");
     let finished;
     try { finished = await bounded(response.finished(), 20_000); }
-    catch { phase(streamFailure("replay-stream-wait-failed")); proof(false); }
-    if (finished !== null) { phase(streamFailure("replay-stream-failed")); proof(false); }
+    catch { phase(await streamFailure("replay-stream-wait-failed")); proof(false); }
+    if (finished !== null) { phase(await streamFailure("replay-stream-failed")); proof(false); }
     phase("replay-body-read");
     let bytes;
     try { bytes = await bounded(response.body(), 20_000); }
@@ -128,6 +134,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   page.on("request", observe);
   let secondaryContext, release, heldPattern;
   try {
+    await page.evaluate(observeSubmissionLifecycle, { origin: app, company });
     for (const boundary of ["headers", "body"]) {
       const phase = name => stage("real-core202-" + boundary + "-" + name);
       phase("initial-session");
@@ -313,6 +320,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     console.log("PASS shipping owner recovery clears private data after external membership loss and restores GET-only under a new issued session with unchanged durable bytes");
     await page.getByRole("button", { name: "Trợ lý AI", exact: true }).first().click();
   } finally {
+    await page.evaluate(() => window.__aiofficeOwnedSubmissionLifecycle?.dispose()).catch(() => {});
     page.off("request", observe); release?.(); if (heldPattern) await page.unroute(heldPattern).catch(() => {});
     coreReplyFault.disarm(); if (secondaryContext) await secondaryContext.close();
   }
