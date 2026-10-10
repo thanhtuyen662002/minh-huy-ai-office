@@ -23,6 +23,10 @@ RUNTIME_LINES = {
     "automatic-note-expiry": "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
     "automatic-note-key-expiry": "PASS owned automatic note configured write key outside SQL expiry witness no effects clock rollback denied",
     "automatic-note-commit": "PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority"}
+NO_WORK_RUNTIME_LINES = {
+    "automatic-no-work-prepare": "PASS owned automatic no-work actual inbox allocation two empty plain sources zero claims effects no model",
+    "automatic-no-work-expiry": "PASS owned automatic no-work three flushed SQL effects source lock savepoint rollback clean detach witness only clock rollback denied",
+    "automatic-no-work-commit": "PASS owned automatic no-work actual atomic receipt two exact NoWork dispositions original replay new nonce refusal no notes outbox or model"}
 
 
 def canonical(value):
@@ -78,18 +82,30 @@ def retained_snapshot(*, tenant, company, sources, accounts, sql):
         ("GroupServices", "Id", base), ("Users", "TenantId,Id", "1=1"),
         ("Tasks", "TenantId,CompanyId,Id", "1=1"), ("TaskDispatches", "TenantId,CompanyId,TaskId,StepId,MessageId", "1=1"),
         ("TaskCheckpoints", "TenantId,CompanyId,TaskId,StepId,Version", "1=1")]
-    values = []
-    for table, order, predicate in queries:
-        value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+    # Retain all 33 complete snapshots, using one bounded SQL invocation rather
+    # than starting 33 Docker/sqlcmd processes per fence. Closed index tags make
+    # lost, duplicate, extra or reordered result lines fail closed.
+    statements = ["SET NOCOUNT ON;"]
+    for index, (table, order, predicate) in enumerate(queries):
+        statements.append(f"SELECT N'{index:02d}|' + CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
             f"(SELECT * FROM aioffice.{table} WHERE {predicate} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
-        assert isinstance(value, str) and re.fullmatch(r"[0-9A-F]{64}", value)
-        values.append(value)
+    result = sql(''.join(statements))
+    assert isinstance(result, str)
+    lines = result.splitlines()
+    assert len(lines) == len(queries)
+    values = []
+    for index, line in enumerate(lines):
+        assert re.fullmatch(f"{index:02d}\\|[0-9A-F]{{64}}", line)
+        values.append(line[3:])
     return tuple(values)
 
 
-def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference):
+def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, proof="notes"):
     reference.require_owned(directory, api)  # Before config/callback/SQL/process.
+    assert type(proof) is str and proof in ("notes", "no_work")
     assert callable(sql) and callable(prepare_source)
+    runtime_lines = RUNTIME_LINES if proof == "notes" else NO_WORK_RUNTIME_LINES
+    commit_mode = "automatic-note-commit" if proof == "notes" else "automatic-no-work-commit"
     tenant, company, service = (canonical(value) for value in (tenant, company, service))
     installation = canonical(manifest["AIOFFICE_INSTALLATION_ID"])
     password = manifest["AIOFFICE_RUNTIME_PASSWORD"]
@@ -160,7 +176,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         assert built.returncode == 0, "Owned automatic note executable build failed"
         configuration = json.dumps({"tenantId": tenant, "companyId": company, "serviceId": service, "sourceId": source, "eventId": events[0]})
         prepared_graph = None
-        for mode, expected in RUNTIME_LINES.items():
+        for mode, expected in runtime_lines.items():
             result = subprocess.run([*command, mode], input=configuration, env=environment, capture_output=True, text=True, timeout=170)
             assert not result.stderr, "Owned automatic note executable emitted unexpected diagnostics"
             reference.require_reference_result(result, mode, [expected])
@@ -175,18 +191,22 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                     f"(SELECT COUNT(*) FROM aioffice.GroupBatchAllocatedRevisions WHERE {scope}));") == "2|1|2"
                 prepared_graph = graph
             assert graph == prepared_graph
-            epoch = {"automatic-note-prepare": 0, "automatic-note-expiry": 1, "automatic-note-key-expiry": 2, "automatic-note-commit": 3}[mode]
+            epoch = list(runtime_lines).index(mode)
             assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope};") == str(epoch)
             if epoch:
-                witness = "IS NULL" if mode == "automatic-note-commit" else "=ExpiresAtUtc"
+                witness = "IS NULL" if mode == commit_mode else "=ExpiresAtUtc"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch={epoch} AND ExpiryObservedAtUtc {witness};") == "1"
-            if mode != "automatic-note-commit":
+            if mode != commit_mode:
                 assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in EFFECT_TABLES)
-            else:
+            elif proof == "notes":
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "4", "4", "5", "1", "4"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=1 AND VerificationLevel=1;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=3 AND VerificationLevel=3;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=1 AND NoteCount=4 AND SelectedMessageCount=2;") == "1"
+            else:
+                assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "0", "0", "0", "0", "0"]
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=2 AND NoteCount=0 AND SelectedMessageCount=2;") == "1"
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=2 AND MessageRevision=1;") == "2"
     except BaseException as error:
         failure = error
     finally:
@@ -200,4 +220,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         except BaseException as error:
             if failure is None: failure = error
     if failure is not None: raise failure
-    print("PASS actual automatic note combined SQL four protected AI host notes five evidence atomic twenty-one effects both expiry rollback original replay no duplicate unchanged all retained scopes", flush=True)
+    if proof == "notes":
+        print("PASS actual automatic note combined SQL four protected AI host notes five evidence atomic twenty-one effects both expiry rollback original replay no duplicate unchanged all retained scopes", flush=True)
+    else:
+        print("PASS actual automatic no-work SQL receipt two dispositions expiry rollback exact replay no duplicate no notes outbox model unchanged all retained scopes", flush=True)

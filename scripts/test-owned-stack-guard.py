@@ -72,17 +72,19 @@ class OwnedStackGuardTests(unittest.TestCase):
     def test_automatic_retained_snapshot_covers_full_prior_claim_brain_account_registry_and_portal_rows(self):
         tenant, company, first, second, account = (str(uuid.uuid4()) for _ in range(5)); queries = []
         result = automatic_smoke.retained_snapshot(tenant=tenant, company=company, sources=[first, second], accounts=[account],
-            sql=lambda query: queries.append(query) or "A" * 64)
-        self.assertEqual(33, len(result)); self.assertEqual(33, len(queries))
+            sql=lambda query: queries.append(query) or '\n'.join(f"{index:02d}|" + "A" * 64 for index in range(33)))
+        self.assertEqual(33, len(result)); self.assertEqual(1, len(queries))
+        statements = [value for value in queries[0].split(';') if "HASHBYTES" in value]
+        self.assertEqual(33, len(statements))
         for table, _ in automatic_smoke.SOURCE_TABLES:
-            query = next(value for value in queries if "FROM aioffice." + table + " WHERE " in value)
+            query = next(value for value in statements if "FROM aioffice." + table + " WHERE " in value)
             self.assertIn("SELECT *", query); self.assertIn("INCLUDE_NULL_VALUES", query)
             self.assertIn(first, query); self.assertIn(second, query); self.assertIn("ORDER BY BindingId", query)
             order = query.split(" ORDER BY ", 1)[1].split(" FOR JSON", 1)[0].split(',')
             self.assertEqual(len(order), len(set(order)))
         for table in ("GroupBindings", "GroupConnectorAccounts", "GroupListenerLeases", "GroupAccountCoverageGaps",
                 "GroupListenerCommandReceipts", "GroupServices", "Users", "Tasks", "TaskDispatches", "TaskCheckpoints"):
-            self.assertTrue(any("FROM aioffice." + table + " WHERE " in query for query in queries))
+            self.assertTrue(any("FROM aioffice." + table + " WHERE " in query for query in statements))
         self.assertFalse(any(re.search(r"\b(INSERT|UPDATE|DELETE)\b", query) for query in queries))
 
     def test_automatic_retained_snapshot_denies_nonhash_private_result(self):
@@ -91,15 +93,30 @@ class OwnedStackGuardTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 automatic_smoke.retained_snapshot(tenant=tenant, company=company, sources=[source], accounts=[account], sql=lambda _: value)
 
-    def automatic_runtime_oracle(self, fault=None):
+    def test_automatic_retained_snapshot_batch_denies_lost_extra_duplicate_reordered_or_private_lines(self):
+        tenant, company, source, account = (str(uuid.uuid4()) for _ in range(4))
+        lines = [f"{index:02d}|" + "A" * 64 for index in range(33)]
+        for value in ('\n'.join(lines[:-1]), '\n'.join(lines + lines[:1]), '\n'.join([lines[0]] * 33),
+                '\n'.join(reversed(lines)), '\n'.join(lines[:5] + ["PRIVATE"] + lines[6:]),
+                '\n'.join(lines).replace("A", "a"), '\n'.join(lines).replace("00|", "0|", 1)):
+            with self.assertRaises(AssertionError):
+                automatic_smoke.retained_snapshot(tenant=tenant, company=company, sources=[source], accounts=[account], sql=lambda _: value)
+
+    def automatic_runtime_oracle(self, fault=None, proof="notes"):
         tenant, company, service, old_source, old_account, source, account, installation = (str(uuid.uuid4()) for _ in range(8))
         events = [str(uuid.uuid4()), str(uuid.uuid4())]; phase = -1; calls = []; queries = []
+        runtime_lines = automatic_smoke.RUNTIME_LINES if proof == "notes" else automatic_smoke.NO_WORK_RUNTIME_LINES
+        commit_phase = len(runtime_lines) - 1
+        effect_counts = (1, 2, 4, 4, 5, 1, 4) if proof == "notes" else (1, 2, 0, 0, 0, 0, 0)
         def sql(query):
             queries.append(query)
             if query.startswith("SELECT Id FROM aioffice.GroupBindings"): return old_source
             if query.startswith("SELECT Id FROM aioffice.GroupConnectorAccounts"): return old_account
             if query.startswith("SELECT ConnectorAccountId"): return account
             if "HASHBYTES" in query:
+                if query.startswith("SET NOCOUNT ON;"):
+                    value = "B" if fault == "retained-mutation" and phase >= 1 else "A"
+                    return '\n'.join(f"{index:02d}|" + value * 64 for index in range(33))
                 if fault == "retained-mutation" and phase >= 1 and "BindingId IN" in query: return "B" * 64
                 if fault == "source-mutation" and phase >= 1 and f"BindingId='{source}'" in query and "GroupMessageRevisions" in query: return "B" * 64
                 return "A" * 64
@@ -109,14 +126,17 @@ class OwnedStackGuardTests(unittest.TestCase):
                 self.fail("Unexpected automatic aggregate oracle")
             if "GroupSourceStates" in query: return "1"
             if "GroupBatchClaimReceipts" in query: return str(max(0, phase))
-            if "GroupBatchClaimStates" in query: return "1" if phase > 0 else "0"
+            if "GroupBatchClaimStates" in query: return "0" if fault == "witness" or phase <= 0 else "1"
             if "Origin=" in query: return "2"
             if "Outcome=1" in query: return "1"
-            for table, count in zip(automatic_smoke.EFFECT_TABLES, (1, 2, 4, 4, 5, 1, 4)):
+            if "Outcome=2" in query: return "1" if "GroupWorkCommitReceipts" in query else "2"
+            for table, count in zip(automatic_smoke.EFFECT_TABLES, effect_counts):
                 if "FROM aioffice." + table + " WHERE " in query:
-                    if fault == "partial-effect" and phase == 3 and table == "GroupRequestEvidence": return "4"
+                    if fault == "partial-effect" and phase == commit_phase and table == ("GroupRequestEvidence" if proof == "notes" else "GroupWorkSourceDispositions"):
+                        return "4" if proof == "notes" else "1"
+                    if fault == "invented-outbox" and phase == commit_phase and table == "GroupNotesCommittedOutbox": return "1"
                     if fault == "expiry-effect" and phase == 1 and table == "GroupCustomerRequests": return "1"
-                    return str(count if phase == 3 else 0)
+                    return str(count if phase == commit_phase else 0)
             if "GroupIngressInbox" in query or "GroupBatchAllocations" in query or "GroupBatchAllocatedRevisions" in query: return "0"
             self.fail("Unexpected automatic SQL oracle")
         def process(command, **kwargs):
@@ -126,13 +146,13 @@ class OwnedStackGuardTests(unittest.TestCase):
             if command[:3] == ["docker", "image", "rm"]: return SimpleNamespace(returncode=0, stdout="", stderr="")
             if command[:2] == ["docker", "inspect"]:
                 return SimpleNamespace(returncode=1, stdout="", stderr="Error: No such object: " + command[-1])
-            mode = command[-1]; phase = list(automatic_smoke.RUNTIME_LINES).index(mode)
-            expected = automatic_smoke.RUNTIME_LINES[mode]
+            mode = command[-1]; phase = list(runtime_lines).index(mode)
+            expected = runtime_lines[mode]
             return SimpleNamespace(returncode=1 if fault == "child-error" else 0,
                 stdout=expected + ("\nPRIVATE\n" if fault == "extra-output" else "\n"), stderr="PRIVATE" if fault == "stderr" else "")
         arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", manifest={"AIOFFICE_INSTALLATION_ID": installation,
             "AIOFFICE_RUNTIME_PASSWORD": "p" * 32}, tenant=tenant, company=company, service=service, sql=sql,
-            prepare_source=lambda: (source, events, base64.b64encode(b"k" * 32).decode("ascii")), reference=reference_smoke)
+            prepare_source=lambda: (source, events, base64.b64encode(b"k" * 32).decode("ascii")), reference=reference_smoke, proof=proof)
         return arguments, process, calls, queries
 
     def test_automatic_runtime_oracle_requires_all_four_modes_complete_graph_and_private_key_environment(self):
@@ -153,6 +173,42 @@ class OwnedStackGuardTests(unittest.TestCase):
     def test_automatic_runtime_oracle_denies_wrong_child_outputs_and_restores_owned_image(self):
         for fault in ("child-error", "extra-output", "stderr", "retained-mutation", "source-mutation", "gap", "partial-effect", "expiry-effect"):
             arguments, process, calls, _ = self.automatic_runtime_oracle(fault)
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), \
+                    patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+                automatic_smoke.verify(**arguments)
+            self.assertEqual("", output.getvalue())
+            if calls: self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_automatic_no_work_profile_refuses_unowned_or_unknown_profile_before_configuration_callbacks(self):
+        def forbidden(*args, **kwargs): self.fail("Invalid no-work profile touched a resource")
+        arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", manifest=None, tenant="invalid",
+            company="invalid", service="invalid", sql=forbidden, prepare_source=forbidden, reference=reference_smoke)
+        with patch.dict(os.environ, {}, clear=True), patch.object(automatic_smoke.subprocess, "run", forbidden), self.assertRaises(RuntimeError):
+            automatic_smoke.verify(**arguments, proof="no_work")
+        for proof in (None, True, 1, "unknown", "no_work;"):
+            with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", forbidden), self.assertRaises(AssertionError):
+                automatic_smoke.verify(**arguments, proof=proof)
+
+    def test_automatic_no_work_runtime_oracle_requires_three_modes_full_three_effects_no_notes_and_private_key_environment(self):
+        arguments, process, calls, queries = self.automatic_runtime_oracle(proof="no_work")
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output:
+            automatic_smoke.verify(**arguments)
+        self.assertEqual(1, len(output.getvalue().splitlines())); self.assertIn("PASS actual automatic no-work SQL", output.getvalue())
+        children = [(command, kwargs) for command, kwargs in calls if command[:2] == ["docker", "run"]]
+        self.assertEqual(list(automatic_smoke.NO_WORK_RUNTIME_LINES), [command[-1] for command, _ in children])
+        self.assertTrue(any("Outcome=2 AND NoteCount=0 AND SelectedMessageCount=2" in query for query in queries))
+        self.assertTrue(any("Outcome=2 AND MessageRevision=1" in query for query in queries))
+        self.assertTrue(any("ExpiryObservedAtUtc =ExpiresAtUtc" in query for query in queries))
+        self.assertTrue(any("ExpiryObservedAtUtc IS NULL" in query for query in queries))
+        for command, kwargs in children:
+            self.assertIn("--read-only", command); self.assertIn("no-new-privileges:true", command); self.assertEqual(170, kwargs["timeout"])
+            self.assertNotIn("p" * 32, " ".join(command)); self.assertNotIn("p" * 32, kwargs["input"])
+            self.assertIn("AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY", kwargs["env"])
+        self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_automatic_no_work_oracle_denies_partial_effects_invented_outbox_missing_witness_mutation_or_child_failure(self):
+        for fault in ("child-error", "extra-output", "stderr", "retained-mutation", "source-mutation", "gap", "partial-effect", "expiry-effect", "invented-outbox", "witness"):
+            arguments, process, calls, _ = self.automatic_runtime_oracle(fault, proof="no_work")
             with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), \
                     patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
                 automatic_smoke.verify(**arguments)
@@ -320,6 +376,30 @@ class OwnedStackGuardTests(unittest.TestCase):
                 "gap", "duplicate-events", "extra-events"):
             arguments, calls, _ = self.clean_effect_callbacks(fault)
             with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare_automatic(**arguments)
+            self.assertEqual(2 if fault in ("gap", "duplicate-events", "extra-events") else 1, sum(x[0] == "post" for x in calls))
+
+    def test_no_work_effect_fixture_guard_precedes_callbacks_and_invalid_handler(self):
+        arguments, calls, _ = self.clean_effect_callbacks()
+        with patch.dict(os.environ, {}, clear=True), self.assertRaises(RuntimeError): effect_fixture.prepare_no_work(**arguments)
+        self.assertEqual([], calls); arguments["post_event"] = None
+        with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare_no_work(**arguments)
+        self.assertEqual([], calls)
+
+    def test_no_work_effect_fixture_posts_only_two_empty_plain_sources_with_exact_hash_after_readiness_lease(self):
+        arguments, calls, events = self.clean_effect_callbacks()
+        with patch.dict(os.environ, self.environment, clear=True): source, actual_events = effect_fixture.prepare_no_work(**arguments)
+        self.assertEqual(events, actual_events)
+        self.assertEqual(["registry", "enroll", "lease", "post", "post", "gaps", "events"], [value[0] for value in calls])
+        self.assertEqual(source, calls[1][1]); self.assertIn("DATEADD(second,30,@now)", calls[2][1])
+        for payload in (calls[3][1], calls[4][1]):
+            self.assertEqual("", payload["text"]); self.assertEqual(1, payload["event"]["kind"])
+            self.assertEqual(hashlib.sha256(b"").hexdigest().upper(), payload["event"]["contentSha256"])
+        self.assertNotEqual(calls[3][1]["event"]["messageId"], calls[4][1]["event"]["messageId"])
+
+    def test_no_work_effect_fixture_preserves_strict_receipts_gaps_and_cardinality(self):
+        for fault in ("http", "foreign-source", "unknown-field", "bool-revision", "bool-sequence", "replay", "gap", "duplicate-events", "extra-events"):
+            arguments, calls, _ = self.clean_effect_callbacks(fault)
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare_no_work(**arguments)
             self.assertEqual(2 if fault in ("gap", "duplicate-events", "extra-events") else 1, sum(x[0] == "post" for x in calls))
 
     def test_clean_effect_fixture_validates_identity_and_callbacks_before_sql(self):
@@ -1105,7 +1185,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 5, True, "1"):
+        for slot in (0, 6, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -1153,6 +1233,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final_automatic = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](fourth_source, 4)
         self.assertEqual(final_automatic, environment); self.assertEqual(16, len(calls))
+        fifth_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](fifth_source, 5)
+        self.assertTrue(all(environment[name] == value for name, value in final_automatic.items()))
+        fifth_prefix = "AIOffice__GroupIntake__SourceKeys__5__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": fifth_source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_NO_WORK_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(fifth_prefix):]: value for name, value in environment.items() if name.startswith(fifth_prefix)})
+        final_no_work = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](fifth_source, 5)
+        self.assertEqual(final_no_work, environment); self.assertEqual(20, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

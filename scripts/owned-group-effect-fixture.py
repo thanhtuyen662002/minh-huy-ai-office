@@ -91,3 +91,21 @@ def prepare_automatic(*, directory, api, tenant, company, service, sql, identity
         identity_index=identity_index, enroll_source=enroll_source, post_event=media_event)
     assert sent == 2
     return result
+
+
+def prepare_no_work(*, directory, api, tenant, company, service, sql, identity_index, enroll_source, post_event):
+    # A distinct scope with two empty plain texts, which requires no model.
+    require_owned(directory, api)
+    assert callable(post_event)
+    sent = 0
+    def empty_event(payload):
+        nonlocal sent
+        assert sent < 2 and payload["event"]["kind"] == 1
+        sent += 1
+        event = dict(payload["event"])
+        event["contentSha256"] = hashlib.sha256(b"").hexdigest().upper()
+        return post_event({**payload, "event": event, "text": ""})
+    result = prepare(directory=directory, api=api, tenant=tenant, company=company, service=service, sql=sql,
+        identity_index=identity_index, enroll_source=enroll_source, post_event=empty_event)
+    assert sent == 2
+    return result

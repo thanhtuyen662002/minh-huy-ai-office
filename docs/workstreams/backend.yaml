@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: b95d25c84681d8e71f91f958af03b55d5eade087
+head: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288 remote b95 sourceapproved6101661330/root FULLread; Build38082610088/native114302453580 active104, Gov38082610070/six prerequisites SUCCESS/root FULLdotnet2666. Close terminal all8/full native104/six original images before superseding. Frozen570 cleanup/order repair scoped APPROVED6101872861 root FULLread; push EXACT570 after parent closure and own new native105. Separate sealed automatic NoWork source preserves typed outcomes through shared atomic engine; 27 focused/full2134 persistence zeroFailSkip/format PASS, new frozen review and actual automatic SQL expiry/replay/authority proof pending. Continue hostonly/max40/authority/gaps/rawcompletion/retry/context/DIUI/model100-30/279/full233; no partial merge or checkpoint stop.'
+next_action: 'Own278/Draft288 exact remote570 sourceapproved6101872861 root FULLread/pushed after parent closure: Build38084668247/native114308583350 ACTIVE105, Gov38084668280/six prerequisites SUCCESS; root FULL.NET2666 zeroFailSkip. Parentb95 Build38082610088/Gov38082610070/all8/native114302453580/quality114308112389 SUCCESS; root FULL104once160PASS/NET2666/six ORIGINAL images11681164564. Localcf1 NoWork source APPROVED6101948302 root FULLread; new separate empty-plain automatic NoWork actual SQL3row/replay/expiry/witness proof adds future106 and slot5, Python112/DebugRelease0W0E/format/unowned16/original104bytes PASS, native/source-review pending. Preserve all33 full retained snapshots in one tagged bounded SQL call. Close570 before superseding approved next checkpoint; continue authority/hostonly/max40/gaps/rawcompletion/retry/context/DIUI/realmodel100-30/279/full233. No partial merge or checkpoint stop.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2307,9 +2307,36 @@ group_278_automatic_no_work_writer:
   legacy: original_ValidateInput_and_source_hash_unchanged_all_model_text_no_media_no_gap_NoWork_only
   focused: 19_new_actual_entry_plus8_retained_legacy_PASS_zeroFailSkip_positive_guarded_open_not_SQL_acceptance
   full_local_persistence: 2134_PASS_zeroFailSkip_changed_CSharp_format_VERIFY_PASS
-  frozen_independent_review: PENDING_before_later_push
+  frozen_independent_review: SCOPED_APPROVED6101948302_root_FULL_fetched_read
   native_SQL: new_automatic_no_note_commit_replay_expiry_authority_NOT_RUN_UNQUALIFIED
   effects: no_notes_outbox_IT_assignment_status_raw_allocation_completion_schema_or_Gateway_config_change
   actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_reused
   next: frozen_source_review_while_closing_b95_then_push570_native105_and_add_actual_no_note_owned_SQL_proof
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_b95_closure_and_automatic_no_work_native_source:
+  exact_parent_remote: b95d25c84681d8e71f91f958af03b55d5eade087
+  parent_build_governance_all8: 38082610088_38082610070_SUCCESS_native114302453580_quality114308112389_SUCCESS
+  parent_root_FULL_native: 104_required_exactly_once160_PASS_zero_failure_markers
+  parent_root_FULL_dotnet: 2666_projects6_520_25_2115_zeroFailSkip_four_successful_projects
+  parent_root_browser: six_ORIGINAL_images11681164564_visually_inspected
+  parent_qualification: frozen_shared_legacy_wrapper_host_reader_capacity_only_not_automatic105_no_note_model_wholefeature
+  exact_remote: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  remote_source_review: SCOPED_APPROVED6101872861_root_FULL_fetched_before_push
+  remote_build_native: Build38084668247_native114308583350_ACTIVE105
+  remote_governance_six_prerequisites: Gov38084668280_and_all_six_SUCCESS
+  remote_root_FULL_dotnet: 2666_projects6_520_25_2115_zeroFailSkip
+  local_source_parent: cf1c9ed7ba60fe3719c22416781f0920cf592fec
+  local_source_parent_review: SCOPED_APPROVED6101948302_root_FULL_fetched_read
+  no_work_fixture: distinct_owned_scope_key_slot5_original0to4_preserved_ready_before30second_fixture_lease_actual_Core_two_empty_plain_ACKs
+  no_work_preparation: actual_shipping_inbox_raw2_allocation1_claim_epochs1to2_source_private_brain_sealed_plan_no_model
+  future_expiry: three_staged_flushed_receipt_dispositions_source_APPLOCK_savepoint_rollback_detach_only_witness_backwards_clock_denial
+  future_commit: atomic1receipt2NoWork_exact_revisions_original_ID_time_hash_full_effect_graph_replay_new_nonce_refusal_no_notes_outbox_keys_writes
+  snapshots: full33_retained_closed_queries_one_SQL_call33_ordered_index_tagged_hashes_missing_extra_duplicate_reordered_malformed_refuse
+  local_controls: 112_Python_PASS_DebugRelease_BUILD_zeroWarnError_changedformat_VERIFY_PASS_unowned16_original104_reference_bytes_fourUTF8PythonASTs
+  frozen_independent_review: PENDING_before_later_push
+  native_SQL: new_automatic_empty_plain_NoWork_NOT_RUN_UNQUALIFIED_future_required106
+  outcome_limits: recall_obsolete_changed_cold_entry_only_native_current_authority_races_still_required
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_reused_no_client_or_config
+  next: close_exact570_native105_all8_FULLlogs_six_ORIGINALs_and_frozen_new_proof_review_then_push_approved106_scope
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
