@@ -32,8 +32,12 @@ public sealed class GroupConnectorSpoolTransport
         this.spool = spool; this.transport = transport; this.binding = binding; this.secrets = secrets; this.clock = clock;
     }
 
-    public async Task<GroupIngressCommittedReceipt> ReplayAsync(GroupSpoolItemReference reference, GroupConnectorEnrollment current,
-        GroupListenerLeaseSnapshot lease, CancellationToken cancellationToken = default)
+    public Task<GroupIngressCommittedReceipt> ReplayAsync(GroupSpoolItemReference reference, GroupConnectorEnrollment current,
+        GroupListenerLeaseSnapshot lease, CancellationToken cancellationToken = default) =>
+        ReplayCoreAsync(reference, current, lease, null, cancellationToken);
+
+    private async Task<GroupIngressCommittedReceipt> ReplayCoreAsync(GroupSpoolItemReference reference, GroupConnectorEnrollment current,
+        GroupListenerLeaseSnapshot lease, DateTimeOffset? authorityCheckedAtUtc, CancellationToken cancellationToken)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10), clock);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
@@ -46,6 +50,7 @@ public sealed class GroupConnectorSpoolTransport
                 throw new GroupConnectorTransportException();
             // Includes the actual transport's Live/owned-fixture policy and
             // fixed service epoch, before disk load, key resolution or decrypt.
+            RequireFreshMetadata(authorityCheckedAtUtc);
             transport.RequireRecovery(context, current, lease);
             var stored = spool.Load(reference);
             var encoded = await secrets.ResolveAsync(binding.Reference, linked.Token).AsTask().WaitAsync(linked.Token);
@@ -53,6 +58,7 @@ public sealed class GroupConnectorSpoolTransport
             if (encoded.Length != 44) throw new GroupConnectorTransportException();
             key = Convert.FromBase64String(encoded);
             if (key.Length != 32 || Convert.ToBase64String(key) != encoded) throw new GroupConnectorTransportException();
+            RequireFreshMetadata(authorityCheckedAtUtc);
             var admission = transport.Recover(stored, key, current, lease);
             using var prepared = await transport.PrepareEventAsync(admission, linked.Token);
             var committed = await transport.SendEventAsync(prepared, linked.Token);
@@ -60,6 +66,7 @@ public sealed class GroupConnectorSpoolTransport
             // The deletion binds the original file reference, not rewrapped
             // ownership or an independently supplied receipt.
             linked.Token.ThrowIfCancellationRequested();
+            RequireFreshMetadata(authorityCheckedAtUtc);
             spool.Acknowledge(reference, committed);
             return committed;
         }
@@ -67,5 +74,44 @@ public sealed class GroupConnectorSpoolTransport
         catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or FormatException or NotSupportedException)
         { if (error is GroupConnectorTransportException known) throw known; throw new GroupConnectorTransportException(); }
         finally { if (key is not null) CryptographicOperations.ZeroMemory(key); }
+    }
+
+    // Operational recovery fetches current backend enrollment and renews the
+    // actual owned lease before disk load or encryption-key resolution. A stale
+    // mechanical snapshot cannot enter this path. Each call owns one deadline.
+    public async Task<GroupIngressCommittedReceipt> ReplayWithCurrentAuthorityAsync(GroupSpoolItemReference reference,
+        GroupConnectorEnrollmentRequest request, GroupListenerLeaseSnapshot ownedLease, CancellationToken cancellationToken = default)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10), clock);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+        try
+        {
+            linked.Token.ThrowIfCancellationRequested();
+            if (reference?.Context is not { } context || request?.Source != context.Source || ownedLease?.Account is null ||
+                context.Source.TenantId != binding.TenantId || context.Source.CompanyId != binding.CompanyId ||
+                context.ConnectorAccountId != binding.ConnectorAccountId || context.ServiceId != binding.ServiceId || context.KeyId != binding.KeyId ||
+                ownedLease.Account != new GroupListenerAccountScope(binding.TenantId, binding.CompanyId, binding.ConnectorAccountId) ||
+                ownedLease.OwnerId == Guid.Empty || ownedLease.Epoch <= 0) throw new GroupConnectorTransportException();
+            var current = await transport.FetchEnrollmentAsync(request, linked.Token);
+            // The stored source/grant/deletion/credential versions are checked
+            // before sending Renew as well as before private load/decryption.
+            transport.RequireRecovery(context, current.Enrollment, ownedLease);
+            using var renewal = await transport.PrepareListenerAsync(current.Enrollment,
+                new(ownedLease.OwnerId, GroupListenerOperation.Renew, ownedLease.Epoch), linked.Token);
+            var renewed = await transport.SendListenerAsync(renewal, linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            return await ReplayCoreAsync(reference, current.Enrollment, renewed.Lease, current.CheckedAtUtc, linked.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { throw new GroupConnectorTransportException(); }
+        catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or FormatException or NotSupportedException)
+        { if (error is GroupConnectorTransportException known) throw known; throw new GroupConnectorTransportException(); }
+    }
+
+    private void RequireFreshMetadata(DateTimeOffset? checkedAtUtc)
+    {
+        if (checkedAtUtc is not { } checkedAt) return;
+        var now = clock.GetUtcNow();
+        if (now.Offset != TimeSpan.Zero || checkedAt.Offset != TimeSpan.Zero || checkedAt > now ||
+            now - checkedAt > GroupConnectorEnrollmentSnapshot.MaximumAge) throw new GroupConnectorTransportException();
     }
 }

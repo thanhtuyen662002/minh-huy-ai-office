@@ -185,6 +185,8 @@ public sealed class CoreApiGroupListenerTests
     [InlineData(Path, true)]
     [InlineData("/internal/group-ingress/events", false)]
     [InlineData("/internal/group-ingress/events", true)]
+    [InlineData("/internal/group-ingress/enrollment", false)]
+    [InlineData("/internal/group-ingress/enrollment", true)]
     public async Task BodyTransportFaultIsBoundedBeforeAuthenticationAndClearsPartialCapture(string path, bool partial)
     {
         await using var fixture = new CoreApiGroupIngressTests.Fixture(seedLease: false); using var request = Request(fixture);

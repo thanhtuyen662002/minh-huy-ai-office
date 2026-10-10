@@ -23,12 +23,13 @@ public sealed class GroupConnectorPreparedRequest : IDisposable
     private readonly object sync = new();
     private byte[]? body;
     internal GroupConnectorPreparedRequest(byte[] body, GroupServiceSignature signature, GroupScope source,
-        GroupListenerAccountScope account, GroupListenerCommand? command)
-    { this.body = body; Signature = signature; Source = source; Account = account; Command = command; }
+        GroupListenerAccountScope? account, GroupListenerCommand? command, GroupConnectorEnrollmentRequest? enrollmentRequest = null)
+    { this.body = body; Signature = signature; Source = source; Account = account; Command = command; EnrollmentRequest = enrollmentRequest; }
     internal GroupServiceSignature Signature { get; }
     internal GroupScope Source { get; }
-    internal GroupListenerAccountScope Account { get; }
+    internal GroupListenerAccountScope? Account { get; }
     internal GroupListenerCommand? Command { get; }
+    internal GroupConnectorEnrollmentRequest? EnrollmentRequest { get; }
     internal byte[] Capture() { lock (sync) { return body?.ToArray() ?? throw new ObjectDisposedException(nameof(GroupConnectorPreparedRequest)); } }
     public void Dispose() { lock (sync) { if (body is { } bytes) CryptographicOperations.ZeroMemory(bytes); body = null; } }
 }
@@ -110,6 +111,74 @@ public sealed class GroupConnectorTransportClient : IDisposable
         return PrepareAsync(enrollment, new GroupListenerPayload(enrollment.Source.ExternalIdentity, command), command, cancellationToken);
     }
 
+    public async Task<GroupConnectorPreparedRequest> PrepareEnrollmentAsync(GroupConnectorEnrollmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        using var timeout = new CancellationTokenSource(Deadline, clock);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+        byte[]? key = null; byte[]? body = null;
+        try
+        {
+            if (request is null) throw new GroupConnectorTransportException();
+            request.Validate();
+            if (request.Source.TenantId != binding.TenantId || request.Source.CompanyId != binding.CompanyId)
+                throw new GroupConnectorTransportException();
+            linked.Token.ThrowIfCancellationRequested();
+            body = JsonSerializer.SerializeToUtf8Bytes(request, GroupServiceAuthenticator.JsonOptions);
+            if (body.Length is < 1 or > GroupServiceAuthenticator.MaximumListenerBodyBytes) throw new GroupConnectorTransportException();
+            var encoded = await secrets.ResolveAsync(binding.Reference, linked.Token).AsTask().WaitAsync(linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            if (encoded.Length != 44) throw new GroupConnectorTransportException();
+            key = Convert.FromBase64String(encoded);
+            if (key.Length != 32 || Convert.ToBase64String(key) != encoded) throw new GroupConnectorTransportException();
+            var now = clock.GetUtcNow();
+            if (now.Offset != TimeSpan.Zero || now.ToUnixTimeSeconds() < 0) throw new GroupConnectorTransportException();
+            var signature = new GroupServiceSignature(binding.ServiceId, binding.CredentialEpoch, now.ToUnixTimeSeconds(), Guid.NewGuid(), "");
+            signature = signature with
+            {
+                SignatureHex = Convert.ToHexString(HMACSHA256.HashData(key,
+                GroupServiceAuthenticator.EnrollmentSigningBytes(signature, body)))
+            };
+            linked.Token.ThrowIfCancellationRequested();
+            // The account is discovered from authenticated backend metadata;
+            // no fabricated enrollment or listener lease bootstraps this call.
+            var prepared = new GroupConnectorPreparedRequest(body, signature, request.Source, null, null, request);
+            body = null; return prepared;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { throw new GroupConnectorTransportException(); }
+        catch (Exception error) when (error is InvalidOperationException or UnauthorizedAccessException or ArgumentException or FormatException or IOException or NotSupportedException)
+        { throw new GroupConnectorTransportException(); }
+        finally { if (key is not null) CryptographicOperations.ZeroMemory(key); if (body is not null) CryptographicOperations.ZeroMemory(body); }
+    }
+
+    public async Task<GroupConnectorCurrentEnrollment> SendEnrollmentAsync(GroupConnectorPreparedRequest prepared,
+        CancellationToken cancellationToken = default)
+    {
+        if (prepared?.EnrollmentRequest is not { } request || prepared.Command is not null) throw new GroupConnectorTransportException();
+        var snapshot = await SendAsync<GroupConnectorEnrollmentSnapshot>(prepared, "/internal/group-ingress/enrollment", cancellationToken);
+        try
+        {
+            var enrollment = snapshot.RequireCurrent(request, binding, clock.GetUtcNow(), policy);
+            cancellationToken.ThrowIfCancellationRequested();
+            return new(enrollment, snapshot.CheckedAtUtc);
+        }
+        catch (Exception error) when (error is UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+        { throw new GroupConnectorTransportException(); }
+    }
+
+    public async Task<GroupConnectorCurrentEnrollment> FetchEnrollmentAsync(GroupConnectorEnrollmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        using var timeout = new CancellationTokenSource(Deadline, clock);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+        try
+        {
+            using var prepared = await PrepareEnrollmentAsync(request, linked.Token);
+            return await SendEnrollmentAsync(prepared, linked.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { throw new GroupConnectorTransportException(); }
+    }
+
     private async Task<GroupConnectorPreparedRequest> PrepareAsync(GroupConnectorEnrollment enrollment, object payload,
         GroupListenerCommand? command, CancellationToken cancellationToken, GroupConnectorSpoolAdmission? admission = null)
     {
@@ -156,7 +225,7 @@ public sealed class GroupConnectorTransportClient : IDisposable
 
     public async Task<GroupIngressCommittedReceipt> SendEventAsync(GroupConnectorPreparedRequest prepared, CancellationToken cancellationToken = default)
     {
-        if (prepared?.Command is not null) throw new GroupConnectorTransportException();
+        if (prepared is null || prepared.Command is not null || prepared.EnrollmentRequest is not null) throw new GroupConnectorTransportException();
         var receipt = await SendAsync<GroupIngressCommittedReceipt>(prepared!, "/internal/group-ingress/events", cancellationToken);
         if (receipt?.Source != prepared!.Source || receipt.MessageId == Guid.Empty || receipt.Revision <= 0 || receipt.CommittedSequence <= 0 ||
             receipt.CommittedAtUtc.Offset != TimeSpan.Zero || receipt.CommittedAtUtc > clock.GetUtcNow()) throw new GroupConnectorTransportException();
@@ -166,10 +235,10 @@ public sealed class GroupConnectorTransportClient : IDisposable
 
     public async Task<GroupListenerCommittedReceipt> SendListenerAsync(GroupConnectorPreparedRequest prepared, CancellationToken cancellationToken = default)
     {
-        if (prepared?.Command is not { } command) throw new GroupConnectorTransportException();
+        if (prepared?.Command is not { } command || prepared.EnrollmentRequest is not null || prepared.Account is null) throw new GroupConnectorTransportException();
         var receipt = await SendAsync<GroupListenerCommittedReceipt>(prepared, "/internal/group-ingress/listener", cancellationToken);
         var lease = receipt?.Lease; var now = clock.GetUtcNow();
-        if (lease?.Account != prepared.Account || lease.OwnerId != command.OwnerId || lease.Epoch <= 0 ||
+        if (lease?.Account is not { } account || account != prepared.Account || lease.OwnerId != command.OwnerId || lease.Epoch <= 0 ||
             command.Operation != GroupListenerOperation.Acquire && lease.Epoch != command.ExpectedEpoch ||
             lease.HeartbeatAtUtc.Offset != TimeSpan.Zero || lease.ExpiresAtUtc.Offset != TimeSpan.Zero || receipt!.CommittedAtUtc.Offset != TimeSpan.Zero ||
             lease.HeartbeatAtUtc > now || lease.ExpiresAtUtc < lease.HeartbeatAtUtc || receipt.CommittedAtUtc < lease.HeartbeatAtUtc || receipt.CommittedAtUtc > now ||

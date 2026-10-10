@@ -114,6 +114,7 @@ app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, compon
 app.MapHealthChecks("/health");
 app.MapGroupIngress(groupIngressEnabled);
 app.MapGroupListener(groupIngressEnabled);
+app.MapGroupEnrollment(groupIngressEnabled);
 app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);
 
 if (authenticationConfigured)

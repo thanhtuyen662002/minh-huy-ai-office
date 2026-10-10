@@ -192,6 +192,79 @@ public sealed class GroupConnectorSpoolTransportTests
         Assert.Equal(0, fixture.Keys.Calls); Assert.Empty(spool.Pending());
     }
 
+    [Theory]
+    [InlineData("success")]
+    [InlineData("metadata403")]
+    [InlineData("renew403")]
+    [InlineData("source-version")]
+    [InlineData("grant-version")]
+    [InlineData("deletion")]
+    [InlineData("metadata-age-after-key")]
+    [InlineData("clock-back-after-key")]
+    public async Task OperationalReplayFetchesCurrentBackendAndRenewsActualOwnershipBeforeSpoolKey(string outcome)
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open();
+        var reference = fixture.Append(spool); var bytes = fixture.Bytes(); var calls = new List<string>();
+        var enrollment = fixture.Enrollment;
+        var snapshot = new GroupConnectorEnrollmentSnapshot(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
+            enrollment.Source, enrollment.Artifact, enrollment.Qualification.Environment, enrollment.Qualification.Observations, 1, Fixture.Now);
+        if (outcome == "source-version") snapshot = snapshot with { Source = snapshot.Source with { Version = 2 } };
+        if (outcome == "grant-version") snapshot = snapshot with { Grant = snapshot.Grant with { Version = 2 } };
+        if (outcome == "deletion") snapshot = snapshot with { Source = snapshot.Source with { DeletionGeneration = 1 } };
+        if (outcome == "metadata-age-after-key") fixture.Keys.BeforeResolution = () => fixture.Clock.Current = Fixture.Now.AddSeconds(11);
+        if (outcome == "clock-back-after-key") fixture.Keys.BeforeResolution = () => fixture.Clock.Current = Fixture.Now.AddTicks(-1);
+        using var client = fixture.Client(async (request, token) =>
+        {
+            var path = request.RequestUri!.AbsolutePath; calls.Add(path);
+            if (path.EndsWith("/enrollment", StringComparison.Ordinal))
+            {
+                Assert.Equal(0, fixture.Keys.Calls);
+                var reply = fixture.Reply(request, snapshot);
+                if (outcome == "metadata403") reply.StatusCode = HttpStatusCode.Forbidden;
+                return reply;
+            }
+            if (path.EndsWith("/listener", StringComparison.Ordinal))
+            {
+                Assert.Equal(0, fixture.Keys.Calls);
+                var command = GroupServiceAuthenticator.ParseListener(await request.Content!.ReadAsByteArrayAsync(token)).Command;
+                Assert.Equal(new GroupListenerCommand(fixture.Lease.OwnerId, GroupListenerOperation.Renew, fixture.Lease.Epoch), command);
+                var reply = fixture.Reply(request, new GroupListenerCommittedReceipt(fixture.Lease, true, false, Fixture.Now, false));
+                if (outcome == "renew403") reply.StatusCode = HttpStatusCode.Forbidden;
+                return reply;
+            }
+            Assert.Equal("/internal/group-ingress/events", path); Assert.Equal(1, fixture.Keys.Calls);
+            return fixture.Reply(request, fixture.Receipt);
+        });
+        var operation = fixture.Replay(spool, client).ReplayWithCurrentAuthorityAsync(reference, new(fixture.Auth.Scope, fixture.Auth.External), fixture.Lease);
+        if (outcome == "success")
+        {
+            Assert.Equal(fixture.Receipt, await operation); Assert.Empty(spool.Pending());
+            Assert.Equal(new[] { "/internal/group-ingress/enrollment", "/internal/group-ingress/listener", "/internal/group-ingress/events" }, calls);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<GroupConnectorTransportException>(() => operation);
+            Assert.Equal(bytes, fixture.Bytes()); Assert.Single(spool.Pending());
+            var afterKey = outcome is "metadata-age-after-key" or "clock-back-after-key";
+            Assert.Equal(afterKey ? 1 : 0, fixture.Keys.Calls);
+            Assert.Equal(outcome == "renew403" || afterKey ? 2 : 1, calls.Count);
+        }
+    }
+
+    [Fact]
+    public async Task OperationalOuterDeadlineCancelsNoncooperativeMetadataBeforeBacklogDecryption()
+    {
+        using var fixture = new Fixture(); using var spool = fixture.Open(); var reference = fixture.Append(spool); var bytes = fixture.Bytes();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var client = fixture.Client((_, _) => { entered.TrySetResult(); return release.Task; });
+        var operation = fixture.Replay(spool, client).ReplayWithCurrentAuthorityAsync(reference, new(fixture.Auth.Scope, fixture.Auth.External), fixture.Lease);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5)); fixture.Clock.FireOuterDeadline();
+        await Assert.ThrowsAsync<GroupConnectorTransportException>(() => operation);
+        Assert.Equal(0, fixture.Keys.Calls); Assert.Equal(bytes, fixture.Bytes()); Assert.Single(spool.Pending());
+        release.TrySetException(new IOException("PRIVATE_LATE_METADATA"));
+    }
+
     private sealed class Fixture : IDisposable
     {
         internal static DateTimeOffset Now => GroupServiceAuthenticatorTests.Fixture.Now;

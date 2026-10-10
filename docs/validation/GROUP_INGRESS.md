@@ -667,3 +667,36 @@ Approved library9d CI terminated with all six prerequisite gates and governance 
 Frozen823 native fixture/cleanup/browser diagnostic scope was independently APPROVED6092680140. Exact Build38016765431/Gov38016765424 has six prerequisites/governance PASS, but actual114108652763/quality114110948673 RED before observed SQL commit at the held native reply boundary. Retained ingress/read/listener markers PASS; no native PASS marker or current Chromium execution. The old native upstream status was not captured.
 
 Root found that the separate synthetic source had no entry in Core's fixed source-content-key configuration. The parent owned override now adds row1 with a separately generated random source-content key, preserves row0, keeps private0600 permissions, and recreates only its owned Core before native Acquire. No production fallback/key/grant behavior changes. An explicit enrollment callback is required before resources.29 Python guards include inert invalid/duplicate source enrollment refusal, original configuration preservation and exact owned command/private-permission checks. Proxy diagnostics emit only fixed phase/403/503/other labels; forwarding disables proxies/redirects and does not read error bodies. Exact commit ACK, lost-reply/process-death, full6 preservation and restore oracles are unchanged. Independent repair review and hosted execution remain mandatory.
+
+### Current backend enrollment candidate
+
+The separately authenticated metadata endpoint/client now derives current
+source/account/Ingest authority and receive qualification from final backend
+rows under the existing owned Serializable transaction. Declared source scope
+must match before key resolution; final authority/qualification is checked after
+the key await. The response is metadata only, no credential reference or private
+source text. It neither creates a lease nor manufactures a portal identity.
+An explicit wire DTO avoids deserializing the qualification implementation class.
+
+The pinned host client signs the separate enrollment domain, validates strict
+bounded no-store replies, exact scope/ordinal external identity/current service
+epoch and qualified profile, and rejects future or older-than10-second metadata.
+`ReplayWithCurrentAuthorityAsync` fetches that metadata and renews its actual owned
+lease before loading a retained capture/resolving its dedicated key. Source/grant/
+deletion/version mismatches fail before private load. Metadata age is checked
+again after the key await and before deletion, within one10-second caller-linked
+deadline. Final backend SQL authority remains required; snapshots do not promise
+instantaneous revocation propagation during an in-flight request.
+
+Local240 focused auth/client/replay/Core HTTP/file tests plus50 retained envelope
+controls and2 additional enrollment body-I/O controls yield292 unique PASS/0skip,
+clean compilation/changed-file formatting. Tests include an independently
+assembled enrollment HMAC, real endpoint registration/no-source-key bootstrap,
+prekey registry/scope denial, postkey revocation/final observation capture,
+cross-domain misuse, unknown/duplicate/invalid UTF8 transport, current backend
+grant denial/restoration, controlled Live receive and exact10-second age positive,
+metadata/renewal failure preserving bytes/no spool key, after-key stale/backward
+clock refusal and noncooperative outer deadline. These use owned SQLite/HTTP
+fixtures or injected transport; fresh enrollment/native SQL execution and frozen
+security review remain pending. This unit is excluded from823 and its native
+source-key repair. No provider/DI recovery loop/broker/full277 acceptance.

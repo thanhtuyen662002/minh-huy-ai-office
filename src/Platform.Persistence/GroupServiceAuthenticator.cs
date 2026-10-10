@@ -98,7 +98,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
             var payload = ParseListener(captured);
             var service = await AuthenticateAuthorityAsync(signature, captured, payload.Identity, GroupSourceEventKind.NewText,
                 "aioffice-group-listener-v1", cancellationToken, value => phase = value);
-            return new(service, payload.Command, signature.Nonce, Convert.ToHexString(SHA256.HashData(captured)));
+            return new(service.Service, payload.Command, signature.Nonce, Convert.ToHexString(SHA256.HashData(captured)));
         }
         catch (UnauthorizedAccessException)
         {
@@ -114,12 +114,35 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         var payload = Parse(body);
         var service = await AuthenticateAuthorityAsync(signature, body, payload.Event.Identity, payload.Event.Kind,
             "aioffice-group-ingest-v1", cancellationToken, phase);
-        return new(service, payload);
+        return new(service.Service, payload);
     }
 
-    private async Task<AuthenticatedGroupService> AuthenticateAuthorityAsync(GroupServiceSignature signature,
+    public async Task<GroupConnectorEnrollmentSnapshot> AuthenticateEnrollmentAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
+    {
+        if (signature is null || body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+        var captured = body.ToArray();
+        var phase = "parse";
+        try
+        {
+            var request = ParseEnrollment(captured);
+            var result = await AuthenticateAuthorityAsync(signature, captured, request.Identity, GroupSourceEventKind.NewText,
+                "aioffice-group-enrollment-v1", cancellationToken, value => phase = value, request.Source);
+            return result.Enrollment;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            logger?.LogWarning("group-enrollment-auth-refusal: {Phase}", phase);
+            throw;
+        }
+        finally { CryptographicOperations.ZeroMemory(captured); }
+    }
+
+    private sealed record AuthenticationResult(AuthenticatedGroupService Service, GroupConnectorEnrollmentSnapshot Enrollment);
+
+    private async Task<AuthenticationResult> AuthenticateAuthorityAsync(GroupServiceSignature signature,
         ReadOnlyMemory<byte> body, GroupExternalIdentity external, GroupSourceEventKind kind, string domain,
-        CancellationToken cancellationToken, Action<string> phase)
+        CancellationToken cancellationToken, Action<string> phase, GroupScope? expectedSource = null)
     {
         phase("signing-time");
         var now = clock.GetUtcNow();
@@ -138,6 +161,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
         await permissions.RequireSafeRuntimeAsync(cancellationToken);
         phase("registry-initial");
         var authority = await directory.RequireIngestAsync(new(signature.ServiceId, signature.CredentialEpoch), external, cancellationToken);
+        if (expectedSource is not null && authority.Source.Scope != expectedSource) throw GroupServiceDirectory.Denied();
         phase("qualification-initial");
         RequireQualification(authority.Account, kind, now, policy);
         var verified = new AuthenticatedGroupService(authority, signedAt);
@@ -166,15 +190,18 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
             phase("expiry-final");
             var finalNow = clock.GetUtcNow();
             RequireFreshSigningTime(signedAt, finalNow);
-            RequireQualification(current.Account, kind, finalNow, policy);
+            var qualification = RequireQualification(current.Account, kind, finalNow, policy);
+            var enrollment = GroupConnectorEnrollmentSnapshot.FromCurrent(current, qualification, finalNow);
             await transaction.CommitAsync(cancellationToken);
-            return verified;
+            cancellationToken.ThrowIfCancellationRequested();
+            return new(verified, enrollment);
         }
         finally { CryptographicOperations.ZeroMemory(key); }
     }
 
     internal static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-ingest-v1");
     internal static byte[] ListenerSigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-listener-v1");
+    internal static byte[] EnrollmentSigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-enrollment-v1");
     private static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body, string domain) => Encoding.ASCII.GetBytes(
         FormattableString.Invariant($"{domain}\n{signature.ServiceId:D}\n{signature.CredentialEpoch}\n{signature.SignedAtUnixSeconds}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
 
@@ -234,7 +261,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
             foreach (var item in node.EnumerateArray()) RequireUniqueProperties(item);
     }
 
-    internal static void RequireQualification(GroupConnectorAccountRecord account, GroupSourceEventKind kind, DateTimeOffset now, GroupIngressRuntimePolicy policy)
+    internal static GroupConnectorQualification RequireQualification(GroupConnectorAccountRecord account, GroupSourceEventKind kind, DateTimeOffset now, GroupIngressRuntimePolicy policy)
     {
         try
         {
@@ -257,6 +284,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
             if (extra is not null && !qualification.Observations.Any(x => x.Capability == extra &&
                 x.Support == GroupConnectorSupport.Supported && x.EvidenceId != Guid.Empty && x.ObservedAtUtc <= now &&
                 now - x.ObservedAtUtc <= GroupConnectorQualification.MaximumObservationAge)) throw GroupServiceDirectory.Denied();
+            return qualification;
         }
         catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
         { throw GroupServiceDirectory.Denied(); }
@@ -265,4 +293,19 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
     private static bool IsHash(string value) => value is not null && value.Length == 64 &&
         value.All(c => c is >= '0' and <= '9' or >= 'A' and <= 'F');
     private sealed record RegistryQualification(GroupQualificationEnvironment Environment, IReadOnlyList<GroupConnectorObservation> Observations);
+
+    internal static GroupConnectorEnrollmentRequest ParseEnrollment(ReadOnlyMemory<byte> body)
+    {
+        try
+        {
+            if (body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+            _ = StrictUtf8.GetCharCount(body.Span);
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 8 });
+            RequireUniqueProperties(document.RootElement);
+            var request = document.Deserialize<GroupConnectorEnrollmentRequest>(JsonOptions) ?? throw GroupServiceDirectory.Denied();
+            request.Validate(); return request;
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        { throw GroupServiceDirectory.Denied(); }
+    }
 }

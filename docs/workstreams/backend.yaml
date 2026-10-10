@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 823f1300ccfe476ba7aaab2f072fd69164bf73b4
+head: fd4f268619372b4dbd4c317dbf02d29a83519b5a
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: '823 native/static scoped APPROVED6092680140; exact Build38016765431/Gov38016765424 six prerequisites/Gov PASS but actual114108652763/quality114110948673 RED before observed native SQL ACK; current browser proof not reached. Root found separate source missing source-content-key enrollment in Core owned override; repair installs dedicated random scoped key row1, preserves original row0/recreates only owned Core,29 Python inert guards PASS. Exact causal status unobserved; fixed proxy stage/403/503/other diagnostics added, no weakened receipt/one-effect checks. Freeze/review/push repair and own exact actual terminal. Local metadata/current lease client/API candidate292 unique focused tests PASS0skip, excluded823/repair, needs frozen review/native extension. Fresh reference broker/278/279/full233 remain ACTIVE.'
+next_action: 'Pushed approved fd4 native source-key repair6092917013; own Build38017961934/Gov38017961861/actual114112369937 through terminal. Static29 guards/original cleanup/eight actual .NET key controls/four inert proxy controls APPROVED, no native execution yet. Separate current backend metadata/API/client/recovery candidate292 unique focused tests PASS0skip/clean compile/format, frozen security review pending, excludedfd4.823 native failure and9d browser replay cause require hosted closure; no narrowed acceptance. Fresh provider/recovery registration/reference broker/278/279/full233 remain ACTIVE.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1125,3 +1125,19 @@ group_connector_native_first_run:
   result: 'All six prerequisites/Gov PASS; actual/quality RED before native committed lost-ACK boundary. Root inspected all retained ingress/read/listener markers PASS, native markers absent/current Chromium skipped. Body-replay9d cause unproven and not exercised here.'
   repair: 'Separate native source was absent from fixed ConfiguredGroupSourceKeyProvider Core enrollment; parent now installs dedicated random owned source-content key row1, preserves original row0, force-recreates only owned Core before native Acquire. Callback required before resources; inert callback invalid GUID/repeated enrollment refusal/no mutations and exact config/command/permissions checks,29 guards PASS. Fixed proxy error stage/status only, disables redirects/proxies; unchanged original receipt/full6/lost-ACK/kill/grant requirements. Actual old status unknown; repair must execute.'
   local_follow_on: 'Separate uncommitted backend enrollment/current recovery API/client candidate: explicit metadata DTO/read-only scoped Serializable current source/Ingest/qualification, separate HMAC domain, bounded no-store replies, actual Renew before key and10s caller/replay deadline/freshness rechecks.240 focused tests plus50 envelope and2 additional body-fault controls=292 unique PASS0skip, no warnings; native/shared review still required. Excluded823 and repair.'
+
+group_connector_native_key_retry:
+  head: fd4f268619372b4dbd4c317dbf02d29a83519b5a
+  receipt: 6092917013
+  build: 38017961934
+  governance: 38017961861
+  actual: 114112369937
+  review: 'Scoped APPROVED29 retained guards/original four cleanup/thread constructor controls/eight actual .NET key-provider controls/four inert actual-handler fixed-error controls; AST/two YAML/diff. Missing separate source key reproduces before resolver, exact row1 preserves original key and enables separate key without fallback. Old hosted causal status remains unobserved; actual native execution pending.'
+  next: 'Own terminal actual/native and current Chromium, fix samePR if red. Current metadata/recovery work is a separate frozen review candidate.'
+
+group_connector_current_enrollment_candidate:
+  predecessor: fd4f268619372b4dbd4c317dbf02d29a83519b5a
+  result: 'Default-off metadata endpoint plus fixed host client, separate HMAC enrollment domain/cross-kind misuse refusal, strict8KiB no-store reply with explicit qualification wire DTO. Declared source matches backend before key; final current company/source/account/service/Ingest/qualification under owned Serializable transaction after key, no credentials/content/lease/portal identity in response. Qualified same-scope/epoch/ordinal-identity response age<=10s becomes immutable current enrollment.'
+  recovery: 'Per-call current metadata fetch and actual owned lease Renew before disk/spool key; stored source/grant/deletion/epoch match, one10s caller-linked overall deadline. Metadata freshness/clock checks before load/after key/before deletion; final backend SQL fences remain authoritative. Unknown/denied/stale/canceled preserves encrypted bytes. No provider/DI listener/recovery loop/broker activation.'
+  local: '240 focused server/client/replay/Core HTTP/file controls plus50 retained envelope and2 new enrollment body-IO controls=292 unique PASS0skip, clean compilation/changed-file format/YAML/diff. Independent golden HMAC/domain misuse/prekey scope-registry/postkey current revocation/captured latest observations/strict no-store/authHTTP/controlledLive-age boundary/stale-after-key/backwardClock/noncooperative metadata deadline/no fake effects retained. Frozen security review/native SQL extension still required.'
+  next: 'Freeze/review current candidate while owning fd4 hosted native terminal; extend actual native client proof to fetched backend enrollment/current owned lease and finish operational recovery/reference-only broker/278/279/full233.'
