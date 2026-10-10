@@ -79,7 +79,7 @@ public sealed class GroupGroundedWorkProposal
                   "type":"object","additionalProperties":false,"required":["message_id","revision","quote"],
                   "properties":{"message_id":{"type":"string"},"revision":{"type":"integer"},"quote":{"type":"string"}}
                 }},
-                "missing_fields":{"type":"array","items":{"type":"string"}},
+                "missing_fields":{"type":"array","description":"At least one missing field is required for needs_clarification; at most10 distinct nonempty fields, validated by the host.","items":{"type":"string"}},
                 "requested_deadline_text":{"type":["string","null"],"description":"Customer wording literally inside supplied evidence, never an IT commitment."},
                 "suggested_relation":{"type":["string","null"],"description":"Unverified hint; cannot authorize a link/update."}
               }
@@ -136,7 +136,8 @@ public sealed class GroupGroundedWorkProposal
                 };
                 var title = Text(note, "title", 200); var problem = Text(note, "problem", 2000); var outcome = Text(note, "outcome", 1000);
                 var missing = Items(note.GetProperty("missing_fields"), 10).Select(item => String(item, 200)).ToArray();
-                if (missing.Distinct(StringComparer.Ordinal).Count() != missing.Length) throw Unavailable();
+                if (missing.Distinct(StringComparer.Ordinal).Count() != missing.Length
+                    || (kind == GroupWorkProposalKind.NeedsClarification && missing.Length == 0)) throw Unavailable();
                 var deadline = NullableText(note, "requested_deadline_text", 1000);
                 var relation = NullableText(note, "suggested_relation", 200);
                 var evidence = new List<GroupProposalEvidence>();

@@ -44,6 +44,63 @@ recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def test_source_checkpoint_type_binding_waits_for_container_without_image_fallback(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in
+            ("source_reader_container", "source_reader_awaiting")]
+        self.assertEqual(2, len(functions))
+        compiled = compile(ast.Module(body=functions, type_ignores=[]), '<actual-source-type-binding>', 'exec')
+        identity, label = "a" * 64, "b" * 32
+        calls = []
+        created = False
+        def run(arguments, **kwargs):
+            calls.append(arguments)
+            if arguments[:2] == ["docker", "inspect"]:
+                typed = arguments[2:4] == ["--type", "container"]
+                if not created:
+                    return SimpleNamespace(returncode=1 if typed else 0,
+                        stdout="" if typed else "sha256:" + identity + "|<no value>")
+                return SimpleNamespace(returncode=0, stdout=identity + "|" + label)
+            self.assertEqual(["docker", "exec", identity, "test", "-f", "/tmp/aioffice-source-proof-awaiting"], arguments)
+            return SimpleNamespace(returncode=0)
+        namespace = {"subprocess": SimpleNamespace(run=run), "re": re, "name": "aioffice-reference-proof-" + label, "suffix": label}
+        exec(compiled, namespace)
+        self.assertFalse(namespace["source_reader_awaiting"]())
+        self.assertEqual(1, len(calls))
+        created = True
+        self.assertTrue(namespace["source_reader_awaiting"]())
+        self.assertEqual(3, len(calls))
+        self.assertEqual(["--type", "container"], calls[0][2:4])
+        self.assertEqual(["--type", "container"], calls[1][2:4])
+
+    def test_owned_kill_type_binding_cannot_select_same_named_image(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "kill_owned"]
+        self.assertEqual(1, len(functions))
+        compiled = compile(ast.Module(body=functions, type_ignores=[]), '<actual-kill-type-binding>', 'exec')
+        identity, label = "a" * 64, "b" * 32
+        calls = []
+        created = False
+        def run(arguments, **kwargs):
+            calls.append(arguments)
+            if arguments[:2] == ["docker", "inspect"]:
+                typed = arguments[2:4] == ["--type", "container"]
+                if not created:
+                    return SimpleNamespace(returncode=1 if typed else 0,
+                        stdout="" if typed else "sha256:" + identity + "|<no value>")
+                return SimpleNamespace(returncode=0, stdout=identity + "|" + label)
+            self.assertEqual(["docker", "kill", identity], arguments)
+            return SimpleNamespace(returncode=0)
+        namespace = {"subprocess": SimpleNamespace(run=run), "re": re, "name": "aioffice-reference-proof-" + label, "suffix": label}
+        exec(compiled, namespace)
+        self.assertFalse(namespace["kill_owned"]())
+        self.assertEqual(1, len(calls))
+        created = True
+        self.assertTrue(namespace["kill_owned"]())
+        self.assertEqual(3, len(calls))
+        self.assertEqual(["--type", "container"], calls[0][2:4])
+        self.assertEqual(["--type", "container"], calls[1][2:4])
+
     def test_reference_source_key_is_canonical_and_refusal_never_echoes_input(self):
         reference_smoke.require_source_key(base64.b64encode(bytes([0x32]) * 32).decode("ascii"))
         for value in (None, "", "owned-private-key-detail", "A" * 44, "A" * 43 + "!", base64.b64encode(bytes(31)).decode("ascii")):

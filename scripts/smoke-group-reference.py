@@ -320,7 +320,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert result.returncode == 0, "Owned reference worker restoration/control failed"
 
     def kill_owned():
-        inspected = subprocess.run(["docker", "inspect", "--format", '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name],
+        inspected = subprocess.run(["docker", "inspect", "--type", "container", "--format", '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name],
             capture_output=True, text=True, timeout=10)
         if inspected.returncode: return False
         identity, label = inspected.stdout.strip().split("|", 1)
@@ -626,7 +626,9 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         hold.stdin.write(configuration(0)); hold.stdin.close(); hold.stdin = None
 
         def source_reader_container():
-            inspected = subprocess.run(["docker", "inspect", "--format", '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name],
+            # The owned image and container share a name. Before creation an
+            # untyped inspect can return the image; only a container may qualify.
+            inspected = subprocess.run(["docker", "inspect", "--type", "container", "--format", '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name],
                 capture_output=True, text=True, timeout=10)
             if inspected.returncode:
                 return None
