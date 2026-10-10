@@ -564,3 +564,36 @@ The fixture now requires object UPDATE DENYD, captures column absent-or-D and
 requires exact catalog restoration. Effective runtime UPDATE0 before/after and
 observed UPDATE1 before API403 remain mandatory. No migration/runtime grant was
 changed. This corrects a fixture assumption; native retry/full acceptance remains.
+
+### Bounded encrypted file spool candidate
+
+`GroupConnectorFileSpool` stores only protected content and fixed scoped/hash
+metadata on a host-owned private volume. Tenant/company/account/service determine
+the private directory, event hashes determine filenames; one exclusive file owner
+serializes the account/service. Paths through reparse points, unexpected files,
+foreign metadata, malformed/truncated/oversized records and changed same-event
+captures refuse with fixed storage errors. No source text/key/opaque identity is
+stored in filenames or record headers. AES authentication remains required on load.
+
+Default bounds are1024 records/64MiB, with hard ceilings4096/256MiB. Capacity
+refuses before writing a new stage, preserving all backlog; no age/capacity eviction
+or automatic erasure is implemented. WriteThrough/Flush(true) precedes atomic
+same-directory promotion. Complete staging is recovered at reopen; torn or
+conflicting staging is retained and blocks recovery with coverage uncertainty.
+These operations support process restart. Hard power-loss durability also depends
+on the host volume/filesystem and has not been qualified by these controls.
+
+An internal acknowledgement operation removes only the exact retained reference
+after the trusted connector transport binds an authenticated committed SQL reply
+to that request. A receipt DTO alone is not authentication; no public deletion API
+exists. That transport is not wired yet. Linux directories/files are700/600;
+Windows requires the host provisioned private root/ACL. No provider session,
+production volume/Windows installer or live connector has been activated.
+
+Local19 actual owned-temp filesystem controls plus50 admission/envelope controls
+PASS69/0skip: exact encrypted Unicode close/reopen, concurrent100 one retained
+file/bytes, exclusive owner, scope isolation, count/byte pressure without eviction,
+complete stage recovery, torn/unknown/name/foreign/magic corruption preservation,
+same-event conflicts, bound roots/limits and exact internal ACK removal. These
+are file lifecycle controls, not native SQL ACK/client/broker/worker acceptance.
+Independent frozen review and the shipping recovery transport remain required.

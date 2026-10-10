@@ -1036,3 +1036,10 @@ group_listener_permission_catalog_native_failure:
   quality: 114093607028
   result: 'Terminal red after initial listener commit-only ACK and100 concurrent exact nonce unchanged SQL bytes PASS; fixture required redundant column DENY row, absent when same as object DENY per documented sys.database_permissions semantics.'
   repair: 'Require object UPDATE D, capture column absent-or-D and exact restoration; effective runtime0 beforeafter and actual1 before403 retained. No migration/grant or product permission fence broadened; focused orchestration/static review/native retry required.'
+
+group_spool_file_candidate:
+  predecessor: 00337c2
+  foundation_review: 'be3b7450aa1369a61b57756052d0e18bf77b6eba scoped APPROVED62 retained/own controls0skip/YAML/diff; original known-fixture promotion and optional-event predecrypt P2 CLOSED. Native54b terminal red at redundant column catalog assumption; repaired00337c2 review pending24guards.'
+  result: 'Host-owned private scoped directory/exclusive file owner, binary bounded protected records, count1024/64MiB defaults/hard4096/256MiB, flushed staging/atomic same-directory promotion and complete-stage reopen recovery. Corrupt/torn/foreign/conflicting entries preserved/refused; no eviction. Internal exact reference/commit reply ACK deletion requires trusted transport still absent.'
+  local: '19 actual owned-temp filesystem plus50 spool foundation controls PASS69/0skip; format/build0warnings/diff/YAML PASS. Reopen lifecycle is not forced process death/power-loss or actual client/SQL/broker acceptance. Linux700/600, Windows host-private-root ACL provisioning required.'
+  next: 'Close/push003 native fixture repair and own exact hosted listener CI through terminal; freeze FS review while implementing trusted lease/enrollment/HMAC recovery transport and reference-only broker. No production/provider activation;277/278/279/full233 ACTIVE.'
