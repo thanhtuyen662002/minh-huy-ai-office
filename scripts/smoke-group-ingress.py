@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import base64
 import hashlib
 import hmac
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -63,7 +64,7 @@ def owned_sql(compose, environment, query):
 
 def permission_diagnostic_query():
     registry = ["GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants"]
-    append_only = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts"]
+    append_only = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts"]
     mutable = {"GroupListenerLeases": ["OwnerId", "Epoch", "ExpiresAtUtc", "HeartbeatAtUtc"],
         "GroupSourceStates": ["CommittedSequence", "ScheduledThroughSequence", "FirstPendingAtUtc", "LastPendingAtUtc"],
         "GroupCoverageGaps": ["ReconnectedAtUtc"],
@@ -623,6 +624,17 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
         read_release_range(payload, original)
+        listener_before = snapshot()
+        listener_spec = importlib.util.spec_from_file_location("group_listener_proof", Path(__file__).with_name("smoke-group-listener.py"))
+        listener_proof = importlib.util.module_from_spec(listener_spec)
+        listener_spec.loader.exec_module(listener_proof)
+        listener_proof.verify(directory=directory, api=api, tenant=tenant, company=company, user=owner,
+            service=service, key=group_key, sql=sql, compose=compose, environment=environment,
+            restart=lambda: compose_run("restart", "core-api", overridden=True), ready=ready,
+            identity_index=identity_index, read_route=read_route)
+        assert snapshot() == listener_before, "Separate listener proof changed retained source bytes"
+        assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
 
     finally:
         # Remove configuration from this host before the existing browser gate.

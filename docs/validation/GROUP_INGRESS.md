@@ -429,3 +429,36 @@ graph/concurrent100, all queued ingress revokes, strict read-release KEY range,
 issued inbox and retained Chromium markers. The14-table migrations/current runtime
 permission expansion executed with retained ingestion; listener commands were not
 exposed in745 and therefore were not exercised by this run.
+
+## Mandatory native listener candidate
+
+The owned full-stack gate now invokes a separate listener proof before removing
+the exclusive random-key Core override. A new disposable account/source receives
+explicit operator Ingest/Reader grants; the retained manual ingress lease and
+protected source graph are preserved. No private source content key is required
+for listener commands or the empty metadata head's startup-gap view.
+
+The candidate exercises the real listener HMAC HTTP route/runtime SQL: first
+server-scoped lease/gap/typed digest receipt,100 concurrent exact nonce replays
+with unchanged complete original table bytes, same-nonce conflict, foreign owner,
+old epoch/wrong event domain/current unsafe append-only permission refusals.
+A targeted receipt CHECK fault after Stop lease mutation must503 and roll back
+all3 complete table fingerprints, then same-command restored retry succeeds.
+Core restart must recover the exact Stop ACK and retain the next ownership epoch.
+
+Five queued source/grant/credential/account/deletion revocations require an actual
+matching held/waiting application lock and runtime Serializable request,403/no
+SQL effects, exact restored registry bytes and successful fresh renewal. Captured
+server deadlines are crossed in real time: original Acquire ACK refuses despite
+later current renewal; an expired original signed nonce still within HMAC skew
+cannot reacquire or extend; fresh owner/nonce takes epoch+1 and records uncertainty.
+Sleeping runtime sessions must be ReadCommitted/no transaction. The separate
+source remains free of message/task/outbox artifacts; retained source/portal graph
+fingerprints are checked by the parent.
+
+This is an unexecuted native candidate. Local22 inert guard/vector/cleanup tests,
+Python syntax/YAML/diff PASS do not prove SQL execution, rollback/locking or full277.
+Independent proof review and exact hosted CI remain mandatory. Cleanup attempts
+release/drain/kill/shutdown/registry restoration/gate drop while preserving the
+original failure; only fixed diagnostics leave the owned process. No live account,
+ERP access, provider send or production activation is involved.

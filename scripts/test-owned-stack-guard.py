@@ -24,12 +24,86 @@ submission_spec.loader.exec_module(submission_smoke)
 group_spec = importlib.util.spec_from_file_location("group_ingress_smoke", Path(__file__).with_name("smoke-group-ingress.py"))
 group_smoke = importlib.util.module_from_spec(group_spec)
 group_spec.loader.exec_module(group_smoke)
+listener_spec = importlib.util.spec_from_file_location("listener_smoke", Path(__file__).with_name("smoke-group-listener.py"))
+listener_smoke = importlib.util.module_from_spec(listener_spec)
+listener_spec.loader.exec_module(listener_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
     root = (Path.cwd() / "guard-test-no-resources").resolve()
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}
+
+    def test_listener_proof_refuses_unowned_before_resources(self):
+        cases = [(self.owned, {"CI": "false"}), (self.owned, {"GITHUB_ACTIONS": "false"}),
+            (self.owned, {"RUNNER_TEMP": ""}), (self.root, {}), (self.owned / "nested", {}),
+            (self.root / "retained", {})]
+        def forbidden(*args, **kwargs): self.fail("Unowned listener proof touched resources")
+        for directory, override in cases:
+            with self.subTest(directory=str(directory), override=override), patch.dict(os.environ, {**self.environment, **override}, clear=True):
+                with self.assertRaisesRegex(RuntimeError, "^Listener proof requires the owned disposable GitHub CI fixture\\.$"):
+                    listener_smoke.verify(directory=directory, api="http://127.0.0.1:8080", tenant="invalid", company="invalid",
+                        user="invalid", service="invalid", key=None, sql=forbidden, compose=[], environment={},
+                        restart=forbidden, ready=forbidden, identity_index=forbidden, read_route=forbidden)
+        with patch.dict(os.environ, self.environment, clear=True):
+            for api in ("https://production.example", "http://localhost:8080", "http://127.0.0.1:8081"):
+                with self.assertRaises(RuntimeError): listener_smoke.require_owned(self.owned, api)
+            listener_smoke.require_owned(self.owned, "http://127.0.0.1:8080")
+
+    def test_listener_signature_never_reuses_ingress_domain_and_binds_captured_bytes(self):
+        service, nonce = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        body = b'{"command":{"operation":1}}'
+        listener = listener_smoke.signing_bytes(service, 1, 1700000000, nonce, body)
+        ingress = group_smoke.signing_bytes(service, 1, 1700000000, nonce, body)
+        self.assertEqual(listener.split(b"\n")[0], b"aioffice-group-listener-v1")
+        self.assertNotEqual(listener, ingress)
+        for changed in ((service, 2, 1700000000, nonce, body), (service, 1, 1700000001, nonce, body),
+                (service, 1, 1700000000, "cccccccc-cccc-cccc-cccc-cccccccccccc", body),
+                (service, 1, 1700000000, nonce, body + b" ")):
+            self.assertNotEqual(listener, listener_smoke.signing_bytes(*changed))
+
+    def test_listener_observed_fence_cleanup_attempts_all_resources_and_preserves_original_failure(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == "queued_revoke")
+        module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
+        class InjectedFailure(Exception): pass
+        for fault in ("observation", "popen", "stdin_write", "stdin_close", "executor", "release", "drain", "shutdown", "restore", "drop"):
+            with self.subTest(fault=fault):
+                effects = []
+                def effect(name):
+                    effects.append(name)
+                    if name == fault: raise InjectedFailure(name)
+                class Input:
+                    def write(self, query): effect("stdin_write")
+                    def close(self): effect("stdin_close")
+                class Process:
+                    stdin = Input()
+                    def communicate(self, timeout): effect("drain")
+                    def kill(self): effect("kill")
+                    def poll(self): return None
+                def popen(*args, **kwargs): effect("popen"); return Process()
+                class Executor:
+                    def __init__(self, **kwargs): effect("executor")
+                    def shutdown(self, **kwargs): effect("shutdown")
+                def sql(query):
+                    if "CREATE TABLE" in query: effect("create"); return ""
+                    if "SET Released=1" in query: effect("release"); return ""
+                    if query == "restore": effect("restore"); return ""
+                    if "DROP TABLE" in query: effect("drop"); return ""
+                    if "sys.dm_tran_locks" in query: effect("observation"); raise InjectedFailure("observation")
+                    self.fail("Unexpected inert listener SQL")
+                identifier = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+                namespace = {"sql": sql, "snapshot": lambda: ["AB" * 32] * 3, "tenant": identifier, "company": identifier, "account": identifier,
+                    "uuid": SimpleNamespace(UUID=listener_smoke.uuid.UUID, uuid4=lambda: SimpleNamespace(hex="probe")),
+                    "subprocess": SimpleNamespace(Popen=popen, PIPE=None), "ThreadPoolExecutor": Executor,
+                    "time": SimpleNamespace(monotonic=lambda: 0), "compose": ["owned-compose"], "environment": {}}
+                exec(compile(module, "inert_listener_cleanup", "exec"), namespace)
+                with self.assertRaises(InjectedFailure) as failure: namespace["queued_revoke"]("revoke", "restore")
+                self.assertEqual(fault if fault in ("popen", "stdin_write", "stdin_close", "executor") else "observation", str(failure.exception))
+                self.assertIn("release", effects); self.assertIn("restore", effects); self.assertIn("drop", effects)
+                if fault != "popen": self.assertIn("drain", effects)
+                if fault not in ("popen", "stdin_write", "stdin_close", "executor"): self.assertIn("shutdown", effects)
 
     def test_group_browser_diagnostics_retain_only_fixed_stage_or_bounded_http_status(self):
         prefix = "FAIL owned group Chromium inbox gate: "
