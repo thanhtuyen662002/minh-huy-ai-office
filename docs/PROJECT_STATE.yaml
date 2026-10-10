@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/284-group-reference-statistics
+current_branch: codex/286-restored-browser-receipt
 current_pr: null
-current_target_head: 6c746b929c2b04b8a21453680cbe940161e465c9
+current_target_head: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
   backend:
-    issue: 284
+    issue: 286
     pr: null
-    branch: codex/284-group-reference-statistics
-    head: 6c746b929c2b04b8a21453680cbe940161e465c9
+    branch: codex/286-restored-browser-receipt
+    head: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
     state: in_progress
-    next: 'Merged283/main6c exact Build38038487497/actual114173836023/quality114176087671 FAILURE; Gov38038487489 and six prerequisites SUCCESS. Application-restart baseline ACK wait passed, separate delivery3/consumer1 assertion failed; actual numbers/cause unproven. Freeze/review284 coherent exact pre/post restart snapshots within unchanged30s, then follow-on Draft PR and exact PR/main closure before277 acceptance and278 implementation.'
+    next: 'Merged285/mainaeb exact Build38041707509/actual114183088426/quality114185755608 FAILURE; Gov38041707526 and six prerequisites SUCCESS. Native application and literal pending RabbitMQ restart PASS. Chromium status202 passed, then historical restoredResponse.json failed before receipt equality; acquisition/JSON/abort cause unproven. Freeze/review286 existing strict original-response reader on this caller, then one Draft and exact PR/main closure before277 acceptance and278 implementation.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own284 follow-on repair after merged283/main6c terminal failure. Local44 Python controls PASS including12 actual-block delayed/disjoint/extra-count/consumer probes across baseline and resumed delivery; source/graph/publication/30s bounds unchanged. Freeze/review/push one Draft PR and close renewed exact PR/main all8/native/Chromium.277 remains OPEN; only private278 design/30 independent label preparation exists. After accepted277/main implement278 automatic SQL brain/notes then279 IT reporter; full233 ACTIVE.'
+next_action: 'Own286 original restored-source receipt reader after merged285/mainaeb terminal Chromium failure. Local36 Node controls PASS including13 actual historical caller/reader positive/refusals; status202/operation/fingerprint/worker/one graph and existing20s/4096/UTF8 policy unchanged. Freeze/review/push one Draft and close renewed exact PR/main all8/native/Chromium.277 remains OPEN; private278 design/proposed120 primary40 independent labels are unevaluated preparation only. After accepted277/main implement278 automatic SQL brain/notes then279 IT reporter; full233 ACTIVE.'
 
 
 blocked_by:

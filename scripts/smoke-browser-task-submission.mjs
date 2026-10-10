@@ -252,7 +252,8 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     const restoredResponse = await positive;
     historicalPhase(restoredResponse.status() === 202 ? "restored202-body" : restoredResponse.status() === 409 ? "restored-refused409"
       : restoredResponse.status() === 401 ? "restored-refused401" : restoredResponse.status() === 503 ? "restored-refused503" : "restored-refused-other");
-    proof(restoredResponse.status() === 202); const receipt = await restoredResponse.json();
+    proof(restoredResponse.status() === 202);
+    const receipt = await requiredReceipt(restoredResponse, name => historicalPhase("restored-" + name));
     historicalPhase("restored-receipt-equal");
     proof(receipt.operationId === prepared.operationId && receipt.inputFingerprint === prepared.inputFingerprint);
     historicalPhase("restored-worker"); await completed(receipt.taskId);
