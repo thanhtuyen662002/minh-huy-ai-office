@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
+current_target_head: ec3e8f79ff5ca772e2499ac3c8555c133425d1f8
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
+    head: ec3e8f79ff5ca772e2499ac3c8555c133425d1f8
     state: in_progress
-    next: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a108 all8/FULL2711 zeroFailSkip/sixOriginal11684211653 ROOT qualified. d286 .NET114329405159 FAILED1 of2761/cause unproven; narrow entity boundary repair bc87bc5 APPROVED6102993149 ROOT FULLread/local90/full2210 PASS. Fixture dc4b2e7 APPROVED6102945756 ROOT FULLread. Separate fifth native history profile prepared: actual501 references/allocation500/cutoff499 ChangedAfterCutoff and empty1 NoWork/raw500 twoSelected498Superseded/pending501;136Python/34focused/Release0Warn0Error/25unowned/ten synthetic parser controls PASS, not native evidence. Review entire new executable/coordinator/workflow50min/docs checkpoint before push; preserve meaningful active111 CI through terminal then own reviewed repair/new112 exact CI closure. Native500/history/model/full278/279/233 incomplete, no partialmerge. Preserve original104/four prior profiles/full34 snapshots and other leases; partialchunks/physical FK/current races/all-contributor frontier/gap/backlog/retry/context/tokenizer/no-click DIUI/100-30realmodel/customer production remain."
+    next: "Own278/Draft288 remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS. Whole10file history preparation SCOPED_APPROVED6103138411 ROOT FULLread/persisted, bc87 boundary repair6102993149 and dc4 fixture6102945756 similarly approved. Prior d286 TERMINAL overallRED Build38091747428/quality114335195433 due.NET114329405159 one failure of2761/causeunproven; native114329405046 SUCCESS/ROOT FULL111 once167PASS/sixOriginal11685495120. Native500/history/suffix501/new112/all8 NOT_YET_QUALIFIED until exact ec3 terminal FULL logs/rootimages. Keep activeCI alive; fix any terminal failure same288. Continue durable bounded per-chunk source/current-note/glossary dependency manifests and all-contributor revalidation before whole raw terminal/frontier; partialchunks/physicalFK/races/honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233 remain incomplete. No partialmerge or real-model claim."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a108 all8/FULL2711 zeroFailSkip/sixOriginal11684211653 ROOT qualified. d286 .NET114329405159 FAILED1 of2761/cause unproven; narrow entity boundary repair bc87bc5 APPROVED6102993149 ROOT FULLread/local90/full2210 PASS. Fixture dc4b2e7 APPROVED6102945756 ROOT FULLread. Separate fifth native history profile prepared: actual501 references/allocation500/cutoff499 ChangedAfterCutoff and empty1 NoWork/raw500 twoSelected498Superseded/pending501;136Python/34focused/Release0Warn0Error/25unowned/ten synthetic parser controls PASS, not native evidence. Review entire new executable/coordinator/workflow50min/docs checkpoint before push; preserve meaningful active111 CI through terminal then own reviewed repair/new112 exact CI closure. Native500/history/model/full278/279/233 incomplete, no partialmerge. Preserve original104/four prior profiles/full34 snapshots and other leases; partialchunks/physical FK/current races/all-contributor frontier/gap/backlog/retry/context/tokenizer/no-click DIUI/100-30realmodel/customer production remain."
+next_action: "Own278/Draft288 remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS. Whole10file history preparation SCOPED_APPROVED6103138411 ROOT FULLread/persisted, bc87 boundary repair6102993149 and dc4 fixture6102945756 similarly approved. Prior d286 TERMINAL overallRED Build38091747428/quality114335195433 due.NET114329405159 one failure of2761/causeunproven; native114329405046 SUCCESS/ROOT FULL111 once167PASS/sixOriginal11685495120. Native500/history/suffix501/new112/all8 NOT_YET_QUALIFIED until exact ec3 terminal FULL logs/rootimages. Keep activeCI alive; fix any terminal failure same288. Continue durable bounded per-chunk source/current-note/glossary dependency manifests and all-contributor revalidation before whole raw terminal/frontier; partialchunks/physicalFK/races/honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233 remain incomplete. No partialmerge or real-model claim."
 
 
 blocked_by:
@@ -1824,8 +1824,22 @@ group_278_raw_history_native_preparation:
   local: 136Python_16corruption_subcases_34focused_dotnet_zeroFailSkip_Release0Warn0Error_changedformat_25unowned_5UTF8AST_fourOldCold_plusHistory_tenSyntheticParser_PASS
   workflow: only_local_runtime_timeout40_to50_minutes_for_bounded120s_fixture_and_three170s_processes_prior33min_job
   future_native_predicates: 112_all111_retained_plus_one_history_aggregate_after_successful_owned_cleanup
-  source_review: PENDING_full_frozen10file_native_history_checkpoint_before_push
+  source_review: SCOPED_APPROVED6103138411_ROOT_FULL_read4259_persisted
   actual501_native500_suffix501: NOT_RUN_UNQUALIFIED
   model: NOT_RUN_UNEVALUATED_existing_Gateway_loader_reused
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge
   next: preserve_active_d286111_terminal_then_reviewed_repair_and_native112_exact_ci_closure_same288
+
+group_278_raw_history_exact_ci:
+  remote_head: ec3e8f79ff5ca772e2499ac3c8555c133425d1f8
+  source_review: SCOPED_APPROVED6103138411_ROOT_FULL_fetched_read4259_persisted
+  build: 38093894476
+  governance: 38093894474
+  native_job: 114335702045
+  dotnet_job: 114335701871
+  native112: ACTIVE_NOT_YET_QUALIFIED
+  prior_d286_build: TERMINAL_RED38091747428_quality114335195433_dotnet114329405159_one_of2761_failed_causeunproven
+  prior_d286_native: SUCCESS114329405046_ROOT_FULL111_once167PASS_sixOriginal11685495120
+  history500_suffix501: NOT_RUN_UNQUALIFIED_until_current_exact_native112
+  model: NOT_RUN_UNEVALUATED
+  next: own_current112_terminal_full_logs_images_same288_repair_then_allcontributor_manifests_terminal_frontier_pipeline
