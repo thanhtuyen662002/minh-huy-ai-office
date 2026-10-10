@@ -3,7 +3,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed class GroupWorkNotePermissionVerifier(PlatformDbContext database)
 {
     private static readonly string[] Registry = ["GroupEditorGrants", "GroupGlossaryEntries", "GroupGlossaryRevisions"];
-    private static readonly string[] AppendOnly = ["GroupRequestRevisions", "GroupRequestEvidence", "GroupWorkCommitReceipts", "GroupWorkSourceDispositions", "GroupNotesCommittedItems"];
+    private static readonly string[] AppendOnly = ["GroupRequestRevisions", "GroupRequestEvidence", "GroupWorkCommitReceipts", "GroupWorkSourceDispositions", "GroupWorkRawDispositions", "GroupNotesCommittedItems"];
     private static readonly IReadOnlyDictionary<string, string[]> WritableColumns = new Dictionary<string, string[]>
     {
         ["GroupCustomerRequests"] = ["CurrentRevision", "BusinessStatus", "BusinessVersion", "AssignedToUserId", "CommittedDueAtUtc", "ConfirmedByUserId", "ConfirmedAtUtc", "UpdatedAtUtc"],

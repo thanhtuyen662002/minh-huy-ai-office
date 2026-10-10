@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote280 TERMINAL RED Build38086639444/native114314414446/quality114319788181; rootFULL log107required21absent137PASS4failures, actual first-profile cleanup absence assertion. Gov38086639370/sixprerequisites SUCCESS/rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. Actual local Docker29.8.1 loopback404 reproduces newline stdout rejection; original CI result shape unretained/unproven. Narrow exactempty-LF-CRLF absence repair125Python PASS/source review pending. Scoped4b6102317836/f76102427093 ROOT FULLread; repaired nexthead must own renewed108/all8/FULL.NET2711 prediction/six ORIGINALs. Raw WIP separately preserved15c25ae56 (27of29focusedPASS; maxfixture needsNewText-then-Edit), excluded from repair. Continue gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge.'
+next_action: "Own278/Draft288 exact remote30a5e8c after scoped APPROVED6102573838 ROOT FULLread; Build38089462537/native114322730774 and Gov38089462538 ACTIVE; renewed108/all8/FULL.NET2711 prediction/six ORIGINALs unqualified. Prior280 TERMINAL RED Build38086639444/native114314414446/quality114319788181; full107 required21absent137PASS4failures. Raw selected-head ledger source checkpoint:29focused/full2189Persistence zeroFailSkip/Release0W0E/format PASS; review and actual SQL atomicity/replay/immutability/max500 remain required. No terminal frontier from selected count; continue all-contributor fencing/full raw completion, gap/backlog/zero-message carrier/retry/context/DIUI, real100-30eval/279/full233; no partialmerge."
 
 
 blocked_by:
@@ -1738,3 +1738,20 @@ automatic_container_absence_repair:
   approved_prerequisites: '4b scoped6102317836 and f7 scoped6102427093 ROOT FULLfetched/read; native108 remains NOT_RUN_UNQUALIFIED.'
   raw_wip_stash: 15c25ae56174dc1bfa78c11c8282b41d5a410ab2
   next: 'Full frozen repair review then samePR reviewed-source108 push/CI closure; preserve failed570/280 evidence and model NOT_RUN_UNEVALUATED; no partialmerge.'
+
+group_278_raw_selected_head_accounting:
+  source_parent: 30a5e8c669351091379ca5aa408ba14a2172611a
+  active_remote_build: 38089462537
+  active_remote_governance: 38089462538
+  active_remote_native: 114322730774
+  parent_source_review: SCOPED_APPROVED6102573838_ROOT_FULL_fetched_read
+  implementation: 'Automatic note and automatic NoWork commits stage immutable metadata-only raw allocation rows beside the existing receipt/selected dispositions/notes/outbox in the SAME transaction and savepoint. Legacy entry paths add no raw rows. Complete freshly fenced dense1to500 allocation is validated; only selected message IDs receive raw links to the exact selected head/outcome. Original replay checks all11 fields, count and sequence with a501 sentinel.'
+  migration: '20261010213659_AddGroupWorkRawAccounting additive table, scoped five-field PK/four restrictive scoped FKs/four indexes/positive revision and closed outcome-relation checks/operator ownership/SELECT INSERT only/all11 column UPDATE denied. No plaintext/new provider/old-table change; forward repair only.'
+  local: '29 new focused PASS, including actual InMemory ingress/allocation/read at500 and501; full2189Persistence zeroFailSkip; fullRelease solution0Warn0Error; changed CSharp format and diff PASS. Existing schema gates include the new30th Group table and preserve every scoped FK/owner/column DENY requirement. Synthetic/InMemory/SQL160 parsing are NOT native runtime acceptance.'
+  review: PENDING_frozen_full_source_review_before_push
+  native: NOT_RUN_UNQUALIFIED_atomic_raw_rows_replay_postflush_rollback_immutability_scoped_FKs_max500_required
+  scope_limits: 'Selected-head accounting is not whole-batch completion; unselected allocation remains unaccounted. Superseded relation means different from the selected head, which can win recall priority or cutoff selection; it does not assert each raw body was model input. No terminal frontier, model quality, independent-process race or no-click pipeline claim.'
+  retained_stash: 15c25ae56174dc1bfa78c11c8282b41d5a410ab2
+  next: 'Finish frozen source review; prepare owned native raw-ledger SQL proof with all retained scopes/legacy counts intact. Own exact30a108 CI through terminal before any later push; do not supersede meaningful active CI.'
+  actual_model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_and_loader_reused
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

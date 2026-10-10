@@ -23,7 +23,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
         ArgumentNullException.ThrowIfNull(proposal); ArgumentNullException.ThrowIfNull(dependencies);
         ValidateInput(proposal, dependencies, operationId, cancellationToken);
         return await CommitCoreAsync(proposal.Preparation.Context, proposal.Preparation.Context.Items.ToDictionary(x => x.MessageId,
-            x => (Revision: x.Revision, Outcome: GroupWorkSourceOutcome.NoWork)), dependencies, operationId, cancellationToken);
+            x => (Revision: x.Revision, Outcome: GroupWorkSourceOutcome.NoWork)), dependencies, operationId, false, cancellationToken);
     }
 
     public async Task<GroupNoWorkCommitResult> CommitAutomaticAsync(GroupAutomaticNotePlan plan,
@@ -32,18 +32,19 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
         ArgumentNullException.ThrowIfNull(plan); ArgumentNullException.ThrowIfNull(dependencies);
         ValidateAutomaticInput(plan, dependencies, operationId, cancellationToken);
         return await CommitCoreAsync(plan.Preparation.Context, plan.SourceDispositions.ToDictionary(x => x.MessageId,
-            x => (Revision: x.Revision, Outcome: x.Outcome)), dependencies, operationId, cancellationToken);
+            x => (Revision: x.Revision, Outcome: x.Outcome)), dependencies, operationId, true, cancellationToken);
     }
 
     private async Task<GroupNoWorkCommitResult> CommitCoreAsync(GroupBatchSourceContext context,
         IReadOnlyDictionary<Guid, (long Revision, GroupWorkSourceOutcome Outcome)> selected,
-        GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken)
+        GroupBrainPrivateContext dependencies, Guid operationId, bool automatic, CancellationToken cancellationToken)
     {
         var handle = context.Handle; var scope = context.Scope;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         var sourceHash = SourceHash(selected.ToDictionary(x => x.Key, x => x.Value.Revision));
         var staged = new List<object>(); var savepointCreated = false; DateTimeOffset? effectTime = null;
+        GroupBatchAllocationReceipt? currentAllocation = null;
         try
         {
             await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
@@ -104,6 +105,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                 MessageRevision = x.Value.Revision,
                 Outcome = x.Value.Outcome
             }));
+            if (automatic) staged.AddRange(RawAccounting());
             database.AddRange(staged);
             await database.SaveChangesAsync(cancellationToken);
             // These fixed effects have already reached SQL. An expired final
@@ -125,6 +127,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
             }
             async Task ObserveAsync(GroupBatchClaimFenceVerdict verdict)
             {
+                if (verdict is GroupBatchClaimFenceVerdict.Current current) currentAllocation = current.Allocation;
                 if (verdict is not GroupBatchClaimFenceVerdict.Expired expired) return;
                 if (savepointCreated)
                 {
@@ -152,6 +155,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                 if (rows.Length != selected.Count || rows.Select(x => x.MessageId).Distinct().Count() != rows.Length
                     || rows.Any(x => !selected.TryGetValue(x.MessageId, out var value)
                         || value.Revision != x.MessageRevision || value.Outcome != x.Outcome)) throw Unavailable();
+                if (automatic) await GroupWorkRawAccounting.RequireReplayAsync(database, scope, operationId, RawAccounting(), cancellationToken);
                 if (await database.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId
                     && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.OriginBatchId == context.BatchId
                     && x.OriginOperationId == operationId, cancellationToken)
@@ -164,6 +168,8 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
         { throw Unavailable(); }
         finally { DetachStaged(); }
 
+        GroupWorkRawDispositionRecord[] RawAccounting() => GroupWorkRawAccounting.Build(context,
+            currentAllocation ?? throw Unavailable(), selected, operationId);
         void DetachStaged()
         { foreach (var entity in staged) database.Entry(entity).State = EntityState.Detached; }
         GroupNoWorkCommitResult Result(GroupWorkCommitReceiptRecord value, bool previous) =>

@@ -97,3 +97,20 @@ are implemented. That later workflow must also resolve bounded gap backlog
 selection; permanent overflow refusal is not acceptance for received known work.
 Zero-message gap attention, raw completion/frontier and native SQL mutation
 qualification remain required. See `docs/validation/GROUP_EXACT_COVERAGE_DEPENDENCIES.md`.
+
+### Immutable selected-head raw accounting
+
+Automatic note and automatic NoWork transactions record metadata-only immutable
+links from every allocated raw revision of each selected message to its sealed
+selected head/outcome and operation. Validate the full freshly fenced dense
+allocation (at most500) and replay every original field with a501 sentinel.
+Unselected messages remain unaccounted. Use the existing transaction/savepoint;
+raw links must roll back with receipts, notes and outbox on final fence failure.
+Legacy entry paths do not add raw links. The additive scoped table has restrictive
+FKs and effective runtime SELECT/INSERT-only rights, including column UPDATE denial.
+
+Different-from-selected-head accounting does not assert every raw body was model
+input or that a batch is terminal. Whole-batch completion/frontier requires all
+raw coverage and current validation of every contributing source/note/glossary
+dependency. Native atomicity/replay/permission/capacity/race qualification remains
+required. See `docs/validation/GROUP_RAW_SELECTED_HEAD_ACCOUNTING.md`.

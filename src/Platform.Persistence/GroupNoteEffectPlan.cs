@@ -10,6 +10,7 @@ internal sealed class GroupNoteEffectPlan
         GroupAutomaticSourceReceipt[] selected, bool automatic)
     {
         Preparation = preparation; Notes = Array.AsReadOnly(notes); Selected = Array.AsReadOnly(selected);
+        IsAutomatic = automatic;
         MaximumNotes = automatic ? GroupAutomaticNotePlan.MaximumNotes : GroupGroundedWorkProposal.MaximumNotes;
         MaximumEvidenceRows = GroupGroundedWorkProposal.MaximumEvidence + (automatic ? 200 : 0);
         Outcome = notes.Any(x => x.Origin == GroupRequestRevisionOrigin.AiExtracted) ? GroupWorkCommitOutcome.Notes : GroupWorkCommitOutcome.Attention;
@@ -19,6 +20,7 @@ internal sealed class GroupNoteEffectPlan
     internal IReadOnlyList<Entry> Notes { get; }
     internal IReadOnlyList<GroupAutomaticSourceReceipt> Selected { get; }
     internal int MaximumNotes { get; }
+    internal bool IsAutomatic { get; }
     internal int MaximumEvidenceRows { get; }
     internal GroupWorkCommitOutcome Outcome { get; }
     public override string ToString() => "Group fixed note effect plan (private content).";

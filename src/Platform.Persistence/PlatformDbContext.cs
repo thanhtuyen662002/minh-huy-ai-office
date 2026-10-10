@@ -54,6 +54,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupRequestEvidenceRecord> GroupRequestEvidence => Set<GroupRequestEvidenceRecord>();
     public DbSet<GroupWorkCommitReceiptRecord> GroupWorkCommitReceipts => Set<GroupWorkCommitReceiptRecord>();
     public DbSet<GroupWorkSourceDispositionRecord> GroupWorkSourceDispositions => Set<GroupWorkSourceDispositionRecord>();
+    public DbSet<GroupWorkRawDispositionRecord> GroupWorkRawDispositions => Set<GroupWorkRawDispositionRecord>();
     public DbSet<GroupNotesCommittedOutboxRecord> GroupNotesCommittedOutbox => Set<GroupNotesCommittedOutboxRecord>();
     public DbSet<GroupNotesCommittedItemRecord> GroupNotesCommittedItems => Set<GroupNotesCommittedItemRecord>();
     public DbSet<GroupEditorGrantRecord> GroupEditorGrants => Set<GroupEditorGrantRecord>();
@@ -71,6 +72,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureGroupBatchAllocation();
         modelBuilder.ConfigureGroupBatchClaims();
         modelBuilder.ConfigureGroupWorkNotes();
+        modelBuilder.ConfigureGroupWorkRawAccounting();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));

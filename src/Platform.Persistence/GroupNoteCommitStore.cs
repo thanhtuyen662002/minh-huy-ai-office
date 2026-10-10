@@ -54,6 +54,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         var permissions = new GroupWorkNotePermissionVerifier(database);
         DataSourceRegistrationTransaction? active = null; IDbContextTransaction? sql = null;
         var savepointCreated = false; DateTimeOffset? effectTime = null;
+        GroupBatchAllocationReceipt? currentAllocation = null;
         try
         {
             string[] retainedKeyIds;
@@ -215,6 +216,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 MessageRevision = x.Revision,
                 Outcome = x.Outcome
             }));
+            if (plan.IsAutomatic) staged.AddRange(RawAccounting());
             staged.Add(new GroupNotesCommittedOutboxRecord
             {
                 TenantId = scope.TenantId,
@@ -258,6 +260,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         }
         async Task ObserveAsync(GroupBatchClaimFenceVerdict verdict)
         {
+            if (verdict is GroupBatchClaimFenceVerdict.Current current) currentAllocation = current.Allocation;
             if (verdict is not GroupBatchClaimFenceVerdict.Expired expired) return;
             if (savepointCreated) { await sql!.RollbackToSavepointAsync(EffectSavepoint, cancellationToken); DetachStaged(); }
             if (database.ChangeTracker.HasChanges()) throw Unavailable();
@@ -284,6 +287,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
             if (dispositions.Length != selected.Count || dispositions.Select(x => x.MessageId).Distinct().Count() != dispositions.Length
                 || dispositions.Any(x => !selected.TryGetValue(x.MessageId, out var source) || source.Revision != x.MessageRevision
                     || x.Outcome != source.Outcome)) throw Unavailable();
+            if (plan.IsAutomatic) await GroupWorkRawAccounting.RequireReplayAsync(database, scope, operationId, RawAccounting(), cancellationToken);
             var requests = await database.GroupCustomerRequests.AsNoTracking().Where(x => x.TenantId == scope.TenantId
                 && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.OriginBatchId == context.BatchId
                 && x.OriginOperationId == operationId).OrderBy(x => x.OriginCandidateOrdinal).Take(plan.MaximumNotes + 1).ToArrayAsync(cancellationToken);
@@ -347,6 +351,8 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
             }
             catch (Exception) { throw Unavailable(); }
         }
+        GroupWorkRawDispositionRecord[] RawAccounting() => GroupWorkRawAccounting.Build(context,
+            currentAllocation ?? throw Unavailable(), selected.ToDictionary(x => x.Key, x => (x.Value.Revision, x.Value.Outcome)), operationId);
         void DetachStaged() { foreach (var entity in staged) database.Entry(entity).State = EntityState.Detached; }
         Guid Identity(string kind, int ordinal) => new(SHA256.HashData(Encoding.ASCII.GetBytes(FormattableString.Invariant(
             $"aioffice-group-note-id-v1/{scope.TenantId:D}/{scope.CompanyId:D}/{scope.SourceBindingId:D}/{context.BatchId:D}/{operationId:D}/{kind}/{ordinal}"))).AsSpan(0, 16));
