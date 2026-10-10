@@ -724,8 +724,12 @@ The owned loss proxy forwards only fixed enrollment/listener/event paths and
 canonical signed headers. Metadata and listener responses forward bounded actual
 Core200/no-store JSON bytes unchanged. Only an observed real event commit holds
 all client ACK bytes. The parent requires two actual metadata and two actual
-Renew forwards before forced child death, reloads the last saved actual scoped
-lease and waits its expiry before acquiring a different owner/epoch2. Existing
+Renew forwards before forced child death, validates the last actual scoped Renew
+response observed in the proxy and waits its expiry before acquiring a different
+owner/epoch2. The child's saved lease is only the first Renew; operational replay
+issues another Renew. Independent review reproduced the earlier-expiry P2, now
+repaired by using the last actual response and retaining the earlier receipt as
+an ordering bound. Original independent closure remains required. Existing
 exact original ACK, full6/restart/cipher preservation, one-effect and clean pooled
 isolation oracles remain. No fixture response fabricates backend authority.
 
@@ -734,3 +738,32 @@ held event ACK, pre-upstream path/size refusal and exact scoped lease/owner/epoc
 duration oracles. Seven .NET owned guard tests, clean executable Release build
 and changed-file formatting pass. These controls do not execute native SQL or
 forced process death; frozen extension review and exact hosted proof are pending.
+
+### fd4 native execution and retained browser failure
+
+Remote `fd4f268619372b4dbd4c317dbf02d29a83519b5a` Build38017961934 /
+Gov38017961861 finished with six prerequisite gates/governance PASS and
+actual114112369937/quality114114935346 RED. Root inspected all three new actual
+.NET spool/SQL markers PASS:100 encrypted captures/forced child death after
+observed commit, full6/cipher preservation through Core restart/fresh epoch2/
+original ACK reconciliation, and actual SQL grant403 byte preservation/restored
+cursor2/clean pooled isolation. All retained ingress/read/listener markers PASS.
+This executed the earlier mechanically configured native enrollment, not the
+follow-on metadata-fetch extension.
+
+Both retained actual Chromium committed202 header-loss and body-loss replay
+controls PASS. The earlier9d body-response cause remains unproven. Later Chromium
+fails with an unhandled15-second response waiter in the submission company-switch
+helper invoked when restoring the original company after held private intent.
+A waiter could reject while selectOption was pending before the parent awaited
+it, bypassing fixed-stage handling and owned restoration. The fixture now observes
+both waiter rejections immediately and still awaits the original promises;
+missing auth request/callback, non-CodeS256, non303 or wrong current company still
+fails. Fixed select/auth-request/callback/workspace/current-session stages identify
+the actual remaining boundary. Original timeout/callback requirements are kept;
+the underlying absent callback cause has not yet been established.
+
+Nine local Node guard tests PASS, including actual extracted helper rejection
+ownership while selection is pending and retained CodeS256/303/current-company
+positive and negative controls. Frozen delta review and renewed exact native/
+Chromium closure remain mandatory. No all8/merge/full277 approval is claimed.

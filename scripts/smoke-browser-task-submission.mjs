@@ -47,12 +47,22 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   const sid = async context => (await context.cookies(app)).find(item => item.name === "aioffice_browser_session")?.value;
   const waitResponse = (path, status) => page.waitForResponse(response => new URL(response.url()).pathname === path
     && response.request().method() === "POST" && response.status() === status, { timeout: 20_000 });
-  async function switchCompany(target, selected) {
+  async function switchCompany(target, selected, phase = "provider-company-switch") {
     const callback = target.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     const request = target.waitForRequest(request => request.url().startsWith(identity + "/realms/aioffice-local/protocol/openid-connect/auth?"));
+    // A waiter can reject while selectOption is still pending. Observe that
+    // rejection immediately, then require the original waiter below so its
+    // failure reaches the fixed-stage parent and owned restoration finally.
+    callback.catch(() => {}); request.catch(() => {});
+    stage(phase + "-select");
     await target.getByRole("combobox", { name: "Chuyển công ty", exact: true }).selectOption(selected);
+    stage(phase + "-auth-request");
     const url = new URL((await request).url()); proof(url.searchParams.get("response_type") === "code" && url.searchParams.get("code_challenge_method") === "S256");
-    proof((await callback).status() === 303); await target.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage(phase + "-callback");
+    proof((await callback).status() === 303);
+    stage(phase + "-workspace");
+    await target.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage(phase + "-current-session");
     const current = await get(target, `/api/local/session?companyId=${selected}`); proof(current.status === 200 && JSON.parse(current.text).companyId === selected);
   }
   async function completed(task) {
@@ -214,11 +224,11 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       } catch { failed = true; captured(); await route.abort().catch(() => {}); } finally { finished(); }
     });
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).click();
-    await bounded(reached); proof(!failed); await switchCompany(page, fixture.companyId); release(); await bounded(delivered);
+    await bounded(reached); proof(!failed); await switchCompany(page, fixture.companyId, "held-private-intent-switch-away"); release(); await bounded(delivered);
     await page.unroute(heldPattern); heldPattern = null;
     proof(attempted && !failed && await page.getByText(lateQuestion, { exact: true }).count() === 0 && sent.length === readCount);
     proof((await get(page, `/api/local/tasks/intents/${lateOp}?companyId=${fixture.companyId}`)).status === 404);
-    await switchCompany(page, company); await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await switchCompany(page, company, "held-private-intent-switch-back"); await page.getByRole("button", { name: "Công việc", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor(); equal(snapshot(), baseline);
     console.log("PASS actual successful private intent held across provider company switch is discarded, restored GET-only recovery preserves all effect and intent bytes");
     stage("external-member-loss-private-clear-restored-recovery");

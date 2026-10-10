@@ -226,6 +226,7 @@ class OwnedStackGuardTests(unittest.TestCase):
                     self.assertNotIn("committed", actions); self.assertEqual(1, captured[proxy.path])
                     self.assertIn(("header", "Content-Length", str(len(raw))), actions)
                     self.assertIn(("header", "Cache-Control", "no-store"), actions)
+                    if path == "listener": self.assertEqual(json.loads(raw), captured["lease_ack"])
 
     def test_spool_proxy_refuses_unknown_path_or_oversized_metadata_before_upstream(self):
         tree = ast.parse(Path(spool_smoke.__file__).read_text(encoding="utf-8"))
@@ -262,6 +263,11 @@ class OwnedStackGuardTests(unittest.TestCase):
         exec(block, namespace)
         value = good
         self.assertEqual(good, namespace["load_lease"](owner, 1))
+        # The retained child file can hold the first Renew. Passing the last
+        # observed actual response must select its later expiry unchanged.
+        latest = {"lease": {**good["lease"], "heartbeatAtUtc": "2026-10-10T00:00:03Z", "expiresAtUtc": "2026-10-10T00:00:33Z"}}
+        self.assertEqual(latest, namespace["load_lease"](owner, 1, latest))
+        self.assertEqual(good, value)
         for field, changed in (("account", {**good["lease"]["account"], "connectorAccountId": str(uuid.uuid4())}),
                 ("ownerId", str(uuid.uuid4())), ("epoch", 2), ("expiresAtUtc", "2026-10-10T00:00:31Z"),
                 ("expiresAtUtc", "2026-10-10T00:00:00Z"), ("heartbeatAtUtc", "2026-10-10T00:00:00+01:00")):

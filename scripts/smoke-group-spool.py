@@ -64,8 +64,9 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
             # Child emits only fixed phase labels; never expose captured streams.
             raise RuntimeError("Owned group spool executable failed at " + mode + ".")
 
-    def load_lease(expected_owner, expected_epoch):
-        receipt = json.loads((root / "lease.json").read_text(encoding="utf-8"))
+    def load_lease(expected_owner, expected_epoch, receipt=None):
+        if receipt is None:
+            receipt = json.loads((root / "lease.json").read_text(encoding="utf-8"))
         lease = receipt["lease"]
         assert lease["account"] == {"tenantId": tenant, "companyId": company, "connectorAccountId": account}
         assert lease["ownerId"] == expected_owner and lease["epoch"] == expected_epoch
@@ -164,6 +165,8 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
                 else:
                     # Preserve actual backend metadata/lease bytes. Only the
                     # committed event ACK is withheld from the shipping client.
+                    if self.path == "/internal/group-ingress/listener":
+                        captured["lease_ack"] = json.loads(raw)
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.send_header("Cache-Control", "no-store")
@@ -228,9 +231,12 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
         raise failure
     assert captured.get("/internal/group-ingress/enrollment") == 2 and captured.get("/internal/group-ingress/listener") == 2, \
         "Native capture/recovery did not use actual current metadata and renewed lease"
-    # The capture process saved the actual Renew receipt before the event
-    # commit. Wait for that latest lease, not the earlier Acquire deadline.
-    renewed = load_lease(owner, 1)
+    # The capture file contains its first Renew; operational Replay issues a
+    # second Renew. Wait for the last actual Core response seen by the proxy.
+    first_renewed = load_lease(owner, 1)
+    renewed = load_lease(owner, 1, captured["lease_ack"])
+    assert datetime.fromisoformat(renewed["lease"]["heartbeatAtUtc"].replace("Z", "+00:00")) >= \
+        datetime.fromisoformat(first_renewed["lease"]["heartbeatAtUtc"].replace("Z", "+00:00"))
     assert datetime.fromisoformat(renewed["lease"]["heartbeatAtUtc"].replace("Z", "+00:00")) >= \
         datetime.fromisoformat(lease["lease"]["heartbeatAtUtc"].replace("Z", "+00:00"))
     lease = renewed
