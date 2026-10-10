@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 2199a508738bf43d952688a6d394a726af6b2160
+current_target_head: c8b67775c91822ef9f0e28e2a3651669002d5641
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 2199a508738bf43d952688a6d394a726af6b2160
+    head: c8b67775c91822ef9f0e28e2a3651669002d5641
     state: in_progress
-    next: 'Own278/Draft288 SAME branch. Remote2199a508738bf43d952688a6d394a726af6b2160 Build38059643216/native114235105757 and quality114239125705 terminal RED; six prerequisites and Governance38059643200 SUCCESS, exact hosted .NET2319 root verified. Root native collector73/93 fixed markers,124 PASS and4 failure markers; held-key revocation/expiry/browser remain unaccepted. Immediate same-PR repair restricts both owned name lookups to container type while retaining full ID/label and cleanup; same image/container name makes image fallback reproducible in inert controls, actual inspect bytes absent so unique runtime cause UNPROVEN. Frozen787 proposal WITHHELD6098710405 solely needs_clarification empty missing_fields; fixed kind-dependent minimum/schema and retained all5 original reviewer controls. Full1814 Persistence0skip and58 Python passed. Freeze combined small repair, obtain independent full changed-scope/original controls approval, then push and own renewed all93/all8/six original images. Continue qualified context/tokenizer/scoped notes/glossary/effect rollback retirement/atomic evidence dispositions completion outbox/DI/UI/actual real100/30 evaluation;278/279/full233 ACTIVE. Existing Gateway primary values absent locally; server secret access unknown; real model NOT RUN/UNEVALUATED.'
+    next: 'Own278/Draft288. Exact remotec8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316 IN_PROGRESS, four prerequisites and Governance38061609472 SUCCESS, web/.NET active at capture. Prior2199 terminalRED and787 WITHHELD remain historical; both bounded repairs approved, renewed native/all93/all8/six original images still unaccepted. Separate private brain content protection implemented: purpose-bound AES256-GCM request/glossary payloads with exact scope/kind/record/revision/sourceVersion/deletionGeneration/keyID, strict UTF8<=64000, fixed errors and temporary byte zeroing.8 new/13 focused controls PASS0skip; freeze and independently review this separate checkpoint before any later push. No notes schema/store/effect/release/DI or actual model qualification inferred. Continue versioned protected scoped SQL notes/glossary, qualified context/tokenizer, source-lock-before-savepoint rollback/expiry witness/native MARS, atomic evidence dispositions completion NotesCommitted, DI/UI and frozen real100/30 model evaluation.278/279/full233 ACTIVE; primary Gateway config absent in checked local scopes, server store access unknown, real model NOT_RUN_UNEVALUATED.'
 
   erp_data:
     issue: 264
@@ -24,7 +24,7 @@ critical_paths:
     branch: codex/264-erp-readonly-qualification
     head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
     state: done
-    next: 'Own278/Draft288 SAME branch. Remote2199a508738bf43d952688a6d394a726af6b2160 Build38059643216/native114235105757 and quality114239125705 terminal RED; six prerequisites and Governance38059643200 SUCCESS, exact hosted .NET2319 root verified. Root native collector73/93 fixed markers,124 PASS and4 failure markers; held-key revocation/expiry/browser remain unaccepted. Immediate same-PR repair restricts both owned name lookups to container type while retaining full ID/label and cleanup; same image/container name makes image fallback reproducible in inert controls, actual inspect bytes absent so unique runtime cause UNPROVEN. Frozen787 proposal WITHHELD6098710405 solely needs_clarification empty missing_fields; fixed kind-dependent minimum/schema and retained all5 original reviewer controls. Full1814 Persistence0skip and58 Python passed. Freeze combined small repair, obtain independent full changed-scope/original controls approval, then push and own renewed all93/all8/six original images. Continue qualified context/tokenizer/scoped notes/glossary/effect rollback retirement/atomic evidence dispositions completion outbox/DI/UI/actual real100/30 evaluation;278/279/full233 ACTIVE. Existing Gateway primary values absent locally; server secret access unknown; real model NOT RUN/UNEVALUATED.'
+    next: 'Own278/Draft288. Exact remotec8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316 IN_PROGRESS, four prerequisites and Governance38061609472 SUCCESS, web/.NET active at capture. Prior2199 terminalRED and787 WITHHELD remain historical; both bounded repairs approved, renewed native/all93/all8/six original images still unaccepted. Separate private brain content protection implemented: purpose-bound AES256-GCM request/glossary payloads with exact scope/kind/record/revision/sourceVersion/deletionGeneration/keyID, strict UTF8<=64000, fixed errors and temporary byte zeroing.8 new/13 focused controls PASS0skip; freeze and independently review this separate checkpoint before any later push. No notes schema/store/effect/release/DI or actual model qualification inferred. Continue versioned protected scoped SQL notes/glossary, qualified context/tokenizer, source-lock-before-savepoint rollback/expiry witness/native MARS, atomic evidence dispositions completion NotesCommitted, DI/UI and frozen real100/30 model evaluation.278/279/full233 ACTIVE; primary Gateway config absent in checked local scopes, server store access unknown, real model NOT_RUN_UNEVALUATED.'
 
   company_selection:
     issue: 266
@@ -32,7 +32,7 @@ critical_paths:
     branch: codex/266-company-selection
     head: a75f31a2761ffe0afcbf067425eb8324789b3554
     state: done
-    next: 'Own278/Draft288 SAME branch. Remote2199a508738bf43d952688a6d394a726af6b2160 Build38059643216/native114235105757 and quality114239125705 terminal RED; six prerequisites and Governance38059643200 SUCCESS, exact hosted .NET2319 root verified. Root native collector73/93 fixed markers,124 PASS and4 failure markers; held-key revocation/expiry/browser remain unaccepted. Immediate same-PR repair restricts both owned name lookups to container type while retaining full ID/label and cleanup; same image/container name makes image fallback reproducible in inert controls, actual inspect bytes absent so unique runtime cause UNPROVEN. Frozen787 proposal WITHHELD6098710405 solely needs_clarification empty missing_fields; fixed kind-dependent minimum/schema and retained all5 original reviewer controls. Full1814 Persistence0skip and58 Python passed. Freeze combined small repair, obtain independent full changed-scope/original controls approval, then push and own renewed all93/all8/six original images. Continue qualified context/tokenizer/scoped notes/glossary/effect rollback retirement/atomic evidence dispositions completion outbox/DI/UI/actual real100/30 evaluation;278/279/full233 ACTIVE. Existing Gateway primary values absent locally; server secret access unknown; real model NOT RUN/UNEVALUATED.'
+    next: 'Own278/Draft288. Exact remotec8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316 IN_PROGRESS, four prerequisites and Governance38061609472 SUCCESS, web/.NET active at capture. Prior2199 terminalRED and787 WITHHELD remain historical; both bounded repairs approved, renewed native/all93/all8/six original images still unaccepted. Separate private brain content protection implemented: purpose-bound AES256-GCM request/glossary payloads with exact scope/kind/record/revision/sourceVersion/deletionGeneration/keyID, strict UTF8<=64000, fixed errors and temporary byte zeroing.8 new/13 focused controls PASS0skip; freeze and independently review this separate checkpoint before any later push. No notes schema/store/effect/release/DI or actual model qualification inferred. Continue versioned protected scoped SQL notes/glossary, qualified context/tokenizer, source-lock-before-savepoint rollback/expiry witness/native MARS, atomic evidence dispositions completion NotesCommitted, DI/UI and frozen real100/30 model evaluation.278/279/full233 ACTIVE; primary Gateway config absent in checked local scopes, server store access unknown, real model NOT_RUN_UNEVALUATED.'
 
 recent_authoritative_merges:
   - 'PR287/repair286 and issue277 accepted main2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd: frozen608/full review6096552286; main independent receipt6096704767. Build38044971534/Gov38044971530/all8/actual114192556176/quality114195330891 SUCCESS. All80 required markers,136 PASS,2027.NET/1334web and six ORIGINAL images11667314210 checked independently.277 CLOSED. Native application/literal pending broker restart and Core202/historical strict original receipts PASS. Earlier aeb failure cause unproven.278/279/model/customer/full233 remain outstanding.'
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 SAME branch. Remote2199a508738bf43d952688a6d394a726af6b2160 Build38059643216/native114235105757 and quality114239125705 terminal RED; six prerequisites and Governance38059643200 SUCCESS, exact hosted .NET2319 root verified. Root native collector73/93 fixed markers,124 PASS and4 failure markers; held-key revocation/expiry/browser remain unaccepted. Immediate same-PR repair restricts both owned name lookups to container type while retaining full ID/label and cleanup; same image/container name makes image fallback reproducible in inert controls, actual inspect bytes absent so unique runtime cause UNPROVEN. Frozen787 proposal WITHHELD6098710405 solely needs_clarification empty missing_fields; fixed kind-dependent minimum/schema and retained all5 original reviewer controls. Full1814 Persistence0skip and58 Python passed. Freeze combined small repair, obtain independent full changed-scope/original controls approval, then push and own renewed all93/all8/six original images. Continue qualified context/tokenizer/scoped notes/glossary/effect rollback retirement/atomic evidence dispositions completion outbox/DI/UI/actual real100/30 evaluation;278/279/full233 ACTIVE. Existing Gateway primary values absent locally; server secret access unknown; real model NOT RUN/UNEVALUATED.'
+next_action: 'Own278/Draft288. Exact remotec8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316 IN_PROGRESS, four prerequisites and Governance38061609472 SUCCESS, web/.NET active at capture. Prior2199 terminalRED and787 WITHHELD remain historical; both bounded repairs approved, renewed native/all93/all8/six original images still unaccepted. Separate private brain content protection implemented: purpose-bound AES256-GCM request/glossary payloads with exact scope/kind/record/revision/sourceVersion/deletionGeneration/keyID, strict UTF8<=64000, fixed errors and temporary byte zeroing.8 new/13 focused controls PASS0skip; freeze and independently review this separate checkpoint before any later push. No notes schema/store/effect/release/DI or actual model qualification inferred. Continue versioned protected scoped SQL notes/glossary, qualified context/tokenizer, source-lock-before-savepoint rollback/expiry witness/native MARS, atomic evidence dispositions completion NotesCommitted, DI/UI and frozen real100/30 model evaluation.278/279/full233 ACTIVE; primary Gateway config absent in checked local scopes, server store access unknown, real model NOT_RUN_UNEVALUATED.'
 
 
 blocked_by:
@@ -1001,3 +1001,24 @@ group_278_grounded_proposal_checkpoint:
   notes_persistence_or_DI: incomplete
   actual_model_evaluation: NOT_RUN_UNEVALUATED
   next: 'Freeze combined same288 repair, independently rerun original5 controls and full changed scope before approved push; own renewed exact all93/all8/browser closure. Continue protected same-group brain and qualified context, effect rollback/retirement/native MARS gate, atomic notes/evidence/dispositions/completion/NotesCommitted, worker DI/UI and real frozen model evaluation.278/279/full233 remain ACTIVE.'
+
+
+group_278_brain_content_protection_checkpoint:
+  remote_head: c8b67775c91822ef9f0e28e2a3651669002d5641
+  scoped_review_root_fully_fetched: 6098786534
+  build: 38061609455
+  actual: 114240837316
+  governance: 38061609472
+  remote_state: IN_PROGRESS_native_four_prerequisites_and_governance_SUCCESS
+  exact_native_acceptance: UNVERIFIED_pending_all93_all8_six_original_browser_images
+  local_state: purpose_bound_private_brain_payload_primitive_pending_frozen_review
+  new_controls: 8
+  focused_controls_including_retained_source: 13
+  maximum_clear_utf8_bytes: 64000
+  maximum_envelope_bytes: 64029
+  purpose: distinct_brain_request_revision_and_glossary_revision_AES256_GCM
+  authenticated_coordinates: full_source_scope_kind_record_revision_source_version_deletion_generation_keyID
+  key_resolution_and_authority: NONE_primitive_only_reuse_existing_scoped_provider_in_future_store
+  notes_schema_store_effects_release_DI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Own exactc8 CI terminal/all93/all8/original images; freeze/review content primitive without next push before closure. Implement versioned scoped protected notes/glossary and store-owned effect rollback/expiry retirement, qualified context/DI/UI and actual frozen model qualification.278/279/full233 ACTIVE.'
