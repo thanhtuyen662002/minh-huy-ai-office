@@ -80,9 +80,23 @@ def verify_pending_broker_restart(*, directory, api, pause_worker, resume_worker
         except BaseException as error:
             if failure is None: failure = error
     if failure is not None: raise failure
-    wait(lambda: broker_stats()["ack"] == baseline["ack"] + 1)
-    resumed = broker_stats()
-    assert resumed["deliver"] == baseline["deliver"] + 1 and resumed["consumers"] == 1
+    resumed = None
+
+    def original_delivery_acknowledged():
+        nonlocal resumed
+        resumed = broker_stats()
+        return (resumed["ack"] == baseline["ack"] + 1
+            and resumed["deliver"] == baseline["deliver"] + 1 and resumed["consumers"] == 1)
+
+    # Management observations can expose ACK before delivery/consumer statistics.
+    # Require every original exact delta in one snapshot within the existing bound.
+    try:
+        wait(original_delivery_acknowledged)
+    except AssertionError as error:
+        if resumed is None: raise
+        raise AssertionError("Owned restarted reference delivery observation failed: "
+            f"ack_delta={resumed['ack'] - baseline['ack']}, "
+            f"deliver_delta={resumed['deliver'] - baseline['deliver']}, consumers={resumed['consumers']}") from error
     assert queue_counts() == (0, 0) and count() == 2 and full_graph() == original
 
 

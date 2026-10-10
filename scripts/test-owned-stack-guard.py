@@ -326,6 +326,47 @@ class OwnedStackGuardTests(unittest.TestCase):
                 self.assertEqual(calls.count("resume"), 1)
                 if not fault: self.assertEqual(calls, ["pause", "publish", "inspect", "restart", "inspect", "resume"])
 
+    def test_pending_broker_restart_observes_all_exact_signals_together_within_existing_bound(self):
+        sequences = (
+            ("delayed", True, [(11, 20, 0), (11, 21, 0), (11, 21, 1)], None),
+            ("disjoint", False, [(11, 20, 1), (10, 21, 1), (11, 20, 1)], "ack_delta=1, deliver_delta=0, consumers=1"),
+            ("overshoot", False, [(12, 22, 1)] * 3, "ack_delta=2, deliver_delta=2, consumers=1"),
+            ("ack-changed-between-samples", False, [(11, 20, 0), (12, 21, 1), (12, 21, 1)], "ack_delta=2, deliver_delta=1, consumers=1"),
+            ("missing-consumer", False, [(11, 21, 0)] * 3, "ack_delta=1, deliver_delta=1, consumers=0"),
+            ("extra-consumer", False, [(11, 21, 2)] * 3, "ack_delta=1, deliver_delta=1, consumers=2"),
+        )
+        for case, succeeds, snapshots, diagnostic in sequences:
+            with self.subTest(case=case), patch.dict(os.environ, self.environment, clear=True):
+                state = dict(published=False, restarted=False, resumed=False, observations=0)
+                frames = iter(snapshots)
+                def publish():
+                    self.assertFalse(state["restarted"]); state["published"] = True
+                def restart(identity):
+                    self.assertEqual(identity, "owned"); state["restarted"] = True
+                def resume(): state["resumed"] = True
+                def statistics():
+                    if not state["resumed"]: return dict(ack=10, deliver=20, consumers=0)
+                    state["observations"] += 1
+                    ack, deliver, consumers = next(frames)
+                    return dict(ack=ack, deliver=deliver, consumers=consumers)
+                def bounded_wait(predicate, seconds=30):
+                    self.assertIn(seconds, (30, 60))
+                    for _ in range(3):
+                        if predicate(): return
+                    raise AssertionError("Owned reference observation deadline exceeded")
+                arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", pause_worker=lambda: None,
+                    resume_worker=resume, broker_state=lambda: ("owned", 2 if state["restarted"] else 1, True),
+                    restart_broker=restart, queue_counts=lambda: (1, 0) if state["published"] and not state["resumed"] else (0, 0),
+                    broker_stats=statistics, publish=publish, inspect_pending=lambda: None,
+                    full_graph=lambda: ["original-eight-table-graph"], count=lambda: 2, wait=bounded_wait)
+                if succeeds:
+                    reference_smoke.verify_pending_broker_restart(**arguments)
+                else:
+                    with self.assertRaisesRegex(AssertionError, diagnostic) as raised:
+                        reference_smoke.verify_pending_broker_restart(**arguments)
+                    self.assertEqual(str(raised.exception.__cause__), "Owned reference observation deadline exceeded")
+                self.assertEqual(state["observations"], 3)
+
     def test_pending_broker_restart_preserves_stop_failure_when_restoration_also_fails(self):
         first = RuntimeError("Owned stop reply lost")
         calls = []

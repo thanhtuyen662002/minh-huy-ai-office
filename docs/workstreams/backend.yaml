@@ -5,7 +5,7 @@ current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
 head: 24495763b5ccf6ff6af9e81768067ec215a5a671
-state: in_progress_exact_ci
+state: in_progress_terminal_ci_repair
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
@@ -1400,3 +1400,13 @@ group_connector_244_dispatch:
   review: 'Frozen db733+sole documented -t option244 APPROVED:53 Python (42 retained+11 independent actual ownership/control/counter/cleanup probes),17.NET guards/new inspect-pending unowned executable boundary/3AST/2YAML/diff PASS. Original lost-reference counterexample CLOSED before republication; four docs truthful. All shipping src/apps/workflow/sln bytes equal542.'
   exact_progress: 'Remote ref/GitHub PR244 verified; Governance and all six prerequisites SUCCESS. Actual step12 started07:14:38UTC and still non-terminal at07:25:46; Chromium pending. Prior542 green is not new restart acceptance.'
   next: 'Own exact current CI to terminal; actual new broker-incarnation/persistent exact-reference survival and shipping ACK/full8 graph required. Terminal red immediately inspect/fix SAME283, no useful CI cancelling progress pushes. Full277 closure/finalPR-main review precede eligiblemerge;278/279/full233 active.'
+group_connector_244_terminal:
+  head: 24495763b5ccf6ff6af9e81768067ec215a5a671
+  build: 38033648198
+  governance: 38033648226
+  actual: 114159514486
+  quality: 114162493033
+  state: terminal_native_failure_same_pr_repair
+  evidence: 'Governance and all six prerequisites SUCCESS. Retained current group/listener/read/spool, three managed process proofs, recovery-only startup and all six reference stages PASS. New proof passed owned incarnation/persistent original queue-reference survival before and after RabbitMQ restart without republication; ACK+1 wait returned, then immediate delivery+1/consumer1 assertion failed. No numeric counter snapshot was emitted; cause remains unproven. Chromium skipped; no full277 acceptance.'
+  repair: 'Within unchanged30s wait require ACK+1, delivery+1 and consumer1 together in one actual management snapshot. Strict exact deltas, ownership/restore, original reference, queue empty/count2/full8/portal/isolation unchanged; only bounded scalar failure diagnostics added.43 Python controls PASS, including delayed-statistics positive and disjoint/overshoot/missing-consumer refusals. Shipping src/apps/tests/workflows unchanged244.'
+  next: 'Freeze and independently review same283 repair plus dispatch/terminal documents, then approved push and exact-head native/browser closure. No merge/full277 until new actual restart and all required gates pass;278/279/full233 active.'

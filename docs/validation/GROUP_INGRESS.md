@@ -1202,3 +1202,24 @@ preserves exact bytes through late reply/reopen, and the hosted loop settles the
 file before stopping. This isolated injection does not prove the native factory,
 real HTTP, SQL fence, process restart or production volume. Frozen scoped host review
 and separate owned native capture/recovery process proof remain mandatory.
+
+### Exact244 terminal restart observation and bounded same-PR repair
+
+Build38033648198/actual114159514486/quality114162493033 failed;
+Governance38033648226 and six prerequisites passed. All retained native group,
+listener, read, spool, managed process/startup and six reference stages passed.
+The new proof reached its post-consumer observation after exact persistent
+original-reference inspection before/after the owned RabbitMQ restart, unchanged
+SQL graph and no republication. ACK+1 was observed; the following immediate
+snapshot did not satisfy delivery+1 and consumer1. No numeric counters were
+emitted, so the actual failure cause remains unproven. Chromium was skipped.
+
+The same-PR candidate observes all three exact conditions together in one
+management snapshot within the existing30s bound. It adds fixed scalar failure
+counter deltas only, preserves all ownership/restoration and original-reference
+checks, and still requires empty queue, count2, exact full8 graph, portal counts
+and clean pooled isolation.43 local Python controls passed, including a transient
+ACK-before-delivery/consumer positive and disjoint, overshoot and missing-consumer
+refusals. Shipping source and native executable bytes are unchanged. Independent
+frozen review and renewed actual native/browser execution remain required; this
+is no full277 or production acceptance.
