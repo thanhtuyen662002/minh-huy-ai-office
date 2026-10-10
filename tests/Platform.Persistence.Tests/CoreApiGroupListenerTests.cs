@@ -179,6 +179,30 @@ public sealed class CoreApiGroupListenerTests
         request.Headers.Add("X-AIOffice-Group-Signed-At", signature.SignedAtUnixSeconds.ToString(CultureInfo.InvariantCulture)); request.Headers.Add("X-AIOffice-Group-Nonce", signature.Nonce.ToString("D"));
         request.Headers.Add("X-AIOffice-Group-Signature", signature.SignatureHex); return request;
     }
+
+    [Theory]
+    [InlineData(Path, false)]
+    [InlineData(Path, true)]
+    [InlineData("/internal/group-ingress/events", false)]
+    [InlineData("/internal/group-ingress/events", true)]
+    public async Task BodyTransportFaultIsBoundedBeforeAuthenticationAndClearsPartialCapture(string path, bool partial)
+    {
+        await using var fixture = new CoreApiGroupIngressTests.Fixture(seedLease: false); using var request = Request(fixture);
+        using var stream = new FailingStream(partial);
+        var response = await fixture.Factory.Server.SendAsync(context =>
+        {
+            context.Request.Method = "POST"; context.Request.Path = path; context.Request.ContentType = "application/json";
+            context.Request.Body = stream;
+            foreach (var header in request.Headers) context.Request.Headers[header.Key] = header.Value.ToArray();
+        });
+        using var reader = new StreamReader(response.Response.Body);
+        var body = await reader.ReadToEndAsync();
+        Assert.Equal(503, response.Response.StatusCode); Assert.Equal("no-store", response.Response.Headers.CacheControl);
+        Assert.DoesNotContain("PRIVATE_FIXTURE", body); Assert.DoesNotContain("IOException", body);
+        Assert.DoesNotContain("Exception", body); Assert.Contains("Invalid", body);
+        Assert.Equal(0, fixture.Auth.Secrets.Calls); await EmptyListenerAsync(fixture);
+        Assert.All(stream.Captured.ToArray(), value => Assert.Equal((byte)0, value));
+    }
     private static async Task EmptyListenerAsync(CoreApiGroupIngressTests.Fixture fixture)
     {
         Assert.Empty(await fixture.Auth.Db.GroupListenerLeases.ToArrayAsync()); Assert.Empty(await fixture.Auth.Db.GroupAccountCoverageGaps.ToArrayAsync());
@@ -198,6 +222,30 @@ public sealed class CoreApiGroupListenerTests
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         { await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken); return 0; }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+    private sealed class FailingStream(bool partial) : Stream
+    {
+        internal Memory<byte> Captured { get; private set; }
+        private int calls;
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (++calls == 1)
+            {
+                Captured = buffer;
+                if (partial) { "PRIVATE_FIXTURE"u8.CopyTo(buffer.Span); return ValueTask.FromResult(15); }
+            }
+            throw new IOException("PRIVATE_FIXTURE_BODY_TRANSPORT");
+        }
         public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         public override void Flush() => throw new NotSupportedException();
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();

@@ -409,3 +409,23 @@ Local108 focused HTTP/auth/store/retained-event tests PASS,0 skips, including20 
 HTTP controls and2 explicit write-order controls. Native SQL nonce/account lock,
 rollback, revocation, expiry, restart/isolation and provider/spool/broker proofs
 remain mandatory before277 acceptance. No live connector or send was attempted.
+
+### Request-body transport privacy repair
+
+Independent86ff review reproduced request-body IOException escaping to the
+Development exception page:500 contained a private error marker and omitted
+no-store after the page cleared response headers. The shared bounded reader now
+maps ordinary body I/O failure to a fixed503; coded BadHttpRequest status such as
+actual overflow413 stays intact. Cancellation is checked before/after each read;
+original caller cancellation propagates. The capture buffer is zeroed on all exits.
+Four new owned HTTP controls cover both event/listener endpoints and faults before
+or after partial capture, fixed no-store503, no authentication/writes/private text,
+and zeroed capture. Local112 focused tests PASS,0 skips. Independent original
+probe closure remains required; no native listener execution is inferred.
+
+Exact745 Build38008927610/Governance38008927679/all8 PASS;
+actual114084138463/quality114086839468. Root inspected retained native protected
+graph/concurrent100, all queued ingress revokes, strict read-release KEY range,
+issued inbox and retained Chromium markers. The14-table migrations/current runtime
+permission expansion executed with retained ingestion; listener commands were not
+exposed in745 and therefore were not exercised by this run.

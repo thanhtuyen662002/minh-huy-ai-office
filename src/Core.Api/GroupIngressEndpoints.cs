@@ -85,12 +85,19 @@ internal static class GroupIngressEndpoints
         {
             while (length <= maximum)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var count = await request.Body.ReadAsync(scratch.AsMemory(length), cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (count == 0) break;
                 length += count;
             }
             if (length > maximum) throw new BadHttpRequestException("Request is too large.", 413);
             return scratch.AsSpan(0, length).ToArray();
+        }
+        catch (IOException error) when (error is not BadHttpRequestException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new BadHttpRequestException("Group request transport is unavailable.", 503);
         }
         finally { CryptographicOperations.ZeroMemory(scratch); }
     }
