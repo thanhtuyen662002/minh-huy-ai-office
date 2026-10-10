@@ -151,9 +151,15 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
     assert sql(column_permission) == "D", "Owned receipt column did not have its original explicit DENY"
     direct_permission = column_permission.replace("SELECT state", "SELECT COUNT(*)").replace("N'aioffice_binding_runtime'", "N'aioffice_runtime'")
     assert sql(direct_permission) == "0", "Owned receipt column had an unexpected direct runtime override"
-    temporary_sql("GRANT UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_runtime;",
-        "REVOKE UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) FROM aioffice_runtime;", lambda: no_effect(command()))
+    effective_column_permission = "EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.GroupListenerCommandReceipts',N'OBJECT',N'UPDATE',N'CommandSha256',N'COLUMN'); REVERT;"
+    assert sql(effective_column_permission) == "0"
+    def refuse_unsafe_column():
+        assert sql(effective_column_permission) == "1", "Owned column escalation did not actually change effective runtime rights"
+        no_effect(command())
+    temporary_sql("GRANT UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_binding_runtime;",
+        "DENY UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_binding_runtime;", refuse_unsafe_column)
     assert sql(column_permission) == "D" and sql(direct_permission) == "0"
+    assert sql(effective_column_permission) == "0"
     assert receipt(*call(body, nonce=nonce), already=True) == {**original, "wasAlreadyCommitted": True}
 
     # The second Save is forced to fail after a real Stop lease mutation and

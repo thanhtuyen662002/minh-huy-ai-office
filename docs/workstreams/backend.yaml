@@ -1001,3 +1001,8 @@ group_listener_native_fixture_cleanup_repair:
   review: 'Independent68b reproduced appliedCREATE/lostReply before try skips owned release/restore/drop; same setup gap at temporaryGRANT/CHECK.22 inert tests/20 generated SQL160 syntax checks/YAML/diff PASS; no other scoped proof blocker. Source6 full fingerprints versus portal4 cardinalities wording corrected; no portal full-row equality claim.'
   repair: 'All setup under guarded cleanup; conditional missing/partial gate/CHECK drop, original failure preserved. Temporary direct login GRANT restored to originally absent override, role columnDENY retained; actual migration grants role, not login.23 inert tests incl CREATE-applied/lostreply and4 temporarySQL fault cases PASS; original closure/native mandatory.'
   remote: 'API54e scoped APPROVED114 independent0skip/19guards; original86ff bodyIO private500/no-store P2 CLOSED, receipt6091749059. Own exact Build38010187105/Gov38010185277/actual114088140386; six prerequisites/Gov PASS, actual pending. No native listener proof yet.'
+
+group_listener_effective_column_proof_repair:
+  predecessor: 8b9e6a4ac34f132e691df090e97fb76795489de2
+  review: '8b9 cleanup original probes closing; reviewer identified documented inference that direct loginGRANT with same-column roleDENY can leave effective0 and403 prove no escalation.'
+  repair: 'Require actual EXECUTE AS runtime HAS_PERMS columnUPDATE1 before403. Temporarily change exact role columnDENY toGRANT, guarded restoreoriginalDENY; assertroleD/directlogin0/effective0 beforeafter.23 inert guardsPASS; native effective rights/runtime proof unexecuted. Freeze independent closure beforepush.'

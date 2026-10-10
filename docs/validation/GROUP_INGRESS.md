@@ -486,3 +486,17 @@ and19 guards PASS, including two noncooperative held-stream caller abort control
 Remote54e Build38010187105/Governance38010185277/actual114088140386 is owned;
 six prerequisites/Governance PASS, actual pending. No native listener commands have
 executed at this checkpoint. Full277/233 remain active.
+
+### Effective unsafe-column fixture precondition
+
+Independent8b9 review identified a permission-oracle inference: a direct login
+GRANT while retaining the same column's role DENY may leave effective UPDATE0.
+The candidate now requires observed runtime HAS_PERMS_BY_NAME column UPDATE1
+before testing403. It temporarily changes the exact role column DENY to GRANT,
+then restores that original DENY under guarded cleanup; original role stateD,
+absent direct login override and effective UPDATE0 are checked before/after.
+The permission algorithm/column-table exception is documented by Microsoft's
+[permission reference](https://learn.microsoft.com/en-us/sql/relational-databases/security/permissions-database-engine?view=sql-server-ver17)
+and [DENY reference](https://learn.microsoft.com/en-us/sql/t-sql/statements/deny-transact-sql?view=sql-server-ver17).
+This strengthens an unexecuted fixture; no unsafe effective rights or shipping
+failure has yet been observed on native SQL for this new table.
