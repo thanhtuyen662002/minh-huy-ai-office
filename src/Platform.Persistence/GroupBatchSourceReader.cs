@@ -1,7 +1,9 @@
+using System.Data;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
@@ -84,6 +86,56 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, token);
         var claims = new GroupBatchClaimStore(database, worker, clock);
         var allocation = await FenceAsync();
+        var current = await ReadLockedAsync(handle, selected, allocation, expected, token);
+        await FenceAsync();
+        if (database.ChangeTracker.HasChanges()) throw Unavailable();
+        await transaction.CommitAsync(token);
+        return (allocation.AllocatedThroughSequence, current.HasCoverageGap, current.Snapshots);
+
+        async Task<GroupBatchAllocationReceipt> FenceAsync()
+        {
+            var verdict = await claims.InspectCurrentLockedAsync(handle, token);
+            if (verdict is GroupBatchClaimFenceVerdict.Current current) return current.Allocation;
+            var expired = (GroupBatchClaimFenceVerdict.Expired)verdict;
+            // This unit contains only reads: no effect has been staged/flushed.
+            // Expiry writes metadata only, commits before denial, and never
+            // relies on a rolled-back transaction to preserve its witness.
+            await claims.RetireExpiredLockedAsync(expired.Observation, token);
+            await transaction.CommitAsync(token);
+            throw GroupServiceDirectory.Denied();
+        }
+    }
+
+    // Fixed SQL dependency read for the future owned effect unit. It returns
+    // an expiry observation; it never retires/commits that unit's staged writes.
+    internal async Task<GroupBatchClaimFenceVerdict> RequireUnchangedLockedAsync(GroupBatchSourceContext context,
+        CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ValidateLockedEntry(context.Handle, token);
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var verdict = await claims.InspectCurrentLockedAsync(context.Handle, token);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
+        var allocation = ((GroupBatchClaimFenceVerdict.Current)verdict).Allocation;
+        var current = await ReadLockedAsync(context.Handle, context.Snapshots.Select(x => x.Head.MessageId).ToArray(),
+            allocation, context.Snapshots, token);
+        if (allocation.AllocatedThroughSequence != context.AllocatedThroughSequence || current.HasCoverageGap != context.HasCoverageGap)
+            throw Unavailable();
+        return await claims.InspectCurrentLockedAsync(context.Handle, token);
+    }
+
+    private void ValidateLockedEntry(GroupBatchClaimHandle handle, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(handle); token.ThrowIfCancellationRequested(); worker.Validate(); handle.Receipt.Scope.Validate();
+        if (handle.Receipt.Scope.TenantId != worker.TenantId || handle.Receipt.Scope.CompanyId != worker.CompanyId) throw GroupServiceDirectory.Denied();
+        if (!database.Database.IsSqlServer() || database.Database.CurrentTransaction is not { } transaction
+            || !transaction.SupportsSavepoints || transaction.GetDbTransaction().IsolationLevel != IsolationLevel.Serializable
+            || database.ChangeTracker.HasChanges()) throw Unavailable();
+    }
+
+    private async Task<(bool HasCoverageGap, GroupBatchSourceSnapshot[] Snapshots)> ReadLockedAsync(GroupBatchClaimHandle handle,
+        Guid[] selected, GroupBatchAllocationReceipt allocation, IReadOnlyList<GroupBatchSourceSnapshot>? expected, CancellationToken token)
+    {
         if (selected.Any(id => !allocation.Revisions.Any(x => x.Metadata.MessageId == id))) throw Unavailable();
         var snapshots = new List<GroupBatchSourceSnapshot>();
         foreach (var id in selected)
@@ -124,23 +176,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
             && x.CompanyId == sourceScope.CompanyId && x.BindingId == sourceScope.SourceBindingId, token)
             || await database.GroupAccountCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == sourceScope.TenantId
                 && x.CompanyId == sourceScope.CompanyId && x.ConnectorAccountId == handle.Authority.Source.ConnectorAccountId, token);
-        await FenceAsync();
-        if (database.ChangeTracker.HasChanges()) throw Unavailable();
-        await transaction.CommitAsync(token);
-        return (allocation.AllocatedThroughSequence, gap, snapshots.ToArray());
-
-        async Task<GroupBatchAllocationReceipt> FenceAsync()
-        {
-            var verdict = await claims.InspectCurrentLockedAsync(handle, token);
-            if (verdict is GroupBatchClaimFenceVerdict.Current current) return current.Allocation;
-            var expired = (GroupBatchClaimFenceVerdict.Expired)verdict;
-            // This unit contains only reads: no effect has been staged/flushed.
-            // Expiry writes metadata only, commits before denial, and never
-            // relies on a rolled-back transaction to preserve its witness.
-            await claims.RetireExpiredLockedAsync(expired.Observation, token);
-            await transaction.CommitAsync(token);
-            throw GroupServiceDirectory.Denied();
-        }
+        return (gap, snapshots.ToArray());
     }
 
     private async ValueTask<GroupSourceKeyMaterial> ResolveKeyAsync(GroupScope scope, string keyId, CancellationToken token)

@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Remote0201fc5e53b3d9d96d655faa077330ca12732629 native brain proof scoped7-file APPROVED6099748082/root FULL fetched before push. Build38068576171 IN_PROGRESS; Governance38068576300 SUCCESS; native114261152085 still pending. Web114261152125 terminal red: original future transaction +11 seconds raced wall-clock +10 allowance; retain original oracle and freeze Date in that test only, no production auth change. Own SAME288 renewed CI; do not merge partial278. Parentb195 Build38066869303/Gov38066869297/all8/native114256181577/quality114259553934 SUCCESS; root all94 exactonce150PASS0fail/2431.NET0skip and all6ORIGINAL11675436987 inspected. Local closed protected AI-note/glossary codec has38 focused and1918 full Persistence PASS0fail0skip; no provider/effect/IT authority, exact Unicode/evidence preserved, whole decoded known-secret policy and64k UTF8 bound. Independent frozen codec/clock-test review pending. New native brain acceptance still requires97exactonce/all8/Gov/all6 originals. Continue qualified same-group context/relevance/tokenizer and first owned note-effect source-lock/savepoint rollback/clean detach/witness-only expiry/native MARS, atomic notes/evidence/raw coverage/completion/NotesCommitted and automatic DI/UI. ExistingGateway real100/30 model evaluation NOT_RUN_UNEVALUATED; required primary variables absent checked scopes, server access unknown.278/279/full233 ACTIVE.'
+next_action: 'Own278/Draft288. Remote0201fc5e53b3d9d96d655faa077330ca12732629 native brain proof scoped7-file APPROVED6099748082/root FULL fetched before push. Build38068576171 IN_PROGRESS; Governance38068576300 SUCCESS; native114261152085 still pending. Web114261152125 terminal red: original future transaction +11 seconds raced wall-clock +10 allowance; retain original oracle and freeze Date in that test only, no production auth change. Own SAME288 renewed CI; do not merge partial278. Parentb195 Build38066869303/Gov38066869297/all8/native114256181577/quality114259553934 SUCCESS; root all94 exactonce150PASS0fail/2431.NET0skip and all6ORIGINAL11675436987 inspected. Local closed protected AI-note/glossary codec has38 focused and1918 full Persistence PASS0fail0skip; no provider/effect/IT authority, exact Unicode/evidence preserved, whole decoded known-secret policy and64k UTF8 bound. Independent frozen codec/clock-test review pending. New native brain acceptance still requires97exactonce/all8/Gov/all6 originals. Continue qualified same-group context/relevance/tokenizer and first owned note-effect source-lock/savepoint rollback/clean detach/witness-only expiry/native MARS, atomic notes/evidence/raw coverage/completion/NotesCommitted and automatic DI/UI. ExistingGateway real100/30 model evaluation NOT_RUN_UNEVALUATED; required primary variables absent checked scopes, server access unknown.278/279/full233 ACTIVE. Scoped internal SQL source/brain dependency preparation175 controls PASS0skip, including4 actual nonSQL/missingSQLtransaction entry refusals. Native invocation/effect rollback/savepoint retention/MARS remain NOT_QUALIFIED; freeze/review this refactor before push and continue first owned effect consumer.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1828,4 +1828,20 @@ group_278_closed_brain_payload_checkpoint:
   frozen_payload_and_web_test_review: PENDING
   actual_model_evaluation: NOT_RUN_UNEVALUATED
   required_native_markers_exact_once: 97
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_locked_dependency_preparation:
+  remote_head: 0201fc5e53b3d9d96d655faa077330ca12732629
+  local_parent: e0c51aa7d9c0ad674563a74a9f59428d633c2a5b
+  selected_public_reader_behavior: retained_original_fences_and_private_metadata_checks
+  internal_sql_entry: Serializable_savepoint_supported_clean_tracker_sealed_context
+  internal_expired_result: observation_only_no_write_or_commit
+  focused_relevant_controls_passed: 175
+  focused_relevant_controls_failed: 0
+  focused_relevant_controls_skipped: 0
+  new_nonSql_missingSqlTransaction_current_expired_refusals: 4
+  actual_internal_native_read_effect_rollback_savepoint_retention_MARS: NOT_QUALIFIED
+  independent_frozen_review: PENDING
+  first_owned_effect_store: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE

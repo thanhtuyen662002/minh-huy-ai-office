@@ -1,6 +1,8 @@
+using System.Data;
 using System.Security.Cryptography;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
@@ -103,17 +105,7 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
         var claims = new GroupBatchClaimStore(database, worker, clock);
         var permissions = new GroupWorkNotePermissionVerifier(database);
         await FenceAsync();
-        var snapshots = new List<GroupBrainSnapshot>();
-        foreach (var (kind, id) in selected)
-        {
-            var snapshot = kind == GroupBrainContentKind.RequestRevision
-                ? await RequestAsync(handle, id, token) : await GlossaryAsync(handle, id, token);
-            ValidateRevision(snapshot.Revision, handle);
-            snapshots.Add(snapshot with { Revision = snapshot.Revision with { ProtectedContent = snapshot.Revision.ProtectedContent!.ToArray() } });
-        }
-        if (snapshots.Sum(x => x.Revision.ProtectedContent!.Length) > MaximumSelectedEnvelopeBytes) throw Unavailable();
-        if (expected is not null && (expected.Count != snapshots.Count
-            || expected.Where((value, index) => !Same(value, snapshots[index])).Any())) throw Unavailable();
+        var snapshots = await ReadLockedAsync(handle, selected, expected, token);
         await FenceAsync();
         if (database.ChangeTracker.HasChanges()) throw Unavailable();
         await transaction.CommitAsync(token);
@@ -130,6 +122,49 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
             await transaction.CommitAsync(token);
             throw GroupServiceDirectory.Denied();
         }
+    }
+
+    // Fixed metadata/cipher dependency check inside an owned SQL effect unit.
+    // No keys/decryption, independent transaction, expiry write or commit.
+    internal async Task<GroupBatchClaimFenceVerdict> RequireUnchangedLockedAsync(GroupBrainPrivateContext context,
+        CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ValidateLockedEntry(context.Handle, token);
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var permissions = new GroupWorkNotePermissionVerifier(database);
+        await permissions.RequireSafeRuntimeAsync(token);
+        var verdict = await claims.InspectCurrentLockedAsync(context.Handle, token);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
+        await ReadLockedAsync(context.Handle, context.Snapshots.Select(x => (x.Kind, x.RecordId)).ToArray(), context.Snapshots, token);
+        await permissions.RequireSafeRuntimeAsync(token);
+        return await claims.InspectCurrentLockedAsync(context.Handle, token);
+    }
+
+    private void ValidateLockedEntry(GroupBatchClaimHandle handle, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(handle); token.ThrowIfCancellationRequested(); worker.Validate(); handle.Receipt.Scope.Validate();
+        if (handle.Receipt.Scope.TenantId != worker.TenantId || handle.Receipt.Scope.CompanyId != worker.CompanyId) throw GroupServiceDirectory.Denied();
+        if (!database.Database.IsSqlServer() || database.Database.CurrentTransaction is not { } transaction
+            || !transaction.SupportsSavepoints || transaction.GetDbTransaction().IsolationLevel != IsolationLevel.Serializable
+            || database.ChangeTracker.HasChanges()) throw Unavailable();
+    }
+
+    private async Task<GroupBrainSnapshot[]> ReadLockedAsync(GroupBatchClaimHandle handle,
+        (GroupBrainContentKind Kind, Guid Id)[] selected, IReadOnlyList<GroupBrainSnapshot>? expected, CancellationToken token)
+    {
+        var snapshots = new List<GroupBrainSnapshot>();
+        foreach (var (kind, id) in selected)
+        {
+            var snapshot = kind == GroupBrainContentKind.RequestRevision
+                ? await RequestAsync(handle, id, token) : await GlossaryAsync(handle, id, token);
+            ValidateRevision(snapshot.Revision, handle);
+            snapshots.Add(snapshot with { Revision = snapshot.Revision with { ProtectedContent = snapshot.Revision.ProtectedContent!.ToArray() } });
+        }
+        if (snapshots.Sum(x => x.Revision.ProtectedContent!.Length) > MaximumSelectedEnvelopeBytes) throw Unavailable();
+        if (expected is not null && (expected.Count != snapshots.Count
+            || expected.Where((value, index) => !Same(value, snapshots[index])).Any())) throw Unavailable();
+        return snapshots.ToArray();
     }
 
     private async Task<GroupBrainSnapshot> RequestAsync(GroupBatchClaimHandle handle, Guid id, CancellationToken token)
