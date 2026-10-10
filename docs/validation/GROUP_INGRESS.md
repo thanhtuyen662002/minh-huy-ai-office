@@ -929,3 +929,30 @@ retained durable inbox/backlog and wakeup on cancellation. The newer confirmatio
 regression covers both null/unknown and confirmed newer attempts. These are local
 inert receiver/SDK controls, not real network or concurrent SQL evidence. Renewed
 frozen review and mandatory owned native SQL/RabbitMQ restart proof remain.
+
+### Default-off host registration candidate
+
+e341 publication repairs have independent scoped APPROVED6093549235:47.NET
+controls PASS0skip and10 retained Node guards plus15 own diagnostic controls PASS.
+The original three P2 categories are independently closed. Build38022812535 and
+Governance38022812541 are the renewed exact-head runs. .NET job114127247828 failed
+before build/test at migration `AddGroupIngressInbox` CHARSET: generated UTF8 BOM
+violated repository utf-8 policy. The local repair removes only that BOM. Actual
+stack114127247688 remains owned through terminal, including the strict Chromium
+completed-stream/body diagnostic; its underlying failure is not inferred.
+
+Core now separately registers reference publication; Agent.Worker registers the
+group reference consumer. With the switch absent or not exactly `true`, neither
+adds group resources. Enabled configuration requires group intake, database,
+canonical nonzero host GUIDs and positive canonical epoch before any registration.
+Both roles may share exactly one binding; replacing existing host authority refuses.
+The worker checks effective group rights before running. Current SQL Extract checks
+and the immutable original graph remain enforced independently on every receipt.
+
+18 inert controls PASS0skip cover default-off without DB/identities, invalid or
+missing host configuration before registration, both role-specific DI resolution,
+shared authority/replacement refusal, native SQL query translation without opening
+a connection, and SQL-backed current-grant/due/inbox/restart-wrap selection. Hosted
+services are resolved but never started in these controls. No real broker/native
+SQL or production activation is claimed. Frozen independent review and mandatory
+owned delivery/crash/restart/revocation/rollback acceptance remain next.

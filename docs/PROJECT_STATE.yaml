@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: b62e19b2ab0c379132b841c6e2625e4da722d86c
+current_target_head: e3417eaffab88d289383d6610407542064ccd7de
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: b62e19b2ab0c379132b841c6e2625e4da722d86c
+    head: e3417eaffab88d289383d6610407542064ccd7de
     state: in_progress
-    next: 'b62 Build38020840049/Gov38020840088 terminal: six prerequisites/Gov and root-inspected ALL3 actual metadata-spool/retained group-listener PASS; actual114121265377/quality114123892704 RED at earlier Core202 body replay202 read, before historical stage. Cause unproven. Foundation21d scoped APPROVED6093416207; publicationa4 independent review reproduced stale tracked outbox P2, repair both reads under lock via fresh AsNoTracking/owned attach plus two-context regressions. Freeze/review repair and strict fixed completed-stream/body/UTF8/JSON diagnostic; push and own renewed exactCI. DI/native broker/provider/278/279/full233 remain ACTIVE.'
+    next: 'e341 publication repairs scoped APPROVED6093549235 (47.NET and10+15 Node PASS). Build38022812535/Gov38022812541 active; .NET114127247828 terminal CHARSET BOM migration failure inspected and local BOM-only repair; actual114127247688 still owned, strict body diagnostic pending. Default-off DI18 plus retained37 local controls PASS; freeze/review registration and native SQL translation. Wait current actual to terminal before next push; repair same PR. Mandatory owned SQL/RabbitMQ interruption/restart/revoke/rollback, provider/278/279/full233 remain ACTIVE.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'b62 Build38020840049/Gov38020840088 terminal: six prerequisites/Gov and root-inspected ALL3 actual metadata-spool/retained group-listener PASS; actual114121265377/quality114123892704 RED at earlier Core202 body replay202 read, before historical stage. Cause unproven. Foundation21d scoped APPROVED6093416207; publicationa4 independent review reproduced stale tracked outbox P2, repair both reads under lock via fresh AsNoTracking/owned attach plus two-context regressions. Freeze/review repair and strict fixed completed-stream/body/UTF8/JSON diagnostic; push and own renewed exactCI. DI/native broker/provider/278/279/full233 remain ACTIVE.'
+next_action: 'e341 publication repairs scoped APPROVED6093549235 (47.NET and10+15 Node PASS). Build38022812535/Gov38022812541 active; .NET114127247828 terminal CHARSET BOM migration failure inspected and local BOM-only repair; actual114127247688 still owned, strict body diagnostic pending. Default-off DI18 plus retained37 local controls PASS; freeze/review registration and native SQL translation. Wait current actual to terminal before next push; repair same PR. Mandatory owned SQL/RabbitMQ interruption/restart/revoke/rollback, provider/278/279/full233 remain ACTIVE.'
 
 
 blocked_by:
@@ -586,3 +586,16 @@ group_publication_review_repairs:
   repairs: 'Fresh under-lock AsNoTracking plus matching unchanged attachment replacement; actual unknown/confirmed newer attempts preserved; ACK/NACK use delivery deadline and bounded WaitAsync even for noncooperative settlement, late faults observed, timeout retires only original attempt. Actual SDK7.2.2 UnregisteredAsync handles server cancel and wakes bounded replacement loop; callbacks capture original channel.'
   local: '37 publication/transport controls PASS0skip:16 dispatcher/18 boundary/3 actual inert receiver and SDK-cancel controls. Includes actual10s noncooperative ACK/NACK with original SQL inbox/backlog and no late replacement settlement. Native SQL/broker still required.'
   next: 'Obtain independent repaired frozen review, push and own renewed exact CI after terminal b62. Then default-off DI/native SQL/RabbitMQ interruption and restart proof. Full277/278/279/233 remain active.'
+
+group_reference_pipeline_registration:
+  state: local_tested_pending_frozen_review
+  reviewed_publication_head: e3417eaffab88d289383d6610407542064ccd7de
+  scoped_publication_approval: 6093549235
+  exact_build: 38022812535
+  exact_governance: 38022812541
+  actual_stack_job: 114127247688
+  dotnet_failure: '114127247828 inspected CHARSET at generated inbox migration BOM; local repair removes BOM only, no migration behavior change.'
+  implementation: 'Explicit default-off Core producer and Worker consumer; canonical fixed host binding and replacement refusal; worker effective permission startup proof;32-candidate fair identity-hash traversal with durable due/retry/receipt in SQL and per-source fresh authority.'
+  local_evidence: '55 focused tests PASS0skip (18 registration/catalog/native query translation with no connection plus37 publication/boundary/actual inert SDK controls); changed files format PASS.'
+  limits: 'Local DI services resolved but not started; no native SQL/broker concurrency/interruption/restart/revoke/rollback or provider qualification claimed. Current actual run stays owned to terminal before renewed push.'
+  next: 'Independent frozen DI/BOM scoped review; close exact e341 actual and repair any precise browser terminal failure SAME PR; then reviewed push and owned native SQL/RabbitMQ proof. Full277/278/279/233 active.'

@@ -38,6 +38,7 @@ builder.Services.AddOptions<RabbitMqWorkOptions>()
         .GetSection(RabbitMqWorkOptions.SectionName)
         .Bind(options));
 builder.Services.AddSingleton<IWorkEnvelopePublisher, RabbitMqWorkPublisher>();
+_ = builder.Services.AddGroupIngressReferenceProducer(builder.Configuration, !string.IsNullOrWhiteSpace(platformConnectionString));
 if (!string.IsNullOrWhiteSpace(platformConnectionString))
 {
     builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(

@@ -132,3 +132,40 @@ tests/qualification are not evidence that SQL memory, worker, connector or autom
 notification has shipped. Continue #277–#279 after accepted prerequisites. Full #233
 and all62 product requirements remain active; customer ERP and Windows acceptance
 remain separate.
+
+### Reference publication and durable worker inbox
+
+The committed group outbox publishes only a strict2048-byte metadata reference to
+a separate durable tenant/company/service RabbitMQ queue. It does not publish
+source plaintext, encrypted content, keys, portal identities or batch decisions.
+Current SQL Extract authorization is independent of Ingest. The trusted worker's
+tenant/company/service/credential epoch comes from host configuration; broker or
+model fields cannot change it. Consumer acceptance appends one immutable scoped
+inbox receipt, after validating the committed SQL revision/outbox graph and current
+authority under the source lock. ACK follows that durable receipt. Neither broker
+confirmation nor inbox arrival advances the SQL batch cursor.
+
+Publication commits a five-second reservation and retries the original EventId
+until SQL has its inbox receipt. Fresh no-tracking reads and owned attachment
+prevent a previous EF identity-map entry from overwriting a newer reservation.
+Publish/ACK/NACK waits are bounded at ten seconds. Reconnection and cancellation
+retire only the original channel attempt; late callbacks cannot settle a replacement.
+The producer traverses at most32 source candidates in identity-hash order per pass,
+wraps its in-memory traversal index, and uses SQL for all durable backlog/retry state.
+Each candidate is independently reauthorized; one unavailable source leaves its
+original SQL backlog pending and does not erase other sources' work.
+
+The pipeline is default-off behind the exact host value
+`AIOffice:GroupIntake:PipelineEnabled=true`, plus group intake enabled and a platform
+database. Its `Worker` section requires canonical TenantId/CompanyId/ServiceId and
+positive CredentialEpoch. Core hosts publication; Agent.Worker hosts consumption.
+One process owns one configured company/service binding. Additional companies use
+separately configured processes. Shared registrations may reuse exactly the same
+binding and must refuse replacement authority. Startup/per-operation effective SQL
+permission proof remains required. Apply the additive inbox migration before this
+runtime; rollback preserves immutable receipt evidence through forward repair.
+
+This registration is an implementation candidate. Local DI/query/SDK controls do
+not qualify actual SQL concurrency, RabbitMQ interruption/restart, provider
+connection, live account membership or a production deployment. Mandatory owned
+native delivery proof and full277 acceptance remain outstanding.

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: b62e19b2ab0c379132b841c6e2625e4da722d86c
+head: e3417eaffab88d289383d6610407542064ccd7de
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1212,3 +1212,16 @@ group_publication_review_repairs:
   result: 'All3 review P2 categories repaired locally: current outbox reads/unknown-confirm fences; actual bounded ACK/NACK within total delivery deadline with exact original-attempt retirement; actual SDK UnregisteredAsync cancellation completes owned attempt for reconnect. Review and native broker acceptance remain mandatory.'
   local: '37 publication controls PASS0skip (16 dispatcher/18 boundary/3 actual inert settlement/SDK-cancel);10 Node diagnostic guards PASS. No network/native SQL/provider/DI activation.'
   next: 'Freeze/review repair, then push and close renewed exact all8/native/Chromium before acceptance. Terminal b62 evidence retained; no underlying Chromium cause claimed.'
+
+group_reference_pipeline_registration:
+  state: local_tested_pending_frozen_review
+  reviewed_publication_head: e3417eaffab88d289383d6610407542064ccd7de
+  scoped_publication_approval: 6093549235
+  exact_build: 38022812535
+  exact_governance: 38022812541
+  actual_stack_job: 114127247688
+  dotnet_failure: '114127247828 inspected CHARSET at generated inbox migration BOM; local repair removes BOM only, no migration behavior change.'
+  implementation: 'Explicit default-off Core producer and Worker consumer; canonical fixed host binding and replacement refusal; worker effective permission startup proof;32-candidate fair identity-hash traversal with durable due/retry/receipt in SQL and per-source fresh authority.'
+  local_evidence: '55 focused tests PASS0skip (18 registration/catalog/native query translation with no connection plus37 publication/boundary/actual inert SDK controls); changed files format PASS.'
+  limits: 'Local DI services resolved but not started; no native SQL/broker concurrency/interruption/restart/revoke/rollback or provider qualification claimed. Current actual run stays owned to terminal before renewed push.'
+  next: 'Independent frozen DI/BOM scoped review; close exact e341 actual and repair any precise browser terminal failure SAME PR; then reviewed push and owned native SQL/RabbitMQ proof. Full277/278/279/233 active.'
