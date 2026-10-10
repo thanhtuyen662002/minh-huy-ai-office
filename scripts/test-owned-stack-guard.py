@@ -1551,6 +1551,82 @@ class OwnedStackGuardTests(unittest.TestCase):
                 submission_smoke.require_stored_event_hex(value, size)
 
 
+class HostBrainFixtureMetadataTests(unittest.TestCase):
+    def fixture(self):
+        cipher = bytes([1]) + bytes(29)
+        message = '33333333-3333-4333-8333-333333333333'
+        return {'operationId': '11111111-1111-4111-8111-111111111111',
+            'batchId': '22222222-2222-4222-8222-222222222222', 'messageId': message,
+            'messageRevision': 1, 'claimEpoch': 9, 'sourceVersion': 1, 'deletionGeneration': 0,
+            'credentialEpoch': 1, 'grantVersion': 1, 'accountVersion': 1,
+            'createdAtUtc': '2026-10-11T01:00:00.0000001+00:00',
+            'sourceSetHash': hashlib.sha256((message + '/1').encode('ascii')).hexdigest().upper(),
+            'notes': [{'requestId': f'{i:08d}-4444-4444-8444-444444444444', 'ordinal': i, 'kind': 5 if i == 3 else 4,
+                'envelope': cipher.hex().upper(), 'envelopeHash': hashlib.sha256(cipher).hexdigest().upper()} for i in range(1, 4)]}
+
+    def refused(self, value):
+        with self.assertRaises((AssertionError, ValueError, TypeError, UnicodeError)):
+            reference_smoke.validated_host_brain_fixture(json.dumps(value))
+
+    def test_closed_metadata_positive_does_not_mutate_or_qualify_fake_cipher(self):
+        value = self.fixture(); original = copy.deepcopy(value)
+        self.assertEqual(value, reference_smoke.validated_host_brain_fixture(json.dumps(value)))
+        self.assertEqual(original, value)
+
+    def test_refuses_unknown_missing_and_duplicate_decoded_names(self):
+        for field in self.fixture():
+            value = self.fixture(); del value[field]
+            with self.subTest(missing=field): self.refused(value)
+        value = self.fixture(); value['sql'] = 'PRIVATE'; self.refused(value)
+        value = self.fixture(); value['notes'][0]['key'] = 'PRIVATE'; self.refused(value)
+        raw = json.dumps(self.fixture())
+        for raw in ('{"operationId":"duplicate",' + raw[1:], raw.replace('"ordinal": 1', '"ordinal": 1, "ordi\\u006eal": 1')):
+            with self.assertRaises(AssertionError): reference_smoke.validated_host_brain_fixture(raw)
+
+    def test_refuses_noncanonical_zero_and_injection_identities(self):
+        for field in ('operationId', 'batchId', 'messageId'):
+            for wrong in ('00000000-0000-0000-0000-000000000000', '{AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA}',
+                    'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA', 'PRIVATE\'; SQL', True):
+                value = self.fixture(); value[field] = wrong
+                with self.subTest(field=field, wrong=wrong): self.refused(value)
+        value = self.fixture(); value['notes'][1]['requestId'] = value['notes'][0]['requestId']; self.refused(value)
+        value = self.fixture(); value['notes'][0]['requestId'] = '00000000-0000-0000-0000-000000000000'; self.refused(value)
+
+    def test_refuses_boolean_float_unbounded_epochs_versions_and_wrong_claim(self):
+        for field in ('messageRevision', 'claimEpoch', 'sourceVersion', 'deletionGeneration', 'credentialEpoch', 'grantVersion', 'accountVersion'):
+            for wrong in (True, 1.0, -1, 9223372036854775808, '1'):
+                value = self.fixture(); value[field] = wrong
+                with self.subTest(field=field, wrong=wrong): self.refused(value)
+            if field != 'deletionGeneration':
+                value = self.fixture(); value[field] = 0; self.refused(value)
+        value = self.fixture(); value['claimEpoch'] = 8; self.refused(value)
+
+    def test_refuses_cardinality_order_and_reason_kind_mismatch(self):
+        for count in (0, 1, 2, 4):
+            value = self.fixture(); value['notes'] = (value['notes'] * 2)[:count]; self.refused(value)
+        for index in range(3):
+            for field, wrong in (('ordinal', True), ('ordinal', index+2), ('kind', True), ('kind', 1), ('kind', 4 if index == 2 else 5)):
+                value = self.fixture(); value['notes'][index][field] = wrong
+                with self.subTest(index=index, field=field, wrong=wrong): self.refused(value)
+
+    def test_refuses_malformed_or_altered_cipher_and_source_hash(self):
+        for wrong in ('', '01', '01' + 'AA' * 1024, '01' + 'aa' * 29, '01' + 'AA' * 29 + 'A', '00' + '00' * 29, 'GG' * 30):
+            value = self.fixture(); value['notes'][0]['envelope'] = wrong
+            with self.subTest(envelope_length=len(wrong)): self.refused(value)
+        for field in ('sourceSetHash',):
+            value = self.fixture(); value[field] = 'B' * 64; self.refused(value)
+        value = self.fixture(); value['notes'][0]['envelopeHash'] = 'B' * 64; self.refused(value)
+        value = self.fixture(); value['messageRevision'] = 2; self.refused(value)
+
+    def test_refuses_non_UTC_calendar_scalar_and_UTF8_byte_overflow(self):
+        for wrong in ('2026-10-11T01:00:00.0000001Z', '2026-10-11T01:00:00.0000001+07:00',
+                '2026-02-30T01:00:00.0000001+00:00', True):
+            value = self.fixture(); value['createdAtUtc'] = wrong; self.refused(value)
+        for raw in ('', '\ud800', ' ' * 8193, json.dumps(self.fixture()) + ' ' * 8192):
+            with self.assertRaises((AssertionError, ValueError, UnicodeError)):
+                reference_smoke.validated_host_brain_fixture(raw)
+
+
 class EffectPreparationOracleTests(unittest.TestCase):
     def run_actual_prefix(self, *, mutate=None, fault=None):
         # Execute the shipping prefix, stopping before protected brain inserts.

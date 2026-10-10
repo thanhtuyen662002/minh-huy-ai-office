@@ -44,7 +44,7 @@ See ../../validation/GROUP_BATCH_CLAIMS.md. Frozen88cb review WITHHELD one concr
 
 ## External dependencies
 
-Existing Gateway configuration discovery found the worker environment loader and protected deployment input. Required primary base URL/model/authorization values are absent in checked local scopes/default files; a separately deployed server secret store is inaccessible. Reuse that loader/Gateway, never borrow coding-agent credentials or add an independent AI configuration. Dedicated ERP read-only accounts and production hosting remain separate full-product gates. Existing installer239 is a separate unqualified lease. No live connector/model/customer/deployment evidence is asserted by this plan.
+Existing Gateway configuration discovery found the worker environment loader and protected deployment input. Required primary base URL/model/authorization values are absent in checked local scopes/default files; the path and access to a separately deployed server secret store remain unverified. Reuse that loader/Gateway, never borrow coding-agent credentials or add an independent AI configuration. Dedicated ERP read-only accounts and production hosting remain separate full-product gates. Existing installer239 is a separate unqualified lease. No live connector/model/customer/deployment evidence is asserted by this plan.
 
 ## Scoped protected source context checkpoint
 

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
+head: 5ff28553de183458aea4931b66d2d406790c9a25
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -2173,4 +2173,26 @@ group_278_owned_effect_pending_anchor_repair:
   original_oracles: original97_try_prefix_AST_and_aggregate_multiset_unchanged
   renewed_frozen_review: PENDING_before_exact_push
   native_SQL_and_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_host_brain_native_preparation:
+  parent_source_head: 5ff28553de183458aea4931b66d2d406790c9a25
+  parent_source_review: SCOPED_APPROVED6101335600_root_FULL_fetched_before_exact_push
+  exact_parent_build: 38080032149_in_progress
+  exact_parent_governance: 38080032175_SUCCESS
+  exact_parent_native: 114294879898_in_progress
+  exact_parent_dotnet: 114294879800_in_progress
+  source: preserved_stash_adapted_only_after_original102_clean_effect_scope_epoch9
+  native_proof: actual_claim_replay_source_and_protected_brain_reader_configured_scoped_keys_final_fence
+  reason_provenance: three_synthetic_operator_fixtures_not_production_host_reason_or_retry_truth
+  SQL_origin_control: rolled_back_host3_AIverification1_must_specific547_origin_CK_then_positive_host3_3
+  metadata: closed8192_UTF8_unique_fields_canonical_IDs_strict_bounds_exact_order_cipher_hashes_only
+  graph: ten_operator_rows_no_disposition_outbox_completion_complete_prior_graph_claims_unchanged
+  current_python: 88_PASS_seven_new_pure_fixture_controls
+  current_native_build: zero_warnings_errors
+  actual_unowned_modes: nine_guard_before_stdin_configuration_resources
+  retained_oracles: original_verify_AST_and_all102_markers_plus_one_required_host_aggregate103
+  format: actual_changed_native_CSharp_APPLY_and_VERIFY_PASS
+  frozen_independent_review: PENDING_before_later_push
+  native_SQL_model_pipeline: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE

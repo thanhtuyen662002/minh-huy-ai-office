@@ -52,6 +52,44 @@ def validated_brain_fixture(raw):
     return value
 
 
+def validated_host_brain_fixture(raw):
+    # Closed disposable producer metadata/cipher only, no SQL/key/plaintext.
+    assert isinstance(raw, str) and 0 < len(raw.encode("utf-8")) <= 8192
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            assert key not in result
+            result[key] = value
+        return result
+    value = json.loads(raw, object_pairs_hook=unique)
+    ids = ("operationId", "batchId", "messageId")
+    numbers = ("claimEpoch", "sourceVersion", "deletionGeneration", "messageRevision", "credentialEpoch", "grantVersion", "accountVersion")
+    assert isinstance(value, dict) and set(value) == set(ids + numbers + ("createdAtUtc", "sourceSetHash", "notes"))
+    for field in ids:
+        assert isinstance(value[field], str) and str(uuid.UUID(value[field])) == value[field] and uuid.UUID(value[field]).int != 0
+    for field in numbers:
+        assert type(value[field]) is int and (0 if field == "deletionGeneration" else 1) <= value[field] <= 9223372036854775807
+    assert value["claimEpoch"] == 9
+    assert isinstance(value["createdAtUtc"], str) and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}\+00:00", value["createdAtUtc"])
+    datetime.fromisoformat(value["createdAtUtc"])
+    assert isinstance(value["sourceSetHash"], str) and re.fullmatch(r"[0-9A-F]{64}", value["sourceSetHash"])
+    assert value["sourceSetHash"] == hashlib.sha256(f"{value['messageId']}/{value['messageRevision']}".encode("ascii")).hexdigest().upper()
+    assert isinstance(value["notes"], list) and len(value["notes"]) == 3
+    request_ids = set()
+    for ordinal, note in enumerate(value["notes"], 1):
+        assert isinstance(note, dict) and set(note) == {"requestId", "ordinal", "kind", "envelope", "envelopeHash"}
+        assert isinstance(note["requestId"], str) and str(uuid.UUID(note["requestId"])) == note["requestId"] and uuid.UUID(note["requestId"]).int != 0
+        assert note["requestId"] not in request_ids
+        request_ids.add(note["requestId"])
+        assert type(note["ordinal"]) is int and note["ordinal"] == ordinal
+        assert type(note["kind"]) is int and note["kind"] == (5 if ordinal == 3 else 4)
+        envelope = note["envelope"]
+        assert isinstance(envelope, str) and re.fullmatch(r"[0-9A-F]{60,2048}", envelope) and len(envelope) % 2 == 0
+        cipher = bytes.fromhex(envelope)
+        assert cipher[0] == 1 and hashlib.sha256(cipher).hexdigest().upper() == note["envelopeHash"]
+    return value
+
+
 def require_reference_result(result, mode, expected_lines):
     # Preserve exact successful output. Failure diagnostics are closed tokens,
     # never arbitrary child stdout/stderr or exception/connection information.
@@ -953,7 +991,8 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
             "no-work-mars": "PASS owned NoWork runtime MARS refuses before connection keys or effects",
             "note-expiry": "PASS owned note runtime eleven flushed SQL effects rollback with source lock retained clean detach witness only and clock rollback denial",
             "note-key-expiry": "PASS owned note runtime configured write key outside SQL expiry witness only without effects and clock rollback denial",
-            "note-commit": "PASS owned note runtime protected two notes literal evidence atomic NotesCommitted exact original replay changed proposal and new nonce refusal"}
+            "note-commit": "PASS owned note runtime protected two notes literal evidence atomic NotesCommitted exact original replay changed proposal and new nonce refusal",
+            "host-brain-read": "PASS owned host brain actual SQL three distinct observed reasons exact protected metadata evidence current scoped keys glossary and final fence"}
         expected_lines = [expected[mode]]
         require_reference_result(result, mode, expected_lines)
         assert_retained()
@@ -1178,4 +1217,66 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
         " AND PublishAttempts=0 AND PublishedAtUtc IS NULL AND AvailableAtUtc=CommittedAtUtc;") == "1"
     unchanged_note_source_graph()
     print("PASS actual note store protected request evidence two unconfirmed notes atomic NotesCommitted exact original replay changed proposal and new nonce refusal unchanged original graphs", flush=True)
+    assert_retained()
+
+    # After all102 original required markers: private operator publication
+    # qualifies only new schema/reader, not host reason truth or a consumer.
+    claims_before_host = [digest("GroupBatchClaimReceipts", "BatchId,Epoch"), digest("GroupBatchClaimStates", "BatchId")]
+    brain_before_host = brain_graph()
+    result = subprocess.run([*command, "host-brain-fixture"], input=configuration(0), env=child_environment,
+        capture_output=True, text=True, timeout=170)
+    assert result.returncode == 0
+    host_fixture = validated_host_brain_fixture(result.stdout)
+    assert brain_graph() == brain_before_host
+    assert [digest("GroupBatchClaimReceipts", "BatchId,Epoch"), digest("GroupBatchClaimStates", "BatchId")] == claims_before_host
+    unchanged_note_source_graph()
+    assert host_fixture["batchId"] == batch_id and host_fixture["sourceVersion"] == version and host_fixture["deletionGeneration"] == generation
+    host_operation, created = host_fixture["operationId"], host_fixture["createdAtUtc"]
+    host_ids = ",".join("'" + note["requestId"] + "'" for note in host_fixture["notes"])
+    def prior_host_objects():
+        hashes = []
+        for table, order, exclusion in [("GroupCustomerRequests", "Id", f"Id NOT IN ({host_ids})"),
+            ("GroupRequestRevisions", "RequestId,Revision", f"RequestId NOT IN ({host_ids})"),
+            ("GroupRequestEvidence", "RequestId,RequestRevision,Ordinal", f"RequestId NOT IN ({host_ids})"),
+            ("GroupWorkCommitReceipts", "BatchId,OperationId", f"OperationId<>'{host_operation}'")]:
+            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+                f"(SELECT * FROM aioffice.{table} WHERE {scope} AND {exclusion} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+            assert re.fullmatch(r"[0-9A-F]{64}", value)
+            hashes.append(value)
+        return hashes
+    old_host_objects = prior_host_objects()
+    # A new revision on an existing valid head isolates the expanded origin
+    # check. Roll back even an unexpected acceptance and expose a fixed token.
+    denied = sql("SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION;"
+        " INSERT INTO aioffice.GroupRequestRevisions(TenantId,CompanyId,BindingId,RequestId,Revision,Origin,VerificationLevel,AuthorServiceId,SourceBatchId,ClaimEpoch,SourceVersion,DeletionGeneration,ContentKeyId,ProtectedContent,EnvelopeSha256,CreatedAtUtc)"
+        f" VALUES({common},'{request_id}',2,3,1,'{service}','{batch_id}',9,{version},{generation},'owned-native-source-v1',0x{host_fixture['notes'][0]['envelope']},'{host_fixture['notes'][0]['envelopeHash']}','{created}');"
+        " ROLLBACK; SELECT N'host-origin-unexpected'; END TRY BEGIN CATCH"
+        " IF @@TRANCOUNT>0 ROLLBACK; IF ERROR_NUMBER()=547 AND CHARINDEX(N'CK_GroupRequestRevisions_Origin',ERROR_MESSAGE())>0"
+        " SELECT N'host-origin-ck-denied'; ELSE THROW; END CATCH;")
+    assert denied == "host-origin-ck-denied"
+    assert brain_graph() == brain_before_host and prior_host_objects() == old_host_objects
+    assert [digest("GroupBatchClaimReceipts", "BatchId,Epoch"), digest("GroupBatchClaimStates", "BatchId")] == claims_before_host
+    unchanged_note_source_graph()
+    statements = ["SET XACT_ABORT ON; BEGIN TRANSACTION;",
+        " INSERT INTO aioffice.GroupWorkCommitReceipts(TenantId,CompanyId,BindingId,BatchId,OperationId,SourceSetSha256,SelectedMessageCount,NoteCount,Outcome,ServiceId,ClaimEpoch,CredentialEpoch,GrantVersion,SourceVersion,DeletionGeneration,AccountVersion,CommittedAtUtc)"
+        f" VALUES({common},'{batch_id}','{host_operation}','{host_fixture['sourceSetHash']}',1,3,3,'{service}',9,{host_fixture['credentialEpoch']},{host_fixture['grantVersion']},{version},{generation},{host_fixture['accountVersion']},'{created}');"]
+    for note in host_fixture["notes"]:
+        request = note["requestId"]
+        statements.extend([
+            " INSERT INTO aioffice.GroupCustomerRequests(TenantId,CompanyId,BindingId,Id,OriginBatchId,OriginOperationId,OriginCandidateOrdinal,RequestCode,Kind,SourceVersion,DeletionGeneration,CurrentRevision,BusinessStatus,BusinessVersion,CreatedAtUtc,UpdatedAtUtc)"
+            f" VALUES({common},'{request}','{batch_id}','{host_operation}',{note['ordinal']},'REQ-{uuid.UUID(request).hex.upper()}',{note['kind']},{version},{generation},1,3,1,'{created}','{created}');",
+            " INSERT INTO aioffice.GroupRequestRevisions(TenantId,CompanyId,BindingId,RequestId,Revision,Origin,VerificationLevel,AuthorServiceId,SourceBatchId,ClaimEpoch,SourceVersion,DeletionGeneration,ContentKeyId,ProtectedContent,EnvelopeSha256,CreatedAtUtc)"
+            f" VALUES({common},'{request}',1,3,3,'{service}','{batch_id}',9,{version},{generation},'owned-native-source-v1',0x{note['envelope']},'{note['envelopeHash']}','{created}');",
+            " INSERT INTO aioffice.GroupRequestEvidence(TenantId,CompanyId,BindingId,RequestId,RequestRevision,Ordinal,MessageId,MessageRevision,Kind)"
+            f" VALUES({common},'{request}',1,1,'{host_fixture['messageId']}',{host_fixture['messageRevision']},2);"])
+    statements.append(" COMMIT;")
+    sql("".join(statements))
+    assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [6, 6, 6, 4, 2, 1, 2, 0, 1, 1]
+    assert prior_host_objects() == old_host_objects and brain_graph()[4:] == brain_before_host[4:]
+    published_host_graph = brain_graph()
+    run("host-brain-read")
+    assert brain_graph() == published_host_graph and prior_host_objects() == old_host_objects
+    assert [digest("GroupBatchClaimReceipts", "BatchId,Epoch"), digest("GroupBatchClaimStates", "BatchId")] == claims_before_host
+    unchanged_note_source_graph()
+    print("PASS actual host brain reader expanded SQL origin three protected observed reasons exact metadata evidence current keys unchanged prior graphs and no reader effects", flush=True)
     assert_retained()
