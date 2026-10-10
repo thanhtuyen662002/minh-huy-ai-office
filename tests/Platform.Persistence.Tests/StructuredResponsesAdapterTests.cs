@@ -196,16 +196,25 @@ public sealed class StructuredResponsesAdapterTests
         var envelope = Encoding.UTF8.GetBytes(Envelope());
         var exact = new byte[262144]; Array.Fill(exact, (byte)' '); envelope.CopyTo(exact, 0);
         byte[] bytes = exact;
+        var copies = 0;
         var handler = new Handler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new ScriptContent(stream => stream.WriteAsync(bytes).AsTask(), known ? bytes.Length : null)
+            Content = new ScriptContent(stream => { Interlocked.Increment(ref copies); return stream.WriteAsync(bytes).AsTask(); }, known ? bytes.Length : null)
         }));
         using var client = new HttpClient(handler);
-        var adapter = new OpenAiCompatibleResponsesAdapter(client, Options());
+        // This tests exact entity bounds. Its finite deadline must tolerate the
+        // intentionally blocking tests running in the same parallel CI suite.
+        // Dedicated 250ms deadline/capacity/cancellation probes retain their budgets.
+        var adapter = new OpenAiCompatibleResponsesAdapter(client, Options(TimeSpan.FromSeconds(30)));
         await adapter.ExecuteAsync(Request());
+        Assert.Equal(1, copies);
         bytes = exact.Concat(new byte[] { (byte)' ' }).ToArray();
         var error = await Assert.ThrowsAsync<AiProviderExecutionException>(() => adapter.ExecuteAsync(Request()));
         Assert.False(error.IsTransient);
+        Assert.Null(error.InnerException);
+        Assert.Equal(known ? "AI structured response is invalid." : "AI structured body transfer failed.", error.Message);
+        Assert.Equal(known ? 1 : 2, copies);
+        Assert.Equal(2, handler.Calls);
     }
 
     [Theory]

@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
     state: in_progress
-    next: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9 APPROVED6102696398 and proofd286e266 APPROVED6102829342 both ROOT FULLread; raw native111 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair review pending; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
+    next: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9/proofd286 scoped APPROVED ROOT FULLread; .NET114329405159 FAILED1 of2761, fixed diagnostic not retained/cause unproven; native114329405046 still ACTIVE. Narrow entity-boundary test-only30s budget/copy diagnostic repair local90/full2210 PASS/format, review pending; raw111/all8 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair dc4b2e7 APPROVED6102945756 ROOT FULLread; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9 APPROVED6102696398 and proofd286e266 APPROVED6102829342 both ROOT FULLread; raw native111 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair review pending; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
+next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9/proofd286 scoped APPROVED ROOT FULLread; .NET114329405159 FAILED1 of2761, fixed diagnostic not retained/cause unproven; native114329405046 still ACTIVE. Narrow entity-boundary test-only30s budget/copy diagnostic repair local90/full2210 PASS/format, review pending; raw111/all8 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair dc4b2e7 APPROVED6102945756 ROOT FULLread; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
 
 
 blocked_by:
@@ -1790,3 +1790,18 @@ group_278_raw_history_fixture_preparation:
   native500_history_suffix501: NOT_RUN_UNQUALIFIED
   real_model: NOT_RUN_UNEVALUATED
   next: separate_owned_history_profile_preserve_original104_four_profiles_and_full34_retained_snapshots
+
+group_278_owned_ci_boundary_test_repair:
+  issue: 278
+  pr: 288
+  failed_head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
+  build: 38091747428
+  failed_dotnet_job: 114329405159
+  root_full_log_read: true
+  full_ci_counts: 2761_total_2760_pass_1_fail_0_skip
+  failure: known_entity_plus_one_IsTransient_true_approx2seconds_fixed_diagnostic_not_retained_cause_unproven
+  scope: one_test_only_finite30s_and_stronger_copy_diagnostic_oracle_shipping_unchanged
+  local: structured90_fullPersistence2210_zeroFailSkip_changed_format_pass
+  review: pending
+  native111: ACTIVE_NOT_YET_QUALIFIED
+  next: preserve_meaningful_native_job_then_reviewed_repair_head_exact_ci_closure_same288
