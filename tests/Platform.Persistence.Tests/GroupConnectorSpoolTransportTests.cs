@@ -178,6 +178,7 @@ public sealed class GroupConnectorSpoolTransportTests
 
     [Theory]
     [InlineData("signing-key")]
+    [InlineData("signing-alias")]
     [InlineData("foreign-company")]
     public void SpoolKeyConfigurationCannotReuseSigningReferenceOrAnotherCompany(string change)
     {
@@ -185,6 +186,7 @@ public sealed class GroupConnectorSpoolTransportTests
         using var client = fixture.Client((_, _) => throw new InvalidOperationException("HTTP must not execute"));
         var binding = fixture.KeyBinding;
         if (change == "signing-key") binding = binding with { Reference = SecretReference.Parse("secretref://env/OWNED_GROUP_KEY") };
+        if (change == "signing-alias") binding = binding with { Reference = SecretReference.Parse("secretref://ENV/owned_group_key") };
         if (change == "foreign-company") binding = binding with { CompanyId = Guid.NewGuid() };
         Assert.Throws<GroupConnectorTransportException>(() => new GroupConnectorSpoolTransport(spool, client, binding, new([fixture.Keys]), fixture.Clock));
         Assert.Equal(0, fixture.Keys.Calls); Assert.Empty(spool.Pending());

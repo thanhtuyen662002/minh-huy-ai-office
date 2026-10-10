@@ -78,8 +78,13 @@ public sealed class GroupConnectorTransportClient : IDisposable
 
     internal void RequireSpoolBinding(GroupConnectorSpoolKeyBinding spool)
     {
+        var sameProvider = spool.Reference.Provider.Equals(binding.Reference.Provider, StringComparison.OrdinalIgnoreCase);
+        // Windows env resource names are case-insensitive. Conservatively
+        // retain that identity on every host so a host move cannot alias keys.
+        var sameResource = spool.Reference.Resource.Equals(binding.Reference.Resource,
+            sameProvider && binding.Reference.Provider.Equals("env", StringComparison.OrdinalIgnoreCase) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         if (spool.TenantId != binding.TenantId || spool.CompanyId != binding.CompanyId || spool.ServiceId != binding.ServiceId ||
-            spool.Reference == binding.Reference) throw new GroupConnectorTransportException();
+            sameProvider && sameResource) throw new GroupConnectorTransportException();
     }
 
     internal void RequireRecovery(GroupSpoolContentContext context, GroupConnectorEnrollment current, GroupListenerLeaseSnapshot lease)
