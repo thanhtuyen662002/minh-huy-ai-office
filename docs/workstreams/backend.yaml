@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Remote1be34eef2124a74a5cd496fe486416ebdf79814d scoped23-file APPROVED6099239328/root fully fetched/pushed; Build38064795318/Gov38064795319/all8 including native114250149831/quality114254406235 SUCCESS. Root full native log checked all94 required markers exactly once/150PASS/zero terminal failure, hosted.NET2382[6,520,25,1831]PASS0skip and all6 ORIGINAL browser images11674668995 inspected. This closes owned schema/native checkpoint only, not brain/model/effects/full278. Locald8fa37da1442baf4220fb211687721d7473cfbf1 WITHHELD6099513302/root fully fetched: actual21-ID public selection despite Count1 and final work-permission await after stale expiry verdict. Both repaired SAME288: per-list Take21 frozen copies/actual aggregate<=20 before SQL/keys, work proof before final live claim verdict. Original actual reader negative and extracted real-body expiry ordering control retained plus safe foreign-service/EF no-socket mappings and three sentinel/combined controls. Repaired reader needs immutable independent review before push; selected opaque context still lacks qualified semantics/relevance completeness/tokenizer/future release/effect authority. Continue actual native brain read, closed qualified context/tokenizer, first owned effect source-lock-before-savepoint rollback/witness-only expiry/native MARS, atomic notes/evidence/raw completion/outbox and automatic DI/UI. Real100/30 model evaluation NOT_RUN_UNEVALUATED; existing Gateway primary vars absent in checked scopes/server access unknown.278/279/full233 ACTIVE; never merge partial acceptance.'
+next_action: 'Own278/Draft288. Exact remoteb195e2e4d87ada379c43aad68dd7b08502015e14 repaired reader scoped9-file APPROVED6099559192/root FULL fetched before push. Build38066869303/native114256181577 IN_PROGRESS, six prerequisites and Governance38066869297 SUCCESS; own exact closure/fix any terminal red SAME288. Accepted parent1be Build38064795318/Gov38064795319/all8/native114250149831/quality114254406235 root94exactonce150PASS0fail/2382.NET0skip/all6ORIGINAL11674668995. Local owned native brain proof preparation: operator six-row protected fixture under new monotone epoch4 after all retained epoch3/source expiry gates, exact original three receipts preserved, configured scoped key outsideSQL, actual request/glossary read/foreign/Extract/glossary policy refusals, held-key SQL Extract revocation/exact restore and witness-only controlled expiry/rollback. Local79 brain/guard controls and64Python/7actual unowned entry refusals PASS; no changed native activation/model calls yet. Freeze/review this new checkpoint; renewed native acceptance requires97exactonce/all8/Gov/all6original images. Fixture publication is synthetic owned setup, not production note effects/semantics/coverage/completion/outbox. Continue qualified closed payload/context/relevance/tokenizer and first owned note-effect rollback/witness/native MARS, atomic notes/raw completion/NotesCommitted and automatic DI/UI. Real100/30 model evaluation NOT_RUN_UNEVALUATED, existingGateway primary vars absent checked scopes/server access unknown.278/279/full233 ACTIVE; no partial merge.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1768,7 +1768,7 @@ group_278_reader_repair_checkpoint:
   withheld_reader_review_root_fully_fetched: 6099513302
   original_counterexamples: actual_public_selection_21_despite_Count1_and_extracted_final_permission_await_expiry
   repairs: bounded_Take21_copied_aggregate20_before_SQL_keys_and_work_proof_before_final_claim_verdict
-  frozen_repaired_reader_review: PENDING
+  frozen_repaired_reader_review: APPROVED6099559192_root_fully_fetched_pushed_b195
   full_repaired_local_persistence_passed: 1880
   full_repaired_local_persistence_failed: 0
   full_repaired_local_persistence_skipped: 0
@@ -1776,3 +1776,25 @@ group_278_reader_repair_checkpoint:
   note_effect_raw_completion_DI_UI: incomplete
   model_evaluation: NOT_RUN_UNEVALUATED
   next: 'Freeze and independently review repaired private reader before push; continue native brain read and first owned effect rollback/witness-only expiry/native MARS, qualified context/tokenizer, atomic notes/raw completion/outbox and automatic DI/UI.278/279/full233 ACTIVE.'
+
+
+group_278_native_brain_read_preparation:
+  remote_head: b195e2e4d87ada379c43aad68dd7b08502015e14
+  repaired_reader_review_root_fully_fetched_before_push: 6099559192
+  build: 38066869303
+  governance: 38066869297
+  actual: 114256181577
+  remote_state: IN_PROGRESS_six_prerequisites_and_governance_SUCCESS
+  local_native_proof_review: PENDING
+  local_brain_guard_controls_passed: 79
+  local_python_controls_passed: 64
+  actual_unowned_entry_modes_refused_before_config: 7
+  changed_native_read_execution: NOT_RUN
+  new_native_brain_markers: 3
+  required_future_native_markers_exact_once: 97
+  fixture: operator_synthetic_protected_six_rows_new_monotone_epoch4_original_three_receipts_unchanged
+  key_reader: existing_ConfiguredGroupSourceKeyProvider_outside_SQL
+  clear_key_and_payload_log_export: forbidden
+  note_effect_raw_coverage_completion_DI_UI: incomplete
+  model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Own b195 exact CI; freeze/review prepared native brain controls before approved later push. Continue closed qualified context/tokenizer and first owned effect rollback/witness-only expiry/native MARS, atomic notes/raw completion/outbox and automatic DI/UI.278/279/full233 ACTIVE.'

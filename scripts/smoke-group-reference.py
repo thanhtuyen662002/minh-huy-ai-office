@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import base64
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,39 @@ def require_owned(directory, api):
             and os.environ.get("RUNNER_TEMP") and directory.resolve() == (Path(os.environ["RUNNER_TEMP"]) / "aioffice-local").resolve()
             and api == "http://127.0.0.1:8080"):
         raise RuntimeError("Group reference proof requires the owned disposable GitHub CI fixture.")
+
+
+def validated_brain_fixture(raw):
+    # Pure closed metadata/cipher fixture decoding; never accepts SQL, private
+    # clear text or a key. Called only after the outer owned-resource guard.
+    assert isinstance(raw, str) and 0 < len(raw.encode("utf-8")) <= 8192
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            assert key not in result
+            result[key] = value
+        return result
+    value = json.loads(raw, object_pairs_hook=unique)
+    ids = ("requestId", "glossaryId", "publisherId", "batchId", "messageId")
+    numbers = ("claimEpoch", "sourceVersion", "deletionGeneration", "messageRevision", "credentialEpoch", "grantVersion", "accountVersion")
+    assert isinstance(value, dict) and set(value) == set(ids + numbers + (
+        "createdAtUtc", "requestEnvelope", "glossaryEnvelope", "requestHash", "glossaryHash", "sourceSetHash"))
+    for field in ids:
+        assert isinstance(value[field], str) and str(uuid.UUID(value[field])) == value[field] and uuid.UUID(value[field]).int != 0
+    assert value["requestId"] != value["glossaryId"]
+    for field in numbers:
+        assert type(value[field]) is int and (0 if field == "deletionGeneration" else 1) <= value[field] <= 9223372036854775807
+    assert value["claimEpoch"] == 4
+    assert isinstance(value["createdAtUtc"], str) and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}\+00:00", value["createdAtUtc"])
+    datetime.fromisoformat(value["createdAtUtc"])
+    for kind in ("request", "glossary"):
+        envelope = value[kind + "Envelope"]
+        assert isinstance(envelope, str) and re.fullmatch(r"[0-9A-F]{60,2048}", envelope) and len(envelope) % 2 == 0
+        cipher = bytes.fromhex(envelope)
+        assert cipher[0] == 1 and hashlib.sha256(cipher).hexdigest().upper() == value[kind + "Hash"]
+    assert isinstance(value["sourceSetHash"], str) and re.fullmatch(r"[0-9A-F]{64}", value["sourceSetHash"])
+    assert value["sourceSetHash"] == hashlib.sha256(f"{value['messageId']}/{value['messageRevision']}".encode("ascii")).hexdigest().upper()
+    return value
 
 
 def close_owned_reference_child(child, kill_owned):
@@ -229,6 +263,11 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "source-deny": "PASS owned source runtime current Extract denies before protected keys",
             "source-foreign": "PASS owned source runtime foreign selected identity refuses before protected keys",
             "source-expiry": "PASS owned source runtime controlled key-await expiry commits SQL witness and refuses context after clock rollback",
+            "brain-read": "PASS owned brain runtime actual SQL request glossary exact evidence configured keys and final current context",
+            "brain-foreign": "PASS owned brain runtime selected identity or glossary policy refuses before keys",
+            "brain-policy-deny": "PASS owned brain runtime selected identity or glossary policy refuses before keys",
+            "brain-deny": "PASS owned brain runtime current Extract refuses before keys",
+            "brain-expiry": "PASS owned brain runtime controlled key-await expiry commits SQL witness and denies after clock rollback",
             "work-schema": "PASS owned work schema runtime migrated empty scoped brain and effective least privilege",
             "work-unsafe": "PASS owned work schema runtime unsafe effective permission refusal",
             "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
@@ -709,6 +748,103 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual source reader controlled key-await expiry commits witness-only SQL no private release or effects and refuses after clock rollback", flush=True)
+
+        # Separate read fixture after all original epoch3 expiry/graph gates.
+        # Operator publication is test setup, not the still-missing note store.
+        brain_tables = [("GroupCustomerRequests", "Id"), ("GroupRequestRevisions", "RequestId,Revision"),
+            ("GroupRequestEvidence", "RequestId,RequestRevision,Ordinal"), ("GroupWorkCommitReceipts", "BatchId,OperationId"),
+            ("GroupWorkSourceDispositions", "BatchId,MessageId"), ("GroupNotesCommittedOutbox", "Id"),
+            ("GroupNotesCommittedItems", "OutboxId,Ordinal"), ("GroupEditorGrants", "UserId"),
+            ("GroupGlossaryEntries", "Id"), ("GroupGlossaryRevisions", "EntryId,Revision")]
+        def brain_graph():
+            return [digest(table, order) for table, order in brain_tables]
+        assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table, _ in brain_tables)
+        def original_three_receipts():
+            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+                f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=3 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+            assert re.fullmatch(r"[0-9A-F]{64}", value)
+            return value
+        original_three = original_three_receipts()
+        result = subprocess.run([*command, "brain-fixture"], input=configuration(0), env=child_environment,
+            capture_output=True, text=True, timeout=170)
+        assert result.returncode == 0
+        fixture = validated_brain_fixture(result.stdout)
+        assert original_three_receipts() == original_three
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc IS NULL));") == "4|1"
+        operation_id = str(uuid.uuid4())
+        common = f"'{tenant}','{company}','{source}'"
+        request_id, glossary_id, batch_id = (fixture[key] for key in ("requestId", "glossaryId", "batchId"))
+        version, generation, created = (fixture[key] for key in ("sourceVersion", "deletionGeneration", "createdAtUtc"))
+        sql("SET XACT_ABORT ON; BEGIN TRANSACTION;"
+            " INSERT INTO aioffice.GroupWorkCommitReceipts(TenantId,CompanyId,BindingId,BatchId,OperationId,SourceSetSha256,SelectedMessageCount,NoteCount,Outcome,ServiceId,ClaimEpoch,CredentialEpoch,GrantVersion,SourceVersion,DeletionGeneration,AccountVersion,CommittedAtUtc)"
+            f" VALUES({common},'{batch_id}','{operation_id}','{fixture['sourceSetHash']}',1,1,1,'{service}',4,{fixture['credentialEpoch']},{fixture['grantVersion']},{version},{generation},{fixture['accountVersion']},'{created}');"
+            " INSERT INTO aioffice.GroupCustomerRequests(TenantId,CompanyId,BindingId,Id,OriginBatchId,OriginOperationId,OriginCandidateOrdinal,RequestCode,Kind,SourceVersion,DeletionGeneration,CurrentRevision,BusinessStatus,BusinessVersion,CreatedAtUtc,UpdatedAtUtc)"
+            f" VALUES({common},'{request_id}','{batch_id}','{operation_id}',1,'REQ-{uuid.UUID(request_id).hex.upper()}',1,{version},{generation},1,1,1,'{created}','{created}');"
+            " INSERT INTO aioffice.GroupRequestRevisions(TenantId,CompanyId,BindingId,RequestId,Revision,Origin,VerificationLevel,AuthorServiceId,SourceBatchId,ClaimEpoch,SourceVersion,DeletionGeneration,ContentKeyId,ProtectedContent,EnvelopeSha256,CreatedAtUtc)"
+            f" VALUES({common},'{request_id}',1,1,1,'{service}','{batch_id}',4,{version},{generation},'owned-native-source-v1',0x{fixture['requestEnvelope']},'{fixture['requestHash']}','{created}');"
+            " INSERT INTO aioffice.GroupRequestEvidence(TenantId,CompanyId,BindingId,RequestId,RequestRevision,Ordinal,MessageId,MessageRevision,Kind)"
+            f" VALUES({common},'{request_id}',1,1,'{fixture['messageId']}',{fixture['messageRevision']},1);"
+            " INSERT INTO aioffice.GroupGlossaryEntries(TenantId,CompanyId,BindingId,Id,CurrentRevision,Version,SourceVersion,DeletionGeneration,IsEnabled,AllowExtraction,PublishedByUserId,CreatedAtUtc)"
+            f" VALUES({common},'{glossary_id}',1,1,{version},{generation},1,1,'{fixture['publisherId']}','{created}');"
+            " INSERT INTO aioffice.GroupGlossaryRevisions(TenantId,CompanyId,BindingId,EntryId,Revision,SourceVersion,DeletionGeneration,PublishedByUserId,ContentKeyId,ProtectedContent,EnvelopeSha256,CreatedAtUtc)"
+            f" VALUES({common},'{glossary_id}',1,{version},{generation},'{fixture['publisherId']}','owned-native-source-v1',0x{fixture['glossaryEnvelope']},'{fixture['glossaryHash']}','{created}'); COMMIT;")
+        expected_counts = [1, 1, 1, 1, 0, 0, 0, 0, 1, 1]
+        assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == expected_counts
+        brain_stable = brain_graph(); brain_claims = claim_graph()
+        run("brain-read"); run("brain-foreign")
+        assert brain_graph() == brain_stable and claim_graph() == brain_claims
+        temporary_sql(sql, f"UPDATE aioffice.GroupGlossaryEntries SET AllowExtraction=0 WHERE {scope} AND Id='{glossary_id}';",
+            f"UPDATE aioffice.GroupGlossaryEntries SET AllowExtraction=1 WHERE {scope} AND Id='{glossary_id}';", lambda: run("brain-policy-deny"))
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("brain-deny"))
+        assert brain_graph() == brain_stable and claim_graph() == brain_claims
+        run("brain-read")
+        assert brain_graph() == brain_stable and claim_graph() == brain_claims
+        print("PASS actual brain reader SQL protected request glossary original evidence configured keys foreign selection Extract and glossary denial exact restore", flush=True)
+
+        hold = subprocess.Popen([*command, "brain-key-revoke"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True, env=child_environment)
+        hold.stdin.write(configuration(0)); hold.stdin.close(); hold.stdin = None
+        def brain_reader_awaiting():
+            identity = source_reader_container()
+            if identity is None:
+                return False
+            signal = subprocess.run(["docker", "exec", identity, "test", "-f", "/tmp/aioffice-brain-proof-awaiting"],
+                capture_output=True, text=True, timeout=10)
+            return signal.returncode == 0
+        wait(brain_reader_awaiting)
+        def release_brain_reader():
+            identity = source_reader_container(); assert identity is not None
+            released = subprocess.run(["docker", "exec", identity, "sh", "-c", ": > /tmp/aioffice-brain-proof-release"],
+                capture_output=True, text=True, timeout=10)
+            assert released.returncode == 0
+            output, _ = hold.communicate(timeout=35)
+            assert hold.returncode == 0 and output.splitlines() == [
+                "CHECKPOINT owned brain key resolved outside SQL before final fence",
+                "PASS owned brain runtime SQL Extract revocation during key await denies private context"]
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", release_brain_reader)
+        assert brain_graph() == brain_stable and claim_graph() == brain_claims
+        run("brain-read")
+        assert brain_graph() == brain_stable and claim_graph() == brain_claims
+        print("PASS actual brain reader external SQL Extract revocation during configured key await denies private context unchanged graph exact restore recovers", flush=True)
+
+        brain_claim_identity = [digest("GroupBatchClaimStates", "BatchId",
+            "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"), brain_claims[1]]
+        run("brain-expiry")
+        assert [digest("GroupBatchClaimStates", "BatchId",
+            "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"),
+            digest("GroupBatchClaimReceipts", "Epoch")] == brain_claim_identity
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc=ExpiresAtUtc;") == "1"
+        assert brain_graph() == brain_stable
+        assert original_three_receipts() == original_three
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual brain reader controlled key-await expiry persists only SQL witness unchanged notes outbox source and portal and denies after clock rollback", flush=True)
     except BaseException as error:
         failure = error
     finally:

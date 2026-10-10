@@ -2,6 +2,7 @@
 import importlib.util
 import ast
 import base64
+import hashlib
 import json
 import io
 from email.message import Message
@@ -44,6 +45,41 @@ recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def brain_fixture(self):
+        value = {field: str(uuid.uuid4()) for field in ("requestId", "glossaryId", "publisherId", "batchId", "messageId")}
+        value.update({"claimEpoch": 4, "sourceVersion": 1, "deletionGeneration": 0, "messageRevision": 1,
+            "credentialEpoch": 1, "grantVersion": 1, "accountVersion": 1, "createdAtUtc": "2026-10-10T16:00:00.0000001+00:00"})
+        for kind in ("request", "glossary"):
+            cipher = bytes([1]) + bytes([0x32 if kind == "request" else 0x33]) * 40
+            value[kind + "Envelope"] = cipher.hex().upper()
+            value[kind + "Hash"] = hashlib.sha256(cipher).hexdigest().upper()
+        value["sourceSetHash"] = hashlib.sha256(f"{value['messageId']}/1".encode("ascii")).hexdigest().upper()
+        return value
+
+    def test_brain_fixture_accepts_only_closed_bounded_cipher_metadata(self):
+        value = self.brain_fixture()
+        self.assertEqual(value, reference_smoke.validated_brain_fixture(json.dumps(value)))
+        self.assertEqual(18, len(value))
+
+    def test_brain_fixture_rejects_sql_shaped_or_unbounded_or_inconsistent_metadata(self):
+        for field, invalid in (("requestId", "'; DROP TABLE aioffice.Tasks;--"), ("glossaryId", str(uuid.UUID(int=0))),
+                ("publisherId", None), ("claimEpoch", 3), ("claimEpoch", True), ("sourceVersion", 0),
+                ("deletionGeneration", -1), ("grantVersion", 9223372036854775808), ("accountVersion", 1.0),
+                ("messageRevision", 0), ("createdAtUtc", "2026-10-10T16:00:00.0000001+00:00'; PRIVATE"),
+                ("createdAtUtc", "2026-10-10T16:00:00.0000001+01:00"), ("createdAtUtc", "2026-99-10T16:00:00.0000001+00:00"),
+                ("requestEnvelope", "01" * 1025), ("requestEnvelope", "01" * 29), ("requestEnvelope", "02" * 30),
+                ("requestHash", "F" * 64), ("glossaryHash", "F" * 64), ("sourceSetHash", "F" * 64),
+                ("glossaryEnvelope", None), ("PRIVATE_KEY", "PRIVATE")):
+            with self.subTest(field=field, invalid=invalid):
+                value = self.brain_fixture(); value[field] = invalid
+                with self.assertRaises((AssertionError, ValueError)): reference_smoke.validated_brain_fixture(json.dumps(value))
+
+    def test_brain_fixture_rejects_duplicate_fields_before_sql_and_total_output_overflow(self):
+        raw = json.dumps(self.brain_fixture(), separators=(",", ":"))
+        duplicate = raw.replace('"claimEpoch":4', '"claimEpoch":4,"claimEpoch":4')
+        for invalid in (duplicate, raw + " " * 8192, "[]", "null"):
+            with self.assertRaises(AssertionError): reference_smoke.validated_brain_fixture(invalid)
+
     def work_schema_fixture(self, fail=False):
         tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
         functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in
