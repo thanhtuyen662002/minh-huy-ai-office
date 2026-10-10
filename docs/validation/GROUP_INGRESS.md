@@ -8,12 +8,15 @@ The active PR HANDOFF records the exact candidate and workflow IDs.
 
 Frozen runtime HEAD `c619adfd5c7681f76cbe53d9e91b57f0cc8c8161` has terminal
 Build38035314357/Governance38035314405/all eight quality gates SUCCESS.
-Actual114164418527 and aggregate114167539832 passed. Root inspected all80
+Actual114164418527 and aggregate114167539832 passed. Root inspected a selected set of80 required
 retained/new fixed native and Chromium markers with zero terminal failures, plus
 all six original images in artifact11664207582. The current jobs passed2027.NET
 and1334web tests. Final full-PR review and refreshed final PR/main gates remain
 before integration. The following checkpoint sections record history; their
-earlier pending/failure statements do not override this result.
+earlier pending/failure statements do not override this result. The80 count is the selected
+retained/new required-marker set, not the overall PASS-line count. It includes
+retained542 actual/shipping/prepare markers and all11 current reference/recovery
+constants; the obsolete inflated application-restart label was replaced.
 
 - Actual SQL admission/filtering, concurrent100 original receipts, edit/recall and
   late-history gaps, protected content, commit cursor, transaction rollback,
