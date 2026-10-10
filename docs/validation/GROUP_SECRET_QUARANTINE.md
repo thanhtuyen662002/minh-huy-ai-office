@@ -1,0 +1,23 @@
+# Versioned group source/output quarantine checkpoint
+
+Issue278 / Draft288. `group-secret-quarantine-v1` is a conservative known-form detector and source preparation step. It is not a complete secret classifier or real-model qualification.
+
+## Behavior
+
+`GroupSecretQuarantine.Inspect` bounds input to65536 UTF16 units, rejects malformed UTF16, and checks a separate NFKC inspection view with format/non-whitespace control characters removed. Original source bytes, IDs, hashes, evidence quotes and returned business text are not normalized or replaced. Fixed, culture-independent non-backtracking patterns with finite timeouts detect credential assignments, authorization headers/standalone Bearer values, private-key PEM blocks, JWT/provider credential forms, credential URIs, signed URI parameters and credential XML elements. A timeout, malformed input or normalization expansion beyond the bound becomes InvalidInput quarantine. NoMatch means only that these known forms did not match.
+
+`InspectOutputJson` requires a bounded, well-formed object, depth<=12 and<=1024 visited nodes. It inspects decoded strings and property names recursively, including arrays, rather than relying on escaped wire text. Invalid JSON, raw/escaped malformed UTF16 or unsupported bounds return metadata-only InvalidInput. Legitimate nullable/numeric/boolean business fields are permitted here; proposal shape, scope, evidence and semantic validation are still separate required gates.
+
+Decisions contain only the fixed policy version, reason and quarantine boolean. They expose no match, original text, position, hash or replacement. Exceptions from JSON decoding are reduced to a fixed decision. No secret is persisted or sent by this component.
+
+`GroupBatchSourcePreparation.Create` consumes the reader's sealed private context. Every selected entry receives one host preparation receipt. Recall/obsolete-generation/changed-after-cutoff entries remain metadata-only. Sensitive readable fields are excluded as Quarantined while the original protected source/evidence remains retained. Empty/format-only text is a host EmptyText disposition. Media with no understood caption remains host attention; a nonempty caption may be a candidate while HasUnsupportedMedia remains true. Provider candidates expose only host message ID/revision/kind/UTC time/original text, with no raw external group/message/sender/reply identifiers. Candidate/plan construction is private and collections are read-only.
+
+The preparation does not authorize a provider release, qualify token counts, classify business actionability, complete raw-ledger coverage or commit an attention note. A later context builder must fence exact contributing dependencies and use an operator-qualified model/tokenizer profile; a writer must run the output gate and grounding validation before atomic SQL effects. Quarantine attention must use fixed metadata and protected original references, not quote the withheld text.
+
+## Evidence and remaining work
+
+Local49 policy and6 source-preparation controls plus32 retained source-reader controls passed87 tests, zero skipped. The final local full Persistence run passed1752, zero skipped and no warnings/errors. They exercise real source ingest/allocation/claim/reader code with bounded InMemory fixtures and deterministic detection; they do not establish native SQL or semantic model accuracy. A first malformed-output control failed on JSON unpaired-surrogate decoding; the retained control now passes after explicit well-formed input validation and fixed decoding refusal. Test-case attributes with unpaired surrogates were replaced by execution-time construction to prevent test-runner replacement/deduplication.
+
+The owned native source-read mode now also calls production source preparation against actual Core/spool records and scoped configured keys, preserving all existing output/graph assertions. This addition is **UNEXECUTED** pending approved checkpoint push and renewed exact-head CI. Remote686d42 source/PID1 checkpoint has independent scoped approval6098102773; Build38056772338 native114226761326 is pending, six prerequisites and Governance38056772438 succeeded. No claim/source native acceptance is inferred from pending CI.
+
+No automatic worker DI, note/evidence/disposition/completion ledger, NotesCommitted outbox, actual provider call, real model output or customer operation is delivered here. Proposed120 primary/40 independent evaluation inputs remain UNEVALUATED. Policies/input/profile/prompt/schema and labels must be frozen before real outputs; mock/mechanical controls cannot satisfy100 primary/30 independent windows or semantic thresholds.278/279/full233 remain active.

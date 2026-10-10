@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 3a781a4a7c483ae53416dd44ba53f831aa9e656a
+head: 686d42ee432b27cf246636c7cf734a6a5a580cad
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Remote3a78 scoped approval6097772273; Build38054218369 native114219254243 and required-quality114223100040 FAILED at claim-crash after154s, six prerequisites and Governance38054218293 SUCCESS;2212.NET/no browser artifact. PID1 self-SIGKILL fixture defect independently confirmed; --init and preconfiguration child guard repair local. Scoped protected source reader32 controls/full1697 Persistence/52Python/11 actual unowned claim-source refusals PASS. Freeze combined checkpoint review before push and own renewed native CI; new source modes UNEXECUTED. Existing AI Gateway loads worker environment; required PRIMARY_BASE_URL/MODEL/AUTHORIZATION absent in checked scopes/default files, no server secret access; actual model UNEVALUATED. Notes/effect rollback wrapper/glossary/quarantine/token profile/outbox/DI/UI/278/279/full233 remain ACTIVE.'
+next_action: 'Own278/Draft288. Pushed686d42 source/PID1 checkpoint scoped approval6098102773; Build38056772338 actual114226761326 IN_PROGRESS, six prerequisites and Governance38056772438 SUCCESS. Own native claim/source/retained browser closure; do not infer acceptance. Local versioned source/output quarantine plus sealed source preparation49 policy/6 preparation/32 retained source controls87 PASS/full1752 Persistence0skip0warnings; native positive preparation assertion UNEXECUTED. Freeze/review before next push. Existing AI Gateway primary environment values absent in checked scopes/default files; server secret access unknown and real model UNEVALUATED. Qualified context/grounding/protected notes/effect rollback wrapper/glossary/dispositions/completion/outbox/DI/UI/278/279/full233 remain ACTIVE.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1572,3 +1572,24 @@ group_278_source_reader_checkpoint:
   actual_model_evaluation: UNEVALUATED
   automatic_notes_and_DI: incomplete
   next: 'Freeze/review combined source/PID1 repair checkpoint; push only approved source and own all renewed exact-head CI/native gates. Then scoped same-group notes/glossary, grounded bounded qualified context/secret quarantine, atomic notes/evidence/disposition/completion/NotesCommitted, automatic DI/UI and actual frozen model evaluation.278/279/full233 stay ACTIVE.'
+
+group_278_quarantine_checkpoint:
+  remote_head: 686d42ee432b27cf246636c7cf734a6a5a580cad
+  remote_scoped_review: 6098102773
+  remote_build: 38056772338
+  remote_governance: 38056772438
+  remote_actual: 114226761326
+  remote_state: IN_PROGRESS_native_six_prerequisites_and_governance_SUCCESS
+  local_state: source_preparation_and_output_quarantine_verified_pending_frozen_review
+  policy: group-secret-quarantine-v1
+  local_policy_controls: 49
+  local_source_preparation_controls: 6
+  retained_source_reader_controls: 32
+  local_combined_focus: 87
+  local_full_persistence: 1752
+  native_positive_preparation_assertion: UNEXECUTED
+  secret_detector_scope: conservative_bounded_known_forms_NoMatch_not_secret_free_proof
+  provider_candidates: host_evidence_ID_revision_kind_UTC_original_nonquarantined_text_no_raw_external_identifiers
+  actual_provider_call_or_model_outputs: NONE_UNEVALUATED
+  worker_notes_effects_or_DI: incomplete
+  next: 'Close exact686 CI before a later approved push. Review frozen quarantine/source-preparation checkpoint, then qualified context and grounded proposals, protected same-group SQL notes/glossary, native note-effect rollback/MARS proof, atomic notes/evidence/dispositions/completion/NotesCommitted, worker DI/UI and actual frozen100/30 model evaluation.278/279/full233 stay ACTIVE.'

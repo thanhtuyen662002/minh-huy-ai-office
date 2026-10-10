@@ -82,6 +82,11 @@ internal static class GroupBatchSourceRuntimeProof
         }
         if (mode != "source-read") throw new InvalidOperationException();
         var context = await reader.ReadAsync(claim.CurrentHandle, ids, token);
+        var prepared = GroupBatchSourcePreparation.Create(context);
+        if (prepared.Candidates.Count != 2 || prepared.Receipts.Count != 2
+            || prepared.QuarantinePolicyVersion != "group-secret-quarantine-v1"
+            || prepared.Receipts.Any(x => x.Disposition != GroupSourcePreparationDisposition.ModelText || x.QuarantineReason is not null)
+            || prepared.Candidates.Any(x => x.Text != "owned native spool 😀\uFEFF ")) throw new InvalidOperationException();
         if (context.Scope != scope || context.BatchId != batch || context.Items.Count != 2 || keys.Reads != 1
             || context.Items.Any(x => x.Disposition != GroupBatchSourceDisposition.Readable || x.Text != "owned native spool 😀\uFEFF ")
             || context.ToString().Contains("owned native spool", StringComparison.Ordinal)

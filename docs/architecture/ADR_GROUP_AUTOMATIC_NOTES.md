@@ -38,3 +38,7 @@ Independent frozen88cb review reproduced a cross-call clock-rollback defect: exp
 ## Source reader boundary
 
 Use a sealed claim and host-selected IDs from the immutable allocation to construct scoped private source context. Source reads retain cutoff head precedence and exact original receipts/envelope; current contributing dependencies are fenced around scoped key awaits outside SQL. No portal identity or model-selected SQL is accepted. Initial/final expiry in this fixed read-only unit persists only the lease witness before denial. A later note-effect transaction must separately own source-lock-before-savepoint rollback/retirement and fail closed where savepoints/MARS cannot support it. Configuration and provider calls continue through the existing worker AI Gateway environment loader and deployment injection; no new client/secret store is introduced.
+
+## Quarantine and source preparation
+
+Use versioned, bounded host quarantine before source candidate selection and on decoded structured output before grounding/persistence. Keep original protected source intact; only metadata reasons and original references may enter quarantine attention. Inspect a separate normalized/control-filtered view without changing original UTF16 evidence. The known-form NoMatch result is not proof of arbitrary secret absence. Preparation exposes host evidence IDs/text without raw external identifiers and preserves every selected item's host disposition; it does not establish complete raw coverage, model token budget or future release/effect authority.

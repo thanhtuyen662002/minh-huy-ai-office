@@ -7,7 +7,7 @@ using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
-public sealed class GroupBatchSourceReaderTests
+public sealed partial class GroupBatchSourceReaderTests
 {
     [Fact]
     public async Task IgnoredKeyCancellationCannotHoldReaderAndLateKeyIsDisposedWithoutContext()
