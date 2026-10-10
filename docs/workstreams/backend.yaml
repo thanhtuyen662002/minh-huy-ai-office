@@ -4,8 +4,8 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 24495763b5ccf6ff6af9e81768067ec215a5a671
-state: in_progress_terminal_ci_repair
+head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+state: in_progress_exact_ci
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
@@ -1410,3 +1410,14 @@ group_connector_244_terminal:
   evidence: 'Governance and all six prerequisites SUCCESS. Retained current group/listener/read/spool, three managed process proofs, recovery-only startup and all six reference stages PASS. New proof passed owned incarnation/persistent original queue-reference survival before and after RabbitMQ restart without republication; ACK+1 wait returned, then immediate delivery+1/consumer1 assertion failed. No numeric counter snapshot was emitted; cause remains unproven. Chromium skipped; no full277 acceptance.'
   repair: 'Within unchanged30s wait require ACK+1, delivery+1 and consumer1 together in one actual management snapshot. Strict exact deltas, ownership/restore, original reference, queue empty/count2/full8/portal/isolation unchanged; only bounded scalar failure diagnostics added.43 Python controls PASS, including delayed-statistics positive and disjoint/overshoot/missing-consumer refusals. Shipping src/apps/tests/workflows unchanged244.'
   next: 'Freeze and independently review same283 repair plus dispatch/terminal documents, then approved push and exact-head native/browser closure. No merge/full277 until new actual restart and all required gates pass;278/279/full233 active.'
+
+group_connector_c619_dispatch:
+  head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  build: 38035314357
+  governance: 38035314405
+  actual: 114164418527
+  scoped_approval: 6095219736
+  state: exact_native_browser_ci_active
+  review: 'Frozen3ad and sole current-next-action correctionc619 APPROVED;43 retained+4 independent original-fixture controls=47 Python PASS,2AST/2YAML/final correction YAML/diff PASS. Original delayed complete snapshot and mixed-snapshot extraACK counterexamples closed. Strict exact30s single-snapshot signals and all final original reference/queue/count2/full8/portal/isolation/owned restoration unchanged. Shipping/native/tests/workflow/sln bytes equal244.'
+  exact_progress: 'Remote ref/GitHub PRc619 verified. Build/native active, Gov SUCCESS. All7 actual jobs allocated; migration and Compose already SUCCESS. New pending-reference restart consumer/final graph/strict Chromium acceptance not inferred.'
+  next: 'Own exact current native/browser/all8 to terminal, fix any proven red SAME283. No useful CI cancellation for progress docs. Full277/finalPR/main acceptance precedes eligible merge;278/279/full233 active.'

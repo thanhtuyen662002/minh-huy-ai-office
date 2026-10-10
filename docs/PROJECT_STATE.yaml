@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 24495763b5ccf6ff6af9e81768067ec215a5a671
+current_target_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 24495763b5ccf6ff6af9e81768067ec215a5a671
-    state: in_progress_terminal_ci_repair
-    next: 'Exact244 Build38033648198/actual114159514486/quality114162493033 terminal FAILURE; Gov38033648226/six prerequisites SUCCESS. Original persistent queue reference survived broker restart before republication; immediate delivery/consumer post-ACK observation failed, numeric cause unproven. Same283 bounded single-snapshot strict observation repair locally verified, frozen review then renewed native/browser CI required. Full277/278/279/full233 active.'
+    head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+    state: in_progress_exact_ci
+    next: 'Reviewed3ad+c619 observation repair6095219736 pushed SAME283, remote/PR verified. Build38035314357/actual114164418527 active, Gov38035314405 SUCCESS. Own exact native/browser terminal; require strict same-snapshot ACK+1/delivery+1/consumer1, final empty queue/count2/full8/portal/isolation and complete Chromium. Full277/finalPR/main acceptance remains;278/279/full233 active.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Exact244 Build38033648198/actual114159514486 is terminal FAILURE, with post-resume delivery/consumer observation failing and Chromium skipped. Close frozen same283 strict single-snapshot repair review, approved push, then own renewed exact native/browser all8 to terminal and fix any proven red. Full277 final closure review/exact PR/main precede eligible merge; then278/279/full233.'
+next_action: 'Own exact reviewedc619 Build38035314357/actual114164418527 through native/main Chromium/all8 terminal; Gov38035314405 SUCCESS. Scope observation repair6095219736 approved,47Python PASS. Current dispatch docs stay local while useful CI runs. Fix any red SAME283; final full277/PR/main acceptance before merge, then278/279/full233.'
 
 
 blocked_by:
@@ -776,3 +776,14 @@ group_connector_244_terminal:
   evidence: 'Governance and all six prerequisites SUCCESS. Retained current group/listener/read/spool, three managed process proofs, recovery-only startup and all six reference stages PASS. New proof passed owned incarnation/persistent original queue-reference survival before and after RabbitMQ restart without republication; ACK+1 wait returned, then immediate delivery+1/consumer1 assertion failed. No numeric counter snapshot was emitted; cause remains unproven. Chromium skipped; no full277 acceptance.'
   repair: 'Within unchanged30s wait require ACK+1, delivery+1 and consumer1 together in one actual management snapshot. Strict exact deltas, ownership/restore, original reference, queue empty/count2/full8/portal/isolation unchanged; only bounded scalar failure diagnostics added.43 Python controls PASS, including delayed-statistics positive and disjoint/overshoot/missing-consumer refusals. Shipping src/apps/tests/workflows unchanged244.'
   next: 'Freeze and independently review same283 repair plus dispatch/terminal documents, then approved push and exact-head native/browser closure. No merge/full277 until new actual restart and all required gates pass;278/279/full233 active.'
+
+group_connector_c619_dispatch:
+  head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  build: 38035314357
+  governance: 38035314405
+  actual: 114164418527
+  scoped_approval: 6095219736
+  state: exact_native_browser_ci_active
+  review: 'Frozen3ad and sole current-next-action correctionc619 APPROVED;43 retained+4 independent original-fixture controls=47 Python PASS,2AST/2YAML/final correction YAML/diff PASS. Original delayed complete snapshot and mixed-snapshot extraACK counterexamples closed. Strict exact30s single-snapshot signals and all final original reference/queue/count2/full8/portal/isolation/owned restoration unchanged. Shipping/native/tests/workflow/sln bytes equal244.'
+  exact_progress: 'Remote ref/GitHub PRc619 verified. Build/native active, Gov SUCCESS. All7 actual jobs allocated; migration and Compose already SUCCESS. New pending-reference restart consumer/final graph/strict Chromium acceptance not inferred.'
+  next: 'Own exact current native/browser/all8 to terminal, fix any proven red SAME283. No useful CI cancellation for progress docs. Full277/finalPR/main acceptance precedes eligible merge;278/279/full233 active.'
