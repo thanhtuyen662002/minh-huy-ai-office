@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
     state: in_progress
-    next: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
+    next: 'Own278/Draft288. Remote a50 allocation scoped approval6097301006 and exact Build38050984824/all8/actual114209890966/quality114213245644/Gov38050984773 SUCCESS; root84 markers/140PASS/2166.NET/all6 ORIGINAL images11669194893 reviewed. Local88cb WITHHELD for expiry clock-rollback P2; durable first-expiry witness/typed verdict/guarded retirement/additive repair locally133 focused.NET/45claim/1661 prior full Persistence/49Python/6actual unowned entry refusals. Freeze independent repair review and unchanged2 counterexamples before push, then own renewed native claim CI. Protected brain/effect rollback wrapper/notes/outbox/DI/UI/actual model evaluation/278/279/full233 remain ACTIVE; proposed120/40 UNEVALUATED/provider location pending.'
 
   erp_data:
     issue: 264
@@ -24,7 +24,7 @@ critical_paths:
     branch: codex/264-erp-readonly-qualification
     head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
     state: done
-    next: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
+    next: 'Own278/Draft288. Remote a50 allocation scoped approval6097301006 and exact Build38050984824/all8/actual114209890966/quality114213245644/Gov38050984773 SUCCESS; root84 markers/140PASS/2166.NET/all6 ORIGINAL images11669194893 reviewed. Local88cb WITHHELD for expiry clock-rollback P2; durable first-expiry witness/typed verdict/guarded retirement/additive repair locally133 focused.NET/45claim/1661 prior full Persistence/49Python/6actual unowned entry refusals. Freeze independent repair review and unchanged2 counterexamples before push, then own renewed native claim CI. Protected brain/effect rollback wrapper/notes/outbox/DI/UI/actual model evaluation/278/279/full233 remain ACTIVE; proposed120/40 UNEVALUATED/provider location pending.'
 
   company_selection:
     issue: 266
@@ -32,7 +32,7 @@ critical_paths:
     branch: codex/266-company-selection
     head: a75f31a2761ffe0afcbf067425eb8324789b3554
     state: done
-    next: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
+    next: 'Own278/Draft288. Remote a50 allocation scoped approval6097301006 and exact Build38050984824/all8/actual114209890966/quality114213245644/Gov38050984773 SUCCESS; root84 markers/140PASS/2166.NET/all6 ORIGINAL images11669194893 reviewed. Local88cb WITHHELD for expiry clock-rollback P2; durable first-expiry witness/typed verdict/guarded retirement/additive repair locally133 focused.NET/45claim/1661 prior full Persistence/49Python/6actual unowned entry refusals. Freeze independent repair review and unchanged2 counterexamples before push, then own renewed native claim CI. Protected brain/effect rollback wrapper/notes/outbox/DI/UI/actual model evaluation/278/279/full233 remain ACTIVE; proposed120/40 UNEVALUATED/provider location pending.'
 
 recent_authoritative_merges:
   - 'PR287/repair286 and issue277 accepted main2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd: frozen608/full review6096552286; main independent receipt6096704767. Build38044971534/Gov38044971530/all8/actual114192556176/quality114195330891 SUCCESS. All80 required markers,136 PASS,2027.NET/1334web and six ORIGINAL images11667314210 checked independently.277 CLOSED. Native application/literal pending broker restart and Core202/historical strict original receipts PASS. Earlier aeb failure cause unproven.278/279/model/customer/full233 remain outstanding.'
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
+next_action: 'Own278/Draft288. Remote a50 allocation scoped approval6097301006 and exact Build38050984824/all8/actual114209890966/quality114213245644/Gov38050984773 SUCCESS; root84 markers/140PASS/2166.NET/all6 ORIGINAL images11669194893 reviewed. Local88cb WITHHELD for expiry clock-rollback P2; durable first-expiry witness/typed verdict/guarded retirement/additive repair locally133 focused.NET/45claim/1661 prior full Persistence/49Python/6actual unowned entry refusals. Freeze independent repair review and unchanged2 counterexamples before push, then own renewed native claim CI. Protected brain/effect rollback wrapper/notes/outbox/DI/UI/actual model evaluation/278/279/full233 remain ACTIVE; proposed120/40 UNEVALUATED/provider location pending.'
 
 
 blocked_by:
@@ -856,3 +856,33 @@ group_278_claim_checkpoint:
   automatic_sql_notes_delivered: false
   model_evaluation: UNEVALUATED
   next: 'Own parent CI; freeze/review claim checkpoint before approved push. Native SQL claims/brain/notes/atomic outbox/automatic DI/UI/model evaluation/full278/279/233 remain.'
+
+group_278_expiry_repair_checkpoint:
+  withheld_head: 88cb2709401940f26840e706ba053e37d0b22afc
+  blocker: cross_call_expired_nonce_and_public_handle_revive_after_wall_clock_rollback
+  state: repair_local_verified_pending_frozen_independent_review
+  original_independent_counterexamples: 2_retained_unchanged_pending_reexecution
+  final_focused_dotnet_controls: 133
+  claim_controls: 45
+  full_persistence_before_final_old_receipt_guard: 1661
+  final_old_receipt_guard: covered_by_final_focused_controls
+  owned_python_controls: 49
+  actual_unowned_claim_entry_refusals: 6
+  migration: AddGroupBatchClaimExpiryFence
+  behavior: immutable_first_committed_expiry_witness_per_epoch_original_nonce_never_renews_typed_no_allocation_expired_verdict_guarded_retirement
+  internal_effect_consumer_and_savepoint_wrapper: NOT_IMPLEMENTED_requires_native_staged_effect_rollback_proof_with_first_consumer
+  claim_native_execution: UNEXECUTED
+  parent_allocation_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
+  parent_build: 38050984824
+  parent_governance: 38050984773
+  parent_actual: 114209890966
+  parent_quality: 114213245644
+  parent_exact_all8: SUCCESS
+  parent_required_markers: 84
+  parent_pass_lines: 140
+  parent_dotnet_tests: 2166
+  parent_browser_artifact: 11669194893
+  parent_browser_original_images_root_inspected: 6
+  automatic_sql_notes: incomplete
+  actual_model_evaluation: UNEVALUATED
+  next: 'Freeze/review expiry repair; unchanged2 independent probes must PASS before approved push and renewed native SQL closure. Continue protected service brain and owned effect rollback wrapper, notes/outbox/DI/UI/actual frozen model qualification;278/279/233 stay ACTIVE.'

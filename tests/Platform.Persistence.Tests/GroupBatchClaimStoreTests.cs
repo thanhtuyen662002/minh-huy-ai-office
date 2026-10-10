@@ -9,6 +9,128 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class GroupBatchClaimStoreTests
 {
     [Fact]
+    public async Task ExpiredNonceRemainsMetadataAcrossClockRollbackAndFirstWitnessNeverMovesWithinEpoch()
+    {
+        using var fixture = await Fixture.CreateAsync(); var owner = Guid.NewGuid(); var operation = Guid.NewGuid();
+        var first = await fixture.AcquireAsync(owner, operation);
+        var witnessedAt = first.Receipt.ExpiresAtUtc.AddSeconds(5);
+        fixture.Auth.Clock.Current = witnessedAt;
+        using (var db = new PlatformDbContext(fixture.Auth.Options))
+            Assert.Null((await fixture.StoreFor(db).TryAcquireAsync(fixture.Scope, fixture.Batch, owner, operation, Fixture.Lifetime))!.CurrentHandle);
+        Assert.Equal(witnessedAt, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        foreach (var at in new[] { first.Receipt.ExpiresAtUtc.AddTicks(-1), first.Receipt.ExpiresAtUtc, witnessedAt.AddTicks(-1) })
+        {
+            fixture.Auth.Clock.Current = at;
+            using var db = new PlatformDbContext(fixture.Auth.Options);
+            var replay = await fixture.StoreFor(db).TryAcquireAsync(fixture.Scope, fixture.Batch, owner, operation, Fixture.Lifetime);
+            Assert.Equal(first.Receipt, replay!.Receipt); Assert.Null(replay.CurrentHandle);
+            Assert.Null(await fixture.StoreFor(db).TryAcquireAsync(fixture.Scope, fixture.Batch, owner, Guid.NewGuid(), Fixture.Lifetime));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(db).RequireCurrentAsync(first.CurrentHandle!));
+        }
+        fixture.Auth.Clock.Current = witnessedAt.AddSeconds(10);
+        await fixture.AcquireAsync(owner, operation);
+        Assert.Equal(witnessedAt, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        fixture.Auth.Clock.Current = witnessedAt;
+        var second = await fixture.AcquireAsync(owner, Guid.NewGuid());
+        Assert.Equal(2, second.Receipt.Epoch); Assert.NotNull(second.CurrentHandle);
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc);
+        Assert.Null((await fixture.AcquireAsync(owner, operation)).CurrentHandle);
+        Assert.Equal(2, await fixture.Auth.Db.GroupBatchClaimReceipts.CountAsync());
+    }
+
+    [Fact]
+    public async Task DeniedPublicHandleCommitsExpiryWitnessBeforeCrossCallClockRollback()
+    {
+        using var fixture = await Fixture.CreateAsync(); var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        using (var db = new PlatformDbContext(fixture.Auth.Options))
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(db).RequireCurrentAsync(first.CurrentHandle!));
+        Assert.Equal(first.Receipt.ExpiresAtUtc, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc.AddTicks(-1);
+        using var restarted = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(restarted).RequireCurrentAsync(first.CurrentHandle!));
+        Assert.Equal(1, await restarted.GroupBatchClaimReceipts.CountAsync()); Assert.False(restarted.ChangeTracker.HasChanges());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FinalAwaitExpiryOrClockRollbackPreservesTheFirstExpiryObservation(bool rollback)
+    {
+        using var fixture = await Fixture.CreateAsync(); var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        var expiry = first.Receipt.ExpiresAtUtc;
+        var clock = new SequenceClock(rollback ? [expiry, expiry.AddTicks(-1)] : [expiry.AddTicks(-1), expiry]);
+        using var db = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => new GroupBatchClaimStore(db, fixture.Worker, clock)
+            .RequireCurrentAsync(first.CurrentHandle!));
+        Assert.Equal(expiry, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        fixture.Auth.Clock.Current = expiry.AddTicks(-1);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.RequireCurrentAsync(first.CurrentHandle!));
+    }
+
+    [Fact]
+    public async Task ExpiredLockedVerdictHasNoAllocationAndOnlyExplicitRetirementWritesWitness()
+    {
+        using var fixture = await Fixture.CreateAsync(); var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        var expired = Assert.IsType<GroupBatchClaimFenceVerdict.Expired>(
+            await fixture.Store.InspectCurrentLockedAsync(first.CurrentHandle!, default));
+        Assert.DoesNotContain(expired.GetType().GetProperties(), x => x.PropertyType == typeof(GroupBatchAllocationReceipt));
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc); Assert.False(fixture.Auth.Db.ChangeTracker.HasChanges());
+        fixture.Auth.Clock.Current -= TimeSpan.FromTicks(1);
+        await fixture.Store.RetireExpiredLockedAsync(expired.Observation, default);
+        Assert.Equal(first.Receipt.ExpiresAtUtc, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.RequireCurrentAsync(first.CurrentHandle!));
+    }
+
+    [Fact]
+    public async Task OldExpiryObservationCannotRetireANewEpoch()
+    {
+        using var fixture = await Fixture.CreateAsync(); var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        var expired = Assert.IsType<GroupBatchClaimFenceVerdict.Expired>(
+            await fixture.Store.InspectCurrentLockedAsync(first.CurrentHandle!, default));
+        var second = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        using var db = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(db).RetireExpiredLockedAsync(expired.Observation, default));
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc);
+        await fixture.Store.RequireCurrentAsync(second.CurrentHandle!);
+        fixture.Auth.Clock.Current = second.Receipt.ExpiresAtUtc;
+        var old = await fixture.AcquireAsync(first.Receipt.OwnerId, first.Receipt.OperationId);
+        Assert.Equal(first.Receipt, old.Receipt); Assert.Null(old.CurrentHandle);
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc);
+    }
+
+    [Fact]
+    public async Task RetirementRefusesStagedWritesAndCurrentRevocation()
+    {
+        using var fixture = await Fixture.CreateAsync(); var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        var expired = Assert.IsType<GroupBatchClaimFenceVerdict.Expired>(
+            await fixture.Store.InspectCurrentLockedAsync(first.CurrentHandle!, default));
+        var state = await fixture.Auth.Db.GroupBatchClaimStates.SingleAsync(); state.OwnerId = Guid.NewGuid();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Store.RetireExpiredLockedAsync(expired.Observation, default));
+        fixture.Auth.Db.ChangeTracker.Clear();
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc);
+        await fixture.ChangeAuthorityAsync("grant");
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.RetireExpiredLockedAsync(expired.Observation, default));
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MalformedStoredExpiryWitnessCannotRestoreOrReplaceAClaim(bool nonUtc)
+    {
+        using var fixture = await Fixture.CreateAsync(); var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        var state = await fixture.Auth.Db.GroupBatchClaimStates.SingleAsync();
+        state.ExpiryObservedAtUtc = nonUtc ? first.Receipt.ExpiresAtUtc.ToOffset(TimeSpan.FromHours(1)) : first.Receipt.ExpiresAtUtc.AddTicks(-1);
+        await fixture.Auth.Db.SaveChangesAsync(); fixture.Auth.Db.ChangeTracker.Clear();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Store.RequireCurrentAsync(first.CurrentHandle!));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
     public async Task ActiveLeaseCannotBeStolenAndOriginalNonceNeverRenewsAcrossFreshContexts()
     {
         using var fixture = await Fixture.CreateAsync(); var owner = Guid.NewGuid(); var operation = Guid.NewGuid();

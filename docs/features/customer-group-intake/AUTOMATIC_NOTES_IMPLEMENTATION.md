@@ -27,7 +27,7 @@ See ADR_GROUP_AUTOMATIC_NOTES.md in architecture and ../../validation/GROUP_BATC
 
 ## Fenced claims implementation checkpoint
 
-See ../../validation/GROUP_BATCH_CLAIMS.md. Immutable original acquisition receipts and current expiring lease state are stored under current Extract/effective permission/source-lock proof. Same nonce never renews; active lease cannot be stolen; expired/replaced/current-authority-changed receipts cannot restore an old handle.120 focused controls PASS and guarded native modes exist but are unexecuted. No claim is completion or a note, and a public current check does not authorize a later unfenced read/effect. Source ordering/terminal frontier and actual protected brain/pipeline remain required.
+See ../../validation/GROUP_BATCH_CLAIMS.md. Frozen88cb review WITHHELD one concrete expiry/clock-rollback P2. Its repair adds a durable first expiry witness, typed no-allocation expired verdict and explicit metadata retirement; old nonce/handle cannot revive and old epoch cannot retire a replacement.133 final focused controls PASS, including45 claim controls; full1661 Persistence controls ran before the final old-receipt guard, covered by final focused controls. Parent a50 allocation all8/Governance/84 markers/140 PASS/2166.NET/all6 original images are closed. New claim native modes remain UNEXECUTED and repair awaits frozen independent approval. No claim is completion or a note. The first protected/result consumer still needs an owned staged-effect rollback/witness-only commit wrapper and actual native proof. Source ordering/terminal frontier and actual protected brain/pipeline remain required.
 
 ## Subsequent checkpoints required on this same issue/PR
 

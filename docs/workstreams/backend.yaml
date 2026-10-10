@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Initiallease019f Build38046671222/Gov38046671223/all8 PASS. Unpushed transport fa95 review withheld for three concrete P2s; repaired code has99 local actual-adapter/legacy controls PASS, plus13 allocation controls. Freeze/review repaired combined HEAD before push, then own exact CI and continue SQL batches/claims/scoped brain/notes/evidence/atomic outbox on SAME PR. No SQL notes or model quality accepted; proposed120/40 UNEVALUATED/provider location pending.279/full233 remain ACTIVE.'
+next_action: 'Own278/Draft288. Remote a50 allocation scoped approval6097301006 and exact Build38050984824/all8/actual114209890966/quality114213245644/Gov38050984773 SUCCESS; root84 markers/140PASS/2166.NET/all6 ORIGINAL images11669194893 reviewed. Local88cb WITHHELD for expiry clock-rollback P2; durable first-expiry witness/typed verdict/guarded retirement/additive repair locally133 focused.NET/45claim/1661 prior full Persistence/49Python/6actual unowned entry refusals. Freeze independent repair review and unchanged2 counterexamples before push, then own renewed native claim CI. Protected brain/effect rollback wrapper/notes/outbox/DI/UI/actual model evaluation/278/279/full233 remain ACTIVE; proposed120/40 UNEVALUATED/provider location pending.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1518,3 +1518,33 @@ group_278_fenced_claim_checkpoint:
   notes_outbox_and_pipeline: incomplete
   actual_model_evaluation: UNEVALUATED
   next: 'Own parent a50 CI to terminal, review immutable claim checkpoint before push and close renewed SQL CI. Then service-scoped brain/dependencies/protected notes/atomic NotesCommitted outbox/DI/UI and actual frozen model qualification.278/279/full233 remain ACTIVE.'
+
+group_278_expiry_repair_checkpoint:
+  withheld_head: 88cb2709401940f26840e706ba053e37d0b22afc
+  blocker: cross_call_expired_nonce_and_public_handle_revive_after_wall_clock_rollback
+  state: repair_local_verified_pending_frozen_independent_review
+  original_independent_counterexamples: 2_retained_unchanged_pending_reexecution
+  final_focused_dotnet_controls: 133
+  claim_controls: 45
+  full_persistence_before_final_old_receipt_guard: 1661
+  final_old_receipt_guard: covered_by_final_focused_controls
+  owned_python_controls: 49
+  actual_unowned_claim_entry_refusals: 6
+  migration: AddGroupBatchClaimExpiryFence
+  behavior: immutable_first_committed_expiry_witness_per_epoch_original_nonce_never_renews_typed_no_allocation_expired_verdict_guarded_retirement
+  internal_effect_consumer_and_savepoint_wrapper: NOT_IMPLEMENTED_requires_native_staged_effect_rollback_proof_with_first_consumer
+  claim_native_execution: UNEXECUTED
+  parent_allocation_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
+  parent_build: 38050984824
+  parent_governance: 38050984773
+  parent_actual: 114209890966
+  parent_quality: 114213245644
+  parent_exact_all8: SUCCESS
+  parent_required_markers: 84
+  parent_pass_lines: 140
+  parent_dotnet_tests: 2166
+  parent_browser_artifact: 11669194893
+  parent_browser_original_images_root_inspected: 6
+  automatic_sql_notes: incomplete
+  actual_model_evaluation: UNEVALUATED
+  next: 'Freeze/review expiry repair; unchanged2 independent probes must PASS before approved push and renewed native SQL closure. Continue protected service brain and owned effect rollback wrapper, notes/outbox/DI/UI/actual frozen model qualification;278/279/233 stay ACTIVE.'

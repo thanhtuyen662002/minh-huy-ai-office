@@ -40,14 +40,19 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
                     throw Unavailable();
                 await ReadAllocationAsync(scope, batchId, now, cancellationToken);
                 var state = await ReadStateAsync(scope, batchId, now, cancellationToken) ?? throw Unavailable();
-                var finalNow = await FinalAuthorityAsync();
+                var finalNow = await FinalAuthorityAsync(allowExpiredClockRollback:
+                    state.ExpiryObservedAtUtc is not null || now >= state.ExpiresAtUtc);
+                if (Matches(state, original))
+                    await PersistExpiryAsync(state, finalNow > now ? finalNow : now, cancellationToken);
+                await directory.RequireCurrentAsync(authority, cancellationToken);
+                await permissions.RequireSafeRuntimeAsync(cancellationToken);
                 var receipt = Receipt(scope, original);
                 return await FinishAsync(new(receipt, IsCurrent(state, original, authority, finalNow)
                     ? new GroupBatchClaimHandle(receipt, authority) : null, true));
             }
             await ReadAllocationAsync(scope, batchId, now, cancellationToken);
             var current = await ReadStateAsync(scope, batchId, now, cancellationToken);
-            if (current is not null && current.ExpiresAtUtc > now)
+            if (current is not null && (current.ExpiresAtUtc > now || current.ExpiryObservedAtUtc > now))
             {
                 await FinalAuthorityAsync(); await transaction.CommitAsync(cancellationToken); return null;
             }
@@ -94,18 +99,19 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
             staged.Add(current); database.Add(record); staged.Add(record);
             current.Epoch = record.Epoch; current.OwnerId = ownerId; current.OperationId = operationId;
             current.IssuedAtUtc = record.IssuedAtUtc; current.ExpiresAtUtc = record.ExpiresAtUtc;
+            current.ExpiryObservedAtUtc = null;
             await FinalAuthorityAsync(record.ExpiresAtUtc);
             await database.SaveChangesAsync(cancellationToken);
             await FinalAuthorityAsync(record.ExpiresAtUtc);
             var committedReceipt = Receipt(scope, record);
             return await FinishAsync(new(committedReceipt, new(committedReceipt, authority), false));
 
-            async Task<DateTimeOffset> FinalAuthorityAsync(DateTimeOffset? requiredExpiry = null)
+            async Task<DateTimeOffset> FinalAuthorityAsync(DateTimeOffset? requiredExpiry = null, bool allowExpiredClockRollback = false)
             {
                 await directory.RequireCurrentAsync(authority, cancellationToken);
                 await permissions.RequireSafeRuntimeAsync(cancellationToken);
                 var finalNow = UtcNow();
-                if (finalNow < now || (requiredExpiry is not null && finalNow >= requiredExpiry)) throw Unavailable();
+                if ((!allowExpiredClockRollback && finalNow < now) || (requiredExpiry is not null && finalNow >= requiredExpiry)) throw Unavailable();
                 return finalNow;
             }
             async Task<GroupBatchClaimResult> FinishAsync(GroupBatchClaimResult result)
@@ -122,8 +128,9 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
     }
 
     // This public check establishes only current metadata at this instant.
-    // Protected readers/result stores must call the internal locked fence in
-    // their own SQL transaction, then fence again immediately before commit.
+    // Expiry retirement commits in this metadata-only unit before denial. The
+    // internal verdict requires an effect consumer to own rollback/retirement;
+    // it must never commit staged effects just to preserve an expiry witness.
     public async Task RequireCurrentAsync(GroupBatchClaimHandle handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(handle);
@@ -131,15 +138,19 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
         try
         {
             await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
-            await RequireCurrentLockedAsync(handle, cancellationToken);
+            var verdict = await InspectCurrentLockedAsync(handle, cancellationToken);
+            if (verdict is GroupBatchClaimFenceVerdict.Expired expired)
+                await RetireExpiredLockedAsync(expired.Observation, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
+            if (verdict is GroupBatchClaimFenceVerdict.Expired) throw GroupServiceDirectory.Denied();
         }
+        catch (DbUpdateException) { throw new GroupBatchClaimCommitException(); }
         catch (Exception error) when (error is SqlException or OverflowException or ArgumentOutOfRangeException or EncoderFallbackException)
         { throw Unavailable(); }
     }
 
-    internal async Task<GroupBatchAllocationReceipt> RequireCurrentLockedAsync(GroupBatchClaimHandle handle,
+    internal async Task<GroupBatchClaimFenceVerdict> InspectCurrentLockedAsync(GroupBatchClaimHandle handle,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(handle);
@@ -157,13 +168,65 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
         ValidateReceipt(original, scope, now);
         if (Receipt(scope, original) != handle.Receipt) throw GroupServiceDirectory.Denied();
         var state = await ReadStateAsync(scope, original.BatchId, now, cancellationToken) ?? throw Unavailable();
-        if (!IsCurrent(state, original, handle.Authority, now)) throw GroupServiceDirectory.Denied();
+        if (!Matches(state, original) || !MatchesAuthority(original, handle.Authority)) throw GroupServiceDirectory.Denied();
         var allocation = await ReadAllocationAsync(scope, original.BatchId, now, cancellationToken);
         await directory.RequireCurrentAsync(handle.Authority, cancellationToken);
         await permissions.RequireSafeRuntimeAsync(cancellationToken);
         var finalNow = UtcNow();
-        if (finalNow < now || !IsCurrent(state, original, handle.Authority, finalNow)) throw GroupServiceDirectory.Denied();
-        return allocation;
+        var observedAt = finalNow > now ? finalNow : now;
+        if (state.ExpiryObservedAtUtc is not null || observedAt >= state.ExpiresAtUtc)
+            return new GroupBatchClaimFenceVerdict.Expired(new(handle, state.ExpiryObservedAtUtc ?? observedAt));
+        if (finalNow < now) throw GroupServiceDirectory.Denied();
+        return new GroupBatchClaimFenceVerdict.Current(allocation);
+    }
+
+    // Caller must have rolled back ALL effect writes and detached their EF
+    // entries before this operation. It does not commit the caller's unit.
+    // The first effect consumer needs an owned savepoint/transaction wrapper
+    // and native rollback proof; no such consumer is shipped at this checkpoint.
+    internal async Task RetireExpiredLockedAsync(GroupBatchClaimExpiryObservation observation, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(observation);
+        var handle = observation.Handle; var scope = handle.Receipt.Scope;
+        ValidateEntry(scope, cancellationToken);
+        if (database.Database.IsSqlServer() && database.Database.CurrentTransaction is null) throw Unavailable();
+        if (observation.ObservedAtUtc.Offset != TimeSpan.Zero || observation.ObservedAtUtc < handle.Receipt.ExpiresAtUtc)
+            throw Unavailable();
+        var permissions = new GroupIngressPermissionVerifier(database);
+        var directory = new GroupExtractionDirectory(database, worker);
+        await permissions.RequireSafeRuntimeAsync(cancellationToken);
+        await GroupSourceTransactionLock.RequireAsync(database, scope, cancellationToken);
+        await directory.RequireCurrentAsync(handle.Authority, cancellationToken);
+        var now = UtcNow(); var validationTime = now > observation.ObservedAtUtc ? now : observation.ObservedAtUtc;
+        var original = await Receipts(scope).SingleOrDefaultAsync(x => x.OperationId == handle.Receipt.OperationId, cancellationToken)
+            ?? throw Unavailable();
+        ValidateReceipt(original, scope, validationTime);
+        var state = await ReadStateAsync(scope, original.BatchId, validationTime, cancellationToken) ?? throw Unavailable();
+        if (Receipt(scope, original) != handle.Receipt || !Matches(state, original) || !MatchesAuthority(original, handle.Authority))
+            throw GroupServiceDirectory.Denied();
+        await ReadAllocationAsync(scope, original.BatchId, validationTime, cancellationToken);
+        await directory.RequireCurrentAsync(handle.Authority, cancellationToken);
+        await permissions.RequireSafeRuntimeAsync(cancellationToken);
+        await PersistExpiryAsync(state, observation.ObservedAtUtc, cancellationToken);
+        await directory.RequireCurrentAsync(handle.Authority, cancellationToken);
+        await permissions.RequireSafeRuntimeAsync(cancellationToken);
+    }
+
+    private async Task PersistExpiryAsync(GroupBatchClaimStateRecord state, DateTimeOffset observedAtUtc, CancellationToken cancellationToken)
+    {
+        if (state.ExpiryObservedAtUtc is not null || observedAtUtc < state.ExpiresAtUtc) return;
+        if (observedAtUtc.Offset != TimeSpan.Zero || database.ChangeTracker.HasChanges()) throw Unavailable();
+        foreach (var tracked in database.ChangeTracker.Entries<GroupBatchClaimStateRecord>().Where(x =>
+            x.Entity.TenantId == state.TenantId && x.Entity.CompanyId == state.CompanyId
+            && x.Entity.BindingId == state.BindingId && x.Entity.BatchId == state.BatchId).ToArray())
+            tracked.State = EntityState.Detached;
+        database.Attach(state);
+        try
+        {
+            state.ExpiryObservedAtUtc = observedAtUtc;
+            await database.SaveChangesAsync(cancellationToken);
+        }
+        finally { database.Entry(state).State = EntityState.Detached; }
     }
 
     private async Task<GroupBatchClaimStateRecord?> ReadStateAsync(GroupScope scope, Guid batchId,
@@ -179,7 +242,9 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
         }
         if (state.Epoch <= 0 || state.OwnerId == Guid.Empty || state.OperationId == Guid.Empty
             || state.IssuedAtUtc.Offset != TimeSpan.Zero || state.ExpiresAtUtc.Offset != TimeSpan.Zero
-            || state.IssuedAtUtc > now || state.ExpiresAtUtc <= state.IssuedAtUtc) throw Unavailable();
+            || state.IssuedAtUtc > now || state.ExpiresAtUtc <= state.IssuedAtUtc
+            || (state.ExpiryObservedAtUtc is { } observed && (observed.Offset != TimeSpan.Zero || observed < state.ExpiresAtUtc)))
+            throw Unavailable();
         var current = await Receipts(scope).SingleOrDefaultAsync(x => x.BatchId == batchId && x.Epoch == state.Epoch, cancellationToken)
             ?? throw Unavailable();
         ValidateReceipt(current, scope, now);
@@ -221,8 +286,10 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
         state.BatchId == receipt.BatchId && state.Epoch == receipt.Epoch && state.OwnerId == receipt.OwnerId
         && state.OperationId == receipt.OperationId && state.IssuedAtUtc == receipt.IssuedAtUtc && state.ExpiresAtUtc == receipt.ExpiresAtUtc;
     private static bool IsCurrent(GroupBatchClaimStateRecord state, GroupBatchClaimReceiptRecord receipt,
-        GroupExtractionAuthority authority, DateTimeOffset now) => Matches(state, receipt) && receipt.ExpiresAtUtc > now
-        && receipt.ServiceId == authority.Principal.ServiceId && receipt.CredentialEpoch == authority.Principal.CredentialEpoch
+        GroupExtractionAuthority authority, DateTimeOffset now) => Matches(state, receipt) && state.ExpiryObservedAtUtc is null
+        && receipt.ExpiresAtUtc > now && MatchesAuthority(receipt, authority);
+    private static bool MatchesAuthority(GroupBatchClaimReceiptRecord receipt, GroupExtractionAuthority authority) =>
+        receipt.ServiceId == authority.Principal.ServiceId && receipt.CredentialEpoch == authority.Principal.CredentialEpoch
         && receipt.GrantVersion == authority.Grant.Version && receipt.SourceVersion == authority.Source.Version
         && receipt.DeletionGeneration == authority.Source.DeletionGeneration && receipt.AccountVersion == authority.AccountVersion
         && receipt.AuthoritySha256 == AuthorityFingerprint(authority);

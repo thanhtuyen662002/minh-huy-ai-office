@@ -8,8 +8,13 @@ internal static class GroupBatchClaimModelConfiguration
     {
         model.Entity<GroupBatchClaimStateRecord>(entity =>
         {
-            entity.ToTable("GroupBatchClaimStates", table => table.HasCheckConstraint("CK_GroupBatchClaimStates_Lease",
-                "[Epoch] > 0 AND [OwnerId] <> '00000000-0000-0000-0000-000000000000' AND [OperationId] <> '00000000-0000-0000-0000-000000000000' AND [ExpiresAtUtc] > [IssuedAtUtc] AND DATEPART(tz,[IssuedAtUtc]) = 0 AND DATEPART(tz,[ExpiresAtUtc]) = 0"));
+            entity.ToTable("GroupBatchClaimStates", table =>
+            {
+                table.HasCheckConstraint("CK_GroupBatchClaimStates_Lease",
+                    "[Epoch] > 0 AND [OwnerId] <> '00000000-0000-0000-0000-000000000000' AND [OperationId] <> '00000000-0000-0000-0000-000000000000' AND [ExpiresAtUtc] > [IssuedAtUtc] AND DATEPART(tz,[IssuedAtUtc]) = 0 AND DATEPART(tz,[ExpiresAtUtc]) = 0");
+                table.HasCheckConstraint("CK_GroupBatchClaimStates_ExpiryObservation",
+                    "[ExpiryObservedAtUtc] IS NULL OR ([ExpiryObservedAtUtc] >= [ExpiresAtUtc] AND DATEPART(tz,[ExpiryObservedAtUtc]) = 0)");
+            });
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.BatchId });
             entity.HasOne<CompanyRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupBatchAllocationRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, Id = x.BatchId }).OnDelete(DeleteBehavior.Restrict);

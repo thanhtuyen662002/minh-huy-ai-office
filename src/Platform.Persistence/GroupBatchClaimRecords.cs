@@ -15,6 +15,9 @@ public sealed class GroupBatchClaimStateRecord
     public Guid OperationId { get; set; }
     public DateTimeOffset IssuedAtUtc { get; set; }
     public DateTimeOffset ExpiresAtUtc { get; set; }
+    // First committed expiry observation is retained for this epoch even when
+    // wall time later moves backwards. Only a new acquisition epoch clears it.
+    public DateTimeOffset? ExpiryObservedAtUtc { get; set; }
 }
 
 // Original acquisition nonce is an immutable receipt. Replaying it does not
@@ -57,3 +60,18 @@ public sealed class GroupBatchClaimHandle
 
 public sealed record GroupBatchClaimResult(GroupBatchClaimReceipt Receipt,
     GroupBatchClaimHandle? CurrentHandle, bool WasAlreadyClaimed);
+
+// Inspection does not commit retirement in a caller-owned transaction. An
+// expired verdict deliberately provides no allocation/read capability. The
+// first effect consumer must own rollback of its effects before retirement.
+internal abstract record GroupBatchClaimFenceVerdict
+{
+    internal sealed record Current(GroupBatchAllocationReceipt Allocation) : GroupBatchClaimFenceVerdict;
+    internal sealed record Expired(GroupBatchClaimExpiryObservation Observation) : GroupBatchClaimFenceVerdict;
+}
+
+internal sealed class GroupBatchClaimExpiryObservation(GroupBatchClaimHandle handle, DateTimeOffset observedAtUtc)
+{
+    internal GroupBatchClaimHandle Handle { get; } = handle;
+    internal DateTimeOffset ObservedAtUtc { get; } = observedAtUtc;
+}

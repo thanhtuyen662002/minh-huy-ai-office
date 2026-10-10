@@ -8,7 +8,7 @@ public sealed class GroupIngressPermissionVerifier(PlatformDbContext database)
     private static readonly string[] AppendOnly = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts", "GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimReceipts"];
     private static readonly IReadOnlyDictionary<string, string[]> WritableColumns = new Dictionary<string, string[]>
     {
-        ["GroupBatchClaimStates"] = ["Epoch", "OwnerId", "OperationId", "IssuedAtUtc", "ExpiresAtUtc"],
+        ["GroupBatchClaimStates"] = ["Epoch", "OwnerId", "OperationId", "IssuedAtUtc", "ExpiresAtUtc", "ExpiryObservedAtUtc"],
         ["GroupListenerLeases"] = ["OwnerId", "Epoch", "ExpiresAtUtc", "HeartbeatAtUtc"],
         ["GroupSourceStates"] = ["CommittedSequence", "ScheduledThroughSequence", "FirstPendingAtUtc", "LastPendingAtUtc"],
         ["GroupCoverageGaps"] = ["ReconnectedAtUtc"],

@@ -212,7 +212,9 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "allocation-deny": "PASS owned allocation runtime refusal allocation-deny",
             "allocation-unsafe": "PASS owned allocation runtime refusal allocation-unsafe",
             "allocation-rollback": "PASS owned allocation runtime refusal allocation-rollback"}.get(mode, "PASS owned reference runtime refusal " + mode)
-        assert result.returncode == 0 and lines == [expected], "Owned reference executable failed at " + mode
+        expected_lines = [expected] if mode != "claim-fence" else [
+            "PASS owned claim runtime durable SQL expiry witness refuses original nonce and handle after clock rollback", expected]
+        assert result.returncode == 0 and lines == expected_lines, "Owned reference executable failed at " + mode
 
     def broker_stats():
         result = subprocess.run([*command, "statistics"], input=configuration(0), env=child_environment,
@@ -553,8 +555,19 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
             f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=1));") == "1|1"
         original_claims = claim_graph()
+        original_claim_identity = [digest("GroupBatchClaimStates", "BatchId",
+            "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"), original_claims[1]]
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND ExpiryObservedAtUtc IS NOT NULL;") == "0"
         run("claim-replay")
-        assert claim_graph() == original_claims
+        assert [digest("GroupBatchClaimStates", "BatchId",
+            "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"),
+            digest("GroupBatchClaimReceipts", "Epoch")] == original_claim_identity
+        # Only first expiry observation may be added by a successful expired
+        # replay. Original epoch, owner, nonce, lease times and receipt bytes
+        # above must stay exact; the following denial may not mutate even it.
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND "
+            "(ExpiryObservedAtUtc IS NULL OR (ExpiryObservedAtUtc>=ExpiresAtUtc AND DATEPART(tz,ExpiryObservedAtUtc)=0));") == "1"
+        original_claims = claim_graph()
         assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
             digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
         print("PASS actual claim competing SQL contexts commit lost receipt abrupt owned process death restart and100 replays preserve original lease without renewal", flush=True)
@@ -564,6 +577,8 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         run("claim-fence")
         assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
             f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=3));") == "3|1"
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND ExpiryObservedAtUtc IS NOT NULL;") == "0"
+        print("PASS actual claim durable SQL expiry witness refuses original nonce handle and new acquisition after owned clock rollback", flush=True)
         assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
             digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
         assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"

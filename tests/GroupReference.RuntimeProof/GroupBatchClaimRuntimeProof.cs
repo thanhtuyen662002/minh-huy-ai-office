@@ -83,6 +83,30 @@ internal static class GroupBatchClaimRuntimeProof
         try { await store.RequireCurrentAsync(second.CurrentHandle, token); }
         catch (UnauthorizedAccessException) { staleDenied = true; }
         if (!staleDenied) throw new InvalidOperationException();
+        var witnessedAt = await db.GroupBatchClaimStates.AsNoTracking().Where(x => x.TenantId == scope.TenantId
+            && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == batch)
+            .Select(x => x.ExpiryObservedAtUtc).SingleAsync(token);
+        if (witnessedAt is null || witnessedAt < second.Receipt.ExpiresAtUtc || witnessedAt.Value.Offset != TimeSpan.Zero)
+            throw new InvalidOperationException();
+        // Real System expiry was observed and committed above; a separate
+        // owned clock now exercises durable SQL fencing across clock rollback.
+        await using (var restarted = new PlatformDbContext(options))
+        {
+            var backwards = new GroupBatchClaimStore(restarted, worker, new FixedClock(second.Receipt.ExpiresAtUtc.AddTicks(-1)));
+            staleDenied = false;
+            try { await backwards.RequireCurrentAsync(second.CurrentHandle, token); }
+            catch (UnauthorizedAccessException) { staleDenied = true; }
+            var replay = await backwards.TryAcquireAsync(scope, batch, owner2, operation2, lifetime, token)
+                ?? throw new InvalidOperationException();
+            if (!staleDenied || replay.Receipt != second.Receipt || replay.CurrentHandle is not null
+                || await backwards.TryAcquireAsync(scope, batch, Guid.NewGuid(), Guid.NewGuid(), lifetime, token) is not null
+                || restarted.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+            var unchanged = await restarted.GroupBatchClaimStates.AsNoTracking().Where(x => x.TenantId == scope.TenantId
+                && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == batch)
+                .Select(x => x.ExpiryObservedAtUtc).SingleAsync(token);
+            if (unchanged != witnessedAt) throw new InvalidOperationException();
+        }
+        Console.WriteLine("PASS owned claim runtime durable SQL expiry witness refuses original nonce and handle after clock rollback");
         var third = await store.TryAcquireAsync(scope, batch, Guid.NewGuid(), Guid.NewGuid(), TimeSpan.FromMinutes(5), token)
             ?? throw new InvalidOperationException();
         if (third.Receipt.Epoch != 3 || third.CurrentHandle is null || third.WasAlreadyClaimed) throw new InvalidOperationException();
@@ -94,7 +118,10 @@ internal static class GroupBatchClaimRuntimeProof
         if (!staleDenied) throw new InvalidOperationException();
         await store.RequireCurrentAsync(third.CurrentHandle, token);
         if (await db.GroupBatchClaimReceipts.CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
-            && x.BindingId == scope.SourceBindingId && x.BatchId == batch, token) != 3 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+            && x.BindingId == scope.SourceBindingId && x.BatchId == batch, token) != 3
+            || await db.GroupBatchClaimStates.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && x.BatchId == batch && x.ExpiryObservedAtUtc != null, token)
+            || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
         Console.WriteLine("PASS owned claim runtime actual expiry monotone replacement active contention and stale handle refusal");
 
         async Task WaitExpiredAsync(DateTimeOffset expiry)
@@ -103,5 +130,10 @@ internal static class GroupBatchClaimRuntimeProof
             if (remaining > lifetime) throw new InvalidOperationException();
             if (remaining > TimeSpan.Zero) await Task.Delay(remaining + TimeSpan.FromMilliseconds(20), token);
         }
+    }
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 }
