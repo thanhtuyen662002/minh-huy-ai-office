@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288 remote0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4; scoped e0/0b approvals6099923155/6099975987 FULL fetched before push. Build38070427348/native114266525657 pending; Governance38070427346 and six prerequisites including repaired Web SUCCESS. Parent0201 native114261152085 SUCCESS/root97exactonce153PASS0failure/full2431.NET0skip/all6ORIGINAL11676735449 inspected; overallRED web clock race and quality dependency, fixed SAME288 without production auth change. Frozen7335 NoWork consumer scoped5-file APPROVED6100082455/root FULL fetched;193 independent controls and1930 root full Persistence PASS0skip. Prepared owned NoWork native expiry-after-flush/source-lock-before-savepoint/rollback-clean-detach/witness-only-clock-rollback, actual atomic receipt/disposition/original replay/newnonce refusal and MARS-before-open. Build0warnings/0errors, three actual unowned modes refused before config,64 Python controls PASS; changed native effects NOT_RUN_UNQUALIFIED. Freeze/review whole native checkpoint before delivery, retain97 original markers plus2 new fixed gates requiring99exactonce/all8/Gov/all6 originals. Continue protected notes/host attention/evidence/raw coverage/completion/NotesCommitted, qualified same-group context/relevance/tokenizer and automatic DI/UI. Existing Gateway real100/30 model evaluation NOT_RUN_UNEVALUATED; checked config absent/server access unknown.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
+next_action: 'Own278/Draft288 remote0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4 terminalRED Build38070427348/native114266525657/quality114269539108. Sixprerequisites and Governance38070427346 SUCCESS; root full.NET2473[6,520,25,1922]0fail0skip. Native original before-application-restart management snapshot undercount ACK1/deliver2/consumer1 vs EXACT2/3/1: root full111PASS/37missing/8failuremarkers, downstream source/brain/Chromium NOT_RUN/noartifact; cause UNPROVEN. SAME288 test-only repair observes held EXACT0/1/1 beforekill and retains actual replay channel through EXACT1/2/1 beforedisposal, separate30s bound outside unchanged10s handler; retains all original baseline2/3/1/postincrements/literalRabbit/fullgraph oracles. Local12 decoder/65 Python controls PASS; freeze/fullreview beforepush, own renewed exact CI and all99 markers/all8/Gov/all6originals. Frozen7335 scoped6100082455 and c61a native-preparation scoped6100158811 approvals FULL fetched; only source/preparation, NoWork actualeffects NOT_RUN_UNQUALIFIED. Local protected-note creation store is separately UNCOMMITTED/UNREVIEWED,13 actual entry controls/full1943 Persistence PASS0skip before brokerdecoder addition; native notes/attention/raw completion/context/outbox/DI/UI remain incomplete. Existing Gateway real100/30 model evaluation NOT_RUN_UNEVALUATED; checked config absent/server access unknown.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1895,4 +1895,42 @@ group_278_no_work_native_preparation:
   required_future_native_markers_exact_once: 99
   protected_notes_attention_raw_completion_outbox_context_DI_UI: incomplete
   actual_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_broker_observation_lifetime_repair:
+  remote_head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  build: 38070427348
+  governance: 38070427346
+  governance_state: SUCCESS
+  actual: 114266525657
+  required_quality: 114269539108
+  build_native_quality_state: terminal_RED_original_reference_snapshot_undercount
+  observed_ack_delivery_consumers: 1_2_1
+  retained_expected_ack_delivery_consumers: 2_3_1
+  underlying_cause: UNPROVEN
+  root_native_full_log_pass_lines: 111
+  root_native_missing_required_markers: 37
+  root_native_terminal_failure_markers: 8
+  downstream_reader_brain_browser: NOT_RUN
+  current_browser_artifact: NONE
+  six_prerequisites: SUCCESS
+  root_hosted_dotnet_passed: 2473
+  root_hosted_dotnet_failed: 0
+  root_hosted_dotnet_skipped: 0
+  held_channel_new_exact_before_kill: 0_1_1
+  replay_channel_new_exact_before_disposal: 1_2_1
+  observation_bound_seconds: 30
+  original_handler_bound_seconds: 10
+  original_restart_and_Rabbit_graph_oracles: retained_exact
+  shipping_source_apps_schema_workflows: unchanged_by_repair
+  local_decoder_controls_passed: 12
+  local_python_controls_passed: 65
+  local_actual_NoWork_unowned_guard_modes_passed: 3
+  consumer_scoped_approval_root_full_fetched: 6100082455
+  native_preparation_scoped_approval_root_full_fetched: 6100158811
+  repair_independent_frozen_review: PENDING
+  renewed_actual_native_acceptance: NOT_RUN_UNQUALIFIED
+  required_future_native_markers_exact_once: 99
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  protected_notes_attention_raw_completion_context_outbox_DI_UI: incomplete
   full_278_279_233: ACTIVE_INCOMPLETE

@@ -235,7 +235,12 @@ try
     if (args[0] == "statistics")
     {
         if (!(await inbox.ReceiveAsync(reference, lifetime.Token)).WasAlreadyReceived) throw new InvalidOperationException();
-        using var statisticsDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        Console.WriteLine(JsonSerializer.Serialize(await ReadBrokerStatisticsAsync(lifetime.Token)));
+        return 0;
+    }
+    async Task<OwnedReferenceBrokerStatistics> ReadBrokerStatisticsAsync(CancellationToken token)
+    {
+        using var statisticsDeadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         statisticsDeadline.CancelAfter(TimeSpan.FromSeconds(10));
         using var handler = new HttpClientHandler { AllowAutoRedirect = false, UseProxy = false, UseCookies = false };
         using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
@@ -252,16 +257,7 @@ try
             used += read;
         }
         if (used is < 1 or > 32768) throw new InvalidOperationException();
-        using var parsed = JsonDocument.Parse(metrics.AsMemory(0, used));
-        var root = parsed.RootElement;
-        static long Counter(JsonElement element, string property) => element.TryGetProperty(property, out var value) ? value.GetInt64() : 0;
-        var statistics = root.TryGetProperty("message_stats", out var counts) ? counts : default;
-        var ack = statistics.ValueKind == JsonValueKind.Object ? Counter(statistics, "ack") : 0;
-        var deliver = statistics.ValueKind == JsonValueKind.Object ? Counter(statistics, "deliver") : 0;
-        var consumers = Counter(root, "consumers");
-        if (ack < 0 || deliver < 0 || consumers < 0) throw new InvalidOperationException();
-        Console.WriteLine(JsonSerializer.Serialize(new { ack, deliver, consumers }));
-        return 0;
+        return OwnedReferenceBrokerStatistics.Parse(metrics.AsMemory(0, used));
     }
     await using var broker = await factory.CreateConnectionAsync(lifetime.Token);
     await using var channel = await broker.CreateChannelAsync(cancellationToken: lifetime.Token);
@@ -321,6 +317,19 @@ try
     };
     await channel.BasicConsumeAsync(queue, false, consumer, lifetime.Token);
     await completion.Task.WaitAsync(lifetime.Token);
+    // Keep this actual replay channel alive until the broker publishes one
+    // coherent exact delivery/ACK snapshot, before disposing the channel.
+    phase = "consume-replay-statistics";
+    using var observedDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+    observedDeadline.CancelAfter(TimeSpan.FromSeconds(30));
+    while (true)
+    {
+        if (!channel.IsOpen || !broker.IsOpen) throw new InvalidOperationException();
+        var observed = await ReadBrokerStatisticsAsync(observedDeadline.Token);
+        if (!channel.IsOpen || !broker.IsOpen) throw new InvalidOperationException();
+        if (observed.Matches(1, 2, 1)) break;
+        await Task.Delay(TimeSpan.FromMilliseconds(100), observedDeadline.Token);
+    }
     Console.WriteLine("PASS owned reference runtime redelivery original SQL receipt and broker ACK");
     return 0;
 }

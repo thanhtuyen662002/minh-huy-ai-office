@@ -459,6 +459,10 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         wait(lambda: count() == 1 and queue_counts() == (0, 1))
         assert count() == 1 and queue_counts() == (0, 1) and protected_graph() == before
         original_receipt = digest("GroupIngressInbox", "CommittedSequence")
+        # Observe this actual held channel before killing it. Management
+        # counters are sampled; later snapshots cannot recreate an unobserved
+        # short-lived channel. Every original restart count stays exact.
+        wait_reference_statistics(broker_stats, wait, ack=0, deliver=1, phase="before owned held delivery kill")
         assert kill_owned(), "Owned reference child missing before committed lost-ACK kill"
         held_stdout, _ = hold.communicate(timeout=15)
         assert hold.returncode == 137 and held_stdout.splitlines() == ["CHECKPOINT owned reference inbox committed before broker ACK"]

@@ -45,6 +45,41 @@ recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def test_held_native_delivery_requires_exact_sample_before_the_owned_kill(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        attempt = next(node for node in verify.body if isinstance(node, ast.Try) and any(isinstance(child, ast.FunctionDef)
+            and child.name == "unsafe_column" for child in node.body))
+        observation = next(index for index, node in enumerate(attempt.body) if isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name)
+            and node.value.func.id == "wait_reference_statistics" and "before owned held delivery kill" in ast.unparse(node))
+        kill = attempt.body[observation + 1]
+        self.assertIsInstance(kill, ast.Assert)
+        self.assertIn("kill_owned()", ast.unparse(kill))
+        block = compile(ast.Module(body=attempt.body[observation:observation + 2], type_ignores=[]), "<actual-held-before-kill>", "exec")
+        for snapshots, succeeds in (([(0, 0, 1), (0, 1, 1)], True), ([(0, 1, 0), (0, 1, 1)], True),
+                ([(0, 0, 1)] * 2, False), ([(1, 1, 1)] * 2, False), ([(0, 2, 1)] * 2, False),
+                ([(0, 1, 0)] * 2, False), ([(0, 1, 2)] * 2, False), ([(0, 0, 1), (1, 1, 1)], False)):
+            with self.subTest(snapshots=snapshots):
+                frames = iter(snapshots); calls = []
+                def statistics():
+                    ack, deliver, consumers = next(frames)
+                    return dict(ack=ack, deliver=deliver, consumers=consumers)
+                def bounded_wait(predicate, seconds=30):
+                    self.assertEqual(30, seconds)
+                    for _ in snapshots:
+                        if predicate(): return
+                    raise AssertionError("Owned observation deadline exceeded")
+                def kill_owned(): calls.append("kill"); return True
+                namespace = dict(wait_reference_statistics=reference_smoke.wait_reference_statistics,
+                    broker_stats=statistics, wait=bounded_wait, kill_owned=kill_owned)
+                if succeeds:
+                    exec(block, namespace); self.assertEqual(["kill"], calls)
+                else:
+                    with self.assertRaisesRegex(AssertionError, "before owned held delivery kill"):
+                        exec(block, namespace)
+                    self.assertEqual([], calls)
+
     def brain_fixture(self):
         value = {field: str(uuid.uuid4()) for field in ("requestId", "glossaryId", "publisherId", "batchId", "messageId")}
         value.update({"claimEpoch": 4, "sourceVersion": 1, "deletionGeneration": 0, "messageRevision": 1,
