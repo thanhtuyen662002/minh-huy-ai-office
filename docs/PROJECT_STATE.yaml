@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 28065657acbf9a596fefaeb7e2b587a07309a642
+current_target_head: 30a5e8c669351091379ca5aa408ba14a2172611a
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 28065657acbf9a596fefaeb7e2b587a07309a642
+    head: 30a5e8c669351091379ca5aa408ba14a2172611a
     state: in_progress
-    next: 'Own278/Draft288 remote280 TERMINAL RED Build38086639444/native114314414446/quality114319788181; rootFULL log107required21absent137PASS4failures, actual first-profile cleanup absence assertion. Gov38086639370/sixprerequisites SUCCESS/rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. Actual local Docker29.8.1 loopback404 reproduces newline stdout rejection; original CI result shape unretained/unproven. Narrow exactempty-LF-CRLF absence repair125Python PASS/source review pending. Scoped4b6102317836/f76102427093 ROOT FULLread; repaired nexthead must own renewed108/all8/FULL.NET2711 prediction/six ORIGINALs. Raw WIP separately preserved15c25ae56 (27of29focusedPASS; maxfixture needsNewText-then-Edit), excluded from repair. Continue gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge.'
+    next: "Own278/Draft288 exact remote30a5e8c after scoped APPROVED6102573838 ROOT FULLread; Build38089462537/native114322730774 ACTIVE; Gov38089462538/six prerequisites SUCCESS. Root FULL.NET2711=[6,520,25,2160]/zeroFailSkip/four successful runs verified; renewed108/all8/six ORIGINALs remain unqualified. Prior280 TERMINAL RED Build38086639444/native114314414446/quality114319788181, full107required21absent137PASS4failures preserved. Local d183580 raw selected-head ledger committed/unpushed:29focused/full2189Persistence zeroFailSkip/Release0W0E/format PASS; frozen source review active, native atomicity/replay/rights/FK/max500/races unqualified. No terminal frontier from selected count; continue all-contributor fences/full raw completion, gap/backlog/zero-message carrier/retry/context/DIUI, real100-30eval/279/full233; no partialmerge or active-CI supersession."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 exact remote30a5e8c after scoped APPROVED6102573838 ROOT FULLread; Build38089462537/native114322730774 and Gov38089462538 ACTIVE; renewed108/all8/FULL.NET2711 prediction/six ORIGINALs unqualified. Prior280 TERMINAL RED Build38086639444/native114314414446/quality114319788181; full107 required21absent137PASS4failures. Raw selected-head ledger source checkpoint:29focused/full2189Persistence zeroFailSkip/Release0W0E/format PASS; review and actual SQL atomicity/replay/immutability/max500 remain required. No terminal frontier from selected count; continue all-contributor fencing/full raw completion, gap/backlog/zero-message carrier/retry/context/DIUI, real100-30eval/279/full233; no partialmerge."
+next_action: "Own278/Draft288 exact remote30a5e8c after scoped APPROVED6102573838 ROOT FULLread; Build38089462537/native114322730774 ACTIVE; Gov38089462538/six prerequisites SUCCESS. Root FULL.NET2711=[6,520,25,2160]/zeroFailSkip/four successful runs verified; renewed108/all8/six ORIGINALs remain unqualified. Prior280 TERMINAL RED Build38086639444/native114314414446/quality114319788181, full107required21absent137PASS4failures preserved. Local d183580 raw selected-head ledger committed/unpushed:29focused/full2189Persistence zeroFailSkip/Release0W0E/format PASS; frozen source review active, native atomicity/replay/rights/FK/max500/races unqualified. No terminal frontier from selected count; continue all-contributor fences/full raw completion, gap/backlog/zero-message carrier/retry/context/DIUI, real100-30eval/279/full233; no partialmerge or active-CI supersession."
 
 
 blocked_by:
