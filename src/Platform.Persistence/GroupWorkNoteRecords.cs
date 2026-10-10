@@ -83,6 +83,8 @@ public sealed class GroupWorkCommitReceiptRecord
     public Guid BatchId { get; set; }
     public Guid OperationId { get; set; }
     public string SourceSetSha256 { get; set; } = "";
+    public int DependencyManifestVersion { get; set; }
+    public byte[]? DependencyManifest { get; set; }
     public int SelectedMessageCount { get; set; }
     public int NoteCount { get; set; }
     public GroupWorkCommitOutcome Outcome { get; set; }

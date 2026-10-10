@@ -156,6 +156,27 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
             || database.ChangeTracker.HasChanges()) throw Unavailable();
     }
 
+    // Reconstruct bounded exact contributors from immutable SQL receipt
+    // metadata, never model-selected IDs. No keys/plaintext/commit are released.
+    internal async Task<GroupBatchClaimFenceVerdict> RequireManifestUnchangedLockedAsync(GroupBatchClaimHandle handle,
+        GroupWorkDependencyManifest manifest, CancellationToken token)
+    {
+        ValidateLockedEntry(handle, token);
+        if (manifest.Scope != handle.Receipt.Scope || manifest.BatchId != handle.Receipt.BatchId
+            || manifest.AuthoritySha256 != GroupBatchClaimStore.AuthorityFingerprint(handle.Authority)) throw Unavailable();
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var permissions = new GroupWorkNotePermissionVerifier(database);
+        await permissions.RequireSafeRuntimeAsync(token);
+        var verdict = await claims.InspectCurrentLockedAsync(handle, token);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
+        var current = await ReadLockedAsync(handle, manifest.Dependencies.Select(x => (x.Kind, x.RecordId)).ToArray(), null, token);
+        if (current.Length != manifest.Dependencies.Count || current.Where((snapshot, index) =>
+            snapshot.Revision.Revision != manifest.Dependencies[index].Revision
+                || GroupWorkDependencyManifest.BrainFingerprint(snapshot) != manifest.Dependencies[index].SnapshotSha256).Any()) throw Unavailable();
+        await permissions.RequireSafeRuntimeAsync(token);
+        return await claims.InspectCurrentLockedAsync(handle, token);
+    }
+
     private async Task<GroupBrainSnapshot[]> ReadLockedAsync(GroupBatchClaimHandle handle,
         (GroupBrainContentKind Kind, Guid Id)[] selected, IReadOnlyList<GroupBrainSnapshot>? expected, CancellationToken token)
     {

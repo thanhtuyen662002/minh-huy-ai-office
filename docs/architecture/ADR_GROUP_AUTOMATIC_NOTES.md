@@ -114,3 +114,22 @@ input or that a batch is terminal. Whole-batch completion/frontier requires all
 raw coverage and current validation of every contributing source/note/glossary
 dependency. Native atomicity/replay/permission/capacity/race qualification remains
 required. See `docs/validation/GROUP_RAW_SELECTED_HEAD_ACCOUNTING.md`.
+
+### Immutable committed chunk dependencies
+
+Expand the original work receipt with versioned bounded metadata of every
+explicit contributing source/current-note/glossary reader dependency. Fresh
+automatic effects stage the complete format1 bytes in the same receipt/savepoint,
+and replay compares those exact original bytes. Existing legacy version0/null
+receipts remain replayable; missing manifests never qualify terminal advancement.
+Keep all existing current-authority/source/brain/expiry fences and immutable
+effective column permissions. Store only scoped identities/revisions and exact
+metadata/cipher fingerprints, with no decrypted source/brain body or credential.
+
+Source and brain reconstruction checks must run inside the future consumer's
+owned serializable SQL unit under a current sealed claim. They return expiry
+observations without writing/committing; the effect consumer owns rollback and
+witness retirement. This checkpoint enables no terminal/frontier mutation. Full
+raw coverage, every committed chunk's contributors, selection completeness and
+provider/tokenizer/context/retry/gap/automatic pipeline qualification remain
+separate requirements. See `docs/validation/GROUP_WORK_DEPENDENCY_MANIFEST.md`.

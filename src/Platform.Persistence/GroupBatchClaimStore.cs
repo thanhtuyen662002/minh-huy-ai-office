@@ -298,7 +298,7 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
             record.IssuedAtUtc, record.ExpiresAtUtc, record.ServiceId, record.CredentialEpoch, record.GrantVersion,
             record.SourceVersion, record.DeletionGeneration, record.AccountVersion);
 
-    private static string AuthorityFingerprint(GroupExtractionAuthority authority)
+    internal static string AuthorityFingerprint(GroupExtractionAuthority authority)
     {
         using var stream = new MemoryStream(8192);
         try

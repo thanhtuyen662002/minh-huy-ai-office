@@ -16,6 +16,7 @@ internal sealed class GroupBatchCoverageSnapshot
 
     internal bool HasGaps => source.Length != 0 || account.Length != 0;
     internal bool Same(GroupBatchCoverageSnapshot other) => source.SequenceEqual(other.source) && account.SequenceEqual(other.account);
+    internal string Fingerprint() => GroupWorkDependencyManifest.Fingerprint("aioffice-group-coverage-dependency-v1", new { source, account });
     public override string ToString() => "Group coverage dependencies (private metadata).";
 
     // Called only within the source reader's fenced serializable SQL unit.

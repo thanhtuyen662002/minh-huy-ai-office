@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: ec3e8f79ff5ca772e2499ac3c8555c133425d1f8
     state: in_progress
-    next: "Own278/Draft288 remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS. Whole10file history preparation SCOPED_APPROVED6103138411 ROOT FULLread/persisted, bc87 boundary repair6102993149 and dc4 fixture6102945756 similarly approved. Prior d286 TERMINAL overallRED Build38091747428/quality114335195433 due.NET114329405159 one failure of2761/causeunproven; native114329405046 SUCCESS/ROOT FULL111 once167PASS/sixOriginal11685495120. Native500/history/suffix501/new112/all8 NOT_YET_QUALIFIED until exact ec3 terminal FULL logs/rootimages. Keep activeCI alive; fix any terminal failure same288. Continue durable bounded per-chunk source/current-note/glossary dependency manifests and all-contributor revalidation before whole raw terminal/frontier; partialchunks/physicalFK/races/honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233 remain incomplete. No partialmerge or real-model claim."
+    next: "Own278/Draft288 exact remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS, ROOT FULL.NET114335701871 qualified2774 zeroFailSkip. Do not supersede meaningful activeCI; close terminal FULL112/all8/original images and repair same288 if red. New bounded immutable automatic receipt dependency manifest source/schema preparation has40 focused and full2263Persistence PASS; freeze whole changes against ec3 for independent FULL review before push. Native receipt fields/reconstruction/rollback/replay/races remain unqualified. Continue all-contributor whole raw terminal/frontier, honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233. No partialmerge/model claim."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS. Whole10file history preparation SCOPED_APPROVED6103138411 ROOT FULLread/persisted, bc87 boundary repair6102993149 and dc4 fixture6102945756 similarly approved. Prior d286 TERMINAL overallRED Build38091747428/quality114335195433 due.NET114329405159 one failure of2761/causeunproven; native114329405046 SUCCESS/ROOT FULL111 once167PASS/sixOriginal11685495120. Native500/history/suffix501/new112/all8 NOT_YET_QUALIFIED until exact ec3 terminal FULL logs/rootimages. Keep activeCI alive; fix any terminal failure same288. Continue durable bounded per-chunk source/current-note/glossary dependency manifests and all-contributor revalidation before whole raw terminal/frontier; partialchunks/physicalFK/races/honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233 remain incomplete. No partialmerge or real-model claim."
+next_action: "Own278/Draft288 exact remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS, ROOT FULL.NET114335701871 qualified2774 zeroFailSkip. Do not supersede meaningful activeCI; close terminal FULL112/all8/original images and repair same288 if red. New bounded immutable automatic receipt dependency manifest source/schema preparation has40 focused and full2263Persistence PASS; freeze whole changes against ec3 for independent FULL review before push. Native receipt fields/reconstruction/rollback/replay/races remain unqualified. Continue all-contributor whole raw terminal/frontier, honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233. No partialmerge/model claim."
 
 
 blocked_by:
@@ -1843,3 +1843,17 @@ group_278_raw_history_exact_ci:
   history500_suffix501: NOT_RUN_UNQUALIFIED_until_current_exact_native112
   model: NOT_RUN_UNEVALUATED
   next: own_current112_terminal_full_logs_images_same288_repair_then_allcontributor_manifests_terminal_frontier_pipeline
+
+group_278_dependency_manifest_preparation:
+  status: SOURCE_SCHEMA_LOCAL_VERIFIED_NOT_NATIVE_QUALIFIED
+  source_review: PENDING_FULL_frozen_whole_checkpoint_before_push
+  format: version1_fixed162header_sources100x56_brain20x57_exact218to6902_metadata_only
+  receipt: additive20261010231206_version0null_legacy_version1bounded_appendonly_atomic_automatic_only
+  replay: complete_original_version1_bytes_legacy0null_compatible_no_terminal_permission
+  revalidation: internal_ownedSerializable_SQL_only_current_authority_allocation_source_brain_cipher_coverage_no_keys_no_frontier
+  local: focused40_fullPersistence2263_zeroFailSkip_format14files_SQL160_actualEF
+  native: NOT_RUN_receipt_fields_locked_reconstruction_rollback_replay_races_current112_predates_schema
+  selection_profile: explicit_contributors_only_relevance_pool_provider_tokenizer_context_chunking_incomplete
+  terminal: NOT_ENABLED_all_raw_all_contributors_contiguous_frontier_required
+  model: NOT_RUN_UNEVALUATED
+  next: independent_frozen_FULL_review_then_native_manifest_proof_same288_after_current112_terminal

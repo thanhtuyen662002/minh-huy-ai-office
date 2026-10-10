@@ -14,9 +14,12 @@ internal static class GroupWorkNoteModelConfiguration
                 table.HasCheckConstraint("CK_GroupWorkCommitReceipts_Counts", "[SelectedMessageCount] BETWEEN 1 AND 100 AND (([Outcome]=2 AND [NoteCount]=0) OR ([Outcome] IN (1,3) AND [NoteCount] BETWEEN 1 AND 40))");
                 table.HasCheckConstraint("CK_GroupWorkCommitReceipts_Authority", "[ClaimEpoch]>0 AND [CredentialEpoch]>0 AND [GrantVersion]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [AccountVersion]>0 AND DATEPART(tz,[CommittedAtUtc])=0");
                 table.HasCheckConstraint("CK_GroupWorkCommitReceipts_SourceSet", "DATALENGTH([SourceSetSha256])=64 AND [SourceSetSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+                table.HasCheckConstraint("CK_GroupWorkCommitReceipts_Dependencies", "([DependencyManifestVersion]=0 AND [DependencyManifest] IS NULL) OR ([DependencyManifestVersion]=1 AND [DependencyManifest] IS NOT NULL AND DATALENGTH([DependencyManifest]) BETWEEN 218 AND 6902)");
             });
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.BatchId, x.OperationId });
             Hash(entity.Property(x => x.SourceSetSha256));
+            entity.Property(x => x.DependencyManifestVersion).HasDefaultValue(0);
+            entity.Property(x => x.DependencyManifest).HasMaxLength(GroupWorkDependencyManifest.MaximumBytes);
             entity.HasOne<GroupBatchAllocationRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, Id = x.BatchId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupServiceRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.ServiceId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.BindingId, x.OperationId }).IsUnique();

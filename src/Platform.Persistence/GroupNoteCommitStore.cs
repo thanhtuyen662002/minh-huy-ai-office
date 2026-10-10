@@ -39,6 +39,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken)
     {
         var context = plan.Preparation.Context; var handle = context.Handle; var scope = context.Scope;
+        var manifest = plan.IsAutomatic ? GroupWorkDependencyManifest.Create(context, dependencies, operationId) : null;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         var payloads = plan.Notes.Select(x => x.Payload).ToArray();
@@ -125,6 +126,8 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 BatchId = context.BatchId,
                 OperationId = operationId,
                 SourceSetSha256 = sourceHash,
+                DependencyManifestVersion = plan.IsAutomatic ? GroupWorkDependencyManifest.Version : 0,
+                DependencyManifest = manifest,
                 SelectedMessageCount = selected.Count,
                 NoteCount = requestIds.Length,
                 Outcome = plan.Outcome,
@@ -270,6 +273,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         }
         void ValidateReceipt(GroupWorkCommitReceiptRecord original)
         {
+            GroupWorkDependencyManifest.RequireReplay(original, manifest);
             if (original.BatchId != context.BatchId || original.SourceSetSha256 != sourceHash || original.SelectedMessageCount != selected.Count
                 || original.NoteCount != payloads.Length || original.Outcome != plan.Outcome
                 || original.ServiceId != handle.Receipt.ServiceId || original.ClaimEpoch <= 0 || original.ClaimEpoch > handle.Receipt.Epoch

@@ -43,6 +43,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         var sourceHash = SourceHash(selected.ToDictionary(x => x.Key, x => x.Value.Revision));
+        var manifest = automatic ? GroupWorkDependencyManifest.Create(context, dependencies, operationId) : null;
         var staged = new List<object>(); var savepointCreated = false; DateTimeOffset? effectTime = null;
         GroupBatchAllocationReceipt? currentAllocation = null;
         try
@@ -81,6 +82,8 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                 BatchId = context.BatchId,
                 OperationId = operationId,
                 SourceSetSha256 = sourceHash,
+                DependencyManifestVersion = automatic ? GroupWorkDependencyManifest.Version : 0,
+                DependencyManifest = manifest,
                 SelectedMessageCount = selected.Count,
                 NoteCount = 0,
                 Outcome = GroupWorkCommitOutcome.NoWork,
@@ -142,6 +145,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
             }
             async Task ValidateReplayAsync(GroupWorkCommitReceiptRecord original)
             {
+                GroupWorkDependencyManifest.RequireReplay(original, manifest);
                 if (original.BatchId != context.BatchId || original.SourceSetSha256 != sourceHash
                     || original.SelectedMessageCount != selected.Count || original.NoteCount != 0 || original.Outcome != GroupWorkCommitOutcome.NoWork
                     || original.ServiceId != handle.Receipt.ServiceId || original.ClaimEpoch <= 0 || original.ClaimEpoch > handle.Receipt.Epoch

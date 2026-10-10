@@ -140,6 +140,30 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
             || database.ChangeTracker.HasChanges()) throw Unavailable();
     }
 
+    // Current claim/authority and every original contributing source/cipher/
+    // coverage dependency. This owns no commit or expiry witness. A future
+    // terminal consumer must own its transaction and staged-effect rollback.
+    internal async Task<GroupBatchClaimFenceVerdict> RequireManifestUnchangedLockedAsync(GroupBatchClaimHandle handle,
+        GroupWorkDependencyManifest manifest, CancellationToken token)
+    {
+        ValidateLockedEntry(handle, token);
+        if (manifest.Scope != handle.Receipt.Scope || manifest.BatchId != handle.Receipt.BatchId
+            || manifest.AuthoritySha256 != GroupBatchClaimStore.AuthorityFingerprint(handle.Authority)) throw Unavailable();
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var permissions = new GroupWorkNotePermissionVerifier(database);
+        await permissions.RequireSafeRuntimeAsync(token);
+        var verdict = await claims.InspectCurrentLockedAsync(handle, token);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
+        var allocation = ((GroupBatchClaimFenceVerdict.Current)verdict).Allocation;
+        if (allocation.AllocatedThroughSequence != manifest.AllocatedThroughSequence) throw Unavailable();
+        var current = await ReadLockedAsync(handle, manifest.Sources.Select(x => x.MessageId).ToArray(), allocation, null, token);
+        if (current.Coverage.Fingerprint() != manifest.CoverageSha256 || current.Snapshots.Length != manifest.Sources.Count
+            || current.Snapshots.Where((snapshot, index) => snapshot.Head.Revision != manifest.Sources[index].Revision
+                || GroupWorkDependencyManifest.SourceFingerprint(snapshot) != manifest.Sources[index].SnapshotSha256).Any()) throw Unavailable();
+        await permissions.RequireSafeRuntimeAsync(token);
+        return await claims.InspectCurrentLockedAsync(handle, token);
+    }
+
     private async Task<(GroupBatchCoverageSnapshot Coverage, GroupBatchSourceSnapshot[] Snapshots)> ReadLockedAsync(GroupBatchClaimHandle handle,
         Guid[] selected, GroupBatchAllocationReceipt allocation, IReadOnlyList<GroupBatchSourceSnapshot>? expected, CancellationToken token)
     {
