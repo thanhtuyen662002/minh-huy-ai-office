@@ -15,8 +15,8 @@ critical_paths:
     pr: 283
     branch: codex/277-group-durable-ingress
     head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
-    state: in_progress_exact_ci
-    next: 'Reviewed3ad+c619 observation repair6095219736 pushed SAME283, remote/PR verified. Build38035314357/actual114164418527 active, Gov38035314405 SUCCESS. Own exact native/browser terminal; require strict same-snapshot ACK+1/delivery+1/consumer1, final empty queue/count2/full8/portal/isolation and complete Chromium. Full277/finalPR/main acceptance remains;278/279/full233 active.'
+    state: ready_for_final_review_exact_runtime_success
+    next: 'Exactc619 all8/Gov SUCCESS; actual pending persistent reference RabbitMQ process restart and strict same-snapshot shipping ACK/delivery/consumer/final queue/count2/full8/portal/isolation PASS, root80markers/six images verified. Full frozen acceptance/finaldocs/exact finalPR/main closure before277 merge, then278/279/full233.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own exact reviewedc619 Build38035314357/actual114164418527 through native/main Chromium/all8 terminal; Gov38035314405 SUCCESS. Scope observation repair6095219736 approved,47Python PASS. Current dispatch docs stay local while useful CI runs. Fix any red SAME283; final full277/PR/main acceptance before merge, then278/279/full233.'
+next_action: 'Exactc619 Build38035314357/Gov38035314405/all8/actual114164418527/quality114167539832 SUCCESS; root80markers/six images inspected. Close full277 and doc-only final reviews, approved final push/exact finalPR/main gates before eligible merge. After accepted277/main proceed278 SQL brain/automatic notes then279 IT reporter; full233 active.'
 
 
 blocked_by:
@@ -787,3 +787,16 @@ group_connector_c619_dispatch:
   review: 'Frozen3ad and sole current-next-action correctionc619 APPROVED;43 retained+4 independent original-fixture controls=47 Python PASS,2AST/2YAML/final correction YAML/diff PASS. Original delayed complete snapshot and mixed-snapshot extraACK counterexamples closed. Strict exact30s single-snapshot signals and all final original reference/queue/count2/full8/portal/isolation/owned restoration unchanged. Shipping/native/tests/workflow/sln bytes equal244.'
   exact_progress: 'Remote ref/GitHub PRc619 verified. Build/native active, Gov SUCCESS. All7 actual jobs allocated; migration and Compose already SUCCESS. New pending-reference restart consumer/final graph/strict Chromium acceptance not inferred.'
   next: 'Own exact current native/browser/all8 to terminal, fix any proven red SAME283. No useful CI cancellation for progress docs. Full277/finalPR/main acceptance precedes eligible merge;278/279/full233 active.'
+
+group_connector_c619_terminal:
+  runtime_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  build: 38035314357
+  governance: 38035314405
+  actual: 114164418527
+  quality: 114167539832
+  screenshot_artifact: 11664207582
+  state: exact_all8_success_full_final_review_pending
+  evidence: 'Root independently inspected all80 retained/new fixed native/browser markers, zero terminal failures;2027.NET/1334web PASS. Actual literal same-container/new-incarnation RabbitMQ restart retained exact persistent original queued reference before any republication. Actual shipping consumer same-snapshot ACK+1/delivery+1/consumer1, final empty queue/count2/full8 graph/portal/isolation PASS. All managed/current SQL/startup/strict original202 headers-body replay/later privacy controls PASS; shipping default-off restoration succeeded.'
+  images: 'Root inspected all six current original images, including375x2021 mobile inbox and1440x5809 maximum submission; content wraps, controls readable, no clipping/credential exposure. Independent full review and own image inspection pending.'
+  limits: 'Earlier244 numeric observation cause and previous browser timeout causes remain unproven; no shipping timeout/receipt oracle relaxation. Core mock contract scope allowed by277; live provider/account/production volume,278/279/installer/readonly ERP/deployment/full233 not delivered.'
+  next: 'Close full frozen c619 acceptance and accurate doc-only final review, approved final push, exact finalPR/main all8. Merge eligible277 then continue278 SQL brain/automatic notes and279 internal IT reporter; full233 active. Do not start dependent implementation before acceptance.'

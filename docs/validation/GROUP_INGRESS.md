@@ -6,12 +6,14 @@ The active PR HANDOFF records the exact candidate and workflow IDs.
 
 ## Current owned runtime acceptance: 2026-10-10
 
-Frozen runtime HEAD `54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8` has terminal
-Build38030969758/Governance38030969756/all eight quality gates SUCCESS.
-Actual114151648993 and aggregate114154582285 passed. Root inspected the native
-and Chromium log markers; final full-PR review and refreshed final PR/main gates
-remain before integration. The following checkpoint sections record history;
-their earlier pending/failure statements do not override this result.
+Frozen runtime HEAD `c619adfd5c7681f76cbe53d9e91b57f0cc8c8161` has terminal
+Build38035314357/Governance38035314405/all eight quality gates SUCCESS.
+Actual114164418527 and aggregate114167539832 passed. Root inspected all80
+retained/new fixed native and Chromium markers with zero terminal failures, plus
+all six original images in artifact11664207582. The current jobs passed2027.NET
+and1334web tests. Final full-PR review and refreshed final PR/main gates remain
+before integration. The following checkpoint sections record history; their
+earlier pending/failure statements do not override this result.
 
 - Actual SQL admission/filtering, concurrent100 original receipts, edit/recall and
   late-history gaps, protected content, commit cursor, transaction rollback,
@@ -29,6 +31,12 @@ their earlier pending/failure statements do not override this result.
   passed lost broker ACK/process death/redelivery,100 duplicates, insert rollback,
   current Extract revoke, unsafe column refusal/exact restore, Core/Worker restart,
   unchanged full graph/cursor and absence of fabricated portal tasks/users.
+- A persistent original reference remained ready across an actual owned RabbitMQ
+  process restart, with the same inspected container and a later StartedAt. Exact
+  payload/protocol/persistent properties and full SQL graph were checked before
+  and after restart, without any republication. The shipping consumer resumed;
+  one snapshot met exact ACK+1/delivery+1/consumer1 within the unchanged30s bound,
+  then empty queue/count2/full8 graph/portal counts/pooled isolation passed.
 - Issued-session Chromium exercised shipping group catalog/message/body reads,
   source read denial/restore, logout late-body fencing and mobile navigation.
   Retained owner-task history stayed private. Both committed202 headers-loss and
@@ -42,16 +50,15 @@ local Chromium synthetic transport control passed, but a local Next transport
 probe stopped at readiness404 before any submit; it supplies no product-cause
 or native SQL/OIDC acceptance evidence.
 
-The full542 review withheld issue277 closure on one evidence gap: its reference
-proof restarted Core/Worker while retaining the RabbitMQ process. Its green run
-does not prove RabbitMQ restart with a persistent reference pending. A same-PR
-candidate now stops only the inspected owned Worker, confirms a persistent original
-reference is ready, restarts only the inspected RabbitMQ container, requires a new
-StartedAt and the same queued reference/full graph BEFORE any republication, then
-resumes the actual shipping consumer and requires positive delivery/ACK and an
-empty queue with exact original SQL graph/receipt/cursor/portal counts. Worker
-restoration runs even on a lost stop reply; the first failure is retained. Local
-guard/adversarial controls are not native acceptance; review/execution remain.
+The full542 review withheld issue277 closure because only Core/Worker had restarted.
+Scoped queue-proof approval6094998445 supplied the literal pending-reference
+restart. Exact244 passed its pre-consumer survival checks, then failed the immediate
+post-ACK delivery/consumer observation; numeric counters were absent, so its cause
+remains unproven. Scoped observation repair6095219736 closed independently reproduced
+delayed-snapshot false refusal and mixed-snapshot extra-ACK acceptance, preserving
+strict equality and deadlines. The reviewed proof executed successfully on exactc619.
+Worker restoration still runs on a lost stop reply and retains the first failure.
+Local guard/adversarial controls remain distinct from this actual native evidence.
 
 Configuration was
 restored to shipping default-off and no live connector login, send or activation
