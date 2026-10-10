@@ -260,7 +260,7 @@ public sealed partial class GroupBatchSourceReaderTests
             CompanyId = f.Auth.Scope.CompanyId,
             ConnectorAccountId = f.Auth.Account.Id,
             ListenerEpoch = 1,
-            Reason = "owned-gap",
+            Reason = "listener-expired",
             OpenedAtUtc = f.Auth.Clock.Current,
             RecordedAtUtc = f.Auth.Clock.Current
         });

@@ -35,18 +35,19 @@ public sealed class GroupBatchSourceEntry
 
 public sealed class GroupBatchSourceContext
 {
-    internal GroupBatchSourceContext(GroupBatchClaimHandle handle, long cutoff, bool hasCoverageGap,
+    internal GroupBatchSourceContext(GroupBatchClaimHandle handle, long cutoff, GroupBatchCoverageSnapshot coverage,
         GroupBatchSourceSnapshot[] snapshots, GroupBatchSourceEntry[] items)
     {
-        Handle = handle; AllocatedThroughSequence = cutoff; HasCoverageGap = hasCoverageGap;
+        Handle = handle; AllocatedThroughSequence = cutoff; Coverage = coverage;
         Snapshots = Array.AsReadOnly(snapshots.ToArray()); Items = Array.AsReadOnly(items.ToArray());
     }
     internal GroupBatchClaimHandle Handle { get; }
+    internal GroupBatchCoverageSnapshot Coverage { get; }
     internal IReadOnlyList<GroupBatchSourceSnapshot> Snapshots { get; }
     public GroupScope Scope => Handle.Receipt.Scope;
     public Guid BatchId => Handle.Receipt.BatchId;
     public long AllocatedThroughSequence { get; }
-    public bool HasCoverageGap { get; }
+    public bool HasCoverageGap => Coverage.HasGaps;
     public IReadOnlyList<GroupBatchSourceEntry> Items { get; }
     public override string ToString() => "Group batch source context (private content).";
 }

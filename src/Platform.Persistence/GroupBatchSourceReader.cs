@@ -33,7 +33,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         try
         {
-            var initial = await ReadUnitAsync(handle, selected, null, cancellationToken);
+            var initial = await ReadUnitAsync(handle, selected, null, null, cancellationToken);
             var texts = new Dictionary<Guid, string>();
             foreach (var group in initial.Snapshots.Where(x => x.Disposition == GroupBatchSourceDisposition.Readable).GroupBy(x => x.Head.ContentKeyId))
             {
@@ -42,7 +42,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
                 if (key.KeyId != group.Key) throw Unavailable();
                 // Fresh authority/lease/dependencies BEFORE decrypt, followed
                 // by a separate final release proof after all private work.
-                await ReadUnitAsync(handle, selected, initial.Snapshots, cancellationToken);
+                await ReadUnitAsync(handle, selected, initial.Snapshots, initial.Coverage, cancellationToken);
                 foreach (var source in group)
                 {
                     var head = source.Head;
@@ -59,9 +59,9 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
                     texts.Add(head.MessageId, text);
                 }
             }
-            var final = await ReadUnitAsync(handle, selected, initial.Snapshots, cancellationToken);
+            await ReadUnitAsync(handle, selected, initial.Snapshots, initial.Coverage, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            return new(handle, initial.Cutoff, final.HasCoverageGap, initial.Snapshots, initial.Snapshots.Select(x =>
+            return new(handle, initial.Cutoff, initial.Coverage, initial.Snapshots, initial.Snapshots.Select(x =>
                 new GroupBatchSourceEntry(x, texts.GetValueOrDefault(x.Head.MessageId))).ToArray());
         }
         catch (Exception error) when (error is SqlException or DbUpdateException or ArgumentException or EncoderFallbackException)
@@ -78,26 +78,26 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         try
         {
-            var current = await ReadUnitAsync(context.Handle, context.Snapshots.Select(x => x.Head.MessageId).ToArray(),
-                context.Snapshots, cancellationToken);
-            if (current.HasCoverageGap != context.HasCoverageGap) throw Unavailable();
+            await ReadUnitAsync(context.Handle, context.Snapshots.Select(x => x.Head.MessageId).ToArray(),
+                context.Snapshots, context.Coverage, cancellationToken);
         }
         catch (Exception error) when (error is SqlException or DbUpdateException or ArgumentException or EncoderFallbackException)
         { throw Unavailable(); }
     }
 
-    private async Task<(long Cutoff, bool HasCoverageGap, GroupBatchSourceSnapshot[] Snapshots)> ReadUnitAsync(GroupBatchClaimHandle handle,
-        Guid[] selected, IReadOnlyList<GroupBatchSourceSnapshot>? expected, CancellationToken token)
+    private async Task<(long Cutoff, GroupBatchCoverageSnapshot Coverage, GroupBatchSourceSnapshot[] Snapshots)> ReadUnitAsync(GroupBatchClaimHandle handle,
+        Guid[] selected, IReadOnlyList<GroupBatchSourceSnapshot>? expected, GroupBatchCoverageSnapshot? expectedCoverage, CancellationToken token)
     {
         ValidateEntry(handle, token);
         await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, token);
         var claims = new GroupBatchClaimStore(database, worker, clock);
         var allocation = await FenceAsync();
         var current = await ReadLockedAsync(handle, selected, allocation, expected, token);
+        if (expectedCoverage is not null && !expectedCoverage.Same(current.Coverage)) throw Unavailable();
         await FenceAsync();
         if (database.ChangeTracker.HasChanges()) throw Unavailable();
         await transaction.CommitAsync(token);
-        return (allocation.AllocatedThroughSequence, current.HasCoverageGap, current.Snapshots);
+        return (allocation.AllocatedThroughSequence, current.Coverage, current.Snapshots);
 
         async Task<GroupBatchAllocationReceipt> FenceAsync()
         {
@@ -126,7 +126,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         var allocation = ((GroupBatchClaimFenceVerdict.Current)verdict).Allocation;
         var current = await ReadLockedAsync(context.Handle, context.Snapshots.Select(x => x.Head.MessageId).ToArray(),
             allocation, context.Snapshots, token);
-        if (allocation.AllocatedThroughSequence != context.AllocatedThroughSequence || current.HasCoverageGap != context.HasCoverageGap)
+        if (allocation.AllocatedThroughSequence != context.AllocatedThroughSequence || !context.Coverage.Same(current.Coverage))
             throw Unavailable();
         return await claims.InspectCurrentLockedAsync(context.Handle, token);
     }
@@ -140,7 +140,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
             || database.ChangeTracker.HasChanges()) throw Unavailable();
     }
 
-    private async Task<(bool HasCoverageGap, GroupBatchSourceSnapshot[] Snapshots)> ReadLockedAsync(GroupBatchClaimHandle handle,
+    private async Task<(GroupBatchCoverageSnapshot Coverage, GroupBatchSourceSnapshot[] Snapshots)> ReadLockedAsync(GroupBatchClaimHandle handle,
         Guid[] selected, GroupBatchAllocationReceipt allocation, IReadOnlyList<GroupBatchSourceSnapshot>? expected, CancellationToken token)
     {
         if (selected.Any(id => !allocation.Revisions.Any(x => x.Metadata.MessageId == id))) throw Unavailable();
@@ -179,10 +179,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         if (expected is not null && (expected.Count != snapshots.Count
             || expected.Where((source, index) => !Same(source, snapshots[index])).Any())) throw Unavailable();
         var sourceScope = handle.Receipt.Scope;
-        var gap = await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == sourceScope.TenantId
-            && x.CompanyId == sourceScope.CompanyId && x.BindingId == sourceScope.SourceBindingId, token)
-            || await database.GroupAccountCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == sourceScope.TenantId
-                && x.CompanyId == sourceScope.CompanyId && x.ConnectorAccountId == handle.Authority.Source.ConnectorAccountId, token);
+        var gap = await GroupBatchCoverageSnapshot.ReadAsync(database, sourceScope, handle.Authority.Source.ConnectorAccountId, token);
         return (gap, snapshots.ToArray());
     }
 

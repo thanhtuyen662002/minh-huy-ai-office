@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+current_target_head: 28065657acbf9a596fefaeb7e2b587a07309a642
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+    head: 28065657acbf9a596fefaeb7e2b587a07309a642
     state: in_progress
-    next: 'Own278/Draft288 terminal RED570 Build38084668247/native114308583350/quality114312741730; full root log strict SQL GUID display projection failure at automatic coordinator entry. Gov/six prerequisites SUCCESS, FULL.NET2666; no native105/browser/merge qualification. Same-PR repair projects only internal typed GUIDs LOWER(CONVERT(char(36))); exact nonzero canonical guard/opaque IDs/all104/full33/effects/expiry/cleanup preserved. Local approved06d NoWork6102067087 and bef host6102145588 rootFULLread; repair119Python PASS/source review pending. After rootFULL repair approval push repaired same branch including approved ancestors and own renewed107/all8/Gov/FULLlogs/six ORIGINALs. Continue rawfrontier/gap/retry/context/DIUI/real100-30eval/279/full233; no checkpointstop.'
+    next: 'Own278/Draft288 remote280 source scopedAPPROVED6102206802 ROOT FULLread, Build38086639444/native114314414446 ACTIVE107 and Gov38086639370 SUCCESS; exact all8/FULL.NET2685 prediction/native107/six ORIGINALs not yet closed.570 terminalRED114308583350/quality114312741730 full log inspected; raw GUID value/casing not retained, specific cause unproven; three typed projections repaired,119Python/20unowned/coldSQL and all scoped approvals closed. Local exact source/account coverage snapshots detect additions/reconnect/changed metadata when bool remains true; bounded256+sentinel/key-await/release/locked fences,26new319focused/full2160Persistence/Release0W0E/format PASS; source review/native mutation pending. Do not supersede meaningful active CI. Continue durable gap carrier/backlog/rawfrontier/retry/context/DIUI/real100-30eval/279/full233/no partialmerge.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 terminal RED570 Build38084668247/native114308583350/quality114312741730; full root log strict SQL GUID display projection failure at automatic coordinator entry. Gov/six prerequisites SUCCESS, FULL.NET2666; no native105/browser/merge qualification. Same-PR repair projects only internal typed GUIDs LOWER(CONVERT(char(36))); exact nonzero canonical guard/opaque IDs/all104/full33/effects/expiry/cleanup preserved. Local approved06d NoWork6102067087 and bef host6102145588 rootFULLread; repair119Python PASS/source review pending. After rootFULL repair approval push repaired same branch including approved ancestors and own renewed107/all8/Gov/FULLlogs/six ORIGINALs. Continue rawfrontier/gap/retry/context/DIUI/real100-30eval/279/full233; no checkpointstop.'
+next_action: 'Own278/Draft288 remote280 source scopedAPPROVED6102206802 ROOT FULLread, Build38086639444/native114314414446 ACTIVE107 and Gov38086639370 SUCCESS; exact all8/FULL.NET2685 prediction/native107/six ORIGINALs not yet closed.570 terminalRED114308583350/quality114312741730 full log inspected; raw GUID value/casing not retained, specific cause unproven; three typed projections repaired,119Python/20unowned/coldSQL and all scoped approvals closed. Local exact source/account coverage snapshots detect additions/reconnect/changed metadata when bool remains true; bounded256+sentinel/key-await/release/locked fences,26new319focused/full2160Persistence/Release0W0E/format PASS; source review/native mutation pending. Do not supersede meaningful active CI. Continue durable gap carrier/backlog/rawfrontier/retry/context/DIUI/real100-30eval/279/full233/no partialmerge.'
 
 
 blocked_by:
@@ -1706,3 +1706,13 @@ automatic_sql_guid_runtime_repair:
   repair: 'Only three internal GUID SQL projections and shared oracle updated;119Python PASS/two added all-three-profile GUID controls. Shipping/schema/workflows/original104/fixture/expiry/full33/cleanup unchanged; independent repair review pending.'
   prior_reviews: '06d source scoped APPROVED6102067087 and bef ten-file source scoped APPROVED6102145588 ROOT FULLread. Native106/107 NOT_RUN_UNQUALIFIED; failed570 must be repaired before any acceptance.'
   next: 'Full frozen repair review/rootFULLreceipt, push repaired same288 with approved local ancestors after terminal570; own107 exact CI through actual terminal closure, repair any new failure on samePR; no partialmerge/model/product claim.'
+
+exact_coverage_dependency_snapshot:
+  remote_head: 28065657acbf9a596fefaeb7e2b587a07309a642
+  build: 38086639444
+  governance: 38086639370
+  native: 114314414446
+  evidence: 'Remote280 renewed107 CI ACTIVE/GovSUCCESS. RootFULL scoped repair6102206802 and prior06d6102067087/bef6102145588 read. Source changes below are local/unpushed; no remote107/new-source/native/model acceptance.'
+  implementation: 'Exact scoped source/account gap metadata snapshots replace bool-only comparisons around key/release and locked effect dependency fences; both kinds read independently,256plus1 sentinel/malformed beforekeys. PublicHasCoverageGap remains conservative; no schema/permission/provider/completion/new gap effects.'
+  local: '26new coverage controls and all319 source-reader tests/full2160Persistence zeroFailSkip; changed format/fullRelease0W0E PASS. InMemory only; original570 failed evidence preserved. ERP264/company266 critical-path blocks untouched.'
+  next: 'Frozen full source review/native concurrent mutation; own remote280107 terminal CI then later approved source push. Required durable gap/backlog/zero-message carrier/raw terminal frontier/runtime remain; do not claim permanent overflow refusal satisfies received-work policy.'
