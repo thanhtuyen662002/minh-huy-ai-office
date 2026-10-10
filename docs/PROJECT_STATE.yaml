@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/277-group-durable-ingress
     head: 00337c2514748d16d8438998f8b19b85c9ab0058
     state: in_progress
-    next: '54b native terminalred after firstACK/100replay PASS at redundant column DENY catalog assumption; scoped003 repair APPROVED24guards/8 independent probes/SQL160. Own003 Build38012373146/Gov38012373142/actual114095008504 to terminal. be3 prefilter/envelope/recovery scoped APPROVED62 controls/original2P2 CLOSED, receipt6092052885. Review local20cd FS19tests, implement trusted recovery/transport/reference broker;278/279/full233 remain.'
+    next: '003 exact all8 PASS Build38012373146/Gov38012373142/actual114095008504/quality114097930440; root inspected all8 new native listener markers plus retained group/range/inbox/Chromium. File20cd scoped APPROVED28 owned-temp controls0skip. Push approved FS checkpoint and own CI; freeze/review local42-control transport then wire exact retained replay/commit ACK deletion/current registry/lease/reference broker.278/279/full233 remain.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own003 Build38012373146/Gov38012373142/actual114095008504 through native listener terminal; fix same PR on red.54b partialinitialACK/100replay PASS then fixture catalog red;003 scopedrepair APPROVED/be3 foundation APPROVED, receipt6092052885. Review local20cd FS then trusted recovery/reference broker/278/279/full233/62 ACTIVE.'
+next_action: '003 all8/native listener PASS, inspected actual114095008504; file20cd scoped APPROVED28 controls. Push approved FS and own exact CI, freeze/review transport candidate then exact retained replay/commit ACK deletion/current registry/lease/reference broker/278/279/full233/62 ACTIVE. No live provider/full277 acceptance.'
 
 
 blocked_by:

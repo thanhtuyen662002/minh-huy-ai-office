@@ -597,3 +597,39 @@ complete stage recovery, torn/unknown/name/foreign/magic corruption preservation
 same-event conflicts, bound roots/limits and exact internal ACK removal. These
 are file lifecycle controls, not native SQL ACK/client/broker/worker acceptance.
 Independent frozen review and the shipping recovery transport remain required.
+
+### Native listener retry closure and file-spool review
+
+Exact `00337c2514748d16d8438998f8b19b85c9ab0058`: Build38012373146/Governance38012373142/all8 PASS, actual114095008504/quality114097930440. Root inspected the eight new listener PASS markers and retained ingress/read-range/inbox/full Chromium proof. The runtime gate executed concurrent100 same-nonce full-byte stability, effective column rights0->1 before403->exact restored0, actual second-save transaction rollback and Core restart, five observed Serializable account-lock registry revocations, original ACK expiry under later renewal, expired signed nonce refusal, fresh takeover uncertainty and clean pooled isolation. The prior54b catalog assertion failure is closed; transport/file spool/provider/broker acceptance is still separate.
+
+File spool `20cd591088430635b9bb46635f5441d962eca9ac` independently scoped APPROVED:19 retained+9 independent owned-temp filesystem controls,28 PASS/0skip, YAML/diff PASS. No file-spool blocker found. This approval does not qualify Windows ACL provisioning, forced process death/power-loss, trusted commit-response deletion or live operation.
+
+### Scoped signing/ACK transport candidate
+
+`GroupConnectorTransportClient` pins a host-configured origin and scoped service/
+credential-epoch secret reference; no request/model secret selector, portal JWT,
+user impersonation, cookie, proxy or redirect is used. Live origins require HTTPS;
+HTTP loopback is limited to the explicit owned synthetic policy. Service HMAC
+uses the existing independent event/listener domains. A disposable prepared
+request retains one exact body/nonce/signing time for a deliberate identical retry.
+Key/captured body buffers are zeroed; no body/error/key diagnostics are logged.
+
+Event admission retains its actual qualified lease snapshot. Preparation checks
+that lease/profile before and after asynchronous signing-key resolution; the
+backend still authenticates fresh authority and commits SQL before its response.
+Successful responses require strict bounded UTF8/JSON, unique decoded property
+names, exact required fields, no-store and exact source/account/owner/epoch/time
+semantics. Non-success never reads upstream diagnostic content. Each operation
+owns a10second deadline plus caller cancellation; noncooperative late headers/
+streams are disposed and aliased read targets are zeroed again on late completion.
+Unavailable/canceled transport supplies no commit ACK and must retain the spool.
+
+Local42 transport controls plus50 spool/19 file controls PASS111/0skip, including
+independent golden HMAC vectors, exact retry, profile/lease refusal before and
+after key resolution, foreign/malformed/duplicate/oversized replies, status-only
+denials, strict listener ownership, caller/deadline held headers and two held-body
+late success/fault controls. These are owned injected HTTP dependencies; no real
+connector transport/provider/live qualification has executed. No DI/worker or
+filesystem ACK integration is activated by this client; fresh trusted enrollment,
+automatic recovery/broker delivery and full277 remain mandatory. Client hosts
+also need UTC clock synchronization for conservative short-lease checks.

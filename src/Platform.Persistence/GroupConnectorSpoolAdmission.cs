@@ -14,10 +14,11 @@ public sealed record GroupConnectorEnrollment(GroupServiceAuthentication Authent
 // must obtain fresh snapshots and recheck source version/deletion before send.
 public sealed class GroupConnectorSpoolAdmission
 {
-    private GroupConnectorSpoolAdmission(GroupConnectorEnrollment enrollment, GroupIngressPayload payload, DateTimeOffset admittedAtUtc)
-    { Enrollment = enrollment; Payload = payload; AdmittedAtUtc = admittedAtUtc; }
+    private GroupConnectorSpoolAdmission(GroupConnectorEnrollment enrollment, GroupIngressPayload payload, GroupListenerLeaseSnapshot lease, DateTimeOffset admittedAtUtc)
+    { Enrollment = enrollment; Payload = payload; Lease = lease; AdmittedAtUtc = admittedAtUtc; }
     internal GroupConnectorEnrollment Enrollment { get; }
     internal GroupIngressPayload Payload { get; }
+    internal GroupListenerLeaseSnapshot Lease { get; }
     internal DateTimeOffset AdmittedAtUtc { get; }
     public GroupScope Source => Enrollment.Source.Scope;
 
@@ -39,7 +40,7 @@ public sealed class GroupConnectorSpoolAdmission
         catch (EncoderFallbackException) { throw Denied(); }
         try { if (Convert.ToHexString(SHA256.HashData(clear)) != payload.Event.ContentSha256) throw Denied(); }
         finally { CryptographicOperations.ZeroMemory(clear); }
-        return new(enrollment, payload, nowUtc);
+        return new(enrollment, payload, lease, nowUtc);
     }
 
     // Used before decrypting recovered content, including lease/qualification
