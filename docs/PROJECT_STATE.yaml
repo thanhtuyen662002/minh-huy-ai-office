@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/277-group-durable-ingress
     head: e3417eaffab88d289383d6610407542064ccd7de
     state: in_progress
-    next: 'e341 Build38022812535 terminal RED/Gov38022812541 PASS; actual114127247688/quality114130002171 RED at body-replay202 completed-stream wait, all3 native metadata/Renew/spool and header-loss retry PASS. DI/BOM aad scoped APPROVED6093691699/63.NET and2 SQL160 PASS. Native1a0 review WITHHELD3 proof P2s; repair12.NET/37 Python locally PASS, freeze/review cleanup and positive post-restart broker ACK/full graph oracle. Diagnose real browser request without assertion weakening; reviewed push/exact CI closure SAME283. Provider/278/279/full233 ACTIVE.'
+    next: 'e341 Build38022812535 terminal RED/Gov38022812541 PASS; actual114127247688/quality114130002171 RED at body-replay202 stream wait, all3 current native spool/header retry PASS. DI/BOM aad APPROVED6093691699; repaired native b5 APPROVED6093886641, all3 original proof P2s CLOSED with24.NET/37+21Python/24SQL160 PASS. 316 diagnostic independently scoped APPROVED/10 retained+34 own Node PASS; underlying hosted cause unproven. Push only approved snapshot, capture exact CI and own new native SQL/RabbitMQ/full Chromium terminal SAME283. Local lease-result follow-on is excluded until tested/reviewed. Provider/278/279/full233 ACTIVE.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'e341 Build38022812535 terminal RED/Gov38022812541 PASS; actual114127247688/quality114130002171 RED at body-replay202 completed-stream wait, all3 native metadata/Renew/spool and header-loss retry PASS. DI/BOM aad scoped APPROVED6093691699/63.NET and2 SQL160 PASS. Native1a0 review WITHHELD3 proof P2s; repair12.NET/37 Python locally PASS, freeze/review cleanup and positive post-restart broker ACK/full graph oracle. Diagnose real browser request without assertion weakening; reviewed push/exact CI closure SAME283. Provider/278/279/full233 ACTIVE.'
+next_action: 'e341 Build38022812535 terminal RED/Gov38022812541 PASS; actual114127247688/quality114130002171 RED at body-replay202 stream wait, all3 current native spool/header retry PASS. DI/BOM aad APPROVED6093691699; repaired native b5 APPROVED6093886641, all3 original proof P2s CLOSED with24.NET/37+21Python/24SQL160 PASS. 316 diagnostic independently scoped APPROVED/10 retained+34 own Node PASS; underlying hosted cause unproven. Push only approved snapshot, capture exact CI and own new native SQL/RabbitMQ/full Chromium terminal SAME283. Local lease-result follow-on is excluded until tested/reviewed. Provider/278/279/full233 ACTIVE.'
 
 
 blocked_by:
@@ -601,7 +601,9 @@ group_reference_pipeline_registration:
   next: 'aad DI/BOM scoped APPROVED6093691699/63.NET; repair terminal e341 browser failure and native proof P2s SAME PR; reviewed push and actual owned SQL/RabbitMQ proof. Full277/278/279/233 active.'
 
 group_reference_native_proof_candidate:
-  state: original_review_withheld_repair_locally_tested
+  state: scoped_repaired_approved_native_execution_pending
+  reviewed_native_head: b5f196387784aaa0ec8085c3b3b1172adf43068d
+  scoped_native_approval: 6093886641
   reviewed_host_registration: aad0025a3740e9de45de3d366094776582467947
   scoped_host_approval: 6093691699
   exact_ci_head: e3417eaffab88d289383d6610407542064ccd7de
@@ -611,5 +613,13 @@ group_reference_native_proof_candidate:
   implementation: 'Separate nonshipping guarded runtime executable and owned coordinator, based on two actual Core/spool committed references; shipping outbox publisher/strict delivery boundary/SQL inbox plus actual broker hold-ACK/owned child kill/redelivery,100 duplicate receipts, rollback/current and observed queued Extract revoke/unsafe column refusal; actual Core/Worker DI second-event delivery and restart.'
   local_evidence: '12 guard tests PASS0skip;37 retained/current Python guards PASS after actual cleanup/restart-oracle fault controls; clean native proof build and changed CSharp format PASS; no native local resources available.'
   oracles: 'Preserve full five private graph tables and all immutable original outbox fields; only separate owned source delivery fields may change; original parent full6 graph, exact durable inbox receipt, source cursor and portal cardinalities remain strict. Verify owned label/container ID before kill; restore baseline Worker even on Core restore failure; no secret arguments or private diagnostics.'
-  limits: 'Executable proof has not run against native SQL/RabbitMQ. Scope approval must precede push and all owned exact-head oracles must pass before acceptance. Current e341 actual remains owned to terminal; .NET migration BOM failure already repaired in reviewed aad.'
-  next: 'Freeze and independently review native proof, close exact e341 body diagnosis, then reviewed push and owned CI execution; repair terminal defects SAME PR. Provider/operational listener/278/279/full233 remain active.'
+  limits: 'Executable proof has not run against native SQL/RabbitMQ. Scope approval must precede push and all owned exact-head oracles must pass before acceptance. e341 actual is terminal RED at body retry completed-stream wait; .NET migration BOM-only repair already approved in aad.'
+  next: 'Native b5 scoped APPROVED6093886641/all3 proof P2s CLOSED; 316 separately scoped APPROVED; then approved push and exact owned CI execution; repair terminal defects SAME PR. Provider/operational listener/278/279/full233 remain active.'
+
+group_reference_approved_push_checkpoint:
+  published_predecessor: e3417eaffab88d289383d6610407542064ccd7de
+  reviewed_runtime_head: 31606664c3a80e621052f3e79fef246e4813ccb7
+  state: approved_checkpoint_before_exact_ci
+  native_approval: 6093886641
+  diagnostic_result: "Scoped APPROVED316;10 retained and34 independent Node controls PASS, exact error whitelist/unknown fallback/private accessor failures remain strict refusal before body."
+  next: "Push the approved native/diagnostic snapshot only, capture exact new HEAD/run/job IDs in HANDOFF, own native SQL/RabbitMQ and full Chromium to terminal; repair real failures SAME283. Later local lease-result code is excluded from this checkpoint."

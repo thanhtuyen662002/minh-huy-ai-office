@@ -1046,3 +1046,19 @@ This uses bundled Playwright1.62.1 and local Chromium; it is not the hosted1.63
 application/SQL fault reproduction or proof of the underlying e341 cause. The next
 exact hosted run must still pass complete bytes, strict UTF8/JSON, all seven original
 receipt fields, current issued SID and the unchanged full effect graph.
+
+Independent repaired native review b5 has scoped APPROVED6093886641. All three
+original1a0 P2s are closed, including the original dead-consumer false-positive
+counterexample and setup/drain/write/chmod restoration faults. Reviewer24.NET
+controls PASS0skip (12 retained+12 own bounded metrics controls),37 retained Python
+and21 independent actual-extracted controls PASS;24 actual SQL templates parse
+SQL160 with zero errors. New entrypoints refuse before open stdin/credentials
+without owned flags. Shipping src/apps/CI bytes remain approved aad. This approves
+the proof code and inert controls; real native SQL/RabbitMQ execution and full277
+acceptance remain required. The restarted delivery requires positive
+[acknowledgement-mode delivery counters](https://www.rabbitmq.com/docs/4.1/http-api-reference),
+with redeliveries included in delivery totals, plus a new ACK and exact SQL graph.
+
+Latest branch audit still has only Draft283 and239. Main is4cfeda58;239 remains
+22f2866e, all9 gates green but conflicts with main and lacks clean Windows/UAC/
+reboot/startup/repair/backup/signing acceptance. It is not merge eligible.

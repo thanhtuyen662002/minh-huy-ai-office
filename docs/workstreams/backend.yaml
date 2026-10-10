@@ -1227,7 +1227,9 @@ group_reference_pipeline_registration:
   next: 'aad DI/BOM scoped APPROVED6093691699/63.NET; repair terminal e341 browser failure and native proof P2s SAME PR; reviewed push and actual owned SQL/RabbitMQ proof. Full277/278/279/233 active.'
 
 group_reference_native_proof_candidate:
-  state: original_review_withheld_repair_locally_tested
+  state: scoped_repaired_approved_native_execution_pending
+  reviewed_native_head: b5f196387784aaa0ec8085c3b3b1172adf43068d
+  scoped_native_approval: 6093886641
   reviewed_host_registration: aad0025a3740e9de45de3d366094776582467947
   scoped_host_approval: 6093691699
   exact_ci_head: e3417eaffab88d289383d6610407542064ccd7de
@@ -1237,9 +1239,9 @@ group_reference_native_proof_candidate:
   implementation: 'Separate nonshipping guarded runtime executable and owned coordinator, based on two actual Core/spool committed references; shipping outbox publisher/strict delivery boundary/SQL inbox plus actual broker hold-ACK/owned child kill/redelivery,100 duplicate receipts, rollback/current and observed queued Extract revoke/unsafe column refusal; actual Core/Worker DI second-event delivery and restart.'
   local_evidence: '12 guard tests PASS0skip;37 retained/current Python guards PASS after actual cleanup/restart-oracle fault controls; clean native proof build and changed CSharp format PASS; no native local resources available.'
   oracles: 'Preserve full five private graph tables and all immutable original outbox fields; only separate owned source delivery fields may change; original parent full6 graph, exact durable inbox receipt, source cursor and portal cardinalities remain strict. Verify owned label/container ID before kill; restore baseline Worker even on Core restore failure; no secret arguments or private diagnostics.'
-  review: '1a0d813 approval WITHHELD on three P2s: setup/reply-loss and drain cleanup; override write/chmod baseline Worker restore; restart without resumed delivery. Local repairs own every restore independently/first failure and require actual post-restart original-reference delivery plus broker ACK/full graph equality. Renewed frozen review required.'
+  review: '1a0d813 approval WITHHELD on three P2s: setup/reply-loss and drain cleanup; override write/chmod baseline Worker restore; restart without resumed delivery. Local repairs own every restore independently/first failure and require actual post-restart original-reference delivery plus broker ACK/full graph equality. Renewed b5 review APPROVED6093886641/all3 original P2s independently CLOSED.'
   limits: 'Executable proof has not run against native SQL/RabbitMQ. Scope approval must precede push and all owned exact-head oracles must pass before acceptance. e341 actual is terminal RED at body retry completed-stream wait; approved aad fixes only the separate migration BOM failure.'
-  next: 'Freeze and independently review all three native repairs; diagnose actual browser request failure without weakening receipt/effect oracles; reviewed push and exact CI closure SAME PR. Provider/operational listener/278/279/full233 remain active.'
+  next: 'b5 scoped APPROVED6093886641/all3 proof P2s CLOSED; 316 separately scoped APPROVED; then approved snapshot push and own exact CI closure SAME PR without weakened receipt/effect oracles. Provider/operational listener/278/279/full233 remain active.'
 
 group_reference_predecessor_terminal:
   head: e3417eaffab88d289383d6610407542064ccd7de
@@ -1249,3 +1251,11 @@ group_reference_predecessor_terminal:
   quality: 114130002171
   result: 'Build/actual/quality RED; Governance and five other prerequisites PASS. Root inspected all3 current native metadata/Renew/spool controls PASS and retained group/listener/read PASS. Chromium headers-loss retry PASS; body-loss retry202 then bounded replay-stream-wait-failed. Precise request cause unproven; later historical/company gates unexecuted. Dotnet migration CHARSET BOM-only fix already scoped APPROVED in aad6093691699.'
   next: 'Repair on same283; no full277 acceptance. Default-off host registration aad APPROVED6093691699/63.NET and two SQL160 queries PASS; new native proof requires repaired frozen approval and actual execution.'
+
+group_reference_approved_push_checkpoint:
+  published_predecessor: e3417eaffab88d289383d6610407542064ccd7de
+  reviewed_runtime_head: 31606664c3a80e621052f3e79fef246e4813ccb7
+  state: approved_checkpoint_before_exact_ci
+  native_approval: 6093886641
+  diagnostic_result: "Scoped APPROVED316;10 retained and34 independent Node controls PASS, exact error whitelist/unknown fallback/private accessor failures remain strict refusal before body."
+  next: "Push the approved native/diagnostic snapshot only, capture exact new HEAD/run/job IDs in HANDOFF, own native SQL/RabbitMQ and full Chromium to terminal; repair real failures SAME283. Later local lease-result code is excluded from this checkpoint."
