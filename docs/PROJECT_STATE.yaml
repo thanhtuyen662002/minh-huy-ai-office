@@ -558,3 +558,12 @@ group_reference_inbox_foundation:
   migration: '20261010031308_AddGroupIngressInbox; scoped Restrict FKs and unique committed sequence; operator-owned runtime SELECT/INSERT with table and every-column UPDATE/DELETE/ALTER/TAKEOWNERSHIP denial. Runtime verifier now requires all15 group tables. Down refuses destructive rollback; forward repair required.'
   state: local_tested_unreviewed
   next: 'Freeze foundation, obtain independent scoped review and close exact-head CI before acceptance. Implement separately gated reference-only publisher/consumer and owned native SQL/broker interruption/redelivery/current-grant proof. b62 current historical browser diagnostic CI remains actively owned; terminal red must be repaired immediately on this PR. No full277/278/279/233 completion or live/customer deployment claim.'
+
+group_reference_publication_checkpoint:
+  foundation: 21d3c3d0e9e39923f8b85eca21c4e18e012ccc15
+  foundation_review: 6093416207
+  foundation_result: 'Scoped APPROVED:241 local controls PASS0skip including29 independent probes;9 generated SQL160 parses/model/YAML/diff PASS. Native concurrent SQL/rollback and broker acceptance remain.'
+  local: '31 publication/transport controls PASS0skip (13 outbox/18 broker boundary); clean Worker build0warnings0errors and changed-file whitespace PASS. No DI or broker execution yet.'
+  scope: 'Source-locked durable5s reservation precedes bounded10s reference publication; retries retain original EventId until SQL inbox exists. Lost/delayed confirms cannot erase backlog or overwrite newer reservation. Current host Extract authority is required before reservation/publication/confirmation; consumer rechecks SQL authority and original graph before exact durable receipt/ACK. No private source/key/portal task/cursor access.'
+  transport: 'Separate deterministic tenant/company/service queue; persistent mandatory confirmed reference messages,2048-byte inbound cap, bounded prefetch, channel-owned callbacks and explicit replacement backoff. Malformed/denied deliveries are NACKed without immediate requeue; original SQL outbox retries after its durable delay. No provider/live activation.'
+  next: 'Freeze publication unit and obtain independent scoped review; finish default-off trusted host registration and owned native SQL/RabbitMQ interruption/restart proof. b62 Build38020840049/Gov38020840088 is actively closing before another push; terminal red repaired same PR. Full277/278/279/233 remain active.'

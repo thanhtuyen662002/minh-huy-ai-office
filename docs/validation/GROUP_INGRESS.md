@@ -837,3 +837,39 @@ has scoped review6093317472, Build38020840049/Gov38020840088 in progress at this
 checkpoint. Its required403/202, exact operation/fingerprint/graphs and source
 restoration remain unchanged. Terminal results stay owned on PR283. Full277,
 automatic SQL brain278, internal IT reporting279 and full233 remain active.
+
+## Reference publication and consumer boundary candidate
+
+Foundation21d has independent scoped approval6093416207:241 local tests PASS0skip
+including29 own controls and nine SQL160 parses/model/YAML/diff. This remains
+foundation evidence; no concurrent native SQL or RabbitMQ acceptance was claimed.
+
+The source-locked outbox dispatcher commits a five-second retry reservation before
+external publication. A bounded ten-second publish uses the original immutable
+EventId/reference. Broker confirmation is recorded separately and is not worker
+acceptance. Rows remain eligible until SQL has the durable inbox receipt. Lost
+confirms/process interruption preserve backlog; delayed confirmations cannot replace
+a newer reservation. Fresh current host Extract authority is checked around the
+SQL reservation, before publication and around confirmation save/commit. A revocation
+can occur after that pre-publication check; references contain no private content
+and the consumer independently enforces current authority before SQL receipt/ACK.
+
+RabbitMQ group references use a separate deterministic tenant/company/service
+queue, persistent mandatory messages and publisher confirms. The inbound body cap
+is2048 bytes before handler resources; JSON/type/ID/host checks precede SQL scope
+creation. Consumer callbacks own their original channel, with explicit bounded
+reconnection rather than racing library recovery. ACK follows only an exact durable
+SQL receipt and current caller fence. Malformed/refused deliveries are NACKed without
+an immediate requeue loop; the SQL producer retries retained references after the
+durable delay. Shutdown leaves unsettled deliveries to owned channel closure.
+Fixed failure logs exclude exception bodies, payloads, keys and connection strings.
+
+Local31 controls PASS0skip:13 outbox controls cover lost confirm/fresh dispatcher,
+consumer commit before lost confirm, grant/epoch/source denial, revoke/restore,
+delayed old confirm, uncommitted graph, foreign/canceled-before-DB and a genuinely
+noncooperative ten-second publisher.18 boundary controls cover held receipt completion,
+exact duplicate receipt, strict pre-handler broker refusals, wrong/future/nonUTC
+receipt, cancellation after commit and fixed queue/transport bounds. Clean Worker
+build0warnings0errors and changed-file whitespace PASS. These are inert local
+controls; no DI registration, real broker, concurrent SQL or live connector is
+proved. Frozen scoped review and mandatory owned native acceptance remain.
