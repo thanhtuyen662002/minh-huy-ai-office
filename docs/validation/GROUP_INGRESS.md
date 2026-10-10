@@ -767,3 +767,29 @@ Nine local Node guard tests PASS, including actual extracted helper rejection
 ownership while selection is pending and retained CodeS256/303/current-company
 positive and negative controls. Frozen delta review and renewed exact native/
 Chromium closure remain mandatory. No all8/merge/full277 approval is claimed.
+
+### d862 current metadata native execution and next browser boundary
+
+Exact `d86223e47dbf391d635e273efa91055bf7037c65`, scoped review6093126875,
+Build38019377330/Gov38019377336 has six prerequisites/governance PASS and
+actual114116728873/quality114119061264 RED in later Chromium. Root inspected all
+three current native markers PASS: actual SQL enrollment and two actual Renew
+responses before spool/process death, last-Renew expiry/fresh owner2/original
+exact ACK/full6/cipher preservation through Core restart, and actual revoked
+grant403 before any spool-key resolution with exact restore/cursor2/clean pooled
+isolation. All retained native group/read/listener controls and both Chromium
+Core202 header/body-loss retries PASS. This establishes the owned native current
+metadata path; it does not qualify a live provider or activate DI/broker.
+
+Current Chromium fails at the broad historical-owner-read/current-source-denial
+stage before later company-switch acceptance. Its precise cause is unproven.
+The same-PR diagnostic delta now separates disabled-source SQL, historical owner
+read/status/body, denied submit/click/response/required403/retry visibility/full
+unchanged graph, and restored submit/required202/exact receipt/one completed
+worker graph. Waiters observe any response at the same exact POST path and still
+require original403/202 statuses; early rejection is owned. Original20-second
+waits, source restoration in finally, exact question/fingerprint/graph and
+CodeS256/owner isolation checks are retained. Only fixed status/stage labels are
+emitted, no private response or dependency diagnostics. Retained9 Node guards,
+syntax/AST/YAML/diff and frozen scoped delta review are required before push;
+renewed actual full Chromium remains mandatory.

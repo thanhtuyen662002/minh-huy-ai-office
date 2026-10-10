@@ -168,17 +168,44 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     proof(sent.length === count + 1); equal(snapshot(), frozen);
 
     stage("historical-owner-read-current-source-denial");
+    const historicalPhase = name => stage("historical-source-" + name);
     try {
+      historicalPhase("disable-sql");
       sql(`USE AIOfficeLocal; UPDATE aioffice.DataSources SET IsEnabled=0 WHERE ${scope} AND Id='${source}';`);
-      const historical = await get(page, savedPath + query); proof(historical.status === 200 && JSON.parse(historical.text).question === question);
-      const denied = waitResponse(savedPath + "/submit", 403);
-      await page.getByRole("button", { name: "Gửi yêu cầu đã lưu", exact: true }).click(); await denied;
-      await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).waitFor(); equal(snapshot(), frozen);
+      historicalPhase("owner-read");
+      const historical = await get(page, savedPath + query);
+      historicalPhase(historical.status === 200 ? "owner-body" : historical.status === 401 ? "owner-refused401"
+        : historical.status === 403 ? "owner-refused403" : historical.status === 503 ? "owner-refused503" : "owner-refused-other");
+      proof(historical.status === 200 && JSON.parse(historical.text).question === question);
+      const denied = page.waitForResponse(response => new URL(response.url()).pathname === savedPath + "/submit"
+        && response.request().method() === "POST", { timeout: 20_000 });
+      denied.catch(() => {});
+      historicalPhase("denied-send-click");
+      await page.getByRole("button", { name: "Gửi yêu cầu đã lưu", exact: true }).click();
+      historicalPhase("denied-response");
+      const refusal = await denied;
+      historicalPhase(refusal.status() === 403 ? "denied403" : refusal.status() === 409 ? "denied-refused409"
+        : refusal.status() === 401 ? "denied-refused401" : refusal.status() === 503 ? "denied-refused503" : "denied-refused-other");
+      proof(refusal.status() === 403);
+      historicalPhase("retry-visible");
+      await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).waitFor();
+      historicalPhase("denied-graph-unchanged"); equal(snapshot(), frozen);
     } finally { sql(`USE AIOfficeLocal; UPDATE aioffice.DataSources SET IsEnabled=1 WHERE ${scope} AND Id='${source}';`); }
-    const positive = waitResponse(savedPath + "/submit", 202);
-    await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click(); const receipt = await (await positive).json();
+    const positive = page.waitForResponse(response => new URL(response.url()).pathname === savedPath + "/submit"
+      && response.request().method() === "POST", { timeout: 20_000 });
+    positive.catch(() => {});
+    historicalPhase("restored-send-click");
+    await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click();
+    historicalPhase("restored-response");
+    const restoredResponse = await positive;
+    historicalPhase(restoredResponse.status() === 202 ? "restored202-body" : restoredResponse.status() === 409 ? "restored-refused409"
+      : restoredResponse.status() === 401 ? "restored-refused401" : restoredResponse.status() === 503 ? "restored-refused503" : "restored-refused-other");
+    proof(restoredResponse.status() === 202); const receipt = await restoredResponse.json();
+    historicalPhase("restored-receipt-equal");
     proof(receipt.operationId === prepared.operationId && receipt.inputFingerprint === prepared.inputFingerprint);
-    await completed(receipt.taskId); oneGraph(initialCounts, initial, receipt.taskId); await idle();
+    historicalPhase("restored-worker"); await completed(receipt.taskId);
+    historicalPhase("restored-one-graph"); oneGraph(initialCounts, initial, receipt.taskId);
+    historicalPhase("restored-idle"); await idle();
     console.log("PASS real prepare reply loss, reload/new CodeS256 issuedSID GET-only owner recovery, explicit restored-source send and one completed task");
 
     stage("second-provider-owner-and-company-isolation");

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: fd4f268619372b4dbd4c317dbf02d29a83519b5a
+current_target_head: d86223e47dbf391d635e273efa91055bf7037c65
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: fd4f268619372b4dbd4c317dbf02d29a83519b5a
+    head: d86223e47dbf391d635e273efa91055bf7037c65
     state: in_progress
-    next: 'fd4 Build38017961934/Gov38017961861/actual114112369937/quality114114935346 terminal: six prerequisites/Gov/all3 actual native spool-SQL markers and both Core202 header/body-loss replay PASS, later Chromium unhandled company-switch callback waiter RED. Underlying callback absence cause unproven; samePR bounded rejection ownership/fixed stages retain original callback303/CodeS256/current-company oracles. Current enrollment f459 scoped APPROVED6093046005:310+16 PASS0skip. Native current-authority extension32 Python/7 .NET/9 Node guards/clean Release build/format PASS; independent earlier-Renew-expiry P2 reproduced, LAST actual listener-response repair requires original closure. Freeze/review repaired extension/browser diagnostics, push approved snapshot and own exact native metadata/fullChromium. Provider/DI loop/reference-only broker/278/279/full233 remain ACTIVE.'
+    next: 'd862 scoped APPROVED6093126875 Build38019377330/Gov38019377336/actual114116728873/quality114119061264: six prerequisites/Gov/ALL3 actual current SQL metadata-Renew-spool recovery and Core202 header/body-loss retries PASS; later broad historical-source denial Chromium RED, precise cause unproven. Freeze/review bounded fixed substages with original403/202/receipt/full-graph/source-restore/timeouts unchanged, push approved diagnostic and own renewed exactCI. Local reference-inbox foundation211 focused tests PASS preserved in named Git stash, unreviewed/unpushed/excluded repair. Provider/DI/reference-only broker/278/279/full233 remain ACTIVE.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'fd4 Build38017961934/Gov38017961861/actual114112369937/quality114114935346 terminal: six prerequisites/Gov/all3 actual native spool-SQL markers and both Core202 header/body-loss replay PASS, later Chromium unhandled company-switch callback waiter RED. Underlying callback absence cause unproven; samePR bounded rejection ownership/fixed stages retain original callback303/CodeS256/current-company oracles. Current enrollment f459 scoped APPROVED6093046005:310+16 PASS0skip. Native current-authority extension32 Python/7 .NET/9 Node guards/clean Release build/format PASS; independent earlier-Renew-expiry P2 reproduced, LAST actual listener-response repair requires original closure. Freeze/review repaired extension/browser diagnostics, push approved snapshot and own exact native metadata/fullChromium. Provider/DI loop/reference-only broker/278/279/full233 remain ACTIVE.'
+next_action: 'd862 scoped APPROVED6093126875 Build38019377330/Gov38019377336/actual114116728873/quality114119061264: six prerequisites/Gov/ALL3 actual current SQL metadata-Renew-spool recovery and Core202 header/body-loss retries PASS; later broad historical-source denial Chromium RED, precise cause unproven. Freeze/review bounded fixed substages with original403/202/receipt/full-graph/source-restore/timeouts unchanged, push approved diagnostic and own renewed exactCI. Local reference-inbox foundation211 focused tests PASS preserved in named Git stash, unreviewed/unpushed/excluded repair. Provider/DI/reference-only broker/278/279/full233 remain ACTIVE.'
 
 
 blocked_by:
