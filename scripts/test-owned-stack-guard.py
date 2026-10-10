@@ -51,8 +51,81 @@ automatic_spec = importlib.util.spec_from_file_location("automatic_note_smoke", 
 automatic_smoke = importlib.util.module_from_spec(automatic_spec)
 automatic_spec.loader.exec_module(automatic_smoke)
 
+raw_history_spec = importlib.util.spec_from_file_location("raw_history_smoke", Path(__file__).with_name("smoke-group-raw-history.py"))
+raw_history_smoke = importlib.util.module_from_spec(raw_history_spec)
+raw_history_spec.loader.exec_module(raw_history_smoke)
+
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def raw_history_runtime_oracle(self, fault=None):
+        arguments, original_process, calls, queries = self.automatic_runtime_oracle(fault=fault, proof="no_work")
+        original_sql = arguments['sql']; phase = -1
+        def sql(query):
+            if 'GroupWorkRawDispositions r' in query:
+                queries.append(query)
+                return {'raw-missing': '499|499|2|497', 'raw-extra': '501|500|2|499', 'raw-head': '500|499|2|498',
+                    'raw-scope': '500|0|2|498', 'raw-relation': '500|500|1|499'}.get(fault, '500|500|2|498')
+            if 'CONCAT' in query and 'GroupIngressInbox' in query:
+                queries.append(query); return '500|1|500' if fault == 'missing-inbox' else '501|1|500'
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupWorkRawDispositions WHERE '):
+                queries.append(query)
+                return '1' if fault == 'raw-expiry' and phase in (0, 1) else '500' if phase == 2 else '0'
+            if 'HASHBYTES' in query and 'FirstPendingAtUtc,LastPendingAtUtc,ScheduledThroughSequence' in query and 'CAST(500' not in query:
+                queries.append(query); return ('B' if fault == 'pending-suffix' and phase >= 0 else 'A') * 64
+            return original_sql(query)
+        def process(command, **kwargs):
+            nonlocal phase
+            if command[:2] != ['docker', 'run']: return original_process(command, **kwargs)
+            phase = list(raw_history_smoke.RUNTIME_LINES).index(command[-1])
+            translated = list(command); translated[-1] = list(automatic_smoke.NO_WORK_RUNTIME_LINES)[phase]
+            result = original_process(translated, **kwargs)
+            calls[-1] = (command, kwargs)
+            result.stdout = result.stdout.replace(automatic_smoke.NO_WORK_RUNTIME_LINES[translated[-1]], raw_history_smoke.RUNTIME_LINES[command[-1]])
+            return result
+        arguments.pop('proof'); arguments.update(sql=sql, automatic=automatic_smoke)
+        return arguments, process, calls, queries
+
+    def test_raw_history_runtime_guard_precedes_configuration_sql_and_process(self):
+        def forbidden(*args, **kwargs): self.fail('Unowned raw history touched a resource')
+        for invalid in ({'CI': 'false'}, {'GITHUB_ACTIONS': 'false'}, {'RUNNER_TEMP': ''}):
+            with patch.dict(os.environ, {**self.environment, **invalid}, clear=True), patch.object(raw_history_smoke.subprocess, 'run', forbidden), self.assertRaises(RuntimeError):
+                raw_history_smoke.verify(directory=self.owned, api='http://127.0.0.1:8080', manifest=None,
+                    tenant='invalid', company='invalid', service='invalid', sql=forbidden, prepare_source=forbidden,
+                    reference=reference_smoke, automatic=None)
+
+    def test_raw_history_runtime_oracle_requires500_raw_cutoff499_heads_retained_pending501_and_full34_snapshots(self):
+        arguments, process, calls, queries = self.raw_history_runtime_oracle()
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(raw_history_smoke.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output:
+            raw_history_smoke.verify(**arguments)
+        self.assertEqual(1, len(output.getvalue().splitlines()))
+        self.assertTrue(output.getvalue().startswith('PASS actual raw history SQL '))
+        runs = [(command, values) for command, values in calls if command[:2] == ['docker', 'run']]
+        self.assertEqual(list(raw_history_smoke.RUNTIME_LINES), [command[-1] for command, _ in runs])
+        for command, values in runs:
+            self.assertEqual(170, values['timeout']); self.assertIn('--read-only', command); self.assertIn('--cap-drop', command)
+            self.assertEqual(arguments['manifest']['AIOFFICE_RUNTIME_PASSWORD'] in values['env']['AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION'], True)
+            self.assertNotIn(values['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'], ' '.join(command) + values['input'])
+            self.assertNotIn(arguments['manifest']['AIOFFICE_RUNTIME_PASSWORD'], ' '.join(command) + values['input'])
+        joined = next(value for value in queries if 'GroupWorkRawDispositions r' in value)
+        for required in ('r.RawRevision', 'r.SelectedMessageRevision=499', 'r.Outcome=6', 'r.SelectedMessageRevision=1',
+                'r.Outcome=2', 'b.ObservedCommittedThroughSequence=501', 'b.RawRevisionCount=500', 'r.Relation=CASE', 'd.OperationId=r.OperationId'):
+            self.assertIn(required, joined)
+        self.assertTrue(any('CAST(500 AS bigint)' in value and 'CommittedSequence=501) AS FirstPendingAtUtc' in value for value in queries))
+        snapshots = [value for value in queries if value.startswith('SET NOCOUNT ON;')]
+        self.assertEqual(5, len(snapshots)); self.assertTrue(all(value.count('FOR JSON PATH,INCLUDE_NULL_VALUES') == 34 for value in snapshots))
+        self.assertEqual(2, sum(command[:2] == ['docker', 'inspect'] for command, _ in calls))
+        self.assertEqual(1, sum(command[:3] == ['docker', 'image', 'rm'] for command, _ in calls))
+
+    def test_raw_history_runtime_oracle_refuses_corruption_and_still_cleans_up_without_pass(self):
+        for fault in ('raw-missing', 'raw-extra', 'raw-head', 'raw-scope', 'raw-relation', 'raw-expiry', 'missing-inbox',
+                'pending-suffix', 'raw-retained-mutation', 'source-mutation', 'partial-effect', 'invented-outbox', 'witness',
+                'child-error', 'extra-output', 'stderr'):
+            arguments, process, calls, _ = self.raw_history_runtime_oracle(fault)
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), patch.object(raw_history_smoke.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+                raw_history_smoke.verify(**arguments)
+            self.assertEqual('', output.getvalue())
+            self.assertTrue(any(command[:3] == ['docker', 'image', 'rm'] for command, _ in calls))
+
     def test_automatic_note_runtime_guard_precedes_bad_config_sql_and_process(self):
         def forbidden(*args, **kwargs): self.fail("Unowned automatic proof touched a resource")
         for invalid in ({"CI": "false"}, {"GITHUB_ACTIONS": "false"}, {"RUNNER_TEMP": ""}):
@@ -1468,7 +1541,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 8, True, "1"):
+        for slot in (0, 9, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -1546,6 +1619,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final_coverage = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](seventh_source, 7)
         self.assertEqual(final_coverage, environment); self.assertEqual(28, len(calls))
+        eighth_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](eighth_source, 8)
+        self.assertTrue(all(environment[name] == value for name, value in final_coverage.items()))
+        eighth_prefix = "AIOffice__GroupIntake__SourceKeys__8__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": eighth_source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_RAW_HISTORY_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(eighth_prefix):]: value for name, value in environment.items() if name.startswith(eighth_prefix)})
+        final_raw_history = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](eighth_source, 8)
+        self.assertEqual(final_raw_history, environment); self.assertEqual(32, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

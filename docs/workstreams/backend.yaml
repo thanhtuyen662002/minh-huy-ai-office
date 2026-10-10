@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a Build38089462537/Gov38089462538/all8/native114322730774/quality114328713161 SUCCESS, ROOT FULL108 once/164PASS/FULL.NET2711 zeroFailSkip/six ORIGINAL11684211653. Raw source53eccb9/proofd286 scoped APPROVED ROOT FULLread; .NET114329405159 FAILED1 of2761, fixed diagnostic not retained/cause unproven; native114329405046 still ACTIVE. Narrow entity-boundary test-only30s budget/copy diagnostic repair local90/full2210 PASS/format, review pending; raw111/all8 NOT_YET_QUALIFIED. Separate actual-Core501 fixture prepared,133Python PASS/callback controls including all501 UTC ACK validation and25 malformed-time subcases; UTC fixture repair dc4b2e7 APPROVED6102945756 ROOT FULLread; native500 allocation/history and suffix501 NOT_RUN_UNQUALIFIED. Continue separate owned history executable/coordinator while owning exact111 CI to terminal; no supersede meaningful CI, model acceptance, full278 closure or partialmerge. Preserve original104/four profiles/full34 snapshots; physical FK/partialchunks/races/all-contributor frontier/gap/backlog/retry/context/DIUI/100-30realmodel/279/full233 remain."
+next_action: "Own278/Draft288 remote d286e266 Build38091747428/native114329405046 ACTIVE111; Gov38091747436 SUCCESS. Prior30a108 all8/FULL2711 zeroFailSkip/sixOriginal11684211653 ROOT qualified. d286 .NET114329405159 FAILED1 of2761/cause unproven; narrow entity boundary repair bc87bc5 APPROVED6102993149 ROOT FULLread/local90/full2210 PASS. Fixture dc4b2e7 APPROVED6102945756 ROOT FULLread. Separate fifth native history profile prepared: actual501 references/allocation500/cutoff499 ChangedAfterCutoff and empty1 NoWork/raw500 twoSelected498Superseded/pending501;136Python/34focused/Release0Warn0Error/25unowned/ten synthetic parser controls PASS, not native evidence. Review entire new executable/coordinator/workflow50min/docs checkpoint before push; preserve meaningful active111 CI through terminal then own reviewed repair/new112 exact CI closure. Native500/history/model/full278/279/233 incomplete, no partialmerge. Preserve original104/four prior profiles/full34 snapshots and other leases; partialchunks/physical FK/current races/all-contributor frontier/gap/backlog/retry/context/tokenizer/no-click DIUI/100-30realmodel/customer production remain."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2464,6 +2464,30 @@ group_278_owned_ci_boundary_test_repair:
   failure: known_entity_plus_one_IsTransient_true_approx2seconds_fixed_diagnostic_not_retained_cause_unproven
   scope: one_test_only_finite30s_and_stronger_copy_diagnostic_oracle_shipping_unchanged
   local: structured90_fullPersistence2210_zeroFailSkip_changed_format_pass
-  review: pending
+  repair_head: bc87bc51b2895812acb0900054ba9ee0c34aae17
+  review: SCOPED_APPROVED6102993149_ROOT_FULL_fetched_read
   native111: ACTIVE_NOT_YET_QUALIFIED
   next: preserve_meaningful_native_job_then_reviewed_repair_head_exact_ci_closure_same288
+
+group_278_raw_history_native_preparation:
+  issue: 278
+  pr: 288
+  parent: bc87bc51b2895812acb0900054ba9ee0c34aae17
+  fixture_review: SCOPED_APPROVED6102945756_ROOT_FULL_read
+  boundary_repair_review: SCOPED_APPROVED6102993149_ROOT_FULL_read
+  scope: separate_fifth_owned_test_profile_no_shipping_provider_schema_delta
+  modes: raw_history_prepare_expiry_commit_owned_gate_before_config_resources
+  fixture: actual_Core501_references_two_messages499_edits_allocated500_observed501
+  cutoff: first_revision499_ChangedAfterCutoff_current500_in_pending501_second_empty1_NoWork
+  accounting: raw500_all11_scoped_fields_twoSelected498Superseded_same_transaction_original3_effects
+  expiry_replay_rights: full503_rollback_detach_witness_only_clock_rollback_denied_original_replay_newnonce_refusal_all11_noopUpdates_Delete_SQL229
+  pending: scheduled500_committed501_firstPending_originalSuffix501_committedAt_lastPending_retained
+  preservation: original104_four_old_modes_full34_snapshots_seven_effect_tables_fullgraphs_cleanup_scoped_source_account_lease_grants_gaps_commands
+  local: 136Python_16corruption_subcases_34focused_dotnet_zeroFailSkip_Release0Warn0Error_changedformat_25unowned_5UTF8AST_fourOldCold_plusHistory_tenSyntheticParser_PASS
+  workflow: only_local_runtime_timeout40_to50_minutes_for_bounded120s_fixture_and_three170s_processes_prior33min_job
+  future_native_predicates: 112_all111_retained_plus_one_history_aggregate_after_successful_owned_cleanup
+  source_review: PENDING_full_frozen10file_native_history_checkpoint_before_push
+  actual501_native500_suffix501: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED_existing_Gateway_loader_reused
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge
+  next: preserve_active_d286111_terminal_then_reviewed_repair_and_native112_exact_ci_closure_same288
