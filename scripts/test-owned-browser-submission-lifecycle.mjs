@@ -4,6 +4,7 @@ import { runInNewContext } from "node:vm";
 import { observeSubmissionLifecycle, submissionAbortStage, observeSubmissionWire, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
 import { EventEmitter } from "node:events";
 import { resolve, join } from "node:path";
+import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
 
 const origin = "http://127.0.0.1:3000", company = "22222222-2222-4222-8222-222222222222";
 const path = `/api/local/tasks/intents/11111111-1111-4111-8111-111111111111/submit?companyId=${company}`;
@@ -161,4 +162,78 @@ test("wire metadata and accepted UI only refine fixed refusal categories", () =>
     Object.defineProperty({ ...empty }, "bodyStarted", { get() { assert.fail("Getter accessed"); } })])
     assert.equal(submissionWireStage(stage, value), stage);
   assert.equal(submissionWireStage("replay-owner-abort-after-headers", { ...empty, acceptedUi: true }), "replay-owner-abort-after-headers");
+});
+
+// Exercise the actual nested reader AND historical caller, without copying their
+// implementations. Inert browser/SQL callbacks cannot establish native acceptance.
+function restoredReceiptFixture({ status = 202, bytes, finished = null, bodyFailure, stalled = false, stalledBody = false, graphFailure = false } = {}) {
+  const operationId = "11111111-1111-4111-8111-111111111111";
+  const receipt = { companyId: company, operationId, inputFingerprint: "A".repeat(64),
+    taskId: "33333333-3333-4333-8333-333333333333", stepId: "44444444-4444-4444-8444-444444444444",
+    messageId: "55555555-5555-4555-8555-555555555555", createdAtUtc: "2026-10-10T00:00:00Z" };
+  const phases = [], calls = { click: 0, body: 0, json: 0, worker: 0, graph: 0, idle: 0, wait: 0 };
+  const source = verifyTaskSubmission.toString();
+  const section = (start, end) => {
+    const first = source.indexOf(start), last = source.indexOf(end, first);
+    assert.ok(first >= 0 && last > first); return source.slice(first, last);
+  };
+  const proof = condition => { if (!condition) throw new Error("Task submission browser proof failed."); };
+  const response = { status: () => status, url: () => origin + path,
+    request: () => ({ method: () => "POST", failure: () => null }),
+    finished: () => stalled ? new Promise(() => {}) : Promise.resolve(finished),
+    body: async () => { calls.body++; if (bodyFailure) throw bodyFailure;
+      if (stalledBody) return new Promise(() => {}); return bytes ?? Buffer.from(JSON.stringify(receipt)); },
+    json: async () => { calls.json++; throw new Error("PRIVATE original unbounded JSON capture must not run."); } };
+  const context = { proof, TextDecoder, JSON, URL, submissionAbortStage, submissionWireStage,
+    page: { waitForResponse: (predicate, options) => {
+      calls.wait++; assert.equal(options.timeout, 20_000); assert.equal(predicate(response), true); return Promise.resolve(response);
+    }, getByRole: (role, options) => { assert.equal(role, "button"); assert.equal(options.name, "Thử lại đúng yêu cầu");
+      assert.equal(options.exact, true); return { click: async () => { calls.click++; } }; } },
+    wireObservation: null, console: { log: () => {} }, historicalPhase: name => phases.push(name),
+    savedPath: path.split("/submit?")[0], query: `?companyId=${company}`, prepared: receipt,
+    initialCounts: [1], initial: ["original"], completed: async task => { assert.equal(task, receipt.taskId); calls.worker++; },
+    oneGraph: (counts, snapshot, task) => { calls.graph++; assert.equal(counts[0], 1);
+      assert.equal(snapshot[0], "original"); assert.equal(task, receipt.taskId); if (graphFailure) proof(false); },
+    idle: async () => { calls.idle++; },
+    // Inert clock compresses only the existing20s reader timer. Keep its requested
+    // bound observable; neither native proof nor product timeout is changed.
+    setTimeout: (callback, milliseconds) => { assert.equal(milliseconds, 20_000); return setTimeout(callback, 5); }, clearTimeout };
+  context.bounded = runInNewContext("(" + section("async function bounded(", "\n  const guid =") + ")", context);
+  context.requiredReceipt = runInNewContext("(" + section("async function requiredReceipt(", "\n  const sent = [];") + ")", context);
+  const caller = section("const positive = page.waitForResponse(", "\n    stage(\"second-provider-owner-and-company-isolation\")");
+  return { calls, phases, receipt, run: () => runInNewContext("(async () => {" + caller + "})()", context) };
+}
+
+test("actual restored-source caller requires original completed bounded body before exact receipt and one graph", async () => {
+  const value = restoredReceiptFixture(); await value.run();
+  assert.deepEqual(value.calls, { click: 1, body: 1, json: 0, worker: 1, graph: 1, idle: 1, wait: 1 });
+  assert.ok(value.phases.indexOf("restored-replay-body-json") < value.phases.indexOf("restored-receipt-equal"));
+  assert.equal(value.phases.at(-1), "restored-idle");
+});
+
+for (const [name, options, lastPhase] of [
+  ["non202", { status: 403 }, "restored-refused-other"],
+  ["failed stream", { finished: new Error("PRIVATE") }, "restored-replay-stream-failed"],
+  ["stalled stream", { stalled: true }, "restored-replay-stream-wait-failed"],
+  ["stalled body", { stalledBody: true }, "restored-replay-body-read-failed"],
+  ["empty body", { bytes: Buffer.alloc(0) }, "restored-replay-empty-body"],
+  ["oversized body", { bytes: Buffer.alloc(4097, 32) }, "restored-replay-body-too-large"],
+  ["invalid UTF8", { bytes: Buffer.from([0xc3, 0x28]) }, "restored-replay-body-invalid-utf8"],
+  ["invalid JSON", { bytes: Buffer.from("{PRIVATE") }, "restored-replay-body-invalid-json"],
+  ["unavailable browser body", { bodyFailure: new Error("No resource with given identifier PRIVATE") }, "restored-replay-browser-body-unavailable"],
+  ["failed body read", { bodyFailure: new Error("PRIVATE") }, "restored-replay-body-read-failed"],
+  ["wrong receipt", { bytes: Buffer.from("{}") }, "restored-receipt-equal"],
+]) test(`actual restored-source caller refuses ${name} before worker or graph`, async () => {
+  const value = restoredReceiptFixture(options);
+  await assert.rejects(value.run(), error => error.message === "Task submission browser proof failed.");
+  assert.equal(value.phases.at(-1), lastPhase); assert.equal(value.calls.json, 0);
+  assert.equal(value.calls.worker, 0); assert.equal(value.calls.graph, 0); assert.equal(value.calls.idle, 0);
+  assert.ok(value.phases.every(phase => !phase.includes("PRIVATE")));
+});
+
+test("actual restored-source caller retains one-graph refusal after a valid original receipt", async () => {
+  const value = restoredReceiptFixture({ graphFailure: true });
+  await assert.rejects(value.run(), error => error.message === "Task submission browser proof failed.");
+  assert.equal(value.phases.at(-1), "restored-one-graph"); assert.equal(value.calls.worker, 1);
+  assert.equal(value.calls.graph, 1); assert.equal(value.calls.idle, 0);
 });
