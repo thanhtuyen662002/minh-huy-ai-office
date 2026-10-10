@@ -642,6 +642,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         arguments, calls, events = self.raw_history_callbacks()
         with patch.dict(os.environ, self.environment, clear=True): source, actual = effect_fixture.prepare_raw_history(**arguments)
         self.assertEqual(events, actual); self.assertEqual(source, calls[1][1])
+        registry = next(value for name, value in calls if name == 'registry')
+        qualification = json.loads(re.search(r"N'(\{\"environment\":1,\"observations\":.*?\})'", registry).group(1))
+        self.assertEqual(1, qualification['environment']); self.assertEqual(1, len(qualification['observations']))
+        observation = qualification['observations'][0]
+        self.assertEqual({'capability', 'support', 'evidenceId', 'observedAtUtc'}, set(observation))
+        self.assertEqual(8, observation['capability']); self.assertEqual(1, observation['support'])
+        self.assertNotEqual(0, uuid.UUID(observation['evidenceId']).int)
+        from datetime import datetime, timezone
+        observed = datetime.fromisoformat(observation['observedAtUtc'])
+        self.assertEqual(timezone.utc.utcoffset(observed), observed.utcoffset())
         payloads = [value for name, value in calls if name == 'post']
         self.assertEqual(501, len(payloads)); self.assertEqual([1, 1], [value['event']['kind'] for value in payloads[:2]])
         self.assertTrue(all(value['event']['kind'] == 3 and value['event']['messageId'] == payloads[0]['event']['messageId'] for value in payloads[2:]))
@@ -653,6 +663,22 @@ class OwnedStackGuardTests(unittest.TestCase):
             self.assertIn('ExpiresAtUtc>@now', query); self.assertIn('HeartbeatAtUtc<=@now', query)
             self.assertIn("OwnerId='" + payloads[0]['listenerOwnerId'] + "' AND Epoch=1", query)
             self.assertNotIn('GroupListenerCommandReceipts', query); self.assertNotIn('GroupCoverageGaps', query)
+
+    def test_edit_observation_is_history_only_and_flag_cannot_bypass_owned_fixture_guard(self):
+        for prepare in (effect_fixture.prepare, effect_fixture.prepare_automatic, effect_fixture.prepare_no_work, effect_fixture.prepare_host_only):
+            arguments, calls, _ = self.clean_effect_callbacks()
+            with patch.dict(os.environ, self.environment, clear=True): prepare(**arguments)
+            registry = next(value for name, value in calls if name == 'registry')
+            self.assertIn("N'{\"environment\":1,\"observations\":[]}'", registry)
+        for flag in (None, 1, 'true'):
+            arguments, calls, _ = self.clean_effect_callbacks()
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError):
+                effect_fixture.prepare(**arguments, edit_fixture=flag)
+            self.assertEqual([], calls)
+        arguments, calls, _ = self.clean_effect_callbacks()
+        with patch.dict(os.environ, {}, clear=True), self.assertRaises(RuntimeError):
+            effect_fixture.prepare(**arguments, edit_fixture=True)
+        self.assertEqual([], calls)
 
     def test_raw_history_fixture_refuses_expired_foreign_lease_and_every_malformed_edit_ack(self):
         for fault in ('lease', 'message', 'revision', 'sequence', 'scope', 'extra-field', 'replay', 'http', 'counts'):

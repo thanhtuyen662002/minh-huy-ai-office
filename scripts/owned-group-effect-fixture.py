@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import copy
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -23,7 +24,7 @@ def prepare_raw_history(*, directory, api, tenant, company, service, sql, identi
         payload["text"] = ""; payload["event"]["contentSha256"] = hashlib.sha256(b"").hexdigest().upper()
         result = post_event(payload); require_ack_time(result[1]); originals.append((payload, result[1])); return result
     source, events = prepare(directory=directory, api=api, tenant=tenant, company=company, service=service, sql=sql,
-        identity_index=identity_index, enroll_source=enroll_source, post_event=empty_event)
+        identity_index=identity_index, enroll_source=enroll_source, post_event=empty_event, edit_fixture=True)
     assert len(originals) == 2
     tenant, company, source = (str(uuid.UUID(value)) for value in (tenant, company, source))
     owner = str(uuid.UUID(originals[0][0]["listenerOwnerId"]))
@@ -45,7 +46,8 @@ def prepare_raw_history(*, directory, api, tenant, company, service, sql, identi
             "revisionEventId": str(uuid.uuid4()), "occurredAtUtc": datetime.now(timezone.utc).isoformat()})
         status, value = post_event(payload)
         assert status == 200 and isinstance(value, dict) and set(value) == {"source", "messageId", "revision",
-            "committedSequence", "committedAtUtc", "wasAlreadyCommitted"}, "Owned raw history Core ACK failed"
+            "committedSequence", "committedAtUtc", "wasAlreadyCommitted"}, \
+            f"Owned raw history Core ACK failed (sequence={sequence}, status={status if type(status) is int and 100 <= status <= 599 else 0})"
         assert value["source"] == {"tenantId": tenant, "companyId": company, "sourceBindingId": source}
         assert value["messageId"] == originals[0][1]["messageId"] and type(value["revision"]) is int and value["revision"] == sequence - 1
         assert type(value["committedSequence"]) is int and value["committedSequence"] == sequence and value["wasAlreadyCommitted"] is False
@@ -68,9 +70,10 @@ def require_owned(directory, api):
         raise RuntimeError("Clean group effect fixture requires the owned disposable GitHub CI fixture.")
 
 
-def prepare(*, directory, api, tenant, company, service, sql, identity_index, enroll_source, post_event):
+def prepare(*, directory, api, tenant, company, service, sql, identity_index, enroll_source, post_event, edit_fixture=False):
     require_owned(directory, api)  # Before callbacks, configuration or SQL.
     assert all(callable(value) for value in (sql, identity_index, enroll_source, post_event))
+    assert type(edit_fixture) is bool
     tenant, company, service = (str(uuid.UUID(value)) for value in (tenant, company, service))
     assert all(uuid.UUID(value).int != 0 for value in (tenant, company, service))
     source, account, listener = (str(uuid.uuid4()) for _ in range(3))
@@ -81,11 +84,15 @@ def prepare(*, directory, api, tenant, company, service, sql, identity_index, en
     hashes = [identity_index('synthetic', external_account, 'account-registry'),
         identity_index('synthetic', external_account, external_group), identity_index('synthetic', 'physical-group-registry', external_group)]
     assert all(isinstance(value, str) and re.fullmatch(r"[0-9A-F]{64}", value) for value in hashes)
+    # Synthetic observation for this owned history account only. Core still
+    # requires EditEvents; this cannot qualify a live account or other scopes.
+    qualification = json.dumps({"environment": 1, "observations": [{"capability": 8, "support": 1,
+        "evidenceId": str(uuid.uuid4()), "observedAtUtc": datetime.now(timezone.utc).isoformat()}] if edit_fixture else []}, separators=(",", ":"))
     # Generated closed identifiers only. This is test-only operator enrollment.
     sql("SET XACT_ABORT ON; BEGIN TRANSACTION;"
         " INSERT aioffice.GroupConnectorAccounts(TenantId,CompanyId,Id,Provider,ExternalAccountId,IdentityHash,PackageVersion,GitCommit,QualificationJson,Version,IsEnabled)"
         f" VALUES('{tenant}','{company}','{account}','synthetic',N'{external_account}',"
-        f"'{hashes[0]}','owned-fixture','{'0'*40}',N'{{\"environment\":1,\"observations\":[]}}',1,1);"
+        f"'{hashes[0]}','owned-fixture','{'0'*40}',N'{qualification}',1,1);"
         " INSERT aioffice.GroupBindings(TenantId,CompanyId,Id,ConnectorAccountId,Role,Provider,ExternalAccountId,ExternalGroupId,IdentityHash,PhysicalGroupHash,DisplayName,Version,DeletionGeneration,IsEnabled)"
         f" VALUES('{tenant}','{company}','{source}','{account}',1,'synthetic',N'{external_account}',N'{external_group}',"
         f"'{hashes[1]}','{hashes[2]}',N'Owned clean SQL effect fixture',1,0,1);"

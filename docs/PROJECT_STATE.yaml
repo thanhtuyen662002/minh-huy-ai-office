@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: ec3e8f79ff5ca772e2499ac3c8555c133425d1f8
     state: in_progress
-    next: "Own278/Draft288 remoteec3e8f79 native112114335702045/Build38093894476 ACTIVE; FULL.NET2774 zeroFailSkip and Gov38093894474 qualified. Close exact terminal112/all8/root FULL logs/original images; repair same288 if red, never supersede meaningfulCI. Source manifest9d7d9cc scoped independent review active; native preparation adds four atomic immutable version1 receipt observations/future113. Local23observer/full2286Persistence/136Python/format6/Release0W0E/25actualunowned PASS; actualmanifestSQL/current locked reconstruction/races/model/fullfeature NOT_RUN_UNQUALIFIED. Freeze separate native checkpoint and obtain FULL review before push after current terminal. Continue allcontributors whole raw terminal/frontier, context/profile/tokenizer/honestgap/retry/no-click pipeline/279/realmodel/customer production/full233; no partialmerge."
+    next: "Own278/Draft288 samebranch immediate ec3 terminal native failure repair. Exact ec3 Build38093894476/native114335702045/quality114341455901 RED, Gov38093894474/six other prerequisite jobs SUCCESS; ROOT FULL112 missing19/pass144/fail4, browser skipped, FULL.NET2774 zeroFailSkip. ACK HTTPstatus/body/iteration unretained so hosted cause unproven; definite history qualification defect repaired by owned synthetic EditEvents evidence only, unchanged Core/live guard. Source9d approved6103383218 ROOTFULL3057 and native794 approved6103421671 ROOTFULL2972. Repair7auth/full2293Persistence/137Python PASS; freeze whole narrow repair for FULL review then push reviewed chain and own future113 all8/Gov through terminal, root FULL logs/original images. Structuralcoverage40controls stashed583594a preserve/restore later; manifest reconstruction/races/terminal/profile/tokenizer/honestgap/retry/no-click/realmodel279/customer/full233 incomplete. No partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 remoteec3e8f79 native112114335702045/Build38093894476 ACTIVE; FULL.NET2774 zeroFailSkip and Gov38093894474 qualified. Close exact terminal112/all8/root FULL logs/original images; repair same288 if red, never supersede meaningfulCI. Source manifest9d7d9cc scoped independent review active; native preparation adds four atomic immutable version1 receipt observations/future113. Local23observer/full2286Persistence/136Python/format6/Release0W0E/25actualunowned PASS; actualmanifestSQL/current locked reconstruction/races/model/fullfeature NOT_RUN_UNQUALIFIED. Freeze separate native checkpoint and obtain FULL review before push after current terminal. Continue allcontributors whole raw terminal/frontier, context/profile/tokenizer/honestgap/retry/no-click pipeline/279/realmodel/customer production/full233; no partialmerge."
+next_action: "Own278/Draft288 samebranch immediate ec3 terminal native failure repair. Exact ec3 Build38093894476/native114335702045/quality114341455901 RED, Gov38093894474/six other prerequisite jobs SUCCESS; ROOT FULL112 missing19/pass144/fail4, browser skipped, FULL.NET2774 zeroFailSkip. ACK HTTPstatus/body/iteration unretained so hosted cause unproven; definite history qualification defect repaired by owned synthetic EditEvents evidence only, unchanged Core/live guard. Source9d approved6103383218 ROOTFULL3057 and native794 approved6103421671 ROOTFULL2972. Repair7auth/full2293Persistence/137Python PASS; freeze whole narrow repair for FULL review then push reviewed chain and own future113 all8/Gov through terminal, root FULL logs/original images. Structuralcoverage40controls stashed583594a preserve/restore later; manifest reconstruction/races/terminal/profile/tokenizer/honestgap/retry/no-click/realmodel279/customer/full233 incomplete. No partialmerge."
 
 
 blocked_by:
@@ -1873,3 +1873,20 @@ group_278_manifest_native_preparation:
   terminal: NOT_ENABLED
   model: NOT_RUN_UNEVALUATED
   next: scoped_FULL_review_then_owned_exact113_after_current112_terminal_no_partialmerge
+
+group_278_history_edit_qualification_repair:
+  prior_ec3: TERMINAL_RED_Build38093894476_native114335702045_quality114341455901
+  root_native: FULL112_required_missing19_PASS144_failurepatterns4_noBrowserArtifact
+  root_dotnet: FULL2774_zeroFailSkip_fourSuccessfulRuns
+  prior_governance: SUCCESS38093894474_sixOtherPrerequisiteJobsSUCCESS
+  hosted_cause: UNPROVEN_HTTPstatus_body_iteration_unretained_CoreEditACK_assertion
+  defect: empty_synthetic_history_observations_cannot_admit_Edit_under_unchanged_current_Core_contract
+  repair: initial_history_only_synthetic_EditEvents_supported_generatedEvidenceUTC_closedbool_no_live_policy_change
+  local: directAuth7_fullPersistence2293_zeroFailSkip_Python137_Csharpformat
+  source_review: PENDING_FULL_frozen_narrow_repair_before_push
+  source9d_review: SCOPED_APPROVED6103383218_ROOT_FULL_read3057_persisted
+  native794_review: SCOPED_APPROVED6103421671_ROOT_FULL_read2972_persisted
+  next_native113: NOT_RUN_UNQUALIFIED
+  structural_coverage: stash583594a29f30ece17e646187352a5139e0c76b32_focused40_only_no_native_frontier
+  model: NOT_RUN_UNEVALUATED
+  next: reviewed_chain_push_same288_own_exact113_CI_then_restore_allcontributor_kernel
