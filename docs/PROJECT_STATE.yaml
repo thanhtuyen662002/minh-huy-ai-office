@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 019fbc1da457c36bd0c9aafc566c09ba360ce95e
     state: in_progress
-    next: 'Own278/Draft288. Bounded StructuredGeneration source is locally verified with91 actual-adapter/legacy controls and zero build warnings/errors; freeze independent review before push and close exact-head CI. Continue durable SQL batches/scoped service brain/notes/evidence/atomic outbox on SAME PR. Proposed120 primary/40 independent windows UNEVALUATED; actual provider configuration pending. No automatic notes/278/279/full233 acceptance yet.'
+    next: 'Own278/Draft288. Initiallease019f Build38046671222/Gov38046671223/all8 PASS. Unpushed transport fa95 review withheld for three concrete P2s; repaired code has99 local actual-adapter/legacy controls PASS, plus13 allocation controls. Freeze/review repaired combined HEAD before push, then own exact CI and continue SQL batches/claims/scoped brain/notes/evidence/atomic outbox on SAME PR. No SQL notes or model quality accepted; proposed120/40 UNEVALUATED/provider location pending.279/full233 remain ACTIVE.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288. Bounded StructuredGeneration source is locally verified with91 actual-adapter/legacy controls and zero build warnings/errors; freeze independent review before push and close exact-head CI. Continue durable SQL batches/scoped service brain/notes/evidence/atomic outbox on SAME PR. Proposed120 primary/40 independent windows UNEVALUATED; actual provider configuration pending. No automatic notes/278/279/full233 acceptance yet.'
+next_action: 'Own278/Draft288. Initiallease019f Build38046671222/Gov38046671223/all8 PASS. Unpushed transport fa95 review withheld for three concrete P2s; repaired code has99 local actual-adapter/legacy controls PASS, plus13 allocation controls. Freeze/review repaired combined HEAD before push, then own exact CI and continue SQL batches/claims/scoped brain/notes/evidence/atomic outbox on SAME PR. No SQL notes or model quality accepted; proposed120/40 UNEVALUATED/provider location pending.279/full233 remain ACTIVE.'
 
 
 blocked_by:

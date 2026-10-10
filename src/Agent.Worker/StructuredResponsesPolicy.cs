@@ -120,7 +120,13 @@ public static class StructuredResponsesPolicy
         return value;
     }
 
-    internal static void ValidateSchema(JsonElement schema, int depth = 1)
+    internal static void ValidateSchema(JsonElement schema)
+    {
+        var totalEnumValues = 0;
+        ValidateSchemaNode(schema, 1, ref totalEnumValues);
+    }
+
+    private static void ValidateSchemaNode(JsonElement schema, int depth, ref int totalEnumValues)
     {
         if (schema.ValueKind != JsonValueKind.Object || depth > SchemaDepthLimit)
             throw new JsonException("Schema shape is unsupported.");
@@ -144,12 +150,12 @@ public static class StructuredResponsesPolicy
             foreach (var item in required.EnumerateArray())
                 if (item.ValueKind != JsonValueKind.String || !requiredNames.Add(item.GetString()!)) throw new JsonException();
             if (!names.SetEquals(requiredNames)) throw new JsonException("All properties must be required.");
-            foreach (var property in properties.EnumerateObject()) ValidateSchema(property.Value, depth + 1);
+            foreach (var property in properties.EnumerateObject()) ValidateSchemaNode(property.Value, depth + 1, ref totalEnumValues);
         }
         else if (type == "array")
         {
             if (!schema.TryGetProperty("items", out var items)) throw new JsonException();
-            ValidateSchema(items, depth + 1);
+            ValidateSchemaNode(items, depth + 1, ref totalEnumValues);
         }
         if (type != "object" && (schema.TryGetProperty("properties", out _) || schema.TryGetProperty("required", out _)
             || schema.TryGetProperty("additionalProperties", out _))) throw new JsonException();
@@ -158,6 +164,17 @@ public static class StructuredResponsesPolicy
         {
             if (type is "object" or "array" || values.ValueKind != JsonValueKind.Array || values.GetArrayLength() == 0)
                 throw new JsonException();
+            totalEnumValues = checked(totalEnumValues + values.GetArrayLength());
+            if (totalEnumValues > 1000) throw new JsonException("Schema enum profile exceeded.");
+            if (type == "string" && values.GetArrayLength() > 250)
+            {
+                var characters = 0;
+                foreach (var value in values.EnumerateArray())
+                {
+                    if (value.ValueKind == JsonValueKind.String) characters = checked(characters + value.GetString()!.Length);
+                }
+                if (characters > 15000) throw new JsonException("Schema string enum profile exceeded.");
+            }
             var unique = new List<JsonElement>();
             foreach (var value in values.EnumerateArray())
             {

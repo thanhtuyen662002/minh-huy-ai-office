@@ -105,55 +105,82 @@ internal sealed class BoundedStructuredResponses(HttpClient client, OpenAiCompat
 
     private async Task<AiGatewayResponse> RunAsync(AiGatewayRequest request, Prepared prepared, CancellationToken cancellation)
     {
-        using var message = new HttpRequestMessage(HttpMethod.Post, options.Endpoint) { Content = new ByteArrayContent(prepared.Body) };
-        message.Content.Headers.ContentType = new("application/json");
-        if (!message.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationHeader))
-            throw new AiProviderExecutionException("AI structured authorization is invalid.", false);
-        using var response = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellation).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode)
-            throw new AiProviderExecutionException("AI structured provider refused the request.",
-                response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500);
+        var message = new HttpRequestMessage(HttpMethod.Post, options.Endpoint) { Content = new ByteArrayContent(prepared.Body) };
+        HttpResponseMessage? response = null;
+        var accepted = false;
         try
         {
-            if (response.Content.Headers.ContentEncoding.Count != 0) throw new InvalidOperationException();
-            var declared = response.Content.Headers.ContentLength;
-            if (declared is < 0 or > StructuredResponsesPolicy.EntityByteLimit) throw new InvalidOperationException();
-            using var sink = new FiniteResponseSink(cancellation);
-            // Unlike generic ReadAsStreamAsync, this route never asks content to prebuffer into an unbounded stream.
-            await response.Content.CopyToAsync(sink, cancellation).ConfigureAwait(false);
-            var bytes = sink.Seal();
-            cancellation.ThrowIfCancellationRequested();
-            if (bytes.Length == 0 || (declared is not null && declared != bytes.Length)) throw new InvalidOperationException();
-            StructuredResponsesPolicy.StrictUtf8.GetCharCount(bytes.Span);
-            using var envelope = StructuredResponsesPolicy.Parse(bytes);
-            var root = envelope.RootElement;
-            if (root.ValueKind != JsonValueKind.Object || String(root, "status") != "completed"
-                || NonNull(root, "error") || NonNull(root, "incomplete_details")) throw new InvalidOperationException();
-            var output = ReadAssistant(root);
-            var outputBytes = StructuredResponsesPolicy.BoundedText(output, StructuredResponsesPolicy.OutputByteLimit);
+            message.Content.Headers.ContentType = new("application/json");
+            if (!message.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationHeader))
+                throw new AiProviderExecutionException("AI structured authorization is invalid.", false);
+            response = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellation).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                throw new AiProviderExecutionException("AI structured provider refused the request.",
+                    response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500);
             try
             {
-                using var outputDocument = StructuredResponsesPolicy.Parse(outputBytes);
-                if (outputDocument.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidOperationException();
-                using var schema = StructuredResponsesPolicy.Parse(prepared.Schema);
-                StructuredResponsesPolicy.ValidateOutput(schema.RootElement, outputDocument.RootElement);
+                if (response.Content.Headers.ContentEncoding.Count != 0) throw new InvalidOperationException();
+                var declared = response.Content.Headers.ContentLength;
+                if (declared is < 0 or > StructuredResponsesPolicy.EntityByteLimit) throw new InvalidOperationException();
+                using var sink = new FiniteResponseSink(cancellation);
+                // Unlike generic ReadAsStreamAsync, this route never asks content to prebuffer into an unbounded stream.
+                try
+                {
+                    await response.Content.CopyToAsync(sink, cancellation).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception copyError) when (copyError is IOException or HttpRequestException)
+                {
+                    // Host overflow/cancellation remains a denial even when a content serializer wraps or suppresses it.
+                    throw new AiProviderExecutionException("AI structured body transfer failed.", !sink.HasFailed);
+                }
+                var bytes = sink.Seal();
+                cancellation.ThrowIfCancellationRequested();
+                if (bytes.Length == 0 || (declared is not null && declared != bytes.Length)) throw new InvalidOperationException();
+                StructuredResponsesPolicy.StrictUtf8.GetCharCount(bytes.Span);
+                using var envelope = StructuredResponsesPolicy.Parse(bytes);
+                var root = envelope.RootElement;
+                if (root.ValueKind != JsonValueKind.Object || String(root, "status") != "completed"
+                    || NonNull(root, "error") || NonNull(root, "incomplete_details")) throw new InvalidOperationException();
+                var output = ReadAssistant(root);
+                var outputBytes = StructuredResponsesPolicy.BoundedText(output, StructuredResponsesPolicy.OutputByteLimit);
+                try
+                {
+                    using var outputDocument = StructuredResponsesPolicy.Parse(outputBytes);
+                    if (outputDocument.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidOperationException();
+                    using var schema = StructuredResponsesPolicy.Parse(prepared.Schema);
+                    StructuredResponsesPolicy.ValidateOutput(schema.RootElement, outputDocument.RootElement);
+                }
+                finally { CryptographicOperations.ZeroMemory(outputBytes); }
+                var model = String(root, "model");
+                if (!StructuredResponsesPolicy.Canonical(model, 256)) throw new InvalidOperationException();
+                var usage = root.GetProperty("usage");
+                var input = usage.GetProperty("input_tokens").GetInt64();
+                var generated = usage.GetProperty("output_tokens").GetInt64();
+                var total = usage.GetProperty("total_tokens").GetInt64();
+                if (input < 0 || generated < 0 || generated > options.MaxOutputTokens || total != checked(input + generated))
+                    throw new InvalidOperationException();
+                cancellation.ThrowIfCancellationRequested();
+                accepted = true;
+                return new(request.RequestId, request.Capability, output, model, input, generated) { ProviderId = options.ProviderId };
             }
-            finally { CryptographicOperations.ZeroMemory(outputBytes); }
-            var model = String(root, "model");
-            if (!StructuredResponsesPolicy.Canonical(model, 256)) throw new InvalidOperationException();
-            var usage = root.GetProperty("usage");
-            var input = usage.GetProperty("input_tokens").GetInt64();
-            var generated = usage.GetProperty("output_tokens").GetInt64();
-            var total = usage.GetProperty("total_tokens").GetInt64();
-            if (input < 0 || generated < 0 || generated > options.MaxOutputTokens || total != checked(input + generated))
-                throw new InvalidOperationException();
-            cancellation.ThrowIfCancellationRequested();
-            return new(request.RequestId, request.Capability, output, model, input, generated) { ProviderId = options.ProviderId };
+            catch (OperationCanceledException) { throw; }
+            catch (AiProviderExecutionException) { throw; }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                throw new AiProviderExecutionException("AI structured response is invalid.", false);
+            }
         }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception exception) when (exception is not OutOfMemoryException)
+        finally
         {
-            throw new AiProviderExecutionException("AI structured response is invalid.", false);
+            var cleanupFailed = false;
+            try { response?.Dispose(); }
+            catch (Exception error) when (error is not OutOfMemoryException) { cleanupFailed = true; }
+            try { message.Dispose(); }
+            catch (Exception error) when (error is not OutOfMemoryException) { cleanupFailed = true; }
+            // Never replace an original auth/schema/format/transport/cancellation decision with a cleanup fault.
+            if (accepted && cleanupFailed)
+                throw new AiProviderExecutionException("AI structured cleanup failed.", true);
         }
     }
 

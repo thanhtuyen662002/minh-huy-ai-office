@@ -16,6 +16,8 @@ internal sealed class FiniteResponseSink(CancellationToken cancellation) : Strea
     public override long Length => throw new NotSupportedException();
     public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
+    internal bool HasFailed { get { lock (gate) { return failed; } } }
+
     public ReadOnlyMemory<byte> Seal()
     {
         lock (gate)

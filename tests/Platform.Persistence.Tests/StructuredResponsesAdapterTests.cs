@@ -521,6 +521,126 @@ public sealed class StructuredResponsesAdapterTests
         finally { gate.TrySetResult(); }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Permanent_primary_denial_survives_disposal_failure_without_backup(bool malformed)
+    {
+        var count = 0;
+        var handler = new Handler((_, _) =>
+        {
+            if (Interlocked.Increment(ref count) > 1) return Task.FromResult(Response(Envelope()));
+            return Task.FromResult(new HttpResponseMessage(malformed ? HttpStatusCode.OK : HttpStatusCode.Unauthorized)
+            {
+                Content = new ScriptContent(stream => stream.WriteAsync(Encoding.UTF8.GetBytes("{malformed")).AsTask(),
+                    dispose: () => throw new IOException("PRIVATE-DISPOSE-CANARY"))
+            });
+        });
+        using var client = new HttpClient(handler);
+        var gateway = new OrderedFailoverAiGateway(new OpenAiCompatibleResponsesAdapter(client, Options()),
+            new OpenAiCompatibleResponsesAdapter(client, Options() with { ProviderId = "backup-provider" }));
+        var error = await Assert.ThrowsAsync<AiProviderExecutionException>(() => gateway.ExecuteAsync(Request()));
+        Assert.False(error.IsTransient);
+        Assert.Equal(1, handler.Calls);
+        Assert.Null(error.InnerException);
+        Assert.DoesNotContain("PRIVATE-DISPOSE-CANARY", error.ToString(), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Body_network_IO_can_use_backup_but_sticky_host_overflow_cannot(bool overflowFirst)
+    {
+        var count = 0;
+        var handler = new Handler((_, _) =>
+        {
+            if (Interlocked.Increment(ref count) > 1) return Task.FromResult(Response(Envelope()));
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ScriptContent(async stream =>
+                {
+                    if (overflowFirst)
+                    {
+                        try { await stream.WriteAsync(new byte[262145]); }
+                        catch (IOException) { }
+                    }
+                    throw new IOException("PRIVATE-BODY-NETWORK-CANARY");
+                })
+            });
+        });
+        using var client = new HttpClient(handler);
+        var gateway = new OrderedFailoverAiGateway(new OpenAiCompatibleResponsesAdapter(client, Options()),
+            new OpenAiCompatibleResponsesAdapter(client, Options() with { ProviderId = "backup-provider" }));
+        if (overflowFirst)
+        {
+            var failure = await Assert.ThrowsAsync<AiProviderExecutionException>(() => gateway.ExecuteAsync(Request()));
+            Assert.False(failure.IsTransient);
+            Assert.Null(failure.InnerException);
+            Assert.Equal(1, handler.Calls);
+        }
+        else
+        {
+            var result = await gateway.ExecuteAsync(Request());
+            Assert.Equal("backup-provider", result.ProviderId);
+            Assert.Equal(2, handler.Calls);
+        }
+    }
+
+    [Theory]
+    [InlineData(1000, true)]
+    [InlineData(1001, false)]
+    public async Task Aggregate_enum_limit_applies_across_different_nested_properties(int count, bool accepted)
+    {
+        var first = Enumerable.Range(0, 500).ToArray();
+        var second = Enumerable.Range(0, count - 500).ToArray();
+        var schema = JsonSerializer.Serialize(new
+        {
+            type = "object",
+            properties = new
+            {
+                a = new { type = "integer", @enum = first },
+                nested = new
+                {
+                    type = "object",
+                    properties = new { b = new { type = "integer", @enum = second } },
+                    required = new[] { "b" },
+                    additionalProperties = false
+                }
+            },
+            required = new[] { "a", "nested" },
+            additionalProperties = false
+        });
+        Assert.True(Encoding.UTF8.GetByteCount(schema) < 32000);
+        var handler = new Handler((_, _) => Task.FromResult(Response(Envelope("{\"a\":0,\"nested\":{\"b\":0}}"))));
+        using var client = new HttpClient(handler);
+        var pending = new OpenAiCompatibleResponsesAdapter(client, Options()).ExecuteAsync(Request(schema: schema));
+        if (accepted) { await pending; Assert.Equal(1, handler.Calls); }
+        else { await Assert.ThrowsAsync<AiProviderExecutionException>(() => pending); Assert.Equal(0, handler.Calls); }
+    }
+
+    [Theory]
+    [InlineData(15000, true)]
+    [InlineData(15001, false)]
+    public async Task More_than_250_string_enums_have_a_separate_aggregate_character_gate(int characters, bool accepted)
+    {
+        var choices = Enumerable.Range(0, 251).Select(index => index.ToString("D4")).ToArray();
+        choices[0] += new string('a', characters - choices.Sum(value => value.Length));
+        Assert.Equal(characters, choices.Sum(value => value.Length));
+        var schema = JsonSerializer.Serialize(new
+        {
+            type = "object",
+            properties = new { note = new { type = "string", @enum = choices } },
+            required = new[] { "note" },
+            additionalProperties = false
+        });
+        Assert.True(Encoding.UTF8.GetByteCount(schema) < 32000);
+        var handler = new Handler((_, _) => Task.FromResult(Response(Envelope(JsonSerializer.Serialize(new { note = choices[1] })))));
+        using var client = new HttpClient(handler);
+        var pending = new OpenAiCompatibleResponsesAdapter(client, Options()).ExecuteAsync(Request(schema: schema));
+        if (accepted) { await pending; Assert.Equal(1, handler.Calls); }
+        else { await Assert.ThrowsAsync<AiProviderExecutionException>(() => pending); Assert.Equal(0, handler.Calls); }
+    }
+
     private static async Task Until(Func<bool> condition)
     {
         using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(4));
