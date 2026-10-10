@@ -33,6 +33,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupServiceGrantRecord> GroupServiceGrants => Set<GroupServiceGrantRecord>();
     public DbSet<GroupReaderGrantRecord> GroupReaderGrants => Set<GroupReaderGrantRecord>();
     public DbSet<GroupListenerLeaseRecord> GroupListenerLeases => Set<GroupListenerLeaseRecord>();
+    public DbSet<GroupAccountCoverageGapRecord> GroupAccountCoverageGaps => Set<GroupAccountCoverageGapRecord>();
+    public DbSet<GroupListenerCommandReceiptRecord> GroupListenerCommandReceipts => Set<GroupListenerCommandReceiptRecord>();
     public DbSet<GroupSourceStateRecord> GroupSourceStates => Set<GroupSourceStateRecord>();
     public DbSet<GroupMessageRecord> GroupMessages => Set<GroupMessageRecord>();
     public DbSet<GroupMessageRevisionRecord> GroupMessageRevisions => Set<GroupMessageRevisionRecord>();

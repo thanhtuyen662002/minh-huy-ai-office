@@ -138,6 +138,32 @@ public sealed class GroupSourceReaderTests
         Assert.Equal(2, await fixture.Auth.Db.GroupMessageRevisions.CountAsync());
     }
 
+    [Theory]
+    [InlineData("same-account")]
+    [InlineData("other-tenant")]
+    [InlineData("other-company")]
+    [InlineData("other-account")]
+    public async Task AccountInterruptionAppearsOnPrivateBodyAndHeadCatalogOnlyInCurrentAccountScope(string scope)
+    {
+        using var fixture = new Fixture(); var receipt = await fixture.CommitAsync();
+        Assert.False((await fixture.ReadAsync(receipt.MessageId))!.HasCoverageGap);
+        fixture.Auth.Db.Add(new GroupAccountCoverageGapRecord
+        {
+            TenantId = scope == "other-tenant" ? Guid.NewGuid() : fixture.Auth.Scope.TenantId,
+            CompanyId = scope == "other-company" ? Guid.NewGuid() : fixture.Auth.Scope.CompanyId,
+            ConnectorAccountId = scope == "other-account" ? Guid.NewGuid() : fixture.Auth.Account.Id,
+            ListenerEpoch = 1,
+            Reason = "listener-started",
+            OpenedAtUtc = GroupServiceAuthenticatorTests.Fixture.Now,
+            RecordedAtUtc = GroupServiceAuthenticatorTests.Fixture.Now
+        });
+        await fixture.Auth.Db.SaveChangesAsync();
+        Assert.Equal(scope == "same-account", (await fixture.ReadAsync(receipt.MessageId))!.HasCoverageGap);
+        var heads = await fixture.Reader.ListMessagesAsync(fixture.Authority, fixture.Auth.Scope.SourceBindingId);
+        Assert.Equal(scope == "same-account", heads.HasCoverageGap); Assert.Single(heads.Items);
+        Assert.Empty(fixture.Auth.Db.GroupCoverageGaps);
+    }
+
     private sealed class Fixture : IDisposable
     {
         internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new();

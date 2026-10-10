@@ -86,6 +86,45 @@ exercise core contracts but can never enable a live receive/send profile.
 
 ## Delivery status
 
+### Durable listener ownership and interrupted coverage
+
+Listener transport uses a separate fixed HMAC domain. Its sealed command carries
+the authenticated service/credential epoch, server-derived account scope, nonce
+and SHA256 of the exact captured command bytes. Caller OwnerId is a process fence,
+not authentication. Current qualified account and enrolled source/Ingest authority
+must be resolved again while consuming the command; an administrator/portal JWT
+or model cannot create listener authority.
+
+Serialize the service/credential-epoch/nonce lock before the account lock, both
+transaction-owned, before reading current registry and retained lease. Persist the
+lease transition, account coverage marker and append-only command receipt in one
+SQL transaction. Replaying the same nonce/body reconciles its original ACK without
+extending expiry or creating coverage. Conflicting nonce reuse refuses. Expired,
+stopped or superseded live ownership cannot be resurrected by an old Acquire/Renew;
+fresh operations need fresh signed command identities. Stop replay only reconciles
+that exact retained stopped row. Fresh final authority/qualification/signing time
+and lease expiry checks precede commit and ACK.
+
+Account interruptions affect all sources on the same tenant/company/account.
+`GroupAccountCoverageGaps` preserves fixed startup/expiry/stop markers and the last
+confirmed heartbeat without iterating every source lock or silently claiming
+complete history. A startup lease does not prove a provider connection. These
+append-only markers have no automatic reconnected/complete flag; source private
+reads/head catalogs conservatively include them. Future batch memory must preserve
+both source and account uncertainty.
+
+The additive `AddGroupListenerOwnership` migration creates account coverage and
+typed command receipts with scoped restrictive FKs, operator ownership and runtime
+SELECT/INSERT only. Receipts contain command digests and ACK metadata, never raw
+commands, provider content or credentials. Apply migrations before upgrading the
+group runtime: the new permission verifier refuses missing/unsafe tables. Existing
+tables/permissions are unchanged; older runtime can coexist after the expand.
+Rollback is forward repair, not deletion of replay/coverage evidence.
+
+This is a persistence design checkpoint. Local policy/auth/store tests and generated
+migration SQL do not establish a running listener, native atomic rollback/locking,
+provider qualification, spool/broker recovery or full #277 acceptance.
+
 The full group workflow is unimplemented at the initial #276 checkpoint. Contract
 tests/qualification are not evidence that SQL memory, worker, connector or automatic
 notification has shipped. Continue #277–#279 after accepted prerequisites. Full #233

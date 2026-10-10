@@ -73,6 +73,23 @@ internal static class GroupIngressModelConfiguration
                 "[Epoch] > 0 AND [ExpiresAtUtc] >= [HeartbeatAtUtc] AND DATEPART(tz,[ExpiresAtUtc]) = 0 AND DATEPART(tz,[HeartbeatAtUtc]) = 0"));
             entity.HasOne<GroupConnectorAccountRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.ConnectorAccountId }).OnDelete(DeleteBehavior.Restrict);
         });
+        model.Entity<GroupAccountCoverageGapRecord>(entity =>
+        {
+            Company(entity, "GroupAccountCoverageGaps", "ConnectorAccountId", "ListenerEpoch", "Reason");
+            entity.ToTable("GroupAccountCoverageGaps", table => table.HasCheckConstraint("CK_GroupAccountCoverageGaps_Values",
+                "[ListenerEpoch] > 0 AND [Reason] IN ('listener-started','listener-expired','listener-stopped') AND [RecordedAtUtc] >= [OpenedAtUtc] AND DATEPART(tz,[OpenedAtUtc]) = 0 AND DATEPART(tz,[RecordedAtUtc]) = 0"));
+            entity.Property(x => x.Reason).HasMaxLength(32).IsUnicode(false).UseCollation(BinaryCollation);
+            entity.HasOne<GroupConnectorAccountRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.ConnectorAccountId }).OnDelete(DeleteBehavior.Restrict);
+        });
+        model.Entity<GroupListenerCommandReceiptRecord>(entity =>
+        {
+            Company(entity, "GroupListenerCommandReceipts", "ServiceId", "CredentialEpoch", "Nonce");
+            entity.ToTable("GroupListenerCommandReceipts", table => table.HasCheckConstraint("CK_GroupListenerCommandReceipts_Values",
+                "[CredentialEpoch] > 0 AND [ListenerEpoch] > 0 AND [Operation] IN (1,2,3) AND [ExpiresAtUtc] >= [HeartbeatAtUtc] AND [CommittedAtUtc] >= [HeartbeatAtUtc] AND DATEPART(tz,[HeartbeatAtUtc]) = 0 AND DATEPART(tz,[ExpiresAtUtc]) = 0 AND DATEPART(tz,[CommittedAtUtc]) = 0"));
+            Hash(entity, "CommandSha256");
+            entity.HasOne<GroupConnectorAccountRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.ConnectorAccountId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GroupServiceRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.ServiceId }).OnDelete(DeleteBehavior.Restrict);
+        });
         model.Entity<GroupSourceStateRecord>(entity =>
         {
             Company(entity, "GroupSourceStates", "BindingId"); Binding(entity);

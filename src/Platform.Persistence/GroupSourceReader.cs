@@ -77,7 +77,7 @@ public sealed class GroupSourceReader(PlatformDbContext database, IAuthorization
             if (receipt.MessageId != head.MessageId || receipt.Revision != winner.Revision || Text(receipt.EventBytes, receipt.EventText) != eventId) throw Unavailable();
             items.Add(new(head.MessageId, winner.Revision, head.LastSequence, winner.Kind, winner.OccurredAtUtc, winner.IsHistoricalBackfill));
         }
-        var gap = await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId && x.BindingId == sourceId, cancellationToken);
+        var gap = await HasCoverageGapAsync(source, access.Binding.ConnectorAccountId, cancellationToken);
         await release.CommitAsync(cancellationToken);
         return new(source, items, heads.Length > limit ? items[^1].LastChangedSequence : null, gap);
     }
@@ -158,14 +158,19 @@ public sealed class GroupSourceReader(PlatformDbContext database, IAuthorization
             var finalReceipt = await ReceiptAsync(scope, eventId, cancellationToken) ?? throw Unavailable();
             if (finalReceipt.EnvelopeSha256 != receipt.EnvelopeSha256 || finalReceipt.MessageId != messageId || finalReceipt.Revision != revision.Revision ||
                 Text(finalReceipt.EventBytes, finalReceipt.EventText) != eventId) throw Unavailable();
-            var gap = await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId &&
-                x.BindingId == sourceId, cancellationToken);
+            var gap = await HasCoverageGapAsync(scope, before.Binding.ConnectorAccountId, cancellationToken);
             await release.CommitAsync(cancellationToken);
             return new(scope, messageId, externalMessage, revision.Revision, revision.CommittedSequence, revision.Kind, sender, reply,
                 revision.OccurredAtUtc, revision.Kind == GroupSourceEventKind.Recall ? null : text, revision.IsHistoricalBackfill, gap);
         }
         finally { if (opened) await database.Database.CloseConnectionAsync(); }
     }
+
+    private async Task<bool> HasCoverageGapAsync(GroupScope source, Guid account, CancellationToken cancellationToken) =>
+        await database.GroupCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId &&
+            x.BindingId == source.SourceBindingId, cancellationToken) ||
+        await database.GroupAccountCoverageGaps.AsNoTracking().AnyAsync(x => x.TenantId == source.TenantId && x.CompanyId == source.CompanyId &&
+            x.ConnectorAccountId == account, cancellationToken);
 
     private async Task<Access> RequireAccessAsync(AuthorizationContext authority, Guid source, CancellationToken cancellationToken)
     {

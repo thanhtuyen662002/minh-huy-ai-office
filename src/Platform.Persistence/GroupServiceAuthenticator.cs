@@ -17,12 +17,14 @@ public sealed record GroupListenerPayload(GroupExternalIdentity Identity, GroupL
 
 public sealed class VerifiedGroupListener
 {
-    internal VerifiedGroupListener(AuthenticatedGroupService service, GroupListenerCommand command)
+    internal VerifiedGroupListener(AuthenticatedGroupService service, GroupListenerCommand command, Guid nonce, string commandSha256)
     {
-        Service = service; Command = command;
+        Service = service; Command = command; Nonce = nonce; CommandSha256 = commandSha256;
         Account = new(service.Source.TenantId, service.Source.CompanyId, service.ConnectorAccountId);
     }
     internal AuthenticatedGroupService Service { get; }
+    internal Guid Nonce { get; }
+    internal string CommandSha256 { get; }
     public GroupListenerAccountScope Account { get; }
     public GroupListenerCommand Command { get; }
 }
@@ -96,7 +98,7 @@ public sealed class GroupServiceAuthenticator(PlatformDbContext database,
             var payload = ParseListener(captured);
             var service = await AuthenticateAuthorityAsync(signature, captured, payload.Identity, GroupSourceEventKind.NewText,
                 "aioffice-group-listener-v1", cancellationToken, value => phase = value);
-            return new(service, payload.Command);
+            return new(service, payload.Command, signature.Nonce, Convert.ToHexString(SHA256.HashData(captured)));
         }
         catch (UnauthorizedAccessException)
         {

@@ -17,7 +17,7 @@ public sealed class GroupIngressModelTests
     {
         using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
         var entities = model.GetEntityTypes().Where(x => x.ClrType.Name.StartsWith("Group", StringComparison.Ordinal)).ToArray();
-        Assert.Equal(12, entities.Length);
+        Assert.Equal(14, entities.Length);
         foreach (var entity in entities)
         {
             Assert.Equal(new[] { "TenantId", "CompanyId" }, entity.FindPrimaryKey()!.Properties.Take(2).Select(x => x.Name));
@@ -65,17 +65,19 @@ public sealed class GroupIngressModelTests
     {
         using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
         var migration = new AddGroupSourceIngress();
-        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations, model).Select(x => x.CommandText));
+        var coverage = new AddGroupListenerOwnership();
+        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).ToArray(), model).Select(x => x.CommandText));
         foreach (var table in new[] { "GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants" })
         {
             Assert.Contains($"GRANT SELECT ON OBJECT::[aioffice].[{table}]", sql);
             Assert.Contains($"DENY INSERT, UPDATE, DELETE, ALTER, TAKE OWNERSHIP ON OBJECT::[aioffice].[{table}]", sql);
             Assert.Contains($"HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'INSERT')=0", GroupIngressPermissionVerifier.VerificationSql);
         }
-        foreach (var table in new[] { "GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts" })
+        foreach (var table in new[] { "GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts" })
         {
             Assert.Contains($"GRANT SELECT, INSERT ON OBJECT::[aioffice].[{table}]", sql);
             Assert.Contains($"DENY UPDATE, DELETE, ALTER, TAKE OWNERSHIP ON OBJECT::[aioffice].[{table}]", sql);
+            Assert.Contains($"HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'UPDATE')=0", GroupIngressPermissionVerifier.VerificationSql);
         }
         foreach (var entity in model.GetEntityTypes().Where(x => x.ClrType.Name.StartsWith("Group", StringComparison.Ordinal)))
         {
@@ -85,5 +87,18 @@ public sealed class GroupIngressModelTests
         Assert.Contains("[ContentKeyId], [ProtectedContent], [SourceVersion], [DeletionGeneration]", sql);
         Assert.DoesNotContain("DROP TABLE", sql); Assert.DoesNotContain("ALTER TABLE [aioffice].[Tasks]", sql);
         Assert.Throws<NotSupportedException>(() => migration.DownOperations);
+        Assert.Throws<NotSupportedException>(() => coverage.DownOperations);
+    }
+
+    [Fact]
+    public void AccountCoverageIsScopedAppendOnlyMetadataAndCannotClaimReconnectedHistory()
+    {
+        using var db = Database(); var entity = db.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(GroupAccountCoverageGapRecord))!;
+        Assert.Equal(new[] { "TenantId", "CompanyId", "ConnectorAccountId", "ListenerEpoch", "Reason" }, entity.FindPrimaryKey()!.Properties.Select(x => x.Name));
+        Assert.Equal(32, entity.FindProperty("Reason")!.GetMaxLength());
+        Assert.Equal("Latin1_General_100_BIN2", entity.FindProperty("Reason")!.GetCollation());
+        Assert.Null(entity.FindProperty("ReconnectedAtUtc")); Assert.Null(entity.FindProperty("PayloadJson")); Assert.Null(entity.FindProperty("SourceText"));
+        Assert.Contains(entity.GetCheckConstraints(), x => x.Sql.Contains("[RecordedAtUtc] >= [OpenedAtUtc]", StringComparison.Ordinal));
+        Assert.Contains(entity.GetForeignKeys(), x => x.PrincipalEntityType.ClrType == typeof(GroupConnectorAccountRecord));
     }
 }

@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 71054612f2e9447596c1d0a1a88c7ccd706cc803
+head: ac58d68380869a02fe8c44e2e2380d8434d438b6
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Parent276 delivered main4cf all8. Exact610 all8 native private inbox verified; own710 Build38007014365/Gov38007014343 through terminal with new mandatory final-read range witness. Complete separately signed listener authentication, durable account lease/coverage, encrypted prefiltered spool and reference-only broker recovery. Preserve current scoped reads and owner-task privacy; then278 automatic notes/279 internal IT reports. Full277/233 acceptance remains open.'
+next_action: 'Parent276 delivered main4cf all8;710 all8 actual matching read-release range/revoke/isolation proof inspected. Own ac58 Build38007947431/Gov38007947436/actual114080999519 to terminal. Freeze/review new local listener SQL store/append-only command receipts/account gaps/migration1064 Persistence PASS; integrate default-off HTTP and actual lock/rollback/revoke/restart proof, then encrypted spool/reference-only broker recovery and278/279. Full277/233 remains open.'
 
 group_contracts_checkpoint:
   initial_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
@@ -940,3 +940,23 @@ group_listener_authentication_checkpoint:
   result: 'Distinct fixed listener-v1 HMAC domain, strict8192 byte captured body; server-derived qualified account/current enrolled source/Ingest authority, unchanged event-v1 signatures. Shared initial/final permissions/service epoch/source-account-grant/key/signing/qualification fences and exact account ID seal; caller owner is process fence only, no portal User/Task.'
   local: '127 focused listener/event/store/reader/HTTP tests PASS,0 skipped. InMemory account-ID replacement control is staged authority-seal evidence, not actual SQL operator rewrite. No lease/gap writes, durable listener/coverage or provider calls.'
   next: 'Freeze and independently review authentication delta; keep710 exact CI owned. Integrate SQL serialized lease and atomic durable coverage/default-off HTTP, then encrypted prefiltered spool/reference-only broker recovery and actual restart/revocation proofs.277/278/279/full233 remain active.'
+
+group_read_release_exact_native_closure:
+  head: 71054612f2e9447596c1d0a1a88c7ccd706cc803
+  build: 38007014365
+  governance: 38007014343
+  actual: 114078024682
+  quality: 114080654106
+  result: 'All8 PASS; root inspected actual Serializable read wait, matching Recall INSERT KEY RangeI-N vs reader RangeS-S/RangeS-U/current ReaderGrant UPDATE wait, original200 beforelater commits, observed session iso2/no openTX, fresh403/restored Recall-null, exact one-effect graph/cursor/prefix preservation/stable replay. Retained native ingress/issued inbox/full Chromium PASS. No listener/runtime/full277 acceptance.'
+
+group_listener_sql_store_checkpoint:
+  predecessor: ac58d68380869a02fe8c44e2e2380d8434d438b6
+  current_remote_build: 38007947431
+  current_remote_governance: 38007947436
+  current_remote_actual: 114080999519
+  remote_state: 'six prerequisite gates/Governance PASS; actual pending; authentication139 retained/independent and19 guards scoped approved'
+  state: 'local persistence checkpoint only; independent review/native integration required; no API/DI/provider operation'
+  replay_seam: 'Independent auth review reproduced signed Acquire reusable at31s inside120s skew. New sealed nonce/exact captured body SHA and append-only service/credential-epoch/nonce command receipt reconcile original live ACK without extending lease or gap. Expired/stopped/superseded Acquire/Renew refuse, exact stoppedACK reconciles only same retained row; conflicting same nonce/account/body refused.'
+  result: 'SQL nonce lock then account lock before current qualified registry/lease reads; server30s transition, lease/account coverage/typed command receipt same pinned Serializable commit, fresh final authority/expiry, ACK aftercommit. Append-only account startup/expiry/stop uncertainty applies to all scoped account sources/head/private reads; no complete-history flag. Additive14th group relation migration protects both new evidence tables with operator ownership/SELECT INSERT only/forward-only repair.'
+  local: 'All1064 Persistence PASS,0 skipped; focused store/auth/model/reader66 earlier PASS plus added cross-account nonce/final-proof controls included full suite.21 store tests include100 replay, expired signature seam, exact ACK recovery, retained epoch/new context, current authority and save-delay refusal/no late ACK.4 account gap scope controls; generated EF no pending model/idempotentSQL/format/diff PASS. InMemory proves no success ACK on late faults, not SQL rollback/concurrency.'
+  next: 'Freeze/review this exact unit, own remoteac58 terminal CI then push approved checkpoint. Add bounded default-off listener HTTP and mandatory actual SQL contention/nonce replay/expiry/revoke/rollback/restart/isolation proof. Complete prefiltered encrypted bounded spool/broker recovery;277/278/279/full233 active.'

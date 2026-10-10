@@ -85,6 +85,42 @@ public sealed class GroupListenerLeaseRecord
     public DateTimeOffset HeartbeatAtUtc { get; set; }
 }
 
+// Append-only account interruptions apply to every source served by that
+// account. Acquiring ownership does not prove a provider connection or fill
+// missed history; these markers are never silently closed on reconnect.
+public sealed class GroupAccountCoverageGapRecord
+{
+    public Guid TenantId { get; set; }
+    public Guid CompanyId { get; set; }
+    public Guid ConnectorAccountId { get; set; }
+    public long ListenerEpoch { get; set; }
+    public string Reason { get; set; } = "";
+    public DateTimeOffset OpenedAtUtc { get; set; }
+    public DateTimeOffset RecordedAtUtc { get; set; }
+}
+
+// Transport nonce is a durable operation identity. Exact captured command
+// bytes may be signed afresh to reconcile a lost ACK; ownership never extends
+// from replay. No raw command, credentials or provider content is stored here.
+public sealed class GroupListenerCommandReceiptRecord
+{
+    public Guid TenantId { get; set; }
+    public Guid CompanyId { get; set; }
+    public Guid ServiceId { get; set; }
+    public long CredentialEpoch { get; set; }
+    public Guid Nonce { get; set; }
+    public Guid ConnectorAccountId { get; set; }
+    public string CommandSha256 { get; set; } = "";
+    public GroupListenerOperation Operation { get; set; }
+    public Guid OwnerId { get; set; }
+    public long ListenerEpoch { get; set; }
+    public DateTimeOffset HeartbeatAtUtc { get; set; }
+    public DateTimeOffset ExpiresAtUtc { get; set; }
+    public bool Changed { get; set; }
+    public bool CoverageRecorded { get; set; }
+    public DateTimeOffset CommittedAtUtc { get; set; }
+}
+
 // Incremented while holding the source transaction lock through commit.
 // Identity allocation / MAX(identity) is never a committed-ingest cursor.
 public sealed class GroupSourceStateRecord
