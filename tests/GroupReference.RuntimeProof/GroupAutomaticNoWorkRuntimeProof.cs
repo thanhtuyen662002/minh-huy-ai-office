@@ -103,6 +103,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
             || dispositions.Any(x => x.Outcome != GroupWorkSourceOutcome.NoWork || !plan.SourceDispositions.Any(value =>
                 value.MessageId == x.MessageId && value.Revision == x.MessageRevision))) throw new InvalidOperationException();
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
+        var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || committed != replay with { WasAlreadyCommitted = false }) throw new InvalidOperationException();
         await RequireOriginalAsync();
@@ -111,16 +112,20 @@ internal static class GroupAutomaticNoWorkRuntimeProof
         catch (InvalidOperationException error) when (error.Message == "Group work commit is unavailable." && error.InnerException is null) { refused = true; }
         if (!refused || keys.Reads != 1 || keys.Writes != 0) throw new InvalidOperationException();
         await RequireOriginalAsync();
+        await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
+        await RequireOriginalAsync();
         Console.WriteLine("PASS owned automatic no-work actual atomic receipt two exact NoWork dispositions original replay new nonce refusal no notes outbox or model");
 
         async Task RequireOriginalAsync()
         {
             if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 3
+                || await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token) != rawGraph
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph) throw new InvalidOperationException();
             RequireClean(db);
         }
         async Task RequireEmptyAsync()
         {
+            await GroupAutomaticRawRuntimeProof.RequireEmptyAsync(db, scope, token);
             if (await db.GroupWorkCommitReceipts.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
                 || await db.GroupWorkSourceDispositions.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
                 || await db.GroupCustomerRequests.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
@@ -133,6 +138,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
     }
     private static void RequireClean(PlatformDbContext db)
     {
+        GroupAutomaticRawRuntimeProof.RequireDetached(db);
         if (db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null || db.ChangeTracker.Entries().Any(x =>
             x.Entity is GroupWorkCommitReceiptRecord or GroupWorkSourceDispositionRecord or GroupCustomerRequestRecord
                 or GroupRequestRevisionRecord or GroupRequestEvidenceRecord or GroupNotesCommittedOutboxRecord or GroupNotesCommittedItemRecord))
@@ -168,6 +174,9 @@ internal static class GroupAutomaticNoWorkRuntimeProof
             var entries = db.ChangeTracker.Entries().Where(x => x.Entity is GroupWorkCommitReceiptRecord or GroupWorkSourceDispositionRecord).ToArray();
             if (entries.Length != 3 || entries.Any(x => x.State != EntityState.Added)
                 || entries.Count(x => x.Entity is GroupWorkCommitReceiptRecord) != 1) throw new InvalidOperationException();
+            var raw = db.ChangeTracker.Entries<GroupWorkRawDispositionRecord>().ToArray();
+            if (raw.Length != 2 || raw.Any(x => x.State != EntityState.Added || x.Entity.OperationId != effect.Operation))
+                throw new InvalidOperationException();
             effect.Staged = true; return ValueTask.FromResult(result);
         }
         public override async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData data, int result, CancellationToken token = default)
@@ -177,6 +186,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
             if (receipt is null) return result;
             if (!effect.Staged || await GroupNoteRuntimeProof.TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != 3)
                 throw new InvalidOperationException();
+            await GroupAutomaticRawRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, 2, token);
             effect.Flushed = true; effect.Advance(); return result;
         }
     }
@@ -195,6 +205,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
             var receipt = db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Single(x => x.Entity.OperationId == effect.Operation).Entity;
             if (await GroupNoteRuntimeProof.TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != 0)
                 throw new InvalidOperationException();
+            await GroupAutomaticRawRuntimeProof.RequireEmptyAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), token);
             effect.RolledBack = true;
         }
     }

@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 30a5e8c669351091379ca5aa408ba14a2172611a
     state: in_progress
-    next: "Own278/Draft288 exact remote30a5e8c after scoped APPROVED6102573838 ROOT FULLread; Build38089462537/native114322730774 ACTIVE; Gov38089462538/six prerequisites SUCCESS. Root FULL.NET2711=[6,520,25,2160]/zeroFailSkip/four successful runs verified; renewed108/all8/six ORIGINALs remain unqualified. Prior280 TERMINAL RED Build38086639444/native114314414446/quality114319788181, full107required21absent137PASS4failures preserved. Local d183580 raw selected-head ledger committed/unpushed:29focused/full2189Persistence zeroFailSkip/Release0W0E/format PASS; frozen source review active, native atomicity/replay/rights/FK/max500/races unqualified. No terminal frontier from selected count; continue all-contributor fences/full raw completion, gap/backlog/zero-message carrier/retry/context/DIUI, real100-30eval/279/full233; no partialmerge or active-CI supersession."
+    next: "Own278/Draft288 exact remote30a5e8c Build38089462537/native114322730774 ACTIVE108; Gov38089462538/six prerequisites SUCCESS/rootFULL.NET2711=[6,520,25,2160]/zeroFailSkip/four runs. Local raw source53eccb9 scoped APPROVED6102696398 ROOT FULLread; separate owned raw proof111 prepared,128Python/21new observers+23retained44focused/full2210Persistence/DebugRelease0W0E/format PASS. Native raw effects/replay/rollback/immutable rights NOT_RUN_UNQUALIFIED; physical FK/max500/current races/all-contributor terminal frontier still required. Do not supersede meaningful active30a CI; full frozen proof review then later reviewed exact111/all8/FULL.NET2761 prediction/six ORIGINALs. Continue honest gap/backlog/zero-message carrier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge/model acceptance."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 exact remote30a5e8c after scoped APPROVED6102573838 ROOT FULLread; Build38089462537/native114322730774 ACTIVE; Gov38089462538/six prerequisites SUCCESS. Root FULL.NET2711=[6,520,25,2160]/zeroFailSkip/four successful runs verified; renewed108/all8/six ORIGINALs remain unqualified. Prior280 TERMINAL RED Build38086639444/native114314414446/quality114319788181, full107required21absent137PASS4failures preserved. Local d183580 raw selected-head ledger committed/unpushed:29focused/full2189Persistence zeroFailSkip/Release0W0E/format PASS; frozen source review active, native atomicity/replay/rights/FK/max500/races unqualified. No terminal frontier from selected count; continue all-contributor fences/full raw completion, gap/backlog/zero-message carrier/retry/context/DIUI, real100-30eval/279/full233; no partialmerge or active-CI supersession."
+next_action: "Own278/Draft288 exact remote30a5e8c Build38089462537/native114322730774 ACTIVE108; Gov38089462538/six prerequisites SUCCESS/rootFULL.NET2711=[6,520,25,2160]/zeroFailSkip/four runs. Local raw source53eccb9 scoped APPROVED6102696398 ROOT FULLread; separate owned raw proof111 prepared,128Python/21new observers+23retained44focused/full2210Persistence/DebugRelease0W0E/format PASS. Native raw effects/replay/rollback/immutable rights NOT_RUN_UNQUALIFIED; physical FK/max500/current races/all-contributor terminal frontier still required. Do not supersede meaningful active30a CI; full frozen proof review then later reviewed exact111/all8/FULL.NET2761 prediction/six ORIGINALs. Continue honest gap/backlog/zero-message carrier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge/model acceptance."
 
 
 blocked_by:
@@ -1748,10 +1748,26 @@ group_278_raw_selected_head_accounting:
   implementation: 'Automatic note and automatic NoWork commits stage immutable metadata-only raw allocation rows beside the existing receipt/selected dispositions/notes/outbox in the SAME transaction and savepoint. Legacy entry paths add no raw rows. Complete freshly fenced dense1to500 allocation is validated; only selected message IDs receive raw links to the exact selected head/outcome. Original replay checks all11 fields, count and sequence with a501 sentinel.'
   migration: '20261010213659_AddGroupWorkRawAccounting additive table, scoped five-field PK/four restrictive scoped FKs/four indexes/positive revision and closed outcome-relation checks/operator ownership/SELECT INSERT only/all11 column UPDATE denied. No plaintext/new provider/old-table change; forward repair only.'
   local: '29 new focused PASS, including actual InMemory ingress/allocation/read at500 and501; full2189Persistence zeroFailSkip; fullRelease solution0Warn0Error; changed CSharp format and diff PASS. Existing schema gates include the new30th Group table and preserve every scoped FK/owner/column DENY requirement. Synthetic/InMemory/SQL160 parsing are NOT native runtime acceptance.'
-  review: PENDING_frozen_full_source_review_before_push
+  review: SCOPED_APPROVED6102696398_ROOT_FULL_fetched_read
   native: NOT_RUN_UNQUALIFIED_atomic_raw_rows_replay_postflush_rollback_immutability_scoped_FKs_max500_required
   scope_limits: 'Selected-head accounting is not whole-batch completion; unselected allocation remains unaccounted. Superseded relation means different from the selected head, which can win recall priority or cutoff selection; it does not assert each raw body was model input. No terminal frontier, model quality, independent-process race or no-click pipeline claim.'
   retained_stash: 15c25ae56174dc1bfa78c11c8282b41d5a410ab2
-  next: 'Finish frozen source review; prepare owned native raw-ledger SQL proof with all retained scopes/legacy counts intact. Own exact30a108 CI through terminal before any later push; do not supersede meaningful active CI.'
+  next: "Source53e scoped approved/rootFULLread; separate raw-native proof prepared/pending frozen review; own active30a108 through terminal before any later push. Physical FK/max500/current races/full terminal coverage still required."
   actual_model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_and_loader_reused
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+
+group_278_raw_native_preparation:
+  source_parent: 53eccb93a5338d2db6a0d6d556c67e77f05fd782
+  parent_source_review: SCOPED_APPROVED6102696398_ROOT_FULL_fetched_read
+  remote_parent: 30a5e8c669351091379ca5aa408ba14a2172611a
+  parent_CI: Build38089462537_native114322730774_ACTIVE108_Gov38089462538_six_prerequisites_SUCCESS_ROOT_FULLdotnet2711_zeroFailSkip_four_runs
+  observer: 'Additional independent bounded501 raw metadata reader requires every11 field/count/order/selected parent/allocation; separate private full raw digest around original replay/changed plan/new nonce refusals. Legacy seven-table21mixed9host3NoWork and default11 counts/fullgraph/witness classifier stay exact. Automatic-only flushed raw2 before expiry, raw0 after rollback, no tracked raw after store returns; no-row key expiry and coverage raw0.'
+  immutable_rights: 'Actual owned runtime executes all11 closed no-op column UPDATE attempts and DELETE WHERE1=0; only SQL229 qualifies permission refusal, followed by unchanged original seven-table and raw graphs. Existing actual effective table/global/ownership/column permission verifier required; no grant/rights mutation.'
+  coordinator: 'Full original33 indexed complete snapshots byte-preserved; appended34th scoped full raw graph, same one bounded SQL call. Original104/four profile/mode markers and seven-table counts preserved. Additional three closed raw aggregate markers only after all observations/cleanup succeed; future111 required.'
+  local: '128Python PASS including20 raw malformed/expiry/retained adjacent subcases;21 new raw observer plus23 retained44focused PASS/full2210Persistence zeroFailSkip; DebugRelease proof build0Warn0Error/changedformat VERIFY/diff PASS;22 actual unowned refusals before resources/four UTF8AST/four cold profile renders. These are not native SQL or model acceptance.'
+  limits: 'Only two selected revision1 heads are used by current owned profiles. InMemory observer500/501 is not actual native raw500. Physical scoped FK attacks, raw history/partial chunks/full-frontier/all-contributor races remain separate required work. No new provider/client/production resource/schema/shipping delta versus approved source53e.'
+  source_review: PENDING_full_frozen10file_proof_review_before_push
+  native: NOT_RUN_UNQUALIFIED_renewed_exact111_mandatory
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_configuration_reused
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

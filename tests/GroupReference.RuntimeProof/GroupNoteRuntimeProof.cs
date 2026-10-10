@@ -193,6 +193,7 @@ internal static class GroupNoteRuntimeProof
         internal bool Armed, ExpireAfterFlush, StagedObserved, Flushed, RolledBack;
         internal int SavepointChecks, WitnessSavepointChecks;
         internal int ExpectedRows = 11;
+        internal int ExpectedRawRows;
         internal Guid Operation;
         internal GroupBatchClaimReceipt? Claim;
         internal DateTimeOffset Expires;
@@ -253,6 +254,9 @@ internal static class GroupNoteRuntimeProof
             var receipt = db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Single(x => x.Entity.OperationId == effect.Operation).Entity;
             if (effect.ExpectedRows is not (9 or 11 or 21)
                 || await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != effect.ExpectedRows) throw new InvalidOperationException();
+            if (effect.ExpectedRawRows is not (0 or 2)) throw new InvalidOperationException();
+            if (effect.ExpectedRawRows == 2)
+                await GroupAutomaticRawRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, 2, token);
             effect.Flushed = true;
             if (effect.ExpireAfterFlush) effect.Advance();
             return result;
@@ -269,6 +273,8 @@ internal static class GroupNoteRuntimeProof
             await effect.RequireLockAsync(transaction, token);
             var receipt = db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Single(x => x.Entity.OperationId == effect.Operation).Entity;
             if (await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != 0) throw new InvalidOperationException();
+            if (effect.ExpectedRawRows == 2)
+                await GroupAutomaticRawRuntimeProof.RequireEmptyAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), token);
             effect.RolledBack = true;
         }
     }

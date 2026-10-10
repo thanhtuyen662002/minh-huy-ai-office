@@ -20,7 +20,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         var step = mode[(hostOnly ? "automatic-host-" : "automatic-note-").Length..];
         var expectedRows = hostOnly ? 9 : 21;
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
-        var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = expectedRows };
+        var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = expectedRows, ExpectedRawRows = 2 };
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
             .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect)).Options);
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
@@ -133,6 +133,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         if (committed.WasAlreadyCommitted || committed.Scope != scope || committed.BatchId != allocated.Id || committed.RequestIds.Count != plan.NoteCount
             || await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != expectedRows) throw new InvalidOperationException();
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
+        var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
         if (readback.Items.Count != plan.NoteCount) throw new InvalidOperationException();
         for (var index = 0; index < committed.RequestIds.Count; index++)
@@ -173,6 +174,8 @@ internal static class GroupAutomaticNoteRuntimeProof
             || await db.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
                 && x.BindingId == scope.SourceBindingId && (x.AssignedToUserId != null || x.CommittedDueAtUtc != null
                     || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token)) throw new InvalidOperationException();
+        await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
+        await RequireOriginalAsync();
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"
             : "PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority");
@@ -181,10 +184,14 @@ internal static class GroupAutomaticNoteRuntimeProof
         {
             if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != expectedRows
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph
+                || await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token) != rawGraph
                 || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null) throw new InvalidOperationException();
+            GroupAutomaticRawRuntimeProof.RequireDetached(db);
         }
         async Task RequireEmptyEffectsAsync()
         {
+            await GroupAutomaticRawRuntimeProof.RequireEmptyAsync(db, scope, token);
+            GroupAutomaticRawRuntimeProof.RequireDetached(db);
             if (await db.GroupWorkCommitReceipts.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
                 || await db.GroupWorkSourceDispositions.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
                 || await db.GroupCustomerRequests.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)

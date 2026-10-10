@@ -90,8 +90,9 @@ def retained_snapshot(*, tenant, company, sources, accounts, sql):
         ("GroupServices", "Id", base), ("Users", "TenantId,Id", "1=1"),
         ("Tasks", "TenantId,CompanyId,Id", "1=1"), ("TaskDispatches", "TenantId,CompanyId,TaskId,StepId,MessageId", "1=1"),
         ("TaskCheckpoints", "TenantId,CompanyId,TaskId,StepId,Version", "1=1")]
-    # Retain all 33 complete snapshots, using one bounded SQL invocation rather
-    # than starting 33 Docker/sqlcmd processes per fence. Closed index tags make
+    queries.append(("GroupWorkRawDispositions", "BindingId,BatchId,CommittedSequence", base + f" AND BindingId IN ({source_list})"))
+    # Retain the original 33 complete snapshots and append raw accounting,
+    # using one bounded SQL invocation. Closed index tags make
     # lost, duplicate, extra or reordered result lines fail closed.
     statements = ["SET NOCOUNT ON;"]
     for index, (table, order, predicate) in enumerate(queries):
@@ -134,6 +135,23 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     assert source not in sources and len(events) == len(set(events)) == 2
     unchanged()
     scope = base + f" AND BindingId='{source}'"
+    def raw_heads():
+        # Observe the exact additional ledger separately from the preserved
+        # seven-table effect oracle. Every raw field is matched to its scoped
+        # allocation, original revision, sealed disposition and receipt.
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupWorkRawDispositions WHERE {scope}),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.GroupWorkRawDispositions r "
+            "JOIN aioffice.GroupBatchAllocatedRevisions a ON a.TenantId=r.TenantId AND a.CompanyId=r.CompanyId AND a.BindingId=r.BindingId "
+            "AND a.BatchId=r.BatchId AND a.CommittedSequence=r.CommittedSequence AND a.MessageId=r.MessageId AND a.Revision=r.RawRevision "
+            "JOIN aioffice.GroupMessageRevisions m ON m.TenantId=r.TenantId AND m.CompanyId=r.CompanyId AND m.BindingId=r.BindingId "
+            "AND m.MessageId=r.MessageId AND m.Revision=r.RawRevision AND m.CommittedSequence=r.CommittedSequence "
+            "JOIN aioffice.GroupWorkSourceDispositions d ON d.TenantId=r.TenantId AND d.CompanyId=r.CompanyId AND d.BindingId=r.BindingId "
+            "AND d.BatchId=r.BatchId AND d.MessageId=r.MessageId AND d.OperationId=r.OperationId "
+            "AND d.MessageRevision=r.SelectedMessageRevision AND d.Outcome=r.Outcome "
+            "JOIN aioffice.GroupWorkCommitReceipts w ON w.TenantId=r.TenantId AND w.CompanyId=r.CompanyId AND w.BindingId=r.BindingId "
+            "AND w.BatchId=r.BatchId AND w.OperationId=r.OperationId "
+            f"WHERE r.TenantId='{tenant}' AND r.CompanyId='{company}' AND r.BindingId='{source}' "
+            "AND r.RawRevision=1 AND r.SelectedMessageRevision=1 AND r.Relation=1 AND w.SelectedMessageCount=2));") == "2|2"
     account = canonical(sql(f"SELECT LOWER(CONVERT(char(36),ConnectorAccountId)) FROM aioffice.GroupBindings WHERE {base} AND Id='{source}';"))
     assert account not in accounts
     def digest(table, order, columns="*"):
@@ -170,7 +188,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     expected_state = digest("GroupSourceStates", "BindingId", "TenantId,CompanyId,BindingId,CommittedSequence,"
         "CAST(NULL AS datetimeoffset(7)) AS FirstPendingAtUtc,CAST(NULL AS datetimeoffset(7)) AS LastPendingAtUtc,CAST(2 AS bigint) AS ScheduledThroughSequence")
     assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in
-        EFFECT_TABLES + ("GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimStates", "GroupBatchClaimReceipts"))
+        EFFECT_TABLES + ("GroupWorkRawDispositions", "GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimStates", "GroupBatchClaimReceipts"))
     suffix = uuid.uuid4().hex; image = "aioffice-automatic-note-proof-" + suffix
     environment = dict(os.environ)
     environment.update({"AIOFFICE_OWNED_GROUP_REFERENCE_PROOF": "true", "AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION":
@@ -215,22 +233,27 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch={epoch} AND ExpiryObservedAtUtc {witness};") == "1"
             if mode != commit_mode:
                 assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in EFFECT_TABLES)
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkRawDispositions WHERE {scope};") == "0"
             elif proof == "notes":
+                raw_heads()
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "4", "4", "5", "1", "4"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=1 AND VerificationLevel=1;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=3 AND VerificationLevel=3;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=1 AND NoteCount=4 AND SelectedMessageCount=2;") == "1"
             elif proof == "no_work":
+                raw_heads()
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "0", "0", "0", "0", "0"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=2 AND NoteCount=0 AND SelectedMessageCount=2;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=2 AND MessageRevision=1;") == "2"
             elif proof == "host_only":
+                raw_heads()
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "1", "1", "2", "1", "1"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=3 AND NoteCount=1 AND SelectedMessageCount=2;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=7 AND MessageRevision=1;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=3 AND VerificationLevel=3;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestEvidence WHERE {scope} AND Kind=2;") == "2"
             else:
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkRawDispositions WHERE {scope};") == "0"
                 assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in EFFECT_TABLES)
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WHERE {scope} AND AfterCommittedSequence=2"
                     " AND Reason='owned-coverage-probe' AND DATEPART(TZOFFSET,OpenedAtUtc)=0;") == "257"
@@ -254,9 +277,12 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     if failure is not None: raise failure
     if proof == "notes":
         print("PASS actual automatic note combined SQL four protected AI host notes five evidence atomic twenty-one effects both expiry rollback original replay no duplicate unchanged all retained scopes", flush=True)
+        print("PASS actual automatic mixed raw SQL two exact selected-head rows same transaction postflush rollback detach full original replay retained raw scopes", flush=True)
     elif proof == "no_work":
         print("PASS actual automatic no-work SQL receipt two dispositions expiry rollback exact replay no duplicate no notes outbox model unchanged all retained scopes", flush=True)
+        print("PASS actual automatic no-work raw SQL two exact selected-head rows same transaction postflush rollback detach full original replay retained raw scopes", flush=True)
     elif proof == "host_only":
         print("PASS actual automatic host SQL protected UnsupportedMedia note two metadata evidence Attention receipt atomic nine effects both expiry rollback original replay no AI IT authority unchanged all retained scopes", flush=True)
+        print("PASS actual automatic host raw SQL two exact selected-head rows same transaction postflush rollback detach full original replay retained raw scopes", flush=True)
     else:
         print("PASS actual coverage SQL exact source account additions reconnection key await context refusal disposed material max256 overflow257 before keys no effects unchanged all retained scopes", flush=True)
