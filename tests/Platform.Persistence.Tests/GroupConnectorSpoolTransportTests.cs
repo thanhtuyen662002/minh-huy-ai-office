@@ -570,7 +570,7 @@ public sealed class GroupConnectorSpoolTransportTests
         release.TrySetException(new IOException("PRIVATE_LATE_METADATA"));
     }
 
-    private sealed class Fixture : IDisposable
+    internal sealed class Fixture : IDisposable
     {
         internal static DateTimeOffset Now => GroupServiceAuthenticatorTests.Fixture.Now;
         internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new();
@@ -660,7 +660,7 @@ public sealed class GroupConnectorSpoolTransportTests
     }
     private sealed class Handler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> reply) : HttpMessageHandler
     { protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => reply(request, cancellationToken); }
-    private sealed class SpoolSecrets : ISecretResolver
+    internal sealed class SpoolSecrets : ISecretResolver
     {
         internal readonly byte[] Key = RandomNumberGenerator.GetBytes(32);
         internal int Calls;
@@ -673,7 +673,7 @@ public sealed class GroupConnectorSpoolTransportTests
             return Resolve?.Invoke() ?? ValueTask.FromResult(Convert.ToBase64String(Key));
         }
     }
-    private sealed class ReplayClock : TimeProvider
+    internal sealed class ReplayClock : TimeProvider
     {
         internal DateTimeOffset Current = Fixture.Now;
         internal Action? BeforeRead;

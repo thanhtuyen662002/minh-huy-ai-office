@@ -40,6 +40,10 @@ public static class GroupIngressPipelineRegistration
         var existing = services.Where(descriptor => descriptor.ServiceType == typeof(GroupExtractionWorkerBinding)).ToArray();
         if (existing.Any(descriptor => descriptor.ImplementationInstance is not GroupExtractionWorkerBinding binding || binding != worker))
             throw Refused();
+        if (services.Where(descriptor => descriptor.ServiceType == typeof(GroupConnectorRecoveryHostBinding)).Any(descriptor =>
+            descriptor.ImplementationInstance is not GroupConnectorRecoveryHostBinding recovery || recovery.Signing.TenantId != worker.TenantId ||
+            recovery.Signing.CompanyId != worker.CompanyId || recovery.Signing.ServiceId != worker.ServiceId || recovery.Signing.CredentialEpoch != worker.CredentialEpoch))
+            throw Refused();
         services.TryAddSingleton(worker);
         services.TryAddSingleton<TimeProvider>(TimeProvider.System);
         services.TryAddScoped<GroupIngressPermissionVerifier>();

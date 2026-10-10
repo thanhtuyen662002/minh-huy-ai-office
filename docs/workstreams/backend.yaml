@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+head: 995286fae8447c08cb87611a503b8fe83431103c
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1284,3 +1284,16 @@ group_reference_ee_native_refusal_repair:
   local: '17 .NET guard/classifier controls PASS0skip; changed format PASS. Frozen review and native rerun required.'
   state: local_tested_pending_frozen_review
   next: 'Close frozen native classifier and076 session reviews, push approved snapshot SAME283 and own exact all8/DI/broker restart/main Chromium. Provider/278/279/full233 active.'
+
+group_connector_default_off_host_checkpoint:
+  remote_head: 995286fae8447c08cb87611a503b8fe83431103c
+  build: 38026673330
+  governance: 38026673652
+  actual: 114138866854
+  remote_state: 'Six prerequisites/Gov PASS, actual running; active exact CI ownership.'
+  session_approval: 6094089395
+  classifier_approval: 6094089704
+  state: local_tested_pending_frozen_review
+  implementation: 'Lazy one-account capture/recovery Worker runtime and loop, exact default-off flag; immutable trusted config and bidirectional process authority guard. Inert resolve/fast refusal, fixed diagnostics/backoff; stop cancels late HTTP and preserves encrypted backlog. No provider/production activation.'
+  local: '60 host/pipeline controls PASS0skip; clean Worker build. Managed lifecycle uses isolated actual file/session/lease policy with bounded fake HTTP; native factory/process/SQL/volume proof still required.'
+  next: 'Freeze/review host and prepare owned native managed runtime proof while995 exact native/main browser runs. Terminal red repaired SAME283; no push to cancel current actual.277/278/279/full233 remain.'

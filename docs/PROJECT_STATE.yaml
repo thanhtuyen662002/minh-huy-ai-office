@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+current_target_head: 995286fae8447c08cb87611a503b8fe83431103c
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+    head: 995286fae8447c08cb87611a503b8fe83431103c
     state: in_progress
-    next: 'Remote ee367677 Build38025424177 terminal RED/Gov38025424210 PASS; six prerequisites PASS, actual114135146988/quality114137785020 FAIL. Four new native reference stages PASS through queued Extract revoke; unsafe-column proof expects wrong exception type. Local classifier repair17 controls PASS/format PASS needs frozen review; then approved push and exact closure SAME283. Local143 APPROVED6093966487/56 controls,076 session89 controls PASS/review running; both excluded from ee. DI/restart/browser not re-exercised. Provider/278/279/full233 ACTIVE.'
+    next: 'Remote995286f Build38026673330/Gov38026673652 actively closing; six prerequisites/Gov PASS, actual114138866854 running. Session076 APPROVED6094089395/98 controls and995 classifier APPROVED6094089704/25 controls pushed. Close native permission/DI/broker restart/full Chromium exact terminal SAME283. Local default-off lazy Worker recovery host60 controls PASS0skip/format PASS needs frozen review and separate owned native process/factory proof. No provider activation.277/278/279/full233 active.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Repair terminal ee367677 Build38025424177/actual114135146988/quality114137785020 unsafe proof classifier SAME283. Four native reference stages and retained current spool/group/listener/read PASS; DI/restart/main browser unexecuted. Freeze/review typed permission-refusal repair17 controls PASS,076 session89 controls PASS/review running;143 APPROVED6093966487. Push only reviewed snapshot and own exact new all8/native/full Chromium. Continue277/278/279/full233.'
+next_action: 'Close exact remote995 Build38026673330/Gov38026673652/actual114138866854 through native unsafe/DI/broker restart/full Chromium; six prerequisites/Gov PASS, actual running. Repair terminal defects SAME283. Local lazy recovery host60 focused controls PASS requires frozen review/native process evidence; no live/provider activation. Continue277/278/279/full233.'
 
 
 blocked_by:
@@ -648,3 +648,16 @@ group_reference_ee_native_refusal_repair:
   local: '17 native guard/classifier controls PASS0skip; changed CSharp format PASS. Native rerun required; underlying child exception not emitted to logs.'
   state: local_tested_pending_frozen_review
   next: 'Independent frozen classifier and076 session closure, reviewed push SAME283, own renewed exact CI through all native DI/restart and main Chromium; no full277/233 completion.'
+
+group_connector_default_off_host_checkpoint:
+  remote_head: 995286fae8447c08cb87611a503b8fe83431103c
+  build: 38026673330
+  governance: 38026673652
+  actual: 114138866854
+  remote_state: 'Six prerequisites/Gov PASS, actual running; active exact CI ownership.'
+  session_approval: 6094089395
+  classifier_approval: 6094089704
+  state: local_tested_pending_frozen_review
+  implementation: 'Explicit default-off account Worker runtime/loop; immutable cloned bounded host binding, HTTPS origin/purpose separate keys/existing private root, inert DI resolution/fast source refusal; shared session owner and shutdown cancellation; fixed logs/backoff, both-order reference role authority refusal. No provider added or activated.'
+  local: '60 host/retained pipeline controls PASS0skip; clean Worker build. Lifecycle tests inject actual file/session/lease policy and bounded fake HTTP; factory/native HTTP/process/SQL/volume proof not yet executed.'
+  next: 'Freeze and review host, retain995 exact terminal closure, then separate owned native managed capture/process death/recovery proof. Push reviewed follow-on after current actual terminal.277/278/279/full233 active.'

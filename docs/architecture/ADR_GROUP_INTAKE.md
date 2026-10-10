@@ -193,6 +193,34 @@ provider connection or complete history. This library adds no provider, hosted
 service, deployment activation or customer sender. Owned runtime recovery proof
 and separately authorized live qualification remain required.
 
+### Default-off Worker recovery host
+
+`AIOffice:GroupIntake:ConnectorRecoveryEnabled=true` explicitly registers an
+account-owned recovery runtime and background loop in Agent.Worker. Group intake
+and the platform database must already be configured; startup performs the group
+effective-permission proof. Absence or any other flag value registers nothing.
+DI resolution is inert: the runtime opens its volume only on an enabled capture
+or recovery operation. The recovery loop and future qualified provider bridge use
+the same runtime/session owner; no provider connection is added here.
+
+The `Connector` section fixes canonical TenantId, CompanyId, ConnectorAccountId,
+ServiceId and positive CredentialEpoch; BackendOrigin is HTTPS with no path,
+credentials, query or fragment. PrivateRoot must be an absolute existing private
+volume, not a filesystem root. SigningSecretRef and SpoolSecretRef are separate
+purpose references, SpoolKeyId is bounded, and Provider/ExternalAccountId plus
+contiguous `Sources:0..255` SourceBindingId/ExternalGroupId entries are cloned.
+Configuration refresh cannot replace the binding. Reference producer/consumer
+and recovery registration refuse mismatched company/service/epoch in either order.
+Production permission and private-volume qualification remain operator release gates.
+
+An owned Development fixture may explicitly select the existing synthetic policy
+and loopback HTTP. Production cannot select that profile; no synthetic capability
+qualifies a live account. Stop cancels shared capture/recovery and disposes owned
+client/volume without deleting pending captures. The loop waits one second after a
+successful pass and five after refusal; logs use a fixed message without payload,
+private paths, IDs, keys or dependency exceptions. Heartbeats still retain coverage
+uncertainty and never claim a provider connection or complete history.
+
 This registration is an implementation candidate. Local DI/query/SDK controls do
 not qualify actual SQL concurrency, RabbitMQ interruption/restart, provider
 connection, live account membership or a production deployment. Mandatory owned

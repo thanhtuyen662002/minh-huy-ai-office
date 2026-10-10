@@ -1121,3 +1121,27 @@ cannot qualify.17 guard/classifier controls PASS0skip and changed format PASS.
 Shipping permissions and all effective-right/full-graph/restore oracles are unchanged.
 The original child exception was not logged; repaired native execution must still
 prove unsafe refusal plus restored DI delivery/restart and complete main browser.
+
+### Worker recovery host candidate
+
+The session and refusal classifier have scoped independent approvals:
+0766094089395 (89 retained+9 own98 controls) and9956094089704 (17 retained+8 own25
+controls), all PASS0skip. Exact remote995286fae8447c08cb87611a503b8fe83431103c is
+actively closing Build38026673330/Governance38026673652. Governance and all six
+prerequisites PASS; actual114138866854 is running. New host changes are excluded.
+
+Worker recovery is explicitly default-off and shares one lazy runtime with capture.
+It freezes bounded trusted configuration, enforces reference-role process authority
+in both registration orders, checks group permissions at startup and rotates actual
+session recovery. Fast input refusal and cancelled operations cannot open a volume
+or resolve keys. Unknown replies survive stop/disposal. Fixed logs and five-second
+refusal backoff avoid private exception output; stopping cancels that backoff.
+
+Local60 host/retained-registration controls PASS0skip. Configuration/URI/secret
+alias/source-list/storage-root/profile and replacement denials run before resources.
+DI resolution is inert. Two lifecycle controls inject an actual encrypted file/session,
+lease policy and bounded fake HTTP into the runtime: shutdown cancels held event ACK,
+preserves exact bytes through late reply/reopen, and the hosted loop settles the exact
+file before stopping. This isolated injection does not prove the native factory,
+real HTTP, SQL fence, process restart or production volume. Frozen scoped host review
+and separate owned native capture/recovery process proof remain mandatory.
