@@ -98,6 +98,15 @@ public static partial class GroupSecretQuarantine
                     foreach (var property in element.EnumerateObject())
                     {
                         var key = Inspect(property.Name); if (key.RequiresQuarantine) return key;
+                        // A credential assignment is the decoded key AND its
+                        // value. Inspecting them independently loses that
+                        // relation (including escaped keys and numeric values).
+                        // Quotes retain even an empty credential assignment;
+                        // null/container assignments also fail conservatively.
+                        var assignedValue = property.Value.ValueKind == JsonValueKind.String
+                            ? "\"" + property.Value.GetString() + "\"" : property.Value.GetRawText();
+                        var assignment = Inspect(property.Name + ":" + assignedValue);
+                        if (assignment.RequiresQuarantine) return assignment;
                         var value = Visit(property.Value); if (value.RequiresQuarantine) return value;
                     }
                 else if (element.ValueKind == JsonValueKind.Array)

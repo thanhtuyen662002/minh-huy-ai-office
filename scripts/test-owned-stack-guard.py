@@ -877,6 +877,10 @@ class OwnedStackGuardTests(unittest.TestCase):
                 original = {"wasAlreadyCommitted": False}
                 namespace = {"sql": sql, "no_effect": no_effect, "command": lambda: b"owned-command", "body": b"owned-command",
                     "nonce": "owned-nonce", "original": original,
+                    "signed_at": 1700000000, "renewal_count": 8,
+                    "timing": lambda *args: self.assertFalse(current["granted"]),
+                    "renew_and_replay": lambda: self.assertFalse(current["granted"]),
+                    "renew_owned": lambda: self.assertFalse(current["granted"]),
                     "call": lambda *args, **kwargs: (200, {"wasAlreadyCommitted": True}), "receipt": lambda status, value, **kwargs: value}
                 if fault is None:
                     exec(compile(module, "inert_listener_permissions", "exec"), namespace)
@@ -885,6 +889,101 @@ class OwnedStackGuardTests(unittest.TestCase):
                     with self.assertRaises(AssertionError): exec(compile(module, "inert_listener_permissions", "exec"), namespace)
                     self.assertEqual(["grant", "restore"] if fault == "ineffective-grant" else [], effects)
                 self.assertFalse(current["granted"])
+
+    def test_listener_foreground_renewal_rejects_changed_history_extra_receipts_and_extended_duration(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == "renew_owned")
+        factory = ast.parse("def factory():\n    renewal_count = 0\n    return None\n").body[0]
+        factory.body.insert(1, helper)
+        factory.body[-1].value = ast.Name(id='renew_owned', ctx=ast.Load())
+        module = ast.fix_missing_locations(ast.Module(body=[factory], type_ignores=[]))
+        for fault in (None, "gap", "receipt", "extra-receipt", "no-receipt", "duration", "denial"):
+            with self.subTest(fault=fault):
+                histories = [["A" * 64, "B" * 64, "4"], ["A" * 64, "B" * 64, "5"]]
+                if fault == "gap": histories[1][0] = "C" * 64
+                if fault == "receipt": histories[1][1] = "C" * 64
+                if fault == "extra-receipt": histories[1][2] = "6"
+                if fault == "no-receipt": histories[1][2] = "4"
+                effects = []
+                def history(nonce): effects.append(('history', nonce)); return histories.pop(0)
+                def call(body, **kwargs): effects.append(('call', kwargs['nonce'])); return (403 if fault == "denial" else 200), {}
+                def receipt(status, value, **kwargs):
+                    self.assertEqual(200, status)
+                    self.assertEqual({'process': 'owned-owner', 'epoch': 1, 'coverage': False}, kwargs)
+                    return {'lease': {'heartbeatAtUtc': '2026-10-10T00:00:00+00:00',
+                        'expiresAtUtc': '2026-10-10T00:00:' + ('31' if fault == "duration" else '30') + '+00:00'}}
+                namespace = {'owner': 'owned-owner', 'command': lambda *args: b'owned-renew', 'uuid': uuid,
+                    'time': SimpleNamespace(time=lambda: 1700000000), 'immutable_history': history,
+                    'call': call, 'receipt': receipt, 'timestamp': listener_smoke.datetime.fromisoformat}
+                exec(compile(module, 'actual-owned-renewal', 'exec'), namespace)
+                action = namespace['factory']()
+                if fault is None:
+                    captured = action()
+                    self.assertEqual(b'owned-renew', captured[0])
+                    self.assertEqual([('history', captured[1]), ('call', captured[1]), ('history', captured[1])], effects)
+                else:
+                    with self.assertRaises(AssertionError): action()
+                    self.assertEqual(1, sum(kind == 'call' for kind, _ in effects))
+
+    def test_listener_renewal_history_refuses_malformed_metadata_without_echo(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding='utf-8'))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'verify')
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == 'immutable_history')
+        module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
+        valid = 'A' * 64 + '|' + 'B' * 64 + '|5'
+        for value in (valid, 'PRIVATE_CREDENTIAL', valid + '\nPRIVATE_CREDENTIAL', valid.replace('|5', '|-1'), valid.replace('A', 'g')):
+            namespace = {'sql': lambda query: value, 'account_scope': 'owned-scope', 're': re}
+            exec(compile(module, 'actual-renewal-history', 'exec'), namespace)
+            if value == valid:
+                self.assertEqual(['A' * 64, 'B' * 64, '5'], namespace['immutable_history']('owned-nonce'))
+            else:
+                with self.assertRaisesRegex(AssertionError, '^Invalid owned renewal history metadata$'):
+                    namespace['immutable_history']('owned-nonce')
+
+    def test_listener_restored_positive_replays_captured_renewal_and_requires_unchanged_graph(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding='utf-8'))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'verify')
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == 'renew_and_replay')
+        module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
+        for fault in (None, 'ack', 'graph'):
+            snapshots = iter((['original-graph'], ['changed-graph' if fault == 'graph' else 'original-graph']))
+            def call(body, **kwargs):
+                self.assertEqual(b'captured-renew', body)
+                self.assertEqual({'nonce': 'captured-nonce', 'signed_at': 1700000000}, kwargs)
+                return 200, {'wasAlreadyCommitted': True, 'changed': fault != 'ack'}
+            def receipt(status, value, **kwargs):
+                self.assertEqual({'coverage': False, 'already': True}, kwargs)
+                return value
+            namespace = {'renew_owned': lambda: (b'captured-renew', 'captured-nonce', 1700000000,
+                {'wasAlreadyCommitted': False, 'changed': True}), 'snapshot': lambda: next(snapshots), 'call': call, 'receipt': receipt}
+            exec(compile(module, 'actual-renewal-replay', 'exec'), namespace)
+            if fault is None: namespace['renew_and_replay']()
+            else:
+                with self.assertRaises(AssertionError): namespace['renew_and_replay']()
+
+    def test_listener_timing_uses_one_server_snapshot_and_only_fixed_flags(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding='utf-8'))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'verify')
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == 'timing')
+        module = ast.fix_missing_locations(ast.Module(body=[helper], type_ignores=[]))
+        for result in ('1|1|1', '0|1|1', '1|0|1', '1|1|0', 'PRIVATE_CREDENTIAL', '1|1|1\nPRIVATE_CREDENTIAL'):
+            queries, messages = [], []
+            def sql(query): queries.append(query); return result
+            namespace = {'sql': sql, 're': re, 'print': messages.append,
+                **{name: 'owned-id' for name in ('tenant', 'company', 'account', 'service')}}
+            exec(compile(module, 'actual-owned-clock', 'exec'), namespace)
+            if re.fullmatch(r'[01]\|[01]\|[01]', result):
+                self.assertEqual(result, namespace['timing']('owned-nonce', 1700000000))
+                self.assertEqual(['INFO owned listener timing expired-receipt/live-lease/fresh-signature=' + result], messages)
+            else:
+                with self.assertRaisesRegex(AssertionError, '^Invalid owned listener timing metadata$'):
+                    namespace['timing']('owned-nonce', 1700000000)
+                self.assertEqual([], messages)
+            self.assertEqual(1, len(queries))
+            self.assertEqual(1, queries[0].count('SYSUTCDATETIME()'))
+            self.assertIn('DATEDIFF_BIG(millisecond', queries[0])
+            self.assertIn('l.OwnerId=r.OwnerId AND l.Epoch=r.ListenerEpoch', queries[0])
 
     def test_final_group_read_race_cleanup_attempts_all_owned_resources_and_preserves_first_failure(self):
         # Execute only the shipping helper's orchestration with inert dependencies.

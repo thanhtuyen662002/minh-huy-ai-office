@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Pushed686d42 source/PID1 checkpoint scoped approval6098102773; Build38056772338 actual114226761326 IN_PROGRESS, six prerequisites and Governance38056772438 SUCCESS. Own native claim/source/retained browser closure; do not infer acceptance. Local versioned source/output quarantine plus sealed source preparation49 policy/6 preparation/32 retained source controls87 PASS/full1752 Persistence0skip0warnings; native positive preparation assertion UNEXECUTED. Freeze/review before next push. Existing AI Gateway primary environment values absent in checked scopes/default files; server secret access unknown and real model UNEVALUATED. Qualified context/grounding/protected notes/effect rollback wrapper/glossary/dispositions/completion/outbox/DI/UI/278/279/full233 remain ACTIVE.'
+next_action: 'Own278/Draft288 SAME branch. Remote686d42 Build38056772338 FAILED at retained listener original ACK114226761326; quality114229033166 FAILED, six prerequisites/Governance38056772438 SUCCESS. No claim/source/browser acceptance. Frozen cecee211 review WITHHELD6098304670 on decoded JSON assignment P2. Local combined repair preserves unchanged5 reviewer probes, adds decoded key/value inspection and foreground owned listener renewals outside fullgraph windows; original30s/100ACK/expiry/rollback/current queued authority contracts remain strict. Local103 focused/1768 Persistence0skip and56 Python PASS. Freeze/review repair BEFORE push, then own renewed exact native/all8. Existing Gateway required primary values absent in checked scopes/default files, server access unknown; real model NOT RUN. Grounded qualified context/protected notes/effect rollback wrapper/glossary/dispositions/completion/outbox/DI/UI/278/279/full233 ACTIVE.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1579,8 +1579,8 @@ group_278_quarantine_checkpoint:
   remote_build: 38056772338
   remote_governance: 38056772438
   remote_actual: 114226761326
-  remote_state: IN_PROGRESS_native_six_prerequisites_and_governance_SUCCESS
-  local_state: source_preparation_and_output_quarantine_verified_pending_frozen_review
+  remote_state: FAILED_retained_listener_original_ACK_before_new_claim_source_modes
+  local_state: cecee_review_WITHHELD6098304670_decoded_assignment_P2_repaired_locally_pending_renewed_review
   policy: group-secret-quarantine-v1
   local_policy_controls: 49
   local_source_preparation_controls: 6
@@ -1593,3 +1593,33 @@ group_278_quarantine_checkpoint:
   actual_provider_call_or_model_outputs: NONE_UNEVALUATED
   worker_notes_effects_or_DI: incomplete
   next: 'Close exact686 CI before a later approved push. Review frozen quarantine/source-preparation checkpoint, then qualified context and grounded proposals, protected same-group SQL notes/glossary, native note-effect rollback/MARS proof, atomic notes/evidence/dispositions/completion/NotesCommitted, worker DI/UI and actual frozen100/30 model evaluation.278/279/full233 stay ACTIVE.'
+
+
+group_278_quarantine_listener_repair:
+  remote_head: 686d42ee432b27cf246636c7cf734a6a5a580cad
+  remote_build: 38056772338
+  remote_actual: 114226761326
+  remote_quality: 114229033166
+  remote_governance: 38056772438
+  remote_state: FAILED_retained_listener_original_ACK_expected200_got403_six_prerequisites_and_governance_SUCCESS
+  native_claim_source_or_browser_acceptance: NONE_new_modes_not_reached
+  failure_expiry_cause: UNPROVEN_original_deadline_not_logged
+  withheld_local_head: cecee2117b4b761e92d3cb1e6a3baf02c206514a
+  withheld_review: 6098304670
+  finding: decoded_JSON_name_value_separation_loses_supported_credential_assignment
+  unchanged_original_counterexamples: 5_retained_now_PASS_locally
+  repair: decoded_assignment_inspection_and_explicit_foreground_fixture_renewals_outside_unchanged_graph_windows
+  production_listener_duration: unchanged_30seconds
+  original_replay_and_negative_graph_oracles: retained
+  fresh_expiry_denial_timing: one_SQL_server_snapshot_expired_original_live_same_owner_epoch_signed_age_below90s_margin
+  local_policy_and_counterexample_controls: 65
+  local_preparation_controls: 6
+  retained_source_controls: 32
+  local_focused_controls: 103
+  local_full_persistence: 1768
+  local_python_controls: 56
+  state: local_verified_pending_frozen_independent_review_and_renewed_native_CI
+  native_preparation_positive: UNEXECUTED
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  automatic_notes_effects_and_DI: incomplete
+  next: 'Freeze combined repair and require unchanged5 independent counterexamples plus retained oracles/review closure before approved push; own exact renewed all8/native claim/source/browser CI. Continue grounded qualified context/protected notes/effect retirement rollback/glossary/dispositions/completion/outbox/DI/UI;278/279/full233 stay ACTIVE.'

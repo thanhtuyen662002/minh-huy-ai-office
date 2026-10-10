@@ -90,6 +90,32 @@ public sealed class GroupSecretQuarantineTests
     }
 
     [Theory]
+    [InlineData("{\"pass\\u0077ord\":\"\"}")]
+    [InlineData("{\"password\":null}")]
+    [InlineData("{\"password\":false}")]
+    [InlineData("{\"password\":[]}")]
+    [InlineData("{\"password\":{\"value\":\"PRIVATE_SENTINEL_72691\"}}")]
+    [InlineData("{\"ｐａｓｓｗｏｒｄ\":\"PRIVATE_SENTINEL_72691\"}")]
+    [InlineData("{\"pass\\u200Bword\":\"PRIVATE_SENTINEL_72691\"}")]
+    [InlineData("{\"Authorization\":\"Ba\\u0073ic PRIVATE_SENTINEL_72691\"}")]
+    public void DecodedAssignmentsKeepAllValueKindsAndUnicodeKeyFences(string output)
+    {
+        var decision = GroupSecretQuarantine.InspectOutputJson(output);
+        Assert.True(decision.RequiresQuarantine);
+        Assert.DoesNotContain("PRIVATE_SENTINEL_72691", decision.ToString());
+        Assert.DoesNotContain("PRIVATE_SENTINEL_72691", JsonSerializer.Serialize(decision));
+    }
+
+    [Theory]
+    [InlineData("{\"requested_deadline_text\":null}")]
+    [InlineData("{\"password_reset\":\"Quên mật khẩu, cần hỗ trợ reset\"}")]
+    [InlineData("{\"notes\":[{\"quantity\":123456,\"verified\":false,\"problem\":\"Tra cứu tồn kho\"}]}")]
+    public void AssignmentInspectionPreservesUnrelatedBusinessValues(string output)
+    {
+        Assert.False(GroupSecretQuarantine.InspectOutputJson(output).RequiresQuarantine);
+    }
+
+    [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("[]")]
