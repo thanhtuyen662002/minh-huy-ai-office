@@ -106,8 +106,10 @@ public sealed class GroupConnectorSpoolTests
     {
         using var fixture = new Fixture();
         Assert.Throws<UnauthorizedAccessException>(() => GroupConnectorSpoolAdmission.Filter(fixture.Enrollment, fixture.Payload(), fixture.Lease, Fixture.Now, GroupIngressRuntimePolicy.Live));
-        var controlled = fixture.Enrollment with { Qualification = fixture.Qualification(environment: GroupQualificationEnvironment.ControlledAccount) };
-        Assert.NotNull(GroupConnectorSpoolAdmission.Filter(controlled, fixture.Payload(), fixture.Lease, Fixture.Now, GroupIngressRuntimePolicy.Live));
+        using var live = new Fixture(controlled: true);
+        var controlled = live.Enrollment with { Qualification = live.Qualification(environment: GroupQualificationEnvironment.ControlledAccount) };
+        Assert.NotNull(GroupConnectorSpoolAdmission.Filter(controlled, live.Payload(), live.Lease, Fixture.Now, GroupIngressRuntimePolicy.Live));
+        Assert.Throws<UnauthorizedAccessException>(() => GroupConnectorSpoolAdmission.Filter(controlled, live.Payload(), live.Lease, Fixture.Now, Fixture.Policy));
         foreach (var kind in new[] { GroupSourceEventKind.Edit, GroupSourceEventKind.Recall })
         {
             var payload = fixture.Payload(kind == GroupSourceEventKind.Recall ? "" : "edit") with
@@ -177,7 +179,8 @@ public sealed class GroupConnectorSpoolTests
     {
         internal static DateTimeOffset Now => GroupServiceAuthenticatorTests.Fixture.Now;
         internal static GroupIngressRuntimePolicy Policy => GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true);
-        internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new();
+        internal readonly GroupServiceAuthenticatorTests.Fixture Auth;
+        internal Fixture(bool controlled = false) { Auth = new(controlled: controlled); }
         internal readonly byte[] Key = RandomNumberGenerator.GetBytes(32);
         internal readonly GroupSpoolContentProtector Protector = new();
         internal GroupConnectorArtifact Artifact => new(Auth.External.Provider, Auth.Account.PackageVersion, Auth.Account.GitCommit);
@@ -197,6 +200,32 @@ public sealed class GroupConnectorSpoolTests
         }
         internal GroupConnectorSpoolAdmission Admit(GroupIngressPayload payload) => GroupConnectorSpoolAdmission.Filter(Enrollment, payload, Lease, Now, Policy);
         public void Dispose() { CryptographicOperations.ZeroMemory(Key); Auth.Dispose(); }
+    }
+
+    [Theory]
+    [InlineData("synthetic")]
+    [InlineData("owned-fixture")]
+    public void KnownFixtureArtifactsCannotBePromotedByControlledQualificationMetadata(string marker)
+    {
+        using var fixture = new Fixture(controlled: true);
+        var artifact = fixture.Artifact with
+        {
+            Provider = marker == "synthetic" ? "synthetic" : fixture.Artifact.Provider,
+            PackageVersion = marker == "owned-fixture" ? "owned-fixture" : fixture.Artifact.PackageVersion
+        };
+        var source = fixture.Enrollment.Source with { ExternalIdentity = fixture.Enrollment.Source.ExternalIdentity with { Provider = artifact.Provider } };
+        var qualification = new GroupConnectorQualification(source.Scope.TenantId, source.Scope.CompanyId, source.ConnectorAccountId,
+            source.ExternalIdentity.AccountId, artifact, GroupQualificationEnvironment.ControlledAccount,
+            fixture.Qualification().Observations);
+        var current = fixture.Enrollment with { Artifact = artifact, Source = source, Qualification = qualification };
+        var payload = fixture.Payload() with { Event = fixture.Payload().Event with { Identity = source.ExternalIdentity } };
+        Assert.Throws<UnauthorizedAccessException>(() => GroupConnectorSpoolAdmission.Filter(current, payload, fixture.Lease, Fixture.Now, GroupIngressRuntimePolicy.Live));
+        // A fixture spool captured under the isolated Development policy cannot
+        // become live merely by changing its trusted qualification metadata.
+        using var owned = new Fixture();
+        var stored = owned.Protector.Protect(owned.Admit(owned.Payload()), owned.Key, "spool-v1");
+        var promoted = owned.Enrollment with { Qualification = owned.Qualification(environment: GroupQualificationEnvironment.ControlledAccount) };
+        Assert.Throws<UnauthorizedAccessException>(() => owned.Protector.Recover(stored, new byte[16], promoted, owned.Lease, Fixture.Now, GroupIngressRuntimePolicy.Live));
     }
 
     [Fact]

@@ -536,3 +536,11 @@ This checkpoint does not implement filesystem durability/capacity/ACK deletion,
 provider session/listener, key provisioning, connector HMAC client, broker dispatch
 or worker. Focused unit controls cover prefilter/revocation/tamper/zeroing/restart;
 no live qualification or complete-history claim is made. Full277/278/279/233 remain.
+
+Independent3b4 review found a known-fixture promotion gap: changing qualification
+environment to ControlledAccount could admit a synthetic/owned-fixture artifact
+under Live. Admission now mirrors the authenticator's explicit artifact fence:
+Live refuses either known fixture marker; the owned synthetic policy requires
+both markers and Synthetic environment.44 focused spool controls and36 retained
+authenticator controls PASS80/0skip, including a distinct controlled-artifact
+positive and synthetic-policy refusal. Original independent closure is required.

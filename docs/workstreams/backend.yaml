@@ -1016,3 +1016,9 @@ group_spool_envelope_foundation:
   result: 'Mechanical trusted-enrollment admission filters DM/self/echo before private content/key/storage, checks exact current Ingest/source/artifact qualification/live lease; AES256-GCM dedicated spool AAD binds scope/account/service/epoch/version/deletion/event/body/time/key. Fresh recovery checks authority/lease/qualification before decrypt, rewraps only transport ownership and zeros released buffers.'
   local: '42 focused admission/envelope/recovery/tamper/zeroing controls PASS,0 skipped; changed C# formatting/diff/YAML PASS. Not wired into a provider/filesystem/client or API; foundation review pending.'
   next: 'Own54b native CI to terminal and repair same PR on red. Freeze scoped foundation review, implement bounded durable file spool/ACK recovery and trusted connector HMAC client; reference-only broker/authorized worker/278/279/full233 remain.'
+
+group_spool_known_fixture_promotion_repair:
+  predecessor: 3b4f436
+  review: 'Independent review found known synthetic/owned-fixture artifact could be promoted with ControlledAccount metadata, contrary to existing authenticator fence.'
+  repair: 'Live explicitly refuses synthetic provider or owned-fixture package; owned synthetic policy requires both markers and Synthetic environment. Separate controlled artifact remains positive; recovery refuses known-fixture promotion before private decrypt.'
+  local: '44 focused spool and36 retained authenticator controls PASS80/0skip; original independent closure pending. No filesystem/client/provider operation shipped.'

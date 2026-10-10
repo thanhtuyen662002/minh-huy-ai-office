@@ -68,7 +68,9 @@ public sealed class GroupConnectorSpoolAdmission
             qualification.TenantId != source.Scope.TenantId || qualification.CompanyId != source.Scope.CompanyId ||
             qualification.ConnectorAccountId != source.ConnectorAccountId || qualification.ExternalAccountId != source.ExternalIdentity.AccountId ||
             enrollment.Artifact.Provider != source.ExternalIdentity.Provider ||
-            (policy.IsSyntheticFixture ? qualification.Environment != GroupQualificationEnvironment.Synthetic :
+            (policy.IsSyntheticFixture ? enrollment.Artifact.Provider != "synthetic" || enrollment.Artifact.PackageVersion != "owned-fixture" ||
+                qualification.Environment != GroupQualificationEnvironment.Synthetic :
+                enrollment.Artifact.Provider == "synthetic" || enrollment.Artifact.PackageVersion == "owned-fixture" ||
                 !qualification.AllowsLiveProfile(GroupConnectorProfile.Receive, source.Scope.TenantId, source.Scope.CompanyId,
                     source.ConnectorAccountId, source.ExternalIdentity.AccountId, enrollment.Artifact, nowUtc))) throw Denied();
     }
