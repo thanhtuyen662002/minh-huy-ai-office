@@ -17,8 +17,15 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(handle); ArgumentNullException.ThrowIfNull(messageIds);
-        if (messageIds.Count is < 1 or > 100) throw Unavailable();
-        var selected = messageIds.Take(101).ToArray();
+        // Freeze actual selected identities without IList Count/indexer fast
+        // paths: the source/evidence set must never be silently truncated.
+        var actual = new List<Guid>(100);
+        foreach (var id in messageIds)
+        {
+            if (actual.Count == 100) throw Unavailable();
+            actual.Add(id);
+        }
+        var selected = actual.ToArray();
         if (selected.Length is < 1 or > 100 || selected.Any(x => x == Guid.Empty) || selected.Distinct().Count() != selected.Length)
             throw Unavailable();
         ValidateEntry(handle, cancellationToken);

@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288 remote dfba2936c5d9fa42c58b0855717cd6134a7f617e scopedAPPROVED6100743752 rootFULLbeforeexactpush. Build38075629274/native114281880568 ownedIN_PROGRESS; Gov38075629275SUCCESS. Prior450 terminalRED closed FULLnative106PASS44missing4failure/noartifact and FULL.NET2493zeroFailSkip; original two noteproofP2s/statisticsname/EF witness and IListcodec findings sourceclosed, complete450failurecauseUNPROVEN. Renewed102exact/all8/Gov/rootFULLnative.NET/all6ORIGINALimages mandatory, no native note acceptance yet. Separate unpublished HostAttention3/HostObserved3 versionedexpand replacesonlyoriginCK preserving1/1and2/2; reader closedhostpayload matchesexact evidence/reason and unconfirmedattentionhead, exposesrequestprovenance separately frombusinessconfirmation, retainsopaqueAI/glossary. DirectcombinedactualIDenumeration fixes IListselectionloss.34newreader+2migration/current240reader-model controls PASSzeroFailSkip; fullPersistence and schemaformat/pending-model/script gates at checkpoint. Obtain exact frozen schema-reader review before any laterpush; do notcancel currentCI. Continue fixedhoststore/mixedmedia-gap honesty/rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+next_action: 'Own278/Draft288 remote dfba2936c5d9fa42c58b0855717cd6134a7f617e scopedAPPROVED6100743752 rootFULLbeforeexactpush. Build38075629274/native114281880568 ownedIN_PROGRESS; Gov38075629275SUCCESS. Prior450 terminalRED closed FULLnative106PASS44missing4failure/noartifact and FULL.NET2493zeroFailSkip; original two noteproofP2s/statisticsname/EF witness and IListcodec findings sourceclosed, complete450failurecauseUNPROVEN. Renewed102exact/all8/Gov/rootFULLnative.NET/all6ORIGINALimages mandatory, no native note acceptance yet. Separate unpublished HostAttention3/HostObserved3 versionedexpand replacesonlyoriginCK preserving1/1and2/2; reader closedhostpayload matchesexact evidence/reason and unconfirmedattentionhead, exposesrequestprovenance separately frombusinessconfirmation, retainsopaqueAI/glossary. DirectcombinedactualIDenumeration fixes IListselectionloss.34newreader+2migration/current240reader-model controls PASSzeroFailSkip; fullPersistence and schemaformat/pending-model/script gates at checkpoint. Obtain exact frozen schema-reader review before any laterpush; do notcancel currentCI. Continue fixedhoststore/mixedmedia-gap honesty/rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop. SeparateoriginalsourceIList fastpath repaired directactual100/101sentinel/disposal,4new/full2052PersistencePASS0FailSkip; bad30 executablemigrationBOM finding repaired UTF8LF/fullchangedformatPASS. Freezecombinedschema-reader-source-format review beforelaterpush; currentCI remainsowned.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2082,3 +2082,17 @@ group_278_host_origin_reader_preparation:
   schema_gates: format_no_pending_model_forward_only_script_YAML2_diff_PASS
   independent_frozen_review: PENDING_before_later_push
   native_host_pipeline_model_full_acceptance: NOT_RUN_UNQUALIFIED_ACTIVE_INCOMPLETE
+
+group_278_original_source_enumeration_repair:
+  local_parent_head: bad30f989f5ce7fe1ccad0f460e7a6ec51fb796f
+  original_source_bound: direct_actual_enumeration_preserve_all100_refuse_101_before_keys_dispose
+  new_controls: 4_PASS_zero_failures_skips
+  first_test_failure: incorrect_expected_fixed_error_wording_repaired_rerun_green
+  complete_local_persistence: 2052_PASS_zero_failures_skips
+  migration_review_finding: bad30_executable_UTF8_BOM_CHARSET_gate_reproduced
+  migration_repair: UTF8_without_BOM_LF_no_operation_change
+  full_changed_executable_format: PASS
+  exact_remote_dotnet_log: dfba_114281880418_FULL_root_collected_2563_projects_6_520_25_2012_zeroFailSkip
+  native_current_remote: 114281880568_owned_IN_PROGRESS_no_current_SQL_acceptance
+  renewed_combined_frozen_review: PENDING_before_later_push
+  full_278_279_233_model: ACTIVE_INCOMPLETE_NOT_RUN_UNQUALIFIED
