@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 28065657acbf9a596fefaeb7e2b587a07309a642
     state: in_progress
-    next: 'Own278/Draft288 remote280 source scopedAPPROVED6102206802 ROOT FULLread, Build38086639444/native114314414446 ACTIVE107 and Gov38086639370 SUCCESS; exact all8/FULL.NET2685 prediction/native107/six ORIGINALs not yet closed.570 terminalRED114308583350/quality114312741730 full log inspected; raw GUID value/casing not retained, specific cause unproven; three typed projections repaired,119Python/20unowned/coldSQL and all scoped approvals closed. Local exact source/account coverage snapshots detect additions/reconnect/changed metadata when bool remains true; bounded256+sentinel/key-await/release/locked fences,26new319focused/full2160Persistence/Release0W0E/format PASS; source review/native mutation pending. Do not supersede meaningful active CI. Continue durable gap carrier/backlog/rawfrontier/retry/context/DIUI/real100-30eval/279/full233/no partialmerge.'
+    next: 'Own278/Draft288 remote280 Build38086639444/native114314414446 ACTIVE107/Gov38086639370SUCCESS; rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. All8/native107/six ORIGINALs not closed; do not supersede meaningful active CI. Local4b exact coverage source APPROVED6102317836 ROOT FULLfetched/read:319retained+16independent/8oldcounterexamples fail-before-pass-after/SQL160actualEF/formatRelease0W0E. New separate owned coverage SQL proof preparation:122Python/22actualunowned/fourcoldprofiles/original104/DebugRelease0W0E/format PASS; source review/native108 NOT_RUN_UNQUALIFIED. Original570 terminalRED evidence and unproven raw GUID cause retained. Continue durable gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; permanent256refusal is not received-work acceptance; no partialmerge.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote280 source scopedAPPROVED6102206802 ROOT FULLread, Build38086639444/native114314414446 ACTIVE107 and Gov38086639370 SUCCESS; exact all8/FULL.NET2685 prediction/native107/six ORIGINALs not yet closed.570 terminalRED114308583350/quality114312741730 full log inspected; raw GUID value/casing not retained, specific cause unproven; three typed projections repaired,119Python/20unowned/coldSQL and all scoped approvals closed. Local exact source/account coverage snapshots detect additions/reconnect/changed metadata when bool remains true; bounded256+sentinel/key-await/release/locked fences,26new319focused/full2160Persistence/Release0W0E/format PASS; source review/native mutation pending. Do not supersede meaningful active CI. Continue durable gap carrier/backlog/rawfrontier/retry/context/DIUI/real100-30eval/279/full233/no partialmerge.'
+next_action: 'Own278/Draft288 remote280 Build38086639444/native114314414446 ACTIVE107/Gov38086639370SUCCESS; rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. All8/native107/six ORIGINALs not closed; do not supersede meaningful active CI. Local4b exact coverage source APPROVED6102317836 ROOT FULLfetched/read:319retained+16independent/8oldcounterexamples fail-before-pass-after/SQL160actualEF/formatRelease0W0E. New separate owned coverage SQL proof preparation:122Python/22actualunowned/fourcoldprofiles/original104/DebugRelease0W0E/format PASS; source review/native108 NOT_RUN_UNQUALIFIED. Original570 terminalRED evidence and unproven raw GUID cause retained. Continue durable gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; permanent256refusal is not received-work acceptance; no partialmerge.'
 
 
 blocked_by:
@@ -1715,4 +1715,13 @@ exact_coverage_dependency_snapshot:
   evidence: 'Remote280 renewed107 CI ACTIVE/GovSUCCESS. RootFULL scoped repair6102206802 and prior06d6102067087/bef6102145588 read. Source changes below are local/unpushed; no remote107/new-source/native/model acceptance.'
   implementation: 'Exact scoped source/account gap metadata snapshots replace bool-only comparisons around key/release and locked effect dependency fences; both kinds read independently,256plus1 sentinel/malformed beforekeys. PublicHasCoverageGap remains conservative; no schema/permission/provider/completion/new gap effects.'
   local: '26new coverage controls and all319 source-reader tests/full2160Persistence zeroFailSkip; changed format/fullRelease0W0E PASS. InMemory only; original570 failed evidence preserved. ERP264/company266 critical-path blocks untouched.'
-  next: 'Frozen full source review/native concurrent mutation; own remote280107 terminal CI then later approved source push. Required durable gap/backlog/zero-message carrier/raw terminal frontier/runtime remain; do not claim permanent overflow refusal satisfies received-work policy.'
+  review: 'Scoped source APPROVED6102317836 ROOT FULLfetched/read;319retained+16independent controls,8counterexamples fail on280/pass4b, actual frozen SQLServer translation/SQL160, full9file scopes/formatRelease0W0E. Native/concurrent/fullfeature/model/merge withheld.'
+  next: 'Own remote280107 terminal CI; later approved source/proof push must qualify its own exact native108. Required durable gap/backlog/zero-message carrier/raw terminal frontier/runtime remain; permanent overflow refusal does not satisfy received-work policy.'
+
+exact_coverage_native_preparation:
+  source_parent: 4b711e85fe6e043a453e6886f8da5572416f107a
+  scope: 'Fourth closed owned profile slot7 actual Core ingress then source-reader gap reconnection/additions/key-await refusal; complete256 and257 beforekeys. Fixed private material disposal/zeroing inspection only; no production API/schema/right/model delta.'
+  local: '122Python PASS/22actualunowned beforeresources/fourUTF8AST/original104bytes/allfourcoldrenderedprofiles/changedCSharpformat/DebugRelease0W0E. All33 retained snapshots and original profiles required.'
+  qualification: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED
+  next: 'Frozen full proof review after checkpoint; own active280107 terminal CI before push then own exact108/all8/FULL.NET2711 prediction/six ORIGINALs. No independent-process concurrency, complete gap workflow or full278 acceptance claimed.'

@@ -32,6 +32,9 @@ HOST_RUNTIME_LINES = {
     "automatic-host-expiry": "PASS owned automatic host nine flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
     "automatic-host-key-expiry": "PASS owned automatic host configured write key outside SQL expiry witness no effects clock rollback denied",
     "automatic-host-commit": "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"}
+COVERAGE_RUNTIME_LINES = {
+    "coverage-prepare": "PASS owned coverage actual inbox allocation two original text sources zero claims effects",
+    "coverage-check": "PASS owned coverage SQL already incomplete reconnection source account additions key await refusal disposed material exact max256 overflow257 before keys seven reads zero writes unchanged effects"}
 
 
 def canonical(value):
@@ -107,9 +110,9 @@ def retained_snapshot(*, tenant, company, sources, accounts, sql):
 
 def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, proof="notes"):
     reference.require_owned(directory, api)  # Before config/callback/SQL/process.
-    assert type(proof) is str and proof in ("notes", "no_work", "host_only")
+    assert type(proof) is str and proof in ("notes", "no_work", "host_only", "coverage")
     assert callable(sql) and callable(prepare_source)
-    runtime_lines = {"notes": RUNTIME_LINES, "no_work": NO_WORK_RUNTIME_LINES, "host_only": HOST_RUNTIME_LINES}[proof]
+    runtime_lines = {"notes": RUNTIME_LINES, "no_work": NO_WORK_RUNTIME_LINES, "host_only": HOST_RUNTIME_LINES, "coverage": COVERAGE_RUNTIME_LINES}[proof]
     commit_mode = list(runtime_lines)[-1]
     tenant, company, service = (canonical(value) for value in (tenant, company, service))
     installation = canonical(manifest["AIOFFICE_INSTALLATION_ID"])
@@ -139,7 +142,8 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         assert re.fullmatch(r"[0-9A-F]{64}", value)
         return value
     def immutable():
-        values = tuple(digest(table, order) for table, order in SOURCE_TABLES[:7] if table not in ("GroupSourceStates", "GroupIngressInbox")) + (
+        values = tuple(digest(table, order) for table, order in SOURCE_TABLES[:7] if table not in ("GroupSourceStates", "GroupIngressInbox")
+            and not (proof == "coverage" and table == "GroupCoverageGaps")) + (
             digest("GroupSourceStates", "BindingId", "TenantId,CompanyId,BindingId,CommittedSequence"),
             digest("GroupServiceGrants", "ServiceId,Capability"))
         for table, predicate in (("GroupBindings", base + f" AND Id='{source}'"),
@@ -188,7 +192,12 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             result = subprocess.run([*command, mode], input=configuration, env=environment, capture_output=True, text=True, timeout=170)
             assert not result.stderr, "Owned automatic note executable emitted unexpected diagnostics"
             reference.require_reference_result(result, mode, [expected])
-            unchanged(); no_gaps()
+            unchanged()
+            if proof != "coverage" or mode != commit_mode: no_gaps()
+            else:
+                assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WHERE {scope}),N'|',"
+                    f"(SELECT COUNT(*) FROM aioffice.GroupAccountCoverageGaps WHERE {base} AND ConnectorAccountId='{account}'),N'|',"
+                    f"(SELECT COUNT(*) FROM aioffice.GroupListenerCommandReceipts WHERE {base} AND ConnectorAccountId='{account}'));") == "257|2|0"
             assert immutable() == immutable_before, "Automatic note effects changed protected source originals"
             assert digest("GroupSourceStates", "BindingId", columns) == expected_state
             graph = tuple(digest(table, order) for table, order in SOURCE_TABLES[6:9])
@@ -215,12 +224,21 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "0", "0", "0", "0", "0"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=2 AND NoteCount=0 AND SelectedMessageCount=2;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=2 AND MessageRevision=1;") == "2"
-            else:
+            elif proof == "host_only":
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "1", "1", "2", "1", "1"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=3 AND NoteCount=1 AND SelectedMessageCount=2;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=7 AND MessageRevision=1;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=3 AND VerificationLevel=3;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestEvidence WHERE {scope} AND Kind=2;") == "2"
+            else:
+                assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in EFFECT_TABLES)
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WHERE {scope} AND AfterCommittedSequence=2"
+                    " AND Reason='owned-coverage-probe' AND DATEPART(TZOFFSET,OpenedAtUtc)=0;") == "257"
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WHERE {scope} AND ReconnectedAtUtc IS NOT NULL"
+                    " AND ReconnectedAtUtc>=OpenedAtUtc AND DATEPART(TZOFFSET,ReconnectedAtUtc)=0;") == "1"
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupAccountCoverageGaps WHERE {base} AND ConnectorAccountId='{account}'"
+                    " AND ListenerEpoch=1 AND Reason IN ('listener-started','listener-expired') AND RecordedAtUtc>=OpenedAtUtc"
+                    " AND DATEPART(TZOFFSET,OpenedAtUtc)=0 AND DATEPART(TZOFFSET,RecordedAtUtc)=0;") == "2"
     except BaseException as error:
         failure = error
     finally:
@@ -238,5 +256,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         print("PASS actual automatic note combined SQL four protected AI host notes five evidence atomic twenty-one effects both expiry rollback original replay no duplicate unchanged all retained scopes", flush=True)
     elif proof == "no_work":
         print("PASS actual automatic no-work SQL receipt two dispositions expiry rollback exact replay no duplicate no notes outbox model unchanged all retained scopes", flush=True)
-    else:
+    elif proof == "host_only":
         print("PASS actual automatic host SQL protected UnsupportedMedia note two metadata evidence Attention receipt atomic nine effects both expiry rollback original replay no AI IT authority unchanged all retained scopes", flush=True)
+    else:
+        print("PASS actual coverage SQL exact source account additions reconnection key await context refusal disposed material max256 overflow257 before keys no effects unchanged all retained scopes", flush=True)

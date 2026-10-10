@@ -106,10 +106,10 @@ class OwnedStackGuardTests(unittest.TestCase):
         tenant, company, service, old_source, old_account, source, account, installation = (str(uuid.uuid4()) for _ in range(8))
         events = [str(uuid.uuid4()), str(uuid.uuid4())]; phase = -1; calls = []; queries = []
         runtime_lines = {"notes": automatic_smoke.RUNTIME_LINES, "no_work": automatic_smoke.NO_WORK_RUNTIME_LINES,
-            "host_only": automatic_smoke.HOST_RUNTIME_LINES}[proof]
+            "host_only": automatic_smoke.HOST_RUNTIME_LINES, "coverage": automatic_smoke.COVERAGE_RUNTIME_LINES}[proof]
         commit_phase = len(runtime_lines) - 1
         effect_counts = {"notes": (1, 2, 4, 4, 5, 1, 4), "no_work": (1, 2, 0, 0, 0, 0, 0),
-            "host_only": (1, 2, 1, 1, 2, 1, 1)}[proof]
+            "host_only": (1, 2, 1, 1, 2, 1, 1), "coverage": (0, 0, 0, 0, 0, 0, 0)}[proof]
         def sql(query):
             queries.append(query)
             if query.startswith("SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupBindings"):
@@ -126,7 +126,8 @@ class OwnedStackGuardTests(unittest.TestCase):
                 if fault == "source-mutation" and phase >= 1 and f"BindingId='{source}'" in query and "GroupMessageRevisions" in query: return "B" * 64
                 return "A" * 64
             if "CONCAT" in query:
-                if "GroupAccountCoverageGaps" in query: return "0|1|0" if fault == "gap" else "0|0|0"
+                if "GroupAccountCoverageGaps" in query:
+                    return "0|1|0" if fault == "gap" else "257|2|0" if proof == "coverage" and phase == commit_phase else "0|0|0"
                 if "GroupIngressInbox" in query: return "2|1|2"
                 self.fail("Unexpected automatic aggregate oracle")
             if "GroupSourceStates" in query: return "1"
@@ -137,6 +138,9 @@ class OwnedStackGuardTests(unittest.TestCase):
             if "Outcome=2" in query: return "1" if "GroupWorkCommitReceipts" in query else "2"
             if "Outcome=3" in query: return "1"
             if "Outcome=7" in query or "Kind=2" in query: return "2"
+            if proof == "coverage" and "GroupCoverageGaps" in query:
+                return "0" if fault == "coverage-incomplete" else "1" if "ReconnectedAtUtc IS NOT NULL" in query else "257"
+            if proof == "coverage" and "GroupAccountCoverageGaps" in query: return "2"
             for table, count in zip(automatic_smoke.EFFECT_TABLES, effect_counts):
                 if "FROM aioffice." + table + " WHERE " in query:
                     if fault == "partial-effect" and phase == commit_phase and table == ("GroupRequestEvidence" if proof == "notes" else "GroupWorkSourceDispositions"):
@@ -188,6 +192,38 @@ class OwnedStackGuardTests(unittest.TestCase):
                     patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
                 automatic_smoke.verify(**arguments)
             self.assertEqual([], calls); self.assertEqual("", output.getvalue())
+
+    def test_coverage_profile_requires_two_closed_modes_exact_metadata_and_zero_effects(self):
+        arguments, process, calls, queries = self.automatic_runtime_oracle(proof="coverage")
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), \
+                patch("sys.stdout", new_callable=io.StringIO) as output:
+            automatic_smoke.verify(**arguments)
+        self.assertEqual(1, len(output.getvalue().splitlines())); self.assertIn("PASS actual coverage SQL", output.getvalue())
+        children = [(command, options) for command, options in calls if command[:2] == ["docker", "run"]]
+        self.assertEqual(list(automatic_smoke.COVERAGE_RUNTIME_LINES), [command[-1] for command, _ in children])
+        for clause in ("AfterCommittedSequence=2", "ReconnectedAtUtc IS NOT NULL", "ListenerEpoch=1 AND Reason IN"):
+            self.assertTrue(any(clause in query for query in queries))
+        for command, options in children:
+            self.assertEqual(170, options["timeout"]); self.assertIn("--read-only", command)
+            self.assertNotIn("p" * 32, " ".join(command)); self.assertNotIn("p" * 32, options["input"])
+        self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_coverage_profile_refuses_partial_metadata_effects_mutation_or_child_error_without_pass(self):
+        for fault in ("coverage-incomplete", "invented-outbox", "retained-mutation", "source-mutation", "gap",
+                "child-error", "extra-output", "stderr", "sql-uuid-uppercase"):
+            arguments, process, calls, _ = self.automatic_runtime_oracle(fault, proof="coverage")
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+                automatic_smoke.verify(**arguments)
+            self.assertEqual("", output.getvalue())
+            if calls: self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_coverage_profile_owned_guard_precedes_configuration_and_callbacks(self):
+        def forbidden(*args, **kwargs): self.fail("Unowned coverage reached a resource")
+        with patch.dict(os.environ, {}, clear=True), patch.object(automatic_smoke.subprocess, "run", forbidden), self.assertRaises(RuntimeError):
+            automatic_smoke.verify(directory=self.owned, api="http://127.0.0.1:8080", manifest=None,
+                tenant="invalid", company="invalid", service="invalid", sql=forbidden, prepare_source=forbidden,
+                reference=reference_smoke, proof="coverage")
 
     def test_automatic_runtime_oracle_requires_all_four_modes_complete_graph_and_private_key_environment(self):
         arguments, process, calls, queries = self.automatic_runtime_oracle()
@@ -1265,7 +1301,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 7, True, "1"):
+        for slot in (0, 8, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -1333,6 +1369,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final_host = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](sixth_source, 6)
         self.assertEqual(final_host, environment); self.assertEqual(24, len(calls))
+        seventh_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](seventh_source, 7)
+        self.assertTrue(all(environment[name] == value for name, value in final_host.items()))
+        seventh_prefix = "AIOffice__GroupIntake__SourceKeys__7__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": seventh_source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_COVERAGE_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(seventh_prefix):]: value for name, value in environment.items() if name.startswith(seventh_prefix)})
+        final_coverage = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](seventh_source, 7)
+        self.assertEqual(final_coverage, environment); self.assertEqual(28, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI
