@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 019fbc1da457c36bd0c9aafc566c09ba360ce95e
+head: 22677f97afbf8e37d65d230440c57e0b99b13540
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-10'
@@ -1450,7 +1450,7 @@ group_automatic_notes_278_checkpoint:
   main_actual: 114192556176
   main_quality: 114195330891
   main_artifact: 11667314210
-  state: bounded_structured_checkpoint_local_verified
+  state: durable_sql_allocation_local_verified_native_pending
   model_evaluation: proposed120_primary_40_independent_UNEVALUATED
   next: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
   draft_pr: 288
@@ -1469,4 +1469,20 @@ group_automatic_notes_278_checkpoint:
   allocation_foundation_head: 202d9357fcd6bde2171553c813a43fce2c76a562
   local_allocation_controls: 13
   repair: original_permanent_failure_survives_cleanup_network_copy_transient_and_enum_profile_caps
-  repaired_approval: pending_frozen_independent_review
+  repaired_approval: scoped_checkpoint_approved_6097021504
+
+# Latest root-owned issue278 implementation frontier; earlier checkpoints remain historical evidence.
+group_278_durable_allocation_checkpoint:
+  parent_head: 22677f97afbf8e37d65d230440c57e0b99b13540
+  parent_review: 6097021504
+  parent_build: 38048764985
+  parent_build_attempt: 2
+  parent_build_state: active_after_one_docker_image_preparation_retry
+  parent_governance: 38048764960
+  local_store_model_ingress_guard_controls: 83
+  local_python_owned_guard_controls: 44
+  migration: AddGroupBatchAllocation
+  native_allocation_modes: implemented_not_executed
+  automatic_sql_notes_delivered: false
+  model_evaluation: UNEVALUATED
+  next: 'Freeze and independently review SQL allocation checkpoint before push; close exact CI/native modes, then fenced claims/scoped current-head brain/notes/atomic outbox and actual model evaluation. Keep278/279/full233 active.'

@@ -22,7 +22,7 @@ try
     // Test-only executable: guard before stdin, configuration, credentials,
     // SQL, broker or any resource. It has no operator/customer credentials.
     OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup"))
+    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup" or "allocation-hold" or "allocation-replay" or "allocation-deny" or "allocation-rollback" or "allocation-unsafe"))
         throw new InvalidOperationException();
     phase = "owned-config";
     var json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -58,6 +58,63 @@ try
     var reference = new GroupIngressDispatchReference(1, scope, outbox.Id, outbox.MessageId, outbox.Revision, outbox.CommittedSequence);
     var inbox = new GroupIngressInboxStore(database, worker, TimeProvider.System);
     phase = args[0];
+    if (args[0].StartsWith("allocation-", StringComparison.Ordinal))
+    {
+        var allocation = new GroupBatchAllocationStore(database, worker, new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), TimeProvider.System);
+        if (args[0] is "allocation-deny" or "allocation-unsafe" or "allocation-rollback")
+        {
+            var refused = false;
+            try { await allocation.AllocateDueAsync(scope, config.EventId, lifetime.Token); }
+            catch (Exception error) when (OwnedGroupReferenceProofGuard.IsExpectedRefusal(args[0], error)) { refused = true; }
+            if (!refused || database.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+            Console.WriteLine("PASS owned allocation runtime refusal " + args[0]);
+            return 0;
+        }
+        GroupBatchAllocationReceipt original;
+        if (args[0] == "allocation-hold")
+        {
+            // Competing fresh SQL contexts start together against an empty reservation.
+            // The source transaction lock must produce one original and stable replays.
+            var creators = await Task.WhenAll(Enumerable.Range(0, 4).Select(async _ =>
+            {
+                await using var creator = new PlatformDbContext(databaseOptions);
+                return await new GroupBatchAllocationStore(creator, worker,
+                    new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), TimeProvider.System)
+                    .AllocateDueAsync(scope, config.EventId, lifetime.Token) ?? throw new InvalidOperationException();
+            }));
+            original = creators.Single(x => !x.WasAlreadyAllocated);
+            if (creators.Any(x => x.BatchId != original.BatchId || x.AllocatedAtUtc != original.AllocatedAtUtc
+                || !x.Revisions.SequenceEqual(original.Revisions))) throw new InvalidOperationException();
+        }
+        else original = await allocation.AllocateDueAsync(scope, config.EventId, lifetime.Token) ?? throw new InvalidOperationException();
+        if (original.WasAlreadyAllocated != (args[0] == "allocation-replay") || original.AfterSequence != 0
+            || original.AllocatedThroughSequence != 2 || original.Revisions.Count != 2 || database.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+        if (args[0] == "allocation-hold")
+        {
+            Console.WriteLine("CHECKPOINT owned allocation committed before receipt delivery"); Console.Out.Flush();
+            await Task.Delay(Timeout.InfiniteTimeSpan, lifetime.Token); // Coordinator kills this inspected owned child only.
+            throw new InvalidOperationException();
+        }
+        using var allocationSlots = new SemaphoreSlim(4);
+        await Task.WhenAll(Enumerable.Range(0, 100).Select(async _ =>
+        {
+            await allocationSlots.WaitAsync(lifetime.Token);
+            try
+            {
+                await using var restarted = new PlatformDbContext(databaseOptions);
+                var replay = await new GroupBatchAllocationStore(restarted, worker,
+                    new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), TimeProvider.System).AllocateDueAsync(scope, config.EventId, lifetime.Token)
+                    ?? throw new InvalidOperationException();
+                if (!replay.WasAlreadyAllocated || replay.BatchId != original.BatchId || replay.AllocatedAtUtc != original.AllocatedAtUtc
+                    || !replay.Revisions.SequenceEqual(original.Revisions) || restarted.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+                if (await new GroupBatchAllocationStore(restarted, worker, GroupBatchTiming.InitialTuning, TimeProvider.System)
+                    .AllocateDueAsync(scope, Guid.NewGuid(), lifetime.Token) is not null) throw new InvalidOperationException();
+            }
+            finally { allocationSlots.Release(); }
+        }));
+        Console.WriteLine("PASS owned allocation runtime100 concurrent original receipts and caught-up cursor");
+        return 0;
+    }
     if (args[0] is "deny" or "rollback" or "unsafe")
     {
         var refused = false;

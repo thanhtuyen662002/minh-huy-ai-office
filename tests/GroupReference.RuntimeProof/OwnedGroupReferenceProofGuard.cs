@@ -9,8 +9,9 @@ public static class OwnedGroupReferenceProofGuard
     // refusal type. An unrelated operation/transport failure is not evidence.
     public static bool IsExpectedRefusal(string mode, Exception error) => mode switch
     {
-        "deny" or "unsafe" => error is UnauthorizedAccessException,
+        "deny" or "unsafe" or "allocation-deny" or "allocation-unsafe" => error is UnauthorizedAccessException,
         "rollback" => error is DbUpdateException,
+        "allocation-rollback" => error is MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationCommitException,
         _ => false
     };
 

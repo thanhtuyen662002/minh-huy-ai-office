@@ -8,6 +8,19 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class GroupReferenceRuntimeProofGuardTests
 {
+    [Fact]
+    public void AllocationRollbackRequiresActualSanitizedCommitBoundaryAndNeverAnUnrelatedOperation()
+    {
+        Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal("allocation-rollback", new GroupBatchAllocationCommitException()));
+        Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal("allocation-rollback", new InvalidOperationException("PRIVATE_UNRELATED")));
+        Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal("allocation-rollback", new DbUpdateException("PRIVATE_SQL")));
+        foreach (var mode in new[] { "allocation-deny", "allocation-unsafe" })
+        {
+            Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new UnauthorizedAccessException()));
+            Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new GroupBatchAllocationCommitException()));
+        }
+    }
+
     [Theory]
     [InlineData("deny", true, false, false)]
     [InlineData("unsafe", true, false, false)]

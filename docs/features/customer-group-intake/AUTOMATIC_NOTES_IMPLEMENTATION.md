@@ -1,6 +1,6 @@
 # Automatic notes implementation — issue278
 
-Status: initial bounded structured transport implementation is locally verified; full automatic notes and model evaluation remain unimplemented/unevaluated. See ../../validation/GROUP_STRUCTURED_RESPONSES.md for checkpoint evidence.
+Status: bounded structured transport is independently reviewed/pushed22677; durable SQL allocation is locally implemented and awaiting checkpoint review/native CI. Automatic note persistence and actual model evaluation remain incomplete/unevaluated. See ../../validation/GROUP_STRUCTURED_RESPONSES.md for checkpoint evidence.
 Dependency: issue277 accepted at merged main `2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd`, independent receipt6096704767; all exact-main gates passed. Full issue233 stays active.
 
 ## Product contract
@@ -20,6 +20,10 @@ Use one total deadline of at most60s. A singleton adapter admits at most4 owned 
 Read actual response bytes into a finite private sink before parsing. ContentLength alone is insufficient. Refuse overflow, invalid UTF8/Unicode, duplicate JSON names, malformed/incomplete/refused/tool/multiple responses and inconsistent usage. Use a production handler with redirects and automatic decompression disabled; only explicit owned-loopback configuration may use HTTP. Arbitrary injected handler allocations are outside the accepted-byte guarantee and require separate tests of the real production handler.
 
 Verify the actual public adapter call path, boundary sizes, actual write overloads, noncooperative headers/body/cleanup, capacity retention/recovery, deadline/caller cancellation and owned-loopback redirect denial. Preserve large legacy Reasoning behavior. This checkpoint alone does not satisfy issue278.
+
+## Durable allocation implementation checkpoint
+
+See ADR_GROUP_AUTOMATIC_NOTES.md in architecture and ../../validation/GROUP_BATCH_ALLOCATION.md. Actual SQL store now persists immutable batch/raw ledger with ScheduledThrough atomically under the same ingress source lock, trusted current Extract authorization and extended effective runtime permissions. The new owned native proof is present but unexecuted until approved checkpoint CI.83 local focused controls PASS; InMemory does not prove native SQL. Fenced work claims, context, notes/outbox, worker activation and actual model evaluation remain required.
 
 ## Subsequent checkpoints required on this same issue/PR
 

@@ -164,7 +164,11 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "publish-existing": "PASS owned reference runtime shipping original accepted reference publication",
             "inspect-pending": "PASS owned reference runtime exact persistent original queued reference retained",
             "consume-replay": "PASS owned reference runtime redelivery original SQL receipt and broker ACK",
-            "duplicates": "PASS owned reference runtime100 concurrent original inbox receipts"}.get(mode, "PASS owned reference runtime refusal " + mode)
+            "duplicates": "PASS owned reference runtime100 concurrent original inbox receipts",
+            "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
+            "allocation-deny": "PASS owned allocation runtime refusal allocation-deny",
+            "allocation-unsafe": "PASS owned allocation runtime refusal allocation-unsafe",
+            "allocation-rollback": "PASS owned allocation runtime refusal allocation-rollback"}.get(mode, "PASS owned reference runtime refusal " + mode)
         assert result.returncode == 0 and lines == [expected], "Owned reference executable failed at " + mode
 
     def broker_stats():
@@ -413,6 +417,63 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual RabbitMQ process restart retains pending persistent original reference before republication and shipping consumer ACK preserves exact SQL graph", flush=True)
+
+        # Separate issue278 allocation proof runs after every retained277 broker
+        # and no-cursor-effect assertion. Only this owned source cursor changes.
+        allocation_before = full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")]
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchAllocations WHERE {scope};") == "0"
+        temporary_sql(sql,
+            f"ALTER TABLE aioffice.GroupBatchAllocations ADD CONSTRAINT CK_CiGroupAllocationRollback CHECK(BindingId<>'{source}');",
+            "IF OBJECT_ID(N'aioffice.CK_CiGroupAllocationRollback',N'C') IS NOT NULL ALTER TABLE aioffice.GroupBatchAllocations DROP CONSTRAINT CK_CiGroupAllocationRollback;",
+            lambda: run("allocation-rollback"))
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocation_before
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("allocation-deny"))
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocation_before
+        print("PASS actual allocation SQL rollback and current Extract denial preserve complete source cursor and empty reservation graph", flush=True)
+
+        def unsafe_allocation_column():
+            assert sql("EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.GroupBatchAllocatedRevisions',N'OBJECT',N'UPDATE',N'ContentSha256',N'COLUMN'); REVERT;") == "1"
+            run("allocation-unsafe")
+        temporary_sql(sql, "GRANT UPDATE ON OBJECT::aioffice.GroupBatchAllocatedRevisions(ContentSha256) TO aioffice_binding_runtime;",
+            "DENY UPDATE ON OBJECT::aioffice.GroupBatchAllocatedRevisions(ContentSha256) TO aioffice_binding_runtime;", unsafe_allocation_column)
+        assert sql("EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.GroupBatchAllocatedRevisions',N'OBJECT',N'UPDATE',N'ContentSha256',N'COLUMN'); REVERT;") == "0"
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocation_before
+        print("PASS actual allocation unsafe effective immutable column right refuses with exact owned permission restoration", flush=True)
+
+        hold = subprocess.Popen([*command, "allocation-hold"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True, env=child_environment)
+        hold.stdin.write(configuration(0)); hold.stdin.close(); hold.stdin = None
+        wait(lambda: sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchAllocations WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchAllocatedRevisions WHERE {scope}));") == "1|2")
+        assert sql(f"SELECT CONCAT(CommittedSequence,N'|',ScheduledThroughSequence,N'|',"
+            f"CASE WHEN FirstPendingAtUtc IS NULL THEN 1 ELSE 0 END,N'|',CASE WHEN LastPendingAtUtc IS NULL THEN 1 ELSE 0 END)"
+            f" FROM aioffice.GroupSourceStates WHERE {scope};") == "2|2|1|1"
+        allocated_graph = full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")]
+        # Every original source/private/inbox byte is retained. Index3 is the
+        # explicit scheduled cursor/pending anchor reservation just asserted.
+        assert allocated_graph[:3] + allocated_graph[4:8] == allocation_before[:3] + allocation_before[4:8]
+        assert kill_owned(), "Owned allocation child missing before lost receipt kill"
+        held_stdout, _ = hold.communicate(timeout=15)
+        assert hold.returncode == 137 and held_stdout.splitlines() == ["CHECKPOINT owned allocation committed before receipt delivery"]
+        run("allocation-replay")
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        print("PASS actual allocation commit lost receipt owned process death restart and100 concurrent replays return original batch ledger with one cursor effect", flush=True)
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("allocation-deny"))
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual allocation original replay requires current Extract and restores SQL isolation without portal key model or note effects", flush=True)
     except BaseException as error:
         failure = error
     finally:
