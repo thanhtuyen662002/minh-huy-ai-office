@@ -85,11 +85,25 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   async function idle() { await page.getByRole("button", { name: "Gửi", exact: true }).waitFor();
     await page.waitForFunction(() => [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Gửi" && !button.disabled), null, { timeout: 60_000 }); }
   async function requiredReceipt(response, phase) {
+    const streamFailure = fallback => {
+      // Playwright's client finished promise need not settle on requestfailed.
+      // Read the actual browser failure, exposing only exact fixed categories.
+      // This remains a refusal; never replace the receipt or retry a request.
+      let failure;
+      try { failure = response.request().failure()?.errorText; } catch { /* Unknown browser boundary. */ }
+      return new Map([
+        ["net::ERR_ABORTED", "replay-request-aborted"],
+        ["net::ERR_CONNECTION_RESET", "replay-request-reset"],
+        ["net::ERR_INCOMPLETE_CHUNKED_ENCODING", "replay-request-truncated"],
+        ["net::ERR_CONTENT_LENGTH_MISMATCH", "replay-request-length"],
+        ["net::ERR_FAILED", "replay-request-failed"],
+      ]).get(failure) ?? fallback;
+    };
     phase("replay-stream-finished");
     let finished;
     try { finished = await bounded(response.finished(), 20_000); }
-    catch { phase("replay-stream-wait-failed"); proof(false); }
-    if (finished !== null) { phase("replay-stream-failed"); proof(false); }
+    catch { phase(streamFailure("replay-stream-wait-failed")); proof(false); }
+    if (finished !== null) { phase(streamFailure("replay-stream-failed")); proof(false); }
     phase("replay-body-read");
     let bytes;
     try { bytes = await bounded(response.body(), 20_000); }

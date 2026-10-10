@@ -17,14 +17,18 @@ test("submission202 receipt requires completed bounded UTF8 JSON and reports onl
   const receipt = { operationId: "owned-inert-operation", inputFingerprint: "owned-inert-fingerprint" };
   const encoded = new TextEncoder().encode(JSON.stringify(receipt));
   for (const fault of [null, "unfinished", "finished-rejected", "finished-timeout", "body-rejected", "body-protocol",
-    "body-timeout", "empty", "oversize", "utf8", "json"] ) {
+    "body-timeout", "empty", "oversize", "utf8", "json", "browser-abort", "browser-reset", "browser-truncated",
+    "browser-length", "browser-failed", "browser-private"] ) {
     const phases = [], bounds = [];
     const action = make(async (promise, maximum) => {
       assert.equal(maximum, 20_000); bounds.push(maximum);
-      if (fault === "finished-timeout" || fault === "body-timeout" && bounds.length === 2) throw new Error("owned private timeout");
+      if (fault === "finished-timeout" || fault?.startsWith("browser-") || fault === "body-timeout" && bounds.length === 2) throw new Error("owned private timeout");
       return await promise;
     }, condition => { if (!condition) throw new Error("owned fixed proof refusal"); });
     const response = {
+      request: () => ({ failure: () => ({ errorText: ({ "browser-abort": "net::ERR_ABORTED", "browser-reset": "net::ERR_CONNECTION_RESET",
+        "browser-truncated": "net::ERR_INCOMPLETE_CHUNKED_ENCODING", "browser-length": "net::ERR_CONTENT_LENGTH_MISMATCH",
+        "browser-failed": "net::ERR_FAILED", "browser-private": "net::ERR_ABORTED owned-private-url" })[fault] }) }),
       finished: async () => { if (fault === "finished-rejected") throw new Error("owned private stream detail"); return fault === "unfinished" ? new Error("owned private network failure") : null; },
       body: async () => {
         if (fault === "body-rejected") throw new Error("owned private body detail");
@@ -38,7 +42,9 @@ test("submission202 receipt requires completed bounded UTF8 JSON and reports onl
     const expected = { unfinished: "replay-stream-failed", "finished-rejected": "replay-stream-wait-failed",
       "finished-timeout": "replay-stream-wait-failed", "body-rejected": "replay-body-read-failed",
       "body-protocol": "replay-browser-body-unavailable", "body-timeout": "replay-body-read-failed", empty: "replay-empty-body",
-      oversize: "replay-body-too-large", utf8: "replay-body-invalid-utf8", json: "replay-body-invalid-json" };
+      oversize: "replay-body-too-large", utf8: "replay-body-invalid-utf8", json: "replay-body-invalid-json",
+      "browser-abort": "replay-request-aborted", "browser-reset": "replay-request-reset", "browser-truncated": "replay-request-truncated",
+      "browser-length": "replay-request-length", "browser-failed": "replay-request-failed", "browser-private": "replay-stream-wait-failed" };
     assert.equal(phases.at(-1), fault ? expected[fault] : "replay-body-json");
     assert.ok(phases.every(phase => /^replay-[a-z0-9-]+$/.test(phase) && !phase.includes("owned-private")));
     assert.ok(bounds.length > 0 && bounds.length <= 2);

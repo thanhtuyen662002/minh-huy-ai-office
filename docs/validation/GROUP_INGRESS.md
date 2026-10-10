@@ -1028,3 +1028,21 @@ Chromium headers-loss retry PASS; body-loss retry received202 headers and failed
 the bounded completed-stream wait. Later historical/company proofs were not
 re-exercised. The underlying browser/request cause remains unproven. .NET job
 114127247828 failed migration CHARSET; approved aad removes only its UTF8 BOM.
+
+The separate Chromium diagnostic now reads `response.request().failure()` on a
+failed/timed-out finished wait. Only exact fixed browser error categories are
+retained: aborted, reset, truncated chunk, length mismatch or failed. Unknown or
+private strings retain the generic refusal. This does not accept a body, substitute
+a receipt, add a retry or relax any SQL effect assertion. Playwright1.63's
+[client request-failed handler](https://raw.githubusercontent.com/microsoft/playwright/v1.63.0/packages/playwright-core/src/client/browserContext.ts)
+does not resolve the finished promise, unlike its request-finished handler.
+
+Ten retained Node guard tests PASS, including six new exact-category/private-string
+controls in the actual receipt helper. A local hermetic loopback Chromium probe
+using the actual transpiled bounded body reader reproduced both cancelled202 and
+truncated202 as browser request failures with a pending finished promise. Three
+fresh complete202 responses surrounding those failures remained readable/valid.
+This uses bundled Playwright1.62.1 and local Chromium; it is not the hosted1.63
+application/SQL fault reproduction or proof of the underlying e341 cause. The next
+exact hosted run must still pass complete bytes, strict UTF8/JSON, all seven original
+receipt fields, current issued SID and the unchanged full effect graph.
