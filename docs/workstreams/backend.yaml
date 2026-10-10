@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288. Remote c8b67775c91822ef9f0e28e2a3651669002d5641 scoped APPROVED6098786534/root fully fetched/pushed; Build38061609455/native114240837316/Quality114245095778 terminal RED, six prerequisites and Governance38061609472 SUCCESS. Root hosted.NET2365 [6,520,25,1814] PASS0skip; native SQL/worker including held-key revoke/expiry PASS, root88/93 markers/144PASS/3 failure markers. Browser historical restored original receipt ERR_ABORTED; product cause UNPROVEN. Fresh CodeS256 document loses passive observer; guarded reinstall and26 helper controls PASS retain strict receipt/body/SID/graph/worker gates. Local c2d47c85f6d5c89cdde241d4be6f69391f96e1dc crypto scoped APPROVED6098855148/root fully fetched, UNPUSHED. New versioned ten-table scoped protected brain/editor/glossary/chunk receipt/disposition/outbox schema and effective permission verifier/native proof source implemented; full1831 Persistence PASS0skip,61 Python PASS, EF no model drift/idempotent generation. New schema actual SQL NOT_RUN; freeze/independently review combined migration/native/diagnostic checkpoint before next approved exact push. Then own renewed all94/native/all8/six original browser images; fix any red SAME288 immediately. Continue current private reader, qualified context/tokenizer, source-lock-before-savepoint rollback/witness-only expiry/native MARS, atomic notes/evidence/raw coverage/completion/NotesCommitted, worker DI/UI and frozen actual100/30 model evaluation.278/279/full233 ACTIVE; checked local Gateway config absent, server access unknown, real model NOT_RUN_UNEVALUATED.'
+next_action: 'Own278/Draft288. Exact remote1be34eef2124a74a5cd496fe486416ebdf79814d scoped23-file APPROVED6099239328/root fully fetched/pushed after crypto c2 scoped6098855148. Build38064795318/native114250149831 IN_PROGRESS, all six prerequisites and Governance38064795319 SUCCESS; hosted.NET full log unavailable until workflow closure, no success count inferred yet. New ten-table work schema actual SQL/all94/browser/all8/six original images UNVERIFIED. Priorc8 terminal browser ERR_ABORTED root88/93/144PASS/3failure markers, product abort cause UNPROVEN; guarded observation repair retained strict gates. Separate local current private brain reader implemented for bounded explicit host-selected request/glossary revisions under sealed live Extract claim; current metadata/evidence/winning source/key/hash/generation fences, scoped existing keys outside SQL and post-await/final exact contributor checks, read-only witness retirement. 41 new reader controls/full1872 Persistence PASS0skip; freeze/review this new checkpoint before any later push. Opaque private payloads confer no model semantics/closed decoding/quarantine/token/relevance completeness or future effect/release authority. Own1be exact CI to terminal; fix any red SAME288 immediately. Continue native actual brain read, qualified context selection/codec/tokenizer, first effect store source-lock-before-savepoint rollback/witness-only expiry/native MARS, atomic notes/evidence/raw coverage/completion/NotesCommitted and automatic DI/UI; frozen real100/30 model evaluation remains NOT_RUN_UNEVALUATED.278/279/full233 ACTIVE, checked local Gateway config absent/server access unknown.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1715,8 +1715,34 @@ group_278_work_schema_and_document_observation_checkpoint:
   python_guard_controls: 61
   ef_model_drift: NONE
   new_schema_actual_sql: NOT_RUN
-  frozen_independent_review: PENDING
+  frozen_independent_review: APPROVED6099239328_root_fully_fetched_pushed1be
   renewed_native_required_markers: 94
   private_reader_note_store_effect_rollback_raw_completion_DI_UI: incomplete
   actual_model_evaluation: NOT_RUN_UNEVALUATED
   next: 'Review frozen whole changed scope, retain original independent controls, push approved exact checkpoint only. Own renewed all94/native/all8/six original images and fix SAME288 terminal failures; continue first effect consumer source-lock/savepoint rollback/expiry witness/native MARS, scoped current brain/context/notes/outbox/automatic DI/UI and frozen real100/30 model qualification.278/279/full233 remain ACTIVE.'
+
+
+group_278_current_brain_reader_checkpoint:
+  remote_head: 1be34eef2124a74a5cd496fe486416ebdf79814d
+  scoped_schema_review_root_fully_fetched: 6099239328
+  build: 38064795318
+  actual: 114250149831
+  governance: 38064795319
+  remote_state: IN_PROGRESS_native_six_prerequisites_and_governance_SUCCESS
+  required_native_markers: 94
+  exact_native_acceptance: UNVERIFIED_pending_all94_all8_six_original_browser_images
+  local_state: current_private_reader_pending_frozen_review
+  new_reader_controls: 41
+  full_local_persistence_passed: 1872
+  full_local_persistence_failed: 0
+  full_local_persistence_skipped: 0
+  maximum_selected_kind_record_pairs: 20
+  maximum_aggregate_envelope_bytes: 256000
+  resolver_lifetime: bounded_two_minutes_outside_SQL_late_material_disposal
+  dependency_fences: sealed_live_claim_current_Extract_head_revision_cipher_business_glossary_evidence_winning_source
+  expiry: read_only_witness_commit_before_denial_no_effect_writes
+  opaque_payload_semantics_relevance_selection_tokenizer_future_release: incomplete
+  actual_native_brain_read: NOT_RUN
+  note_store_effect_rollback_raw_completion_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Own exact1be CI terminal and repair SAME288 if red; independently review frozen private reader before approved later push. Implement actual native brain reads and closed qualified context/tokenizer, first owned note-effect rollback/expiry witness/native MARS, atomic notes/evidence/raw coverage/completion/outbox and automatic DI/UI plus frozen real100/30 model eval.278/279/full233 remain ACTIVE.'
