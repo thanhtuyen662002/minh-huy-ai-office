@@ -4,8 +4,8 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
-state: in_progress
+head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+state: final_review_runtime_green
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
@@ -1366,3 +1366,17 @@ group_connector_browser_observation_overflow_repair:
   finding: 'Ninth matched same-URL request beyond8-record cap reused previous attempt projection; diagnostic accuracy issue, original EOF/receipt not bypassed and currentmandatoryloop4matchedPOSTs.'
   repair: 'Both signal/wire observers permanently returnnull afterninthmatchedrequest, retain cap8 and originalsinglefetchinvocation even synchronousfailure; no body/authorization/request mutation.'
   local: '23 Node PASS0skip incl actual requiredReceipt refusal, overflow and original synchronous throw;2YAML/syntax/diff PASS. Frozen original review closure/native execution pending;277/278/279/full233 active.'
+
+group_connector_542_terminal:
+  runtime_head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+  build: 38030969758
+  governance: 38030969756
+  actual: 114151648993
+  quality: 114154582285
+  screenshot_artifact: 11662381255
+  state: exact_all8_success_final_review_pending
+  scoped_reviews: 'Native startup6094370900; managed factory/process proof and cleanup6094525216; passive wire/overflow closure6094640143. Full issue277 frozen review is active; no full approval yet.'
+  native: 'Root inspected all retained admission/filter/current-read/listener/spool controls, three actual managed factory/process/HTTP/current SQL/cipher/hosted-loop markers, actual recovery-only startup SQL/inert DI and all six reference SQL/RabbitMQ/shipping-DI/restart markers PASS. Private group configuration removed and shipping default-off restored.'
+  browser: 'Root inspected complete actual Chromium OIDC/administration/company/private-owner history and strict full original202 headers/body-loss replay, reload/newSID recovery, cross-user/company denial and late-body fencing PASS. Earlier TimeoutError cause remains unproven; no oracle/timeouts weakened.'
+  local_diagnostic_limits: 'Exact pinned Playwright1.63/Chromium1243 synthetic transport: three complete202 positives/two timeout refusals PASS. Next build PASS but transport fixture readiness failed twice, latest standalone404; no submit/native/product-cause evidence. Only two root-generated tracked TypeScript files restored to runtime HEAD; private logs retained.'
+  next: 'Close full277 and final documentation frozen reviews, then exact final PR/main closure and eligible283 merge. Continue278 automatic scoped SQL brain/batches/notes and279 separately authorized internal IT notification. Live connector/readonly ERP/installer/deployment/full233 remain active.'

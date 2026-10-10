@@ -1,6 +1,8 @@
-# Group connector qualification: contracts only
+# Group connector qualification: live evidence remains unverified
 
-Issue276/PR282 follows the user-provided automatic IT workflow requirements.
+Issue276/PR282 follows the user-provided automatic IT workflow requirements and
+is delivered on main4cfeda58. Issue277/PR283 adds the owned synthetic core runtime;
+its current acceptance evidence is in [GROUP_INGRESS.md](GROUP_INGRESS.md).
 No account login, controlled receive/send or live activation occurred. Core contracts
 can progress using an explicitly synthetic connector; synthetic evidence cannot
 enable a live receive/send profile.
@@ -50,8 +52,9 @@ with475 passing tests including13 own counterexamples, independent Python hash
 golden and YAML/diff checks. Accepted main281/1b0 has all8 gates PASS
 (Build37985845222/Gov37985845186/actual114007505342/quality114011846100).
 Frozen ee30 Build37986918810/Gov37986918797/all8/actual114011097674/quality114014463755
-PASS. Final integration/documentation review and refreshed final PR/main gates remain required.
-No group SQL store, migration, ingress endpoint, queue pipeline, memory worker or
-sender is delivered by this issue's contract checkpoint.277–279 must implement and
-verify the actual call path, complete customer-role collision set, enrollment role
-exclusivity, final authority, protected content, commit order and no-click flow.
+PASS. PR282 subsequently integrated the contract checkpoint on main4cfeda58.
+That issue276 checkpoint delivered no group SQL store, migration, ingress endpoint,
+queue pipeline, memory worker or sender. Issue277 implements and proves the owned
+SQL ingress/listener/spool/reference queue/read path; its synthetic evidence cannot
+qualify this table's live account observations. Issues278/279 still must deliver
+the automatic brain/notes and separate internal IT no-click reporting flow.

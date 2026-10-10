@@ -4,6 +4,52 @@ Issue277/PR283 implements the automatic customer-source ingress accepted by
 issue276. Contracts PR282 is delivered on main4cfeda58; PR283 now targets main.
 The active PR HANDOFF records the exact candidate and workflow IDs.
 
+## Current owned runtime acceptance: 2026-10-10
+
+Frozen runtime HEAD `54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8` has terminal
+Build38030969758/Governance38030969756/all eight quality gates SUCCESS.
+Actual114151648993 and aggregate114154582285 passed. Root inspected the native
+and Chromium log markers; final full-PR review and refreshed final PR/main gates
+remain before integration. The following checkpoint sections record history;
+their earlier pending/failure statements do not override this result.
+
+- Actual SQL admission/filtering, concurrent100 original receipts, edit/recall and
+  late-history gaps, protected content, commit cursor, transaction rollback,
+  current revocation/restore and exact private read release all passed.
+- Actual separately fenced listener and encrypted spool survived observed SQL
+  commit followed by lost ACK and owned process death. Fresh current SQL grant
+  denial occurred before the spool key; exact encrypted backlog was retained.
+  Restart reconciled the original ACK without changing the full source graph.
+- The shipping Worker recovery factory and registered hosted loop were exercised
+  without injected session/spool/client implementations. Core restart, current
+  grant403/exact restore, new process owner/epoch2, original receipt and deletion
+  of only the acknowledged capture passed. Recovery-only startup used the actual
+  runtime SQL principal and validated inert DI without resolving keys/storage.
+- Actual reference-only outbox/RabbitMQ/shipping Core producer/Worker consumer
+  passed lost broker ACK/process death/redelivery,100 duplicates, insert rollback,
+  current Extract revoke, unsafe column refusal/exact restore, broker restart,
+  unchanged full graph/cursor and absence of fabricated portal tasks/users.
+- Issued-session Chromium exercised shipping group catalog/message/body reads,
+  source read denial/restore, logout late-body fencing and mobile navigation.
+  Retained owner-task history stayed private. Both committed202 headers-loss and
+  body-loss explicit replays passed the unchanged full EOF/UTF8/JSON/original
+  receipt/SID/all-eight-effect-graph checks; later owner/company gates also passed.
+
+Earlier replay timeouts remain recorded as failed evidence; their product cause
+is unproven. No shipping timeout or receipt oracle was weakened to pass this run.
+Passive owned diagnostic metadata is never an accepted receipt. A separate pinned
+local Chromium synthetic transport control passed, but a local Next transport
+probe stopped at readiness404 before any submit; it supplies no product-cause
+or native SQL/OIDC acceptance evidence.
+
+These results qualify the owned synthetic issue277 core path. Configuration was
+restored to shipping default-off and no live connector login, send or activation
+occurred. Actual provider/account and production volume qualification remain
+separate gates. Issue278 must implement durable automatic batching, SQL brain,
+business/attention notes and atomic NotesCommitted; issue279 must implement
+separately authorized internal IT disclosure/reporting. No business employee
+Generate/Accept/Approve/Send prerequisite is introduced. Full233 remains active.
+
 ## First SQL checkpoint
 
 The additive `AddGroupSourceIngress` migration adds the operator-owned service,

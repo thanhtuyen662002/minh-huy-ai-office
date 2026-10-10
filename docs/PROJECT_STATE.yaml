@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
+current_target_head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
-    state: in_progress
-    next: 'Exact1cb Build38028533634 FAILURE/Gov38028533645 SUCCESS; six prerequisites and complete native stack PASS, actual114144426124 main Chromium fails submission-real-core202-headers-replay-timeout-after-headers. Original fetch signal TimeoutError after early202 headers observed; complete body/cause remains unproven. Repair SAME283 without relaxed receipt/SID/full graph gates.4ce native startup scoped APPROVED6094370900;598 managed proof sole reproduced cleanup P2 now locally repaired pending frozen closure/native execution.277/278/279/full233 active.'
+    head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+    state: final_review_runtime_green
+    next: 'Exact542 Build38030969758/Gov38030969756/all8/actual114151648993/quality114154582285 SUCCESS. Root inspected native managed recovery/startup/reference and strict complete Chromium markers. Complete full frozen277 review and final durable documentation review, then own final exact PR/main gates before merge/closing277.278 automatic SQL brain/notes is next after accepted277; provider/customer/installer/full233 remain active.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close exact remote1cb Build38028533634/Gov38028533645 through terminal native/main Chromium; diagnose actual abort category and repair SAME283 without weakened oracles. Review native startup composition follow-on; managed recovery factory/process/SQL/volume and provider qualification remain.277/278/279/full233 active.'
+next_action: 'Complete full frozen277 and final documentation review after exact542 all8 native/Chromium SUCCESS; push only reviewed final closure and own its exact PR/main gates. Merge283/close277 only when acceptance/review pass, then implement278 automatic SQL brain/batches/notes and279 separate internal IT reporting. Live connector/readonly ERP/installer/deployment/full233 remain active.'
 
 
 blocked_by:
@@ -732,3 +732,17 @@ group_connector_browser_observation_overflow_repair:
   finding: 'Ninth matched same-URL request beyond8-record cap could project previous attempt metadata. Current mandatory receipt loop has4 matchedPOSTs and original EOF/receipt always required, so no acceptance bypass; stale causal diagnostic must still be refused.'
   repair: 'Both original-signal and passive-wire observers permanently invalidate read projection after the ninth matched request; read returnsnull. No new record/listener, body access or request mutation; original fetch forwarded exactlyonce, including synchronous failure on ninth call.'
   local: '23 Node controls PASS0skip including actual strict receipt integration/overflow stale evidence/synchronous original failure;2YAML/Node syntax/diff PASS. src/apps/workflow unchanged. Frozen independent original ninth-attempt closure and renewed native proof required.'
+
+group_connector_542_terminal:
+  runtime_head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+  build: 38030969758
+  governance: 38030969756
+  actual: 114151648993
+  quality: 114154582285
+  screenshot_artifact: 11662381255
+  state: exact_all8_success_final_review_pending
+  scoped_reviews: 'Native startup6094370900; managed factory/process proof and cleanup6094525216; passive wire/overflow closure6094640143. Full issue277 frozen review is active; no full approval yet.'
+  native: 'Root inspected all retained admission/filter/current-read/listener/spool controls, three actual managed factory/process/HTTP/current SQL/cipher/hosted-loop markers, actual recovery-only startup SQL/inert DI and all six reference SQL/RabbitMQ/shipping-DI/restart markers PASS. Private group configuration removed and shipping default-off restored.'
+  browser: 'Root inspected complete actual Chromium OIDC/administration/company/private-owner history and strict full original202 headers/body-loss replay, reload/newSID recovery, cross-user/company denial and late-body fencing PASS. Earlier TimeoutError cause remains unproven; no oracle/timeouts weakened.'
+  local_diagnostic_limits: 'Exact pinned Playwright1.63/Chromium1243 synthetic transport: three complete202 positives/two timeout refusals PASS. Next build PASS but transport fixture readiness failed twice, latest standalone404; no submit/native/product-cause evidence. Only two root-generated tracked TypeScript files restored to runtime HEAD; private logs retained.'
+  next: 'Close full277 and final documentation frozen reviews, then exact final PR/main closure and eligible283 merge. Continue278 automatic scoped SQL brain/batches/notes and279 separately authorized internal IT notification. Live connector/readonly ERP/installer/deployment/full233 remain active.'
