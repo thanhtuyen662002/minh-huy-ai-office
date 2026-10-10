@@ -121,8 +121,8 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
 
         async Task FenceAsync()
         {
-            var verdict = await claims.InspectCurrentLockedAsync(handle, token);
             await permissions.RequireSafeRuntimeAsync(token);
+            var verdict = await claims.InspectCurrentLockedAsync(handle, token);
             if (verdict is GroupBatchClaimFenceVerdict.Current) return;
             // This fixed unit contains only reads. No staged effects are
             // committed with the durable metadata-only expiry witness.
@@ -253,8 +253,13 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
     {
         if (requests is null || glossary is null || requests.Count > MaximumSelectedRevisions || glossary.Count > MaximumSelectedRevisions
             || requests.Count + glossary.Count > MaximumSelectedRevisions) throw Unavailable();
-        var result = requests.Select(x => (Kind: GroupBrainContentKind.RequestRevision, Id: x))
-            .Concat(glossary.Select(x => (Kind: GroupBrainContentKind.GlossaryRevision, Id: x))).ToArray();
+        // Count is only an early guard. Freeze a bounded enumeration and check
+        // its actual size before any SQL/key lookup; never truncate excess IDs.
+        var requestSnapshot = requests.Take(MaximumSelectedRevisions + 1).ToArray();
+        var glossarySnapshot = glossary.Take(MaximumSelectedRevisions + 1).ToArray();
+        if (requestSnapshot.Length + glossarySnapshot.Length > MaximumSelectedRevisions) throw Unavailable();
+        var result = requestSnapshot.Select(x => (Kind: GroupBrainContentKind.RequestRevision, Id: x))
+            .Concat(glossarySnapshot.Select(x => (Kind: GroupBrainContentKind.GlossaryRevision, Id: x))).ToArray();
         if (result.Any(x => x.Id == Guid.Empty) || result.Distinct().Count() != result.Length) throw Unavailable();
         return result;
     }

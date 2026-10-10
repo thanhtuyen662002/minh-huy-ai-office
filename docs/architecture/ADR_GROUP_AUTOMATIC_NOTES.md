@@ -62,3 +62,8 @@ Freeze operator registry ownership and literal runtime permissions in the migrat
 Use a sealed live Extract claim to read only bounded host-selected exact-group current request/glossary revisions. Snapshot current heads, business metadata, glossary publication/enablement, exact evidence and current winning source metadata; reject changed/recalled contributors. Resolve scoped keys outside SQL, then refence every contributing dependency before decrypt and final private return. Empty selection still requires authority. The fixed read-only unit can commit witness-only expiry retirement; it cannot establish staged-effect rollback or future release authority.
 
 Returned private payloads remain opaque. A qualified context must decode the closed format, quarantine, select/budget bounded relevant same-group work and pin complete selection dependencies before release through the existing Gateway. An explicit selected-set reader does not prove relevance/completeness, semantic grounding or a real model result. See `docs/validation/GROUP_BRAIN_CURRENT_READER.md`.
+
+
+### Reader bound and final verdict ordering
+
+Bound the actual copied selection with per-list overflow sentinels and reject a combined size above20 before SQL or keys, independently of caller Count. In each read unit perform the effective work permission proof before computing the final live-claim verdict. A permission await cannot reuse a verdict computed before its completion; observed expiry remains witness-only retirement followed by refusal. Retain independent counterexamples and qualify actual SQL reads separately.
