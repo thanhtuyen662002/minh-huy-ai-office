@@ -1571,7 +1571,11 @@ class EffectPreparationOracleTests(unittest.TestCase):
             if "GroupAccountCoverageGaps" in statement: return "0|0"
             if "CONCAT" in statement: return "2|4|1"
             if not state["launches"]:
-                if "GroupSourceStates" in statement: return "0" if fault == "pending-before" else "1"
+                if "GroupSourceStates" in statement:
+                    # Actual ingress scheduling anchors can be reanchored
+                    # after saving immutable revisions; equality is false.
+                    if "FirstPendingAtUtc=(" in statement or "LastPendingAtUtc=(" in statement: return "0"
+                    return "0" if fault == "pending-before" else "1"
                 table = re.search(r"FROM aioffice\.(\w+)", statement)[1]
                 return "1" if fault == "preexisting-" + table else "0"
             if "GroupSourceStates" in statement: return "0" if fault == "pending-after" else "1"
@@ -1603,7 +1607,7 @@ class EffectPreparationOracleTests(unittest.TestCase):
         graph, state = self.run_actual_prefix()
         self.assertEqual(["A" * 64] * 9, graph)
         self.assertEqual(["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupCoverageGaps",
-            "GroupIngressOutbox", "GroupSourceStates"], state["before_digests"])
+            "GroupIngressOutbox", "GroupSourceStates", "GroupSourceStates", "GroupSourceStates", "GroupSourceStates"], state["before_digests"])
         self.assertEqual(1, state["launches"])
         self.assertEqual(1, state["retained_checks"])
 

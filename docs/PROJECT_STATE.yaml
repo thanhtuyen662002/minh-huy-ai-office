@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
     state: in_progress
-    next: 'Own278/Draft288 remote dfba terminalRED Build38075629274/native114281880568/quality114286293916; root FULLnative130PASS23missingRequired102 and FULL.NET2563 zeroFailSkip. Frozen dd215 WITHHELD6101233127 rootFULL: nonexistent receipt order column and clean-source baseline after preparation. Repaired with real full command key, five actual EF schema controls and immutable clean source frozen before child/immediate and every later comparison; exact permitted state/inbox/allocation/claim additions independently checked.81Python and5newEF PASS; prior2079fullPersistence and18gap-diagnostic controls remain recorded. Four historical UTF8 lines restored byte-exact predecessor wording. Renew full frozen review/rootFULLbefore exactpush, capture newHEAD/runs, close all102/all8/Gov/FULLlogs/sixORIGINALimages. Preserve original97 oracles and original gap-bearing graph; production gap guards unchanged. Source ae83 and deterministicplan9de9 approved/rootFULL, future unreviewed hostnative3files safely stashed. Continue hoststore/mixedmedia-gap/rawcoverage-completion/context-tokenizer/automaticDI-UI/actual100-30eval/279/full233; actualmodel NOT_RUN_UNEVALUATED, no partial merge or checkpoint stop.'
+    next: 'Own278/Draft288 remote dfba terminalRED; rootFULL native130PASS23missingRequired102 and .NET2563 zeroFailSkip. dd215 WITHHELD6101233127 oldfindings closed at415; 415 WITHHELD6101294070 rootFULL only pending==revision timestamp proof assumption. Actual ingress latency reanchor requires UTC/non-null/ordered pending>=commit; repair freezes fullprestate and exact expected prepared state changing only scheduled2/pendingNULL.81Python and7focused actual.NET/sixschema+storelatency PASS, formatter/original97AST+allaggregate markers PASS. Renew complete frozen review and rootFULLbefore exactpush; capture renewed HEAD/runs and own all102/all8/Gov/FULLlogs/sixORIGINALimages. No production gap-guard changes; preserve original gap-bearing source and all retainedgraphs. Future host reader candidates prepared privately from safely retained stash, excluded from repair. Continue hoststore/mixedmedia-gap/rawcoverage-completion/context-tokenizer/automaticDI-UI/real100-30eval/279/full233; actualmodel NOT_RUN_UNEVALUATED, no partialmerge/checkpointstop.'
 
   erp_data:
     issue: 264
@@ -1497,4 +1497,18 @@ group_278_owned_effect_proof_review_repair:
   original_oracles: original97_try_prefix_AST_and_aggregate_multiset_unchanged
   renewed_frozen_review: PENDING_before_exact_push
   native_SQL_and_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_owned_effect_pending_anchor_repair:
+  reviewed_head: 415fe359bf594bb734419ab0e945a1f30f5a789f
+  withheld_receipt: 6101294070_root_FULL_fetched
+  prior_findings: two_P2_and_four_exact_historical_UTF8_restorations_CLOSED
+  demonstrated_assumption: actual_ingress_reanchors_pending_after_source_save_final_authority_latency
+  repair: UTC_nonnull_ordered_pending_at_or_after_commits_full_prestate_frozen_exact_projected_poststate
+  current_python: 81_PASS_inert_actual_prefix_controls_allow_reanchored_anchors
+  focused_dotnet: 7_PASS_six_actual_model_controls_one_retained_actual_public_store_latency_control_zeroFailSkip
+  changed_CSharp_format: VERIFY_PASS
+  original_oracles: original97_try_prefix_AST_and_aggregate_multiset_unchanged
+  renewed_frozen_review: PENDING_before_exact_push
+  native_SQL_and_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE

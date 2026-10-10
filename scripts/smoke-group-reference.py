@@ -989,10 +989,18 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
     # Only pending/cursor fields may change on the source state. All effect
     # tables start empty; receiving and allocation must add the exact prefix.
     assert sql(f"SELECT COUNT(*) FROM aioffice.GroupSourceStates WHERE {scope} AND CommittedSequence=2 AND ScheduledThroughSequence=0"
-        f" AND FirstPendingAtUtc=(SELECT CommittedAtUtc FROM aioffice.GroupMessageRevisions WHERE {scope} AND CommittedSequence=1)"
-        f" AND LastPendingAtUtc=(SELECT CommittedAtUtc FROM aioffice.GroupMessageRevisions WHERE {scope} AND CommittedSequence=2);") == "1"
+        " AND FirstPendingAtUtc IS NOT NULL AND LastPendingAtUtc IS NOT NULL AND FirstPendingAtUtc<=LastPendingAtUtc"
+        " AND DATEPART(TZOFFSET,FirstPendingAtUtc)=0 AND DATEPART(TZOFFSET,LastPendingAtUtc)=0"
+        f" AND FirstPendingAtUtc>=(SELECT CommittedAtUtc FROM aioffice.GroupMessageRevisions WHERE {scope} AND CommittedSequence=1)"
+        f" AND LastPendingAtUtc>=(SELECT CommittedAtUtc FROM aioffice.GroupMessageRevisions WHERE {scope} AND CommittedSequence=2);") == "1"
+    source_state_columns = "TenantId,CompanyId,BindingId,CommittedSequence,FirstPendingAtUtc,LastPendingAtUtc,ScheduledThroughSequence"
+    source_state_before = digest("GroupSourceStates", "BindingId", source_state_columns)
+    source_state_prepared = digest("GroupSourceStates", "BindingId",
+        "TenantId,CompanyId,BindingId,CommittedSequence,CAST(NULL AS datetimeoffset(7)) AS FirstPendingAtUtc,"
+        "CAST(NULL AS datetimeoffset(7)) AS LastPendingAtUtc,CAST(2 AS bigint) AS ScheduledThroughSequence")
     preparation_tables = ("GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimStates", "GroupBatchClaimReceipts")
     assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in preparation_tables)
+    assert digest("GroupSourceStates", "BindingId", source_state_columns) == source_state_before
     result = subprocess.run([*command, "effect-brain-fixture"], input=configuration(0), env=child_environment,
         capture_output=True, text=True, timeout=170)
     assert result.returncode == 0, "Owned clean effect batch fixture failed"
@@ -1000,6 +1008,7 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
     assert_immutable_source()
     assert_retained()
     no_gaps()
+    assert digest("GroupSourceStates", "BindingId", source_state_columns) == source_state_prepared
     assert sql(f"SELECT COUNT(*) FROM aioffice.GroupSourceStates WHERE {scope} AND CommittedSequence=2 AND ScheduledThroughSequence=2"
         " AND FirstPendingAtUtc IS NULL AND LastPendingAtUtc IS NULL;") == "1"
     assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupIngressInbox WHERE {scope}),N'|',"

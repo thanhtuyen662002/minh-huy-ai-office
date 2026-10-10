@@ -53,6 +53,16 @@ public sealed class OwnedEffectSnapshotSchemaTests
     }
 
     [Fact]
+    public void PreparedSourceStateOracleIncludesEveryActualStateColumn()
+    {
+        using var db = Context();
+        var entity = db.Model.FindEntityType(typeof(GroupSourceStateRecord))!;
+        var store = StoreObjectIdentifier.Table(entity.GetTableName()!, entity.GetSchema());
+        var retained = QuotedValueAfter(Script(), "source_state_columns = \"").Split(',');
+        Assert.Equal(entity.GetProperties().Select(x => x.GetColumnName(store)!).Order(), retained.Order());
+    }
+
+    [Fact]
     public void AllocatedRevisionOracleComparesEveryActualCopiedColumn()
     {
         using var db = Context();
