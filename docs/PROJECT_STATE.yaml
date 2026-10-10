@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 5ff28553de183458aea4931b66d2d406790c9a25
+current_target_head: b95d25c84681d8e71f91f958af03b55d5eade087
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 5ff28553de183458aea4931b66d2d406790c9a25
+    head: b95d25c84681d8e71f91f958af03b55d5eade087
     state: in_progress
-    next: 'Own278/Draft288: exact5ff root FULL closure all102 once/158PASS/2636.NET/all8-Gov/sixORIGINAL11680029776 PASS. Local approved host577/plan57a/capacitybbbb receipts6101445392/6101478951/6101577796 FULLfetched, future104 not native-qualified. New combined protected writer shares exact-current transactional engine; legacy20 no-media/no-gap guards retained, combined40/source100/evidence300 and host3/3 metadata separate, gaps/zero-notes/rawcompletion denied pending durable carrier. Fifteen new entry/three projection+13retained31 PASS; full source review then exactpush/own all104/all8/Gov/full logs/six originals closure. Automatic combined SQL replay/expiry/authority proof, rawcoverage/terminal/retry/context/DI-UI/actual100-30eval/279/full233 remain; actualmodel NOT_RUN_UNEVALUATED. No eligible merge or checkpointstop.'
+    next: 'Own278/Draft288 exactb95 approved6101661330 FULLread and pushed: Build38082610088/native114302453580 active, Gov38082610070/six prerequisitesSUCCESS, rootFULL.NET2666 zeroFailSkip. Close native104/fulllogs/all8/six originals before later push. New actual mixed automatic native proof uses separate fresh Media/quarantine source slot4 and shared writer21 effects, postflush/keyexpiry/replay/noIT/full prior graphs; build100Python/13unowned/originalverifyAST passed but SQL NOT_RUN. Freeze review then push only approved checkpoint/own new105 closure. Host-only/max40/current-authority races/rawcoverage/gaps/terminal/retry/tokenizer/DI-UI/model100-30/reporter279/full233 remain ACTIVE; modelNOT_RUN_UNEVALUATED, no partialmerge or checkpointstop.'
 
   erp_data:
     issue: 264
@@ -1596,4 +1596,24 @@ group_278_5ff_native_closure_and_combined_writer:
   future_native: existing104_exercises_legacy_wrapper_combined_SQL_effect_replay_expiry_authority_proof_required
   actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_loader_no_second_client
   frozen_independent_review: PENDING_before_any_push
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_automatic_mixed_native_proof_source:
+  source_parent: b95d25c84681d8e71f91f958af03b55d5eade087
+  parent_review: SCOPED_APPROVED6101661330_root_FULL_fetched_before_push
+  parent_build_governance: Build38082610088_active_Gov38082610070_SUCCESS_six_prerequisites_SUCCESS
+  parent_native: 114302453580_active_original104_host_capacity_not_automatic_SQL
+  parent_FULL_dotnet: 2666_projects6_520_25_2115_zeroFailSkip_four_successful_projects
+  enrollment: separately_owned_synthetic_account_source_key_slot4_existing_loader_original0to3_retained
+  input: actual_Core_two_media_readable_caption_and_fixed_synthetic_quarantine_exact_UTF8_hashes
+  preparation: actual_shipping_inbox_allocation_claim_sources_brain_empty_no_gaps_fixed_synthetic_AI
+  effects: mixed21_rows_receipt1_dispositions2_heads4_revisions4_evidence5_outbox1_items4
+  separation: exact_AI1_1_literal_Host3_3_metadata_unconfirmed_no_IT_authority_no_secret_text
+  future_expiry: post_flush_source_lock_savepoint_rollback_clean_detach_only_witness_and_key_await_no_effects_clock_rollback_denied
+  future_replay: exact_original_ID_time_ciphertext_graph_changed_plan_and_new_nonce_refused
+  retained_graphs: all_prior_sources_accounts_claims_brain_grants_portal_full_private_hashes_every_phase
+  local: runtime_proof_BUILD_zeroWarnError_Python100_PASS_format_VERIFY_unowned13_guards_original104_verify_AST_diff_PASS
+  frozen_independent_review: PENDING_before_push
+  native_SQL_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  next: close_exact_parent_CI_then_review_push_native105_all8_FULL_logs_six_originals_host_only_max40_authority_races_remaining
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

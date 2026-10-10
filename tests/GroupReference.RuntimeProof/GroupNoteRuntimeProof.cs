@@ -148,7 +148,7 @@ internal static class GroupNoteRuntimeProof
         try { await action(); } catch (InvalidOperationException error) when (error.Message == "Group note commit is unavailable." && error.InnerException is null) { refused = true; }
         if (!refused) throw new InvalidOperationException();
     }
-    private static async Task<int> TargetRowsAsync(PlatformDbContext db, GroupScope scope, Guid operation, CancellationToken token)
+    internal static async Task<int> TargetRowsAsync(PlatformDbContext db, GroupScope scope, Guid operation, CancellationToken token)
     {
         var ids = await db.GroupCustomerRequests.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
             && x.BindingId == scope.SourceBindingId && x.OriginOperationId == operation).Select(x => x.Id).ToArrayAsync(token);
@@ -192,6 +192,7 @@ internal static class GroupNoteRuntimeProof
     {
         internal bool Armed, ExpireAfterFlush, StagedObserved, Flushed, RolledBack;
         internal int SavepointChecks, WitnessSavepointChecks;
+        internal int ExpectedRows = 11;
         internal Guid Operation;
         internal GroupBatchClaimReceipt? Claim;
         internal DateTimeOffset Expires;
@@ -250,7 +251,8 @@ internal static class GroupNoteRuntimeProof
             if (!effect.Armed || effect.Flushed || eventData.Context is not PlatformDbContext db
                 || !db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Any(x => x.Entity.OperationId == effect.Operation)) return result;
             var receipt = db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Single(x => x.Entity.OperationId == effect.Operation).Entity;
-            if (await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != 11) throw new InvalidOperationException();
+            if (effect.ExpectedRows is not (11 or 21)
+                || await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != effect.ExpectedRows) throw new InvalidOperationException();
             effect.Flushed = true;
             if (effect.ExpireAfterFlush) effect.Advance();
             return result;
@@ -270,7 +272,7 @@ internal static class GroupNoteRuntimeProof
             effect.RolledBack = true;
         }
     }
-    private sealed class CountedKeys : IGroupSourceKeyProvider
+    internal sealed class CountedKeys : IGroupSourceKeyProvider
     {
         private readonly PlatformDbContext db; private readonly GroupScope scope; private readonly ConfiguredGroupSourceKeyProvider configured;
         internal int Reads, Writes; internal Action? BeforeWrite;

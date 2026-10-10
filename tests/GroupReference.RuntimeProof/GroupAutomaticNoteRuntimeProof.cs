@@ -1,0 +1,205 @@
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using MinhHuy.AIOffice.Platform.Persistence;
+using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
+
+namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
+
+// Real shipping stores on a separately owned SQL fixture. Interpretations are
+// fixed synthetic test inputs; this does not evaluate a model or raw completion.
+internal static class GroupAutomaticNoteRuntimeProof
+{
+    internal static async Task RunAsync(string mode, GroupScope scope, Guid operation,
+        GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
+    {
+        OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
+        if (mode is not ("automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit"))
+            throw new InvalidOperationException();
+        var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
+        var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = 21 };
+        await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
+            .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect)).Options);
+        var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
+            && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).ToArrayAsync(token);
+        if (references.Length != 2 || references[0].Id != operation || references[0].CommittedSequence != 1
+            || references[1].CommittedSequence != 2) throw new InvalidOperationException();
+        if (mode == "automatic-note-prepare")
+        {
+            var inbox = new GroupIngressInboxStore(db, worker, clock);
+            foreach (var value in references)
+                await inbox.ReceiveAsync(new(1, scope, value.Id, value.MessageId, value.Revision, value.CommittedSequence), token);
+            var last = await db.GroupSourceStates.AsNoTracking().Where(x => x.TenantId == scope.TenantId
+                && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).Select(x => x.LastPendingAtUtc).SingleAsync(token)
+                ?? throw new InvalidOperationException();
+            clock.Current = last.AddMinutes(3);
+            var allocation = await new GroupBatchAllocationStore(db, worker, new(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(120)), clock)
+                .AllocateDueAsync(scope, operation, token) ?? throw new InvalidOperationException();
+            if (allocation.WasAlreadyAllocated || allocation.AfterSequence != 0 || allocation.AllocatedThroughSequence != 2
+                || allocation.Revisions.Count != 2 || db.ChangeTracker.HasChanges()
+                || await db.GroupBatchClaimStates.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                    && x.BindingId == scope.SourceBindingId, token)) throw new InvalidOperationException();
+            await RequireEmptyEffectsAsync();
+            Console.WriteLine("PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims");
+            return;
+        }
+        var allocated = await db.GroupBatchAllocations.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
+            && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.OperationId == operation, token);
+        var previous = await db.GroupBatchClaimReceipts.AsNoTracking().Where(x => x.TenantId == scope.TenantId
+            && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocated.Id)
+            .OrderByDescending(x => x.Epoch).FirstOrDefaultAsync(token);
+        var expectedEpoch = mode switch { "automatic-note-expiry" => 1, "automatic-note-key-expiry" => 2, _ => 3 };
+        if ((previous?.Epoch ?? 0) != expectedEpoch - 1) throw new InvalidOperationException();
+        if (previous is not null)
+        {
+            var previousState = await db.GroupBatchClaimStates.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
+                && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocated.Id, token);
+            if (previousState.Epoch != previous.Epoch || previousState.ExpiryObservedAtUtc != previous.ExpiresAtUtc)
+                throw new InvalidOperationException();
+            if (clock.Current <= previous.ExpiresAtUtc) clock.Current = previous.ExpiresAtUtc.AddTicks(1);
+        }
+        else if (clock.Current < allocated.AllocatedAtUtc) clock.Current = allocated.AllocatedAtUtc;
+        await RequireEmptyEffectsAsync();
+        var claim = await new GroupBatchClaimStore(db, worker, clock).TryAcquireAsync(scope, allocated.Id, Guid.NewGuid(), Guid.NewGuid(),
+            TimeSpan.FromMinutes(2), token) ?? throw new InvalidOperationException();
+        if (claim.WasAlreadyClaimed || claim.CurrentHandle is null || claim.Receipt.Epoch != expectedEpoch) throw new InvalidOperationException();
+        var handle = claim.CurrentHandle;
+        var keys = new GroupNoteRuntimeProof.CountedKeys(db, scope);
+        var sources = new GroupBatchSourceReader(db, worker, clock, keys, new());
+        var brain = new GroupBrainCurrentReader(db, worker, clock, keys, new());
+        var preparation = GroupBatchSourcePreparation.Create(await sources.ReadAsync(handle, references.Select(x => x.MessageId).ToArray(), token));
+        var source = preparation.Candidates.Single();
+        if (source.Kind != GroupSourceEventKind.Media || source.Text != "Tra cứu tồn kho 😀\uFEFF "
+            || preparation.Receipts.Count != 2 || preparation.Receipts.Count(x => x.Disposition == GroupSourcePreparationDisposition.Quarantined) != 1)
+            throw new InvalidOperationException();
+        var proposal = Proposal(false); var plan = GroupAutomaticNotePlan.Create(preparation, proposal);
+        if (plan.HasCoverageGap || plan.AiNotes.Count != 2 || plan.HostNotes.Count != 2 || plan.NoteCount != 4
+            || plan.HostNotes.Sum(x => x.SourceReferences.Count) != 3 || plan.SourceDispositions.Count != 2
+            || plan.SourceDispositions.Count(x => x.Outcome == GroupWorkSourceOutcome.Work) != 1
+            || plan.SourceDispositions.Count(x => x.Outcome == GroupWorkSourceOutcome.Quarantined) != 1) throw new InvalidOperationException();
+        var dependencies = await brain.ReadAsync(handle, [], [], token);
+        var effectOperation = Guid.NewGuid();
+        var store = new GroupNoteCommitStore(db, worker, clock, sources, brain, keys, new());
+        if (keys.Reads != 1 || keys.Writes != 0 || dependencies.Items.Count != 0 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+        // Reuse the exact legacy expiry probe, with its fixed row expectation
+        // expanded for this four-note graph. Witness classification is unchanged.
+        effect.ObserveCommit(mode switch { "automatic-note-expiry" => "note-expiry", "automatic-note-key-expiry" => "note-key-expiry", _ => "note-commit" },
+            effectOperation, handle.Receipt.ExpiresAtUtc);
+        effect.Claim = handle.Receipt;
+        if (mode is "automatic-note-expiry" or "automatic-note-key-expiry")
+        {
+            if (mode == "automatic-note-key-expiry") keys.BeforeWrite = () => clock.Current = handle.Receipt.ExpiresAtUtc;
+            await DeniedAsync(() => store.CommitAutomaticAsync(plan, dependencies, effectOperation, token));
+            if (mode == "automatic-note-expiry" && (!effect.StagedObserved || !effect.Flushed || !effect.RolledBack || effect.SavepointChecks < 1))
+                throw new InvalidOperationException();
+            if (mode == "automatic-note-key-expiry" && (effect.StagedObserved || effect.Flushed || effect.RolledBack || effect.SavepointChecks != 0))
+                throw new InvalidOperationException();
+            await RequireEmptyEffectsAsync();
+            var state = await db.GroupBatchClaimStates.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
+                && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocated.Id, token);
+            if (state.Epoch != expectedEpoch || state.ExpiryObservedAtUtc != handle.Receipt.ExpiresAtUtc
+                || keys.Reads != 1 || keys.Writes != 1) throw new InvalidOperationException();
+            clock.Current = handle.Receipt.IssuedAtUtc;
+            await DeniedAsync(() => store.CommitAutomaticAsync(plan, dependencies, effectOperation, token));
+            await RequireEmptyEffectsAsync();
+            if (keys.Reads != 1 || keys.Writes != 1) throw new InvalidOperationException();
+            Console.WriteLine(mode == "automatic-note-expiry"
+                ? "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied"
+                : "PASS owned automatic note configured write key outside SQL expiry witness no effects clock rollback denied");
+            return;
+        }
+        var committed = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
+        if (committed.WasAlreadyCommitted || committed.Scope != scope || committed.BatchId != allocated.Id || committed.RequestIds.Count != 4
+            || await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 21) throw new InvalidOperationException();
+        var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
+        var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
+        if (readback.Items.Count != 4) throw new InvalidOperationException();
+        for (var index = 0; index < committed.RequestIds.Count; index++)
+        {
+            var item = readback.Items.Single(x => x.RecordId == committed.RequestIds[index]);
+            if (item.Revision != 1 || item.IsItConfirmed || item.Content.Contains("OWNED_AUTOMATIC_PRIVATE_SENTINEL", StringComparison.Ordinal))
+                throw new InvalidOperationException();
+            if (index < 2)
+            {
+                var clear = GroupBrainPayloadCodec.DecodeAiNote(item.Content);
+                if (item.Origin != GroupRequestRevisionOrigin.AiExtracted || item.VerificationLevel != GroupRequestVerificationLevel.SourceBackedAiInterpretation
+                    || item.Content != GroupBrainPayloadCodec.EncodeAiNote(proposal.Notes[index]) || clear.Evidence.Count != 1
+                    || clear.Evidence[0].MessageId != source.MessageId || clear.Evidence[0].Revision != source.Revision || clear.Evidence[0].Quote != source.Text)
+                    throw new InvalidOperationException();
+            }
+            else
+            {
+                var host = plan.HostNotes[index - 2]; var clear = GroupBrainPayloadCodec.DecodeHostAttention(item.Content);
+                if (item.Origin != GroupRequestRevisionOrigin.HostAttention || item.VerificationLevel != GroupRequestVerificationLevel.HostObserved
+                    || item.BusinessStatus != GroupNoteBusinessStatus.NeedsClarification || item.Content != host.EncodePayload()
+                    || clear.Reason != host.Reason || clear.HasCoverageGap || !clear.SourceReferences.SequenceEqual(host.SourceReferences))
+                    throw new InvalidOperationException();
+            }
+        }
+        await RequireOriginalAsync();
+        var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
+        if (!replay.WasAlreadyCommitted || replay.Scope != committed.Scope || replay.BatchId != committed.BatchId || replay.OperationId != committed.OperationId
+            || replay.OutboxId != committed.OutboxId || replay.CommittedAtUtc != committed.CommittedAtUtc || !replay.RequestIds.SequenceEqual(committed.RequestIds))
+            throw new InvalidOperationException();
+        await RequireOriginalAsync();
+        await RefusedAsync(() => store.CommitAutomaticAsync(GroupAutomaticNotePlan.Create(preparation, Proposal(true)), dependencies, effectOperation, token));
+        await RequireOriginalAsync();
+        var reads = keys.Reads; var writes = keys.Writes;
+        await RefusedAsync(() => store.CommitAutomaticAsync(plan, dependencies, Guid.NewGuid(), token));
+        await RequireOriginalAsync();
+        if (reads != 4 || writes != 1 || keys.Reads != reads || keys.Writes != writes
+            || await db.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && (x.AssignedToUserId != null || x.CommittedDueAtUtc != null
+                    || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token)) throw new InvalidOperationException();
+        Console.WriteLine("PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority");
+
+        async Task RequireOriginalAsync()
+        {
+            if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 21
+                || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph
+                || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null) throw new InvalidOperationException();
+        }
+        async Task RequireEmptyEffectsAsync()
+        {
+            if (await db.GroupWorkCommitReceipts.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || await db.GroupWorkSourceDispositions.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || await db.GroupCustomerRequests.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || await db.GroupRequestRevisions.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || await db.GroupRequestEvidence.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || await db.GroupNotesCommittedOutbox.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || await db.GroupNotesCommittedItems.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token)
+                || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null
+                || db.ChangeTracker.Entries().Any(x => x.Entity is GroupWorkCommitReceiptRecord or GroupWorkSourceDispositionRecord
+                    or GroupCustomerRequestRecord or GroupRequestRevisionRecord or GroupRequestEvidenceRecord or GroupNotesCommittedOutboxRecord or GroupNotesCommittedItemRecord))
+                throw new InvalidOperationException();
+        }
+        GroupGroundedWorkProposal Proposal(bool changed) => GroupGroundedWorkProposal.Parse(preparation, JsonSerializer.Serialize(new
+        {
+            version = GroupGroundedWorkProposal.FormatVersion,
+            notes = new[] { Note("request", changed ? "owned changed interpretation" : "owned synthetic inventory question", []),
+                Note("needs_clarification", "owned synthetic missing warehouse", ["owned warehouse detail"]) },
+            source_dispositions = new[] { new { message_id = source.MessageId.ToString("D"), revision = source.Revision, disposition = "work" } }
+        }));
+        object Note(string type, string title, string[] missing) => new
+        {
+            type,
+            title,
+            problem = "owned synthetic interpretation",
+            outcome = "owned synthetic requested outcome",
+            source_refs = new[] { new { message_id = source.MessageId.ToString("D"), revision = source.Revision, quote = source.Text } },
+            missing_fields = missing,
+            requested_deadline_text = (string?)null,
+            suggested_relation = (string?)null
+        };
+    }
+    private static async Task DeniedAsync(Func<Task<GroupNoteCommitResult>> action)
+    {
+        var denied = false; try { await action(); } catch (UnauthorizedAccessException) { denied = true; }
+        if (!denied) throw new InvalidOperationException();
+    }
+    private static async Task RefusedAsync(Func<Task<GroupNoteCommitResult>> action)
+    {
+        var refused = false;
+        try { await action(); } catch (InvalidOperationException error) when (error.Message == "Group note commit is unavailable." && error.InnerException is null) { refused = true; }
+        if (!refused) throw new InvalidOperationException();
+    }
+}

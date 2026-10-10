@@ -70,3 +70,24 @@ def prepare(*, directory, api, tenant, company, service, sql, identity_index, en
     events = [str(uuid.UUID(value.strip())) for value in events]
     assert len(events) == 2 and len(set(events)) == 2
     return source, events
+
+
+def prepare_automatic(*, directory, api, tenant, company, service, sql, identity_index, enroll_source, post_event):
+    # A new separately owned scope. Reuse enrollment/ACK/lease/gap checks while
+    # replacing only the two synthetic inputs for the combined-writer proof.
+    require_owned(directory, api)
+    assert callable(post_event)
+    sent = 0
+    def media_event(payload):
+        nonlocal sent
+        assert sent < 2 and payload["event"]["kind"] == 1
+        text = "Tra cứu tồn kho 😀\uFEFF " if sent == 0 else "Password=OWNED_AUTOMATIC_PRIVATE_SENTINEL"
+        sent += 1
+        event = dict(payload["event"])
+        event["kind"] = 2  # Actual GroupSourceEventKind.Media, not Edit.
+        event["contentSha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest().upper()
+        return post_event({**payload, "event": event, "text": text})
+    result = prepare(directory=directory, api=api, tenant=tenant, company=company, service=service, sql=sql,
+        identity_index=identity_index, enroll_source=enroll_source, post_event=media_event)
+    assert sent == 2
+    return result
