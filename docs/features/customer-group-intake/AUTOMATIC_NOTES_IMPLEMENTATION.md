@@ -1,6 +1,6 @@
 # Automatic notes implementation — issue278
 
-Status: implementation plan; no automatic note feature or model evaluation delivered yet.
+Status: initial bounded structured transport implementation is locally verified; full automatic notes and model evaluation remain unimplemented/unevaluated. See ../../validation/GROUP_STRUCTURED_RESPONSES.md for checkpoint evidence.
 Dependency: issue277 accepted at merged main `2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd`, independent receipt6096704767; all exact-main gates passed. Full issue233 stays active.
 
 ## Product contract

@@ -5,18 +5,18 @@ status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
-current_pr: null
-current_target_head: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
+current_pr: 288
+current_target_head: 019fbc1da457c36bd0c9aafc566c09ba360ce95e
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
   backend:
     issue: 278
-    pr: null
+    pr: 288
     branch: codex/278-group-automatic-notes
-    head: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
+    head: 019fbc1da457c36bd0c9aafc566c09ba360ce95e
     state: in_progress
-    next: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
+    next: 'Own278/Draft288. Bounded StructuredGeneration source is locally verified with91 actual-adapter/legacy controls and zero build warnings/errors; freeze independent review before push and close exact-head CI. Continue durable SQL batches/scoped service brain/notes/evidence/atomic outbox on SAME PR. Proposed120 primary/40 independent windows UNEVALUATED; actual provider configuration pending. No automatic notes/278/279/full233 acceptance yet.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
+next_action: 'Own278/Draft288. Bounded StructuredGeneration source is locally verified with91 actual-adapter/legacy controls and zero build warnings/errors; freeze independent review before push and close exact-head CI. Continue durable SQL batches/scoped service brain/notes/evidence/atomic outbox on SAME PR. Proposed120 primary/40 independent windows UNEVALUATED; actual provider configuration pending. No automatic notes/278/279/full233 acceptance yet.'
 
 
 blocked_by:

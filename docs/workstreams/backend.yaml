@@ -2,9 +2,9 @@ workstream: backend
 role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
 status: active-development
 current_issue: 278
-current_pr: null
+current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
+head: 019fbc1da457c36bd0c9aafc566c09ba360ce95e
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
+next_action: 'Own278/Draft288. Bounded StructuredGeneration source is locally verified with91 actual-adapter/legacy controls and zero build warnings/errors; freeze independent review before push and close exact-head CI. Continue durable SQL batches/scoped service brain/notes/evidence/atomic outbox on SAME PR. Proposed120 primary/40 independent windows UNEVALUATED; actual provider configuration pending. No automatic notes/278/279/full233 acceptance yet.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1450,6 +1450,13 @@ group_automatic_notes_278_checkpoint:
   main_actual: 114192556176
   main_quality: 114195330891
   main_artifact: 11667314210
-  state: initial_lease_no_implementation_yet
+  state: bounded_structured_checkpoint_local_verified
   model_evaluation: proposed120_primary_40_independent_UNEVALUATED
   next: 'Own278 from independently accepted merged main2e after277 closure. First implement bounded StructuredGeneration on the actual Responses adapter with strict JSON/schema validation, finite owned transport and adversarial path tests; then durable batching, scoped SQL brain/notes/evidence/atomic outbox, no-click runtime and actual model evaluation. Proposed120 primary/40 independent windows are UNEVALUATED.279 and full233 remain ACTIVE.'
+  draft_pr: 288
+  initial_lease_head: 019fbc1da457c36bd0c9aafc566c09ba360ce95e
+  initial_lease_review: 6096764040
+  local_structured_and_legacy_tests: 91
+  local_worker_build: zero_warnings_zero_errors
+  shipping_scope: bounded_structured_transport_and_syntax_only
+  automatic_sql_notes_delivered: false

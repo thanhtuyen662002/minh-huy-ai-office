@@ -13,6 +13,11 @@ public sealed record OpenAiCompatibleResponsesOptions(
     string ProviderId,
     int MaxOutputTokens = 1024)
 {
+    public TimeSpan StructuredTimeout { get; init; } = TimeSpan.FromSeconds(60);
+
+    // Explicitly owned development/test loopback only; never an arbitrary HTTP provider.
+    public bool AllowInsecureLoopback { get; init; }
+
     public static OpenAiCompatibleResponsesOptions? FromEnvironment(
         string prefix = "AIOFFICE_AI",
         string defaultProviderId = "openai-compatible")
@@ -58,7 +63,13 @@ public sealed record OpenAiCompatibleResponsesOptions(
         }
 
         var endpoint = new Uri($"{baseUrl.TrimEnd('/')}/responses", UriKind.Absolute);
-        return new OpenAiCompatibleResponsesOptions(endpoint, model, authorization, providerId);
+        var allowLoopback = Environment.GetEnvironmentVariable($"{prefix}_ALLOW_INSECURE_LOOPBACK") == "true";
+        var result = new OpenAiCompatibleResponsesOptions(endpoint, model, authorization, providerId)
+        {
+            AllowInsecureLoopback = allowLoopback
+        };
+        StructuredResponsesPolicy.ValidateOptions(result);
+        return result;
     }
 }
 
@@ -155,9 +166,12 @@ public sealed class OpenAiCompatibleResponsesAdapter(
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    private readonly BoundedStructuredResponses structured = new(httpClient, options);
+
     public string ProviderId => options.ProviderId;
 
-    public bool Supports(AiCapability capability) => capability == AiCapability.Reasoning;
+    public bool Supports(AiCapability capability) =>
+        capability is AiCapability.Reasoning or AiCapability.StructuredGeneration;
 
     public async Task<AiGatewayResponse> ExecuteAsync(
         AiGatewayRequest request,
@@ -165,6 +179,15 @@ public sealed class OpenAiCompatibleResponsesAdapter(
     {
         ArgumentNullException.ThrowIfNull(request);
         request.Validate();
+        if (!Supports(request.Capability))
+        {
+            throw new AiProviderExecutionException("AI capability is unsupported.", false);
+        }
+
+        if (request.Capability == AiCapability.StructuredGeneration)
+        {
+            return await structured.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+        }
 
         using var message = new HttpRequestMessage(HttpMethod.Post, options.Endpoint)
         {
