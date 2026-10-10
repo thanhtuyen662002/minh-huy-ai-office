@@ -112,9 +112,12 @@ class OwnedStackGuardTests(unittest.TestCase):
             "host_only": (1, 2, 1, 1, 2, 1, 1)}[proof]
         def sql(query):
             queries.append(query)
-            if query.startswith("SELECT Id FROM aioffice.GroupBindings"): return old_source
-            if query.startswith("SELECT Id FROM aioffice.GroupConnectorAccounts"): return old_account
-            if query.startswith("SELECT ConnectorAccountId"): return account
+            if query.startswith("SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupBindings"):
+                return old_source.upper() if fault == "sql-uuid-uppercase" else old_source
+            if query.startswith("SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupConnectorAccounts"):
+                return old_account.upper() if fault == "sql-uuid-uppercase" else old_account
+            if query.startswith("SELECT LOWER(CONVERT(char(36),ConnectorAccountId))"):
+                return account.upper() if fault == "sql-uuid-uppercase" else account
             if "HASHBYTES" in query:
                 if query.startswith("SET NOCOUNT ON;"):
                     value = "B" if fault == "retained-mutation" and phase >= 1 else "A"
@@ -159,6 +162,32 @@ class OwnedStackGuardTests(unittest.TestCase):
             "AIOFFICE_RUNTIME_PASSWORD": "p" * 32}, tenant=tenant, company=company, service=service, sql=sql,
             prepare_source=lambda: (source, events, base64.b64encode(b"k" * 32).decode("ascii")), reference=reference_smoke, proof=proof)
         return arguments, process, calls, queries
+
+    def test_automatic_sql_uuid_projection_keeps_all_profiles_canonical_without_weakening_identity_guard(self):
+        value = "abcdef12-3456-4789-9abc-def012345678"
+        self.assertEqual(value, automatic_smoke.canonical(value))
+        for malformed in (value.upper(), "{" + value + "}", value.replace("-", ""), str(uuid.UUID(int=0))):
+            with self.subTest(value=malformed), self.assertRaises(AssertionError): automatic_smoke.canonical(malformed)
+        for proof in ("notes", "no_work", "host_only"):
+            arguments, process, _, queries = self.automatic_runtime_oracle(proof=proof)
+            with self.subTest(proof=proof), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output:
+                automatic_smoke.verify(**arguments)
+            self.assertEqual(1, len(output.getvalue().splitlines()))
+            projections = [query for query in queries if query.startswith("SELECT LOWER(CONVERT(char(36),")]
+            self.assertEqual(3, len(projections))
+            self.assertTrue(any("Id)) FROM aioffice.GroupBindings" in query for query in projections))
+            self.assertTrue(any("Id)) FROM aioffice.GroupConnectorAccounts" in query for query in projections))
+            self.assertTrue(any("ConnectorAccountId)) FROM aioffice.GroupBindings" in query for query in projections))
+
+    def test_automatic_noncanonical_sql_guid_result_refuses_before_fixture_or_docker(self):
+        for proof in ("notes", "no_work", "host_only"):
+            arguments, process, calls, _ = self.automatic_runtime_oracle("sql-uuid-uppercase", proof=proof)
+            arguments["prepare_source"] = lambda: self.fail("Noncanonical SQL identity reached fixture enrollment")
+            with self.subTest(proof=proof), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+                automatic_smoke.verify(**arguments)
+            self.assertEqual([], calls); self.assertEqual("", output.getvalue())
 
     def test_automatic_runtime_oracle_requires_all_four_modes_complete_graph_and_private_key_environment(self):
         arguments, process, calls, queries = self.automatic_runtime_oracle()

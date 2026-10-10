@@ -116,8 +116,11 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     password = manifest["AIOFFICE_RUNTIME_PASSWORD"]
     assert isinstance(password, str) and re.fullmatch(r"[A-Za-z0-9_-]{32,128}", password)
     base = f"TenantId='{tenant}' AND CompanyId='{company}'"
-    sources = [canonical(value.strip()) for value in sql(f"SELECT Id FROM aioffice.GroupBindings WHERE {base} ORDER BY Id;").splitlines()]
-    accounts = [canonical(value.strip()) for value in sql(f"SELECT Id FROM aioffice.GroupConnectorAccounts WHERE {base} ORDER BY Id;").splitlines()]
+    # SQL uniqueidentifier display is not the canonical wire representation.
+    # Project only these internal typed GUIDs; keep the input guard strict and
+    # never normalize opaque provider/account/group/message identities.
+    sources = [canonical(value.strip()) for value in sql(f"SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupBindings WHERE {base} ORDER BY Id;").splitlines()]
+    accounts = [canonical(value.strip()) for value in sql(f"SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupConnectorAccounts WHERE {base} ORDER BY Id;").splitlines()]
     retained = retained_snapshot(tenant=tenant, company=company, sources=sources, accounts=accounts, sql=sql)
     def unchanged():
         assert retained_snapshot(tenant=tenant, company=company, sources=sources, accounts=accounts, sql=sql) == retained, \
@@ -128,7 +131,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     assert source not in sources and len(events) == len(set(events)) == 2
     unchanged()
     scope = base + f" AND BindingId='{source}'"
-    account = canonical(sql(f"SELECT ConnectorAccountId FROM aioffice.GroupBindings WHERE {base} AND Id='{source}';"))
+    account = canonical(sql(f"SELECT LOWER(CONVERT(char(36),ConnectorAccountId)) FROM aioffice.GroupBindings WHERE {base} AND Id='{source}';"))
     assert account not in accounts
     def digest(table, order, columns="*"):
         value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
