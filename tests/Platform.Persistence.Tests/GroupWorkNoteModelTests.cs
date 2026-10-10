@@ -157,4 +157,35 @@ public sealed class GroupWorkNoteModelTests
             Assert.Empty(errors);
         }
     }
+
+    [Fact]
+    public void HostOriginExpansionRetainsExactOldClausesAndChangesOnlyTheOriginConstraint()
+    {
+        using var db = Database(); var migration = new AddGroupHostAttentionOrigin();
+        var drop = Assert.IsType<DropCheckConstraintOperation>(migration.UpOperations[0]);
+        var add = Assert.IsType<AddCheckConstraintOperation>(migration.UpOperations[1]);
+        Assert.Equal(2, migration.UpOperations.Count);
+        Assert.Equal("aioffice", drop.Schema); Assert.Equal("GroupRequestRevisions", drop.Table);
+        Assert.Equal("CK_GroupRequestRevisions_Origin", drop.Name);
+        Assert.Equal(drop.Schema, add.Schema); Assert.Equal(drop.Table, add.Table); Assert.Equal(drop.Name, add.Name);
+        var old = new AddGroupWorkNotes().UpOperations.OfType<CreateTableOperation>().Single(x => x.Name == drop.Table)
+            .CheckConstraints.Single(x => x.Name == drop.Name).Sql;
+        Assert.Equal(old + " OR ([Origin]=3 AND [VerificationLevel]=3 AND [AuthorServiceId] IS NOT NULL AND [AuthorUserId] IS NULL AND [SourceBatchId] IS NOT NULL AND [ClaimEpoch] IS NOT NULL AND [ClaimEpoch]>0)", add.Sql);
+        Assert.Equal(new[] { 1, 2, 3 }, Enum.GetValues<GroupRequestRevisionOrigin>().Select(x => (int)x));
+        Assert.Equal(new[] { 1, 2, 3 }, Enum.GetValues<GroupRequestVerificationLevel>().Select(x => (int)x));
+        Assert.Equal(add.Sql, db.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(GroupRequestRevisionRecord))!
+            .GetCheckConstraints().Single(x => x.Name == drop.Name).Sql);
+        Assert.Throws<NotSupportedException>(() => migration.DownOperations);
+    }
+
+    [Fact]
+    public void HostOriginForwardSqlParsesWithoutNewColumnsRightsOrDataMutation()
+    {
+        using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
+        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(new AddGroupHostAttentionOrigin().UpOperations, model).Select(x => x.CommandText));
+        using var reader = new StringReader(sql); new TSql160Parser(true).Parse(reader, out var errors); Assert.Empty(errors);
+        Assert.Contains("ALTER TABLE [aioffice].[GroupRequestRevisions] ADD CONSTRAINT [CK_GroupRequestRevisions_Origin] CHECK", sql);
+        foreach (var forbidden in new[] { "CREATE TABLE", "DROP TABLE", "DROP COLUMN", "ALTER COLUMN", "GRANT ", "DENY ", "REVOKE ", "INSERT ", "UPDATE ", "DELETE " })
+            Assert.DoesNotContain(forbidden, sql, StringComparison.OrdinalIgnoreCase);
+    }
 }

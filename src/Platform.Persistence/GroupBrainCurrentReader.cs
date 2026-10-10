@@ -7,8 +7,9 @@ using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
-// Protected private revisions are opaque here. A future qualified context must
-// decode its closed payload format, quarantine and budget it before release.
+// Existing AI/glossary revisions remain opaque here. Host attention additionally
+// requires its closed metadata payload to match exact protected evidence.
+// A future qualified context must quarantine and budget all content before release.
 // This reader neither invokes a model nor grants future provider/effect authority.
 public sealed class GroupBrainPrivateRevision
 {
@@ -16,6 +17,8 @@ public sealed class GroupBrainPrivateRevision
     {
         Kind = snapshot.Kind; RecordId = snapshot.RecordId; Revision = snapshot.Revision.Revision;
         RequestCode = snapshot.Request?.RequestCode; BusinessStatus = snapshot.Request?.BusinessStatus;
+        Origin = snapshot.Request is null ? null : snapshot.Revision.Origin;
+        VerificationLevel = snapshot.Request is null ? null : snapshot.Revision.VerificationLevel;
         IsItConfirmed = snapshot.Request?.ConfirmedByUserId is not null; Content = content;
     }
     public GroupBrainContentKind Kind { get; }
@@ -23,6 +26,8 @@ public sealed class GroupBrainPrivateRevision
     public long Revision { get; }
     public string? RequestCode { get; }
     public GroupNoteBusinessStatus? BusinessStatus { get; }
+    public GroupRequestRevisionOrigin? Origin { get; }
+    public GroupRequestVerificationLevel? VerificationLevel { get; }
     public bool IsItConfirmed { get; }
     public string Content { get; }
     public override string ToString() => "Group brain revision (private content).";
@@ -74,6 +79,7 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
                     var value = protector.Unprotect(new(handle.Receipt.Scope, snapshot.Kind, snapshot.RecordId,
                         revision.Revision, revision.SourceVersion, revision.DeletionGeneration),
                         revision.ProtectedContent!, key.Key, key.KeyId);
+                    ValidateHostPayload(snapshot, value);
                     content.Add((snapshot.Kind, snapshot.RecordId), value);
                 }
             }
@@ -188,12 +194,18 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
                 || head.AssignedToUserId is not null || head.CommittedDueAtUtc is not null))) throw Unavailable();
         var revision = await RequestRevisionAsync(scope, id, head.CurrentRevision, token) ?? throw Unavailable();
         if (revision.CreatedAtUtc < head.CreatedAtUtc || revision.CreatedAtUtc > head.UpdatedAtUtc) throw Unavailable();
-        if (revision.Origin == GroupRequestRevisionOrigin.AiExtracted)
+        if (revision.Origin is GroupRequestRevisionOrigin.AiExtracted or GroupRequestRevisionOrigin.HostAttention)
         {
-            if (revision.VerificationLevel != GroupRequestVerificationLevel.SourceBackedAiInterpretation
+            var expectedLevel = revision.Origin == GroupRequestRevisionOrigin.AiExtracted
+                ? GroupRequestVerificationLevel.SourceBackedAiInterpretation : GroupRequestVerificationLevel.HostObserved;
+            if (revision.VerificationLevel != expectedLevel
                 || revision.AuthorServiceId is null || revision.AuthorServiceId == Guid.Empty
                 || revision.AuthorUserId is not null || revision.SourceBatchId is null || revision.SourceBatchId == Guid.Empty
                 || revision.ClaimEpoch is null or <= 0) throw Unavailable();
+            if (revision.Origin == GroupRequestRevisionOrigin.HostAttention
+                && (head.Kind is not (GroupNoteKind.NeedsClarification or GroupNoteKind.ExtractionFailed)
+                    || head.BusinessStatus != GroupNoteBusinessStatus.NeedsClarification
+                    || head.ConfirmedByUserId is not null)) throw Unavailable();
         }
         else if (revision.Origin != GroupRequestRevisionOrigin.ItEdited || revision.VerificationLevel != GroupRequestVerificationLevel.ItConfirmed
             || revision.AuthorServiceId is not null || revision.AuthorUserId is null || revision.AuthorUserId == Guid.Empty
@@ -207,6 +219,8 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
         {
             var item = evidence[index];
             if (item.Ordinal != index + 1 || item.MessageId == Guid.Empty || item.MessageRevision <= 0 || !Enum.IsDefined(item.Kind)) throw Unavailable();
+            if (revision.Origin == GroupRequestRevisionOrigin.HostAttention && item.Kind != GroupRequestEvidenceKind.HostMetadataAttention
+                || revision.Origin == GroupRequestRevisionOrigin.AiExtracted && item.Kind != GroupRequestEvidenceKind.LiteralSourceQuote) throw Unavailable();
             // Project only bounded source dependency metadata. Original external
             // identities/private source bodies are not part of the brain read.
             var winner = await database.GroupMessageRevisions.AsNoTracking().Where(x => x.TenantId == scope.TenantId
@@ -284,19 +298,36 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
         && first.Revision with { ProtectedContent = null } == second.Revision with { ProtectedContent = null }
         && first.Revision.ProtectedContent!.AsSpan().SequenceEqual(second.Revision.ProtectedContent)
         && first.Evidence.SequenceEqual(second.Evidence) && first.SourceHeads.SequenceEqual(second.SourceHeads);
+    private static void ValidateHostPayload(GroupBrainSnapshot snapshot, string value)
+    {
+        if (snapshot.Request is null || snapshot.Revision.Origin != GroupRequestRevisionOrigin.HostAttention) return;
+        try
+        {
+            var payload = GroupBrainPayloadCodec.DecodeHostAttention(value);
+            if (!payload.SourceReferences.SequenceEqual(snapshot.Evidence.Select(x => new GroupHostAttentionReference(x.MessageId, x.MessageRevision)))
+                || (payload.Reason == GroupHostAttentionReason.ExtractionFailed) != (snapshot.Request.Kind == GroupNoteKind.ExtractionFailed))
+                throw Unavailable();
+        }
+        catch (InvalidOperationException) { throw Unavailable(); }
+    }
     private static (GroupBrainContentKind Kind, Guid Id)[] Select(IReadOnlyList<Guid> requests, IReadOnlyList<Guid> glossary)
     {
-        if (requests is null || glossary is null || requests.Count > MaximumSelectedRevisions || glossary.Count > MaximumSelectedRevisions
-            || requests.Count + glossary.Count > MaximumSelectedRevisions) throw Unavailable();
-        // Count is only an early guard. Freeze a bounded enumeration and check
-        // its actual size before any SQL/key lookup; never truncate excess IDs.
-        var requestSnapshot = requests.Take(MaximumSelectedRevisions + 1).ToArray();
-        var glossarySnapshot = glossary.Take(MaximumSelectedRevisions + 1).ToArray();
-        if (requestSnapshot.Length + glossarySnapshot.Length > MaximumSelectedRevisions) throw Unavailable();
-        var result = requestSnapshot.Select(x => (Kind: GroupBrainContentKind.RequestRevision, Id: x))
-            .Concat(glossarySnapshot.Select(x => (Kind: GroupBrainContentKind.GlossaryRevision, Id: x))).ToArray();
-        if (result.Any(x => x.Id == Guid.Empty) || result.Distinct().Count() != result.Length) throw Unavailable();
-        return result;
+        if (requests is null || glossary is null) throw Unavailable();
+        // Enumerate directly so IList Count/indexer fast paths cannot silently
+        // omit selected dependencies. Bound the combined actual sequence.
+        var result = new List<(GroupBrainContentKind Kind, Guid Id)>(MaximumSelectedRevisions);
+        Add(requests, GroupBrainContentKind.RequestRevision); Add(glossary, GroupBrainContentKind.GlossaryRevision);
+        if (result.Any(x => x.Id == Guid.Empty) || result.Distinct().Count() != result.Count) throw Unavailable();
+        return result.ToArray();
+
+        void Add(IReadOnlyList<Guid> values, GroupBrainContentKind kind)
+        {
+            foreach (var id in values)
+            {
+                if (result.Count == MaximumSelectedRevisions) throw Unavailable();
+                result.Add((kind, id));
+            }
+        }
     }
     private void ValidateEntry(GroupBatchClaimHandle handle, CancellationToken token)
     {

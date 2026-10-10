@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 450738eab84591e121e091927f010af9edfe1f9c
+current_target_head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 450738eab84591e121e091927f010af9edfe1f9c
+    head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
     state: in_progress
-    next: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched; actual EF witness savepoint falsefailure repairedccb with exact originalclaim single Modified ExpiryObserved property and sourceExclusive lock for every savepoint;36 actual local observer/entry controls PASS. Combinedfrozenccb review reproduced host codec IList Count fastpath silently truncating actual11 references to1. Repaired direct bounded foreach sentinel11/disposal, permanent false-size0/1/10/11 and unbounded controls.34host+38retainedcodec PASS72zeroFailSkip, format/diff; noSQL/model authority. Obtain renewed combined frozen review/rootFULLreceipt before exactapprovedpush, own renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader including actual selection enumeration, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+    next: 'Own278/Draft288 remote dfba2936c5d9fa42c58b0855717cd6134a7f617e scopedAPPROVED6100743752 rootFULLbeforeexactpush. Build38075629274/native114281880568 ownedIN_PROGRESS; Gov38075629275SUCCESS. Prior450 terminalRED closed FULLnative106PASS44missing4failure/noartifact and FULL.NET2493zeroFailSkip; original two noteproofP2s/statisticsname/EF witness and IListcodec findings sourceclosed, complete450failurecauseUNPROVEN. Renewed102exact/all8/Gov/rootFULLnative.NET/all6ORIGINALimages mandatory, no native note acceptance yet. Separate unpublished HostAttention3/HostObserved3 versionedexpand replacesonlyoriginCK preserving1/1and2/2; reader closedhostpayload matchesexact evidence/reason and unconfirmedattentionhead, exposesrequestprovenance separately frombusinessconfirmation, retainsopaqueAI/glossary. DirectcombinedactualIDenumeration fixes IListselectionloss.34newreader+2migration/current240reader-model controls PASSzeroFailSkip; fullPersistence and schemaformat/pending-model/script gates at checkpoint. Obtain exact frozen schema-reader review before any laterpush; do notcancel currentCI. Continue fixedhoststore/mixedmedia-gap honesty/rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched; actual EF witness savepoint falsefailure repairedccb with exact originalclaim single Modified ExpiryObserved property and sourceExclusive lock for every savepoint;36 actual local observer/entry controls PASS. Combinedfrozenccb review reproduced host codec IList Count fastpath silently truncating actual11 references to1. Repaired direct bounded foreach sentinel11/disposal, permanent false-size0/1/10/11 and unbounded controls.34host+38retainedcodec PASS72zeroFailSkip, format/diff; noSQL/model authority. Obtain renewed combined frozen review/rootFULLreceipt before exactapprovedpush, own renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader including actual selection enumeration, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+next_action: 'Own278/Draft288 remote dfba2936c5d9fa42c58b0855717cd6134a7f617e scopedAPPROVED6100743752 rootFULLbeforeexactpush. Build38075629274/native114281880568 ownedIN_PROGRESS; Gov38075629275SUCCESS. Prior450 terminalRED closed FULLnative106PASS44missing4failure/noartifact and FULL.NET2493zeroFailSkip; original two noteproofP2s/statisticsname/EF witness and IListcodec findings sourceclosed, complete450failurecauseUNPROVEN. Renewed102exact/all8/Gov/rootFULLnative.NET/all6ORIGINALimages mandatory, no native note acceptance yet. Separate unpublished HostAttention3/HostObserved3 versionedexpand replacesonlyoriginCK preserving1/1and2/2; reader closedhostpayload matchesexact evidence/reason and unconfirmedattentionhead, exposesrequestprovenance separately frombusinessconfirmation, retainsopaqueAI/glossary. DirectcombinedactualIDenumeration fixes IListselectionloss.34newreader+2migration/current240reader-model controls PASSzeroFailSkip; fullPersistence and schemaformat/pending-model/script gates at checkpoint. Obtain exact frozen schema-reader review before any laterpush; do notcancel currentCI. Continue fixedhoststore/mixedmedia-gap honesty/rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
 
 
 blocked_by:
@@ -1399,3 +1399,24 @@ group_278_host_actual_enumeration_repair:
   renewed_combined_source_review: PENDING_before_exact_push
   frozen_native_required_markers: 102_exactly_once_all99_retained
   host_SQL_model_full_acceptance: NOT_RUN_UNQUALIFIED_ACTIVE_INCOMPLETE
+
+group_278_host_origin_reader_preparation:
+  source_approved_remote_head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
+  remote_combined_review: 6100743752_root_FULL_before_exact_push
+  exact_build: 38075629274_owned_IN_PROGRESS
+  exact_governance: 38075629275_SUCCESS
+  exact_native: 114281880568_owned_IN_PROGRESS
+  migration: 20261010182105_AddGroupHostAttentionOrigin
+  operations: replace_only_origin_CK_preserve_exact_old_AI_IT_clauses_add_explicit_host_3_3
+  runtime_rights_and_relationships: unchanged
+  rollback: narrowing_refused_forward_repair_required
+  reader: exact_host_closed_payload_refs_reason_unconfirmed_attention_head_metadata_evidence
+  provenance: request_origin_verification_separate_business_confirmation_null_for_glossary
+  selection: direct_bounded_combined_actual_enumeration_without_IList_Count_indexer_fastpath
+  new_reader_controls: 34_PASS
+  new_migration_controls: 2_PASS
+  complete_reader_model_controls: 240_PASS_zero_failures_skips
+  full_local_persistence: 2048_PASS_zero_failures_skips
+  schema_gates: format_no_pending_model_forward_only_script_YAML2_diff_PASS
+  independent_frozen_review: PENDING_before_later_push
+  native_host_pipeline_model_full_acceptance: NOT_RUN_UNQUALIFIED_ACTIVE_INCOMPLETE

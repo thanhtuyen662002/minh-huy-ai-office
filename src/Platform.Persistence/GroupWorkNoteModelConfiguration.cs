@@ -46,7 +46,7 @@ internal static class GroupWorkNoteModelConfiguration
             entity.ToTable("GroupRequestRevisions", table =>
             {
                 PayloadChecks(table, "GroupRequestRevisions");
-                table.HasCheckConstraint("CK_GroupRequestRevisions_Origin", "([Origin]=1 AND [VerificationLevel]=1 AND [AuthorServiceId] IS NOT NULL AND [AuthorUserId] IS NULL AND [SourceBatchId] IS NOT NULL AND [ClaimEpoch] IS NOT NULL AND [ClaimEpoch]>0) OR ([Origin]=2 AND [VerificationLevel]=2 AND [AuthorServiceId] IS NULL AND [AuthorUserId] IS NOT NULL AND [SourceBatchId] IS NULL AND [ClaimEpoch] IS NULL)");
+                table.HasCheckConstraint("CK_GroupRequestRevisions_Origin", "([Origin]=1 AND [VerificationLevel]=1 AND [AuthorServiceId] IS NOT NULL AND [AuthorUserId] IS NULL AND [SourceBatchId] IS NOT NULL AND [ClaimEpoch] IS NOT NULL AND [ClaimEpoch]>0) OR ([Origin]=2 AND [VerificationLevel]=2 AND [AuthorServiceId] IS NULL AND [AuthorUserId] IS NOT NULL AND [SourceBatchId] IS NULL AND [ClaimEpoch] IS NULL) OR ([Origin]=3 AND [VerificationLevel]=3 AND [AuthorServiceId] IS NOT NULL AND [AuthorUserId] IS NULL AND [SourceBatchId] IS NOT NULL AND [ClaimEpoch] IS NOT NULL AND [ClaimEpoch]>0)");
             });
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.RequestId, x.Revision });
             Payload(entity.Property(x => x.ContentKeyId), entity.Property(x => x.ProtectedContent), entity.Property(x => x.EnvelopeSha256));

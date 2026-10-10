@@ -75,3 +75,7 @@ Returned private payloads remain opaque. A qualified context must decode the clo
 ### Reader bound and final verdict ordering
 
 Bound the actual copied selection with per-list overflow sentinels and reject a combined size above20 before SQL or keys, independently of caller Count. In each read unit perform the effective work permission proof before computing the final live-claim verdict. A permission await cannot reuse a verdict computed before its completion; observed expiry remains witness-only retirement followed by refusal. Retain independent counterexamples and qualify actual SQL reads separately.
+
+### Host observation provenance expansion
+
+Keep host metadata attention distinct from source-backed AI interpretations and IT edits through the explicit3/3 HostAttention/HostObserved revision pair. Expand only the origin check while preserving the old1/1 and2/2 clauses and existing effective permissions. Readers expose request provenance separately from business confirmation, require an unconfirmed attention head and metadata evidence, and match a closed protected host payload to exact evidence refs/reason. Preserve legacy opaque AI/glossary content; qualified model context remains a separate release boundary. Freeze actual selected dependencies through direct bounded enumeration to avoid IList size fast paths. Do not enable host writes until fixed consumer authority and native persistence qualification exist. See `docs/validation/GROUP_HOST_ATTENTION_READER.md`.

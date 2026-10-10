@@ -2,8 +2,8 @@ using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
-public enum GroupRequestRevisionOrigin { AiExtracted = 1, ItEdited = 2 }
-public enum GroupRequestVerificationLevel { SourceBackedAiInterpretation = 1, ItConfirmed = 2 }
+public enum GroupRequestRevisionOrigin { AiExtracted = 1, ItEdited = 2, HostAttention = 3 }
+public enum GroupRequestVerificationLevel { SourceBackedAiInterpretation = 1, ItConfirmed = 2, HostObserved = 3 }
 public enum GroupRequestEvidenceKind { LiteralSourceQuote = 1, HostMetadataAttention = 2 }
 public enum GroupWorkCommitOutcome { Notes = 1, NoWork = 2, Attention = 3 }
 public enum GroupWorkSourceOutcome
