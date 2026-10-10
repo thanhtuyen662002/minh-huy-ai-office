@@ -56,7 +56,7 @@ def close_owned_container(*, directory, api, name, suffix, reference):
             inspected = subprocess.run(["docker", "inspect", "--type", "container", "--format",
                 '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name], capture_output=True, text=True, timeout=10)
             if inspected.returncode:
-                assert inspected.returncode == 1 and not inspected.stdout and inspected.stderr.strip() in (
+                assert inspected.returncode == 1 and inspected.stdout in ("", "\n", "\r\n") and inspected.stderr.strip() in (
                     "Error: No such object: " + name, "Error: No such container: " + name,
                     "Error response from daemon: No such container: " + name), "Owned automatic container absence is unverified"
                 continue
@@ -64,7 +64,7 @@ def close_owned_container(*, directory, api, name, suffix, reference):
             assert re.fullmatch(r"[0-9a-f]{64}", identity) and label == suffix and not inspected.stderr, \
                 "Owned automatic container identity mismatch"
             removed = subprocess.run(["docker", "rm", "--force", identity], capture_output=True, text=True, timeout=15)
-            assert removed.returncode == 0 or (removed.returncode == 1 and not removed.stdout and removed.stderr.strip() in (
+            assert removed.returncode == 0 or (removed.returncode == 1 and removed.stdout in ("", "\n", "\r\n") and removed.stderr.strip() in (
                 "Error: No such container: " + identity, "Error response from daemon: No such container: " + identity)), \
                 "Owned automatic container removal failed"
         except BaseException as error:

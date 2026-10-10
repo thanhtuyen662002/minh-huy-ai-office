@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 28065657acbf9a596fefaeb7e2b587a07309a642
     state: in_progress
-    next: 'Own278/Draft288 remote280 Build38086639444/native114314414446 ACTIVE107/Gov38086639370SUCCESS; rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. All8/native107/six ORIGINALs not closed; do not supersede meaningful active CI. Local4b exact coverage source APPROVED6102317836 ROOT FULLfetched/read:319retained+16independent/8oldcounterexamples fail-before-pass-after/SQL160actualEF/formatRelease0W0E. New separate owned coverage SQL proof preparation:122Python/22actualunowned/fourcoldprofiles/original104/DebugRelease0W0E/format PASS; source review/native108 NOT_RUN_UNQUALIFIED. Original570 terminalRED evidence and unproven raw GUID cause retained. Continue durable gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; permanent256refusal is not received-work acceptance; no partialmerge.'
+    next: 'Own278/Draft288 remote280 TERMINAL RED Build38086639444/native114314414446/quality114319788181; rootFULL log107required21absent137PASS4failures, actual first-profile cleanup absence assertion. Gov38086639370/sixprerequisites SUCCESS/rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. Actual local Docker29.8.1 loopback404 reproduces newline stdout rejection; original CI result shape unretained/unproven. Narrow exactempty-LF-CRLF absence repair125Python PASS/source review pending. Scoped4b6102317836/f76102427093 ROOT FULLread; repaired nexthead must own renewed108/all8/FULL.NET2711 prediction/six ORIGINALs. Raw WIP separately preserved15c25ae56 (27of29focusedPASS; maxfixture needsNewText-then-Edit), excluded from repair. Continue gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote280 Build38086639444/native114314414446 ACTIVE107/Gov38086639370SUCCESS; rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. All8/native107/six ORIGINALs not closed; do not supersede meaningful active CI. Local4b exact coverage source APPROVED6102317836 ROOT FULLfetched/read:319retained+16independent/8oldcounterexamples fail-before-pass-after/SQL160actualEF/formatRelease0W0E. New separate owned coverage SQL proof preparation:122Python/22actualunowned/fourcoldprofiles/original104/DebugRelease0W0E/format PASS; source review/native108 NOT_RUN_UNQUALIFIED. Original570 terminalRED evidence and unproven raw GUID cause retained. Continue durable gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; permanent256refusal is not received-work acceptance; no partialmerge.'
+next_action: 'Own278/Draft288 remote280 TERMINAL RED Build38086639444/native114314414446/quality114319788181; rootFULL log107required21absent137PASS4failures, actual first-profile cleanup absence assertion. Gov38086639370/sixprerequisites SUCCESS/rootFULL.NET2685=[6,520,25,2134]/zeroFailSkip/four runs. Actual local Docker29.8.1 loopback404 reproduces newline stdout rejection; original CI result shape unretained/unproven. Narrow exactempty-LF-CRLF absence repair125Python PASS/source review pending. Scoped4b6102317836/f76102427093 ROOT FULLread; repaired nexthead must own renewed108/all8/FULL.NET2711 prediction/six ORIGINALs. Raw WIP separately preserved15c25ae56 (27of29focusedPASS; maxfixture needsNewText-then-Edit), excluded from repair. Continue gap/backlog/zero-message carrier/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge.'
 
 
 blocked_by:
@@ -1725,3 +1725,16 @@ exact_coverage_native_preparation:
   qualification: NOT_RUN_UNQUALIFIED
   model: NOT_RUN_UNEVALUATED
   next: 'Frozen full proof review after checkpoint; own active280107 terminal CI before push then own exact108/all8/FULL.NET2711 prediction/six ORIGINALs. No independent-process concurrency, complete gap workflow or full278 acceptance claimed.'
+
+automatic_container_absence_repair:
+  failed_head: 28065657acbf9a596fefaeb7e2b587a07309a642
+  failed_build: 38086639444
+  failed_native: 114314414446
+  failed_quality: 114319788181
+  governance: 38086639370
+  evidence: 'RootFULL107required21absent137PASS4failurepatterns; first automatic parent cleanup absence assertion, no native107/all8/browser qualification. Six prerequisites/Gov SUCCESS/FULL.NET2685 zeroFailSkip four runs. Original inspect value shape unretained/unproven.'
+  reproduction: 'Actual Docker29.8.1 CLI against own loopback HTTP404/empty privateconfig: return1/stdoutLF/exactownederror, old check rejects; no real daemon/resource activation.'
+  repair: 'Only two absence stdout checks accept exactempty/LF/CRLF; return1/exactownedname-or-ID errors/labels/reinspect/IDonlyremove/timeouts/firsterror unchanged.125Python including three new bounded methods PASS.'
+  approved_prerequisites: '4b scoped6102317836 and f7 scoped6102427093 ROOT FULLfetched/read; native108 remains NOT_RUN_UNQUALIFIED.'
+  raw_wip_stash: 15c25ae56174dc1bfa78c11c8282b41d5a410ab2
+  next: 'Full frozen repair review then samePR reviewed-source108 push/CI closure; preserve failed570/280 evidence and model NOT_RUN_UNEVALUATED; no partialmerge.'
