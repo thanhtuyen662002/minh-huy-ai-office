@@ -1049,5 +1049,81 @@ class OwnedStackGuardTests(unittest.TestCase):
                 submission_smoke.require_stored_event_hex(value, size)
 
 
+class ReferenceChildClosureTests(unittest.TestCase):
+    class Child:
+        def __init__(self, poll_error=None, drain_errors=(), input_error=None, completed=False):
+            self.poll_error = poll_error
+            self.drain_errors = list(drain_errors)
+            self.drains = []
+            self.completed = completed
+            self.stdin = SimpleNamespace(close=lambda: self.close_input(input_error))
+            self.input_closed = 0
+
+        def close_input(self, error):
+            self.input_closed += 1
+            if error is not None: raise error
+
+        def poll(self):
+            if self.poll_error is not None: raise self.poll_error
+            return 0 if self.completed else None
+
+        def communicate(self, timeout):
+            self.drains.append(timeout)
+            if self.drain_errors:
+                error = self.drain_errors.pop(0)
+                if error is not None: raise error
+            return ("", "")
+
+    def test_poll_failure_still_attempts_owned_kill_and_drain_preserving_original(self):
+        original = RuntimeError("owned-poll-fault")
+        child = self.Child(poll_error=original)
+        kills = []
+        with self.assertRaises(RuntimeError) as observed:
+            reference_smoke.close_owned_reference_child(child, lambda: kills.append("inspected-kill"))
+        self.assertIs(original, observed.exception)
+        self.assertEqual(["inspected-kill"], kills)
+        self.assertEqual([15], child.drains)
+
+    def test_kill_failure_cannot_skip_drain(self):
+        original = RuntimeError("owned-kill-fault")
+        child = self.Child()
+        def kill(): raise original
+        with self.assertRaises(RuntimeError) as observed:
+            reference_smoke.close_owned_reference_child(child, kill)
+        self.assertIs(original, observed.exception)
+        self.assertEqual([15], child.drains)
+
+    def test_drain_timeout_reinspects_kill_and_always_performs_final_bounded_drain(self):
+        original = TimeoutError("owned-first-drain")
+        child = self.Child(drain_errors=[original, None])
+        kills = []
+        with self.assertRaises(TimeoutError) as observed:
+            reference_smoke.close_owned_reference_child(child, lambda: kills.append("inspected-kill"))
+        self.assertIs(original, observed.exception)
+        self.assertEqual(["inspected-kill", "inspected-kill"], kills)
+        self.assertEqual([15, 5], child.drains)
+
+    def test_every_failure_still_attempts_secondary_kill_and_final_drain(self):
+        original = RuntimeError("owned-input-close")
+        child = self.Child(poll_error=RuntimeError("poll"), drain_errors=[TimeoutError("first"), TimeoutError("final")], input_error=original)
+        kills = []
+        def kill():
+            kills.append("inspected-kill")
+            raise RuntimeError("kill")
+        with self.assertRaises(RuntimeError) as observed:
+            reference_smoke.close_owned_reference_child(child, kill)
+        self.assertIs(original, observed.exception)
+        self.assertEqual(2, len(kills)); self.assertEqual([15, 5], child.drains)
+        self.assertIsNone(child.stdin)
+
+    def test_completed_child_is_drained_without_kill_and_partial_child_is_inert(self):
+        child = self.Child(completed=True)
+        kills = []
+        reference_smoke.close_owned_reference_child(child, lambda: kills.append("kill"))
+        reference_smoke.close_owned_reference_child(None, lambda: kills.append("kill"))
+        self.assertEqual([], kills); self.assertEqual([15], child.drains)
+        self.assertEqual(1, child.input_closed)
+
+
 if __name__ == "__main__":
     unittest.main()

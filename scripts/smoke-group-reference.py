@@ -17,6 +17,44 @@ def require_owned(directory, api):
         raise RuntimeError("Group reference proof requires the owned disposable GitHub CI fixture.")
 
 
+def close_owned_reference_child(child, kill_owned):
+    # The caller has already guarded/created this exact owned child. A failed
+    # observation is never evidence that it stopped. Attempt every independent
+    # bounded closure step and preserve the first failure for the outer cleanup.
+    if child is None:
+        return
+    failure = None
+    running = True
+    try:
+        if child.stdin is not None:
+            child.stdin.close()
+    except BaseException as error:
+        failure = error
+    finally:
+        child.stdin = None  # communicate must not flush a closed/failed input.
+    try:
+        running = child.poll() is None
+    except BaseException as error:
+        if failure is None: failure = error
+    if running:
+        try: kill_owned()  # This callback inspects the exact container ID/label.
+        except BaseException as error:
+            if failure is None: failure = error
+    try:
+        child.communicate(timeout=15)
+    except BaseException as error:
+        if failure is None: failure = error
+        # Drain/setup failure can race container creation or a lost kill reply.
+        # Re-inspect ownership before the second kill, then always drain again.
+        try: kill_owned()
+        except BaseException as error:
+            if failure is None: failure = error
+        try: child.communicate(timeout=5)
+        except BaseException as error:
+            if failure is None: failure = error
+    if failure is not None: raise failure
+
+
 def temporary_sql(sql, setup, restore, action):
     # Setup may apply even if its reply is lost. Restoration owns that boundary,
     # including setup errors, and never replaces the first meaningful failure.
@@ -477,11 +515,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
     except BaseException as error:
         failure = error
     finally:
-        def stop_hold():
-            if hold is not None and hold.poll() is None:
-                kill_owned()
-                hold.communicate(timeout=15)
-        cleanup(stop_hold)
+        cleanup(lambda: close_owned_reference_child(hold, kill_owned))
         cleanup(lambda: pipeline("disable"))
         cleanup(lambda: subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30))
     if failure is not None: raise failure

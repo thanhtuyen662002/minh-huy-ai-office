@@ -1477,12 +1477,29 @@ group_278_durable_allocation_checkpoint:
   parent_review: 6097021504
   parent_build: 38048764985
   parent_build_attempt: 2
-  parent_build_state: active_after_one_docker_image_preparation_retry
+  parent_build_state: all8_success_after_one_docker_image_preparation_retry
   parent_governance: 38048764960
   local_store_model_ingress_guard_controls: 83
-  local_python_owned_guard_controls: 44
+  local_python_owned_guard_controls: 49
   migration: AddGroupBatchAllocation
   native_allocation_modes: implemented_not_executed
   automatic_sql_notes_delivered: false
   model_evaluation: UNEVALUATED
   next: 'Freeze and independently review SQL allocation checkpoint before push; close exact CI/native modes, then fenced claims/scoped current-head brain/notes/atomic outbox and actual model evaluation. Keep278/279/full233 active.'
+
+group_278_allocation_cleanup_repair:
+  reviewed_initial_local_head: c2fa8d63eb6fd37d2dd17afc64444648c39f6eed
+  finding: 'Independent native owned-child cleanup early poll/kill/drain failures skipped later closure steps; no shipping SQL defect inferred.'
+  repair: independently_guarded_partial_stdin_poll_inspected_kill_drain_secondary_inspected_kill_final_bounded_drain_preserve_first_error
+  local_python_controls: 49
+  local_store_and_retained_controls: 83
+  parent_actual: 114204499774
+  parent_quality: 114207355042
+  parent_native_required_markers: 80
+  parent_native_missing_markers: 0
+  parent_native_pass_lines: 136
+  parent_dotnet_tests: 2130
+  parent_browser_artifact: 11669336235
+  parent_browser_root_original_images_inspected: 6
+  state: repaired_source_awaiting_frozen_independent_review
+  next: 'Independently review repaired combined checkpoint before push; own new exact SQL CI/native modes, then claims/brain/notes/outbox. Actual model evaluation/278 acceptance/279/full233 remain incomplete.'
