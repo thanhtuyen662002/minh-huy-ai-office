@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
     state: in_progress
-    next: 'Own278/Draft288 remote dfba2936c5d9fa42c58b0855717cd6134a7f617e terminalRED Build38075629274/native114281880568/quality114286293916; Gov38075629275/six prerequisitesSUCCESS. Root FULLnative130PASS23missingRequired102/4failures/noChromium and FULL.NET2563=6/520/25/2012 zeroFailSkip. Proven fixture mismatch: retained same-account listener gap propagates to source; NoWork no-gap preparation refuses before consumer. Preserve production no-gap guards and every original97 oracle/gap-bearing source/brain/claims/account gap-lease-command-registry byte. New separate clean owned effect fixture seeds exact30s listener metadata onlyafterCore readiness, two actual Core HMAC originals; actual inbox/allocation/claims1-3 retirement/brainfixture4 and actualreader expiry witness prepare existing NoWork5-6/note7-9 oracles.77Python/18newgap-diagnostic controls/build0W0E/format and unowned guard gates atcheckpoint; these are not SQL/model acceptance. Freeze full repair review/rootFULLbefore laterpush; then capture renewed exactHEAD/runs and own all102/all8/Gov/FULLlogs/all6ORIGINALs. Local ae83 schema-source-BOM repair APPROVED6100882673 and9de9 deterministichostplan APPROVED6100923911 rootFULLfetched; source approval only. Stash retains unreviewed futurehostbrain native3files. Continue fixedhoststore/mixedmedia-gap honesty/rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+    next: 'Own278/Draft288 remote dfba terminalRED Build38075629274/native114281880568/quality114286293916; root FULLnative130PASS23missingRequired102 and FULL.NET2563 zeroFailSkip. Frozen dd215 WITHHELD6101233127 rootFULL: nonexistent receipt order column and clean-source baseline after preparation. Repaired with real full command key, five actual EF schema controls and immutable clean source frozen before child/immediate and every later comparison; exact permitted state/inbox/allocation/claim additions independently checked.81Python and5newEF PASS; prior2079fullPersistence and18gap-diagnostic controls remain recorded. Four historical UTF8 lines restored byte-exact predecessor wording. Renew full frozen review/rootFULLbefore exactpush, capture newHEAD/runs, close all102/all8/Gov/FULLlogs/sixORIGINALimages. Preserve original97 oracles and original gap-bearing graph; production gap guards unchanged. Source ae83 and deterministicplan9de9 approved/rootFULL, future unreviewed hostnative3files safely stashed. Continue hoststore/mixedmedia-gap/rawcoverage-completion/context-tokenizer/automaticDI-UI/actual100-30eval/279/full233; actualmodel NOT_RUN_UNEVALUATED, no partial merge or checkpoint stop.'
 
   erp_data:
     issue: 264
@@ -360,7 +360,7 @@ task_history_ui_checkpoint:
   prior_governance: 37879046019
   prior_actual: 113654483822
   prior_result: 'Migration BOM format defect at88ef Build37878689371/dotnet113653087126 corrected on same271; generated migration now required UTF8 without BOM and tracked LF, focused format PASS.3301.NET/migration/web/Compose/FE/deployment PASS, actual still live. No actual history acceptance yet.'
-  local: '70 new parser/issued-SID real-helper BFF/panel/workspace tests PASS plus40 retained session lifecycle/races PASS at previous69-new delta; typecheck PASS. New BFF requires exact typed scoped JSON/strict UTF8, drops Core private error diagnostics, final shared SID/body/deadline fence retained. Supported owner CÃ´ng viec list/detail/refresh/paging and remount recovery; completed-but-unavailable/connection/pending/failed states truthful. Reads are GET-only. Company/user/generation/operation serial fence plus local and actual-hook composed aborts prevent late old-session repaint; logout/fresh validation clear private UI.'
+  local: '70 new parser/issued-SID real-helper BFF/panel/workspace tests PASS plus40 retained session lifecycle/races PASS at previous69-new delta; typecheck PASS. New BFF requires exact typed scoped JSON/strict UTF8, drops Core private error diagnostics, final shared SID/body/deadline fence retained. Supported owner Công viec list/detail/refresh/paging and remount recovery; completed-but-unavailable/connection/pending/failed states truthful. Reads are GET-only. Company/user/generation/operation serial fence plus local and actual-hook composed aborts prevent late old-session repaint; logout/fresh validation clear private UI.'
   remaining: 'Mandatory new owned SQL execution, native queued final-authority revocation and restored positives, stored raw Unicode/unknown metadata, two-provider-user/two-company actual Chromium reload/new-sign-in recovery and no-extra-task/dispatch/charge fingerprints. Full frozen independent review and exact final PR/main CI. Not ready for merge; full233 remains active.'
 
 task_history_sql_proof_checkpoint:
@@ -1481,4 +1481,20 @@ group_278_dfba_native_gap_fixture_repair:
   deterministic_plan_review: 9de9_APPROVED6100923911_root_FULL_fetched
   future_host_native: preserved_in_named_Git_stash_three_unreviewed_files_not_in_repair
   native_and_actual_model: UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_owned_effect_proof_review_repair:
+  reviewed_head: dd2154505c97f89157215dd79a5d7fb8f46968eb
+  withheld_receipt: 6101233127_root_FULL_fetched
+  receipt_order: actual_ServiceId_CredentialEpoch_Nonce_full_key
+  clean_immutable_baseline: before_child_full_source_cipher_revisions_receipts_gaps_outbox_stable_state_fields
+  comparison: immediate_after_and_every_subsequent_effect_gate
+  allowed_additions: exact_pending_cursor_transition_empty_effect_tables_original_inbox_all_copied_allocation_metadata_claim_prefix
+  new_schema_controls: 5_PASS_actual_EF_relational_model_no_SQL_connection
+  current_python_controls: 81_PASS_inert_callbacks_and_actual_prefix_mutation_oracles
+  retained_full_persistence: 2079_PASS_before_five_new_schema_controls
+  historical_UTF8: four_lines_restored_exact_predecessor9de9_wording
+  original_oracles: original97_try_prefix_AST_and_aggregate_multiset_unchanged
+  renewed_frozen_review: PENDING_before_exact_push
+  native_SQL_and_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
   full_278_279_233: ACTIVE_INCOMPLETE

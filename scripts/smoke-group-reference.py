@@ -899,7 +899,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             values = full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
                 digest("GroupBatchAllocatedRevisions", "CommittedSequence")] + brain_graph() + claim_graph()
             for table, order in (("GroupAccountCoverageGaps", "ListenerEpoch,Reason"),
-                    ("GroupListenerLeases", "Epoch"), ("GroupListenerCommandReceipts", "OperationId")):
+                    ("GroupListenerLeases", "Epoch"), ("GroupListenerCommandReceipts", "ServiceId,CredentialEpoch,Nonce")):
                 value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
                     f"(SELECT * FROM aioffice.{table} WHERE TenantId='{tenant}' AND CompanyId='{company}' AND ConnectorAccountId='{original_account}' ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
                 assert re.fullmatch(r"[0-9A-F]{64}", value)
@@ -969,18 +969,64 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
             ("GroupIngressOutbox", "CommittedSequence"), ("GroupIngressInbox", "CommittedSequence"))]
     def claim_graph():
         return [digest("GroupBatchClaimStates", "BatchId"), digest("GroupBatchClaimReceipts", "Epoch")]
+    def immutable_source_graph():
+        return [digest(table, order) for table, order in (("GroupMessages", "Id"),
+            ("GroupMessageRevisions", "CommittedSequence"), ("GroupIngressReceipts", "EventIdentityHash"),
+            ("GroupCoverageGaps", "Id"), ("GroupIngressOutbox", "CommittedSequence"))] + [
+                digest("GroupSourceStates", "BindingId", "TenantId,CompanyId,BindingId,CommittedSequence")]
     def no_gaps():
         assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WHERE {scope}),N'|',"
             f"(SELECT COUNT(*) FROM aioffice.GroupAccountCoverageGaps g JOIN aioffice.GroupBindings b ON b.TenantId=g.TenantId AND b.CompanyId=g.CompanyId AND b.ConnectorAccountId=g.ConnectorAccountId WHERE b.TenantId='{tenant}' AND b.CompanyId='{company}' AND b.Id='{source}')); ") == "0|0"
     no_gaps()
+    immutable_source = immutable_source_graph()
+    def assert_immutable_source():
+        assert immutable_source_graph() == immutable_source, "Clean effect preparation changed immutable source bytes"
+    original_assert_retained = assert_retained
+    def assert_retained():
+        original_assert_retained()
+        assert_immutable_source()
+        no_gaps()
+    # Only pending/cursor fields may change on the source state. All effect
+    # tables start empty; receiving and allocation must add the exact prefix.
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupSourceStates WHERE {scope} AND CommittedSequence=2 AND ScheduledThroughSequence=0"
+        f" AND FirstPendingAtUtc=(SELECT CommittedAtUtc FROM aioffice.GroupMessageRevisions WHERE {scope} AND CommittedSequence=1)"
+        f" AND LastPendingAtUtc=(SELECT CommittedAtUtc FROM aioffice.GroupMessageRevisions WHERE {scope} AND CommittedSequence=2);") == "1"
+    preparation_tables = ("GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimStates", "GroupBatchClaimReceipts")
+    assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table in preparation_tables)
     result = subprocess.run([*command, "effect-brain-fixture"], input=configuration(0), env=child_environment,
         capture_output=True, text=True, timeout=170)
     assert result.returncode == 0, "Owned clean effect batch fixture failed"
     fixture = validated_brain_fixture(result.stdout)
+    assert_immutable_source()
     assert_retained()
+    no_gaps()
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupSourceStates WHERE {scope} AND CommittedSequence=2 AND ScheduledThroughSequence=2"
+        " AND FirstPendingAtUtc IS NULL AND LastPendingAtUtc IS NULL;") == "1"
     assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupIngressInbox WHERE {scope}),N'|',"
         f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
         f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc IS NULL));") == "2|4|1"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchAllocations WHERE {scope};") == "1"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchAllocations WHERE {scope} AND Id='{fixture['batchId']}' AND OperationId='{events[0]}'"
+        " AND AfterSequence=0 AND AllocatedThroughSequence=2 AND ObservedCommittedThroughSequence=2 AND RawRevisionCount=2;") == "1"
+    # Compare the entire copied revision metadata, rather than accepting two
+    # arbitrary rows as the prepared baseline. Inbox references must identify
+    # the same two original Core outbox events and scoped worker authority.
+    revision_columns = "TenantId,CompanyId,BindingId,CommittedSequence,MessageId,Revision,ContentSha256,Kind,CommittedAtUtc,IsHistoricalBackfill,SourceVersion,DeletionGeneration"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchAllocatedRevisions WHERE {scope};") == "2"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchAllocatedRevisions WHERE {scope} AND BatchId='{fixture['batchId']}';") == "2"
+    assert sql(f"SELECT COUNT(*) FROM (SELECT {revision_columns} FROM aioffice.GroupBatchAllocatedRevisions WHERE {scope}"
+        f" EXCEPT SELECT {revision_columns} FROM aioffice.GroupMessageRevisions WHERE {scope}) mismatch;") == "0"
+    assert sql("SELECT COUNT(*) FROM aioffice.GroupIngressInbox i JOIN aioffice.GroupIngressOutbox o ON"
+        " o.TenantId=i.TenantId AND o.CompanyId=i.CompanyId AND o.BindingId=i.BindingId AND o.Id=i.EventId"
+        " JOIN aioffice.GroupMessageRevisions r ON r.TenantId=i.TenantId AND r.CompanyId=i.CompanyId AND r.BindingId=i.BindingId"
+        " AND r.MessageId=i.MessageId AND r.Revision=i.Revision"
+        f" WHERE i.TenantId='{tenant}' AND i.CompanyId='{company}' AND i.BindingId='{source}'"
+        " AND i.MessageId=o.MessageId AND i.Revision=o.Revision AND i.CommittedSequence=o.CommittedSequence"
+        " AND i.SourceVersion=r.SourceVersion AND i.DeletionGeneration=r.DeletionGeneration"
+        f" AND i.ServiceId='{service}' AND i.CredentialEpoch={fixture['credentialEpoch']} AND i.GrantVersion={fixture['grantVersion']}"
+        " AND DATEPART(TZOFFSET,i.ReceivedAtUtc)=0 AND i.ReceivedAtUtc>=r.CommittedAtUtc;") == "2"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope};") == "1"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND BatchId='{fixture['batchId']}' AND Epoch BETWEEN 1 AND 4;") == "4"
     allocated_graph = full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")]
     portal = sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
         "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
@@ -1025,10 +1071,6 @@ def verify_fixed_effects(*, directory, api, tenant, company, service, source, ev
         "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"), digest("GroupBatchClaimReceipts", "Epoch")] == claim_identity
     assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc=ExpiresAtUtc;") == "1"
     assert brain_graph() == brain_stable and original_three_receipts() == original_three
-    original_assert_retained = assert_retained
-    def assert_retained():
-        original_assert_retained()
-        no_gaps()
     # Append fixed-effect probes only after every retained reader oracle.
     # Synthetic classification proves SQL mechanics, never model quality.
     def original_four_receipts():

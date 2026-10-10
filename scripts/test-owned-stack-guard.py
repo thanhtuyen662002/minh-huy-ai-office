@@ -1,6 +1,7 @@
 """Verify the adversarial fixture boundary without files, Docker or network."""
 import importlib.util
 import ast
+import copy
 import base64
 import hashlib
 import json
@@ -1548,6 +1549,78 @@ class OwnedStackGuardTests(unittest.TestCase):
         for value, size in [(original[:256], 600), (original[:-1], 600), ("NULL", 600), ("gg" * 600, 600), ("AA" * 4001, 4001)]:
             with self.subTest(length=len(value), expected_bytes=size), self.assertRaises(AssertionError):
                 submission_smoke.require_stored_event_hex(value, size)
+
+
+class EffectPreparationOracleTests(unittest.TestCase):
+    def run_actual_prefix(self, *, mutate=None, fault=None):
+        # Execute the shipping prefix, stopping before protected brain inserts.
+        # Inert mutations test its oracle; they never qualify SQL behavior.
+        function = next(node for node in ast.parse(Path(reference_spec.origin).read_text(encoding="utf-8")).body
+            if isinstance(node, ast.FunctionDef) and node.name == "verify_fixed_effects")
+        prefix = copy.deepcopy(function)
+        boundary = next(index for index, node in enumerate(prefix.body) if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "allocated_graph" for target in node.targets))
+        prefix.body = prefix.body[:boundary + 1] + [ast.Return(value=ast.Name(id="allocated_graph", ctx=ast.Load()))]
+        module = ast.fix_missing_locations(ast.Module(body=[prefix], type_ignores=[]))
+        state = {"launches": 0, "before_digests": [], "retained_checks": 0}
+        def sql(statement):
+            if "HASHBYTES" in statement:
+                table = re.search(r"FROM aioffice\.(\w+)", statement)[1]
+                if not state["launches"]: state["before_digests"].append(table)
+                return ("B" if state["launches"] and mutate == table else "A") * 64
+            if "GroupAccountCoverageGaps" in statement: return "0|0"
+            if "CONCAT" in statement: return "2|4|1"
+            if not state["launches"]:
+                if "GroupSourceStates" in statement: return "0" if fault == "pending-before" else "1"
+                table = re.search(r"FROM aioffice\.(\w+)", statement)[1]
+                return "1" if fault == "preexisting-" + table else "0"
+            if "GroupSourceStates" in statement: return "0" if fault == "pending-after" else "1"
+            if "EXCEPT" in statement: return "1" if fault == "revision-metadata" else "0"
+            if "GroupIngressInbox i JOIN" in statement: return "1" if fault == "inbox-metadata" else "2"
+            if "GroupBatchAllocations" in statement: return "2" if fault == "allocation" else "1"
+            if "GroupBatchAllocatedRevisions" in statement: return "3" if fault == "allocated-rows" else "2"
+            if "GroupBatchClaimStates" in statement: return "2" if fault == "claim-state" else "1"
+            if "GroupBatchClaimReceipts" in statement: return "3" if fault == "claim-receipts" else "4"
+            self.fail("Unexpected inert preparation SQL")
+        def launch(*args, **kwargs):
+            state["launches"] += 1
+            return SimpleNamespace(returncode=0, stdout="bounded-private-fixture")
+        def retained(): state["retained_checks"] += 1
+        namespace = dict(reference_smoke.__dict__)
+        namespace["subprocess"] = SimpleNamespace(run=launch)
+        namespace["validated_brain_fixture"] = lambda _: {"batchId": str(uuid.uuid4()), "credentialEpoch": 1, "grantVersion": 1}
+        exec(compile(module, str(reference_spec.origin), "exec"), namespace)
+        with tempfile.TemporaryDirectory(prefix="aioffice-effect-oracle-") as root:
+            directory = Path(root) / "aioffice-local"; directory.mkdir()
+            with patch.dict(os.environ, {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": root}, clear=True):
+                graph = namespace["verify_fixed_effects"](directory=directory, api="http://127.0.0.1:8080",
+                    tenant=str(uuid.uuid4()), company=str(uuid.uuid4()), service=str(uuid.uuid4()), source=str(uuid.uuid4()),
+                    events=[str(uuid.uuid4()), str(uuid.uuid4())], source_key=base64.b64encode(bytes(32)).decode(), sql=sql,
+                    command=["inert"], child_environment={}, assert_retained=retained)
+        return graph, state
+
+    def test_actual_prefix_freezes_before_child_and_allows_exact_documented_additions(self):
+        graph, state = self.run_actual_prefix()
+        self.assertEqual(["A" * 64] * 9, graph)
+        self.assertEqual(["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupCoverageGaps",
+            "GroupIngressOutbox", "GroupSourceStates"], state["before_digests"])
+        self.assertEqual(1, state["launches"])
+        self.assertEqual(1, state["retained_checks"])
+
+    def test_actual_prefix_refuses_each_immutable_source_mutation_during_child(self):
+        for table in ("GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupCoverageGaps",
+                "GroupIngressOutbox", "GroupSourceStates"):
+            with self.subTest(table=table), self.assertRaisesRegex(AssertionError, "changed immutable source bytes"):
+                self.run_actual_prefix(mutate=table)
+
+    def test_actual_prefix_refuses_preexisting_effects_and_wrong_pending_state(self):
+        for fault in ("pending-before", "preexisting-GroupIngressInbox", "preexisting-GroupBatchAllocations",
+                "preexisting-GroupBatchAllocatedRevisions", "preexisting-GroupBatchClaimStates", "preexisting-GroupBatchClaimReceipts"):
+            with self.subTest(fault=fault), self.assertRaises(AssertionError): self.run_actual_prefix(fault=fault)
+
+    def test_actual_prefix_refuses_inexact_source_inbox_allocation_and_claim_additions(self):
+        for fault in ("pending-after", "revision-metadata", "inbox-metadata", "allocation", "allocated-rows", "claim-state", "claim-receipts"):
+            with self.subTest(fault=fault), self.assertRaises(AssertionError): self.run_actual_prefix(fault=fault)
 
 
 class ReferenceChildClosureTests(unittest.TestCase):
