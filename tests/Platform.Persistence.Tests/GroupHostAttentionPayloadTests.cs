@@ -109,11 +109,65 @@ public sealed class GroupHostAttentionPayloadTests
         var error = Assert.Throws<InvalidOperationException>(() => GroupBrainPayloadCodec.DecodeHostAttention(wire));
         Assert.Equal("Group brain payload is unavailable.", error.Message); Assert.Null(error.InnerException);
     }
-    private sealed class LyingReferences(GroupHostAttentionReference[] values) : IReadOnlyList<GroupHostAttentionReference>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(10)]
+    [InlineData(11)]
+    public void HostEncoderUsesActualEnumerationEvenWhenIListClaimsOneItem(int actualCount)
+    {
+        var references = Enumerable.Range(1, actualCount).Select(x => new GroupHostAttentionReference(Guid.NewGuid(), x)).ToArray();
+        var caller = new LyingReferences(references);
+        Assert.True(caller.Count == 1); // Deliberately false advertised size, not enumeration size.
+        if (actualCount is 0 or 11)
+        {
+            var error = Assert.Throws<InvalidOperationException>(() => GroupBrainPayloadCodec.EncodeHostAttention(GroupHostAttentionReason.UnsupportedMedia, false, caller));
+            Assert.Equal("Group brain payload is unavailable.", error.Message); Assert.Null(error.InnerException);
+        }
+        else
+            Assert.Equal(references, GroupBrainPayloadCodec.DecodeHostAttention(GroupBrainPayloadCodec.EncodeHostAttention(GroupHostAttentionReason.UnsupportedMedia, false, caller)).SourceReferences);
+    }
+    [Fact]
+    public void HostEncoderStopsAfterEleventhActualItemAndDisposesEnumerator()
+    {
+        var caller = new UnboundedReferences();
+        Assert.Throws<InvalidOperationException>(() => GroupBrainPayloadCodec.EncodeHostAttention(GroupHostAttentionReason.UnsupportedMedia, false, caller));
+        Assert.Equal(11, caller.Visited); Assert.True(caller.Disposed);
+    }
+    private sealed class LyingReferences(GroupHostAttentionReference[] values) : IReadOnlyList<GroupHostAttentionReference>, IList<GroupHostAttentionReference>
     {
         public int Count => 1;
-        public GroupHostAttentionReference this[int index] => values[index];
+        public GroupHostAttentionReference this[int index] { get => values[index]; set => throw new NotSupportedException(); }
+        public bool IsReadOnly => true;
+        public void Add(GroupHostAttentionReference item) => throw new NotSupportedException();
+        public void Clear() => throw new NotSupportedException();
+        public bool Contains(GroupHostAttentionReference item) => throw new NotSupportedException();
+        public void CopyTo(GroupHostAttentionReference[] array, int arrayIndex) => throw new NotSupportedException();
+        public int IndexOf(GroupHostAttentionReference item) => throw new NotSupportedException();
+        public void Insert(int index, GroupHostAttentionReference item) => throw new NotSupportedException();
+        public bool Remove(GroupHostAttentionReference item) => throw new NotSupportedException();
+        public void RemoveAt(int index) => throw new NotSupportedException();
         public IEnumerator<GroupHostAttentionReference> GetEnumerator() => ((IEnumerable<GroupHostAttentionReference>)values).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+    private sealed class UnboundedReferences : IReadOnlyList<GroupHostAttentionReference>
+    {
+        public int Count => throw new InvalidOperationException("Count must not be read.");
+        public GroupHostAttentionReference this[int index] => throw new InvalidOperationException("Indexer must not be read.");
+        public int Visited { get; private set; }
+        public bool Disposed { get; private set; }
+        public IEnumerator<GroupHostAttentionReference> GetEnumerator()
+        {
+            try
+            {
+                while (true)
+                {
+                    if (++Visited > 11) throw new InvalidOperationException("Enumeration exceeded the sentinel.");
+                    yield return new(Guid.NewGuid(), Visited);
+                }
+            }
+            finally { Disposed = true; }
+        }
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

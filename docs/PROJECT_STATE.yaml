@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 450738eab84591e121e091927f010af9edfe1f9c
     state: in_progress
-    next: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired while retaining every original exact oracle; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched closes originaltwo noteproofP2s/statsname/leadnextaction; one EF automaticmetadata-witnesssavepoint falsefailure reproduced. Furtherrepair requiresExclusive sourceAPPLOCK for every savepoint, permitsONLY one exact originalclaim Modified witness property null-to-exactexpiry, separatelycountsmetadata; clean effect/mixed/foreign/otherproperty savepoints remainforbidden.23 actualprobe/graph/classifiercontrols plus13entry PASS36zeroFailSkip;67Python/sixunownedCLI/build0W0E/format/YAML2/diff beforefreeze. Local7243d6b closedhostattentionpayload29new+38retainedcodec PASS67, noSQL/provider/migration/DIactivation, unreviewed. Obtain combinedfrozen codec+metadata-repair review/rootFULLreceipt, push exactapprovedhead andown renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+    next: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched; actual EF witness savepoint falsefailure repairedccb with exact originalclaim single Modified ExpiryObserved property and sourceExclusive lock for every savepoint;36 actual local observer/entry controls PASS. Combinedfrozenccb review reproduced host codec IList Count fastpath silently truncating actual11 references to1. Repaired direct bounded foreach sentinel11/disposal, permanent false-size0/1/10/11 and unbounded controls.34host+38retainedcodec PASS72zeroFailSkip, format/diff; noSQL/model authority. Obtain renewed combined frozen review/rootFULLreceipt before exactapprovedpush, own renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader including actual selection enumeration, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired while retaining every original exact oracle; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched closes originaltwo noteproofP2s/statsname/leadnextaction; one EF automaticmetadata-witnesssavepoint falsefailure reproduced. Furtherrepair requiresExclusive sourceAPPLOCK for every savepoint, permitsONLY one exact originalclaim Modified witness property null-to-exactexpiry, separatelycountsmetadata; clean effect/mixed/foreign/otherproperty savepoints remainforbidden.23 actualprobe/graph/classifiercontrols plus13entry PASS36zeroFailSkip;67Python/sixunownedCLI/build0W0E/format/YAML2/diff beforefreeze. Local7243d6b closedhostattentionpayload29new+38retainedcodec PASS67, noSQL/provider/migration/DIactivation, unreviewed. Obtain combinedfrozen codec+metadata-repair review/rootFULLreceipt, push exactapprovedhead andown renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
+next_action: 'Own278/Draft288 remote450738 terminalRED Build38072401233/native114272345912/quality114275847815; Gov38072401239/sixprerequisitesSUCCESS. RootFULLnative106PASS44missing4failure/noartifact; FULL.NET2493=[6,520,25,1942]zeroFailSkip. Statistics child name collision repaired; actual full failure cause UNPROVEN. Frozen884 scopedWITHHELD6100627326 rootFULLfetched; actual EF witness savepoint falsefailure repairedccb with exact originalclaim single Modified ExpiryObserved property and sourceExclusive lock for every savepoint;36 actual local observer/entry controls PASS. Combinedfrozenccb review reproduced host codec IList Count fastpath silently truncating actual11 references to1. Repaired direct bounded foreach sentinel11/disposal, permanent false-size0/1/10/11 and unbounded controls.34host+38retainedcodec PASS72zeroFailSkip, format/diff; noSQL/model authority. Obtain renewed combined frozen review/rootFULLreceipt before exactapprovedpush, own renewedCI/all102exact/all8/Gov/FULLlogs/all6ORIGINALs. Continue versionedHostAttention schema/reader including actual selection enumeration, mixedmedia-gap honestnotes, rawcoverage-completion/context-tokenizer/automaticDI/UI/real100-30eval/279/full233; no partialmerge/checkpointstop.'
 
 
 blocked_by:
@@ -1386,3 +1386,16 @@ group_278_metadata_witness_savepoint_repair:
   combined_native_repair_and_codec_review: PENDING
   future_required_markers: 102_exactly_once_all_originals_retained
   native_notes_model_full_278_279_233: ACTIVE_INCOMPLETE_NOT_RUN_UNQUALIFIED
+
+group_278_host_actual_enumeration_repair:
+  combined_review_frozen_head: ccb95b67da713b5daa6e5d1ef71d771272d155f5
+  reproduced_P2: IList_false_Count_1_LINQ_fastpath_dropped_ten_actual_references
+  repair: direct_bounded_foreach_reject_eleventh_actual_item_dispose_no_caller_Count_indexer
+  permanent_new_controls: five_false_advertised_sizes_and_unbounded_sentinel_disposal_PASS
+  host_format_controls: 34_PASS
+  retained_AI_glossary_controls: 38_PASS
+  combined_local_codec_controls: 72_PASS_zero_failures_skips
+  native_witness_observer_and_entry_controls: 36_PASS_zero_failures_skips
+  renewed_combined_source_review: PENDING_before_exact_push
+  frozen_native_required_markers: 102_exactly_once_all99_retained
+  host_SQL_model_full_acceptance: NOT_RUN_UNQUALIFIED_ACTIVE_INCOMPLETE

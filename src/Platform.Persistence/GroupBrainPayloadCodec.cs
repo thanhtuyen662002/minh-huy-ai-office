@@ -102,8 +102,15 @@ public static class GroupBrainPayloadCodec
         IReadOnlyList<GroupHostAttentionReference>? references)
     {
         if (references is null) throw Unavailable();
-        var selected = references.Take(11).ToArray();
-        if (selected.Length is < 1 or > 10 || selected.Any(x => x is null)) throw Unavailable();
+        // Enumerate directly: LINQ may trust IList.Count/indexers and silently
+        // discard references when a caller reports a different collection size.
+        var selected = new List<GroupHostAttentionReference>(10);
+        foreach (var reference in references)
+        {
+            if (selected.Count == 10 || reference is null) throw Unavailable();
+            selected.Add(reference);
+        }
+        if (selected.Count == 0) throw Unavailable();
         var reasonText = reason switch
         {
             GroupHostAttentionReason.UnsupportedMedia => "unsupported_media",
