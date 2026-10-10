@@ -38,12 +38,56 @@ spool_spec.loader.exec_module(spool_smoke)
 reference_spec = importlib.util.spec_from_file_location("reference_smoke", Path(__file__).with_name("smoke-group-reference.py"))
 reference_smoke = importlib.util.module_from_spec(reference_spec)
 reference_spec.loader.exec_module(reference_smoke)
+recovery_spec = importlib.util.spec_from_file_location("recovery_host_smoke", Path(__file__).with_name("smoke-group-recovery-host.py"))
+recovery_smoke = importlib.util.module_from_spec(recovery_spec)
+recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
     root = (Path.cwd() / "guard-test-no-resources").resolve()
     owned = root / "aioffice-local"
     environment = {"CI": "true", "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(root)}
+
+    def test_managed_recovery_refuses_unowned_before_credentials_files_sql_or_processes(self):
+        for directory, override, api in [(self.owned, {"CI": "false"}, "http://127.0.0.1:8080"),
+                (self.owned, {"GITHUB_ACTIONS": "false"}, "http://127.0.0.1:8080"),
+                (self.owned, {"RUNNER_TEMP": ""}, "http://127.0.0.1:8080"),
+                (self.root, {}, "http://127.0.0.1:8080"), (self.owned / "nested", {}, "http://127.0.0.1:8080"),
+                (self.owned, {}, "https://foreign.invalid")]:
+            with self.subTest(override=override), patch.dict(os.environ, {**self.environment, **override}), \
+                    patch.object(recovery_smoke.subprocess, "run") as process, patch.object(Path, "mkdir") as directory_create, \
+                    patch.object(recovery_smoke.secrets, "token_bytes") as key:
+                sql = lambda *args: self.fail("Unowned recovery touched SQL")
+                with self.assertRaisesRegex(RuntimeError, "owned disposable GitHub CI fixture"):
+                    recovery_smoke.verify(directory=directory, api=api, tenant="INVALID", company="INVALID", service="INVALID",
+                        key=None, runtime_password=None, sql=sql, restart=sql, ready=sql, identity_index=sql, enroll_source=sql)
+                process.assert_not_called(); directory_create.assert_not_called(); key.assert_not_called()
+
+    def test_managed_recovery_cleanup_attempts_each_owned_resource_and_retains_first_failure(self):
+        tree = ast.parse(Path(recovery_smoke.__file__).read_text(encoding="utf-8"))
+        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        boundary = next(node for node in function.body if isinstance(node, ast.Try) and node.finalbody)
+        wrapper = ast.FunctionDef(name="cleanup", args=ast.arguments(posonlyargs=[], args=[ast.arg(arg="failure")],
+            kwonlyargs=[], kw_defaults=[], defaults=[]), body=boundary.finalbody + [ast.Return(value=ast.Name(id="failure", ctx=ast.Load()))],
+            decorator_list=[])
+        block = compile(ast.fix_missing_locations(ast.Module(body=[wrapper], type_ignores=[])), '<actual-managed-cleanup>', 'exec')
+        for fault in (None, "kill", "drain", "shutdown", "close", "join"):
+            for earlier in (False, True):
+                effects = []; first = RuntimeError("earlier-owned-failure") if earlier else None
+                def effect(name):
+                    effects.append(name)
+                    if name == fault: raise RuntimeError(name)
+                process = SimpleNamespace(poll=lambda: None, kill=lambda: effect("kill"), communicate=lambda **kwargs: effect("drain"))
+                proxy = SimpleNamespace(shutdown=lambda: effect("shutdown"), server_close=lambda: effect("close"))
+                serving = SimpleNamespace(is_alive=lambda: True, ident=1, join=lambda **kwargs: effect("join"))
+                namespace = dict(process=process, proxy=proxy, serving=serving, release=SimpleNamespace(set=lambda: effect("release")))
+                exec(block, namespace)
+                result = namespace['cleanup'](first)
+                self.assertEqual(["shutdown", "close", "join"], effects[-3:])
+                self.assertIn("kill", effects)
+                if fault != "kill": self.assertIn("drain", effects)
+                if earlier: self.assertIs(first, result)
+                else: self.assertEqual(fault, str(result) if result is not None else None)
 
     def test_reference_refuses_unowned_before_configuration_sql_or_processes(self):
         for directory, override, api in [(self.owned, {"CI": "false"}, "http://127.0.0.1:8080"),
@@ -228,7 +272,7 @@ class OwnedStackGuardTests(unittest.TestCase):
 
     def test_native_source_key_callback_preserves_original_enrollment_and_recreates_only_owned_core(self):
         tree = ast.parse(Path(group_smoke.__file__).read_text(encoding="utf-8"))
-        callback = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "enroll_spool_source")
+        callback = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "enroll_owned_source")
         block = compile(ast.fix_missing_locations(ast.Module([callback], type_ignores=[])), "<inert-source-key-enrollment>", "exec")
         calls = []
         class Override:
@@ -243,9 +287,11 @@ class OwnedStackGuardTests(unittest.TestCase):
             tenant=tenant, company=company, private_environment=environment, override=Override(),
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
-        with self.assertRaises(ValueError): namespace["enroll_spool_source"]("invalid-source")
+        with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
+        for slot in (0, 3, True, "1"):
+            with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
-        namespace["enroll_spool_source"](source)
+        namespace["enroll_owned_source"](source, 1)
         self.assertTrue(all(environment[name] == value for name, value in original.items()))
         prefix = "AIOffice__GroupIntake__SourceKeys__1__"
         self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": source,
@@ -256,8 +302,20 @@ class OwnedStackGuardTests(unittest.TestCase):
         self.assertEqual(("compose", ("up", "-d", "--no-deps", "--force-recreate", "core-api"), {"overridden": True}), calls[2])
         self.assertEqual(("ready",), calls[3])
         before = environment.copy()
-        with self.assertRaises(AssertionError): namespace["enroll_spool_source"](source)
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, 1)
         self.assertEqual(before, environment); self.assertEqual(4, len(calls))
+        second_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](second_source, 2)
+        self.assertTrue(all(environment[name] == value for name, value in before.items()))
+        second_prefix = "AIOffice__GroupIntake__SourceKeys__2__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": second_source,
+            "KeyId": "owned-managed-source-v1", "SecretRef": "secretref://env/OWNED_MANAGED_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(second_prefix):]: value for name, value in environment.items() if name.startswith(second_prefix)})
+        self.assertEqual(before["OWNED_NATIVE_GROUP_CONTENT_KEY"], environment["OWNED_NATIVE_GROUP_CONTENT_KEY"])
+        self.assertEqual(["write", "chmod", "compose", "ready"], [call[0] for call in calls[4:]])
+        final = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](second_source, 2)
+        self.assertEqual(final, environment); self.assertEqual(8, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

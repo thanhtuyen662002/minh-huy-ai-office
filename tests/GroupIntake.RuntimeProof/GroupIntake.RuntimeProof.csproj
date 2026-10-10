@@ -5,6 +5,9 @@
     <AssemblyName>MinhHuy.AIOffice.GroupIntake.RuntimeProof</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../src/Agent.Worker/Agent.Worker.csproj">
+      <Aliases>RuntimeWorker</Aliases>
+    </ProjectReference>
     <ProjectReference Include="../../src/Platform.Persistence/Platform.Persistence.csproj" />
   </ItemGroup>
 </Project>

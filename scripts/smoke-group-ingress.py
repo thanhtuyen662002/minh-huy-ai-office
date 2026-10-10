@@ -636,23 +636,37 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         spool_spec = importlib.util.spec_from_file_location("group_spool_proof", Path(__file__).with_name("smoke-group-spool.py"))
         spool_proof = importlib.util.module_from_spec(spool_spec)
         spool_spec.loader.exec_module(spool_proof)
-        def enroll_spool_source(source_id):
+        def enroll_owned_source(source_id, slot):
             # Separate owned synthetic source; preserve the original key row.
             # No production registry/configuration or credentials are touched.
             source_id = str(uuid.UUID(source_id))
-            assert not any(name.startswith("AIOffice__GroupIntake__SourceKeys__1__") for name in private_environment)
-            private_environment["OWNED_NATIVE_GROUP_CONTENT_KEY"] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
+            assert type(slot) is int and slot in (1, 2)
+            prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
+            assert not any(name.startswith(prefix) for name in private_environment)
+            secret_name = "OWNED_NATIVE_GROUP_CONTENT_KEY" if slot == 1 else "OWNED_MANAGED_GROUP_CONTENT_KEY"
+            private_environment[secret_name] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
             for name, value in {"TenantId": tenant, "CompanyId": company, "SourceBindingId": source_id,
-                    "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_NATIVE_GROUP_CONTENT_KEY", "IsWriteKey": "true"}.items():
-                private_environment["AIOffice__GroupIntake__SourceKeys__1__" + name] = value
+                    "KeyId": "owned-native-source-v1" if slot == 1 else "owned-managed-source-v1", "SecretRef": "secretref://env/" + secret_name, "IsWriteKey": "true"}.items():
+                private_environment[prefix + name] = value
             override.write_text(json.dumps({"services": {"core-api": {"environment": private_environment}}}), encoding="utf-8")
             override.chmod(0o600)
             compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
             ready()
         spool_source = spool_proof.verify(directory=directory, api=api, tenant=tenant, company=company, service=service,
             key=group_key, sql=sql, restart=lambda: compose_run("restart", "core-api", overridden=True),
-            ready=ready, identity_index=identity_index, enroll_source=enroll_spool_source)
+            ready=ready, identity_index=identity_index, enroll_source=lambda source_id: enroll_owned_source(source_id, 1))
         assert snapshot() == listener_before, "Separate native spool proof changed retained source bytes"
+        assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+
+        recovery_spec = importlib.util.spec_from_file_location("group_recovery_host_proof", Path(__file__).with_name("smoke-group-recovery-host.py"))
+        recovery_proof = importlib.util.module_from_spec(recovery_spec)
+        recovery_spec.loader.exec_module(recovery_proof)
+        recovery_proof.verify(directory=directory, api=api, tenant=tenant, company=company, service=service,
+            key=group_key, runtime_password=manifest["AIOFFICE_RUNTIME_PASSWORD"], sql=sql,
+            restart=lambda: compose_run("restart", "core-api", overridden=True), ready=ready,
+            identity_index=identity_index, enroll_source=lambda source_id: enroll_owned_source(source_id, 2))
+        assert snapshot() == listener_before, "Separate managed recovery proof changed retained source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
 

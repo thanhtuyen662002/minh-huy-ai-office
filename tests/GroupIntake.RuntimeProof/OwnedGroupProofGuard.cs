@@ -2,6 +2,13 @@ namespace MinhHuy.AIOffice.GroupIntake.RuntimeProof;
 
 public static class OwnedGroupProofGuard
 {
+    public static string RequireOwnedRecovery(Func<string, string?> environment)
+    {
+        var original = RequireOwned(environment);
+        if (environment("AIOFFICE_OWNED_GROUP_RECOVERY_PROOF") != "true")
+            throw new InvalidOperationException("Owned group recovery proof is unavailable.");
+        return Path.Combine(Path.GetDirectoryName(original)!, "group-recovery-proof");
+    }
     // Before any file, secret, network, process or SQL access. This harness is
     // not shipped in application containers and cannot run on customer config.
     public static string RequireOwned(Func<string, string?> environment)

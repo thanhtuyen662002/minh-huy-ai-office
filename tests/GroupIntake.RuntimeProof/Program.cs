@@ -11,8 +11,9 @@ using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 var stage = "owned-guard";
 try
 {
-    var root = OwnedGroupProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("acquire" or "capture" or "capture-send" or "replay" or "deny")) throw new InvalidOperationException();
+    if (args.Length != 1 || args[0] is not ("acquire" or "capture" or "capture-send" or "replay" or "deny" or "host-capture-send" or "host-recover" or "host-deny")) throw new InvalidOperationException();
+    var managed = args[0].StartsWith("host-", StringComparison.Ordinal);
+    var root = managed ? OwnedGroupProofGuard.RequireOwnedRecovery(Environment.GetEnvironmentVariable) : OwnedGroupProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
     stage = "owned-config";
     for (var directory = new DirectoryInfo(root); directory is not null; directory = directory.Parent)
         if (!directory.Exists || directory.Attributes.HasFlag(FileAttributes.ReparsePoint)) throw new InvalidOperationException();
@@ -42,6 +43,12 @@ try
     var policy = GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true);
     var countedSecrets = new OwnedProofSecrets();
     var secrets = new CompositeSecretResolver([countedSecrets]);
+    if (managed)
+    {
+        stage = args[0];
+        await OwnedRecoveryHostProof.RunAsync(args[0], root, config, external, countedSecrets, secrets);
+        return 0;
+    }
     using var client = new GroupConnectorTransportClient(origin,
         new(config.TenantId, config.CompanyId, config.ServiceId, 1, SecretReference.Parse("secretref://env/AIOFFICE_GROUP_PROOF_SIGNING_KEY")), secrets, TimeProvider.System, policy);
     void Save(string name, object value) => File.WriteAllBytes(Path.Combine(root, name), JsonSerializer.SerializeToUtf8Bytes(value, jsonOptions));

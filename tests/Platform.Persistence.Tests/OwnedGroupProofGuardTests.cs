@@ -36,4 +36,28 @@ public sealed class OwnedGroupProofGuardTests
         ["AIOFFICE_OWNED_GROUP_SPOOL_PROOF"] = "true",
         ["RUNNER_TEMP"] = Path.Combine(Path.GetTempPath(), "group-guard-no-resources")
     };
+
+    [Theory]
+    [InlineData("CI", "false")]
+    [InlineData("GITHUB_ACTIONS", "false")]
+    [InlineData("AIOFFICE_OWNED_GROUP_SPOOL_PROOF", "false")]
+    [InlineData("AIOFFICE_OWNED_GROUP_RECOVERY_PROOF", "false")]
+    [InlineData("RUNNER_TEMP", "")]
+    [InlineData("RUNNER_TEMP", "relative")]
+    public void ManagedRecoveryHasItsOwnOptInAndCannotResolveUnownedResources(string key, string value)
+    {
+        var env = Environment(); env["AIOFFICE_OWNED_GROUP_RECOVERY_PROOF"] = "true"; env[key] = value;
+        Assert.Throws<InvalidOperationException>(() => Guard.RequireOwnedRecovery(name => env.GetValueOrDefault(name)));
+    }
+
+    [Fact]
+    public void ManagedRecoveryUsesSeparateFixedOwnedRoot()
+    {
+        var env = Environment(); env["AIOFFICE_OWNED_GROUP_RECOVERY_PROOF"] = "true";
+        var actual = Guard.RequireOwnedRecovery(name => env.GetValueOrDefault(name));
+        Assert.Equal(Path.Combine(Path.GetFullPath(env["RUNNER_TEMP"]), "aioffice-local", "group-recovery-proof"), actual);
+        Assert.NotEqual(Guard.RequireOwned(name => env.GetValueOrDefault(name)), actual);
+        env["RUNNER_TEMP"] = Path.GetPathRoot(Path.GetTempPath())!;
+        Assert.Throws<InvalidOperationException>(() => Guard.RequireOwnedRecovery(name => env.GetValueOrDefault(name)));
+    }
 }
