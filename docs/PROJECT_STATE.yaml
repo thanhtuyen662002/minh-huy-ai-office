@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/277-group-durable-ingress
-current_pr: 283
-current_target_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+current_branch: codex/284-group-reference-statistics
+current_pr: null
+current_target_head: 6c746b929c2b04b8a21453680cbe940161e465c9
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
   backend:
-    issue: 277
-    pr: 283
-    branch: codex/277-group-durable-ingress
-    head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
-    state: full_runtime_approved_final_docs_gates_pending
-    next: 'Exactc619 all8/Gov SUCCESS; actual pending persistent reference RabbitMQ process restart and strict same-snapshot shipping ACK/delivery/consumer/final queue/count2/full8/portal/isolation PASS, root selected80 required markers/six images verified. Full c619 APPROVED6095552242; finaldocs/exact finalPR/main closure before277 merge, then278/279/full233.'
+    issue: 284
+    pr: null
+    branch: codex/284-group-reference-statistics
+    head: 6c746b929c2b04b8a21453680cbe940161e465c9
+    state: in_progress
+    next: 'Merged283/main6c exact Build38038487497/actual114173836023/quality114176087671 FAILURE; Gov38038487489 and six prerequisites SUCCESS. Application-restart baseline ACK wait passed, separate delivery3/consumer1 assertion failed; actual numbers/cause unproven. Freeze/review284 coherent exact pre/post restart snapshots within unchanged30s, then follow-on Draft PR and exact PR/main closure before277 acceptance and278 implementation.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Exactc619 Build38035314357/Gov38035314405/all8/actual114164418527/quality114167539832 SUCCESS; root selected80 required markers/six images inspected. Full c619 core277 APPROVED6095552242; close doc-only final review, approved final push/exact finalPR/main gates before eligible merge. After accepted277/main proceed278 SQL brain/automatic notes then279 IT reporter; full233 active.'
+next_action: 'Own284 follow-on repair after merged283/main6c terminal failure. Local44 Python controls PASS including12 actual-block delayed/disjoint/extra-count/consumer probes across baseline and resumed delivery; source/graph/publication/30s bounds unchanged. Freeze/review/push one Draft PR and close renewed exact PR/main all8/native/Chromium.277 remains OPEN; only private278 design/30 independent label preparation exists. After accepted277/main implement278 automatic SQL brain/notes then279 IT reporter; full233 ACTIVE.'
 
 
 blocked_by:

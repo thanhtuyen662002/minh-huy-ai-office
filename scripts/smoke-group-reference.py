@@ -34,6 +34,26 @@ def temporary_sql(sql, setup, restore, action):
     if failure is not None: raise failure
 
 
+def wait_reference_statistics(broker_stats, wait, *, ack, deliver, phase):
+    observed = None
+
+    def coherent():
+        nonlocal observed
+        observed = broker_stats()
+        return observed["ack"] == ack and observed["deliver"] == deliver and observed["consumers"] == 1
+
+    # ACK, delivery and consumer management statistics need not become visible
+    # together. One complete snapshot must meet all original exact conditions.
+    try:
+        wait(coherent)  # Retain the existing30-second bound.
+    except AssertionError as error:
+        if observed is None: raise
+        raise AssertionError(f"Owned reference {phase} observation failed: "
+            f"ack={observed['ack']}, expected_ack={ack}, "
+            f"deliver={observed['deliver']}, expected_deliver={deliver}, consumers={observed['consumers']}") from error
+    return observed
+
+
 def verify_pending_broker_restart(*, directory, api, pause_worker, resume_worker, broker_state,
         restart_broker, queue_counts, broker_stats, publish, inspect_pending, full_graph, count, wait):
     require_owned(directory, api)  # Before any callback or process/service change.
@@ -366,15 +386,14 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         wait(lambda: count() == 2 and queue_counts() == (0, 0) and sql(f"SELECT COUNT(*) FROM aioffice.GroupIngressOutbox WHERE {scope} AND PublishedAtUtc IS NOT NULL;") == "2", 60)
         assert protected_graph() == before
         stable = full_graph()
-        wait(lambda: broker_stats()["ack"] == 2)
-        prior_stats = broker_stats()
-        assert prior_stats["consumers"] == 1 and prior_stats["deliver"] == 3  # Held delivery + redelivery + event2.
+        # Held delivery + redelivery + event2; only the latter two are ACKed.
+        prior_stats = wait_reference_statistics(broker_stats, wait, ack=2, deliver=3, phase="before application restart")
         pipeline("restart")
         wait(lambda: broker_stats()["consumers"] == 1)
         run("publish-existing")  # Actual persistent mandatory publication after restart; no new graph.
-        wait(lambda: broker_stats()["ack"] == prior_stats["ack"] + 1)
-        resumed_stats = broker_stats()
-        assert resumed_stats["deliver"] == prior_stats["deliver"] + 1 and resumed_stats["consumers"] == 1 and queue_counts() == (0, 0)
+        wait_reference_statistics(broker_stats, wait, ack=prior_stats["ack"] + 1,
+            deliver=prior_stats["deliver"] + 1, phase="after application restart")
+        assert queue_counts() == (0, 0)
         assert count() == 2 and full_graph() == stable
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"

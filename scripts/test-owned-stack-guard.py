@@ -251,12 +251,69 @@ class OwnedStackGuardTests(unittest.TestCase):
                     return {"ack": 3 if resumed else 2, "deliver": 4 if resumed and fault != "wrong-deliver" else 3,
                         "consumers": 0 if state["restarted"] and fault == "no-consumer" else 1}
                 namespace = dict(wait=lambda predicate: self.assertTrue(predicate()), broker_stats=stats, pipeline=pipeline, run=run,
+                    wait_reference_statistics=reference_smoke.wait_reference_statistics,
                     stable=["same-receipt"], count=lambda: 2, full_graph=lambda: ["changed-receipt" if fault == "changed-receipt" else "same-receipt"],
                     queue_counts=lambda: (1, 0) if fault == "pending-queue" else (0, 0))
                 if fault:
                     with self.assertRaises(AssertionError): exec(block, namespace)
                 else:
                     exec(block, namespace); self.assertEqual(["restart", "publish-existing"], calls)
+
+    def test_application_restart_observes_exact_baseline_and_delivery_in_one_snapshot(self):
+        tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        attempt = next(node for node in verify.body if isinstance(node, ast.Try) and any(isinstance(child, ast.FunctionDef)
+            and child.name == "unsafe_column" for child in node.body))
+        start = next(i for i, node in enumerate(attempt.body) if isinstance(node, ast.Assign)
+            and isinstance(node.targets[0], ast.Name) and node.targets[0].id == "stable") + 1
+        end = next(i for i in range(start, len(attempt.body)) if isinstance(attempt.body[i], ast.Assert)
+            and isinstance(attempt.body[i].test, ast.BoolOp) and "full_graph" in ast.unparse(attempt.body[i])) + 1
+        block = compile(ast.Module(body=attempt.body[start:end], type_ignores=[]), '<actual-application-restart-statistics>', 'exec')
+        cases = (
+            ("delayed", True, [(0, -1, 0), (0, 0, 0), (0, 0, 1)]),
+            ("disjoint", False, [(0, -1, 1), (-1, 0, 1), (0, -1, 1)]),
+            ("extra-ack", False, [(0, -1, 1), (1, 0, 1), (1, 0, 1)]),
+            ("extra-delivery", False, [(0, 1, 1)] * 3),
+            ("missing-consumer", False, [(0, 0, 0)] * 3),
+            ("extra-consumer", False, [(0, 0, 2)] * 3),
+        )
+        for phase in ("before", "after"):
+            for case, succeeds, frames in cases:
+                with self.subTest(phase=phase, case=case):
+                    state = dict(published=False, restarted=False, observations=0)
+                    snapshots = iter(frames)
+                    calls = []
+                    def pipeline(operation):
+                        calls.append(operation); state["restarted"] = True
+                    def run(mode):
+                        calls.append(mode); state["published"] = True
+                    def stats():
+                        selected = phase == "before" and not state["restarted"] or phase == "after" and state["published"]
+                        if not selected:
+                            return dict(ack=3 if state["published"] else 2, deliver=4 if state["published"] else 3, consumers=1)
+                        state["observations"] += 1
+                        ack_offset, delivery_offset, consumers = next(snapshots)
+                        return dict(ack=(3 if state["published"] else 2) + ack_offset,
+                            deliver=(4 if state["published"] else 3) + delivery_offset, consumers=consumers)
+                    def bounded_wait(predicate, seconds=30):
+                        self.assertEqual(seconds, 30)
+                        for _ in range(3):
+                            if predicate(): return
+                        raise AssertionError("Owned observation deadline exceeded")
+                    namespace = dict(wait=bounded_wait, broker_stats=stats, pipeline=pipeline, run=run,
+                        wait_reference_statistics=reference_smoke.wait_reference_statistics, stable=["unchanged-full8"],
+                        count=lambda: 2, full_graph=lambda: ["unchanged-full8"], queue_counts=lambda: (0, 0))
+                    if succeeds:
+                        exec(block, namespace)
+                        self.assertEqual(calls, ["restart", "publish-existing"])
+                    else:
+                        with self.assertRaisesRegex(AssertionError, f"Owned reference {phase} application restart observation failed") as raised:
+                            exec(block, namespace)
+                        self.assertEqual(str(raised.exception.__cause__), "Owned observation deadline exceeded")
+                        self.assertIn("expected_ack=", str(raised.exception))
+                        self.assertIn("expected_deliver=", str(raised.exception))
+                        self.assertEqual(calls, [] if phase == "before" else ["restart", "publish-existing"])
+                    self.assertEqual(state["observations"], 3)
 
     def test_pending_broker_restart_refuses_unowned_before_callbacks(self):
         def forbidden(*args): raise AssertionError("Owned guard touched resources")
