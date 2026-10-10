@@ -8,6 +8,7 @@ import { startOwnedCoreReplyProxy, committedReplyEvidence } from "./owned-browse
 import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
 import { requireOwnedGroupInbox, verifyOwnedGroupInbox } from "./smoke-browser-group-inbox.mjs";
+import { submissionAbortStage, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
 
 test("submission202 receipt requires completed bounded UTF8 JSON and reports only fixed refusal stages", async () => {
   const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
@@ -48,6 +49,34 @@ test("submission202 receipt requires completed bounded UTF8 JSON and reports onl
     assert.equal(phases.at(-1), fault ? expected[fault] : "replay-body-json");
     assert.ok(phases.every(phase => /^replay-[a-z0-9-]+$/.test(phase) && !phase.includes("owned-private")));
     assert.ok(bounds.length > 0 && bounds.length <= 2);
+  }
+});
+
+test("actual receipt failure remains a refusal after passive wire and UI projection", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function requiredReceipt("), end = source.indexOf("  const sent =", start);
+  const make = new Function("bounded", "proof", "page", "wireObservation", "submissionAbortStage", "submissionWireStage",
+    source.slice(start, end) + ";return requiredReceipt;");
+  const empty = { bodyStarted: false, wireFinished: false, compressed: false };
+  for (const [wire, accepted, expected] of [[empty, false, "replay-timeout-no-body-observed"],
+    [{ ...empty, bodyStarted: true }, false, "replay-timeout-body-started"],
+    [{ ...empty, bodyStarted: true, compressed: true }, false, "replay-timeout-compressed-body-started"],
+    [{ ...empty, wireFinished: true }, false, "replay-timeout-after-wire-finished"],
+    [empty, true, "replay-timeout-after-accepted-ui"], [null, false, "replay-timeout-after-headers"]]) {
+    const phases = [], url = "owned-private-url";
+    const page = { evaluate: async (_fn, requested) => {
+      assert.equal(requested, url); return { kind: "timeout", headersBeforeAbort: true, headersNearDeadline: false };
+    }, getByText: (text, options) => {
+      assert.equal(text, "Hệ thống đã nhận yêu cầu. Mở Công việc để xem tiến độ và kết quả đã lưu.");
+      assert.deepEqual(options, { exact: true }); return { count: async () => accepted ? 1 : 0 };
+    } };
+    const observer = { read: requested => { assert.equal(requested, url); return wire; } };
+    const receipt = make(async (_promise, maximum) => {
+      assert.equal(maximum, 20_000); throw new Error("owned-private-failure");
+    }, condition => { assert.ok(condition); }, page, observer, submissionAbortStage, submissionWireStage);
+    await assert.rejects(receipt({ url: () => url, request: () => ({ failure: () => ({ errorText: "net::ERR_ABORTED" }) }),
+      finished: async () => null, body: () => { assert.fail("Failed stream body used as receipt"); } }, name => phases.push(name)));
+    assert.equal(phases.at(-1), expected); assert.ok(phases.every(name => !name.includes("private")));
   }
 });
 

@@ -2,7 +2,7 @@
 import { resolve, join } from "node:path";
 import { readFile, mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { observeSubmissionLifecycle, submissionAbortStage } from "./owned-browser-submission-lifecycle.mjs";
+import { observeSubmissionLifecycle, submissionAbortStage, observeSubmissionWire, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
 
 export async function verifyTaskSubmission({ directory, manifest, browser, ownerPage: page, ownerContext, sql, app, identity, coreReplyFault, setStage }) {
   const proof = condition => { if (!condition) throw new Error("Task submission browser proof failed."); };
@@ -94,7 +94,12 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       try { failure = response.request().failure()?.errorText; } catch { /* Unknown browser boundary. */ }
       if (failure === "net::ERR_ABORTED") {
         try {
-          return submissionAbortStage(await page.evaluate(url => window.__aiofficeOwnedSubmissionLifecycle?.read(url) ?? null, response.url()));
+          const category = submissionAbortStage(await page.evaluate(url => window.__aiofficeOwnedSubmissionLifecycle?.read(url) ?? null, response.url()));
+          if (category !== "replay-timeout-after-headers") return category;
+          const wire = wireObservation?.read(response.url());
+          if (!wire) return category;
+          const acceptedUi = await page.getByText("Hệ thống đã nhận yêu cầu. Mở Công việc để xem tiến độ và kết quả đã lưu.", { exact: true }).count() === 1;
+          return submissionWireStage(category, { ...wire, acceptedUi });
         } catch { return "replay-request-aborted"; }
       }
       return new Map([
@@ -132,8 +137,9 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   const observe = request => { if (request.method() === "POST" && new URL(request.url()).pathname.startsWith("/api/local/tasks/intents"))
     sent.push({ path: new URL(request.url()).pathname, body: request.postDataJSON() }); };
   page.on("request", observe);
-  let secondaryContext, release, heldPattern;
+  let secondaryContext, release, heldPattern, wireObservation;
   try {
+    wireObservation = await observeSubmissionWire(ownerContext, page, { directory, origin: app, company });
     await page.evaluate(observeSubmissionLifecycle, { origin: app, company });
     for (const boundary of ["headers", "body"]) {
       const phase = name => stage("real-core202-" + boundary + "-" + name);
@@ -320,6 +326,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     console.log("PASS shipping owner recovery clears private data after external membership loss and restores GET-only under a new issued session with unchanged durable bytes");
     await page.getByRole("button", { name: "Trợ lý AI", exact: true }).first().click();
   } finally {
+    await wireObservation?.dispose().catch(() => {});
     await page.evaluate(() => window.__aiofficeOwnedSubmissionLifecycle?.dispose()).catch(() => {});
     page.off("request", observe); release?.(); if (heldPattern) await page.unroute(heldPattern).catch(() => {});
     coreReplyFault.disarm(); if (secondaryContext) await secondaryContext.close();

@@ -1347,3 +1347,15 @@ group_connector_managed_cleanup_repair:
   review: 'Frozen598 withheld solely on child poll/kill skipping drain and no timeout recovery.76 .NET/39 Python/8 exact proxy/3 unowned CLI controls PASS; no other reproduced blocker, no native success.'
   repair: 'Independent guarded poll/kill/drain, conservative kill after poll fault,5s drain TimeoutExpired triggers guarded kill+final5s drain. First fault preserved; proxy shutdown/close/join always attempted.'
   local: '39 Python PASS, strengthened actual finalbody extraction covers each process/proxy fault, secondary timeout kill/drain and earlier failure. Original reviewer unchanged counterexample closure required before push.'
+
+group_connector_managed_cleanup_closure:
+  head: 8f4c5d9b0b019ee5202359a71339464f537aa1d0
+  scoped_approval: 6094525216
+  result: 'Unchanged original missing-drain counterexample CLOSED;26 independent finalbody/39 retained Python/8 proxy controls PASS;2AST/2YAML/diff PASS. Full598 managed proof scoped approved,76 .NET/3 actual unowned modes unchanged. Native startup SQL/managed execution required, no full277.'
+
+group_connector_browser_wire_observation_candidate:
+  predecessor: 8f4c5d9b0b019ee5202359a71339464f537aa1d0
+  state: local_tested_pending_frozen_review
+  implementation: 'Owned-only passive Chromium protocol session, at most8 matched submit RAM records; fixed encoding/body-start/loadingFinished projection. No request interception/body/authorization reads, sends, aborts, delays or relaxed timeout. Fixed accepted-notice count and wire booleans only refine already-failed timeout-after-headers; strict20s EOF/original receipt/SID/full8 graph remains.'
+  local: '22 Node controls PASS0skip including actual receipt refusal integration. Local Chrome/shipping reader3 complete normal/compressed/chunked202 positives and2 empty/body-started timeout negatives PASS. Separate CDP metadata can arrive after Playwright finished; diagnostic runs after original20s failure, no waits added.2YAML/syntax/diff PASS; src/apps unchanged.'
+  next: 'Frozen scoped review then approved SAME283 push; execute both new startup/managed proofs and exact native/browser gates to terminal. Diagnose/fix proven cause;277/278/279/full233 active.'
