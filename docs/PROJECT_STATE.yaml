@@ -725,3 +725,10 @@ group_connector_browser_wire_observation_candidate:
   local: '22 retained/current Node controls PASS0skip, including unchanged actual requiredReceipt refusal extraction;2 YAML/Node syntax/diff PASS. Local actual Chrome with shipping bounded reader and passive session:3 complete normal/compressed/chunked202 positives and2 empty/body-started timeout negatives PASS. Separate CDP events can arrive after Playwright finished; no shipping waits added, diagnostic failure occurs after original20s bound.'
   limits: 'Native1cb established only original TimeoutError after early202 headers, not body completeness or cause. New wire/UI native diagnostics pending; no product or native acceptance inferred. src/apps unchanged8f.'
   next: 'Frozen scoped review, approved SAME283 push including startup/managed native proof, own exact CI terminal and repair proven body/browser cause.277/278/279/full233 active.'
+
+group_connector_browser_observation_overflow_repair:
+  predecessor: 1599af4e160ad82cc8761b925342d739dd738109
+  state: local_tested_pending_frozen_review
+  finding: 'Ninth matched same-URL request beyond8-record cap could project previous attempt metadata. Current mandatory receipt loop has4 matchedPOSTs and original EOF/receipt always required, so no acceptance bypass; stale causal diagnostic must still be refused.'
+  repair: 'Both original-signal and passive-wire observers permanently invalidate read projection after the ninth matched request; read returnsnull. No new record/listener, body access or request mutation; original fetch forwarded exactlyonce, including synchronous failure on ninth call.'
+  local: '23 Node controls PASS0skip including actual strict receipt integration/overflow stale evidence/synchronous original failure;2YAML/Node syntax/diff PASS. src/apps/workflow unchanged. Frozen independent original ninth-attempt closure and renewed native proof required.'

@@ -1359,3 +1359,10 @@ group_connector_browser_wire_observation_candidate:
   implementation: 'Owned-only passive Chromium protocol session, at most8 matched submit RAM records; fixed encoding/body-start/loadingFinished projection. No request interception/body/authorization reads, sends, aborts, delays or relaxed timeout. Fixed accepted-notice count and wire booleans only refine already-failed timeout-after-headers; strict20s EOF/original receipt/SID/full8 graph remains.'
   local: '22 Node controls PASS0skip including actual receipt refusal integration. Local Chrome/shipping reader3 complete normal/compressed/chunked202 positives and2 empty/body-started timeout negatives PASS. Separate CDP metadata can arrive after Playwright finished; diagnostic runs after original20s failure, no waits added.2YAML/syntax/diff PASS; src/apps unchanged.'
   next: 'Frozen scoped review then approved SAME283 push; execute both new startup/managed proofs and exact native/browser gates to terminal. Diagnose/fix proven cause;277/278/279/full233 active.'
+
+group_connector_browser_observation_overflow_repair:
+  predecessor: 1599af4e160ad82cc8761b925342d739dd738109
+  state: local_tested_pending_frozen_review
+  finding: 'Ninth matched same-URL request beyond8-record cap reused previous attempt projection; diagnostic accuracy issue, original EOF/receipt not bypassed and currentmandatoryloop4matchedPOSTs.'
+  repair: 'Both signal/wire observers permanently returnnull afterninthmatchedrequest, retain cap8 and originalsinglefetchinvocation even synchronousfailure; no body/authorization/request mutation.'
+  local: '23 Node PASS0skip incl actual requiredReceipt refusal, overflow and original synchronous throw;2YAML/syntax/diff PASS. Frozen original review closure/native execution pending;277/278/279/full233 active.'

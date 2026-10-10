@@ -7,24 +7,27 @@ export function observeSubmissionLifecycle({ origin, company }) {
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(company)
     || window.__aiofficeOwnedSubmissionLifecycle) throw new Error("Owned browser observation refused.");
   const original = window.fetch, records = [];
+  let exhausted = false;
   function observed(...args) {
     let record;
     try {
       const [input, init] = args, url = typeof input === "string" ? new URL(input, origin) : null;
       if (url?.origin === origin && /^\/api\/local\/tasks\/intents\/[0-9a-f-]{36}\/submit$/.test(url.pathname)
-        && url.search === "?companyId=" + company && init?.method === "POST" && init.signal instanceof AbortSignal
-        && records.length < 8) {
-        const signal = init.signal;
-        record = { url: url.href, started: performance.now(), headers: null, aborted: null, kind: "absent", signal };
-        record.abort = () => {
-          record.aborted = performance.now();
-          try {
-            record.kind = signal.reason instanceof DOMException && signal.reason.name === "TimeoutError" ? "timeout"
-              : signal.reason instanceof DOMException && signal.reason.name === "AbortError" ? "owner" : "other";
-          } catch { record.kind = "other"; }
-        };
-        records.push(record); signal.addEventListener("abort", record.abort, { once: true });
-        if (signal.aborted) record.abort();
+        && url.search === "?companyId=" + company && init?.method === "POST" && init.signal instanceof AbortSignal) {
+        if (records.length >= 8) exhausted = true;
+        else {
+          const signal = init.signal;
+          record = { url: url.href, started: performance.now(), headers: null, aborted: null, kind: "absent", signal };
+          record.abort = () => {
+            record.aborted = performance.now();
+            try {
+              record.kind = signal.reason instanceof DOMException && signal.reason.name === "TimeoutError" ? "timeout"
+                : signal.reason instanceof DOMException && signal.reason.name === "AbortError" ? "owner" : "other";
+            } catch { record.kind = "other"; }
+          };
+          records.push(record); signal.addEventListener("abort", record.abort, { once: true });
+          if (signal.aborted) record.abort();
+        }
       }
     } catch { /* Observation must not change the original request. */ }
     const result = Reflect.apply(original, this, args);
@@ -34,6 +37,7 @@ export function observeSubmissionLifecycle({ origin, company }) {
   window.fetch = observed;
   window.__aiofficeOwnedSubmissionLifecycle = {
     read(url) {
+      if (exhausted) return null;
       const record = records.findLast(item => item.url === url);
       return record ? { kind: record.kind,
         headersBeforeAbort: record.headers !== null && record.aborted !== null && record.headers <= record.aborted,
@@ -69,13 +73,16 @@ export async function observeSubmissionWire(context, page, { directory, origin, 
     || origin !== "http://127.0.0.1:3000" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(company)
     || company === "00000000-0000-0000-0000-000000000000") throw new Error("Owned browser wire observation refused.");
   const session = await context.newCDPSession(page), records = [];
+  let exhausted = false;
   const handlers = {
     "Network.requestWillBeSent": event => {
       const request = event.request;
       let url; try { url = new URL(request.url); } catch { return; }
-      if (records.length < 8 && request.method === "POST" && url.origin === origin
-        && /^\/api\/local\/tasks\/intents\/[0-9a-f-]{36}\/submit$/.test(url.pathname) && url.search === "?companyId=" + company)
+      if (request.method === "POST" && url.origin === origin
+        && /^\/api\/local\/tasks\/intents\/[0-9a-f-]{36}\/submit$/.test(url.pathname) && url.search === "?companyId=" + company) {
+        if (records.length >= 8) { exhausted = true; return; }
         records.push({ id: event.requestId, url: url.href, bodyStarted: false, wireFinished: false, compressed: false });
+      }
     },
     "Network.responseReceived": event => {
       const record = records.find(item => item.id === event.requestId);
@@ -103,6 +110,7 @@ export async function observeSubmissionWire(context, page, { directory, origin, 
   catch (error) { await dispose().catch(() => {}); throw error; }
   return {
     read(url) {
+      if (exhausted) return null;
       const record = records.findLast(item => item.url === url);
       return record ? { bodyStarted: record.bodyStarted, wireFinished: record.wireFinished, compressed: record.compressed } : null;
     }, dispose,

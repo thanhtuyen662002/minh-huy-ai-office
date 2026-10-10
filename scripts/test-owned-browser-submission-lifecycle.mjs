@@ -44,15 +44,25 @@ test("observation preserves original rejection and ignores foreign paths, compan
 test("observer has a bounded lifetime and never replaces a later fetch wrapper", async () => {
   const value = fixture(async () => ({}));
   const controllers = Array.from({ length: 9 }, () => new AbortController());
-  for (const controller of controllers) await value.window.fetch(path, { method: "POST", signal: controller.signal });
-  controllers[8].abort(); assert.equal(value.read().kind, "absent");
+  for (const controller of controllers.slice(0, 8)) await value.window.fetch(path, { method: "POST", signal: controller.signal });
   controllers[7].abort(); assert.equal(value.read().kind, "owner");
+  await value.window.fetch(path, { method: "POST", signal: controllers[8].signal });
+  controllers[8].abort(); assert.equal(value.read(), null);
   const wrapper = () => {}; value.window.fetch = wrapper; value.dispose();
   assert.equal(value.window.fetch, wrapper);
   const second = fixture(async () => ({})), controller = new AbortController();
   await second.window.fetch(path, { method: "POST", signal: controller.signal });
   const project = second.window.__aiofficeOwnedSubmissionLifecycle.read;
   second.dispose(); controller.abort(); assert.equal(project(origin + path).kind, "absent");
+});
+
+test("exhausted fetch observation forwards synchronous failure once and never returns old evidence", async () => {
+  const failure = new Error("PRIVATE"), controller = new AbortController(); let calls = 0;
+  const value = fixture(() => { calls++; if (calls === 9) throw failure; return Promise.resolve({}); });
+  for (let index = 0; index < 8; index++) await value.window.fetch(path, { method: "POST", signal: controller.signal });
+  controller.abort(); assert.equal(value.read().kind, "owner");
+  assert.throws(() => value.window.fetch(path, { method: "POST", signal: new AbortController().signal }), error => error === failure);
+  assert.equal(calls, 9); assert.equal(value.read(), null); value.dispose();
 });
 test("observation refuses a nonowned origin or duplicate installation before replacing fetch", () => {
   const fetch = () => {}; const window = { location: { origin: "https://foreign.invalid" }, fetch };
@@ -108,12 +118,15 @@ test("wire observer ignores foreign scopes and has bounded request lifetime", as
       session.emit("Network.requestWillBeSent", { requestId: "foreign", request: { url, method: "POST" } });
     session.emit("Network.requestWillBeSent", { requestId: "get", request: { url: origin + path, method: "GET" } });
     assert.equal(observer.read(origin + path), null);
-    for (let index = 0; index < 9; index++) session.emit("Network.requestWillBeSent", { requestId: String(index), request: { url: origin + path, method: "POST" } });
-    session.emit("Network.loadingFinished", { requestId: "8" });
+    for (let index = 0; index < 8; index++) session.emit("Network.requestWillBeSent", { requestId: String(index), request: { url: origin + path, method: "POST" } });
     session.emit("Network.dataReceived", { requestId: "7", dataLength: NaN });
     assert.deepEqual(observer.read(origin + path), { bodyStarted: false, wireFinished: false, compressed: false });
     session.emit("Network.dataReceived", { requestId: "7", dataLength: 1 });
     assert.equal(observer.read(origin + path).bodyStarted, true);
+    session.emit("Network.requestWillBeSent", { requestId: "8", request: { url: origin + path, method: "POST" } });
+    session.emit("Network.loadingFinished", { requestId: "7" });
+    session.emit("Network.loadingFinished", { requestId: "8" });
+    assert.equal(observer.read(origin + path), null);
     await observer.dispose();
   });
 });
