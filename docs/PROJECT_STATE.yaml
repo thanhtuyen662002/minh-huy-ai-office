@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: d86223e47dbf391d635e273efa91055bf7037c65
+current_target_head: b62e19b2ab0c379132b841c6e2625e4da722d86c
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: d86223e47dbf391d635e273efa91055bf7037c65
+    head: b62e19b2ab0c379132b841c6e2625e4da722d86c
     state: in_progress
-    next: 'd862 scoped APPROVED6093126875 Build38019377330/Gov38019377336/actual114116728873/quality114119061264: six prerequisites/Gov/ALL3 actual current SQL metadata-Renew-spool recovery and Core202 header/body-loss retries PASS; later broad historical-source denial Chromium RED, precise cause unproven. Freeze/review bounded fixed substages with original403/202/receipt/full-graph/source-restore/timeouts unchanged, push approved diagnostic and own renewed exactCI. Local reference-inbox foundation211 focused tests PASS preserved in named Git stash, unreviewed/unpushed/excluded repair. Provider/DI/reference-only broker/278/279/full233 remain ACTIVE.'
+    next: 'b62 scoped APPROVED6093317472 Build38020840049/Gov38020840088 in progress: own exact historical-source diagnostic CI to terminal and repair any red same PR. Predecessor d862 ALL3 actual current SQL metadata-Renew-spool and Core202 retries PASS; historical browser RED, cause unproven. Restored local reference-inbox foundation212 focused PASS0skip, clean build/model/script; freeze/review before push. No actual inbox SQL/broker/DI/provider qualification yet. Full277/278/279/233 remain ACTIVE; no partial merge.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'd862 scoped APPROVED6093126875 Build38019377330/Gov38019377336/actual114116728873/quality114119061264: six prerequisites/Gov/ALL3 actual current SQL metadata-Renew-spool recovery and Core202 header/body-loss retries PASS; later broad historical-source denial Chromium RED, precise cause unproven. Freeze/review bounded fixed substages with original403/202/receipt/full-graph/source-restore/timeouts unchanged, push approved diagnostic and own renewed exactCI. Local reference-inbox foundation211 focused tests PASS preserved in named Git stash, unreviewed/unpushed/excluded repair. Provider/DI/reference-only broker/278/279/full233 remain ACTIVE.'
+next_action: 'b62 scoped APPROVED6093317472 Build38020840049/Gov38020840088 in progress: own exact historical-source diagnostic CI to terminal and repair any red same PR. Predecessor d862 ALL3 actual current SQL metadata-Renew-spool and Core202 retries PASS; historical browser RED, cause unproven. Restored local reference-inbox foundation212 focused PASS0skip, clean build/model/script; freeze/review before push. No actual inbox SQL/broker/DI/provider qualification yet. Full277/278/279/233 remain ACTIVE; no partial merge.'
 
 
 blocked_by:
@@ -546,3 +546,15 @@ group_contracts_delivered_276:
   main_quality: 114040168330
   state: done
   result: '276 CLOSED/282 MERGED with exact finalPR/main all8 and retained actualSQL/Redis/Chromium PASS. Typed contracts and unverified qualification registry only; actual277-279 source/brain/notes/reports and full233 remain. Four auth counterexamples independently closed at061; store timing/HTTP ongoing and actual277 runtime unproved.'
+
+group_reference_inbox_foundation:
+  predecessor: b62e19b2ab0c379132b841c6e2625e4da722d86c
+  predecessor_review: 6093317472
+  predecessor_build: 38020840049
+  predecessor_governance: 38020840088
+  predecessor_status: in_progress
+  local: '212 focused controls PASS0skip (143 Persistence/69 Contracts); clean Persistence build0warnings0errors, EF no pending model changes, additive migration script generated against inert local design-time configuration. No actual SQL or broker execution yet.'
+  scope: 'Strict bounded reference-only broker DTO; trusted host-fixed Extract worker binding; current SQL Extract authorization and immutable metadata-only inbox receipt. Duplicate100 retains original receipt; delivery before producer confirmation/retry reservation is supported while actual revision commit must be UTC and not future. No key/private source/model/portal Task/User access or cursor advance.'
+  migration: '20261010031308_AddGroupIngressInbox; scoped Restrict FKs and unique committed sequence; operator-owned runtime SELECT/INSERT with table and every-column UPDATE/DELETE/ALTER/TAKEOWNERSHIP denial. Runtime verifier now requires all15 group tables. Down refuses destructive rollback; forward repair required.'
+  state: local_tested_unreviewed
+  next: 'Freeze foundation, obtain independent scoped review and close exact-head CI before acceptance. Implement separately gated reference-only publisher/consumer and owned native SQL/broker interruption/redelivery/current-grant proof. b62 current historical browser diagnostic CI remains actively owned; terminal red must be repaired immediately on this PR. No full277/278/279/233 completion or live/customer deployment claim.'

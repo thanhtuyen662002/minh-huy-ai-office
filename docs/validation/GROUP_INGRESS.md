@@ -793,3 +793,47 @@ CodeS256/owner isolation checks are retained. Only fixed status/stage labels are
 emitted, no private response or dependency diagnostics. Retained9 Node guards,
 syntax/AST/YAML/diff and frozen scoped delta review are required before push;
 renewed actual full Chromium remains mandatory.
+
+## Reference-only durable worker inbox foundation
+
+The new strict `GroupIngressDispatchReference` names only version, scoped source,
+original outbox event/message/revision and committed sequence. Maximum2048 bytes,
+fatal UTF8, decoded duplicate-property rejection, required exact JSON fields,
+canonical broker message ID and a separate fixed message type reject authority,
+portal identity, destinations, keys and source text in broker hints.
+
+The worker binding is trusted host configuration. The SQL inbox store resolves
+current active company, exact original physical source/account, enabled service
+and credential epoch, and a separate current Extract grant under a Serializable
+source lock. Ingest and Notify grants do not authorize delivery. It checks the
+exact existing outbox/revision/original ingress receipt and committed cursor,
+rechecks authority and effective permissions around save/commit, and returns only
+an exact original reference and durable receipt time. Metadata projections do not
+materialize encrypted source or resolve keys. No portal user/task or batch cursor
+is created. A repeated delivery still requires current authority before returning
+the original inbox receipt.
+
+Publisher AvailableAt is a retry reservation. A broker hint can arrive before
+that reservation expires or producer confirmation is saved; the original revision
+must still be committed in UTC at or before the current clock. This is covered by
+an explicit positive reservation test and retained future-revision denial.
+
+Additive migration `20261010031308_AddGroupIngressInbox` has scoped Restrict foreign
+keys, unique source committed sequence, positive audited versions and UTC time.
+The operator owns the table; runtime SELECT/INSERT is allowed and every column's
+UPDATE plus DELETE/ALTER/TAKEOWNERSHIP is denied. The runtime verifier now includes
+all15 group tables. Down refuses destructive rollback in favor of forward repair.
+
+Local212 focused tests PASS0skip (143 Persistence/69 Contracts), including100
+exact duplicate receipts,13 current Extract denials, malformed SQL graph controls,
+foreign host/cancellation before database, strict broker parsing and model rights.
+Clean Persistence build0warnings0errors and EF no pending model changes PASS;
+migration SQL was generated using an inert local design-time configuration without
+opening a SQL connection. This foundation remains unreviewed until frozen review;
+no actual SQL concurrency/rollback or RabbitMQ/DI/worker delivery is claimed.
+
+Pushed browser diagnostic predecessor `b62e19b2ab0c379132b841c6e2625e4da722d86c`
+has scoped review6093317472, Build38020840049/Gov38020840088 in progress at this
+checkpoint. Its required403/202, exact operation/fingerprint/graphs and source
+restoration remain unchanged. Terminal results stay owned on PR283. Full277,
+automatic SQL brain278, internal IT reporting279 and full233 remain active.

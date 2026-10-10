@@ -41,6 +41,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupIngressReceiptRecord> GroupIngressReceipts => Set<GroupIngressReceiptRecord>();
     public DbSet<GroupCoverageGapRecord> GroupCoverageGaps => Set<GroupCoverageGapRecord>();
     public DbSet<GroupIngressOutboxRecord> GroupIngressOutbox => Set<GroupIngressOutboxRecord>();
+    public DbSet<GroupIngressInboxRecord> GroupIngressInbox => Set<GroupIngressInboxRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

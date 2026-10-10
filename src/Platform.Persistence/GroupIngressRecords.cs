@@ -210,3 +210,22 @@ public sealed class GroupIngressOutboxRecord
     public DateTimeOffset? PublishedAtUtc { get; set; }
     public int PublishAttempts { get; set; }
 }
+
+// Append-only worker receipt for a committed reference. This is not a portal
+// task or extracted note. Automatic batch selection remains SQL driven.
+public sealed class GroupIngressInboxRecord
+{
+    public Guid TenantId { get; set; }
+    public Guid CompanyId { get; set; }
+    public Guid BindingId { get; set; }
+    public Guid EventId { get; set; }
+    public Guid MessageId { get; set; }
+    public long Revision { get; set; }
+    public long CommittedSequence { get; set; }
+    public long SourceVersion { get; set; }
+    public long DeletionGeneration { get; set; }
+    public Guid ServiceId { get; set; }
+    public long CredentialEpoch { get; set; }
+    public long GrantVersion { get; set; }
+    public DateTimeOffset ReceivedAtUtc { get; set; }
+}

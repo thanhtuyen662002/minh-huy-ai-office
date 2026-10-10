@@ -140,6 +140,15 @@ internal static class GroupIngressModelConfiguration
             entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.BindingId, x.MessageId, x.Revision }).IsUnique();
             entity.HasIndex(x => new { x.PublishedAtUtc, x.AvailableAtUtc });
         });
+        model.Entity<GroupIngressInboxRecord>(entity =>
+        {
+            Company(entity, "GroupIngressInbox", "BindingId", "EventId"); Revision(entity);
+            entity.ToTable("GroupIngressInbox", table => table.HasCheckConstraint("CK_GroupIngressInbox_Values",
+                "[Revision] > 0 AND [CommittedSequence] > 0 AND [SourceVersion] > 0 AND [DeletionGeneration] >= 0 AND [CredentialEpoch] > 0 AND [GrantVersion] > 0 AND DATEPART(tz,[ReceivedAtUtc]) = 0"));
+            entity.HasOne<GroupIngressOutboxRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, Id = x.EventId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GroupServiceRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.ServiceId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.BindingId, x.CommittedSequence }).IsUnique();
+        });
     }
 
     private static void Company<T>(EntityTypeBuilder<T> entity, string table, params string[] key) where T : class

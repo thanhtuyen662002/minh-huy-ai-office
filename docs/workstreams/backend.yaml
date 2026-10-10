@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: d86223e47dbf391d635e273efa91055bf7037c65
+head: b62e19b2ab0c379132b841c6e2625e4da722d86c
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -1177,3 +1177,13 @@ group_connector_d862_actual_current_metadata:
   result: 'Six prerequisites/Gov PASS; ALL3 current native metadata/Renew/spool/process-death/last-Renew expiry/freshOwner2/original ACK/full6+bytes restart/actual grant403 BEFORE spool-key/exact restorecursor2/pooled isolation PASS. Root inspected retained native group/read/listener and both Chromium Core202 header/body-loss retries PASS. Actual/quality RED at later broad historical-owner-read-current-source-denial; exact cause unproven, subsequent company-switch proof unexecuted.'
   repair: 'Bounded diagnostic-only fixed phases now separate disabled-source SQL/historical GET status-body/submit click-response/required403/retry-visible/unchanged graph/exact restore/required202/receipt/worker-onegraph. Observe all exact-path POST replies but require original403/202, immediate waiter rejection ownership, original20s waits/source restore/fingerprint/private-owner/original full graph assertions retained. No private content/error output or assertion weakening.'
   next: 'Freeze/review diagnostic delta, push approved current and own exact native/fullChromium terminal. Source-callback causes remain unproven. Separate local reference-inbox foundation211 focused tests PASS is preserved in named Git stash, unreviewed/unpushed and excluded from this repair; restore after approved push. Provider/DI/broker/278/279/full233 remain.'
+
+group_reference_inbox_foundation_checkpoint:
+  predecessor: b62e19b2ab0c379132b841c6e2625e4da722d86c
+  predecessor_review: 6093317472
+  predecessor_build: 38020840049
+  predecessor_governance: 38020840088
+  predecessor_status: in_progress
+  local: '212 focused PASS0skip:143 Persistence/69 Contracts. Clean build, EF no pending model changes and additive migration SQL generated without connecting to customer/local SQL. Foundation restored from retained named stash31b9f31dd6bab031af7adb9e3f88098c9950f8be; it is no longer stash-only work.'
+  result: 'Reference-only strict2048-byte broker contract and host-fixed current Extract authority guard a metadata-only Serializable append-only SQL inbox. Duplicate100 replays exact original receipt, no protected source/key/portal task or cursor effects. Future publisher retry reservation does not invalidate an already committed reference; future original revision does. No RabbitMQ/DI activation or native SQL claim yet.'
+  next: 'Independent frozen foundation review; then separately gated broker outbox/consumer with current-authority durable settlement and owned actual restart/interruption proof. Own b62 Build38020840049/Gov38020840088 to terminal and repair any historical Chromium defect on same PR. Full277/278/279/233 remain active.'
