@@ -5,9 +5,10 @@ public sealed class GroupIngressPermissionVerifier(PlatformDbContext database)
     // Fixed server-owned identifiers only. No event, model or HTTP value can
     // choose a table or a permission proof. Migrations freeze their own SQL.
     private static readonly string[] Registry = ["GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants"];
-    private static readonly string[] AppendOnly = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts", "GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions"];
+    private static readonly string[] AppendOnly = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts", "GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimReceipts"];
     private static readonly IReadOnlyDictionary<string, string[]> WritableColumns = new Dictionary<string, string[]>
     {
+        ["GroupBatchClaimStates"] = ["Epoch", "OwnerId", "OperationId", "IssuedAtUtc", "ExpiresAtUtc"],
         ["GroupListenerLeases"] = ["OwnerId", "Epoch", "ExpiresAtUtc", "HeartbeatAtUtc"],
         ["GroupSourceStates"] = ["CommittedSequence", "ScheduledThroughSequence", "FirstPendingAtUtc", "LastPendingAtUtc"],
         ["GroupCoverageGaps"] = ["ReconnectedAtUtc"],

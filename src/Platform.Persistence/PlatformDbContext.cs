@@ -46,6 +46,9 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupBatchAllocationRecord> GroupBatchAllocations => Set<GroupBatchAllocationRecord>();
     public DbSet<GroupBatchAllocatedRevisionRecord> GroupBatchAllocatedRevisions => Set<GroupBatchAllocatedRevisionRecord>();
 
+    public DbSet<GroupBatchClaimStateRecord> GroupBatchClaimStates => Set<GroupBatchClaimStateRecord>();
+    public DbSet<GroupBatchClaimReceiptRecord> GroupBatchClaimReceipts => Set<GroupBatchClaimReceiptRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
@@ -55,6 +58,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureTaskSubmissionIntents();
         modelBuilder.ConfigureGroupIngress();
         modelBuilder.ConfigureGroupBatchAllocation();
+        modelBuilder.ConfigureGroupBatchClaims();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));

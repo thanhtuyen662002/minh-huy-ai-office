@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 22677f97afbf8e37d65d230440c57e0b99b13540
+current_target_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 22677f97afbf8e37d65d230440c57e0b99b13540
+    head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
     state: in_progress
-    next: 'Own278/Draft288. Repaired transport22677 scoped approved6097021504 and pushed; Build38048764985 attempt1 failed at Docker image preparation, attempt2 all8 SUCCESS/Gov38048764960 PASS. Local additive durable allocation store/migration/native modes implemented with83 focused controls PASS; freeze/review before push and own actual SQL CI, then claims/scoped brain/notes/evidence/atomic outbox on SAME PR. No SQL notes or model quality accepted; proposed120/40 UNEVALUATED/provider location pending.279/full233 remain ACTIVE.'
+    next: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
 
   erp_data:
     issue: 264
@@ -24,7 +24,7 @@ critical_paths:
     branch: codex/264-erp-readonly-qualification
     head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
     state: done
-    next: "264/265 accepted after independent frozen e3 and final a7 reviews, exact PR/main gates and actual SQL/Chromium PASS. Conservative standalone engine16/current-database qualifier is shipped; dedicated customer credentials, legacy module profiles and inventory reconciliation remain."
+    next: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
 
   company_selection:
     issue: 266
@@ -32,7 +32,7 @@ critical_paths:
     branch: codex/266-company-selection
     head: a75f31a2761ffe0afcbf067425eb8324789b3554
     state: done
-    next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
+    next: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
 
 recent_authoritative_merges:
   - 'PR287/repair286 and issue277 accepted main2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd: frozen608/full review6096552286; main independent receipt6096704767. Build38044971534/Gov38044971530/all8/actual114192556176/quality114195330891 SUCCESS. All80 required markers,136 PASS,2027.NET/1334web and six ORIGINAL images11667314210 checked independently.277 CLOSED. Native application/literal pending broker restart and Core202/historical strict original receipts PASS. Earlier aeb failure cause unproven.278/279/model/customer/full233 remain outstanding.'
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288. Repaired transport22677 scoped approved6097021504 and pushed; Build38048764985 attempt1 failed at Docker image preparation, attempt2 all8 SUCCESS/Gov38048764960 PASS. Local additive durable allocation store/migration/native modes implemented with83 focused controls PASS; freeze/review before push and own actual SQL CI, then claims/scoped brain/notes/evidence/atomic outbox on SAME PR. No SQL notes or model quality accepted; proposed120/40 UNEVALUATED/provider location pending.279/full233 remain ACTIVE.'
+next_action: 'Own278/Draft288. Allocation a50 SCOPED APPROVED6097301006 pushed; exact Build38050984824/actual114209890966 active, Gov38050984773 PASS. New fenced claim store/immutable original receipts/lease state/additive migration/internal live handle fence/native modes locally verified120.NET/49Python/6 actual entry refusals; freeze independent review before next push. Own parent CI terminal and renewed native SQL closure. Then scoped brain/notes/evidence/atomic outbox/DI/UI/actual model evaluation; proposed120/40 UNEVALUATED/provider location pending.279/full233 ACTIVE.'
 
 
 blocked_by:
@@ -840,3 +840,19 @@ group_278_allocation_cleanup_repair:
   parent_browser_root_original_images_inspected: 6
   state: repaired_source_awaiting_frozen_independent_review
   next: 'Independently review repaired combined checkpoint before push; own new exact SQL CI/native modes, then claims/brain/notes/outbox. Actual model evaluation/278 acceptance/279/full233 remain incomplete.'
+
+group_278_claim_checkpoint:
+  parent_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
+  parent_scoped_review: 6097301006
+  parent_build: 38050984824
+  parent_actual: 114209890966
+  parent_governance: 38050984773
+  state: local_verified_pending_frozen_review_and_native_execution
+  focused_dotnet_controls: 120
+  owned_python_controls: 49
+  actual_unowned_executable_refusals: 6
+  migration: AddGroupBatchClaims
+  native_claim_modes: implemented_UNEXECUTED
+  automatic_sql_notes_delivered: false
+  model_evaluation: UNEVALUATED
+  next: 'Own parent CI; freeze/review claim checkpoint before approved push. Native SQL claims/brain/notes/atomic outbox/automatic DI/UI/model evaluation/full278/279/233 remain.'

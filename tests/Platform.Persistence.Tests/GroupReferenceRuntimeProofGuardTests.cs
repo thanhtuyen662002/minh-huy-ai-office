@@ -21,6 +21,20 @@ public sealed class GroupReferenceRuntimeProofGuardTests
         }
     }
 
+    [Fact]
+    public void ClaimRefusalsRequireCurrentAuthorityOrTheActualSanitizedCommitBoundary()
+    {
+        Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal("claim-rollback", new GroupBatchClaimCommitException()));
+        foreach (var error in new Exception[] { new DbUpdateException("PRIVATE_SQL"), new GroupBatchAllocationCommitException(),
+            new InvalidOperationException("PRIVATE_UNRELATED"), new UnauthorizedAccessException(), new IOException() })
+            Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal("claim-rollback", error));
+        foreach (var mode in new[] { "claim-deny", "claim-unsafe" })
+        {
+            Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new UnauthorizedAccessException()));
+            Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new GroupBatchClaimCommitException()));
+        }
+    }
+
     [Theory]
     [InlineData("deny", true, false, false)]
     [InlineData("unsafe", true, false, false)]

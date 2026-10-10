@@ -203,6 +203,11 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "inspect-pending": "PASS owned reference runtime exact persistent original queued reference retained",
             "consume-replay": "PASS owned reference runtime redelivery original SQL receipt and broker ACK",
             "duplicates": "PASS owned reference runtime100 concurrent original inbox receipts",
+            "claim-replay": "PASS owned claim runtime100 concurrent original receipts never renew expired lease",
+            "claim-fence": "PASS owned claim runtime actual expiry monotone replacement active contention and stale handle refusal",
+            "claim-deny": "PASS owned claim runtime refusal claim-deny",
+            "claim-unsafe": "PASS owned claim runtime refusal claim-unsafe",
+            "claim-rollback": "PASS owned claim runtime refusal claim-rollback",
             "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
             "allocation-deny": "PASS owned allocation runtime refusal allocation-deny",
             "allocation-unsafe": "PASS owned allocation runtime refusal allocation-unsafe",
@@ -512,6 +517,60 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual allocation original replay requires current Extract and restores SQL isolation without portal key model or note effects", flush=True)
+
+        # Claims add metadata only to the independently allocated owned source.
+        # Every original raw/inbox/allocation byte must remain unchanged.
+        def claim_graph():
+            return [digest("GroupBatchClaimStates", "BatchId"), digest("GroupBatchClaimReceipts", "Epoch")]
+        empty_claims = claim_graph()
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope};") == "0"
+        temporary_sql(sql,
+            f"ALTER TABLE aioffice.GroupBatchClaimReceipts ADD CONSTRAINT CK_CiGroupClaimRollback CHECK(BindingId<>'{source}');",
+            "IF OBJECT_ID(N'aioffice.CK_CiGroupClaimRollback',N'C') IS NOT NULL ALTER TABLE aioffice.GroupBatchClaimReceipts DROP CONSTRAINT CK_CiGroupClaimRollback;",
+            lambda: run("claim-rollback"))
+        assert claim_graph() == empty_claims
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("claim-deny"))
+        assert claim_graph() == empty_claims
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        print("PASS actual claim SQL rollback and current Extract denial preserve empty claim and original allocation graph", flush=True)
+
+        def unsafe_claim_column(table, column):
+            assert sql(f"EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'UPDATE',N'{column}',N'COLUMN'); REVERT;") == "1"
+            run("claim-unsafe")
+        for table, column in [("GroupBatchClaimReceipts", "AuthoritySha256"), ("GroupBatchClaimStates", "BatchId")]:
+            temporary_sql(sql, f"GRANT UPDATE ON OBJECT::aioffice.{table}({column}) TO aioffice_binding_runtime;",
+                f"DENY UPDATE ON OBJECT::aioffice.{table}({column}) TO aioffice_binding_runtime;",
+                lambda table=table, column=column: unsafe_claim_column(table, column))
+            assert sql(f"EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'UPDATE',N'{column}',N'COLUMN'); REVERT;") == "0"
+            assert claim_graph() == empty_claims
+        print("PASS actual claim unsafe effective immutable receipt and state identity rights refuse with exact owned restore", flush=True)
+
+        crashed = subprocess.run([*command, "claim-crash"], input=configuration(0), env=child_environment,
+            capture_output=True, text=True, timeout=170)
+        assert crashed.returncode == 137 and crashed.stdout.splitlines() == ["CHECKPOINT owned claim committed before receipt delivery"]
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=1));") == "1|1"
+        original_claims = claim_graph()
+        run("claim-replay")
+        assert claim_graph() == original_claims
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        print("PASS actual claim competing SQL contexts commit lost receipt abrupt owned process death restart and100 replays preserve original lease without renewal", flush=True)
+        temporary_sql(sql, f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=0 WHERE {grant};",
+            f"UPDATE aioffice.GroupServiceGrants SET IsEnabled=1 WHERE {grant};", lambda: run("claim-deny"))
+        assert claim_graph() == original_claims
+        run("claim-fence")
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=3));") == "3|1"
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+            digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual claim original replay requires current Extract actual expiry increments fenced epoch stale handles refuse and no portal private model note effects", flush=True)
     except BaseException as error:
         failure = error
     finally:

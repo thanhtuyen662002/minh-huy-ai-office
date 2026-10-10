@@ -136,6 +136,18 @@ public sealed class GroupBatchAllocationStore(PlatformDbContext database, GroupE
         void Add(object entity) { database.Add(entity); staged.Add(entity); }
     }
 
+    // Internal metadata-only reuse after the caller owns the source SQL lock and
+    // has established current Extract authority. Never starts a nested transaction.
+    internal async Task<GroupBatchAllocationReceipt> ReadAllocatedLockedAsync(GroupScope scope, Guid batchId,
+        DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        if (database.Database.IsSqlServer() && database.Database.CurrentTransaction is null) throw Unavailable();
+        var batch = await database.GroupBatchAllocations.AsNoTracking().SingleOrDefaultAsync(x =>
+            x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId
+            && x.Id == batchId, cancellationToken) ?? throw Unavailable();
+        return await RestoreAsync(scope, batch, now, cancellationToken);
+    }
+
     private async Task<GroupBatchAllocationReceipt> RestoreAsync(GroupScope scope, GroupBatchAllocationRecord batch,
         DateTimeOffset now, CancellationToken cancellationToken)
     {

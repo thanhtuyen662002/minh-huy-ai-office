@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 22677f97afbf8e37d65d230440c57e0b99b13540
+head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-10'
@@ -1503,3 +1503,18 @@ group_278_allocation_cleanup_repair:
   parent_browser_root_original_images_inspected: 6
   state: repaired_source_awaiting_frozen_independent_review
   next: 'Independently review repaired combined checkpoint before push; own new exact SQL CI/native modes, then claims/brain/notes/outbox. Actual model evaluation/278 acceptance/279/full233 remain incomplete.'
+
+group_278_fenced_claim_checkpoint:
+  parent_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
+  parent_review: 6097301006
+  parent_build: 38050984824
+  parent_actual: 114209890966
+  parent_governance: 38050984773
+  state: local_verified_pending_independent_review_native_execution
+  local_controls: 120_dotnet_49_python_6_actual_unowned_entry_refusals
+  migration: AddGroupBatchClaims
+  behavior: original_nonce_never_renews_active_lease_monotone_expiry_epoch_current_authority_and_internal_live_handle_fence
+  native_claim_modes: UNEXECUTED
+  notes_outbox_and_pipeline: incomplete
+  actual_model_evaluation: UNEVALUATED
+  next: 'Own parent a50 CI to terminal, review immutable claim checkpoint before push and close renewed SQL CI. Then service-scoped brain/dependencies/protected notes/atomic NotesCommitted outbox/DI/UI and actual frozen model qualification.278/279/full233 remain ACTIVE.'

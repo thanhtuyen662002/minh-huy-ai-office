@@ -1,6 +1,6 @@
 # Automatic notes implementation — issue278
 
-Status: bounded structured transport is independently reviewed/pushed22677; durable SQL allocation is locally implemented and awaiting checkpoint review/native CI. Automatic note persistence and actual model evaluation remain incomplete/unevaluated. See ../../validation/GROUP_STRUCTURED_RESPONSES.md for checkpoint evidence.
+Status: bounded structured transport is independently reviewed/pushed22677; durable SQL allocation scoped review6097301006 approved/pushed a50 with exact native CI active; fenced claims are locally verified and awaiting their own frozen review/native execution. Automatic note persistence and actual model evaluation remain incomplete/unevaluated. See ../../validation/GROUP_STRUCTURED_RESPONSES.md for checkpoint evidence.
 Dependency: issue277 accepted at merged main `2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd`, independent receipt6096704767; all exact-main gates passed. Full issue233 stays active.
 
 ## Product contract
@@ -23,7 +23,11 @@ Verify the actual public adapter call path, boundary sizes, actual write overloa
 
 ## Durable allocation implementation checkpoint
 
-See ADR_GROUP_AUTOMATIC_NOTES.md in architecture and ../../validation/GROUP_BATCH_ALLOCATION.md. Actual SQL store now persists immutable batch/raw ledger with ScheduledThrough atomically under the same ingress source lock, trusted current Extract authorization and extended effective runtime permissions. The new owned native proof is present but unexecuted until approved checkpoint CI.83 local focused controls PASS; InMemory does not prove native SQL. Fenced work claims, context, notes/outbox, worker activation and actual model evaluation remain required.
+See ADR_GROUP_AUTOMATIC_NOTES.md in architecture and ../../validation/GROUP_BATCH_ALLOCATION.md. Actual SQL store now persists immutable batch/raw ledger with ScheduledThrough atomically under the same ingress source lock, trusted current Extract authorization and extended effective runtime permissions. The new owned native proof is present but unexecuted until approved checkpoint CI.83 local focused controls PASS; InMemory does not prove native SQL. Fenced claims are now locally implemented; native claim proof, context, notes/outbox, worker activation and actual model evaluation remain required.
+
+## Fenced claims implementation checkpoint
+
+See ../../validation/GROUP_BATCH_CLAIMS.md. Immutable original acquisition receipts and current expiring lease state are stored under current Extract/effective permission/source-lock proof. Same nonce never renews; active lease cannot be stolen; expired/replaced/current-authority-changed receipts cannot restore an old handle.120 focused controls PASS and guarded native modes exist but are unexecuted. No claim is completion or a note, and a public current check does not authorize a later unfenced read/effect. Source ordering/terminal frontier and actual protected brain/pipeline remain required.
 
 ## Subsequent checkpoints required on this same issue/PR
 
