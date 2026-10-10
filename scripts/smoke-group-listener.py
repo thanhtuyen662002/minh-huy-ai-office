@@ -148,7 +148,12 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
     column_permission = "SELECT state FROM sys.database_permissions WHERE class=1 AND major_id=OBJECT_ID(N'aioffice.GroupListenerCommandReceipts')"
     column_permission += " AND minor_id=COLUMNPROPERTY(OBJECT_ID(N'aioffice.GroupListenerCommandReceipts'),N'CommandSha256',N'ColumnId')"
     column_permission += " AND grantee_principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_runtime') AND permission_name=N'UPDATE';"
-    assert sql(column_permission) == "D", "Owned receipt column did not have its original explicit DENY"
+    # SQL catalog omits a redundant column DENY equal to its object DENY.
+    # Capture the exception row separately; effective permission remains the
+    # causal oracle, never inferred merely from a catalog row's presence.
+    original_column_permission = sql(column_permission)
+    table_permission = column_permission.replace("minor_id=COLUMNPROPERTY(OBJECT_ID(N'aioffice.GroupListenerCommandReceipts'),N'CommandSha256',N'ColumnId')", "minor_id=0")
+    assert sql(table_permission) == "D" and original_column_permission in ("", "D"), "Owned receipt permission baseline was unsafe or unexpected"
     direct_permission = column_permission.replace("SELECT state", "SELECT COUNT(*)").replace("N'aioffice_binding_runtime'", "N'aioffice_runtime'")
     assert sql(direct_permission) == "0", "Owned receipt column had an unexpected direct runtime override"
     effective_column_permission = "EXECUTE AS LOGIN=N'aioffice_runtime'; SELECT HAS_PERMS_BY_NAME(N'aioffice.GroupListenerCommandReceipts',N'OBJECT',N'UPDATE',N'CommandSha256',N'COLUMN'); REVERT;"
@@ -158,7 +163,7 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
         no_effect(command())
     temporary_sql("GRANT UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_binding_runtime;",
         "DENY UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_binding_runtime;", refuse_unsafe_column)
-    assert sql(column_permission) == "D" and sql(direct_permission) == "0"
+    assert sql(table_permission) == "D" and sql(column_permission) == original_column_permission and sql(direct_permission) == "0"
     assert sql(effective_column_permission) == "0"
     assert receipt(*call(body, nonce=nonce), already=True) == {**original, "wasAlreadyCommitted": True}
 

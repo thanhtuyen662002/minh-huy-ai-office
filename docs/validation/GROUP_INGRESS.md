@@ -553,3 +553,14 @@ capability is required before decryption, then full post-decrypt admission remai
 Missing/stale/future Edit/Recall controls use an invalid key to prove refusal before
 the private operation; legitimate Edit/Recall stays positive.50 spool plus36
 authenticator controls PASS86/0skip. Independent original-probe closure remains.
+
+### Native permission-catalog baseline correction
+
+Exact54b Build38011253824 actual114091542726 is terminal red after first listener
+ACK/100 concurrent replay PASS: fixture required a column catalog DENY row that
+was absent. SQL Server omits column permission rows equal to object permissions,
+as documented in its [permission catalog reference](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-permissions-transact-sql).
+The fixture now requires object UPDATE DENYD, captures column absent-or-D and
+requires exact catalog restoration. Effective runtime UPDATE0 before/after and
+observed UPDATE1 before API403 remain mandatory. No migration/runtime grant was
+changed. This corrects a fixture assumption; native retry/full acceptance remains.

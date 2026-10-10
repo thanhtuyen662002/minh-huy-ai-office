@@ -1028,3 +1028,11 @@ group_spool_optional_capability_recovery_repair:
   review: 'Independent3b4 probe found current missing optional Edit/Recall capability checked only after private decryption.'
   repair: 'EventKind bound in context/AAD and exact parsed payload equality; current event-specific capability evidence checked before Unprotect and full admission after. Missing/stale/future controls refuse with invalid key, valid events remain positive.'
   local: '50 spool plus36 retained authenticator controls PASS86/0skip; original independent closure pending. No active filesystem/provider/SQL delivery claim.'
+
+group_listener_permission_catalog_native_failure:
+  head: 54b7ae68b341656798a878e3c1247c8449c6de54
+  build: 38011253824
+  actual: 114091542726
+  quality: 114093607028
+  result: 'Terminal red after initial listener commit-only ACK and100 concurrent exact nonce unchanged SQL bytes PASS; fixture required redundant column DENY row, absent when same as object DENY per documented sys.database_permissions semantics.'
+  repair: 'Require object UPDATE D, capture column absent-or-D and exact restoration; effective runtime0 beforeafter and actual1 before403 retained. No migration/grant or product permission fence broadened; focused orchestration/static review/native retry required.'

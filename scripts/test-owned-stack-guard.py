@@ -138,6 +138,45 @@ class OwnedStackGuardTests(unittest.TestCase):
             self.assertIsNone(group_smoke.browser_failure_stage(prefix + stage))
         self.assertIsNone(group_smoke.browser_failure_stage("OTHER PRIVATE_BODY"))
 
+    def test_listener_permission_oracle_accepts_redundant_deny_absence_and_requires_real_escalation(self):
+        tree = ast.parse(Path(listener_smoke.__file__).read_text(encoding="utf-8"))
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")
+        helper = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == "temporary_sql")
+        def assigns(node, name):
+            return isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == name for target in node.targets)
+        start = next(i for i, node in enumerate(verify.body) if assigns(node, "column_permission"))
+        end = next(i for i in range(start, len(verify.body)) if isinstance(verify.body[i], ast.Assign)
+            and isinstance(verify.body[i].targets[0], ast.Tuple))
+        module = ast.fix_missing_locations(ast.Module(body=[helper, *verify.body[start:end]], type_ignores=[]))
+        for baseline, fault in (("", None), ("D", None), ("G", "column"), ("", "table"),
+                ("", "direct"), ("", "initial-effective"), ("", "ineffective-grant")):
+            with self.subTest(baseline=baseline, fault=fault):
+                effects = []; current = {"granted": False}
+                def sql(query):
+                    if query.startswith("GRANT UPDATE"):
+                        effects.append("grant"); current["granted"] = True; return ""
+                    if query.startswith("DENY UPDATE"):
+                        effects.append("restore"); current["granted"] = False; return ""
+                    if "HAS_PERMS_BY_NAME" in query:
+                        return "1" if fault == "initial-effective" or current["granted"] and fault != "ineffective-grant" else "0"
+                    if query.startswith("SELECT COUNT(*)"): return "1" if fault == "direct" else "0"
+                    if "minor_id=0" in query: return "G" if fault == "table" else "D"
+                    if query.startswith("SELECT state"): return "G" if current["granted"] else baseline
+                    self.fail("Unexpected inert permission query")
+                def no_effect(body):
+                    self.assertTrue(current["granted"]); effects.append("refusal")
+                original = {"wasAlreadyCommitted": False}
+                namespace = {"sql": sql, "no_effect": no_effect, "command": lambda: b"owned-command", "body": b"owned-command",
+                    "nonce": "owned-nonce", "original": original,
+                    "call": lambda *args, **kwargs: (200, {"wasAlreadyCommitted": True}), "receipt": lambda status, value, **kwargs: value}
+                if fault is None:
+                    exec(compile(module, "inert_listener_permissions", "exec"), namespace)
+                    self.assertEqual(["grant", "refusal", "restore"], effects)
+                else:
+                    with self.assertRaises(AssertionError): exec(compile(module, "inert_listener_permissions", "exec"), namespace)
+                    self.assertEqual(["grant", "restore"] if fault == "ineffective-grant" else [], effects)
+                self.assertFalse(current["granted"])
+
     def test_final_group_read_race_cleanup_attempts_all_owned_resources_and_preserves_first_failure(self):
         # Execute only the shipping helper's orchestration with inert dependencies.
         # No files, SQL, processes, threads or HTTP are created by these controls.
