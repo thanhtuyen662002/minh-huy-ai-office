@@ -45,6 +45,28 @@ recovery_spec.loader.exec_module(recovery_smoke)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def test_statistics_child_has_independent_name_with_original_owned_arguments(self):
+        suffix = "a" * 32
+        command = ["docker", "run", "--init", "--rm", "--name", "aioffice-reference-proof-" + suffix,
+            "--label", "aioffice.owned-proof=" + suffix, "--network", "owned-network", "--read-only", "--cap-drop", "ALL",
+            "--security-opt", "no-new-privileges:true", "--tmpfs", "/tmp:rw,noexec,nosuid,size=16m", "-i",
+            "-e", "CI", "-e", "GITHUB_ACTIONS", "-e", "AIOFFICE_OWNED_GROUP_REFERENCE_PROOF",
+            "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION", "-e", "AIOFFICE_GROUP_REFERENCE_PROOF_BROKER_PASSWORD", "owned-image"]
+        original = command.copy()
+        stats = reference_smoke.reference_statistics_command(command)
+        self.assertEqual(original, command)
+        self.assertEqual("aioffice-reference-stats-" + suffix, stats[command.index("--name") + 1])
+        self.assertEqual([command.index("--name") + 1], [index for index in range(len(command)) if command[index] != stats[index]])
+        self.assertEqual(stats, reference_smoke.reference_statistics_command(command))
+
+    def test_statistics_child_refuses_foreign_malformed_or_duplicate_ownership(self):
+        suffix = "a" * 32
+        valid = ["docker", "run", "--name", "aioffice-reference-proof-" + suffix, "--label", "aioffice.owned-proof=" + suffix, "owned-image"]
+        for command in ((), [], ["--name"], valid + ["--name", "second"], valid + ["--label", "foreign"],
+            [*valid[:3], "foreign", *valid[4:]], [*valid[:5], "aioffice.owned-proof=" + "b" * 32, valid[-1]]):
+            with self.subTest(command=command), self.assertRaises(AssertionError):
+                reference_smoke.reference_statistics_command(command)
+
     def test_held_native_delivery_requires_exact_sample_before_the_owned_kill(self):
         tree = ast.parse(Path(reference_smoke.__file__).read_text(encoding="utf-8"))
         verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "verify")

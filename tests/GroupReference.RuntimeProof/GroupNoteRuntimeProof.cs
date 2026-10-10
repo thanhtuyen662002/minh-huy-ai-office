@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -52,14 +53,13 @@ internal static class GroupNoteRuntimeProof
         var proposal = Proposal(false); var effectOperation = Guid.NewGuid();
         var store = new GroupNoteCommitStore(db, worker, clock, sources, brain, keys, new());
         if (keys.Reads != 2 || keys.Writes != 0 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+        effect.ObserveCommit(mode, effectOperation, handle.Receipt.ExpiresAtUtc);
         if (mode is "note-expiry" or "note-key-expiry")
         {
-            if (mode == "note-expiry")
-            { effect.Operation = effectOperation; effect.Expires = handle.Receipt.ExpiresAtUtc; effect.Armed = true; }
-            else keys.BeforeWrite = () => clock.Current = handle.Receipt.ExpiresAtUtc;
+            if (mode == "note-key-expiry") keys.BeforeWrite = () => clock.Current = handle.Receipt.ExpiresAtUtc;
             await DeniedAsync(() => store.CommitAsync(proposal, dependencies, effectOperation, token));
-            if (mode == "note-expiry" && (!effect.Flushed || !effect.RolledBack || effect.SavepointChecks < 1)) throw new InvalidOperationException();
-            if (mode == "note-key-expiry" && (effect.Flushed || effect.RolledBack || effect.SavepointChecks != 0)) throw new InvalidOperationException();
+            if (mode == "note-expiry" && (!effect.StagedObserved || !effect.Flushed || !effect.RolledBack || effect.SavepointChecks < 1)) throw new InvalidOperationException();
+            if (mode == "note-key-expiry" && (effect.StagedObserved || effect.Flushed || effect.RolledBack || effect.SavepointChecks != 0)) throw new InvalidOperationException();
             if (keys.Reads != 2 || keys.Writes != 1 || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null
                 || await TargetRowsAsync(db, scope, effectOperation, token) != 0 || db.ChangeTracker.Entries().Any(x =>
                     x.Entity is GroupWorkCommitReceiptRecord or GroupWorkSourceDispositionRecord or GroupCustomerRequestRecord
@@ -80,6 +80,7 @@ internal static class GroupNoteRuntimeProof
         var committed = await store.CommitAsync(proposal, dependencies, effectOperation, token);
         if (committed.WasAlreadyCommitted || committed.RequestIds.Count != 2 || committed.Scope != scope || committed.BatchId != batch
             || await TargetRowsAsync(db, scope, effectOperation, token) != 11) throw new InvalidOperationException();
+        var committedGraph = await CommitGraphDigestAsync(db, scope, effectOperation, token);
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
         for (var index = 0; index < committed.RequestIds.Count; index++)
         {
@@ -90,13 +91,17 @@ internal static class GroupNoteRuntimeProof
                 || clear.Evidence[0].Quote != source.Text || item.BusinessStatus != (index == 0 ? GroupNoteBusinessStatus.New : GroupNoteBusinessStatus.NeedsClarification))
                 throw new InvalidOperationException();
         }
+        await RequireOriginalGraphAsync();
         var replay = await store.CommitAsync(proposal, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || replay.Scope != committed.Scope || replay.BatchId != committed.BatchId
             || replay.OperationId != committed.OperationId || replay.OutboxId != committed.OutboxId || replay.CommittedAtUtc != committed.CommittedAtUtc
             || !replay.RequestIds.SequenceEqual(committed.RequestIds)) throw new InvalidOperationException();
+        await RequireOriginalGraphAsync();
         await RefuseAsync(() => store.CommitAsync(Proposal(true), dependencies, effectOperation, token));
+        await RequireOriginalGraphAsync();
         var reads = keys.Reads; var writes = keys.Writes;
         await RefuseAsync(() => store.CommitAsync(proposal, dependencies, Guid.NewGuid(), token));
+        await RequireOriginalGraphAsync();
         if (keys.Reads != reads || keys.Writes != writes || writes != 1 || reads != 5 || db.ChangeTracker.HasChanges()
             || db.Database.CurrentTransaction is not null || await TargetRowsAsync(db, scope, effectOperation, token) != 11
             || await db.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
@@ -104,6 +109,12 @@ internal static class GroupNoteRuntimeProof
                 && (x.AssignedToUserId != null || x.CommittedDueAtUtc != null || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token))
             throw new InvalidOperationException();
         Console.WriteLine("PASS owned note runtime protected two notes literal evidence atomic NotesCommitted exact original replay changed proposal and new nonce refusal");
+
+        async Task RequireOriginalGraphAsync()
+        {
+            if (await TargetRowsAsync(db, scope, effectOperation, token) != 11
+                || await CommitGraphDigestAsync(db, scope, effectOperation, token) != committedGraph) throw new InvalidOperationException();
+        }
 
         GroupGroundedWorkProposal Proposal(bool changed) => GroupGroundedWorkProposal.Parse(preparation, JsonSerializer.Serialize(new
         {
@@ -149,17 +160,51 @@ internal static class GroupNoteRuntimeProof
             + await db.GroupRequestEvidence.AsNoTracking().CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && ids.Contains(x.RequestId), token)
             + await db.GroupNotesCommittedItems.AsNoTracking().CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && outboxes.Contains(x.OutboxId), token);
     }
-    private sealed class OwnedClock(DateTimeOffset now) : TimeProvider
-    { internal DateTimeOffset Current = now; public override DateTimeOffset GetUtcNow() => Current; }
-    private sealed class EffectEvidence(GroupScope scope, OwnedClock clock)
+    internal static async Task<string> CommitGraphDigestAsync(PlatformDbContext db, GroupScope scope, Guid operation, CancellationToken token)
     {
-        internal bool Armed, Flushed, RolledBack;
+        // Private full-record snapshot after first commit, never printed. Every
+        // replay/refusal must preserve the exact original graph, including the
+        // new business heads and ciphertext; counts alone cannot prove this.
+        var heads = await db.GroupCustomerRequests.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+            && x.BindingId == scope.SourceBindingId && x.OriginOperationId == operation).OrderBy(x => x.Id).ToArrayAsync(token);
+        var ids = heads.Select(x => x.Id).ToArray();
+        var outboxes = await db.GroupNotesCommittedOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+            && x.BindingId == scope.SourceBindingId && x.OperationId == operation).OrderBy(x => x.Id).ToArrayAsync(token);
+        var outboxIds = outboxes.Select(x => x.Id).ToArray();
+        object[] graph = [heads,
+            await db.GroupRequestRevisions.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && ids.Contains(x.RequestId)).OrderBy(x => x.RequestId).ThenBy(x => x.Revision).ToArrayAsync(token),
+            await db.GroupRequestEvidence.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && ids.Contains(x.RequestId)).OrderBy(x => x.RequestId).ThenBy(x => x.RequestRevision).ThenBy(x => x.Ordinal).ToArrayAsync(token),
+            await db.GroupWorkCommitReceipts.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && x.OperationId == operation).OrderBy(x => x.BatchId).ToArrayAsync(token),
+            await db.GroupWorkSourceDispositions.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && x.OperationId == operation).OrderBy(x => x.BatchId).ThenBy(x => x.MessageId).ToArrayAsync(token),
+            outboxes,
+            await db.GroupNotesCommittedItems.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
+                && x.BindingId == scope.SourceBindingId && outboxIds.Contains(x.OutboxId)).OrderBy(x => x.OutboxId).ThenBy(x => x.Ordinal).ToArrayAsync(token)];
+        return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(graph)));
+    }
+    internal sealed class OwnedClock(DateTimeOffset now) : TimeProvider
+    { internal DateTimeOffset Current = now; public override DateTimeOffset GetUtcNow() => Current; }
+    internal sealed class EffectEvidence(GroupScope scope, OwnedClock clock)
+    {
+        internal bool Armed, ExpireAfterFlush, StagedObserved, Flushed, RolledBack;
         internal int SavepointChecks;
         internal Guid Operation;
         internal DateTimeOffset Expires;
+        internal void ObserveCommit(string mode, Guid operation, DateTimeOffset expires)
+        {
+            if (mode is not ("note-expiry" or "note-key-expiry" or "note-commit") || operation == Guid.Empty)
+                throw new InvalidOperationException();
+            Operation = operation; Expires = expires;
+            Armed = mode is "note-expiry" or "note-key-expiry";
+            ExpireAfterFlush = mode == "note-expiry";
+        }
         internal void Advance() => clock.Current = Expires;
         internal async Task RequireLockAsync(DbTransaction transaction, CancellationToken token)
         {
+            if (transaction is null || transaction.Connection is null) throw new InvalidOperationException();
             await using var command = transaction.Connection!.CreateCommand(); command.Transaction = transaction; command.CommandTimeout = 5;
             command.CommandText = "SELECT APPLOCK_MODE(N'public',@resource,N'Transaction');";
             var parameter = command.CreateParameter(); parameter.ParameterName = "@resource";
@@ -167,18 +212,28 @@ internal static class GroupNoteRuntimeProof
             if (!string.Equals((string?)await command.ExecuteScalarAsync(token), "Exclusive", StringComparison.Ordinal)) throw new InvalidOperationException();
         }
     }
-    private sealed class FlushProbe(EffectEvidence effect) : SaveChangesInterceptor
+    internal sealed class FlushProbe(EffectEvidence effect) : SaveChangesInterceptor
     {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
+            InterceptionResult<int> result, CancellationToken token = default)
+        {
+            if (effect.Armed && eventData.Context is PlatformDbContext db
+                && db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Any(x => x.Entity.OperationId == effect.Operation))
+                effect.StagedObserved = true;
+            return ValueTask.FromResult(result);
+        }
         public override async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken token = default)
         {
             if (!effect.Armed || effect.Flushed || eventData.Context is not PlatformDbContext db
                 || !db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Any(x => x.Entity.OperationId == effect.Operation)) return result;
             var receipt = db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Single(x => x.Entity.OperationId == effect.Operation).Entity;
             if (await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != 11) throw new InvalidOperationException();
-            effect.Flushed = true; effect.Advance(); return result;
+            effect.Flushed = true;
+            if (effect.ExpireAfterFlush) effect.Advance();
+            return result;
         }
     }
-    private sealed class RollbackProbe(EffectEvidence effect) : DbTransactionInterceptor
+    internal sealed class RollbackProbe(EffectEvidence effect) : DbTransactionInterceptor
     {
         public override async ValueTask<InterceptionResult> CreatingSavepointAsync(DbTransaction transaction, TransactionEventData data,
             InterceptionResult result, CancellationToken token = default)

@@ -107,6 +107,22 @@ def temporary_sql(sql, setup, restore, action):
     if failure is not None: raise failure
 
 
+def reference_statistics_command(command):
+    # The held proof child must remain alive while statistics are measured.
+    # A second docker run cannot reuse its --name. Preserve every owned guard,
+    # label, network, credential-reference and resource argument otherwise.
+    assert isinstance(command, list) and command.count("--name") == 1 and command.count("--label") == 1
+    name_index, label_index = command.index("--name") + 1, command.index("--label") + 1
+    assert name_index < len(command) and label_index < len(command)
+    name = command[name_index]
+    assert isinstance(name, str) and re.fullmatch(r"aioffice-reference-proof-[0-9a-f]{32}", name)
+    suffix = name.removeprefix("aioffice-reference-proof-")
+    assert command[label_index] == "aioffice.owned-proof=" + suffix
+    independent = command.copy()
+    independent[name_index] = "aioffice-reference-stats-" + suffix
+    return independent
+
+
 def wait_reference_statistics(broker_stats, wait, *, ack, deliver, phase):
     observed = None
 
@@ -285,9 +301,9 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert result.returncode == 0 and lines == expected_lines, "Owned reference executable failed at " + mode
 
     def broker_stats():
-        result = subprocess.run([*command, "statistics"], input=configuration(0), env=child_environment,
+        result = subprocess.run([*reference_statistics_command(command), "statistics"], input=configuration(0), env=child_environment,
             capture_output=True, text=True, timeout=30)
-        assert result.returncode == 0, "Owned reference broker statistics unavailable"
+        assert result.returncode == 0, f"Owned reference broker statistics unavailable exit={result.returncode}"
         value = json.loads(result.stdout)
         assert set(value) == {"ack", "deliver", "consumers"} and all(type(number) is int and number >= 0 for number in value.values())
         return value
