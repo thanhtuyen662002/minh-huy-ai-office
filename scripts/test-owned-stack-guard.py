@@ -105,9 +105,11 @@ class OwnedStackGuardTests(unittest.TestCase):
     def automatic_runtime_oracle(self, fault=None, proof="notes"):
         tenant, company, service, old_source, old_account, source, account, installation = (str(uuid.uuid4()) for _ in range(8))
         events = [str(uuid.uuid4()), str(uuid.uuid4())]; phase = -1; calls = []; queries = []
-        runtime_lines = automatic_smoke.RUNTIME_LINES if proof == "notes" else automatic_smoke.NO_WORK_RUNTIME_LINES
+        runtime_lines = {"notes": automatic_smoke.RUNTIME_LINES, "no_work": automatic_smoke.NO_WORK_RUNTIME_LINES,
+            "host_only": automatic_smoke.HOST_RUNTIME_LINES}[proof]
         commit_phase = len(runtime_lines) - 1
-        effect_counts = (1, 2, 4, 4, 5, 1, 4) if proof == "notes" else (1, 2, 0, 0, 0, 0, 0)
+        effect_counts = {"notes": (1, 2, 4, 4, 5, 1, 4), "no_work": (1, 2, 0, 0, 0, 0, 0),
+            "host_only": (1, 2, 1, 1, 2, 1, 1)}[proof]
         def sql(query):
             queries.append(query)
             if query.startswith("SELECT Id FROM aioffice.GroupBindings"): return old_source
@@ -127,14 +129,17 @@ class OwnedStackGuardTests(unittest.TestCase):
             if "GroupSourceStates" in query: return "1"
             if "GroupBatchClaimReceipts" in query: return str(max(0, phase))
             if "GroupBatchClaimStates" in query: return "0" if fault == "witness" or phase <= 0 else "1"
-            if "Origin=" in query: return "2"
+            if "Origin=" in query: return "1" if proof == "host_only" else "2"
             if "Outcome=1" in query: return "1"
             if "Outcome=2" in query: return "1" if "GroupWorkCommitReceipts" in query else "2"
+            if "Outcome=3" in query: return "1"
+            if "Outcome=7" in query or "Kind=2" in query: return "2"
             for table, count in zip(automatic_smoke.EFFECT_TABLES, effect_counts):
                 if "FROM aioffice." + table + " WHERE " in query:
                     if fault == "partial-effect" and phase == commit_phase and table == ("GroupRequestEvidence" if proof == "notes" else "GroupWorkSourceDispositions"):
                         return "4" if proof == "notes" else "1"
                     if fault == "invented-outbox" and phase == commit_phase and table == "GroupNotesCommittedOutbox": return "1"
+                    if fault == "invented-ai" and phase == commit_phase and table == "GroupRequestRevisions": return "2"
                     if fault == "expiry-effect" and phase == 1 and table == "GroupCustomerRequests": return "1"
                     return str(count if phase == commit_phase else 0)
             if "GroupIngressInbox" in query or "GroupBatchAllocations" in query or "GroupBatchAllocatedRevisions" in query: return "0"
@@ -209,6 +214,30 @@ class OwnedStackGuardTests(unittest.TestCase):
     def test_automatic_no_work_oracle_denies_partial_effects_invented_outbox_missing_witness_mutation_or_child_failure(self):
         for fault in ("child-error", "extra-output", "stderr", "retained-mutation", "source-mutation", "gap", "partial-effect", "expiry-effect", "invented-outbox", "witness"):
             arguments, process, calls, _ = self.automatic_runtime_oracle(fault, proof="no_work")
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), \
+                    patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+                automatic_smoke.verify(**arguments)
+            self.assertEqual("", output.getvalue())
+            if calls: self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_automatic_host_runtime_oracle_requires_four_modes_one_host_note_two_attention_dispositions_nine_effects_no_model(self):
+        arguments, process, calls, queries = self.automatic_runtime_oracle(proof="host_only")
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output:
+            automatic_smoke.verify(**arguments)
+        self.assertEqual(1, len(output.getvalue().splitlines())); self.assertIn("PASS actual automatic host SQL", output.getvalue())
+        children = [(command, kwargs) for command, kwargs in calls if command[:2] == ["docker", "run"]]
+        self.assertEqual(list(automatic_smoke.HOST_RUNTIME_LINES), [command[-1] for command, _ in children])
+        for clause in ("Outcome=3 AND NoteCount=1 AND SelectedMessageCount=2", "Outcome=7 AND MessageRevision=1",
+                "Origin=3 AND VerificationLevel=3", "Kind=2"):
+            self.assertTrue(any(clause in query for query in queries))
+        for command, kwargs in children:
+            self.assertIn("--read-only", command); self.assertEqual(170, kwargs["timeout"])
+            self.assertNotIn("p" * 32, " ".join(command)); self.assertNotIn("p" * 32, kwargs["input"])
+        self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
+
+    def test_automatic_host_oracle_denies_partial_effects_invented_ai_missing_witness_mutation_or_child_failure(self):
+        for fault in ("child-error", "extra-output", "stderr", "retained-mutation", "source-mutation", "gap", "partial-effect", "expiry-effect", "invented-ai", "witness"):
+            arguments, process, calls, _ = self.automatic_runtime_oracle(fault, proof="host_only")
             with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), \
                     patch("sys.stdout", new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
                 automatic_smoke.verify(**arguments)
@@ -400,6 +429,28 @@ class OwnedStackGuardTests(unittest.TestCase):
         for fault in ("http", "foreign-source", "unknown-field", "bool-revision", "bool-sequence", "replay", "gap", "duplicate-events", "extra-events"):
             arguments, calls, _ = self.clean_effect_callbacks(fault)
             with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare_no_work(**arguments)
+            self.assertEqual(2 if fault in ("gap", "duplicate-events", "extra-events") else 1, sum(x[0] == "post" for x in calls))
+
+    def test_host_only_effect_fixture_guard_precedes_callbacks_and_invalid_handler(self):
+        arguments, calls, _ = self.clean_effect_callbacks()
+        with patch.dict(os.environ, {}, clear=True), self.assertRaises(RuntimeError): effect_fixture.prepare_host_only(**arguments)
+        self.assertEqual([], calls); arguments["post_event"] = None
+        with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare_host_only(**arguments)
+        self.assertEqual([], calls)
+
+    def test_host_only_effect_fixture_posts_only_two_empty_media_with_exact_empty_hash_and_complete_receipts(self):
+        arguments, calls, events = self.clean_effect_callbacks()
+        with patch.dict(os.environ, self.environment, clear=True): source, actual_events = effect_fixture.prepare_host_only(**arguments)
+        self.assertEqual(events, actual_events); self.assertEqual(source, calls[1][1])
+        self.assertEqual(["registry", "enroll", "lease", "post", "post", "gaps", "events"], [value[0] for value in calls])
+        for payload in (calls[3][1], calls[4][1]):
+            self.assertEqual("", payload["text"]); self.assertEqual(2, payload["event"]["kind"])
+            self.assertEqual(hashlib.sha256(b"").hexdigest().upper(), payload["event"]["contentSha256"])
+
+    def test_host_only_effect_fixture_preserves_strict_receipts_gaps_and_cardinality(self):
+        for fault in ("http", "foreign-source", "unknown-field", "bool-revision", "bool-sequence", "replay", "gap", "duplicate-events", "extra-events"):
+            arguments, calls, _ = self.clean_effect_callbacks(fault)
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare_host_only(**arguments)
             self.assertEqual(2 if fault in ("gap", "duplicate-events", "extra-events") else 1, sum(x[0] == "post" for x in calls))
 
     def test_clean_effect_fixture_validates_identity_and_callbacks_before_sql(self):
@@ -1185,7 +1236,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 6, True, "1"):
+        for slot in (0, 7, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -1243,6 +1294,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final_no_work = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](fifth_source, 5)
         self.assertEqual(final_no_work, environment); self.assertEqual(20, len(calls))
+        sixth_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](sixth_source, 6)
+        self.assertTrue(all(environment[name] == value for name, value in final_no_work.items()))
+        sixth_prefix = "AIOffice__GroupIntake__SourceKeys__6__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": sixth_source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_HOST_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(sixth_prefix):]: value for name, value in environment.items() if name.startswith(sixth_prefix)})
+        final_host = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](sixth_source, 6)
+        self.assertEqual(final_host, environment); self.assertEqual(24, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

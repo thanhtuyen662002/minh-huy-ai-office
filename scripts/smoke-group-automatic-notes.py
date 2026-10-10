@@ -27,6 +27,11 @@ NO_WORK_RUNTIME_LINES = {
     "automatic-no-work-prepare": "PASS owned automatic no-work actual inbox allocation two empty plain sources zero claims effects no model",
     "automatic-no-work-expiry": "PASS owned automatic no-work three flushed SQL effects source lock savepoint rollback clean detach witness only clock rollback denied",
     "automatic-no-work-commit": "PASS owned automatic no-work actual atomic receipt two exact NoWork dispositions original replay new nonce refusal no notes outbox or model"}
+HOST_RUNTIME_LINES = {
+    "automatic-host-prepare": "PASS owned automatic host actual inbox allocation two empty media sources no claims effects or model",
+    "automatic-host-expiry": "PASS owned automatic host nine flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
+    "automatic-host-key-expiry": "PASS owned automatic host configured write key outside SQL expiry witness no effects clock rollback denied",
+    "automatic-host-commit": "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"}
 
 
 def canonical(value):
@@ -102,10 +107,10 @@ def retained_snapshot(*, tenant, company, sources, accounts, sql):
 
 def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, proof="notes"):
     reference.require_owned(directory, api)  # Before config/callback/SQL/process.
-    assert type(proof) is str and proof in ("notes", "no_work")
+    assert type(proof) is str and proof in ("notes", "no_work", "host_only")
     assert callable(sql) and callable(prepare_source)
-    runtime_lines = RUNTIME_LINES if proof == "notes" else NO_WORK_RUNTIME_LINES
-    commit_mode = "automatic-note-commit" if proof == "notes" else "automatic-no-work-commit"
+    runtime_lines = {"notes": RUNTIME_LINES, "no_work": NO_WORK_RUNTIME_LINES, "host_only": HOST_RUNTIME_LINES}[proof]
+    commit_mode = list(runtime_lines)[-1]
     tenant, company, service = (canonical(value) for value in (tenant, company, service))
     installation = canonical(manifest["AIOFFICE_INSTALLATION_ID"])
     password = manifest["AIOFFICE_RUNTIME_PASSWORD"]
@@ -203,10 +208,16 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=1 AND VerificationLevel=1;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=3 AND VerificationLevel=3;") == "2"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=1 AND NoteCount=4 AND SelectedMessageCount=2;") == "1"
-            else:
+            elif proof == "no_work":
                 assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "0", "0", "0", "0", "0"]
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=2 AND NoteCount=0 AND SelectedMessageCount=2;") == "1"
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=2 AND MessageRevision=1;") == "2"
+            else:
+                assert [sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") for table in EFFECT_TABLES] == ["1", "2", "1", "1", "2", "1", "1"]
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkCommitReceipts WHERE {scope} AND Outcome=3 AND NoteCount=1 AND SelectedMessageCount=2;") == "1"
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupWorkSourceDispositions WHERE {scope} AND Outcome=7 AND MessageRevision=1;") == "2"
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestRevisions WHERE {scope} AND Origin=3 AND VerificationLevel=3;") == "1"
+                assert sql(f"SELECT COUNT(*) FROM aioffice.GroupRequestEvidence WHERE {scope} AND Kind=2;") == "2"
     except BaseException as error:
         failure = error
     finally:
@@ -222,5 +233,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     if failure is not None: raise failure
     if proof == "notes":
         print("PASS actual automatic note combined SQL four protected AI host notes five evidence atomic twenty-one effects both expiry rollback original replay no duplicate unchanged all retained scopes", flush=True)
-    else:
+    elif proof == "no_work":
         print("PASS actual automatic no-work SQL receipt two dispositions expiry rollback exact replay no duplicate no notes outbox model unchanged all retained scopes", flush=True)
+    else:
+        print("PASS actual automatic host SQL protected UnsupportedMedia note two metadata evidence Attention receipt atomic nine effects both expiry rollback original replay no AI IT authority unchanged all retained scopes", flush=True)

@@ -640,10 +640,10 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             # Separate owned synthetic source; preserve the original key row.
             # No production registry/configuration or credentials are touched.
             source_id = str(uuid.UUID(source_id))
-            assert type(slot) is int and slot in (1, 2, 3, 4, 5)
+            assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6)
             prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
             assert not any(name.startswith(prefix) for name in private_environment)
-            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY"}[slot]
+            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY", 6: "OWNED_HOST_GROUP_CONTENT_KEY"}[slot]
             private_environment[secret_name] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
             for name, value in {"TenantId": tenant, "CompanyId": company, "SourceBindingId": source_id,
                     "KeyId": "owned-managed-source-v1" if slot == 2 else "owned-native-source-v1", "SecretRef": "secretref://env/" + secret_name, "IsWriteKey": "true"}.items():
@@ -742,6 +742,16 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             return new_source, new_events, private_environment["OWNED_NO_WORK_GROUP_CONTENT_KEY"]
         automatic_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
             service=service, sql=sql, prepare_source=prepare_no_work_source, reference=reference_proof, proof="no_work")
+        def prepare_host_only_source():
+            spec = importlib.util.spec_from_file_location("owned_host_only_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_host_only(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 6), post_event=call)
+            return new_source, new_events, private_environment["OWNED_HOST_GROUP_CONTENT_KEY"]
+        automatic_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_host_only_source, reference=reference_proof, proof="host_only")
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

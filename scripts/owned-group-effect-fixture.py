@@ -109,3 +109,13 @@ def prepare_no_work(*, directory, api, tenant, company, service, sql, identity_i
         identity_index=identity_index, enroll_source=enroll_source, post_event=empty_event)
     assert sent == 2
     return result
+
+
+def prepare_host_only(*, directory, api, tenant, company, service, sql, identity_index, enroll_source, post_event):
+    require_owned(directory, api)
+    assert callable(post_event)
+    def empty_media(payload):
+        assert payload["event"]["kind"] == 1 and payload["text"] == ""
+        return post_event({**payload, "event": {**payload["event"], "kind": 2}})
+    return prepare_no_work(directory=directory, api=api, tenant=tenant, company=company, service=service, sql=sql,
+        identity_index=identity_index, enroll_source=enroll_source, post_event=empty_media)

@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
     state: in_progress
-    next: 'Own278/Draft288 exact remote570 sourceapproved6101872861 root FULLread/pushed after parent closure: Build38084668247/native114308583350 ACTIVE105, Gov38084668280/six prerequisites SUCCESS; root FULL.NET2666 zeroFailSkip. Parentb95 Build38082610088/Gov38082610070/all8/native114302453580/quality114308112389 SUCCESS; root FULL104once160PASS/NET2666/six ORIGINAL images11681164564. Localcf1 NoWork source APPROVED6101948302 root FULLread; new separate empty-plain automatic NoWork actual SQL3row/replay/expiry/witness proof adds future106 and slot5, Python112/DebugRelease0W0E/format/unowned16/original104bytes PASS, native/source-review pending. Preserve all33 full retained snapshots in one tagged bounded SQL call. Close570 before superseding approved next checkpoint; continue authority/hostonly/max40/gaps/rawcompletion/retry/context/DIUI/realmodel100-30/279/full233. No partial merge or checkpoint stop.'
+    next: 'Own278/Draft288 remote570 sourceapproved6101872861 rootFULLread; Build38084668247/native114308583350 ACTIVE105, Gov38084668280/six prerequisites SUCCESS/root FULL.NET2666. Parentb95 all8/Gov/104once160PASS/NET2666/six ORIGINALs11681164564 closed. Local06d NoWork proof scoped APPROVED6102067087 rootFULLread, future106 unqualified; push exact06d only after570closure. New host-only actual emptyMedia fixture slot6/Attention receipt one observed note/two metadata refs/atomic9rows/both expiry rollback witness/original replay/noAIIT adds future107,117Python/DebugRelease0W0E/format/unowned20/original104/fourUTF8AST PASS; source review/native pending. Continue full40/authority/gaps/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge or checkpointstop.'
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own278/Draft288 exact remote570 sourceapproved6101872861 root FULLread/pushed after parent closure: Build38084668247/native114308583350 ACTIVE105, Gov38084668280/six prerequisites SUCCESS; root FULL.NET2666 zeroFailSkip. Parentb95 Build38082610088/Gov38082610070/all8/native114302453580/quality114308112389 SUCCESS; root FULL104once160PASS/NET2666/six ORIGINAL images11681164564. Localcf1 NoWork source APPROVED6101948302 root FULLread; new separate empty-plain automatic NoWork actual SQL3row/replay/expiry/witness proof adds future106 and slot5, Python112/DebugRelease0W0E/format/unowned16/original104bytes PASS, native/source-review pending. Preserve all33 full retained snapshots in one tagged bounded SQL call. Close570 before superseding approved next checkpoint; continue authority/hostonly/max40/gaps/rawcompletion/retry/context/DIUI/realmodel100-30/279/full233. No partial merge or checkpoint stop.'
+next_action: 'Own278/Draft288 remote570 sourceapproved6101872861 rootFULLread; Build38084668247/native114308583350 ACTIVE105, Gov38084668280/six prerequisites SUCCESS/root FULL.NET2666. Parentb95 all8/Gov/104once160PASS/NET2666/six ORIGINALs11681164564 closed. Local06d NoWork proof scoped APPROVED6102067087 rootFULLread, future106 unqualified; push exact06d only after570closure. New host-only actual emptyMedia fixture slot6/Attention receipt one observed note/two metadata refs/atomic9rows/both expiry rollback witness/original replay/noAIIT adds future107,117Python/DebugRelease0W0E/format/unowned20/original104/fourUTF8AST PASS; source review/native pending. Continue full40/authority/gaps/rawfrontier/retry/context/DIUI/real100-30eval/279/full233; no partialmerge or checkpointstop.'
 
 
 blocked_by:
@@ -1672,9 +1672,27 @@ group_278_b95_closure_and_automatic_no_work_native_source:
   future_commit: atomic1receipt2NoWork_exact_revisions_original_ID_time_hash_full_effect_graph_replay_new_nonce_refusal_no_notes_outbox_keys_writes
   snapshots: full33_retained_closed_queries_one_SQL_call33_ordered_index_tagged_hashes_missing_extra_duplicate_reordered_malformed_refuse
   local_controls: 112_Python_PASS_DebugRelease_BUILD_zeroWarnError_changedformat_VERIFY_PASS_unowned16_original104_reference_bytes_fourUTF8PythonASTs
-  frozen_independent_review: PENDING_before_later_push
+  frozen_independent_review: SCOPED_APPROVED6102067087_root_FULL_fetched_read
   native_SQL: new_automatic_empty_plain_NoWork_NOT_RUN_UNQUALIFIED_future_required106
   outcome_limits: recall_obsolete_changed_cold_entry_only_native_current_authority_races_still_required
   actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_reused_no_client_or_config
   next: close_exact570_native105_all8_FULLlogs_six_ORIGINALs_and_frozen_new_proof_review_then_push_approved106_scope
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_host_only_automatic_native_source:
+  source_parent: 06d98b52b405e8d92d013ba44d637e6badcf6d6d
+  parent_source_review: SCOPED_APPROVED6102067087_root_FULL_fetched_read
+  exact_remote: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  remote_CI: Build38084668247_native114308583350_ACTIVE105_Gov38084668280_six_prerequisites_SUCCESS_root_FULLdotnet2666
+  fixture: separate_owned_slot6_original0to5_preserved_Core_ready_before30second_operator_lease_two_actual_empty_Media_ACKs_no_model
+  sealed_plan: zero_AI_one_UnsupportedMedia_Host3_3_unconfirmed_two_metadata_references_two_Attention_source_dispositions
+  future_graph: nine_rows_receiptAttention1_dispositions2_head1_revision1_metadata_evidence2_outbox1_item1
+  future_expiry: same_source_APPLOCK_savepoint_rollback_clean_detach_exact_witness_clock_rollback_denial_and_external_write_key_expiry_no_effects
+  future_replay: original_ID_time_protected_payload_full7graph_equal_new_nonce_duplicate_refusal_reads3_writes1_no_AI_IT_authority
+  observer: fixed_test_only_expected9_11_21_original_default11_witness_classifier_unchanged
+  local: 117_Python_PASS_DebugRelease_BUILD_zeroWarnError_changedformat_VERIFY_PASS_unowned20_original104bytes_fourUTF8ASTs
+  frozen_independent_review: PENDING_before_later_push
+  native_SQL_actual_model: host_only107_NOT_RUN_UNQUALIFIED_model_NOT_RUN_UNEVALUATED
+  gateway: existing_loader_reused_no_second_client_or_configuration
+  next: close570105_then_exact_approved06d106_and_own_CI_then_reviewed_host107_max40_authority_and_remaining_feature
   full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop

@@ -251,7 +251,7 @@ internal static class GroupNoteRuntimeProof
             if (!effect.Armed || effect.Flushed || eventData.Context is not PlatformDbContext db
                 || !db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Any(x => x.Entity.OperationId == effect.Operation)) return result;
             var receipt = db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Single(x => x.Entity.OperationId == effect.Operation).Entity;
-            if (effect.ExpectedRows is not (11 or 21)
+            if (effect.ExpectedRows is not (9 or 11 or 21)
                 || await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != effect.ExpectedRows) throw new InvalidOperationException();
             effect.Flushed = true;
             if (effect.ExpireAfterFlush) effect.Advance();

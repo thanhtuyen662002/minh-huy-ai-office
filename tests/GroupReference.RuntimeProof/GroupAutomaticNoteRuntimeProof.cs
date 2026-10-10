@@ -13,17 +13,21 @@ internal static class GroupAutomaticNoteRuntimeProof
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-        if (mode is not ("automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit"))
+        if (mode is not ("automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit"
+            or "automatic-host-prepare" or "automatic-host-expiry" or "automatic-host-key-expiry" or "automatic-host-commit"))
             throw new InvalidOperationException();
+        var hostOnly = mode.StartsWith("automatic-host-", StringComparison.Ordinal);
+        var step = mode[(hostOnly ? "automatic-host-" : "automatic-note-").Length..];
+        var expectedRows = hostOnly ? 9 : 21;
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
-        var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = 21 };
+        var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = expectedRows };
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
             .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect)).Options);
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).ToArrayAsync(token);
         if (references.Length != 2 || references[0].Id != operation || references[0].CommittedSequence != 1
             || references[1].CommittedSequence != 2) throw new InvalidOperationException();
-        if (mode == "automatic-note-prepare")
+        if (step == "prepare")
         {
             var inbox = new GroupIngressInboxStore(db, worker, clock);
             foreach (var value in references)
@@ -39,7 +43,9 @@ internal static class GroupAutomaticNoteRuntimeProof
                 || await db.GroupBatchClaimStates.AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
                     && x.BindingId == scope.SourceBindingId, token)) throw new InvalidOperationException();
             await RequireEmptyEffectsAsync();
-            Console.WriteLine("PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims");
+            Console.WriteLine(hostOnly
+                ? "PASS owned automatic host actual inbox allocation two empty media sources no claims effects or model"
+                : "PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims");
             return;
         }
         var allocated = await db.GroupBatchAllocations.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
@@ -47,7 +53,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         var previous = await db.GroupBatchClaimReceipts.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocated.Id)
             .OrderByDescending(x => x.Epoch).FirstOrDefaultAsync(token);
-        var expectedEpoch = mode switch { "automatic-note-expiry" => 1, "automatic-note-key-expiry" => 2, _ => 3 };
+        var expectedEpoch = step switch { "expiry" => 1, "key-expiry" => 2, _ => 3 };
         if ((previous?.Epoch ?? 0) != expectedEpoch - 1) throw new InvalidOperationException();
         if (previous is not null)
         {
@@ -67,13 +73,25 @@ internal static class GroupAutomaticNoteRuntimeProof
         var sources = new GroupBatchSourceReader(db, worker, clock, keys, new());
         var brain = new GroupBrainCurrentReader(db, worker, clock, keys, new());
         var preparation = GroupBatchSourcePreparation.Create(await sources.ReadAsync(handle, references.Select(x => x.MessageId).ToArray(), token));
-        var source = preparation.Candidates.Single();
-        if (source.Kind != GroupSourceEventKind.Media || source.Text != "Tra cứu tồn kho 😀\uFEFF "
-            || preparation.Receipts.Count != 2 || preparation.Receipts.Count(x => x.Disposition == GroupSourcePreparationDisposition.Quarantined) != 1)
-            throw new InvalidOperationException();
-        var proposal = Proposal(false); var plan = GroupAutomaticNotePlan.Create(preparation, proposal);
-        if (plan.HasCoverageGap || plan.AiNotes.Count != 2 || plan.HostNotes.Count != 2 || plan.NoteCount != 4
-            || plan.HostNotes.Sum(x => x.SourceReferences.Count) != 3 || plan.SourceDispositions.Count != 2
+        var source = preparation.Candidates.SingleOrDefault();
+        if (preparation.Receipts.Count != 2) throw new InvalidOperationException();
+        if (hostOnly)
+        {
+            if (source is not null || preparation.Receipts.Any(x => x.Disposition != GroupSourcePreparationDisposition.EmptyText
+                || !x.HasUnsupportedMedia)) throw new InvalidOperationException();
+        }
+        else if (source is null || source.Kind != GroupSourceEventKind.Media || source.Text != "Tra cứu tồn kho 😀\uFEFF "
+            || preparation.Receipts.Count(x => x.Disposition == GroupSourcePreparationDisposition.Quarantined) != 1) throw new InvalidOperationException();
+        var proposal = hostOnly ? null : Proposal(false); var plan = GroupAutomaticNotePlan.Create(preparation, proposal);
+        if (plan.HasCoverageGap || plan.SourceDispositions.Count != 2) throw new InvalidOperationException();
+        if (hostOnly)
+        {
+            if (plan.AiNotes.Count != 0 || plan.HostNotes.Count != 1 || plan.NoteCount != 1
+                || plan.HostNotes[0].Reason != GroupHostAttentionReason.UnsupportedMedia || plan.HostNotes[0].SourceReferences.Count != 2
+                || plan.SourceDispositions.Any(x => x.Outcome != GroupWorkSourceOutcome.Attention || !x.HasHostAttention)) throw new InvalidOperationException();
+        }
+        else if (plan.AiNotes.Count != 2 || plan.HostNotes.Count != 2 || plan.NoteCount != 4
+            || plan.HostNotes.Sum(x => x.SourceReferences.Count) != 3
             || plan.SourceDispositions.Count(x => x.Outcome == GroupWorkSourceOutcome.Work) != 1
             || plan.SourceDispositions.Count(x => x.Outcome == GroupWorkSourceOutcome.Quarantined) != 1) throw new InvalidOperationException();
         var dependencies = await brain.ReadAsync(handle, [], [], token);
@@ -82,16 +100,16 @@ internal static class GroupAutomaticNoteRuntimeProof
         if (keys.Reads != 1 || keys.Writes != 0 || dependencies.Items.Count != 0 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
         // Reuse the exact legacy expiry probe, with its fixed row expectation
         // expanded for this four-note graph. Witness classification is unchanged.
-        effect.ObserveCommit(mode switch { "automatic-note-expiry" => "note-expiry", "automatic-note-key-expiry" => "note-key-expiry", _ => "note-commit" },
+        effect.ObserveCommit(step switch { "expiry" => "note-expiry", "key-expiry" => "note-key-expiry", _ => "note-commit" },
             effectOperation, handle.Receipt.ExpiresAtUtc);
         effect.Claim = handle.Receipt;
-        if (mode is "automatic-note-expiry" or "automatic-note-key-expiry")
+        if (step is "expiry" or "key-expiry")
         {
-            if (mode == "automatic-note-key-expiry") keys.BeforeWrite = () => clock.Current = handle.Receipt.ExpiresAtUtc;
+            if (step == "key-expiry") keys.BeforeWrite = () => clock.Current = handle.Receipt.ExpiresAtUtc;
             await DeniedAsync(() => store.CommitAutomaticAsync(plan, dependencies, effectOperation, token));
-            if (mode == "automatic-note-expiry" && (!effect.StagedObserved || !effect.Flushed || !effect.RolledBack || effect.SavepointChecks < 1))
+            if (step == "expiry" && (!effect.StagedObserved || !effect.Flushed || !effect.RolledBack || effect.SavepointChecks < 1))
                 throw new InvalidOperationException();
-            if (mode == "automatic-note-key-expiry" && (effect.StagedObserved || effect.Flushed || effect.RolledBack || effect.SavepointChecks != 0))
+            if (step == "key-expiry" && (effect.StagedObserved || effect.Flushed || effect.RolledBack || effect.SavepointChecks != 0))
                 throw new InvalidOperationException();
             await RequireEmptyEffectsAsync();
             var state = await db.GroupBatchClaimStates.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
@@ -102,24 +120,29 @@ internal static class GroupAutomaticNoteRuntimeProof
             await DeniedAsync(() => store.CommitAutomaticAsync(plan, dependencies, effectOperation, token));
             await RequireEmptyEffectsAsync();
             if (keys.Reads != 1 || keys.Writes != 1) throw new InvalidOperationException();
-            Console.WriteLine(mode == "automatic-note-expiry"
-                ? "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied"
-                : "PASS owned automatic note configured write key outside SQL expiry witness no effects clock rollback denied");
+            Console.WriteLine(hostOnly
+                ? step == "expiry"
+                    ? "PASS owned automatic host nine flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied"
+                    : "PASS owned automatic host configured write key outside SQL expiry witness no effects clock rollback denied"
+                : step == "expiry"
+                    ? "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied"
+                    : "PASS owned automatic note configured write key outside SQL expiry witness no effects clock rollback denied");
             return;
         }
         var committed = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
-        if (committed.WasAlreadyCommitted || committed.Scope != scope || committed.BatchId != allocated.Id || committed.RequestIds.Count != 4
-            || await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 21) throw new InvalidOperationException();
+        if (committed.WasAlreadyCommitted || committed.Scope != scope || committed.BatchId != allocated.Id || committed.RequestIds.Count != plan.NoteCount
+            || await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != expectedRows) throw new InvalidOperationException();
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
-        if (readback.Items.Count != 4) throw new InvalidOperationException();
+        if (readback.Items.Count != plan.NoteCount) throw new InvalidOperationException();
         for (var index = 0; index < committed.RequestIds.Count; index++)
         {
             var item = readback.Items.Single(x => x.RecordId == committed.RequestIds[index]);
             if (item.Revision != 1 || item.IsItConfirmed || item.Content.Contains("OWNED_AUTOMATIC_PRIVATE_SENTINEL", StringComparison.Ordinal))
                 throw new InvalidOperationException();
-            if (index < 2)
+            if (index < plan.AiNotes.Count)
             {
+                if (proposal is null || source is null) throw new InvalidOperationException();
                 var clear = GroupBrainPayloadCodec.DecodeAiNote(item.Content);
                 if (item.Origin != GroupRequestRevisionOrigin.AiExtracted || item.VerificationLevel != GroupRequestVerificationLevel.SourceBackedAiInterpretation
                     || item.Content != GroupBrainPayloadCodec.EncodeAiNote(proposal.Notes[index]) || clear.Evidence.Count != 1
@@ -128,7 +151,7 @@ internal static class GroupAutomaticNoteRuntimeProof
             }
             else
             {
-                var host = plan.HostNotes[index - 2]; var clear = GroupBrainPayloadCodec.DecodeHostAttention(item.Content);
+                var host = plan.HostNotes[index - plan.AiNotes.Count]; var clear = GroupBrainPayloadCodec.DecodeHostAttention(item.Content);
                 if (item.Origin != GroupRequestRevisionOrigin.HostAttention || item.VerificationLevel != GroupRequestVerificationLevel.HostObserved
                     || item.BusinessStatus != GroupNoteBusinessStatus.NeedsClarification || item.Content != host.EncodePayload()
                     || clear.Reason != host.Reason || clear.HasCoverageGap || !clear.SourceReferences.SequenceEqual(host.SourceReferences))
@@ -141,20 +164,22 @@ internal static class GroupAutomaticNoteRuntimeProof
             || replay.OutboxId != committed.OutboxId || replay.CommittedAtUtc != committed.CommittedAtUtc || !replay.RequestIds.SequenceEqual(committed.RequestIds))
             throw new InvalidOperationException();
         await RequireOriginalAsync();
-        await RefusedAsync(() => store.CommitAutomaticAsync(GroupAutomaticNotePlan.Create(preparation, Proposal(true)), dependencies, effectOperation, token));
+        if (!hostOnly) await RefusedAsync(() => store.CommitAutomaticAsync(GroupAutomaticNotePlan.Create(preparation, Proposal(true)), dependencies, effectOperation, token));
         await RequireOriginalAsync();
         var reads = keys.Reads; var writes = keys.Writes;
         await RefusedAsync(() => store.CommitAutomaticAsync(plan, dependencies, Guid.NewGuid(), token));
         await RequireOriginalAsync();
-        if (reads != 4 || writes != 1 || keys.Reads != reads || keys.Writes != writes
+        if (reads != (hostOnly ? 3 : 4) || writes != 1 || keys.Reads != reads || keys.Writes != writes
             || await db.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
                 && x.BindingId == scope.SourceBindingId && (x.AssignedToUserId != null || x.CommittedDueAtUtc != null
                     || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token)) throw new InvalidOperationException();
-        Console.WriteLine("PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority");
+        Console.WriteLine(hostOnly
+            ? "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"
+            : "PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority");
 
         async Task RequireOriginalAsync()
         {
-            if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 21
+            if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != expectedRows
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph
                 || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null) throw new InvalidOperationException();
         }
@@ -172,20 +197,24 @@ internal static class GroupAutomaticNoteRuntimeProof
                     or GroupCustomerRequestRecord or GroupRequestRevisionRecord or GroupRequestEvidenceRecord or GroupNotesCommittedOutboxRecord or GroupNotesCommittedItemRecord))
                 throw new InvalidOperationException();
         }
-        GroupGroundedWorkProposal Proposal(bool changed) => GroupGroundedWorkProposal.Parse(preparation, JsonSerializer.Serialize(new
+        GroupGroundedWorkProposal Proposal(bool changed)
         {
-            version = GroupGroundedWorkProposal.FormatVersion,
-            notes = new[] { Note("request", changed ? "owned changed interpretation" : "owned synthetic inventory question", []),
-                Note("needs_clarification", "owned synthetic missing warehouse", ["owned warehouse detail"]) },
-            source_dispositions = new[] { new { message_id = source.MessageId.ToString("D"), revision = source.Revision, disposition = "work" } }
-        }));
+            if (source is null) throw new InvalidOperationException();
+            return GroupGroundedWorkProposal.Parse(preparation, JsonSerializer.Serialize(new
+            {
+                version = GroupGroundedWorkProposal.FormatVersion,
+                notes = new[] { Note("request", changed ? "owned changed interpretation" : "owned synthetic inventory question", []),
+                    Note("needs_clarification", "owned synthetic missing warehouse", ["owned warehouse detail"]) },
+                source_dispositions = new[] { new { message_id = source.MessageId.ToString("D"), revision = source.Revision, disposition = "work" } }
+            }));
+        }
         object Note(string type, string title, string[] missing) => new
         {
             type,
             title,
             problem = "owned synthetic interpretation",
             outcome = "owned synthetic requested outcome",
-            source_refs = new[] { new { message_id = source.MessageId.ToString("D"), revision = source.Revision, quote = source.Text } },
+            source_refs = new[] { new { message_id = (source ?? throw new InvalidOperationException()).MessageId.ToString("D"), revision = source.Revision, quote = source.Text } },
             missing_fields = missing,
             requested_deadline_text = (string?)null,
             suggested_relation = (string?)null
