@@ -9,6 +9,42 @@ import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
 import { requireOwnedGroupInbox, verifyOwnedGroupInbox } from "./smoke-browser-group-inbox.mjs";
 
+test("submission202 receipt requires completed bounded UTF8 JSON and reports only fixed refusal stages", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function requiredReceipt("), end = source.indexOf("  const sent =", start);
+  assert.ok(start > 0 && end > start);
+  const make = new Function("bounded", "proof", source.slice(start, end) + ";return requiredReceipt;");
+  const receipt = { operationId: "owned-inert-operation", inputFingerprint: "owned-inert-fingerprint" };
+  const encoded = new TextEncoder().encode(JSON.stringify(receipt));
+  for (const fault of [null, "unfinished", "finished-rejected", "finished-timeout", "body-rejected", "body-protocol",
+    "body-timeout", "empty", "oversize", "utf8", "json"] ) {
+    const phases = [], bounds = [];
+    const action = make(async (promise, maximum) => {
+      assert.equal(maximum, 20_000); bounds.push(maximum);
+      if (fault === "finished-timeout" || fault === "body-timeout" && bounds.length === 2) throw new Error("owned private timeout");
+      return await promise;
+    }, condition => { if (!condition) throw new Error("owned fixed proof refusal"); });
+    const response = {
+      finished: async () => { if (fault === "finished-rejected") throw new Error("owned private stream detail"); return fault === "unfinished" ? new Error("owned private network failure") : null; },
+      body: async () => {
+        if (fault === "body-rejected") throw new Error("owned private body detail");
+        if (fault === "body-protocol") throw new Error("No data found for resource with given identifier: owned-private-url");
+        return fault === "empty" ? new Uint8Array(0) : fault === "oversize" ? new Uint8Array(4097)
+          : fault === "utf8" ? new Uint8Array([0xff]) : fault === "json" ? new TextEncoder().encode("owned-private-invalid-json") : encoded;
+      },
+    };
+    if (fault) await assert.rejects(action(response, phase => phases.push(phase)), /^Error: owned fixed proof refusal$/);
+    else assert.deepEqual(await action(response, phase => phases.push(phase)), receipt);
+    const expected = { unfinished: "replay-stream-failed", "finished-rejected": "replay-stream-wait-failed",
+      "finished-timeout": "replay-stream-wait-failed", "body-rejected": "replay-body-read-failed",
+      "body-protocol": "replay-browser-body-unavailable", "body-timeout": "replay-body-read-failed", empty: "replay-empty-body",
+      oversize: "replay-body-too-large", utf8: "replay-body-invalid-utf8", json: "replay-body-invalid-json" };
+    assert.equal(phases.at(-1), fault ? expected[fault] : "replay-body-json");
+    assert.ok(phases.every(phase => /^replay-[a-z0-9-]+$/.test(phase) && !phase.includes("owned-private")));
+    assert.ok(bounds.length > 0 && bounds.length <= 2);
+  }
+});
+
 test("submission company-switch owns early waiter failures without accepting a missing callback", async () => {
   const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
   const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function completed(", start);

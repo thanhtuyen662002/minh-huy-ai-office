@@ -84,6 +84,30 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   }
   async function idle() { await page.getByRole("button", { name: "Gửi", exact: true }).waitFor();
     await page.waitForFunction(() => [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Gửi" && !button.disabled), null, { timeout: 60_000 }); }
+  async function requiredReceipt(response, phase) {
+    phase("replay-stream-finished");
+    let finished;
+    try { finished = await bounded(response.finished(), 20_000); }
+    catch { phase("replay-stream-wait-failed"); proof(false); }
+    if (finished !== null) { phase("replay-stream-failed"); proof(false); }
+    phase("replay-body-read");
+    let bytes;
+    try { bytes = await bounded(response.body(), 20_000); }
+    catch (error) {
+      // Classify only fixed browser protocol boundaries. Never emit the
+      // exception text, which may contain URLs, selectors or private JSON.
+      phase(typeof error?.message === "string" && /No (?:resource|data).*identifier/i.test(error.message)
+        ? "replay-browser-body-unavailable" : "replay-body-read-failed"); proof(false);
+    }
+    phase(bytes.byteLength === 0 ? "replay-empty-body" : bytes.byteLength > 4096 ? "replay-body-too-large" : "replay-body-utf8");
+    proof(bytes.byteLength > 0 && bytes.byteLength <= 4096);
+    let text;
+    try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+    catch { phase("replay-body-invalid-utf8"); proof(false); }
+    phase("replay-body-json");
+    try { return JSON.parse(text); }
+    catch { phase("replay-body-invalid-json"); proof(false); }
+  }
   const sent = [];
   const observe = request => { if (request.method() === "POST" && new URL(request.url()).pathname.startsWith("/api/local/tasks/intents"))
     sent.push({ path: new URL(request.url()).pathname, body: request.postDataJSON() }); };
@@ -119,6 +143,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       // boundary behind a timeout. Keep the202 acceptance requirement.
       const retry = page.waitForResponse(response => new URL(response.url()).pathname === `/api/local/tasks/intents/${fault.operationId}/submit`
         && response.request().method() === "POST", { timeout: 20_000 });
+      retry.catch(() => {});
       phase("replay-click");
       await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click();
       phase("replay-response");
@@ -126,7 +151,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       phase(response.status() === 202 ? "replay-202-body" : response.status() === 503 ? "replay-refused503"
         : response.status() === 401 ? "replay-refused401" : response.status() === 409 ? "replay-refused409" : "replay-refused-other");
       proof(response.status() === 202);
-      const receipt = await response.json();
+      const receipt = await requiredReceipt(response, phase);
       phase("receipt-equal");
       proof(["companyId", "operationId", "inputFingerprint", "taskId", "stepId", "messageId", "createdAtUtc"].every(key => receipt[key] === (key === "companyId" ? company : fault[key])));
       phase("final-idle"); await idle();

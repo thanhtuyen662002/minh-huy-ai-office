@@ -142,6 +142,52 @@ public sealed class GroupIngressOutboxDispatcherTests
     }
 
     [Fact]
+    public async Task UnchangedPretrackedOutboxCannotOverwriteReservationCommittedByAnotherContext()
+    {
+        using var fixture = new Fixture();
+        var unchangedGrant = fixture.Auth.Db.Entry(fixture.Auth.Grant);
+        await using (var other = new PlatformDbContext(fixture.Auth.Options))
+        {
+            var current = await other.GroupIngressOutbox.SingleAsync();
+            current.PublishAttempts = 5; current.AvailableAtUtc = fixture.Auth.Clock.Current;
+            await other.SaveChangesAsync();
+        }
+        Assert.False(fixture.Auth.Db.ChangeTracker.HasChanges());
+        Assert.True(await fixture.Dispatcher.PublishNextAsync(fixture.Auth.Scope));
+        Assert.Equal(6, (await fixture.OutboxAsync()).PublishAttempts);
+        Assert.Equal(EntityState.Unchanged, unchangedGrant.State);
+        Assert.Same(fixture.Auth.Grant, unchangedGrant.Entity);
+        Assert.False(fixture.Auth.Db.ChangeTracker.HasChanges());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfirmationReadsActualReservationEvenIfPublisherPretrackedAnOlderRow(bool newerConfirmed)
+    {
+        using var fixture = new Fixture();
+        var current = fixture.Auth.Clock.Current;
+        fixture.Publisher.Action = async _ =>
+        {
+            var old = await fixture.Auth.Db.GroupIngressOutbox.SingleAsync();
+            Assert.Equal(1, old.PublishAttempts);
+            await using var other = new PlatformDbContext(fixture.Auth.Options);
+            var newer = await other.GroupIngressOutbox.SingleAsync();
+            newer.PublishAttempts = 7; newer.AvailableAtUtc = current.AddSeconds(8);
+            newer.PublishedAtUtc = newerConfirmed ? current.AddSeconds(2) : null;
+            await other.SaveChangesAsync();
+            fixture.Auth.Clock.Current = current.AddSeconds(3);
+            Assert.False(fixture.Auth.Db.ChangeTracker.HasChanges());
+        };
+        Assert.True(await fixture.Dispatcher.PublishNextAsync(fixture.Auth.Scope));
+        var confirmed = await fixture.OutboxAsync();
+        Assert.Equal(7, confirmed.PublishAttempts);
+        Assert.Equal(current.AddSeconds(8), confirmed.AvailableAtUtc);
+        Assert.Equal(newerConfirmed ? current.AddSeconds(2) : (DateTimeOffset?)null, confirmed.PublishedAtUtc);
+        Assert.False(fixture.Auth.Db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
     public async Task ForeignHostAndCallerCancellationRefuseBeforeDatabaseOrPublisher()
     {
         using var fixture = new Fixture(); fixture.Auth.Db.Dispose();
@@ -171,7 +217,7 @@ public sealed class GroupIngressOutboxDispatcherTests
         Assert.Null((await fixture.OutboxAsync()).PublishedAtUtc);
     }
 
-    private sealed class Publisher : IGroupIngressReferencePublisher
+    internal sealed class Publisher : IGroupIngressReferencePublisher
     {
         internal readonly List<GroupIngressDispatchReference> References = [];
         internal Func<GroupIngressDispatchReference, Task>? Action;
@@ -184,7 +230,7 @@ public sealed class GroupIngressOutboxDispatcherTests
 
     // Owned inert graph; InMemory does not establish native SQL locking,
     // permissions, crash recovery or a real RabbitMQ confirmation.
-    private sealed class Fixture : IDisposable
+    internal sealed class Fixture : IDisposable
     {
         internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new("capability");
         internal readonly Publisher Publisher = new();

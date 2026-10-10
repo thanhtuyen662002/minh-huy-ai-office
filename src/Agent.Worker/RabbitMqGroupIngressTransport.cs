@@ -98,13 +98,11 @@ public sealed class RabbitMqGroupIngressConsumer(IOptions<RabbitMqWorkOptions> o
                 await using var connection = await factory.CreateConnectionAsync(stoppingToken);
                 await using var channel = await connection.CreateChannelAsync(RabbitMqWorkPublisher.CreateConfirmingChannelOptions(), stoppingToken);
                 var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                channel.ChannelShutdownAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
-                channel.CallbackExceptionAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
-                connection.ConnectionShutdownAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
                 await RabbitMqGroupIngressPublisher.DeclareAsync(channel, worker, stoppingToken);
                 await channel.BasicQosAsync(0, options.Value.PrefetchCount, false, stoppingToken);
                 var consumer = new AsyncEventingBasicConsumer(channel);
-                consumer.ReceivedAsync += async (_, args) => await ReceiveAsync(channel, args, stoppingToken);
+                BindAttemptCompletion(channel, connection, consumer, closed);
+                consumer.ReceivedAsync += async (_, args) => await ReceiveAsync(channel, args, stoppingToken, () => closed.TrySetResult());
                 await channel.BasicConsumeAsync(RabbitMqGroupIngressPublisher.QueueName(worker), autoAck: false, consumer, stoppingToken);
                 // Connection/channel ownership stays in this attempt. A callback
                 // never acknowledges a delivery on a later replacement channel.
@@ -122,7 +120,17 @@ public sealed class RabbitMqGroupIngressConsumer(IOptions<RabbitMqWorkOptions> o
         }
     }
 
-    private async Task ReceiveAsync(IChannel channel, BasicDeliverEventArgs args, CancellationToken stoppingToken)
+    internal static void BindAttemptCompletion(IChannel channel, IConnection connection, AsyncEventingBasicConsumer consumer,
+        TaskCompletionSource closed)
+    {
+        channel.ChannelShutdownAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
+        channel.CallbackExceptionAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
+        connection.ConnectionShutdownAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
+        consumer.UnregisteredAsync += (_, _) => { closed.TrySetResult(); return Task.CompletedTask; };
+        if (!channel.IsOpen || !connection.IsOpen) closed.TrySetResult();
+    }
+
+    private async Task ReceiveAsync(IChannel channel, BasicDeliverEventArgs args, CancellationToken stoppingToken, Action retireAttempt)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
         deadline.CancelAfter(GroupIngressOutboxDispatcher.PublishDeadline);
@@ -134,12 +142,18 @@ public sealed class RabbitMqGroupIngressConsumer(IOptions<RabbitMqWorkOptions> o
                     await using var scope = scopeFactory.CreateAsyncScope();
                     return await scope.ServiceProvider.GetRequiredService<GroupIngressInboxStore>().ReceiveAsync(reference, token);
                 }, clock, deadline.Token);
-            await channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+            await SettleAsync(channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: deadline.Token), deadline.Token);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
             // Closing this owned channel returns an unsettled delivery. SQL
             // inbox/outbox state remains authoritative across shutdown.
+        }
+        catch (OperationCanceledException) when (deadline.IsCancellationRequested)
+        {
+            // Retire this exact channel/connection attempt. An ignored or lost
+            // settlement cannot keep the serial consumer occupied indefinitely.
+            retireAttempt();
         }
         catch
         {
@@ -148,9 +162,19 @@ public sealed class RabbitMqGroupIngressConsumer(IOptions<RabbitMqWorkOptions> o
             {
                 // No immediate poison/revocation retry loop. The producer retries
                 // unchanged SQL references after its durable five-second delay.
-                await channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
+                await SettleAsync(channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false,
+                    cancellationToken: deadline.Token), deadline.Token);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+            catch { retireAttempt(); }
         }
+    }
+
+    private static async Task SettleAsync(ValueTask operation, CancellationToken cancellationToken)
+    {
+        var task = operation.AsTask();
+        _ = task.ContinueWith(completed => _ = completed.Exception, CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        await task.WaitAsync(cancellationToken);
     }
 }

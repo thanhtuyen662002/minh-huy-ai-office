@@ -873,3 +873,59 @@ receipt, cancellation after commit and fixed queue/transport bounds. Clean Worke
 build0warnings0errors and changed-file whitespace PASS. These are inert local
 controls; no DI registration, real broker, concurrent SQL or live connector is
 proved. Frozen scoped review and mandatory owned native acceptance remain.
+
+### b62 native success and recurring browser body boundary
+
+Exactb62 Build38020840049/Governance38020840088 is terminal: six prerequisites and
+Governance PASS; actual114121265377/quality114123892704 RED. Root inspected ALL3
+current metadata/Renew/native spool markers and retained group/listener/read proof
+PASS. Core202 header-loss Chromium retry PASS. The body-loss replay received actual
+202 headers, then failed at `submission-real-core202-body-replay-202-body`; its
+precise cause remains unproven. Historical-source substages and later company
+switch were not re-exercised on this run. No shipping cause/fix is inferred.
+
+The required receipt diagnostic now demands bounded response completion with no
+stream error, then an actual nonempty body at most4096 bytes, fatal UTF8 and JSON.
+Each refusal gets a fixed stage; known browser protocol resource-unavailability
+is classified without exposing exception text/URLs/payloads. Original required202,
+exact receipt/company/operation/fingerprint/IDs/time and full unchanged graph,
+source restoration and no additional retry remain.10 retained/current Node guards
+PASS including extracted actual helper controls for stream failures/deadlines,
+body failures/protocol/empty/overflow/UTF8/JSON and positive exact receipt. Native
+classification remains mandatory.
+
+Independent a4 publication review reproduced an EF identity-map P2: an unchanged
+pretracked outbox attempt0 can overwrite a separate context's committed attempt5
+with1. Source SQL locking does not refresh that tracked instance. Both reservation
+and confirmation now select fresh AsNoTracking under the owned source lock; only
+matching unchanged prior outbox entries are detached, then the fresh current row
+is attached for mutation. Unrelated tracked entities remain. Two separate-context
+regressions cover reservation increment6 and confirmation preserving a newer
+attempt7/retry/confirmation. The repaired frozen snapshot still requires independent
+review, followed by actual native SQL/broker proof; InMemory is not rollback or
+concurrency acceptance. Full277/278/279/233 remain active.
+
+### Publication review repair candidate
+
+Frozen a4 independent review withheld approval for three reproduced P2 categories.
+In addition to stale tracked reservation/confirmation, consumer ACK/NACK used the
+host stopping token instead of the delivery's ten-second deadline, and broker
+cancellation left an open-channel attempt waiting forever.31 retained and five
+additional independent controls passed; no additional domain/privacy finding.
+
+ACK and NACK now use the delivery deadline and bounded WaitAsync even for a
+noncooperative settlement. Late faults are observed without private output; own
+expiry retires only the original channel/connection attempt. A durable SQL receipt
+or unreceived SQL backlog is preserved. The actual RabbitMQ.Client7.2.2
+UnregisteredAsync event, raised by server HandleBasicCancelAsync, completes that
+owned attempt for bounded reconnect. Channel/connection shutdown and callback
+failures also remain owned. Callbacks never settle on a replacement channel.
+
+Three additional controls invoke the actual private shipping receive method with
+the real inert SQL inbox and deliberately stalled ACK/NACK, and invoke actual SDK
+consume-OK/server-cancel with otherwise open inert resources. They require the
+ten-second token/bounded retirement, one original-channel settlement attempt,
+retained durable inbox/backlog and wakeup on cancellation. The newer confirmation
+regression covers both null/unknown and confirmed newer attempts. These are local
+inert receiver/SDK controls, not real network or concurrent SQL evidence. Renewed
+frozen review and mandatory owned native SQL/RabbitMQ restart proof remain.

@@ -52,7 +52,7 @@ public sealed class GroupIngressOutboxDispatcher(PlatformDbContext database,
             var directory = new GroupExtractionDirectory(database, worker);
             var authority = await directory.RequireAsync(scope, cancellationToken);
             var now = UtcNow();
-            tracked = await database.GroupIngressOutbox.Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId &&
+            tracked = await database.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId &&
                 x.BindingId == scope.SourceBindingId && x.AvailableAtUtc <= now &&
                 !database.GroupIngressInbox.Any(receipt => receipt.TenantId == x.TenantId && receipt.CompanyId == x.CompanyId &&
                     receipt.BindingId == x.BindingId && receipt.EventId == x.Id))
@@ -71,6 +71,7 @@ public sealed class GroupIngressOutboxDispatcher(PlatformDbContext database,
                 tracked.PublishAttempts < 0 || tracked.PublishAttempts == int.MaxValue ||
                 (tracked.PublishedAtUtc is { } published && (published.Offset != TimeSpan.Zero || published < committed || published > now)))
                 throw Unavailable();
+            TrackFreshOutbox(tracked);
             tracked.PublishAttempts++;
             tracked.AvailableAtUtc = now + RetryDelay;
             await directory.RequireCurrentAsync(authority, cancellationToken);
@@ -99,7 +100,7 @@ public sealed class GroupIngressOutboxDispatcher(PlatformDbContext database,
             await LockSourceAsync(scope, cancellationToken);
             var directory = new GroupExtractionDirectory(database, worker);
             await directory.RequireCurrentAsync(reservation.Authority, cancellationToken);
-            tracked = await database.GroupIngressOutbox.SingleOrDefaultAsync(x => x.TenantId == scope.TenantId &&
+            tracked = await database.GroupIngressOutbox.AsNoTracking().SingleOrDefaultAsync(x => x.TenantId == scope.TenantId &&
                 x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.Id == reference.EventId, cancellationToken) ?? throw Unavailable();
             if (tracked.MessageId != reference.MessageId || tracked.Revision != reference.Revision || tracked.CommittedSequence != reference.CommittedSequence)
                 throw Unavailable();
@@ -108,6 +109,7 @@ public sealed class GroupIngressOutboxDispatcher(PlatformDbContext database,
             // cannot overwrite that attempt or shorten its retry checkpoint.
             if (tracked.PublishAttempts == reservation.Attempt && tracked.AvailableAtUtc == reservation.AvailableAtUtc)
             {
+                TrackFreshOutbox(tracked);
                 tracked.PublishedAtUtc = UtcNow();
                 await database.SaveChangesAsync(cancellationToken);
             }
@@ -150,6 +152,22 @@ public sealed class GroupIngressOutboxDispatcher(PlatformDbContext database,
     private void RequireCleanContext()
     {
         if (database.ChangeTracker.HasChanges() || (database.Database.IsRelational() && !database.Database.IsSqlServer())) throw Unavailable();
+    }
+
+    private void TrackFreshOutbox(GroupIngressOutboxRecord current)
+    {
+        // An unchanged entity may still be stale after another context commits.
+        // Source locks protect SQL, not the EF identity map. Attach only the
+        // freshly read row and preserve all unrelated caller-tracked entities.
+        var previous = database.ChangeTracker.Entries<GroupIngressOutboxRecord>().SingleOrDefault(entry =>
+            entry.Entity.TenantId == current.TenantId && entry.Entity.CompanyId == current.CompanyId &&
+            entry.Entity.BindingId == current.BindingId && entry.Entity.Id == current.Id);
+        if (previous is not null)
+        {
+            if (previous.State != EntityState.Unchanged) throw Unavailable();
+            previous.State = EntityState.Detached;
+        }
+        database.Attach(current);
     }
 
     private DateTimeOffset UtcNow()

@@ -1194,3 +1194,21 @@ group_reference_publication_checkpoint:
   local: 'Foundation scoped APPROVED241 local/29 own/9 SQL160; publication31 local PASS0skip (13 dispatcher/18 delivery boundary), clean Worker build and changed whitespace PASS. No actual SQL/RabbitMQ/DI execution.'
   result: 'Durable5s reservation and10s bounded reference-only publication preserve EventId through lost confirms and fresh dispatcher retry. SQL inbox suppresses later publication; delayed old confirm cannot overwrite new reservation. Separate fixed-scope persistent confirmed queue and current-authority durable consumer receipt precede ACK; malformed/revoked work is not immediately requeued and SQL backlog remains recoverable.'
   next: 'Frozen publication review; default-off host registration and mandatory owned native SQL/broker proof. Close b62 historical browser CI before renewed push. No full277 or product completion.'
+
+group_publication_tracking_and_browser_body_repair:
+  failing_runtime_head: b62e19b2ab0c379132b841c6e2625e4da722d86c
+  build: 38020840049
+  governance: 38020840088
+  actual: 114121265377
+  quality: 114123892704
+  result: 'Terminal native/quality RED at Core202 body replay202 read; root-inspected ALL3 current metadata spool/retained group-listener PASS, header-loss retry PASS; later historical/company acceptance not re-exercised. Precise cause unproven.'
+  publication_p2: 'Reviewer reproduced unchanged EF identity-map outbox overwriting newer committed attempt. Both reads are now fresh AsNoTracking under lock with matching unchanged entry replacement only; two-context reservation and confirmation regressions preserve current attempt/retry/confirm and unrelated tracked state. Frozen repaired review pending.'
+  diagnostic: 'Strict bounded completed response/4096-byte/fatal UTF8/JSON stages retain202/exact receipt/all effect oracles, no retries/private error output. Local10 Node guards PASS; actual diagnosis pending.'
+  next: 'Freeze/review repaired publication and diagnostic; push only after scoped approval and own exactCI. Finish default-off registration and actual owned SQL/broker acceptance. Full277/278/279/233 active.'
+
+group_publication_review_repairs:
+  reviewed_head: a4ad55696e9d6b36eb30d891594724ca40aa5f3e
+  state: local_tested_pending_frozen_review
+  result: 'All3 review P2 categories repaired locally: current outbox reads/unknown-confirm fences; actual bounded ACK/NACK within total delivery deadline with exact original-attempt retirement; actual SDK UnregisteredAsync cancellation completes owned attempt for reconnect. Review and native broker acceptance remain mandatory.'
+  local: '37 publication controls PASS0skip (16 dispatcher/18 boundary/3 actual inert settlement/SDK-cancel);10 Node diagnostic guards PASS. No network/native SQL/provider/DI activation.'
+  next: 'Freeze/review repair, then push and close renewed exact all8/native/Chromium before acceptance. Terminal b62 evidence retained; no underlying Chromium cause claimed.'
