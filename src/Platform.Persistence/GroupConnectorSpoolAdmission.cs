@@ -48,15 +48,25 @@ public sealed class GroupConnectorSpoolAdmission
     internal static void RequireCurrent(GroupConnectorEnrollment enrollment,
         GroupListenerLeaseSnapshot lease, DateTimeOffset nowUtc, GroupIngressRuntimePolicy policy, GroupSourceEventKind kind)
     {
-        if (enrollment?.Source is null || lease?.Account is null || policy is null || !Enum.IsDefined(kind)) throw Denied();
+        if (lease?.Account is null) throw Denied();
+        RequireQualifiedEnrollment(enrollment, nowUtc, policy, kind);
         var source = enrollment.Source;
-        GroupRoutingPolicy.AuthorizeIngest(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
-            source, source.ExternalIdentity, isGroup: true, isKnownReportEcho: false);
         if (lease.Account != new GroupListenerAccountScope(source.Scope.TenantId, source.Scope.CompanyId, source.ConnectorAccountId) ||
             lease.OwnerId == Guid.Empty || lease.Epoch <= 0 ||
             nowUtc.Offset != TimeSpan.Zero || lease.HeartbeatAtUtc.Offset != TimeSpan.Zero || lease.ExpiresAtUtc.Offset != TimeSpan.Zero ||
             lease.HeartbeatAtUtc > nowUtc || lease.ExpiresAtUtc <= nowUtc || lease.ExpiresAtUtc - lease.HeartbeatAtUtc > GroupListenerLeasePolicy.LeaseDuration)
             throw Denied();
+    }
+
+    // Initial listener Acquire has no lease yet, but still needs the same
+    // current scoped receive qualification as an admitted event.
+    internal static void RequireQualifiedEnrollment(GroupConnectorEnrollment enrollment, DateTimeOffset nowUtc,
+        GroupIngressRuntimePolicy policy, GroupSourceEventKind kind = GroupSourceEventKind.NewText)
+    {
+        if (enrollment?.Source is null || policy is null || !Enum.IsDefined(kind) || nowUtc.Offset != TimeSpan.Zero) throw Denied();
+        var source = enrollment.Source;
+        GroupRoutingPolicy.AuthorizeIngest(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
+            source, source.ExternalIdentity, isGroup: true, isKnownReportEcho: false);
         var qualification = enrollment.Qualification;
         if (qualification is null || enrollment.Artifact is null || qualification.Artifact != enrollment.Artifact ||
             qualification.TenantId != source.Scope.TenantId || qualification.CompanyId != source.Scope.CompanyId ||

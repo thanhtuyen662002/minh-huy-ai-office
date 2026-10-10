@@ -76,6 +76,27 @@ public sealed class GroupConnectorTransportClient : IDisposable
         return PrepareAsync(admission.Enrollment, admission.Payload, null, cancellationToken, admission);
     }
 
+    internal void RequireSpoolBinding(GroupConnectorSpoolKeyBinding spool)
+    {
+        if (spool.TenantId != binding.TenantId || spool.CompanyId != binding.CompanyId || spool.ServiceId != binding.ServiceId ||
+            spool.Reference == binding.Reference) throw new GroupConnectorTransportException();
+    }
+
+    internal void RequireRecovery(GroupSpoolContentContext context, GroupConnectorEnrollment current, GroupListenerLeaseSnapshot lease)
+    {
+        if (current?.Authentication is null || current.Authentication.ServiceId != binding.ServiceId ||
+            current.Authentication.CredentialEpoch != binding.CredentialEpoch || current.Source?.Scope.TenantId != binding.TenantId ||
+            current.Source.Scope.CompanyId != binding.CompanyId) throw new GroupConnectorTransportException();
+        GroupSpoolContentProtector.RequireRecovery(context, current, lease, clock.GetUtcNow(), policy);
+    }
+
+    internal GroupConnectorSpoolAdmission Recover(GroupSpoolProtectedContent stored, ReadOnlySpan<byte> key,
+        GroupConnectorEnrollment current, GroupListenerLeaseSnapshot lease)
+    {
+        RequireRecovery(stored.Context, current, lease);
+        return new GroupSpoolContentProtector().Recover(stored, key, current, lease, clock.GetUtcNow(), policy);
+    }
+
     public Task<GroupConnectorPreparedRequest> PrepareListenerAsync(GroupConnectorEnrollment enrollment,
         GroupListenerCommand command, CancellationToken cancellationToken = default)
     {
@@ -94,6 +115,7 @@ public sealed class GroupConnectorTransportClient : IDisposable
         {
             if (admission is not null)
                 GroupConnectorSpoolAdmission.RequireCurrent(admission.Enrollment, admission.Lease, clock.GetUtcNow(), policy, admission.Payload.Event.Kind);
+            else GroupConnectorSpoolAdmission.RequireQualifiedEnrollment(enrollment, clock.GetUtcNow(), policy);
             var source = enrollment.Source;
             GroupRoutingPolicy.AuthorizeIngest(enrollment.Authentication, enrollment.Principal, enrollment.Grant, source,
                 source.ExternalIdentity, isGroup: true, isKnownReportEcho: false);
@@ -112,6 +134,7 @@ public sealed class GroupConnectorTransportClient : IDisposable
             if (now.Offset != TimeSpan.Zero || now.ToUnixTimeSeconds() < 0) throw new GroupConnectorTransportException();
             if (admission is not null)
                 GroupConnectorSpoolAdmission.RequireCurrent(admission.Enrollment, admission.Lease, now, policy, admission.Payload.Event.Kind);
+            else GroupConnectorSpoolAdmission.RequireQualifiedEnrollment(enrollment, now, policy);
             var signature = new GroupServiceSignature(binding.ServiceId, binding.CredentialEpoch, now.ToUnixTimeSeconds(), Guid.NewGuid(), "");
             var signing = command is null ? GroupServiceAuthenticator.SigningBytes(signature, body) : GroupServiceAuthenticator.ListenerSigningBytes(signature, body);
             signature = signature with { SignatureHex = Convert.ToHexString(HMACSHA256.HashData(key, signing)) };
@@ -131,7 +154,7 @@ public sealed class GroupConnectorTransportClient : IDisposable
         if (prepared?.Command is not null) throw new GroupConnectorTransportException();
         var receipt = await SendAsync<GroupIngressCommittedReceipt>(prepared!, "/internal/group-ingress/events", cancellationToken);
         if (receipt?.Source != prepared!.Source || receipt.MessageId == Guid.Empty || receipt.Revision <= 0 || receipt.CommittedSequence <= 0 ||
-            receipt.CommittedAtUtc.Offset != TimeSpan.Zero) throw new GroupConnectorTransportException();
+            receipt.CommittedAtUtc.Offset != TimeSpan.Zero || receipt.CommittedAtUtc > clock.GetUtcNow()) throw new GroupConnectorTransportException();
         cancellationToken.ThrowIfCancellationRequested();
         return receipt;
     }
@@ -144,7 +167,8 @@ public sealed class GroupConnectorTransportClient : IDisposable
         if (lease?.Account != prepared.Account || lease.OwnerId != command.OwnerId || lease.Epoch <= 0 ||
             command.Operation != GroupListenerOperation.Acquire && lease.Epoch != command.ExpectedEpoch ||
             lease.HeartbeatAtUtc.Offset != TimeSpan.Zero || lease.ExpiresAtUtc.Offset != TimeSpan.Zero || receipt!.CommittedAtUtc.Offset != TimeSpan.Zero ||
-            lease.HeartbeatAtUtc > now || lease.ExpiresAtUtc < lease.HeartbeatAtUtc || receipt.CommittedAtUtc < lease.HeartbeatAtUtc ||
+            lease.HeartbeatAtUtc > now || lease.ExpiresAtUtc < lease.HeartbeatAtUtc || receipt.CommittedAtUtc < lease.HeartbeatAtUtc || receipt.CommittedAtUtc > now ||
+            receipt.CoverageRecorded && (!receipt.Changed || command.Operation == GroupListenerOperation.Renew) ||
             lease.ExpiresAtUtc - lease.HeartbeatAtUtc > GroupListenerLeasePolicy.LeaseDuration ||
             (command.Operation == GroupListenerOperation.Stop ? lease.ExpiresAtUtc != lease.HeartbeatAtUtc : lease.ExpiresAtUtc <= now))
             throw new GroupConnectorTransportException();

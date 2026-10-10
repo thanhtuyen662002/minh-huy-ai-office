@@ -72,6 +72,7 @@ public sealed class GroupConnectorTransportClientTests
     [InlineData("content-type")]
     [InlineData("cache")]
     [InlineData("redirect-origin")]
+    [InlineData("future-commit")]
     public async Task MalformedOrForeignSuccessNeverBecomesCommitAck(string change)
     {
         using var fixture = new Fixture();
@@ -83,6 +84,7 @@ public sealed class GroupConnectorTransportClientTests
             if (change == "revision") value = value with { Revision = 0 };
             if (change == "sequence") value = value with { CommittedSequence = 0 };
             if (change == "offset") value = value with { CommittedAtUtc = Fixture.Now.ToOffset(TimeSpan.FromHours(7)) };
+            if (change == "future-commit") value = value with { CommittedAtUtc = DateTimeOffset.MaxValue.ToUniversalTime() };
             var response = fixture.Reply(request, value); var json = JsonSerializer.Serialize(value, GroupServiceAuthenticator.JsonOptions);
             if (change == "missing") json = "{}";
             if (change == "duplicate") json = json.Replace("\"revision\":1", "\"revision\":1,\"revisi\\u006fn\":1", StringComparison.Ordinal);
@@ -241,10 +243,64 @@ public sealed class GroupConnectorTransportClientTests
         await Assert.ThrowsAsync<GroupConnectorTransportException>(() => client.SendListenerAsync(prepared));
     }
 
+    [Theory]
+    [InlineData("synthetic-live")]
+    [InlineData("stale-before")]
+    [InlineData("stale-after")]
+    public async Task ListenerMustRetainQualifiedReceiveProfileBeforeAndAfterSigningKey(string change)
+    {
+        using var fixture = new Fixture(controlled: change != "synthetic-live");
+        if (change == "stale-before") fixture.ObservedAt = Fixture.Now.AddDays(-31);
+        if (change == "stale-after")
+        {
+            fixture.ObservedAt = Fixture.Now.AddDays(-30).AddSeconds(1);
+            fixture.Auth.Secrets.BeforeResolution = () => fixture.Clock.Current = Fixture.Now.AddSeconds(2);
+        }
+        using var client = new GroupConnectorTransportClient(new("https://owned.invalid/"), fixture.Binding, fixture.Secrets,
+            fixture.Clock, GroupIngressRuntimePolicy.Live, new Handler((_, _) => throw new InvalidOperationException("HTTP must not execute")));
+        await Assert.ThrowsAsync<GroupConnectorTransportException>(() => client.PrepareListenerAsync(fixture.Enrollment,
+            new(Guid.NewGuid(), GroupListenerOperation.Acquire, 0)));
+        Assert.Equal(change == "stale-after" ? 1 : 0, fixture.Auth.Secrets.Calls);
+    }
+
+    [Fact]
+    public async Task QualifiedControlledLiveListenerCanPrepareWithoutFabricatingALease()
+    {
+        using var fixture = new Fixture(controlled: true);
+        using var client = new GroupConnectorTransportClient(new("https://owned.invalid/"), fixture.Binding, fixture.Secrets,
+            fixture.Clock, GroupIngressRuntimePolicy.Live, new Handler((_, _) => throw new InvalidOperationException("HTTP must not execute")));
+        using var prepared = await client.PrepareListenerAsync(fixture.Enrollment, new(Guid.NewGuid(), GroupListenerOperation.Acquire, 0));
+        Assert.Equal(1, fixture.Auth.Secrets.Calls);
+    }
+
+    [Theory]
+    [InlineData("future-commit")]
+    [InlineData("renew-coverage")]
+    [InlineData("unchanged-coverage")]
+    public async Task ImpossibleListenerCommitMetadataNeverBecomesAck(string change)
+    {
+        using var fixture = new Fixture();
+        var command = new GroupListenerCommand(Guid.NewGuid(), change == "renew-coverage" ? GroupListenerOperation.Renew : GroupListenerOperation.Acquire,
+            change == "renew-coverage" ? 1 : 0);
+        using var client = fixture.Client((request, _) =>
+        {
+            var value = fixture.ListenerReceipt(command);
+            if (change == "future-commit") value = value with { CommittedAtUtc = DateTimeOffset.MaxValue.ToUniversalTime() };
+            if (change == "renew-coverage") value = value with { CoverageRecorded = true };
+            if (change == "unchanged-coverage") value = value with { Changed = false, CoverageRecorded = true };
+            return Task.FromResult(fixture.Reply(request, value));
+        });
+        using var prepared = await client.PrepareListenerAsync(fixture.Enrollment, command);
+        await Assert.ThrowsAsync<GroupConnectorTransportException>(() => client.SendListenerAsync(prepared));
+    }
+
     private sealed class Fixture : IDisposable
     {
         internal static DateTimeOffset Now => GroupServiceAuthenticatorTests.Fixture.Now;
-        internal readonly GroupServiceAuthenticatorTests.Fixture Auth = new();
+        internal readonly GroupServiceAuthenticatorTests.Fixture Auth;
+        private readonly bool controlled;
+        internal DateTimeOffset ObservedAt = Now;
+        internal Fixture(bool controlled = false) { this.controlled = controlled; Auth = new(controlled: controlled); }
         internal readonly ControlledClock Clock = new();
         internal CompositeSecretResolver Secrets => new([Auth.Secrets]);
         internal GroupConnectorSigningBinding Binding => new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Service.Id, 1, SecretReference.Parse("secretref://env/OWNED_GROUP_KEY"));
@@ -256,7 +312,12 @@ public sealed class GroupConnectorTransportClientTests
                 return new(new(Auth.Service.Id, 1), new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Service.Id, 1, true),
                     new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Service.Id, Auth.Scope.SourceBindingId, GroupServiceCapability.Ingest, 1, true),
                     new(Auth.Scope, Auth.Account.Id, Auth.External, "Owned transport", 1, 0, true),
-                    new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Account.Id, Auth.External.AccountId, artifact, GroupQualificationEnvironment.Synthetic, []), artifact);
+                    new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Account.Id, Auth.External.AccountId, artifact,
+                        controlled ? GroupQualificationEnvironment.ControlledAccount : GroupQualificationEnvironment.Synthetic,
+                        controlled ? new[] { GroupConnectorCapability.GroupTextReceive, GroupConnectorCapability.MessageIdentity,
+                            GroupConnectorCapability.SenderIdentity, GroupConnectorCapability.SelfOriginCorrelation, GroupConnectorCapability.ListenerCollisionDetection,
+                            GroupConnectorCapability.GapDetection, GroupConnectorCapability.MembershipVerification }.Select(capability =>
+                                new GroupConnectorObservation(capability, GroupConnectorSupport.Supported, Guid.NewGuid(), ObservedAt)).ToArray() : []), artifact);
             }
         }
         internal GroupConnectorSpoolAdmission Admission() => GroupConnectorSpoolAdmission.Filter(Enrollment, Auth.Payload(),
@@ -264,7 +325,7 @@ public sealed class GroupConnectorTransportClientTests
             GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true));
         internal GroupIngressCommittedReceipt EventReceipt => new(Auth.Scope, Guid.Parse("11111111-1111-1111-1111-111111111111"), 1, 1, Now, false);
         internal GroupListenerCommittedReceipt ListenerReceipt(GroupListenerCommand command) => new(new(new(Auth.Scope.TenantId, Auth.Scope.CompanyId, Auth.Account.Id),
-            command.OwnerId, 1, Now, Now.AddSeconds(30)), true, true, Now, false);
+            command.OwnerId, 1, Now, Now.AddSeconds(30)), true, command.Operation != GroupListenerOperation.Renew, Now, false);
         internal GroupConnectorTransportClient Client(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> reply) =>
             new(new("http://127.0.0.1/"), Binding, Secrets, Clock, GroupIngressRuntimePolicy.OwnedSyntheticFixture("Development", true), new Handler(reply));
         internal HttpResponseMessage Reply(HttpRequestMessage request, object value) => new(HttpStatusCode.OK)

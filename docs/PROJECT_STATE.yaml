@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 00337c2514748d16d8438998f8b19b85c9ab0058
+current_target_head: 20cd591088430635b9bb46635f5441d962eca9ac
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 00337c2514748d16d8438998f8b19b85c9ab0058
+    head: 20cd591088430635b9bb46635f5441d962eca9ac
     state: in_progress
-    next: '003 exact all8 PASS Build38012373146/Gov38012373142/actual114095008504/quality114097930440; root inspected all8 new native listener markers plus retained group/range/inbox/Chromium. File20cd scoped APPROVED28 owned-temp controls0skip. Push approved FS checkpoint and own CI; freeze/review local42-control transport then wire exact retained replay/commit ACK deletion/current registry/lease/reference broker.278/279/full233 remain.'
+    next: 'Own approved20cd Build38013792478/Gov38013792484/actual114099512222 through terminal; six prerequisite gates/Gov PASS.003 all8/native listener PASS, root inspected. bbec transport review reproduced listener qualification/future commit/invalid coverage P2; repaired shared beforeafter qualification/time/coverage fences plus exact retained replay/ACK deletion25 controls.144 focused PASS0skip; independent original closure/replay review/native client proof mandatory before push. Current registry/lease/reference broker/278/279/full233 remain.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: '003 all8/native listener PASS, inspected actual114095008504; file20cd scoped APPROVED28 controls. Push approved FS and own exact CI, freeze/review transport candidate then exact retained replay/commit ACK deletion/current registry/lease/reference broker/278/279/full233/62 ACTIVE. No live provider/full277 acceptance.'
+next_action: 'Own20cd Build38013792478/Gov38013792484/actual114099512222 terminal CI;003 native closure/file20cd scoped approval receipt6092241009. Freeze repaired transport/replay144 controls for original P2 closure and scoped review, add mandatory actual .NET spool/client/SQL restart/reply-loss proof then current registry/lease/reference broker/278/279/full233/62 ACTIVE. No live provider/full277 acceptance.'
 
 
 blocked_by:

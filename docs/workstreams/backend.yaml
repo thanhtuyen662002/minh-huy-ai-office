@@ -4,7 +4,7 @@ status: active-development
 current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
-head: 00337c2514748d16d8438998f8b19b85c9ab0058
+head: 20cd591088430635b9bb46635f5441d962eca9ac
 state: in_progress
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Listener persistence745 scoped approved85 retained/own tests,19guards/migration syntax. ac58 all8 verified; own745 Build38008927610/Gov38008927679/actual114084138463. Freeze/review default-off HTTP and explicit lease-before-gap write order108 focused tests, then mandatory actual SQL listener lock/replay/expiry/rollback/revoke/restart/isolation. Complete spool/broker/278/279/full233.'
+next_action: 'Own20cd Build38013792478/Gov38013792484/actual114099512222 terminal;003 native listener all8 PASS/file20cd scoped APPROVED28 controls, receipt6092241009. Freeze repaired transport/exact retained replay144 tests for original listener qualification/future commit/coverage P2 closure and scoped review. Mandatory actual .NET client/spool/SQL proof before operation, then current registry/lease/reference broker/278/279/full233.'
 
 group_contracts_checkpoint:
   initial_head: 8403b38cafa4b8a07b19402f735b29eab2fa1a60
@@ -1072,3 +1072,15 @@ group_spool_file_review_closure:
   head: 20cd591088430635b9bb46635f5441d962eca9ac
   review: 'Scoped APPROVED19 retained+9 independent actual owned-temp FS controls28/0skip,YAML/diff. Exact capacity/reopen/no eviction, failed-open owner release, conflicting staging preservation, malformed bounded headers/tamper refusal unchanged disk, hard limits and stale/foreign ACK preserve new capture; no FS blocker.'
   next: 'Push this approved checkpoint and own exact CI while transport is reviewed. Trusted transport/reference binding, Windows ACL provisioning, forced death/power-loss and full277 remain.'
+
+group_connector_replay_checkpoint:
+  predecessor: bbec72d7c5a2f15e2455e7f1cc1f2804b5318397
+  remote: 20cd591088430635b9bb46635f5441d962eca9ac
+  build: 38013792478
+  governance: 38013792484
+  actual: 114099512222
+  receipt: 6092241009
+  review: 'Independent bbec42 retained+3 positive/cleanup PASS; six new expected denials reproduced2P2 categories: listener qualification missing beforeafter signing key and future event/listener commit or impossible Renew coverage accepted. Shared current qualified enrollment receive fence now applies without fake lease at initialAcquire beforeafter key; committed time<=hostUTC and coverage semantics mirror backend reconciliation. Original probes must close before transport approval.'
+  result: 'Exact retained reference replay validates current metadata/service scope/epoch/transport policy/qualified lease before load/spool key/decrypt. One host-bound dedicated key reference, not retained selector and not signing reference; recheck after key. Rewrap only owner/epoch, fresh signature, strict authenticated response then internal original-reference deletion. Whole replay10s/caller deadline; unknown/canceled/malformed/revoked/tampered preserves bytes. No provider/current backend fetch/DI/poller activation.'
+  local: '50 transport+25 exact replay+50 envelope+19 actual file controls144 PASS0skip, focused clean build. Stateful injected commit-reply loss/close-reopen/new owner preserves event/text and original commit, one simulated effect; status/foreign/future/cancel/noncooperative key deadline/current scope-version-deletion-qualification/optional/tamper/recaptured-file protection. This is actual FS plus injected HTTP, not native .NET SQL/broker proof.'
+  next: 'Freeze/review repaired transport/replay; own20cd native terminal. Add guarded real .NET client/encrypted spool/SQL commit-reply loss/process restart/current revoke proof, then trusted current enrollment/lease provider and reference-only broker.278/279/full233 ACTIVE.'

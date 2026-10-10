@@ -72,18 +72,26 @@ public sealed class GroupSpoolContentProtector
     public GroupConnectorSpoolAdmission Recover(GroupSpoolProtectedContent stored, ReadOnlySpan<byte> key,
         GroupConnectorEnrollment current, GroupListenerLeaseSnapshot lease, DateTimeOffset nowUtc, GroupIngressRuntimePolicy policy)
     {
-        if (stored?.Context is not { } context || current?.Source is not { } source || current.Principal is null || current.Grant is null ||
+        if (stored?.Context is not { } context) throw GroupConnectorSpoolAdmission.Denied();
+        RequireRecovery(context, current, lease, nowUtc, policy);
+        using var clear = Unprotect(context, stored.Envelope, key);
+        var payload = GroupServiceAuthenticator.Parse(clear.Body);
+        // A restart changes transport ownership, never the logical event.
+        payload = payload with { ListenerOwnerId = lease.OwnerId, ListenerEpoch = lease.Epoch };
+        return GroupConnectorSpoolAdmission.Filter(current, payload, lease, nowUtc, policy);
+    }
+
+    // The transport calls this before even resolving the host-bound spool key.
+    internal static void RequireRecovery(GroupSpoolContentContext context, GroupConnectorEnrollment current,
+        GroupListenerLeaseSnapshot lease, DateTimeOffset nowUtc, GroupIngressRuntimePolicy policy)
+    {
+        if (context is null || current?.Source is not { } source || current.Principal is null || current.Grant is null ||
             context.Source != source.Scope || context.ConnectorAccountId != source.ConnectorAccountId || context.ServiceId != current.Principal.ServiceId ||
             context.CredentialEpoch != current.Principal.CredentialEpoch || context.SourceVersion != source.Version || context.GrantVersion != current.Grant.Version ||
             context.DeletionGeneration != source.DeletionGeneration || context.ExternalIdentityHash != source.ExternalIdentity.IndexKey() ||
             context.AdmittedAtUtc > nowUtc) throw GroupConnectorSpoolAdmission.Denied();
         // Fresh trusted enrollment is checked before resolving private content.
         GroupConnectorSpoolAdmission.RequireCurrent(current, lease, nowUtc, policy, context.EventKind);
-        using var clear = Unprotect(context, stored.Envelope, key);
-        var payload = GroupServiceAuthenticator.Parse(clear.Body);
-        // A restart changes transport ownership, never the logical event.
-        payload = payload with { ListenerOwnerId = lease.OwnerId, ListenerEpoch = lease.Epoch };
-        return GroupConnectorSpoolAdmission.Filter(current, payload, lease, nowUtc, policy);
     }
 
     private static byte[] AssociatedData(GroupSpoolContentContext context, ReadOnlySpan<byte> key)
