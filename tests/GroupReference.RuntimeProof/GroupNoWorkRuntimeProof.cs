@@ -16,8 +16,21 @@ internal static class GroupNoWorkRuntimeProof
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
+        var progress = new ProofProgress();
+        try { await RunOwnedAsync(mode, scope, operation, worker, options, progress, token); }
+        catch
+        {
+            // Fixed test-only tokens: never exception data, SQL, source, IDs or keys.
+            Console.WriteLine(progress.FailureLine());
+            throw;
+        }
+    }
+
+    private static async Task RunOwnedAsync(string mode, GroupScope scope, Guid operation,
+        GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, ProofProgress progress, CancellationToken token)
+    {
         var clock = new OwnedClock(TimeProvider.System.GetUtcNow());
-        var evidence = new EffectEvidence(scope, clock);
+        var evidence = new EffectEvidence(scope, clock, progress);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
             .AddInterceptors(new FlushProbe(evidence), new RollbackProbe(evidence)).Options);
         var batch = await db.GroupBatchAllocations.AsNoTracking().Where(x => x.TenantId == scope.TenantId
@@ -27,6 +40,7 @@ internal static class GroupNoWorkRuntimeProof
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == batch)
             .OrderByDescending(x => x.Epoch).FirstAsync(token);
         var claims = new GroupBatchClaimStore(db, worker, clock);
+        progress.Phase = ProofPhase.Claim;
         GroupBatchClaimResult claim;
         if (mode is "no-work-expiry" or "no-work-commit")
         {
@@ -54,7 +68,9 @@ internal static class GroupNoWorkRuntimeProof
         var sourceId = await db.GroupBatchAllocatedRevisions.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == batch)
             .Select(x => x.MessageId).Distinct().OrderBy(x => x).FirstAsync(token);
+        progress.Phase = ProofPhase.Source;
         var source = await sourceReader.ReadAsync(handle, [sourceId], token);
+        progress.Phase = ProofPhase.Preparation;
         var preparation = GroupBatchSourcePreparation.Create(source);
         if (preparation.Candidates.Count != 1 || preparation.Receipts.Any(x => x.HasUnsupportedMedia) || source.HasCoverageGap)
             throw new InvalidOperationException();
@@ -69,7 +85,9 @@ internal static class GroupNoWorkRuntimeProof
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).Select(x => x.Id).SingleAsync(token);
         var glossaryId = await db.GroupGlossaryEntries.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).Select(x => x.Id).SingleAsync(token);
+        progress.Phase = ProofPhase.Brain;
         var dependencies = await brainReader.ReadAsync(handle, [requestId], [glossaryId], token);
+        progress.Phase = ProofPhase.Dependencies;
         if (keys.Reads != 2 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
         var effectOperation = Guid.NewGuid();
         if (mode == "no-work-mars")
@@ -85,12 +103,14 @@ internal static class GroupNoWorkRuntimeProof
             Console.WriteLine("PASS owned NoWork runtime MARS refuses before connection keys or effects"); return;
         }
         var consumer = new GroupNoWorkCommitStore(db, worker, clock, sourceReader, brainReader);
+        progress.Phase = ProofPhase.Commit;
         if (mode == "no-work-expiry")
         {
             evidence.Operation = effectOperation; evidence.Expires = handle.Receipt.ExpiresAtUtc; evidence.Armed = true;
             var denied = false;
             try { await consumer.CommitAsync(proposal, dependencies, effectOperation, token); }
             catch (UnauthorizedAccessException) { denied = true; }
+            progress.Phase = ProofPhase.ExpiryChecks;
             if (!denied || !evidence.Flushed || !evidence.RolledBack || evidence.SavepointChecks < 1
                 || keys.Reads != 2 || db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Any()
                 || db.ChangeTracker.Entries<GroupWorkSourceDispositionRecord>().Any() || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
@@ -99,6 +119,7 @@ internal static class GroupNoWorkRuntimeProof
             if (state.Epoch != 5 || state.ExpiryObservedAtUtc != handle.Receipt.ExpiresAtUtc || await TargetRowsAsync(db, effectOperation, token) != 0)
                 throw new InvalidOperationException();
             var before = clock.Current; clock.Current = handle.Receipt.IssuedAtUtc;
+            progress.Phase = ProofPhase.ClockRollback;
             denied = false;
             try { await consumer.CommitAsync(proposal, dependencies, effectOperation, token); }
             catch (UnauthorizedAccessException) { denied = true; }
@@ -108,11 +129,13 @@ internal static class GroupNoWorkRuntimeProof
             Console.WriteLine("PASS owned NoWork runtime flushed two SQL effects rollback with source lock retained clean detach witness only and clock rollback denial"); return;
         }
         var committed = await consumer.CommitAsync(proposal, dependencies, effectOperation, token);
+        progress.Phase = ProofPhase.Replay;
         var replay = await consumer.CommitAsync(proposal, dependencies, effectOperation, token);
         if (committed.WasAlreadyCommitted || !replay.WasAlreadyCommitted || committed != replay with { WasAlreadyCommitted = false }
             || committed.SelectedMessageCount != 1 || committed.Scope != scope || committed.BatchId != batch
             || await TargetRowsAsync(db, effectOperation, token) != 2) throw new InvalidOperationException();
         await RefuseAsync(() => consumer.CommitAsync(proposal, dependencies, Guid.NewGuid(), token));
+        progress.Phase = ProofPhase.DuplicateChecks;
         if (keys.Reads != 2 || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null
             || await TargetRowsAsync(db, effectOperation, token) != 2) throw new InvalidOperationException();
         Console.WriteLine("PASS owned NoWork runtime actual atomic SQL receipt disposition exact original replay and new nonce duplicate refusal");
@@ -130,12 +153,21 @@ internal static class GroupNoWorkRuntimeProof
         + await db.GroupWorkSourceDispositions.AsNoTracking().CountAsync(x => x.OperationId == operation, token);
     private sealed class OwnedClock(DateTimeOffset now) : TimeProvider
     { internal DateTimeOffset Current = now; public override DateTimeOffset GetUtcNow() => Current; }
-    private sealed class EffectEvidence(GroupScope scope, OwnedClock clock)
+    internal enum ProofPhase { Setup, Claim, Source, Preparation, Brain, Dependencies, Commit, Savepoint, Flush, Rollback, ExpiryChecks, ClockRollback, Replay, DuplicateChecks }
+    internal sealed class ProofProgress
+    {
+        internal ProofPhase Phase;
+        internal string FailureLine() => Enum.IsDefined(Phase)
+            ? "FAIL owned NoWork runtime phase-" + Phase.ToString().ToLowerInvariant()
+            : "FAIL owned NoWork runtime phase-unknown";
+    }
+    private sealed class EffectEvidence(GroupScope scope, OwnedClock clock, ProofProgress progress)
     {
         internal bool Armed, Flushed, RolledBack;
         internal int SavepointChecks;
         internal Guid Operation;
         internal DateTimeOffset Expires;
+        internal void Observe(ProofPhase phase) => progress.Phase = phase;
         internal async Task RequireSourceLockAsync(DbTransaction transaction, CancellationToken token)
         {
             await using var command = transaction.Connection!.CreateCommand(); command.Transaction = transaction; command.CommandTimeout = 5;
@@ -152,6 +184,7 @@ internal static class GroupNoWorkRuntimeProof
         {
             if (!evidence.Armed || evidence.Flushed || eventData.Context is not PlatformDbContext db) return result;
             if (!db.ChangeTracker.Entries<GroupWorkCommitReceiptRecord>().Any(x => x.Entity.OperationId == evidence.Operation)) return result;
+            evidence.Observe(ProofPhase.Flush);
             if (await TargetRowsAsync(db, evidence.Operation, token) != 2) throw new InvalidOperationException();
             evidence.Flushed = true; evidence.Advance(); return result;
         }
@@ -161,12 +194,13 @@ internal static class GroupNoWorkRuntimeProof
         public override async ValueTask<InterceptionResult> CreatingSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
             InterceptionResult result, CancellationToken token = default)
         {
-            if (evidence.Armed) { await evidence.RequireSourceLockAsync(transaction, token); evidence.SavepointChecks++; }
+            if (evidence.Armed) { evidence.Observe(ProofPhase.Savepoint); await evidence.RequireSourceLockAsync(transaction, token); evidence.SavepointChecks++; }
             return result;
         }
         public override async Task RolledBackToSavepointAsync(DbTransaction transaction, TransactionEventData eventData, CancellationToken token = default)
         {
             if (!evidence.Armed || !evidence.Flushed || eventData.Context is not PlatformDbContext db) return;
+            evidence.Observe(ProofPhase.Rollback);
             await evidence.RequireSourceLockAsync(transaction, token);
             if (await TargetRowsAsync(db, evidence.Operation, token) != 0) throw new InvalidOperationException();
             evidence.RolledBack = true;

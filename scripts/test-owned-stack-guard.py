@@ -42,9 +42,136 @@ reference_spec.loader.exec_module(reference_smoke)
 recovery_spec = importlib.util.spec_from_file_location("recovery_host_smoke", Path(__file__).with_name("smoke-group-recovery-host.py"))
 recovery_smoke = importlib.util.module_from_spec(recovery_spec)
 recovery_spec.loader.exec_module(recovery_smoke)
+effect_spec = importlib.util.spec_from_file_location("effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+effect_fixture = importlib.util.module_from_spec(effect_spec)
+effect_spec.loader.exec_module(effect_fixture)
 
 
 class OwnedStackGuardTests(unittest.TestCase):
+    def clean_effect_callbacks(self, fault=None):
+        tenant, company, service = (str(uuid.uuid4()) for _ in range(3))
+        calls, enrolled, messages = [], [], []
+        events = [str(uuid.uuid4()), str(uuid.uuid4())]
+        def sql(statement):
+            if "INSERT aioffice.GroupConnectorAccounts" in statement:
+                calls.append(("registry", statement))
+                if fault == "registry": raise RuntimeError("owned-registry-failure")
+                return ""
+            if "INSERT aioffice.GroupListenerLeases" in statement:
+                calls.append(("lease", statement)); return ""
+            if "GroupAccountCoverageGaps" in statement:
+                calls.append(("gaps", statement)); return "0|1|0" if fault == "gap" else "0|0|0"
+            if "GroupIngressOutbox" in statement:
+                calls.append(("events", statement))
+                return "\n".join([events[0], events[0]] if fault == "duplicate-events" else events + events[:1] if fault == "extra-events" else events)
+            self.fail("Unexpected inert clean effect SQL")
+        def enroll(source):
+            calls.append(("enroll", source)); enrolled.append(source)
+            if fault == "enroll": raise RuntimeError("owned-enrollment-failure")
+        def post(payload):
+            calls.append(("post", payload)); messages.append(payload)
+            sequence = len(messages)
+            value = {"source": {"tenantId": tenant, "companyId": company, "sourceBindingId": enrolled[0]},
+                "messageId": str(uuid.uuid4()), "revision": 1, "committedSequence": sequence,
+                "committedAtUtc": "2026-10-11T01:00:00+00:00", "wasAlreadyCommitted": False}
+            if fault == "foreign-source": value["source"]["sourceBindingId"] = str(uuid.uuid4())
+            if fault == "unknown-field": value["private"] = "PRIVATE"
+            if fault == "bool-revision": value["revision"] = True
+            if fault == "bool-sequence": value["committedSequence"] = True
+            if fault == "replay": value["wasAlreadyCommitted"] = True
+            return (403 if fault == "http" else 200), value
+        arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", tenant=tenant, company=company,
+            service=service, sql=sql, identity_index=lambda *values: hashlib.sha256("\n".join(values).encode()).hexdigest().upper(),
+            enroll_source=enroll, post_event=post)
+        return arguments, calls, events
+
+    def test_clean_effect_fixture_guards_before_every_callback(self):
+        for invalid in ({"CI": "false"}, {"GITHUB_ACTIONS": "false"}, {"RUNNER_TEMP": ""}):
+            arguments, calls, _ = self.clean_effect_callbacks()
+            with patch.dict(os.environ, {**self.environment, **invalid}, clear=True), self.assertRaises(RuntimeError):
+                effect_fixture.prepare(**arguments)
+            self.assertEqual([], calls)
+        for field, value in (("api", "https://example.com"), ("directory", self.owned / "other")):
+            arguments, calls, _ = self.clean_effect_callbacks(); arguments[field] = value
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(RuntimeError): effect_fixture.prepare(**arguments)
+            self.assertEqual([], calls)
+
+    def test_clean_effect_fixture_validates_identity_and_callbacks_before_sql(self):
+        for field, value in (("tenant", "invalid"), ("service", str(uuid.UUID(int=0))), ("post_event", None),
+                ("enroll_source", None), ("identity_index", lambda *args: "'; PRIVATE")):
+            arguments, calls, _ = self.clean_effect_callbacks(); arguments[field] = value
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises((AssertionError, ValueError)):
+                effect_fixture.prepare(**arguments)
+            self.assertEqual([], calls)
+
+    def test_clean_effect_fixture_orders_seed_after_readiness_and_exact_two_core_events(self):
+        arguments, calls, events = self.clean_effect_callbacks()
+        with patch.dict(os.environ, self.environment, clear=True): source, actual_events = effect_fixture.prepare(**arguments)
+        self.assertEqual(events, actual_events)
+        self.assertEqual(["registry", "enroll", "lease", "post", "post", "gaps", "events"], [value[0] for value in calls])
+        self.assertEqual(source, calls[1][1])
+        self.assertIn("BEGIN TRANSACTION", calls[0][1]); self.assertIn("COMMIT", calls[0][1])
+        self.assertIn("SYSUTCDATETIME()", calls[2][1]); self.assertIn("DATEADD(second,30,@now)", calls[2][1])
+        self.assertEqual(calls[3][1]["event"]["identity"], calls[4][1]["event"]["identity"])
+        self.assertNotEqual(calls[3][1]["event"]["messageId"], calls[4][1]["event"]["messageId"])
+        self.assertEqual(1, calls[3][1]["listenerEpoch"])
+        self.assertEqual(calls[3][1]["listenerOwnerId"], calls[4][1]["listenerOwnerId"])
+        for _, value in calls:
+            if isinstance(value, str): self.assertNotRegex(value, r"\b(?:DELETE|UPDATE)\b")
+
+    def test_clean_effect_fixture_stops_before_lease_after_setup_or_enrollment_failure(self):
+        for fault, stages in (("registry", ["registry"]), ("enroll", ["registry", "enroll"])):
+            arguments, calls, _ = self.clean_effect_callbacks(fault)
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(RuntimeError): effect_fixture.prepare(**arguments)
+            self.assertEqual(stages, [value[0] for value in calls])
+
+    def test_clean_effect_fixture_rejects_nonoriginal_or_foreign_core_ack_without_retry(self):
+        for fault in ("http", "foreign-source", "unknown-field", "bool-revision", "bool-sequence", "replay"):
+            arguments, calls, _ = self.clean_effect_callbacks(fault)
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare(**arguments)
+            self.assertEqual(["registry", "enroll", "lease", "post"], [value[0] for value in calls])
+
+    def test_clean_effect_fixture_rejects_persisted_gap_or_wrong_event_cardinality(self):
+        for fault in ("gap", "duplicate-events", "extra-events"):
+            arguments, calls, _ = self.clean_effect_callbacks(fault)
+            with patch.dict(os.environ, self.environment, clear=True), self.assertRaises(AssertionError): effect_fixture.prepare(**arguments)
+            self.assertEqual(2, sum(value[0] == "post" for value in calls))
+
+    def test_clean_effect_runtime_guards_before_configuration_or_callbacks(self):
+        def forbidden(*args, **kwargs): self.fail("Unowned fixed-effect proof touched a resource")
+        with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(RuntimeError, "owned disposable GitHub CI fixture"):
+            reference_smoke.verify_fixed_effects(directory=self.owned, api="http://127.0.0.1:8080", tenant="invalid",
+                company="invalid", service="invalid", source="invalid", events=None, source_key=None, sql=forbidden,
+                command=None, child_environment=None, assert_retained=forbidden)
+
+    def test_reference_success_requires_original_exact_output_and_exit(self):
+        expected = ["PASS owned test original"]
+        reference_smoke.require_reference_result(SimpleNamespace(stdout=expected[0], returncode=0), "no-work-expiry", expected)
+        for output, code in ((expected[0], 1), (expected[0] + "\nextra", 0), ("", 0)):
+            with self.subTest(code=code, output=output), self.assertRaises(AssertionError):
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=output, returncode=code), "no-work-expiry", expected)
+
+    def test_reference_failure_exports_only_known_no_work_phase(self):
+        for mode in ("no-work-expiry", "no-work-commit", "no-work-mars"):
+            for phase in ("setup", "claim", "source", "preparation", "brain", "dependencies", "commit", "savepoint",
+                    "flush", "rollback", "expirychecks", "clockrollback", "replay", "duplicatechecks", "unknown"):
+                output = "FAIL owned NoWork runtime phase-" + phase + "\nFAIL owned reference runtime " + mode
+                with self.subTest(mode=mode, phase=phase), self.assertRaisesRegex(AssertionError, "exit=1; phase=" + phase + "$"):
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=output, returncode=1), mode, ["PASS original"])
+
+    def test_reference_failure_never_exports_arbitrary_output_or_stderr(self):
+        private = "PRIVATE_CONNECTION_TOKEN_SOURCE"
+        for output, code, mode in ((private, 1, "no-work-expiry"),
+                ("FAIL owned NoWork runtime phase-" + private + "\nFAIL owned reference runtime no-work-expiry", 1, "no-work-expiry"),
+                ("FAIL owned NoWork runtime phase-flush\nFAIL owned reference runtime no-work-expiry\n" + private, 1, "no-work-expiry"),
+                ("FAIL owned NoWork runtime phase-flush\nFAIL owned reference runtime no-work-expiry", 2, "no-work-expiry"),
+                ("FAIL owned NoWork runtime phase-flush\nFAIL owned reference runtime note-expiry", 1, "note-expiry"),
+                (private, private, "no-work-expiry")):
+            with self.subTest(code=code, mode=mode), self.assertRaises(AssertionError) as refusal:
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=output, stderr=private, returncode=code), mode, ["PASS original"])
+            self.assertNotIn(private, str(refusal.exception))
+            self.assertNotIn("phase=", str(refusal.exception))
+
     def test_statistics_child_has_independent_name_with_original_owned_arguments(self):
         suffix = "a" * 32
         command = ["docker", "run", "--init", "--rm", "--name", "aioffice-reference-proof-" + suffix,
@@ -752,7 +879,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 3, True, "1"):
+        for slot in (0, 4, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -780,6 +907,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](second_source, 2)
         self.assertEqual(final, environment); self.assertEqual(8, len(calls))
+        third_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](third_source, 3)
+        self.assertTrue(all(environment[name] == value for name, value in final.items()))
+        third_prefix = "AIOffice__GroupIntake__SourceKeys__3__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": third_source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_EFFECT_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(third_prefix):]: value for name, value in environment.items() if name.startswith(third_prefix)})
+        last = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](third_source, 3)
+        self.assertEqual(last, environment); self.assertEqual(12, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

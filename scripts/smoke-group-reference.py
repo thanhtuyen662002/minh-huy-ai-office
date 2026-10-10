@@ -52,6 +52,25 @@ def validated_brain_fixture(raw):
     return value
 
 
+def require_reference_result(result, mode, expected_lines):
+    # Preserve exact successful output. Failure diagnostics are closed tokens,
+    # never arbitrary child stdout/stderr or exception/connection information.
+    lines = result.stdout.splitlines()
+    if result.returncode == 0 and lines == expected_lines:
+        return
+    detail = ""
+    phases = {"setup", "claim", "source", "preparation", "brain", "dependencies", "commit", "savepoint",
+        "flush", "rollback", "expirychecks", "clockrollback", "replay", "duplicatechecks", "unknown"}
+    prefix = "FAIL owned NoWork runtime phase-"
+    if (mode in {"no-work-expiry", "no-work-commit", "no-work-mars"} and result.returncode == 1
+            and len(lines) == 2 and lines[1] == "FAIL owned reference runtime " + mode and lines[0].startswith(prefix)):
+        phase = lines[0][len(prefix):]
+        if phase in phases:
+            detail = "; phase=" + phase
+    exit_code = str(result.returncode) if type(result.returncode) is int and -255 <= result.returncode <= 255 else "unknown"
+    raise AssertionError("Owned reference executable failed at " + mode + "; exit=" + exit_code + detail)
+
+
 def close_owned_reference_child(child, kill_owned):
     # The caller has already guarded/created this exact owned child. A failed
     # observation is never evidence that it stopped. Attempt every independent
@@ -220,9 +239,10 @@ def require_source_key(source_key):
         raise RuntimeError("Owned reference source key is unavailable.") from None
 
 
-def verify(*, directory, api, manifest, tenant, company, service, source, sql, compose, environment, pipeline, source_key=None):
+def verify(*, directory, api, manifest, tenant, company, service, source, sql, compose, environment, pipeline, source_key=None, prepare_effect_source=None):
     require_owned(directory, api)  # Before configuration, files, credentials, SQL or processes.
     require_source_key(source_key)
+    assert callable(prepare_effect_source), "Owned clean effect source preparation is unavailable"
     tenant, company, service, source = (str(uuid.UUID(value)) for value in (tenant, company, service, source))
     installation = uuid.UUID(manifest["AIOFFICE_INSTALLATION_ID"]).hex
     scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
@@ -298,7 +318,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "allocation-rollback": "PASS owned allocation runtime refusal allocation-rollback"}.get(mode, "PASS owned reference runtime refusal " + mode)
         expected_lines = [expected] if mode != "claim-fence" else [
             "PASS owned claim runtime durable SQL expiry witness refuses original nonce and handle after clock rollback", expected]
-        assert result.returncode == 0 and lines == expected_lines, "Owned reference executable failed at " + mode
+        require_reference_result(result, mode, expected_lines)
 
     def broker_stats():
         result = subprocess.run([*reference_statistics_command(command), "statistics"], input=configuration(0), env=child_environment,
@@ -872,100 +892,35 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual brain reader controlled key-await expiry persists only SQL witness unchanged notes outbox source and portal and denies after clock rollback", flush=True)
 
-        # Append fixed-effect probes only after every retained reader oracle.
-        # Synthetic classification proves SQL mechanics, never model quality.
-        def original_four_receipts():
-            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
-                f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=4 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
-            assert re.fullmatch(r"[0-9A-F]{64}", value)
-            return value
-        original_four = original_four_receipts()
-        run("no-work-expiry")
-        assert brain_graph() == brain_stable
-        assert original_four_receipts() == original_four
-        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
-            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=5 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "5|1"
-        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
-        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
-            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
-        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
-            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
-        print("PASS actual NoWork store flushed SQL rollback retains source lock clean tracker and only expiry witness unchanged brain source allocation portal", flush=True)
-
-        run("no-work-commit")
-        assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [1, 1, 1, 2, 1, 0, 0, 0, 1, 1]
-        no_work_stable = brain_graph(); no_work_claims = claim_graph()
-        assert [value for index, value in enumerate(no_work_stable) if index not in (3, 4)] == [
-            value for index, value in enumerate(brain_stable) if index not in (3, 4)]
-        assert original_four_receipts() == original_four
-        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
-            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=6 AND ExpiryObservedAtUtc IS NULL));") == "6|1"
-        run("no-work-mars")
-        assert brain_graph() == no_work_stable and claim_graph() == no_work_claims
-        assert original_four_receipts() == original_four and original_three_receipts() == original_three
-        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
-        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
-            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
-        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
-            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
-        print("PASS actual NoWork store SQL atomic selected receipt disposition original replay duplicate nonce refusal and MARS before connection unchanged remaining graph", flush=True)
-
-        # Separate fixed protected-note consumer after every original NoWork
-        # oracle. Synthetic interpretations qualify SQL mechanics only.
-        def original_six_receipts():
-            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
-                f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=6 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
-            assert re.fullmatch(r"[0-9A-F]{64}", value)
-            return value
-        original_six = original_six_receipts()
-        def prior_note_objects():
-            selections = [("GroupCustomerRequests", "Id", f"Id='{request_id}'"),
-                ("GroupRequestRevisions", "RequestId,Revision", f"RequestId='{request_id}'"),
-                ("GroupRequestEvidence", "RequestId,RequestRevision,Ordinal", f"RequestId='{request_id}'"),
-                ("GroupWorkCommitReceipts", "BatchId,OperationId", "NoteCount<=1"),
-                ("GroupWorkSourceDispositions", "BatchId,MessageId", "Outcome=2")]
-            values = []
-            for table, order, predicate in selections:
+        # Original gap-bearing spool/reference/reader suite is complete.
+        # Its immutable bytes remain checked during every later effect phase.
+        original_account = str(uuid.UUID(sql(f"SELECT ConnectorAccountId FROM aioffice.GroupBindings WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{source}';")))
+        def retained_scope_bytes():
+            values = full_graph() + [digest("GroupBatchAllocations", "AfterSequence"),
+                digest("GroupBatchAllocatedRevisions", "CommittedSequence")] + brain_graph() + claim_graph()
+            for table, order in (("GroupAccountCoverageGaps", "ListenerEpoch,Reason"),
+                    ("GroupListenerLeases", "Epoch"), ("GroupListenerCommandReceipts", "OperationId")):
                 value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
-                    f"(SELECT * FROM aioffice.{table} WHERE {scope} AND {predicate} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+                    f"(SELECT * FROM aioffice.{table} WHERE TenantId='{tenant}' AND CompanyId='{company}' AND ConnectorAccountId='{original_account}' ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+                assert re.fullmatch(r"[0-9A-F]{64}", value)
+                values.append(value)
+            for table, identity in (("GroupBindings", source), ("GroupConnectorAccounts", original_account)):
+                value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+                    f"(SELECT * FROM aioffice.{table} WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{identity}' FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
                 assert re.fullmatch(r"[0-9A-F]{64}", value)
                 values.append(value)
             return values
-        prior_notes = prior_note_objects()
-        def unchanged_note_source_graph():
-            assert original_six_receipts() == original_six and original_four_receipts() == original_four and original_three_receipts() == original_three
-            assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
-            assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
-                "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
-            assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
-                " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
-        run("note-expiry")
-        assert brain_graph() == no_work_stable and prior_note_objects() == prior_notes
-        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
-            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=7 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "7|1"
-        unchanged_note_source_graph()
-        print("PASS actual note store eleven flushed SQL effects rollback source lock retained clean detach only expiry witness unchanged complete brain source allocation portal", flush=True)
-
-        run("note-key-expiry")
-        assert brain_graph() == no_work_stable and prior_note_objects() == prior_notes
-        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
-            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=8 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "8|1"
-        unchanged_note_source_graph()
-        print("PASS actual note store configured write key outside SQL expired final fence commits only witness no note disposition outbox source portal effects clock rollback denied", flush=True)
-
-        run("note-commit")
-        assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [3, 3, 3, 3, 2, 1, 2, 0, 1, 1]
-        assert prior_note_objects() == prior_notes
-        assert brain_graph()[7:] == no_work_stable[7:]
-        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
-            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=9 AND ExpiryObservedAtUtc IS NULL));") == "9|1"
-        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCustomerRequests WHERE {scope} AND Id<>'{request_id}' AND CurrentRevision=1"
-            " AND BusinessVersion=1 AND BusinessStatus IN(1,3) AND AssignedToUserId IS NULL AND CommittedDueAtUtc IS NULL"
-            " AND ConfirmedByUserId IS NULL AND ConfirmedAtUtc IS NULL;") == "2"
-        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupNotesCommittedOutbox WHERE {scope} AND NoteCount=2"
-            " AND PublishAttempts=0 AND PublishedAtUtc IS NULL AND AvailableAtUtc=CommittedAtUtc;") == "1"
-        unchanged_note_source_graph()
-        print("PASS actual note store protected request evidence two unconfirmed notes atomic NotesCommitted exact original replay changed proposal and new nonce refusal unchanged original graphs", flush=True)
+        retained = retained_scope_bytes()
+        def assert_retained():
+            assert retained_scope_bytes() == retained, "Clean effect fixture changed original gap-bearing source or reader bytes"
+        pipeline("disable")
+        effect_source, effect_events, effect_key = prepare_effect_source()
+        assert str(uuid.UUID(effect_source)) != source and not set(effect_events).intersection(events)
+        assert_retained()
+        verify_fixed_effects(directory=directory, api=api, tenant=tenant, company=company, service=service,
+            source=effect_source, events=effect_events, source_key=effect_key, sql=sql, command=command,
+            child_environment=child_environment, assert_retained=assert_retained)
+        assert_retained()
     except BaseException as error:
         failure = error
     finally:
@@ -973,3 +928,203 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         cleanup(lambda: pipeline("disable"))
         cleanup(lambda: subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30))
     if failure is not None: raise failure
+
+
+def verify_fixed_effects(*, directory, api, tenant, company, service, source, events, source_key, sql,
+        command, child_environment, assert_retained):
+    require_owned(directory, api)
+    require_source_key(source_key)
+    tenant, company, service, source = (str(uuid.UUID(value)) for value in (tenant, company, service, source))
+    events = [str(uuid.UUID(value)) for value in events]
+    assert len(events) == 2 and len(set(events)) == 2 and all(uuid.UUID(value).int != 0 for value in events)
+    scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
+    child_environment = dict(child_environment)
+    child_environment["AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY"] = source_key
+    def configuration(index):
+        return json.dumps({"tenantId": tenant, "companyId": company, "serviceId": service, "sourceId": source, "eventId": events[index]})
+    def run(mode, index=0):
+        result = subprocess.run([*command, mode], input=configuration(index), env=child_environment,
+            capture_output=True, text=True, timeout=170)
+        lines = result.stdout.splitlines()
+        expected = {
+            "brain-expiry": "PASS owned brain runtime controlled key-await expiry commits SQL witness and denies after clock rollback",
+            "no-work-expiry": "PASS owned NoWork runtime flushed two SQL effects rollback with source lock retained clean detach witness only and clock rollback denial",
+            "no-work-commit": "PASS owned NoWork runtime actual atomic SQL receipt disposition exact original replay and new nonce duplicate refusal",
+            "no-work-mars": "PASS owned NoWork runtime MARS refuses before connection keys or effects",
+            "note-expiry": "PASS owned note runtime eleven flushed SQL effects rollback with source lock retained clean detach witness only and clock rollback denial",
+            "note-key-expiry": "PASS owned note runtime configured write key outside SQL expiry witness only without effects and clock rollback denial",
+            "note-commit": "PASS owned note runtime protected two notes literal evidence atomic NotesCommitted exact original replay changed proposal and new nonce refusal"}
+        expected_lines = [expected[mode]]
+        require_reference_result(result, mode, expected_lines)
+        assert_retained()
+
+    def digest(table, order, columns="*"):
+        value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+            f"(SELECT {columns} FROM aioffice.{table} WHERE {scope} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+        assert re.fullmatch(r"[0-9A-F]{64}", value)
+        return value
+    def full_graph():
+        return [digest(table, order) for table, order in (("GroupMessages", "Id"), ("GroupMessageRevisions", "CommittedSequence"),
+            ("GroupIngressReceipts", "EventIdentityHash"), ("GroupSourceStates", "BindingId"), ("GroupCoverageGaps", "Id"),
+            ("GroupIngressOutbox", "CommittedSequence"), ("GroupIngressInbox", "CommittedSequence"))]
+    def claim_graph():
+        return [digest("GroupBatchClaimStates", "BatchId"), digest("GroupBatchClaimReceipts", "Epoch")]
+    def no_gaps():
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupCoverageGaps WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupAccountCoverageGaps g JOIN aioffice.GroupBindings b ON b.TenantId=g.TenantId AND b.CompanyId=g.CompanyId AND b.ConnectorAccountId=g.ConnectorAccountId WHERE b.TenantId='{tenant}' AND b.CompanyId='{company}' AND b.Id='{source}')); ") == "0|0"
+    no_gaps()
+    result = subprocess.run([*command, "effect-brain-fixture"], input=configuration(0), env=child_environment,
+        capture_output=True, text=True, timeout=170)
+    assert result.returncode == 0, "Owned clean effect batch fixture failed"
+    fixture = validated_brain_fixture(result.stdout)
+    assert_retained()
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupIngressInbox WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc IS NULL));") == "2|4|1"
+    allocated_graph = full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")]
+    portal = sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+        "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+    brain_tables = [("GroupCustomerRequests", "Id"), ("GroupRequestRevisions", "RequestId,Revision"),
+        ("GroupRequestEvidence", "RequestId,RequestRevision,Ordinal"), ("GroupWorkCommitReceipts", "BatchId,OperationId"),
+        ("GroupWorkSourceDispositions", "BatchId,MessageId"), ("GroupNotesCommittedOutbox", "Id"),
+        ("GroupNotesCommittedItems", "OutboxId,Ordinal"), ("GroupEditorGrants", "UserId"),
+        ("GroupGlossaryEntries", "Id"), ("GroupGlossaryRevisions", "EntryId,Revision")]
+    def brain_graph():
+        return [digest(table, order) for table, order in brain_tables]
+    assert all(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};") == "0" for table, _ in brain_tables)
+    def original_three_receipts():
+        value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+            f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=3 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+        assert re.fullmatch(r"[0-9A-F]{64}", value)
+        return value
+    original_three = original_three_receipts()
+    operation_id = str(uuid.uuid4())
+    common = f"'{tenant}','{company}','{source}'"
+    request_id, glossary_id, batch_id = (fixture[key] for key in ("requestId", "glossaryId", "batchId"))
+    version, generation, created = (fixture[key] for key in ("sourceVersion", "deletionGeneration", "createdAtUtc"))
+    sql("SET XACT_ABORT ON; BEGIN TRANSACTION;"
+        " INSERT INTO aioffice.GroupWorkCommitReceipts(TenantId,CompanyId,BindingId,BatchId,OperationId,SourceSetSha256,SelectedMessageCount,NoteCount,Outcome,ServiceId,ClaimEpoch,CredentialEpoch,GrantVersion,SourceVersion,DeletionGeneration,AccountVersion,CommittedAtUtc)"
+        f" VALUES({common},'{batch_id}','{operation_id}','{fixture['sourceSetHash']}',1,1,1,'{service}',4,{fixture['credentialEpoch']},{fixture['grantVersion']},{version},{generation},{fixture['accountVersion']},'{created}');"
+        " INSERT INTO aioffice.GroupCustomerRequests(TenantId,CompanyId,BindingId,Id,OriginBatchId,OriginOperationId,OriginCandidateOrdinal,RequestCode,Kind,SourceVersion,DeletionGeneration,CurrentRevision,BusinessStatus,BusinessVersion,CreatedAtUtc,UpdatedAtUtc)"
+        f" VALUES({common},'{request_id}','{batch_id}','{operation_id}',1,'REQ-{uuid.UUID(request_id).hex.upper()}',1,{version},{generation},1,1,1,'{created}','{created}');"
+        " INSERT INTO aioffice.GroupRequestRevisions(TenantId,CompanyId,BindingId,RequestId,Revision,Origin,VerificationLevel,AuthorServiceId,SourceBatchId,ClaimEpoch,SourceVersion,DeletionGeneration,ContentKeyId,ProtectedContent,EnvelopeSha256,CreatedAtUtc)"
+        f" VALUES({common},'{request_id}',1,1,1,'{service}','{batch_id}',4,{version},{generation},'owned-native-source-v1',0x{fixture['requestEnvelope']},'{fixture['requestHash']}','{created}');"
+        " INSERT INTO aioffice.GroupRequestEvidence(TenantId,CompanyId,BindingId,RequestId,RequestRevision,Ordinal,MessageId,MessageRevision,Kind)"
+        f" VALUES({common},'{request_id}',1,1,'{fixture['messageId']}',{fixture['messageRevision']},1);"
+        " INSERT INTO aioffice.GroupGlossaryEntries(TenantId,CompanyId,BindingId,Id,CurrentRevision,Version,SourceVersion,DeletionGeneration,IsEnabled,AllowExtraction,PublishedByUserId,CreatedAtUtc)"
+        f" VALUES({common},'{glossary_id}',1,1,{version},{generation},1,1,'{fixture['publisherId']}','{created}');"
+        " INSERT INTO aioffice.GroupGlossaryRevisions(TenantId,CompanyId,BindingId,EntryId,Revision,SourceVersion,DeletionGeneration,PublishedByUserId,ContentKeyId,ProtectedContent,EnvelopeSha256,CreatedAtUtc)"
+        f" VALUES({common},'{glossary_id}',1,{version},{generation},'{fixture['publisherId']}','owned-native-source-v1',0x{fixture['glossaryEnvelope']},'{fixture['glossaryHash']}','{created}'); COMMIT;")
+    expected_counts = [1, 1, 1, 1, 0, 0, 0, 0, 1, 1]
+    assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == expected_counts
+    brain_stable = brain_graph()
+    claim_identity = [digest("GroupBatchClaimStates", "BatchId",
+        "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"), digest("GroupBatchClaimReceipts", "Epoch")]
+    run("brain-expiry")
+    assert [digest("GroupBatchClaimStates", "BatchId",
+        "TenantId,CompanyId,BindingId,BatchId,Epoch,OwnerId,OperationId,IssuedAtUtc,ExpiresAtUtc"), digest("GroupBatchClaimReceipts", "Epoch")] == claim_identity
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc=ExpiresAtUtc;") == "1"
+    assert brain_graph() == brain_stable and original_three_receipts() == original_three
+    original_assert_retained = assert_retained
+    def assert_retained():
+        original_assert_retained()
+        no_gaps()
+    # Append fixed-effect probes only after every retained reader oracle.
+    # Synthetic classification proves SQL mechanics, never model quality.
+    def original_four_receipts():
+        value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+            f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=4 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+        assert re.fullmatch(r"[0-9A-F]{64}", value)
+        return value
+    original_four = original_four_receipts()
+    assert_retained()
+    run("no-work-expiry")
+    assert brain_graph() == brain_stable
+    assert original_four_receipts() == original_four
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=5 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "5|1"
+    assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+    assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+        "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+    assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+        " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+    assert_retained()
+    print("PASS actual NoWork store flushed SQL rollback retains source lock clean tracker and only expiry witness unchanged brain source allocation portal", flush=True)
+
+    run("no-work-commit")
+    assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [1, 1, 1, 2, 1, 0, 0, 0, 1, 1]
+    no_work_stable = brain_graph(); no_work_claims = claim_graph()
+    assert [value for index, value in enumerate(no_work_stable) if index not in (3, 4)] == [
+        value for index, value in enumerate(brain_stable) if index not in (3, 4)]
+    assert original_four_receipts() == original_four
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=6 AND ExpiryObservedAtUtc IS NULL));") == "6|1"
+    run("no-work-mars")
+    assert brain_graph() == no_work_stable and claim_graph() == no_work_claims
+    assert original_four_receipts() == original_four and original_three_receipts() == original_three
+    assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+    assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+        "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+    assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+        " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+    assert_retained()
+    print("PASS actual NoWork store SQL atomic selected receipt disposition original replay duplicate nonce refusal and MARS before connection unchanged remaining graph", flush=True)
+
+    # Separate fixed protected-note consumer after every original NoWork
+    # oracle. Synthetic interpretations qualify SQL mechanics only.
+    def original_six_receipts():
+        value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+            f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=6 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+        assert re.fullmatch(r"[0-9A-F]{64}", value)
+        return value
+    original_six = original_six_receipts()
+    def prior_note_objects():
+        selections = [("GroupCustomerRequests", "Id", f"Id='{request_id}'"),
+            ("GroupRequestRevisions", "RequestId,Revision", f"RequestId='{request_id}'"),
+            ("GroupRequestEvidence", "RequestId,RequestRevision,Ordinal", f"RequestId='{request_id}'"),
+            ("GroupWorkCommitReceipts", "BatchId,OperationId", "NoteCount<=1"),
+            ("GroupWorkSourceDispositions", "BatchId,MessageId", "Outcome=2")]
+        values = []
+        for table, order, predicate in selections:
+            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+                f"(SELECT * FROM aioffice.{table} WHERE {scope} AND {predicate} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+            assert re.fullmatch(r"[0-9A-F]{64}", value)
+            values.append(value)
+        return values
+    prior_notes = prior_note_objects()
+    def unchanged_note_source_graph():
+        assert_retained()
+        assert original_six_receipts() == original_six and original_four_receipts() == original_four and original_three_receipts() == original_three
+        assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+        assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+    run("note-expiry")
+    assert brain_graph() == no_work_stable and prior_note_objects() == prior_notes
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=7 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "7|1"
+    unchanged_note_source_graph()
+    print("PASS actual note store eleven flushed SQL effects rollback source lock retained clean detach only expiry witness unchanged complete brain source allocation portal", flush=True)
+
+    run("note-key-expiry")
+    assert brain_graph() == no_work_stable and prior_note_objects() == prior_notes
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=8 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "8|1"
+    unchanged_note_source_graph()
+    print("PASS actual note store configured write key outside SQL expired final fence commits only witness no note disposition outbox source portal effects clock rollback denied", flush=True)
+
+    run("note-commit")
+    assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [3, 3, 3, 3, 2, 1, 2, 0, 1, 1]
+    assert prior_note_objects() == prior_notes
+    assert brain_graph()[7:] == no_work_stable[7:]
+    assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+        f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=9 AND ExpiryObservedAtUtc IS NULL));") == "9|1"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCustomerRequests WHERE {scope} AND Id<>'{request_id}' AND CurrentRevision=1"
+        " AND BusinessVersion=1 AND BusinessStatus IN(1,3) AND AssignedToUserId IS NULL AND CommittedDueAtUtc IS NULL"
+        " AND ConfirmedByUserId IS NULL AND ConfirmedAtUtc IS NULL;") == "2"
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupNotesCommittedOutbox WHERE {scope} AND NoteCount=2"
+        " AND PublishAttempts=0 AND PublishedAtUtc IS NULL AND AvailableAtUtc=CommittedAtUtc;") == "1"
+    unchanged_note_source_graph()
+    print("PASS actual note store protected request evidence two unconfirmed notes atomic NotesCommitted exact original replay changed proposal and new nonce refusal unchanged original graphs", flush=True)
+    assert_retained()
