@@ -1,5 +1,6 @@
 """Shipping group references on the exact owned disposable SQL/RabbitMQ CI stack."""
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -31,6 +32,58 @@ def temporary_sql(sql, setup, restore, action):
             except BaseException as error:
                 if failure is None: failure = error
     if failure is not None: raise failure
+
+
+def verify_pending_broker_restart(*, directory, api, pause_worker, resume_worker, broker_state,
+        restart_broker, queue_counts, broker_stats, publish, inspect_pending, full_graph, count, wait):
+    require_owned(directory, api)  # Before any callback or process/service change.
+    original = full_graph()
+    assert count() == 2 and queue_counts() == (0, 0)
+    previous = broker_state()
+    assert previous[2] is True
+    failure = None
+    baseline = None
+    try:
+        # Restoration owns a stop whose successful reply may be lost.
+        pause_worker()
+        wait(lambda: broker_stats()["consumers"] == 0)
+        assert queue_counts() == (0, 0) and count() == 2 and full_graph() == original
+        publish()  # Shipping mandatory/persistent confirmed ORIGINAL reference.
+        assert queue_counts() == (1, 0) and count() == 2 and full_graph() == original
+        inspect_pending()  # Exact persistent properties/reference; requeue, no SQL effects.
+        wait(lambda: queue_counts() == (1, 0))
+        assert count() == 2 and full_graph() == original
+        restart_broker(previous[0])  # Only the inspected owned container ID.
+
+        def restarted():
+            current = broker_state()
+            return current[0] == previous[0] and current[1] > previous[1] and current[2] is True
+        wait(restarted, 60)
+
+        def statistics_ready():
+            try: statistics = broker_stats()
+            except AssertionError: return False  # Bounded actual management readiness.
+            assert statistics["consumers"] == 0
+            return True
+        wait(statistics_ready, 60)
+        # No publication after restart may hide a lost durable reference.
+        assert queue_counts() == (1, 0) and count() == 2 and full_graph() == original
+        inspect_pending()
+        wait(lambda: queue_counts() == (1, 0))
+        assert count() == 2 and full_graph() == original
+        baseline = broker_stats()  # Counters may reset with the broker process.
+        assert baseline["consumers"] == 0
+    except BaseException as error:
+        failure = error
+    finally:
+        try: resume_worker()
+        except BaseException as error:
+            if failure is None: failure = error
+    if failure is not None: raise failure
+    wait(lambda: broker_stats()["ack"] == baseline["ack"] + 1)
+    resumed = broker_stats()
+    assert resumed["deliver"] == baseline["deliver"] + 1 and resumed["consumers"] == 1
+    assert queue_counts() == (0, 0) and count() == 2 and full_graph() == original
 
 
 def verify(*, directory, api, manifest, tenant, company, service, source, sql, compose, environment, pipeline):
@@ -75,6 +128,7 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         expected = {"publish": "PASS owned reference runtime shipping outbox publication",
             "recovery-startup": "PASS owned reference runtime recovery-only startup SQL permission and inert DI",
             "publish-existing": "PASS owned reference runtime shipping original accepted reference publication",
+            "inspect-pending": "PASS owned reference runtime exact persistent original queued reference retained",
             "consume-replay": "PASS owned reference runtime redelivery original SQL receipt and broker ACK",
             "duplicates": "PASS owned reference runtime100 concurrent original inbox receipts"}.get(mode, "PASS owned reference runtime refusal " + mode)
         assert result.returncode == 0 and lines == [expected], "Owned reference executable failed at " + mode
@@ -126,6 +180,40 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             if predicate(): return
             time.sleep(.1)
         raise AssertionError("Owned reference observation deadline exceeded")
+
+    def service_identity(service_name):
+        assert service_name in ("rabbitmq", "agent-worker")
+        selected = subprocess.run([*compose, "ps", "--all", "--quiet", service_name],
+            env=environment, capture_output=True, text=True, timeout=15)
+        identity = selected.stdout.strip()
+        assert selected.returncode == 0 and re.fullmatch(r"[0-9a-f]{64}", identity)
+        inspected = subprocess.run(["docker", "inspect", "--format",
+            '{{.Id}}|{{.State.StartedAt}}|{{.State.Running}}|{{index .Config.Labels "com.docker.compose.project"}}|{{index .Config.Labels "com.docker.compose.service"}}', identity],
+            capture_output=True, text=True, timeout=15)
+        assert inspected.returncode == 0
+        fields = inspected.stdout.strip().split("|")
+        assert len(fields) == 5 and fields[0] == identity and fields[3:] == ["aioffice-" + installation, service_name]
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z", fields[1]) and fields[2] in ("true", "false")
+        return identity, datetime.fromisoformat(fields[1].replace("Z", "+00:00")), fields[2] == "true"
+
+    def broker_state():
+        identity, started, running = service_identity("rabbitmq")
+        health = subprocess.run(["docker", "inspect", "--format", '{{.State.Health.Status}}', identity],
+            capture_output=True, text=True, timeout=15)
+        assert health.returncode == 0 and health.stdout.strip() in ("healthy", "starting", "unhealthy")
+        return identity, started, running and health.stdout.strip() == "healthy"
+
+    def restart_broker(identity):
+        assert service_identity("rabbitmq")[0] == identity
+        result = subprocess.run(["docker", "restart", "--time", "10", identity],
+            capture_output=True, text=True, timeout=60)
+        assert result.returncode == 0, "Owned reference broker restart failed"
+
+    def worker_control(operation, identity):
+        assert operation in ("stop", "start") and service_identity("agent-worker")[0] == identity
+        result = subprocess.run([*compose, operation, "agent-worker"], env=environment,
+            capture_output=True, text=True, timeout=45)
+        assert result.returncode == 0, "Owned reference worker restoration/control failed"
 
     def kill_owned():
         inspected = subprocess.run(["docker", "inspect", "--format", '{{.Id}}|{{index .Config.Labels "aioffice.owned-proof"}}', name],
@@ -278,7 +366,20 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
-        print("PASS actual shipping Core producer/Worker consumer DI and broker delivery/restart preserve SQL graph/cursor and no fake portal task", flush=True)
+        print("PASS actual shipping Core producer/Worker consumer DI and application restart preserve SQL graph/cursor and no fake portal task", flush=True)
+        worker_identity, _, worker_running = service_identity("agent-worker")
+        assert worker_running
+        verify_pending_broker_restart(directory=directory, api=api,
+            pause_worker=lambda: worker_control("stop", worker_identity),
+            resume_worker=lambda: worker_control("start", worker_identity), broker_state=broker_state,
+            restart_broker=restart_broker, queue_counts=queue_counts, broker_stats=broker_stats,
+            publish=lambda: run("publish-existing"), inspect_pending=lambda: run("inspect-pending"),
+            full_graph=full_graph, count=count, wait=wait)
+        assert full_graph() == stable and portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+            "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+        assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+            " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        print("PASS actual RabbitMQ process restart retains pending persistent original reference before republication and shipping consumer ACK preserves exact SQL graph", flush=True)
     except BaseException as error:
         failure = error
     finally:

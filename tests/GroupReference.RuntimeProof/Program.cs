@@ -22,7 +22,7 @@ try
     // Test-only executable: guard before stdin, configuration, credentials,
     // SQL, broker or any resource. It has no operator/customer credentials.
     OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup"))
+    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup"))
         throw new InvalidOperationException();
     phase = "owned-config";
     var json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -183,6 +183,30 @@ try
     await using var broker = await factory.CreateConnectionAsync(lifetime.Token);
     await using var channel = await broker.CreateChannelAsync(cancellationToken: lifetime.Token);
     await channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false, arguments: null, cancellationToken: lifetime.Token);
+    if (args[0] == "inspect-pending")
+    {
+        if (!(await inbox.ReceiveAsync(reference, lifetime.Token)).WasAlreadyReceived || database.ChangeTracker.HasChanges())
+            throw new InvalidOperationException();
+        using var inspectionDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        inspectionDeadline.CancelAfter(TimeSpan.FromSeconds(10));
+        var pending = await channel.BasicGetAsync(queue, false, inspectionDeadline.Token) ?? throw new InvalidOperationException();
+        Exception? inspectionFailure = null;
+        try
+        {
+            if (pending.BasicProperties.DeliveryMode != DeliveryModes.Persistent ||
+                !pending.Body.Span.SequenceEqual(reference.ToBytes()) ||
+                GroupIngressDispatchReference.Parse(pending.Body.Span, pending.BasicProperties.Type,
+                    pending.BasicProperties.MessageId, pending.BasicProperties.ContentType) != reference)
+                throw new InvalidOperationException();
+        }
+        catch (Exception error) { inspectionFailure = error; }
+        // Preserve the original queued delivery even when exact validation fails.
+        try { await channel.BasicNackAsync(pending.DeliveryTag, false, true, inspectionDeadline.Token).AsTask().WaitAsync(inspectionDeadline.Token); }
+        catch (Exception error) { inspectionFailure ??= error; }
+        if (inspectionFailure is not null) throw new InvalidOperationException();
+        Console.WriteLine("PASS owned reference runtime exact persistent original queued reference retained");
+        return 0;
+    }
     await channel.BasicQosAsync(0, 1, false, lifetime.Token);
     var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     var consumer = new AsyncEventingBasicConsumer(channel);

@@ -258,6 +258,88 @@ class OwnedStackGuardTests(unittest.TestCase):
                 else:
                     exec(block, namespace); self.assertEqual(["restart", "publish-existing"], calls)
 
+    def test_pending_broker_restart_refuses_unowned_before_callbacks(self):
+        def forbidden(*args): raise AssertionError("Owned guard touched resources")
+        with patch.dict(os.environ, {**self.environment, "CI": "false"}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "requires the owned disposable GitHub CI fixture"):
+                reference_smoke.verify_pending_broker_restart(directory=self.owned, api="http://127.0.0.1:8080",
+                    pause_worker=forbidden, resume_worker=forbidden, broker_state=forbidden,
+                    restart_broker=forbidden, queue_counts=forbidden, broker_stats=forbidden,
+                    publish=forbidden, inspect_pending=forbidden, full_graph=forbidden, count=forbidden, wait=forbidden)
+
+    def test_pending_broker_restart_original_reference_survives_before_shipping_ack(self):
+        faults = (None, "stop-reply-lost", "restart-failed", "different-broker", "same-incarnation", "unhealthy",
+            "lost-message", "unexpected-consumer", "graph-after-pause", "graph-after-publish", "graph-after-restart",
+            "graph-after-resume", "duplicate-effect", "no-ack", "wrong-delivery", "pending-after-ack", "resume-failed",
+            "wrong-original-reference")
+        for fault in faults:
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True):
+                calls = []
+                state = dict(paused=False, published=False, restarted=False, resumed=False)
+                first = RuntimeError("Owned first operation failed")
+                def pause():
+                    calls.append("pause"); state["paused"] = True
+                    if fault == "stop-reply-lost": raise first
+                def resume():
+                    calls.append("resume"); state["resumed"] = True
+                    if fault == "resume-failed": raise first
+                def publish():
+                    self.assertTrue(state["paused"]); self.assertFalse(state["restarted"])
+                    calls.append("publish"); state["published"] = True
+                def restart(identity):
+                    self.assertEqual(identity, "owned-broker"); self.assertTrue(state["published"])
+                    calls.append("restart"); state["restarted"] = True
+                    if fault == "restart-failed": raise first
+                def inspect_pending():
+                    self.assertTrue(state["published"]); self.assertFalse(state["resumed"])
+                    calls.append("inspect")
+                    if state["restarted"] and fault == "wrong-original-reference": raise AssertionError("Original pending reference changed")
+                def broker():
+                    return ("different" if state["restarted"] and fault == "different-broker" else "owned-broker",
+                        2 if state["restarted"] and fault != "same-incarnation" else 1,
+                        not (state["restarted"] and fault == "unhealthy"))
+                def queue():
+                    if not state["published"]: return (0, 0)
+                    if state["resumed"]: return (1, 0) if fault == "pending-after-ack" else (0, 0)
+                    return (0, 0) if state["restarted"] and fault == "lost-message" else (1, 0)
+                def statistics():
+                    resumed = state["resumed"]
+                    # A fresh process may reset counters; require positive deltas.
+                    return dict(ack=11 if resumed and fault != "no-ack" else 10,
+                        deliver=22 if resumed and fault == "wrong-delivery" else 21 if resumed else 20,
+                        consumers=1 if resumed or state["restarted"] and fault == "unexpected-consumer" else 0)
+                def graph():
+                    changed = any(state[phase] and fault == label for phase, label in (
+                        ("paused", "graph-after-pause"), ("published", "graph-after-publish"),
+                        ("restarted", "graph-after-restart"), ("resumed", "graph-after-resume")))
+                    return ["changed" if changed else "original-eight-table-graph"]
+                arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", pause_worker=pause,
+                    resume_worker=resume, broker_state=broker, restart_broker=restart, queue_counts=queue,
+                    broker_stats=statistics, publish=publish, inspect_pending=inspect_pending, full_graph=graph,
+                    count=lambda: 3 if state["resumed"] and fault == "duplicate-effect" else 2,
+                    wait=lambda predicate, seconds=30: self.assertTrue(predicate()))
+                if fault:
+                    with self.assertRaises((AssertionError, RuntimeError)) as raised:
+                        reference_smoke.verify_pending_broker_restart(**arguments)
+                    if fault in ("stop-reply-lost", "restart-failed", "resume-failed"): self.assertIs(raised.exception, first)
+                else: reference_smoke.verify_pending_broker_restart(**arguments)
+                self.assertEqual(calls.count("resume"), 1)
+                if not fault: self.assertEqual(calls, ["pause", "publish", "inspect", "restart", "inspect", "resume"])
+
+    def test_pending_broker_restart_preserves_stop_failure_when_restoration_also_fails(self):
+        first = RuntimeError("Owned stop reply lost")
+        calls = []
+        def stop(): calls.append("stop"); raise first
+        def start(): calls.append("start"); raise RuntimeError("Owned restore failed")
+        def forbidden(*args): raise AssertionError("Later operation ran after failure")
+        with patch.dict(os.environ, self.environment, clear=True):
+            with self.assertRaises(RuntimeError) as raised:
+                reference_smoke.verify_pending_broker_restart(directory=self.owned, api="http://127.0.0.1:8080",
+                    pause_worker=stop, resume_worker=start, broker_state=lambda: ("owned", 1, True),
+                    restart_broker=forbidden, queue_counts=lambda: (0, 0), broker_stats=forbidden,
+                    publish=forbidden, inspect_pending=forbidden, full_graph=lambda: ["unchanged"], count=lambda: 2, wait=forbidden)
+        self.assertIs(raised.exception, first); self.assertEqual(calls, ["stop", "start"])
+
     def test_spool_proof_refuses_unowned_before_resources(self):
         cases = [(self.owned, "http://127.0.0.1:8080", {"CI": "false"}),
             (self.owned, "http://127.0.0.1:8080", {"GITHUB_ACTIONS": "false"}),

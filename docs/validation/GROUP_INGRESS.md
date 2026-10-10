@@ -27,7 +27,7 @@ their earlier pending/failure statements do not override this result.
   runtime SQL principal and validated inert DI without resolving keys/storage.
 - Actual reference-only outbox/RabbitMQ/shipping Core producer/Worker consumer
   passed lost broker ACK/process death/redelivery,100 duplicates, insert rollback,
-  current Extract revoke, unsafe column refusal/exact restore, broker restart,
+  current Extract revoke, unsafe column refusal/exact restore, Core/Worker restart,
   unchanged full graph/cursor and absence of fabricated portal tasks/users.
 - Issued-session Chromium exercised shipping group catalog/message/body reads,
   source read denial/restore, logout late-body fencing and mobile navigation.
@@ -42,7 +42,18 @@ local Chromium synthetic transport control passed, but a local Next transport
 probe stopped at readiness404 before any submit; it supplies no product-cause
 or native SQL/OIDC acceptance evidence.
 
-These results qualify the owned synthetic issue277 core path. Configuration was
+The full542 review withheld issue277 closure on one evidence gap: its reference
+proof restarted Core/Worker while retaining the RabbitMQ process. Its green run
+does not prove RabbitMQ restart with a persistent reference pending. A same-PR
+candidate now stops only the inspected owned Worker, confirms a persistent original
+reference is ready, restarts only the inspected RabbitMQ container, requires a new
+StartedAt and the same queued reference/full graph BEFORE any republication, then
+resumes the actual shipping consumer and requires positive delivery/ACK and an
+empty queue with exact original SQL graph/receipt/cursor/portal counts. Worker
+restoration runs even on a lost stop reply; the first failure is retained. Local
+guard/adversarial controls are not native acceptance; review/execution remain.
+
+Configuration was
 restored to shipping default-off and no live connector login, send or activation
 occurred. Actual provider/account and production volume qualification remain
 separate gates. Issue278 must implement durable automatic batching, SQL brain,
