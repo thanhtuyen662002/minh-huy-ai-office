@@ -44,7 +44,8 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         {
             string[] retainedKeyIds;
             bool originalExisted;
-            // No external key await holds a SQL connection, transaction or lock.
+            // Release the owned SQL transaction and locks before external key
+            // awaits. An already-open caller connection remains caller-owned.
             await using (var preflight = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken))
             {
                 active = preflight; sql = database.Database.CurrentTransaction;

@@ -271,6 +271,9 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
             "no-work-expiry": "PASS owned NoWork runtime flushed two SQL effects rollback with source lock retained clean detach witness only and clock rollback denial",
             "no-work-commit": "PASS owned NoWork runtime actual atomic SQL receipt disposition exact original replay and new nonce duplicate refusal",
             "no-work-mars": "PASS owned NoWork runtime MARS refuses before connection keys or effects",
+            "note-expiry": "PASS owned note runtime eleven flushed SQL effects rollback with source lock retained clean detach witness only and clock rollback denial",
+            "note-key-expiry": "PASS owned note runtime configured write key outside SQL expiry witness only without effects and clock rollback denial",
+            "note-commit": "PASS owned note runtime protected two notes literal evidence atomic NotesCommitted exact original replay changed proposal and new nonce refusal",
             "work-schema": "PASS owned work schema runtime migrated empty scoped brain and effective least privilege",
             "work-unsafe": "PASS owned work schema runtime unsafe effective permission refusal",
             "allocation-replay": "PASS owned allocation runtime100 concurrent original receipts and caught-up cursor",
@@ -890,6 +893,63 @@ def verify(*, directory, api, manifest, tenant, company, service, source, sql, c
         assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
             " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
         print("PASS actual NoWork store SQL atomic selected receipt disposition original replay duplicate nonce refusal and MARS before connection unchanged remaining graph", flush=True)
+
+        # Separate fixed protected-note consumer after every original NoWork
+        # oracle. Synthetic interpretations qualify SQL mechanics only.
+        def original_six_receipts():
+            value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),"
+                f"(SELECT * FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch<=6 ORDER BY Epoch FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+            assert re.fullmatch(r"[0-9A-F]{64}", value)
+            return value
+        original_six = original_six_receipts()
+        def prior_note_objects():
+            selections = [("GroupCustomerRequests", "Id", f"Id='{request_id}'"),
+                ("GroupRequestRevisions", "RequestId,Revision", f"RequestId='{request_id}'"),
+                ("GroupRequestEvidence", "RequestId,RequestRevision,Ordinal", f"RequestId='{request_id}'"),
+                ("GroupWorkCommitReceipts", "BatchId,OperationId", "NoteCount<=1"),
+                ("GroupWorkSourceDispositions", "BatchId,MessageId", "Outcome=2")]
+            values = []
+            for table, order, predicate in selections:
+                value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+                    f"(SELECT * FROM aioffice.{table} WHERE {scope} AND {predicate} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+                assert re.fullmatch(r"[0-9A-F]{64}", value)
+                values.append(value)
+            return values
+        prior_notes = prior_note_objects()
+        def unchanged_note_source_graph():
+            assert original_six_receipts() == original_six and original_four_receipts() == original_four and original_three_receipts() == original_three
+            assert full_graph() + [digest("GroupBatchAllocations", "AfterSequence"), digest("GroupBatchAllocatedRevisions", "CommittedSequence")] == allocated_graph
+            assert portal == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
+                "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
+            assert sql("SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE login_name=N'aioffice_runtime' AND status=N'sleeping'"
+                " AND (transaction_isolation_level<>2 OR open_transaction_count<>0);") == "0"
+        run("note-expiry")
+        assert brain_graph() == no_work_stable and prior_note_objects() == prior_notes
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=7 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "7|1"
+        unchanged_note_source_graph()
+        print("PASS actual note store eleven flushed SQL effects rollback source lock retained clean detach only expiry witness unchanged complete brain source allocation portal", flush=True)
+
+        run("note-key-expiry")
+        assert brain_graph() == no_work_stable and prior_note_objects() == prior_notes
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=8 AND ExpiryObservedAtUtc=ExpiresAtUtc));") == "8|1"
+        unchanged_note_source_graph()
+        print("PASS actual note store configured write key outside SQL expired final fence commits only witness no note disposition outbox source portal effects clock rollback denied", flush=True)
+
+        run("note-commit")
+        assert [int(sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {scope};")) for table, _ in brain_tables] == [3, 3, 3, 3, 2, 1, 2, 0, 1, 1]
+        assert prior_note_objects() == prior_notes
+        assert brain_graph()[7:] == no_work_stable[7:]
+        assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}),N'|',"
+            f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=9 AND ExpiryObservedAtUtc IS NULL));") == "9|1"
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCustomerRequests WHERE {scope} AND Id<>'{request_id}' AND CurrentRevision=1"
+            " AND BusinessVersion=1 AND BusinessStatus IN(1,3) AND AssignedToUserId IS NULL AND CommittedDueAtUtc IS NULL"
+            " AND ConfirmedByUserId IS NULL AND ConfirmedAtUtc IS NULL;") == "2"
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupNotesCommittedOutbox WHERE {scope} AND NoteCount=2"
+            " AND PublishAttempts=0 AND PublishedAtUtc IS NULL AND AvailableAtUtc=CommittedAtUtc;") == "1"
+        unchanged_note_source_graph()
+        print("PASS actual note store protected request evidence two unconfirmed notes atomic NotesCommitted exact original replay changed proposal and new nonce refusal unchanged original graphs", flush=True)
     except BaseException as error:
         failure = error
     finally:

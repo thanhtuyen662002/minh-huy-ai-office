@@ -4,11 +4,11 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+head: 450738eab84591e121e091927f010af9edfe1f9c
 state: in_progress
 lease_owner: root-backend-278
-lease_heartbeat_at: '2026-10-10'
-last_checkpoint_at: '2026-10-10'
+lease_heartbeat_at: '2026-10-11'
+last_checkpoint_at: '2026-10-11'
 last_completed_issue: 277
 last_merged_pr: 287
 last_merge_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Own278/Draft288 remote0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4 terminalRED Build38070427348/native114266525657/quality114269539108. Sixprerequisites and Governance38070427346 SUCCESS; root full.NET2473[6,520,25,1922]0fail0skip. Native original before-application-restart management snapshot undercount ACK1/deliver2/consumer1 vs EXACT2/3/1: root full111PASS/37missing/8failuremarkers, downstream source/brain/Chromium NOT_RUN/noartifact; cause UNPROVEN. SAME288 test-only repair observes held EXACT0/1/1 beforekill and retains actual replay channel through EXACT1/2/1 beforedisposal, separate30s bound outside unchanged10s handler; retains all original baseline2/3/1/postincrements/literalRabbit/fullgraph oracles. Local12 decoder/65 Python controls PASS; freeze/fullreview beforepush, own renewed exact CI and all99 markers/all8/Gov/all6originals. Frozen7335 scoped6100082455 and c61a native-preparation scoped6100158811 approvals FULL fetched; only source/preparation, NoWork actualeffects NOT_RUN_UNQUALIFIED. Local protected-note creation store prepared for frozen review:13 actual entry controls/full1955 current Persistence PASS0fail0skip; fixed protected requests/revisions/evidence/selected dispositions/NotesCommitted outbox, source lock before savepoint, flushed final fences/rollback-detach-witness-only and exact full graph replay; native notes/attention/raw completion/context/outbox/DI/UI remain incomplete. Existing Gateway real100/30 model evaluation NOT_RUN_UNEVALUATED; checked config absent/server access unknown.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
+next_action: 'Own278/Draft288 remote450738eab84591e121e091927f010af9edfe1f9c exact Build38072401233/native114272345912 IN_PROGRESS; Governance38072401239 and all six prerequisites SUCCESS. Scoped8-file APPROVED6100312871 root FULL fetched before exact push. Current native acceptance requires all99 exactly once/all8/Gov/full logs/all6 ORIGINAL images; do not cancel it with a later push. Parent0b68 terminal red closed with full111PASS37missing8failure/noartifact and2473.NET0skip; underlying counter cause UNPROVEN. Localddac five-file protected-note store scoped APPROVED6100428398 root FULL fetched;67 independent focused controls/13 root entry controls/full1955 root Persistence0fail0skip. New guarded native notes preparation appends epoch7 flushed11-row rollback/source-lock/witness/rewind, epoch8 configured-key-await expiry without effects, epoch9 protected two notes/readback/exact original replay/changed proposal/new nonce refusal; all102 retained+new markers required on the later exact push. Local executable build0W0E/65Python/three actual unowned note guards/three retained NoWork guards PASS; YAML2/format/diff verification required before freeze. No actual SQL note acceptance or model qualification inferred. Freeze/review/root FULL fetch before later push; continue host attention/raw coverage/completion/qualified context-tokenizer/automatic DI/UI and actual100/30 evaluation.278/279/full233 ACTIVE_INCOMPLETE; no partial merge/checkpoint stop.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -1960,4 +1960,27 @@ group_278_protected_note_consumer_preparation:
   native_protected_writes_replay_flush_rollback_expiry_key_rotation_history: NOT_RUN_UNQUALIFIED
   host_attention_raw_coverage_completion_context_automatic_DI_UI: incomplete
   actual_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_protected_note_native_preparation:
+  current_remote_head: 450738eab84591e121e091927f010af9edfe1f9c
+  current_build: 38072401233
+  current_native: 114272345912
+  current_governance: 38072401239
+  current_state: native_IN_PROGRESS_six_prerequisites_and_governance_SUCCESS
+  current_scope_review: APPROVED6100312871_root_FULL_fetched_before_exact_push
+  current_scope_required_markers: 99
+  local_store_head: ddac10daeedbeeae9fce12e4be0d22c80099d96b
+  local_store_review: APPROVED6100428398_root_FULL_fetched
+  local_store_independent_focused_controls: 67_PASS_zero_failures_skips
+  local_native_preparation: build0W0E_65Python_three_note_guards_three_NoWork_guards_PASS
+  prepared_note_modes: epoch7_flush11_rollback_epoch8_key_await_expiry_epoch9_protected_commit_exact_replay
+  original_claim_receipts_and_source_NoWork_graphs: immutable_full_hashes_preserved
+  SQL_observation: actual_effect_queries_and_exclusive_source_APPLOCK_before_savepoint_after_rollback
+  key_provider: existing_configured_scoped_source_provider_outside_SQL
+  direct_internal_key_disposal_qualification: NOT_QUALIFIED_no_visibility_widening
+  proposed_note_scope_required_markers: 102
+  prepared_native_note_execution: NOT_RUN_UNQUALIFIED
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  host_attention_raw_completion_context_tokenizer_automatic_DI_UI: incomplete
   full_278_279_233: ACTIVE_INCOMPLETE
