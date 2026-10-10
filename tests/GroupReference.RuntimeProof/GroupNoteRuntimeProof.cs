@@ -256,7 +256,10 @@ internal static class GroupNoteRuntimeProof
                 || await TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != effect.ExpectedRows) throw new InvalidOperationException();
             if (effect.ExpectedRawRows is not (0 or 2)) throw new InvalidOperationException();
             if (effect.ExpectedRawRows == 2)
+            {
                 await GroupAutomaticRawRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, 2, token);
+                await GroupAutomaticManifestRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token);
+            }
             effect.Flushed = true;
             if (effect.ExpireAfterFlush) effect.Advance();
             return result;

@@ -775,6 +775,12 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             return new_source, new_events, private_environment["OWNED_RAW_HISTORY_GROUP_CONTENT_KEY"]
         raw_history_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
             service=service, sql=sql, prepare_source=prepare_raw_history_source, reference=reference_proof, automatic=automatic_proof)
+        assert sql(f"SELECT CONCAT(COUNT(*),N'|',COUNT(DISTINCT BatchId),N'|',COUNT(DISTINCT OperationId)) "
+            f"FROM aioffice.GroupWorkCommitReceipts WHERE TenantId='{tenant}' AND CompanyId='{company}' "
+            "AND DependencyManifestVersion=1 AND DATALENGTH(DependencyManifest)=274 AND SelectedMessageCount=2 "
+            "AND SUBSTRING(DependencyManifest,1,8)=0x41494F4744455031 "
+            "AND SUBSTRING(DependencyManifest,161,2)=0x0200;") == "4|4|4"
+        print("PASS actual automatic manifest SQL four original version1 receipts exact scoped source identities cutoff metadata same savepoint rollback original replay immutable both columns no terminal or model claim", flush=True)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

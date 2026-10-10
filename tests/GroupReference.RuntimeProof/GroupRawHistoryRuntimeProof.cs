@@ -119,6 +119,7 @@ internal static class GroupRawHistoryRuntimeProof
                 value.MessageId == x.MessageId && value.Revision == x.MessageRevision && value.Outcome == x.Outcome))) throw new InvalidOperationException();
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 500, token);
+        var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || committed != replay with { WasAlreadyCommitted = false }) throw new InvalidOperationException();
         await RequireOriginalAsync();
@@ -128,6 +129,7 @@ internal static class GroupRawHistoryRuntimeProof
         if (!refused || keys.Reads != 1 || keys.Writes != 0) throw new InvalidOperationException();
         await RequireOriginalAsync();
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
+        await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
         Console.WriteLine("PASS owned raw history atomic500 raw rows cutoff499 ChangedAfterCutoff and empty1 NoWork original replay new nonce refused immutable runtime rights pending501 unchanged");
 
@@ -135,6 +137,7 @@ internal static class GroupRawHistoryRuntimeProof
         {
             if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 3
                 || await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 500, token) != rawGraph
+                || await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token) != manifestGraph
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph) throw new InvalidOperationException();
             await RequireReservationAsync();
             RequireClean(db);
@@ -228,6 +231,7 @@ internal static class GroupRawHistoryRuntimeProof
             if (!effect.Staged || await GroupNoteRuntimeProof.TargetRowsAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token) != 3)
                 throw new InvalidOperationException();
             await GroupAutomaticRawRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, 500, token);
+            await GroupAutomaticManifestRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token);
             effect.Flushed = true; effect.Advance(); return result;
         }
     }

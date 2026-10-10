@@ -134,6 +134,7 @@ internal static class GroupAutomaticNoteRuntimeProof
             || await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != expectedRows) throw new InvalidOperationException();
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
+        var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
         if (readback.Items.Count != plan.NoteCount) throw new InvalidOperationException();
         for (var index = 0; index < committed.RequestIds.Count; index++)
@@ -175,6 +176,7 @@ internal static class GroupAutomaticNoteRuntimeProof
                 && x.BindingId == scope.SourceBindingId && (x.AssignedToUserId != null || x.CommittedDueAtUtc != null
                     || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token)) throw new InvalidOperationException();
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
+        await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"
@@ -185,6 +187,7 @@ internal static class GroupAutomaticNoteRuntimeProof
             if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != expectedRows
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph
                 || await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token) != rawGraph
+                || await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token) != manifestGraph
                 || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null) throw new InvalidOperationException();
             GroupAutomaticRawRuntimeProof.RequireDetached(db);
         }

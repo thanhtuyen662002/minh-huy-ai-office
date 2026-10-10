@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Own278/Draft288 exact remote ec3e8f79 Build38093894476/native114335702045 ACTIVE112; Gov38093894474 SUCCESS, ROOT FULL.NET114335701871 qualified2774 zeroFailSkip. Do not supersede meaningful activeCI; close terminal FULL112/all8/original images and repair same288 if red. New bounded immutable automatic receipt dependency manifest source/schema preparation has40 focused and full2263Persistence PASS; freeze whole changes against ec3 for independent FULL review before push. Native receipt fields/reconstruction/rollback/replay/races remain unqualified. Continue all-contributor whole raw terminal/frontier, honestgap/backlog/retry/context/tokenizer/no-click DIAPIUI/100-30realmodel/279/customer production/full233. No partialmerge/model claim."
+next_action: "Own278/Draft288 remoteec3e8f79 native112114335702045/Build38093894476 ACTIVE; FULL.NET2774 zeroFailSkip and Gov38093894474 qualified. Close exact terminal112/all8/root FULL logs/original images; repair same288 if red, never supersede meaningfulCI. Source manifest9d7d9cc scoped independent review active; native preparation adds four atomic immutable version1 receipt observations/future113. Local23observer/full2286Persistence/136Python/format6/Release0W0E/25actualunowned PASS; actualmanifestSQL/current locked reconstruction/races/model/fullfeature NOT_RUN_UNQUALIFIED. Freeze separate native checkpoint and obtain FULL review before push after current terminal. Continue allcontributors whole raw terminal/frontier, context/profile/tokenizer/honestgap/retry/no-click pipeline/279/realmodel/customer production/full233; no partialmerge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2519,3 +2519,19 @@ group_278_dependency_manifest_preparation:
   terminal: NOT_ENABLED_all_raw_all_contributors_contiguous_frontier_required
   model: NOT_RUN_UNEVALUATED
   next: independent_frozen_FULL_review_then_native_manifest_proof_same288_after_current112_terminal
+
+group_278_manifest_native_preparation:
+  source_base: 9d7d9ccc62e1511f46665eaf49a83925bb777edd
+  source_review: PENDING_FULL_frozen_separate_native_checkpoint_before_push
+  modes: existing25_unchanged_four_committed_automatic_scopes_no_new_mode
+  observation: independent_actual_receipt_two_sources_zero_brain274bytes_scopedIDs_cutoff_exact_heads_digest
+  atomicity: actual_postflush_before_expiry_same_savepoint_zero_receipt_after_rollback_original_replay
+  immutability: both_actual_columns_closed_noop_UPDATE_SQL229_digest_unchanged
+  preservation: frozen112_reference_fourprofiles_history_cleanup_original_graphs_plus_one_future113_marker
+  local: observer23_fullPersistence2286_zeroFailSkip_Python136_format6_Release0W0E_25actualunowned
+  native113: NOT_RUN_UNQUALIFIED_current_remote112_predates_manifest_schema
+  reconstruction: NOT_RUN_nonempty_brain_fullfingerprints_locked_current_dependencies_races
+  own_write_chain: preeffect_inputs_future_terminal_requires_explicit_input_to_posteffect_heads
+  terminal: NOT_ENABLED
+  model: NOT_RUN_UNEVALUATED
+  next: scoped_FULL_review_then_owned_exact113_after_current112_terminal_no_partialmerge
