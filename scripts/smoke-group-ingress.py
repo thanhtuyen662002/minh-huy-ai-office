@@ -636,9 +636,22 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
         spool_spec = importlib.util.spec_from_file_location("group_spool_proof", Path(__file__).with_name("smoke-group-spool.py"))
         spool_proof = importlib.util.module_from_spec(spool_spec)
         spool_spec.loader.exec_module(spool_proof)
+        def enroll_spool_source(source_id):
+            # Separate owned synthetic source; preserve the original key row.
+            # No production registry/configuration or credentials are touched.
+            source_id = str(uuid.UUID(source_id))
+            assert not any(name.startswith("AIOffice__GroupIntake__SourceKeys__1__") for name in private_environment)
+            private_environment["OWNED_NATIVE_GROUP_CONTENT_KEY"] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
+            for name, value in {"TenantId": tenant, "CompanyId": company, "SourceBindingId": source_id,
+                    "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_NATIVE_GROUP_CONTENT_KEY", "IsWriteKey": "true"}.items():
+                private_environment["AIOffice__GroupIntake__SourceKeys__1__" + name] = value
+            override.write_text(json.dumps({"services": {"core-api": {"environment": private_environment}}}), encoding="utf-8")
+            override.chmod(0o600)
+            compose_run("up", "-d", "--no-deps", "--force-recreate", "core-api", overridden=True)
+            ready()
         spool_proof.verify(directory=directory, api=api, tenant=tenant, company=company, service=service,
             key=group_key, sql=sql, restart=lambda: compose_run("restart", "core-api", overridden=True),
-            ready=ready, identity_index=identity_index)
+            ready=ready, identity_index=identity_index, enroll_source=enroll_spool_source)
         assert snapshot() == listener_before, "Separate native spool proof changed retained source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

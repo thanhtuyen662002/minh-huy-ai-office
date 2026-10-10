@@ -1,6 +1,8 @@
 """Verify the adversarial fixture boundary without files, Docker or network."""
 import importlib.util
 import ast
+import base64
+import json
 import os
 import re
 from pathlib import Path
@@ -60,6 +62,47 @@ class OwnedStackGuardTests(unittest.TestCase):
                 spool_smoke.verify(directory=self.owned, api="http://127.0.0.1:8080", tenant=str(uuid.uuid4()),
                     company=str(uuid.uuid4()), service=str(uuid.uuid4()), key=b"bad",
                     sql=forbidden, restart=forbidden, ready=forbidden, identity_index=forbidden)
+
+    def test_spool_proof_requires_owned_source_key_enrollment_before_resources(self):
+        def forbidden(*args, **kwargs): self.fail("Missing source key enrollment touched resources")
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(Path, "mkdir", forbidden):
+            with self.assertRaisesRegex(RuntimeError, "^Owned spool source key enrollment is unavailable\\.$"):
+                spool_smoke.verify(directory=self.owned, api="http://127.0.0.1:8080", tenant=str(uuid.uuid4()),
+                    company=str(uuid.uuid4()), service=str(uuid.uuid4()), key=b"x"*32,
+                    sql=forbidden, restart=forbidden, ready=forbidden, identity_index=forbidden)
+
+    def test_native_source_key_callback_preserves_original_enrollment_and_recreates_only_owned_core(self):
+        tree = ast.parse(Path(group_smoke.__file__).read_text(encoding="utf-8"))
+        callback = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "enroll_spool_source")
+        block = compile(ast.fix_missing_locations(ast.Module([callback], type_ignores=[])), "<inert-source-key-enrollment>", "exec")
+        calls = []
+        class Override:
+            def write_text(self, text, encoding): calls.append(("write", json.loads(text), encoding))
+            def chmod(self, mode): calls.append(("chmod", mode))
+        original = {"AIOffice__GroupIntake__SourceKeys__0__SourceBindingId": str(uuid.uuid4()),
+            "AIOffice__GroupIntake__SourceKeys__0__SecretRef": "secretref://env/INERT_ORIGINAL_CONTENT_KEY",
+            "INERT_ORIGINAL_CONTENT_KEY": "owned-inert-original-value"}
+        environment = original.copy()
+        tenant, company, source = (str(uuid.uuid4()) for _ in range(3))
+        namespace = dict(uuid=uuid, base64=base64, json=json, secrets=SimpleNamespace(token_bytes=lambda size: b"n"*size),
+            tenant=tenant, company=company, private_environment=environment, override=Override(),
+            compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
+        exec(block, namespace)
+        with self.assertRaises(ValueError): namespace["enroll_spool_source"]("invalid-source")
+        self.assertEqual(original, environment); self.assertEqual([], calls)
+        namespace["enroll_spool_source"](source)
+        self.assertTrue(all(environment[name] == value for name, value in original.items()))
+        prefix = "AIOffice__GroupIntake__SourceKeys__1__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_NATIVE_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(prefix):]: value for name, value in environment.items() if name.startswith(prefix)})
+        self.assertEqual(environment, calls[0][1]["services"]["core-api"]["environment"])
+        self.assertEqual(("chmod", 0o600), calls[1])
+        self.assertEqual(("compose", ("up", "-d", "--no-deps", "--force-recreate", "core-api"), {"overridden": True}), calls[2])
+        self.assertEqual(("ready",), calls[3])
+        before = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_spool_source"](source)
+        self.assertEqual(before, environment); self.assertEqual(4, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

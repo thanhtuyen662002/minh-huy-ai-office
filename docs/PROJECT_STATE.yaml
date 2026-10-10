@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/277-group-durable-ingress
 current_pr: 283
-current_target_head: 9d498b4574e92aa65d56d9c5c666a1286407326d
+current_target_head: 823f1300ccfe476ba7aaab2f072fd69164bf73b4
 last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 277
     pr: 283
     branch: codex/277-group-durable-ingress
-    head: 9d498b4574e92aa65d56d9c5c666a1286407326d
+    head: 823f1300ccfe476ba7aaab2f072fd69164bf73b4
     state: in_progress
-    next: 'Approved9d library receipt6092460850; terminal Build38015307994/Gov38015307999 has all six prerequisites/Gov PASS but actual114104147229 and quality114106277827 RED at unchanged Chromium submission-real-core202-body-replay-response. Root inspected retained SQL/listener/header-loss PASS; cause unproven, add fixed substage/status diagnostics without relaxing202 or effects oracle. Native588 fixture review found proxy/thread allocation cleanup P2; repaired guarded allocation plus six inert failure controls,7.NET/27 Python PASS, closure review pending/actual unexecuted. Fresh backend registry/lease/reference broker/278/279/full233 remain.'
+    next: '823 native/static scoped APPROVED6092680140; exact Build38016765431/Gov38016765424 six prerequisites/Gov PASS but actual114108652763/quality114110948673 RED before observed native SQL ACK; current browser proof not reached. Root found separate source missing source-content-key enrollment in Core owned override; repair installs dedicated random scoped key row1, preserves original row0/recreates only owned Core,29 Python inert guards PASS. Exact causal status unobserved; fixed proxy stage/403/503/other diagnostics added, no weakened receipt/one-effect checks. Freeze/review/push repair and own exact actual terminal. Local metadata/current lease client/API candidate292 unique focused tests PASS0skip, excluded823/repair, needs frozen review/native extension. Fresh reference broker/278/279/full233 remain ACTIVE.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close native588 guarded-allocation original P2 and browser diagnostic frozen review; push approved candidate, own exact terminal actual CI on same PR.9d actual/quality red browser replay cause unproven; no blind retry or narrowed acceptance. Continue fresh backend registry/lease/reference broker/278/279/full233/62 ACTIVE.'
+next_action: '823 native/static scoped APPROVED6092680140; exact Build38016765431/Gov38016765424 six prerequisites/Gov PASS but actual114108652763/quality114110948673 RED before observed native SQL ACK; current browser proof not reached. Root found separate source missing source-content-key enrollment in Core owned override; repair installs dedicated random scoped key row1, preserves original row0/recreates only owned Core,29 Python inert guards PASS. Exact causal status unobserved; fixed proxy stage/403/503/other diagnostics added, no weakened receipt/one-effect checks. Freeze/review/push repair and own exact actual terminal. Local metadata/current lease client/API candidate292 unique focused tests PASS0skip, excluded823/repair, needs frozen review/native extension. Fresh reference broker/278/279/full233 remain ACTIVE.'
 
 
 blocked_by:

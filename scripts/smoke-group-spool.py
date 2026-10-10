@@ -9,6 +9,7 @@ import secrets
 import subprocess
 import threading
 import time
+import urllib.error
 import urllib.request
 import uuid
 from datetime import datetime, timezone
@@ -22,11 +23,13 @@ def require_owned(directory, api):
         raise RuntimeError("Spool proof requires the owned disposable GitHub CI fixture.")
 
 
-def verify(*, directory, api, tenant, company, service, key, sql, restart, ready, identity_index):
+def verify(*, directory, api, tenant, company, service, key, sql, restart, ready, identity_index, enroll_source=None):
     require_owned(directory, api)  # Before files, keys, SQL, build, processes or HTTP.
     tenant, company, service = (str(uuid.UUID(value)) for value in (tenant, company, service))
     if not isinstance(key, bytes) or len(key) != 32:
         raise RuntimeError("Owned spool signing key is unavailable.")
+    if not callable(enroll_source):
+        raise RuntimeError("Owned spool source key enrollment is unavailable.")
     account, source, owner, event = (str(uuid.uuid4()) for _ in range(4))
     registry = f"TenantId='{tenant}' AND CompanyId='{company}'"
     scope = registry + f" AND BindingId='{source}'"
@@ -94,6 +97,7 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
       INSERT aioffice.GroupServiceGrants(TenantId,CompanyId,ServiceId,BindingId,Capability,Version,IsEnabled)
       VALUES ('{tenant}','{company}','{service}','{source}',1,1,1);""")
     save_config()
+    enroll_source(source)  # Dedicated owned source-content key before listener/ingress.
     run("acquire")
     lease = json.loads((root / "lease.json").read_text(encoding="utf-8"))
     assert lease["lease"]["epoch"] == 1 and lease["lease"]["ownerId"] == owner
@@ -109,6 +113,7 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
             pass  # No source, headers, paths or dependency exceptions logged.
 
         def do_POST(self):
+            phase = "request-contract"
             try:
                 if self.path != "/internal/group-ingress/events":
                     raise RuntimeError()
@@ -126,7 +131,12 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
                 if len(body) != length:
                     raise RuntimeError()
                 request = urllib.request.Request(api + self.path, data=body, method="POST", headers=headers)
-                with urllib.request.urlopen(request, timeout=12) as response:
+                class NoRedirect(urllib.request.HTTPRedirectHandler):
+                    def redirect_request(self, *args, **kwargs): return None
+                opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+                phase = "upstream"
+                with opener.open(request, timeout=12) as response:
+                    phase = "response-contract"
                     raw = response.read(8193)
                     if response.status != 200 or len(raw) > 8192 or "no-store" not in response.headers.get("Cache-Control", ""):
                         raise RuntimeError()
@@ -136,8 +146,15 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
                     captured["ack"] = value
                 committed.set()  # Real Core SQL committed; no client ACK bytes.
                 release.wait(15)
+            except urllib.error.HTTPError as error:
+                captured["failed"] = True
+                captured["failure_stage"] = "upstream403" if error.code == 403 else "upstream503" if error.code == 503 else "upstream-other"
+                try: error.close()
+                except Exception: pass  # Never emit a dependency close error.
+                committed.set()
             except Exception:
                 captured["failed"] = True
+                captured["failure_stage"] = phase
                 committed.set()
             finally:
                 self.close_connection = True
@@ -155,7 +172,8 @@ def verify(*, directory, api, tenant, company, service, key, sql, restart, ready
         save_config()
         process = subprocess.Popen(["dotnet", str(executable), "capture-send"], env=child_environment,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        assert committed.wait(12) and not captured.get("failed") and "ack" in captured, "Native client did not reach committed lost-ACK boundary"
+        assert committed.wait(12) and not captured.get("failed") and "ack" in captured, \
+            "Native client did not reach committed lost-ACK boundary: " + captured.get("failure_stage", "no-observed-response")
         assert process.poll() is None, "Native client completed before forced death"
         process.kill()  # Only this owned child, after observed real commit.
         process.communicate(timeout=5)
