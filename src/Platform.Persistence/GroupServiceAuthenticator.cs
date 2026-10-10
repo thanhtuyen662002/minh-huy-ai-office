@@ -1,0 +1,311 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
+using MinhHuy.AIOffice.Platform.Configuration;
+using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
+
+namespace MinhHuy.AIOffice.Platform.Persistence;
+
+public sealed record GroupServiceSignature(Guid ServiceId, long CredentialEpoch,
+    long SignedAtUnixSeconds, Guid Nonce, string SignatureHex);
+public sealed record GroupIngressPayload(GroupSourceEventMetadata Event, string Text,
+    bool IsGroup, bool IsSelf, bool IsKnownReportEcho, Guid ListenerOwnerId, long ListenerEpoch);
+
+public sealed record GroupListenerPayload(GroupExternalIdentity Identity, GroupListenerCommand Command);
+
+public sealed class VerifiedGroupListener
+{
+    internal VerifiedGroupListener(AuthenticatedGroupService service, GroupListenerCommand command, Guid nonce, string commandSha256)
+    {
+        Service = service; Command = command; Nonce = nonce; CommandSha256 = commandSha256;
+        Account = new(service.Source.TenantId, service.Source.CompanyId, service.ConnectorAccountId);
+    }
+    internal AuthenticatedGroupService Service { get; }
+    internal Guid Nonce { get; }
+    internal string CommandSha256 { get; }
+    public GroupListenerAccountScope Account { get; }
+    public GroupListenerCommand Command { get; }
+}
+
+public sealed class VerifiedGroupIngress
+{
+    internal VerifiedGroupIngress(AuthenticatedGroupService service, GroupIngressPayload payload)
+    { Service = service; Payload = payload; }
+    internal AuthenticatedGroupService Service { get; }
+    internal GroupIngressPayload Payload { get; }
+    public GroupScope Source => Service.Source;
+}
+
+// The host chooses this policy once; no HTTP/model input can select a profile.
+public sealed class GroupIngressRuntimePolicy
+{
+    private GroupIngressRuntimePolicy(bool synthetic) { IsSyntheticFixture = synthetic; }
+    internal bool IsSyntheticFixture { get; }
+    public static GroupIngressRuntimePolicy Live { get; } = new(false);
+    public static GroupIngressRuntimePolicy OwnedSyntheticFixture(string hostEnvironment, bool ownedDisposable)
+    {
+        if (hostEnvironment != "Development" || !ownedDisposable)
+            throw new InvalidOperationException("Synthetic group ingress requires an owned development fixture.");
+        return new(true);
+    }
+}
+
+public sealed class GroupServiceAuthenticator(PlatformDbContext database,
+    CompositeSecretResolver secrets, GroupIngressRuntimePolicy policy, TimeProvider clock, ILogger<GroupServiceAuthenticator>? logger = null)
+{
+    public const int MaximumBodyBytes = 65536;
+    public const int MaximumListenerBodyBytes = 8192;
+    public static readonly TimeSpan MaximumClockSkew = TimeSpan.FromMinutes(2);
+    private static readonly UTF8Encoding StrictUtf8 = new(false, true);
+    internal static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = false,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        RespectRequiredConstructorParameters = true,
+        MaxDepth = 8
+    };
+
+    public async Task<VerifiedGroupIngress> AuthenticateAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
+    {
+        if (signature is null || body.Length is < 1 or > MaximumBodyBytes) throw GroupServiceDirectory.Denied();
+        // ReadOnlyMemory can alias caller-owned mutable bytes. Parse and sign
+        // one private snapshot across all asynchronous secret/SQL work.
+        var captured = body.ToArray();
+        var phase = "parse";
+        try { return await AuthenticateCapturedAsync(signature, captured, cancellationToken, value => phase = value); }
+        catch (UnauthorizedAccessException)
+        {
+            // Fixed server phases only: never log events, keys, references,
+            // identities, exception bodies or attacker-controlled input.
+            logger?.LogWarning("group-auth-refusal: {Phase}", phase);
+            throw;
+        }
+        finally { CryptographicOperations.ZeroMemory(captured); }
+    }
+
+    public async Task<VerifiedGroupListener> AuthenticateListenerAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
+    {
+        if (signature is null || body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+        var captured = body.ToArray();
+        var phase = "parse";
+        try
+        {
+            var payload = ParseListener(captured);
+            var service = await AuthenticateAuthorityAsync(signature, captured, payload.Identity, GroupSourceEventKind.NewText,
+                "aioffice-group-listener-v1", cancellationToken, value => phase = value);
+            return new(service.Service, payload.Command, signature.Nonce, Convert.ToHexString(SHA256.HashData(captured)));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            logger?.LogWarning("group-listener-auth-refusal: {Phase}", phase);
+            throw;
+        }
+        finally { CryptographicOperations.ZeroMemory(captured); }
+    }
+
+    private async Task<VerifiedGroupIngress> AuthenticateCapturedAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken, Action<string> phase)
+    {
+        var payload = Parse(body);
+        var service = await AuthenticateAuthorityAsync(signature, body, payload.Event.Identity, payload.Event.Kind,
+            "aioffice-group-ingest-v1", cancellationToken, phase);
+        return new(service.Service, payload);
+    }
+
+    public async Task<GroupConnectorEnrollmentSnapshot> AuthenticateEnrollmentAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
+    {
+        if (signature is null || body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+        var captured = body.ToArray();
+        var phase = "parse";
+        try
+        {
+            var request = ParseEnrollment(captured);
+            var result = await AuthenticateAuthorityAsync(signature, captured, request.Identity, GroupSourceEventKind.NewText,
+                "aioffice-group-enrollment-v1", cancellationToken, value => phase = value, request.Source);
+            return result.Enrollment;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            logger?.LogWarning("group-enrollment-auth-refusal: {Phase}", phase);
+            throw;
+        }
+        finally { CryptographicOperations.ZeroMemory(captured); }
+    }
+
+    private sealed record AuthenticationResult(AuthenticatedGroupService Service, GroupConnectorEnrollmentSnapshot Enrollment);
+
+    private async Task<AuthenticationResult> AuthenticateAuthorityAsync(GroupServiceSignature signature,
+        ReadOnlyMemory<byte> body, GroupExternalIdentity external, GroupSourceEventKind kind, string domain,
+        CancellationToken cancellationToken, Action<string> phase, GroupScope? expectedSource = null)
+    {
+        phase("signing-time");
+        var now = clock.GetUtcNow();
+        if (signature.ServiceId == Guid.Empty || signature.CredentialEpoch <= 0 || signature.Nonce == Guid.Empty ||
+            !IsHash(signature.SignatureHex)) throw GroupServiceDirectory.Denied();
+        DateTimeOffset signedAt;
+        try { signedAt = DateTimeOffset.FromUnixTimeSeconds(signature.SignedAtUnixSeconds); }
+        catch (ArgumentOutOfRangeException) { throw GroupServiceDirectory.Denied(); }
+        RequireFreshSigningTime(signedAt, now);
+        var signingBytes = SigningBytes(signature, body.Span, domain);
+
+        var directory = new GroupServiceDirectory(database);
+        var permissions = new GroupIngressPermissionVerifier(database);
+        await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
+        phase("permissions-initial");
+        await permissions.RequireSafeRuntimeAsync(cancellationToken);
+        phase("registry-initial");
+        var authority = await directory.RequireIngestAsync(new(signature.ServiceId, signature.CredentialEpoch), external, cancellationToken);
+        if (expectedSource is not null && authority.Source.Scope != expectedSource) throw GroupServiceDirectory.Denied();
+        phase("qualification-initial");
+        RequireQualification(authority.Account, kind, now, policy);
+        var verified = new AuthenticatedGroupService(authority, signedAt);
+        byte[] key;
+        try
+        {
+            phase("service-key");
+            var value = await secrets.ResolveAsync(SecretReference.Parse(authority.CredentialReference), cancellationToken);
+            if (value.Length != 44) throw GroupServiceDirectory.Denied();
+            key = Convert.FromBase64String(value);
+            if (key.Length != 32 || Convert.ToBase64String(key) != value)
+            { CryptographicOperations.ZeroMemory(key); throw GroupServiceDirectory.Denied(); }
+        }
+        catch (Exception error) when (error is FormatException or NotSupportedException or InvalidOperationException)
+        { throw GroupServiceDirectory.Denied(); }
+        try
+        {
+            phase("hmac");
+            var expected = HMACSHA256.HashData(key, signingBytes);
+            if (!CryptographicOperations.FixedTimeEquals(expected, Convert.FromHexString(signature.SignatureHex)))
+                throw GroupServiceDirectory.Denied();
+            phase("registry-final");
+            var current = await directory.RequireCurrentAsync(verified, cancellationToken);
+            phase("permissions-final");
+            await permissions.RequireSafeRuntimeAsync(cancellationToken);
+            phase("expiry-final");
+            var finalNow = clock.GetUtcNow();
+            RequireFreshSigningTime(signedAt, finalNow);
+            var qualification = RequireQualification(current.Account, kind, finalNow, policy);
+            var enrollment = GroupConnectorEnrollmentSnapshot.FromCurrent(current, qualification, finalNow);
+            await transaction.CommitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            return new(verified, enrollment);
+        }
+        finally { CryptographicOperations.ZeroMemory(key); }
+    }
+
+    internal static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-ingest-v1");
+    internal static byte[] ListenerSigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-listener-v1");
+    internal static byte[] EnrollmentSigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "aioffice-group-enrollment-v1");
+    private static byte[] SigningBytes(GroupServiceSignature signature, ReadOnlySpan<byte> body, string domain) => Encoding.ASCII.GetBytes(
+        FormattableString.Invariant($"{domain}\n{signature.ServiceId:D}\n{signature.CredentialEpoch}\n{signature.SignedAtUnixSeconds}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
+
+    internal static GroupListenerPayload ParseListener(ReadOnlyMemory<byte> body)
+    {
+        try
+        {
+            if (body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+            _ = StrictUtf8.GetCharCount(body.Span);
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 8 });
+            RequireUniqueProperties(document.RootElement);
+            var payload = document.Deserialize<GroupListenerPayload>(JsonOptions) ?? throw GroupServiceDirectory.Denied();
+            if (payload.Identity is null || payload.Command is null) throw GroupServiceDirectory.Denied();
+            payload.Identity.Validate(); payload.Command.Validate();
+            return payload;
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        { throw GroupServiceDirectory.Denied(); }
+    }
+
+    internal static void RequireFreshSigningTime(DateTimeOffset signedAtUtc, DateTimeOffset nowUtc)
+    {
+        if (signedAtUtc.Offset != TimeSpan.Zero || nowUtc.Offset != TimeSpan.Zero || (nowUtc - signedAtUtc).Duration() > MaximumClockSkew)
+            throw GroupServiceDirectory.Denied();
+    }
+
+    internal static GroupIngressPayload Parse(ReadOnlyMemory<byte> body)
+    {
+        try
+        {
+            if (body.Length is < 1 or > MaximumBodyBytes) throw GroupServiceDirectory.Denied();
+            _ = StrictUtf8.GetCharCount(body.Span);
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 8 });
+            RequireUniqueProperties(document.RootElement);
+            var payload = document.Deserialize<GroupIngressPayload>(JsonOptions) ?? throw GroupServiceDirectory.Denied();
+            if (payload.Event is null || !payload.IsGroup || payload.IsSelf || payload.IsKnownReportEcho ||
+                payload.ListenerOwnerId == Guid.Empty || payload.ListenerEpoch <= 0 || payload.Text is null ||
+                payload.Text.Length > GroupSourceContentProtector.MaximumTextLength) throw GroupServiceDirectory.Denied();
+            payload.Event.Validate();
+            var contentHash = Convert.ToHexString(SHA256.HashData(StrictUtf8.GetBytes(payload.Text)));
+            if (payload.Event.ContentSha256 != contentHash) throw GroupServiceDirectory.Denied();
+            return payload;
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        { throw GroupServiceDirectory.Denied(); }
+    }
+
+    private static void RequireUniqueProperties(JsonElement node)
+    {
+        if (node.ValueKind == JsonValueKind.Object)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var property in node.EnumerateObject())
+            { if (!names.Add(property.Name)) throw GroupServiceDirectory.Denied(); RequireUniqueProperties(property.Value); }
+        }
+        else if (node.ValueKind == JsonValueKind.Array)
+            foreach (var item in node.EnumerateArray()) RequireUniqueProperties(item);
+    }
+
+    internal static GroupConnectorQualification RequireQualification(GroupConnectorAccountRecord account, GroupSourceEventKind kind, DateTimeOffset now, GroupIngressRuntimePolicy policy)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(account.QualificationJson, new JsonDocumentOptions { MaxDepth = 8 });
+            RequireUniqueProperties(document.RootElement);
+            var stored = document.Deserialize<RegistryQualification>(JsonOptions) ?? throw GroupServiceDirectory.Denied();
+            var artifact = new GroupConnectorArtifact(account.Provider, account.PackageVersion, account.GitCommit);
+            var qualification = new GroupConnectorQualification(account.TenantId, account.CompanyId, account.Id,
+                account.ExternalAccountId, artifact, stored.Environment, stored.Observations);
+            if (policy.IsSyntheticFixture)
+            {
+                if (account.Provider != "synthetic" || account.PackageVersion != "owned-fixture" ||
+                    stored.Environment != GroupQualificationEnvironment.Synthetic) throw GroupServiceDirectory.Denied();
+            }
+            else if (account.Provider == "synthetic" || account.PackageVersion == "owned-fixture" ||
+                !qualification.AllowsLiveProfile(GroupConnectorProfile.Receive, account.TenantId, account.CompanyId,
+                account.Id, account.ExternalAccountId, artifact, now)) throw GroupServiceDirectory.Denied();
+            var extra = kind == GroupSourceEventKind.Edit ? GroupConnectorCapability.EditEvents :
+                kind == GroupSourceEventKind.Recall ? GroupConnectorCapability.RecallEvents : (GroupConnectorCapability?)null;
+            if (extra is not null && !qualification.Observations.Any(x => x.Capability == extra &&
+                x.Support == GroupConnectorSupport.Supported && x.EvidenceId != Guid.Empty && x.ObservedAtUtc <= now &&
+                now - x.ObservedAtUtc <= GroupConnectorQualification.MaximumObservationAge)) throw GroupServiceDirectory.Denied();
+            return qualification;
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        { throw GroupServiceDirectory.Denied(); }
+    }
+
+    private static bool IsHash(string value) => value is not null && value.Length == 64 &&
+        value.All(c => c is >= '0' and <= '9' or >= 'A' and <= 'F');
+    private sealed record RegistryQualification(GroupQualificationEnvironment Environment, IReadOnlyList<GroupConnectorObservation> Observations);
+
+    internal static GroupConnectorEnrollmentRequest ParseEnrollment(ReadOnlyMemory<byte> body)
+    {
+        try
+        {
+            if (body.Length is < 1 or > MaximumListenerBodyBytes) throw GroupServiceDirectory.Denied();
+            _ = StrictUtf8.GetCharCount(body.Span);
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 8 });
+            RequireUniqueProperties(document.RootElement);
+            var request = document.Deserialize<GroupConnectorEnrollmentRequest>(JsonOptions) ?? throw GroupServiceDirectory.Denied();
+            request.Validate(); return request;
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        { throw GroupServiceDirectory.Denied(); }
+    }
+}

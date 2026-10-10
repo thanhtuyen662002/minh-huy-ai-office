@@ -10,6 +10,8 @@ public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
     private static readonly PathString SlaStatusPath = new("/api/sla/status");
     private static readonly PathString TasksPath = new("/api/tasks");
     private static readonly PathString CompanyPath = new("/api/company");
+    private static readonly PathString GroupIngressPath = new("/internal/group-ingress");
+    private static readonly PathString GroupSourcesPath = new("/api/group-sources");
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -22,7 +24,9 @@ public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
             || context.Request.Path.StartsWithSegments(AuditPath)
             || context.Request.Path.Equals(SlaStatusPath)
             || context.Request.Path.StartsWithSegments(TasksPath)
-            || context.Request.Path.StartsWithSegments(CompanyPath))
+            || context.Request.Path.StartsWithSegments(CompanyPath)
+            || context.Request.Path.StartsWithSegments(GroupIngressPath)
+            || context.Request.Path.StartsWithSegments(GroupSourcesPath))
         {
             context.Response.Headers.CacheControl = "no-store";
         }

@@ -2,6 +2,7 @@
 import { resolve, join } from "node:path";
 import { readFile, mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
+import { observeSubmissionLifecycle, submissionAbortStage, observeSubmissionWire, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
 
 export async function verifyTaskSubmission({ directory, manifest, browser, ownerPage: page, ownerContext, sql, app, identity, coreReplyFault, setStage }) {
   const proof = condition => { if (!condition) throw new Error("Task submission browser proof failed."); };
@@ -47,12 +48,22 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   const sid = async context => (await context.cookies(app)).find(item => item.name === "aioffice_browser_session")?.value;
   const waitResponse = (path, status) => page.waitForResponse(response => new URL(response.url()).pathname === path
     && response.request().method() === "POST" && response.status() === status, { timeout: 20_000 });
-  async function switchCompany(target, selected) {
+  async function switchCompany(target, selected, phase = "provider-company-switch") {
     const callback = target.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     const request = target.waitForRequest(request => request.url().startsWith(identity + "/realms/aioffice-local/protocol/openid-connect/auth?"));
+    // A waiter can reject while selectOption is still pending. Observe that
+    // rejection immediately, then require the original waiter below so its
+    // failure reaches the fixed-stage parent and owned restoration finally.
+    callback.catch(() => {}); request.catch(() => {});
+    stage(phase + "-select");
     await target.getByRole("combobox", { name: "Chuyển công ty", exact: true }).selectOption(selected);
+    stage(phase + "-auth-request");
     const url = new URL((await request).url()); proof(url.searchParams.get("response_type") === "code" && url.searchParams.get("code_challenge_method") === "S256");
-    proof((await callback).status() === 303); await target.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage(phase + "-callback");
+    proof((await callback).status() === 303);
+    stage(phase + "-workspace");
+    await target.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage(phase + "-current-session");
     const current = await get(target, `/api/local/session?companyId=${selected}`); proof(current.status === 200 && JSON.parse(current.text).companyId === selected);
   }
   async function completed(task) {
@@ -74,35 +85,106 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
   }
   async function idle() { await page.getByRole("button", { name: "Gửi", exact: true }).waitFor();
     await page.waitForFunction(() => [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Gửi" && !button.disabled), null, { timeout: 60_000 }); }
+  async function requiredReceipt(response, phase) {
+    const streamFailure = async fallback => {
+      // Playwright's client finished promise need not settle on requestfailed.
+      // Read the actual browser failure, exposing only exact fixed categories.
+      // This remains a refusal; never replace the receipt or retry a request.
+      let failure;
+      try { failure = response.request().failure()?.errorText; } catch { /* Unknown browser boundary. */ }
+      if (failure === "net::ERR_ABORTED") {
+        try {
+          const category = submissionAbortStage(await page.evaluate(url => window.__aiofficeOwnedSubmissionLifecycle?.read(url) ?? null, response.url()));
+          if (category !== "replay-timeout-after-headers") return category;
+          const wire = wireObservation?.read(response.url());
+          if (!wire) return category;
+          const acceptedUi = await page.getByText("Hệ thống đã nhận yêu cầu. Mở Công việc để xem tiến độ và kết quả đã lưu.", { exact: true }).count() === 1;
+          return submissionWireStage(category, { ...wire, acceptedUi });
+        } catch { return "replay-request-aborted"; }
+      }
+      return new Map([
+        ["net::ERR_ABORTED", "replay-request-aborted"],
+        ["net::ERR_CONNECTION_RESET", "replay-request-reset"],
+        ["net::ERR_INCOMPLETE_CHUNKED_ENCODING", "replay-request-truncated"],
+        ["net::ERR_CONTENT_LENGTH_MISMATCH", "replay-request-length"],
+        ["net::ERR_FAILED", "replay-request-failed"],
+      ]).get(failure) ?? fallback;
+    };
+    phase("replay-stream-finished");
+    let finished;
+    try { finished = await bounded(response.finished(), 20_000); }
+    catch { phase(await streamFailure("replay-stream-wait-failed")); proof(false); }
+    if (finished !== null) { phase(await streamFailure("replay-stream-failed")); proof(false); }
+    phase("replay-body-read");
+    let bytes;
+    try { bytes = await bounded(response.body(), 20_000); }
+    catch (error) {
+      // Classify only fixed browser protocol boundaries. Never emit the
+      // exception text, which may contain URLs, selectors or private JSON.
+      phase(typeof error?.message === "string" && /No (?:resource|data).*identifier/i.test(error.message)
+        ? "replay-browser-body-unavailable" : "replay-body-read-failed"); proof(false);
+    }
+    phase(bytes.byteLength === 0 ? "replay-empty-body" : bytes.byteLength > 4096 ? "replay-body-too-large" : "replay-body-utf8");
+    proof(bytes.byteLength > 0 && bytes.byteLength <= 4096);
+    let text;
+    try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+    catch { phase("replay-body-invalid-utf8"); proof(false); }
+    phase("replay-body-json");
+    try { return JSON.parse(text); }
+    catch { phase("replay-body-invalid-json"); proof(false); }
+  }
   const sent = [];
   const observe = request => { if (request.method() === "POST" && new URL(request.url()).pathname.startsWith("/api/local/tasks/intents"))
     sent.push({ path: new URL(request.url()).pathname, body: request.postDataJSON() }); };
   page.on("request", observe);
-  let secondaryContext, release, heldPattern;
+  let secondaryContext, release, heldPattern, wireObservation;
   try {
+    wireObservation = await observeSubmissionWire(ownerContext, page, { directory, origin: app, company });
+    await page.evaluate(observeSubmissionLifecycle, { origin: app, company });
     for (const boundary of ["headers", "body"]) {
-      stage("real-core202-" + boundary);
+      const phase = name => stage("real-core202-" + boundary + "-" + name);
+      phase("initial-session");
       const question = `Kiểm tra tồn kho ${boundary} 😀 �`, originalSid = await sid(ownerContext), count = sent.length;
       const initialCounts = effectCounts(), initialSnapshot = snapshot();
-      proof(originalSid); await composer(question);
+      proof(originalSid);
+      phase("composer"); await composer(question);
+      phase("fault-arm");
       coreReplyFault.arm({ kind: "task-submit", company, source, question, boundary });
       const lost = page.waitForResponse(response => /\/api\/local\/tasks\/intents\/[0-9a-f-]{36}\/submit\?/.test(response.url())
         && response.request().method() === "POST" && response.status() === 503, { timeout: 20_000 });
+      phase("first-response");
       await page.getByRole("button", { name: "Gửi", exact: true }).click(); await lost;
+      phase("retry-visible");
       await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).waitFor();
       const fault = coreReplyFault.read(); coreReplyFault.disarm();
+      phase("fault-evidence");
       proof(fault.count === 1 && fault.upstreamStatus === 202 && [fault.operationId, fault.taskId, fault.stepId, fault.messageId].every(guid));
+      phase("post-requests");
       proof(sent.length === count + 2 && sent[count].body.question === question && sent[count].body.operationId === fault.operationId
         && Object.keys(sent[count + 1].body).join(",") === "inputFingerprint" && sent[count + 1].body.inputFingerprint === fault.inputFingerprint);
-      await completed(fault.taskId); oneGraph(initialCounts, initialSnapshot, fault.taskId); const committed = snapshot();
+      phase("worker-completed"); await completed(fault.taskId);
+      phase("graph-after-commit"); oneGraph(initialCounts, initialSnapshot, fault.taskId); const committed = snapshot();
+      phase("session-unchanged");
       proof(await sid(ownerContext) === originalSid);
-      const retry = waitResponse(`/api/local/tasks/intents/${fault.operationId}/submit`, 202);
+      // Observe a refusal as well as202; filtering it out hides the actual
+      // boundary behind a timeout. Keep the202 acceptance requirement.
+      const retry = page.waitForResponse(response => new URL(response.url()).pathname === `/api/local/tasks/intents/${fault.operationId}/submit`
+        && response.request().method() === "POST", { timeout: 20_000 });
+      retry.catch(() => {});
+      phase("replay-click");
       await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click();
-      const receipt = await (await retry).json();
+      phase("replay-response");
+      const response = await retry;
+      phase(response.status() === 202 ? "replay-202-body" : response.status() === 503 ? "replay-refused503"
+        : response.status() === 401 ? "replay-refused401" : response.status() === 409 ? "replay-refused409" : "replay-refused-other");
+      proof(response.status() === 202);
+      const receipt = await requiredReceipt(response, phase);
+      phase("receipt-equal");
       proof(["companyId", "operationId", "inputFingerprint", "taskId", "stepId", "messageId", "createdAtUtc"].every(key => receipt[key] === (key === "companyId" ? company : fault[key])));
-      await idle(); proof(await sid(ownerContext) === originalSid && sent.length === count + 3
+      phase("final-idle"); await idle();
+      phase("same-original-request"); proof(await sid(ownerContext) === originalSid && sent.length === count + 3
         && sent[count + 2].path === sent[count + 1].path && JSON.stringify(sent[count + 2].body) === JSON.stringify(sent[count + 1].body));
-      equal(snapshot(), committed);
+      phase("graph-unchanged"); equal(snapshot(), committed);
       console.log(`PASS actual Core committed202 ${boundary} loss, same issuedSID/operation/fingerprint-only explicit retry and unchanged graph/worker/dispatch/settlements`);
     }
 
@@ -138,17 +220,44 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     proof(sent.length === count + 1); equal(snapshot(), frozen);
 
     stage("historical-owner-read-current-source-denial");
+    const historicalPhase = name => stage("historical-source-" + name);
     try {
+      historicalPhase("disable-sql");
       sql(`USE AIOfficeLocal; UPDATE aioffice.DataSources SET IsEnabled=0 WHERE ${scope} AND Id='${source}';`);
-      const historical = await get(page, savedPath + query); proof(historical.status === 200 && JSON.parse(historical.text).question === question);
-      const denied = waitResponse(savedPath + "/submit", 403);
-      await page.getByRole("button", { name: "Gửi yêu cầu đã lưu", exact: true }).click(); await denied;
-      await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).waitFor(); equal(snapshot(), frozen);
+      historicalPhase("owner-read");
+      const historical = await get(page, savedPath + query);
+      historicalPhase(historical.status === 200 ? "owner-body" : historical.status === 401 ? "owner-refused401"
+        : historical.status === 403 ? "owner-refused403" : historical.status === 503 ? "owner-refused503" : "owner-refused-other");
+      proof(historical.status === 200 && JSON.parse(historical.text).question === question);
+      const denied = page.waitForResponse(response => new URL(response.url()).pathname === savedPath + "/submit"
+        && response.request().method() === "POST", { timeout: 20_000 });
+      denied.catch(() => {});
+      historicalPhase("denied-send-click");
+      await page.getByRole("button", { name: "Gửi yêu cầu đã lưu", exact: true }).click();
+      historicalPhase("denied-response");
+      const refusal = await denied;
+      historicalPhase(refusal.status() === 403 ? "denied403" : refusal.status() === 409 ? "denied-refused409"
+        : refusal.status() === 401 ? "denied-refused401" : refusal.status() === 503 ? "denied-refused503" : "denied-refused-other");
+      proof(refusal.status() === 403);
+      historicalPhase("retry-visible");
+      await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).waitFor();
+      historicalPhase("denied-graph-unchanged"); equal(snapshot(), frozen);
     } finally { sql(`USE AIOfficeLocal; UPDATE aioffice.DataSources SET IsEnabled=1 WHERE ${scope} AND Id='${source}';`); }
-    const positive = waitResponse(savedPath + "/submit", 202);
-    await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click(); const receipt = await (await positive).json();
+    const positive = page.waitForResponse(response => new URL(response.url()).pathname === savedPath + "/submit"
+      && response.request().method() === "POST", { timeout: 20_000 });
+    positive.catch(() => {});
+    historicalPhase("restored-send-click");
+    await page.getByRole("button", { name: "Thử lại đúng yêu cầu", exact: true }).click();
+    historicalPhase("restored-response");
+    const restoredResponse = await positive;
+    historicalPhase(restoredResponse.status() === 202 ? "restored202-body" : restoredResponse.status() === 409 ? "restored-refused409"
+      : restoredResponse.status() === 401 ? "restored-refused401" : restoredResponse.status() === 503 ? "restored-refused503" : "restored-refused-other");
+    proof(restoredResponse.status() === 202); const receipt = await restoredResponse.json();
+    historicalPhase("restored-receipt-equal");
     proof(receipt.operationId === prepared.operationId && receipt.inputFingerprint === prepared.inputFingerprint);
-    await completed(receipt.taskId); oneGraph(initialCounts, initial, receipt.taskId); await idle();
+    historicalPhase("restored-worker"); await completed(receipt.taskId);
+    historicalPhase("restored-one-graph"); oneGraph(initialCounts, initial, receipt.taskId);
+    historicalPhase("restored-idle"); await idle();
     console.log("PASS real prepare reply loss, reload/new CodeS256 issuedSID GET-only owner recovery, explicit restored-source send and one completed task");
 
     stage("second-provider-owner-and-company-isolation");
@@ -194,11 +303,11 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       } catch { failed = true; captured(); await route.abort().catch(() => {}); } finally { finished(); }
     });
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).click();
-    await bounded(reached); proof(!failed); await switchCompany(page, fixture.companyId); release(); await bounded(delivered);
+    await bounded(reached); proof(!failed); await switchCompany(page, fixture.companyId, "held-private-intent-switch-away"); release(); await bounded(delivered);
     await page.unroute(heldPattern); heldPattern = null;
     proof(attempted && !failed && await page.getByText(lateQuestion, { exact: true }).count() === 0 && sent.length === readCount);
     proof((await get(page, `/api/local/tasks/intents/${lateOp}?companyId=${fixture.companyId}`)).status === 404);
-    await switchCompany(page, company); await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await switchCompany(page, company, "held-private-intent-switch-back"); await page.getByRole("button", { name: "Công việc", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor(); equal(snapshot(), baseline);
     console.log("PASS actual successful private intent held across provider company switch is discarded, restored GET-only recovery preserves all effect and intent bytes");
     stage("external-member-loss-private-clear-restored-recovery");
@@ -217,6 +326,8 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     console.log("PASS shipping owner recovery clears private data after external membership loss and restores GET-only under a new issued session with unchanged durable bytes");
     await page.getByRole("button", { name: "Trợ lý AI", exact: true }).first().click();
   } finally {
+    await wireObservation?.dispose().catch(() => {});
+    await page.evaluate(() => window.__aiofficeOwnedSubmissionLifecycle?.dispose()).catch(() => {});
     page.off("request", observe); release?.(); if (heldPattern) await page.unroute(heldPattern).catch(() => {});
     coreReplyFault.disarm(); if (secondaryContext) await secondaryContext.close();
   }

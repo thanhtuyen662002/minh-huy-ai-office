@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/276-group-routing-contracts
-current_pr: 282
-current_target_head: ee30ad80680c1cd457cb5b3518111efaa17575ae
-last_verified_commit: 1b0b7c53273a9405ff8d60b9c1976c6f6cc34519
+current_branch: codex/277-group-durable-ingress
+current_pr: 283
+current_target_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
 
 critical_paths:
   backend:
-    issue: 276
-    pr: 282
-    branch: codex/276-group-routing-contracts
-    head: ee30ad80680c1cd457cb5b3518111efaa17575ae
-    state: in_progress
-    next: '276/282 active. Full frozen ee30 contracts/qualification review APPROVED6088762933:475 independent tests including13 own probes;66 new/full462 repository Contracts PASS. Accepted main281/1b0 exact all8 Build37985845222/Gov37985845186/actual114007505342/quality114011846100 PASS. Integrated1b0 locally; final documentation/integration review and exact final PR/main gates remain. Then277 SQL ingress,278 real SQL brain/automatic notes,279 IT-only reporter. No live qualification/activation or runtime delivery from contracts.'
+    issue: 277
+    pr: 283
+    branch: codex/277-group-durable-ingress
+    head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+    state: full_runtime_approved_final_docs_gates_pending
+    next: 'Exactc619 all8/Gov SUCCESS; actual pending persistent reference RabbitMQ process restart and strict same-snapshot shipping ACK/delivery/consumer/final queue/count2/full8/portal/isolation PASS, root selected80 required markers/six images verified. Full c619 APPROVED6095552242; finaldocs/exact finalPR/main closure before277 merge, then278/279/full233.'
 
   erp_data:
     issue: 264
@@ -80,7 +80,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Close owned276/282 final integration/documentation review and exact final PR/main gates after full ee30 approval6088762933. Accepted281/main1b0 all8 verified and integrated locally. Immediately continue277 SQL ingress/revisions/coverage/queue,278 SQL-backed scoped brain/automatic notes and279 SQL-driven IT-only reporter. No per-item approval/customer outbound/live activation; all62/233 active;273 queued/239actualWindows-signingDraft.'
+next_action: 'Exactc619 Build38035314357/Gov38035314405/all8/actual114164418527/quality114167539832 SUCCESS; root selected80 required markers/six images inspected. Full c619 core277 APPROVED6095552242; close doc-only final review, approved final push/exact finalPR/main gates before eligible merge. After accepted277/main proceed278 SQL brain/automatic notes then279 IT reporter; full233 active.'
 
 
 blocked_by:
@@ -529,3 +529,280 @@ group_ci_issued_redis_repair:
   result: 'Managed direct-cache bootstrap, deployment and FE runtime PASS. Web1275 tests PASS but retained actual restored-RDB restart refused a container name instead of required64hex issuedID. Independent reviewer also reproduced unowned name-cleanup risk. Same282 captures successful docker run fullID as step output before readiness; unchanged physical Redis restart test and cleanup consume only that issuedID. Empty/invalid output cannot remove a preexisting container; no name fallback.'
   local: '8 cache tests/YAML/diff PASS; frozen delta independent review and hosted actualRedis/full gates remain required. Prior actual114029064733 still running and deliberately retained for expiry diagnosis before the next push.'
   next: 'Close both review findings on frozen issuedID repair; preserve current actual proof until terminal, then push and own exact gates. Do not merge until final all8 PR/main and current independent approval.'
+
+
+group_contracts_delivered_276:
+  pr: 282
+  head: 5e04cfabc24059b3bb0cae5121625ede14ed2a79
+  reviews: [6088762933,6088892125,6089109985,6089491503]
+  pr_build: 37993213419
+  pr_governance: 37993213376
+  pr_actual: 114032470855
+  pr_quality: 114036373283
+  main: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
+  main_build: 37994392711
+  main_governance: 37994392804
+  main_actual: 114036573516
+  main_quality: 114040168330
+  state: done
+  result: '276 CLOSED/282 MERGED with exact finalPR/main all8 and retained actualSQL/Redis/Chromium PASS. Typed contracts and unverified qualification registry only; actual277-279 source/brain/notes/reports and full233 remain. Four auth counterexamples independently closed at061; store timing/HTTP ongoing and actual277 runtime unproved.'
+
+group_reference_inbox_foundation:
+  predecessor: b62e19b2ab0c379132b841c6e2625e4da722d86c
+  predecessor_review: 6093317472
+  predecessor_build: 38020840049
+  predecessor_governance: 38020840088
+  predecessor_status: in_progress
+  local: '212 focused controls PASS0skip (143 Persistence/69 Contracts); clean Persistence build0warnings0errors, EF no pending model changes, additive migration script generated against inert local design-time configuration. No actual SQL or broker execution yet.'
+  scope: 'Strict bounded reference-only broker DTO; trusted host-fixed Extract worker binding; current SQL Extract authorization and immutable metadata-only inbox receipt. Duplicate100 retains original receipt; delivery before producer confirmation/retry reservation is supported while actual revision commit must be UTC and not future. No key/private source/model/portal Task/User access or cursor advance.'
+  migration: '20261010031308_AddGroupIngressInbox; scoped Restrict FKs and unique committed sequence; operator-owned runtime SELECT/INSERT with table and every-column UPDATE/DELETE/ALTER/TAKEOWNERSHIP denial. Runtime verifier now requires all15 group tables. Down refuses destructive rollback; forward repair required.'
+  state: local_tested_unreviewed
+  next: 'Freeze foundation, obtain independent scoped review and close exact-head CI before acceptance. Implement separately gated reference-only publisher/consumer and owned native SQL/broker interruption/redelivery/current-grant proof. b62 current historical browser diagnostic CI remains actively owned; terminal red must be repaired immediately on this PR. No full277/278/279/233 completion or live/customer deployment claim.'
+
+group_reference_publication_checkpoint:
+  foundation: 21d3c3d0e9e39923f8b85eca21c4e18e012ccc15
+  foundation_review: 6093416207
+  foundation_result: 'Scoped APPROVED:241 local controls PASS0skip including29 independent probes;9 generated SQL160 parses/model/YAML/diff PASS. Native concurrent SQL/rollback and broker acceptance remain.'
+  local: '31 publication/transport controls PASS0skip (13 outbox/18 broker boundary); clean Worker build0warnings0errors and changed-file whitespace PASS. No DI or broker execution yet.'
+  scope: 'Source-locked durable5s reservation precedes bounded10s reference publication; retries retain original EventId until SQL inbox exists. Lost/delayed confirms cannot erase backlog or overwrite newer reservation. Current host Extract authority is required before reservation/publication/confirmation; consumer rechecks SQL authority and original graph before exact durable receipt/ACK. No private source/key/portal task/cursor access.'
+  transport: 'Separate deterministic tenant/company/service queue; persistent mandatory confirmed reference messages,2048-byte inbound cap, bounded prefetch, channel-owned callbacks and explicit replacement backoff. Malformed/denied deliveries are NACKed without immediate requeue; original SQL outbox retries after its durable delay. No provider/live activation.'
+  next: 'Freeze publication unit and obtain independent scoped review; finish default-off trusted host registration and owned native SQL/RabbitMQ interruption/restart proof. b62 Build38020840049/Gov38020840088 is actively closing before another push; terminal red repaired same PR. Full277/278/279/233 remain active.'
+
+group_publication_tracking_and_browser_body_repair:
+  failing_runtime_head: b62e19b2ab0c379132b841c6e2625e4da722d86c
+  build: 38020840049
+  governance: 38020840088
+  actual: 114121265377
+  quality: 114123892704
+  result: 'Six prerequisites/Gov PASS; root inspected ALL3 actual current metadata/Renew/spool and all retained group/listener/read markers PASS. Core202 header-loss Chromium PASS; body-loss replay reached202 then failed reading browser body. Historical substages and later company switch not re-exercised. Cause remains unproven.'
+  publication_review: 'a4ad556 scoped review reproduced P2: unchanged pretracked EF outbox attempt0 can overwrite separately committed attempt5 as1. Both reservation/confirmation now read fresh AsNoTracking under source lock and attach only fresh matching row, detaching only matching unchanged prior entry and preserving unrelated tracked entities. Two independent-context regressions added; renewed frozen review required.'
+  diagnostic: 'Required202 receipt now separates completed-stream/null failure, bounded4096-byte body read, empty/overflow, fatal UTF8 and JSON. Fixed refusal labels only; original exact receipt/effect/source restoration assertions and no retry remain. Browser protocol body-unavailable is classified without printing private exception/body. Local10 Node guards PASS; native classification not executed yet.'
+  next: 'Close publication P2 with frozen independent review; push reviewed repaired snapshot after terminal b62 closure and own exact renewed all8/native/Chromium. Continue default-off DI and mandatory owned native SQL/broker interruption/restart proof. Full277/278/279/233 remain ACTIVE.'
+
+group_publication_review_repairs:
+  reviewed_head: a4ad55696e9d6b36eb30d891594724ca40aa5f3e
+  state: local_tested_pending_frozen_review
+  findings: 'Independent review withheld approval after3 reproduced P2 categories: stale tracked reservation/confirmation; ACK/NACK outside delivery10s deadline; broker cancellation not retiring otherwise open consumer attempt. No other parsing/domain/privacy finding. Retained31 and five independent controls PASS.'
+  repairs: 'Fresh under-lock AsNoTracking plus matching unchanged attachment replacement; actual unknown/confirmed newer attempts preserved; ACK/NACK use delivery deadline and bounded WaitAsync even for noncooperative settlement, late faults observed, timeout retires only original attempt. Actual SDK7.2.2 UnregisteredAsync handles server cancel and wakes bounded replacement loop; callbacks capture original channel.'
+  local: '37 publication/transport controls PASS0skip:16 dispatcher/18 boundary/3 actual inert receiver and SDK-cancel controls. Includes actual10s noncooperative ACK/NACK with original SQL inbox/backlog and no late replacement settlement. Native SQL/broker still required.'
+  next: 'Obtain independent repaired frozen review, push and own renewed exact CI after terminal b62. Then default-off DI/native SQL/RabbitMQ interruption and restart proof. Full277/278/279/233 remain active.'
+
+group_reference_pipeline_registration:
+  state: scoped_approved_local_unpushed
+  reviewed_publication_head: e3417eaffab88d289383d6610407542064ccd7de
+  scoped_publication_approval: 6093549235
+  exact_build: 38022812535
+  exact_governance: 38022812541
+  actual_stack_job: 114127247688
+  dotnet_failure: '114127247828 inspected CHARSET at generated inbox migration BOM; local repair removes BOM only, no migration behavior change.'
+  implementation: 'Explicit default-off Core producer and Worker consumer; canonical fixed host binding and replacement refusal; worker effective permission startup proof;32-candidate fair identity-hash traversal with durable due/retry/receipt in SQL and per-source fresh authority.'
+  local_evidence: '55 focused tests PASS0skip (18 registration/catalog/native query translation with no connection plus37 publication/boundary/actual inert SDK controls); changed files format PASS.'
+  limits: 'Local DI services resolved but not started; no native SQL/broker concurrency/interruption/restart/revoke/rollback or provider qualification claimed. Current actual run is terminal RED at browser body completed-stream wait; no new native reference execution yet.'
+  next: 'aad DI/BOM scoped APPROVED6093691699/63.NET; repair terminal e341 browser failure and native proof P2s SAME PR; reviewed push and actual owned SQL/RabbitMQ proof. Full277/278/279/233 active.'
+
+group_reference_native_proof_candidate:
+  state: scoped_repaired_approved_native_execution_pending
+  reviewed_native_head: b5f196387784aaa0ec8085c3b3b1172adf43068d
+  scoped_native_approval: 6093886641
+  reviewed_host_registration: aad0025a3740e9de45de3d366094776582467947
+  scoped_host_approval: 6093691699
+  exact_ci_head: e3417eaffab88d289383d6610407542064ccd7de
+  exact_build: 38022812535
+  exact_governance: 38022812541
+  actual_stack_job: 114127247688
+  implementation: 'Separate nonshipping guarded runtime executable and owned coordinator, based on two actual Core/spool committed references; shipping outbox publisher/strict delivery boundary/SQL inbox plus actual broker hold-ACK/owned child kill/redelivery,100 duplicate receipts, rollback/current and observed queued Extract revoke/unsafe column refusal; actual Core/Worker DI second-event delivery and restart.'
+  local_evidence: '12 guard tests PASS0skip;37 retained/current Python guards PASS after actual cleanup/restart-oracle fault controls; clean native proof build and changed CSharp format PASS; no native local resources available.'
+  oracles: 'Preserve full five private graph tables and all immutable original outbox fields; only separate owned source delivery fields may change; original parent full6 graph, exact durable inbox receipt, source cursor and portal cardinalities remain strict. Verify owned label/container ID before kill; restore baseline Worker even on Core restore failure; no secret arguments or private diagnostics.'
+  limits: 'Executable proof has not run against native SQL/RabbitMQ. Scope approval must precede push and all owned exact-head oracles must pass before acceptance. e341 actual is terminal RED at body retry completed-stream wait; .NET migration BOM-only repair already approved in aad.'
+  next: 'Native b5 scoped APPROVED6093886641/all3 proof P2s CLOSED; 316 separately scoped APPROVED; then approved push and exact owned CI execution; repair terminal defects SAME PR. Provider/operational listener/278/279/full233 remain active.'
+
+group_reference_approved_push_checkpoint:
+  published_predecessor: e3417eaffab88d289383d6610407542064ccd7de
+  reviewed_runtime_head: 31606664c3a80e621052f3e79fef246e4813ccb7
+  state: approved_checkpoint_before_exact_ci
+  native_approval: 6093886641
+  diagnostic_result: "Scoped APPROVED316;10 retained and34 independent Node controls PASS, exact error whitelist/unknown fallback/private accessor failures remain strict refusal before body."
+  next: "Push the approved native/diagnostic snapshot only, capture exact new HEAD/run/job IDs in HANDOFF, own native SQL/RabbitMQ and full Chromium to terminal; repair real failures SAME283. Later local lease-result code is excluded from this checkpoint."
+
+group_connector_recovery_session_checkpoint:
+  remote_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+  build: 38025424177
+  governance: 38025424210
+  actual_stack_job: 114135146988
+  remote_state: 'Terminal RED in unsafe-column native proof classifier; six prerequisites and Governance PASS. Four reference stages PASS through observed queued Extract revoke; DI/restart/main browser unexecuted.'
+  local_parent: 143ef68bb18d41f224de83c0aadde05c4bca3bb6
+  parent_review: 6093966487
+  state: local_tested_pending_frozen_review
+  implementation: 'One generated process owner serializes capture/recovery; fresh backend Acquire/Renew and current authority before keys; authenticated SQL ACK only; exact open spool binding; immutable cloned at-most256 enrollment;32-item fair traversal retains poison captures; waiting cancellation cannot erase active lease. No provider/DI/host activation.'
+  local: '89 combined spool-transport/file controls PASS0skip; changed CSharp format/diff PASS. Reply loss/restart/new epoch/fair traversal/current version and grant denial/noncooperative four phases/late ACK/post-key and queued cancellation all covered. Native operational host/restart proof remains.'
+  next: 'Freeze/review session on local parent143; keep ee exact CI ownership. Terminal red repaired immediately SAME283. Push follow-on only after scoped approval and current actual terminal. Provider/278/279/full233 remain active.'
+
+group_reference_ee_native_refusal_repair:
+  failed_head: ee3676771d9c8ff0b513ddfeea73d5662bda8d5b
+  build: 38025424177
+  governance: 38025424210
+  actual: 114135146988
+  quality: 114137785020
+  result: 'Root inspected terminal logs: retained group/read/listener and all3 current spool markers PASS; native hold/kill/redelivery/original ACK,100 duplicates, rollback/current Extract revoke and observed queued revoke PASS. Unsafe setup proved actual column UPDATE=1, then child refused at unsafe but harness expected InvalidOperationException. DI/restart/main browser not re-exercised.'
+  repair: 'Test-only exact expected type classifier: actual shipping permission verifier returns DataSourceSecretBindingService.Unavailable() UnauthorizedAccessException; deny/unsafe accept only this type category, rollback only DbUpdateException. Unexpected InvalidOperationException/IO/cancellation remain FAIL. Shipping policy, graph/oracles/restoration unchanged.'
+  local: '17 native guard/classifier controls PASS0skip; changed CSharp format PASS. Native rerun required; underlying child exception not emitted to logs.'
+  state: local_tested_pending_frozen_review
+  next: 'Independent frozen classifier and076 session closure, reviewed push SAME283, own renewed exact CI through all native DI/restart and main Chromium; no full277/233 completion.'
+
+group_connector_default_off_host_checkpoint:
+  remote_head: 995286fae8447c08cb87611a503b8fe83431103c
+  build: 38026673330
+  governance: 38026673652
+  actual: 114138866854
+  remote_state: 'Terminal RED in Chromium retry after realCore202 headers loss; all six native SQL/RabbitMQ reference stages PASS; six prerequisites/Gov PASS.'
+  session_approval: 6094089395
+  classifier_approval: 6094089704
+  state: local_tested_pending_frozen_review
+  implementation: 'Explicit default-off account Worker runtime/loop; immutable cloned bounded host binding, HTTPS origin/purpose separate keys/existing private root, inert DI resolution/fast source refusal; shared session owner and shutdown cancellation; fixed logs/backoff, both-order reference role authority refusal. No provider added or activated.'
+  local: '071 review withheld for reproduced recovery-only startup missing GroupIngressPermissionVerifier. Registered TryAddScoped and added two exact startup-resolution controls;62 host/pipeline PASS0skip. Inert resolution fixture retains validated scope with owned in-memory DB, no SQL/host activation. Factory/native HTTP/process/SQL/volume proof still required.'
+  next: 'Renew frozen repaired host review, then owned native managed capture/process death/recovery proof. Close995 browser failure SAME283.277/278/279/full233 active.'
+
+group_reference_995_terminal:
+  head: 995286fae8447c08cb87611a503b8fe83431103c
+  build: 38026673330
+  governance: 38026673652
+  actual: 114138866854
+  quality: 114140944176
+  native_result: 'Root inspected all six new owned native reference stages PASS: SQL receipt commit/lost broker ACK/owned child kill/redelivery/original receipt;100 duplicates; insert rollback/current Extract revoke/full graph; observed queued revoke; unsafe effective Inbox column UPDATE refusal/exact restore; shipping Core producer/Worker consumer DI/Core-Worker application restart/resumed original-reference delivery/ACK/source cursor/no fake PortalTask. All retained group/read/listener/current spool controls PASS.'
+  browser_result: 'Retained sign-in/member/admin/callback/logout/Redis expiry/company selection/owner history/two-user privacy PASS. New main-browser headers-loss replay received202 then net::ERR_ABORTED; stream/receipt/full effect gate remains strict and failed. Abort cause unproven; body replay and later historical/company gates unexecuted.'
+  local_observation: 'Nonshipping owned-only observer preserves original fetch/Response/signal; records only fixed abort kind/header timing projection, no body/cookie/header values, retries or timeout change.16 retained/current Node controls PASS0skip; local Chrome actual bounded reader positive/cut/timeout controls PASS with observer. Native next run required; no shipping cause claimed.'
+  next: 'Frozen repaired host and observation review, approved push SAME283, native exact CI closure; fix proven browser cause without weakening bounds/oracles. No full277 acceptance.'
+
+group_connector_native_startup_candidate:
+  state: local_candidate_native_execution_pending
+  implementation: 'Additional guarded reference-container mode exercises recovery-only/reference-pipeline-off registration with actual owned runtime SQL principal and GetRequiredService<GroupIngressPermissionVerifier>. ValidateOnBuild/Scopes and inert runtime/host resolution require no keys/HTTP/volume creation; exact full8 source graph and zero inbox effects compared before publication.'
+  local: 'Native reference executable build0warnings0errors, changed format and37 retained Python guards PASS. No local SQL/Docker; actual native permission execution remains mandatory.'
+  limits: 'This covers startup dependency composition, not managed capture/hosted recovery process/volume/HTTP acceptance or provider activation. No full277 acceptance.'
+  next: 'Freeze/review before push, then own native exact CI. Keep1cb observation/host scope independent; push cannot cancel another active actual run.'
+
+group_connector_1cb_dispatch:
+  head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
+  build: 38028533634
+  governance: 38028533645
+  scoped_approval: 6094320091
+  review: 'Original recovery-only startup P2 independently CLOSED with unchanged pipeline false/true probe;80 .NET and31 Node PASS0skip,3 YAML/frozen diff PASS. Original requests/Responses/signals/private values remain unchanged; refusal diagnostics fixed and receipt20s bounds unchanged.'
+  state: exact_ci_active
+  next: 'Own current exact native/main Chromium to terminal and repair proven cause SAME283. No extra push to cancel actual. Native startup follow-on and managed recovery/provider/full277 acceptance remain.'
+
+group_connector_managed_process_proof_candidate:
+  state: local_tested_pending_frozen_review_and_native_execution
+  predecessor: 4ce5bfafb0c393b8c93e27481114939afd449e13
+  predecessor_scoped_approval: 6094370900
+  implementation: 'Separate owned synthetic account/source/key slot2/private recovery root; shipping Worker lazy runtime and actual registered hosted loop, no injected session/spool/HTTP collaborator. Parent transparent signed HTTP proxy observes actual Core SQL commit, withholds event ACK, kills only its owned child. Core restart/current Ingest403 before spool key/exact grant restore; lease expiry/new process-generated owner and epoch2/actual original committed ACK/only capture deletion/full6 source graph equality.'
+  startup_limit: 'Host proof validates scoped DI with owned runtime connection but does not open SQL from host; separate approved4ce recovery-startup mode executes actual permission SQL inside the owned network. Both native executions remain required; do not infer one from the other.'
+  local: 'Clean managed runtime proof build0warnings0errors;76 guard/host/pipeline controls PASS0skip;39 Python owned guards/independent cleanup/retained slot1 plus slot2 preservation controls PASS; changed format PASS. No local Docker/native SQL; no native success claimed.'
+  next: 'Frozen independent proof review before any push. Own exact active1cb native/main Chromium; terminal failures repaired SAME283. No push cancelling active actual. Provider/277/278/279/full233 remain.'
+
+group_connector_1cb_terminal:
+  head: 1cb7525429dd94934e76464d9d29a602cebfe6d9
+  build: 38028533634
+  governance: 38028533645
+  actual: 114144426124
+  quality: 114147206284
+  result: 'Build/actual/quality FAILURE; Governance and six prerequisites SUCCESS. All retained group/read/listener/current spool and six new reference native stages PASS; complete local stack PASS. Main Chromium retained auth/member/admin/session/company/history privacy PASS, then headers-loss sameSID replay receives202 and original TimeoutError fires after early headers. Full EOF/receipt/effects remains strict and failed; no complete body or product cause inferred.'
+  next: 'Diagnose actual body/wire/UI boundary and repair SAME283. Native startup and managed recovery proof remain unexecuted; do not merge or claim full277/production.'
+
+group_connector_managed_cleanup_repair:
+  frozen_predecessor: 598b73c9b19f4d8f20b2eeace689e01eedf6b50b
+  review: 'Independent frozen598 review withheld solely on reproduced stop_child poll/kill skipping drain and missing timeout recovery.76 .NET/39 Python/8 proxy/3 executable unowned controls PASS0skip;3 AST/2 YAML/diff PASS. Other actual ACK/owner/epoch/cipher/full6 oracles sound statically; no native success.'
+  repair: 'Each owned child poll/kill/drain separately guarded; poll failure conservatively attempts kill, failed kill still drains. First5s drain TimeoutExpired triggers independently guarded kill and final5s drain. Original error preserved while proxy shutdown/close/join always attempted.'
+  local: '39 Python PASS; unchanged actual cleanup extraction strengthened for poll/kill/drain/timeout/secondary kill/secondary drain/proxy faults and prior failure. Frozen original reviewer counterexample closure required before push.'
+
+group_connector_managed_cleanup_closure:
+  head: 8f4c5d9b0b019ee5202359a71339464f537aa1d0
+  scoped_approval: 6094525216
+  result: 'Original unchanged reviewer missing-drain counterexample CLOSED; independently26 exact-finalbody controls/39 retained Python/8 proxy controls PASS,2AST/2YAML/diff PASS. Full598 proof included in scoped approval; prior76 .NET/3 actual unowned modes unchanged. Native startup SQL and managed process proof remain unexecuted; no full277 approval.'
+
+group_connector_browser_wire_observation_candidate:
+  predecessor: 8f4c5d9b0b019ee5202359a71339464f537aa1d0
+  state: local_tested_pending_frozen_review
+  implementation: 'Owned-only passive Chromium protocol session projects matched submit response encoding category/data-start/loadingFinished, at most8 private RAM records. No interception, getResponseBody, authorization/body access, cancellation, retries, delay or timeout change. On already-failed original stream, fixed wire booleans and exact current accepted-notice count refine only timeout-after-headers refusal. Full20s EOF/receipt/original IDs/SID/all8 effects still required.'
+  local: '22 retained/current Node controls PASS0skip, including unchanged actual requiredReceipt refusal extraction;2 YAML/Node syntax/diff PASS. Local actual Chrome with shipping bounded reader and passive session:3 complete normal/compressed/chunked202 positives and2 empty/body-started timeout negatives PASS. Separate CDP events can arrive after Playwright finished; no shipping waits added, diagnostic failure occurs after original20s bound.'
+  limits: 'Native1cb established only original TimeoutError after early202 headers, not body completeness or cause. New wire/UI native diagnostics pending; no product or native acceptance inferred. src/apps unchanged8f.'
+  next: 'Frozen scoped review, approved SAME283 push including startup/managed native proof, own exact CI terminal and repair proven body/browser cause.277/278/279/full233 active.'
+
+group_connector_browser_observation_overflow_repair:
+  predecessor: 1599af4e160ad82cc8761b925342d739dd738109
+  state: local_tested_pending_frozen_review
+  finding: 'Ninth matched same-URL request beyond8-record cap could project previous attempt metadata. Current mandatory receipt loop has4 matchedPOSTs and original EOF/receipt always required, so no acceptance bypass; stale causal diagnostic must still be refused.'
+  repair: 'Both original-signal and passive-wire observers permanently invalidate read projection after the ninth matched request; read returnsnull. No new record/listener, body access or request mutation; original fetch forwarded exactlyonce, including synchronous failure on ninth call.'
+  local: '23 Node controls PASS0skip including actual strict receipt integration/overflow stale evidence/synchronous original failure;2YAML/Node syntax/diff PASS. src/apps/workflow unchanged. Frozen independent original ninth-attempt closure and renewed native proof required.'
+
+group_connector_542_terminal:
+  runtime_head: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+  build: 38030969758
+  governance: 38030969756
+  actual: 114151648993
+  quality: 114154582285
+  screenshot_artifact: 11662381255
+  state: exact_all8_success_review_withheld_queue_restart
+  scoped_reviews: 'Native startup6094370900; managed factory/process proof and cleanup6094525216; passive wire/overflow closure6094640143. Full542 review WITHHELD solely for actual RabbitMQ process/queue restart evidence;2027.NET/1334web/all8/six images otherwise independently verified.'
+  native: 'Root inspected all retained admission/filter/current-read/listener/spool controls, three actual managed factory/process/HTTP/current SQL/cipher/hosted-loop markers, actual recovery-only startup SQL/inert DI and all six reference SQL/RabbitMQ/shipping-DI/application-restart markers PASS. Private group configuration removed and shipping default-off restored.'
+  browser: 'Root inspected complete actual Chromium OIDC/administration/company/private-owner history and strict full original202 headers/body-loss replay, reload/newSID recovery, cross-user/company denial and late-body fencing PASS. Earlier TimeoutError cause remains unproven; no oracle/timeouts weakened.'
+  local_diagnostic_limits: 'Exact pinned Playwright1.63/Chromium1243 synthetic transport: three complete202 positives/two timeout refusals PASS. Next build PASS but transport fixture readiness failed twice, latest standalone404; no submit/native/product-cause evidence. Only two root-generated tracked TypeScript files restored to runtime HEAD; private logs retained.'
+  next: 'Repair actual pending-reference RabbitMQ restart evidence and inflated wording on SAME283; frozen repair review/native exact CI remain.278/279/live connector/readonly ERP/installer/deployment/full233 remain active.'
+
+group_connector_pending_queue_restart_candidate:
+  predecessor: 54226ae7f9a1ac9bf6f78c8f509e84f5d66bd8f8
+  state: local_native_proof_candidate_pending_review_execution
+  finding: 'Full frozen542 otherwise verified all8/Gov/2027.NET/1334web/six original images and all owned managed/startup/read/strict replay markers. Sole277 acceptance gap: proof restarted Core/Worker while RabbitMQ process remained alive; historical inflated wording corrected. No additional reproduced shipping blocker.'
+  implementation: 'Guarded owned Worker pause with lost-reply restoration; mandatory persistent confirmed original reference; exact raw reference/protocol/persistent-property inspection and requeue before/after bound RabbitMQ container restart. Same inspected container with later StartedAt, original queued reference/full8 graph retained BEFORE republication; actual shipping Worker resumes with positive delivery/ACK and empty queue, exact SQL receipts/cursor/source/outbox/portal counts. Fresh post-broker counters avoid assuming old management counters survive restart.'
+  local: '42 retained/new Python guard tests PASS, including18 positive/refusal queue-incarnation/content/effect/ACK/cleanup controls and first-failure restoration. Native proof clean build/changed C# format,17 .NET guard tests and actual new inspect-pending entry refusal before resources PASS.2AST/2YAML/diff PASS. Independent frozen review/native SQL/Docker execution remain.'
+  limits: 'Test/evidence repair only; no shipping src/apps/workflow change, live login/send/activation or weakened receipt/scope/authority requirements. Real pending-message broker restart must execute before277 closure.'
+  next: 'Freeze/review corrected docs and actual queue-restart proof, push approved SAME283, own renewed exact all8 to terminal, fix any terminal red immediately. Merge277 only after accepted PR/main; then278 automatic brain/notes and279 internal IT reporter; full233 active.'
+
+group_connector_244_dispatch:
+  head: 24495763b5ccf6ff6af9e81768067ec215a5a671
+  build: 38033648198
+  governance: 38033648226
+  actual: 114159514486
+  scoped_approval: 6094998445
+  state: exact_native_ci_active
+  review: 'Frozen db733+sole documented -t option244 APPROVED:53 Python (42 retained+11 independent actual ownership/control/counter/cleanup probes),17.NET guards/new inspect-pending unowned executable boundary/3AST/2YAML/diff PASS. Original lost-reference counterexample CLOSED before republication; four docs truthful. All shipping src/apps/workflow/sln bytes equal542.'
+  exact_progress: 'Remote ref/GitHub PR244 verified; Governance and all six prerequisites SUCCESS. Actual step12 started07:14:38UTC and still non-terminal at07:25:46; Chromium pending. Prior542 green is not new restart acceptance.'
+  next: 'Own exact current CI to terminal; actual new broker-incarnation/persistent exact-reference survival and shipping ACK/full8 graph required. Terminal red immediately inspect/fix SAME283, no useful CI cancelling progress pushes. Full277 closure/finalPR-main review precede eligiblemerge;278/279/full233 active.'
+group_connector_244_terminal:
+  head: 24495763b5ccf6ff6af9e81768067ec215a5a671
+  build: 38033648198
+  governance: 38033648226
+  actual: 114159514486
+  quality: 114162493033
+  state: terminal_native_failure_same_pr_repair
+  evidence: 'Governance and all six prerequisites SUCCESS. Retained current group/listener/read/spool, three managed process proofs, recovery-only startup and all six reference stages PASS. New proof passed owned incarnation/persistent original queue-reference survival before and after RabbitMQ restart without republication; ACK+1 wait returned, then immediate delivery+1/consumer1 assertion failed. No numeric counter snapshot was emitted; cause remains unproven. Chromium skipped; no full277 acceptance.'
+  repair: 'Within unchanged30s wait require ACK+1, delivery+1 and consumer1 together in one actual management snapshot. Strict exact deltas, ownership/restore, original reference, queue empty/count2/full8/portal/isolation unchanged; only bounded scalar failure diagnostics added.43 Python controls PASS, including delayed-statistics positive and disjoint/overshoot/missing-consumer refusals. Shipping src/apps/tests/workflows unchanged244.'
+  next: 'Freeze and independently review same283 repair plus dispatch/terminal documents, then approved push and exact-head native/browser closure. No merge/full277 until new actual restart and all required gates pass;278/279/full233 active.'
+
+group_connector_c619_dispatch:
+  head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  build: 38035314357
+  governance: 38035314405
+  actual: 114164418527
+  scoped_approval: 6095219736
+  state: exact_native_browser_ci_active
+  review: 'Frozen3ad and sole current-next-action correctionc619 APPROVED;43 retained+4 independent original-fixture controls=47 Python PASS,2AST/2YAML/final correction YAML/diff PASS. Original delayed complete snapshot and mixed-snapshot extraACK counterexamples closed. Strict exact30s single-snapshot signals and all final original reference/queue/count2/full8/portal/isolation/owned restoration unchanged. Shipping/native/tests/workflow/sln bytes equal244.'
+  exact_progress: 'Remote ref/GitHub PRc619 verified. Build/native active, Gov SUCCESS. All7 actual jobs allocated; migration and Compose already SUCCESS. New pending-reference restart consumer/final graph/strict Chromium acceptance not inferred.'
+  next: 'Own exact current native/browser/all8 to terminal, fix any proven red SAME283. No useful CI cancellation for progress docs. Full277/finalPR/main acceptance precedes eligible merge;278/279/full233 active.'
+
+group_connector_c619_terminal:
+  runtime_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  build: 38035314357
+  governance: 38035314405
+  actual: 114164418527
+  quality: 114167539832
+  screenshot_artifact: 11664207582
+  state: exact_all8_success_full_runtime_approved_final_gates_pending
+  evidence: 'Root independently inspected a selected set of80 required retained/new fixed native/browser markers, zero terminal failures;2027.NET/1334web PASS. Actual literal same-container/new-incarnation RabbitMQ restart retained exact persistent original queued reference before any republication. Actual shipping consumer same-snapshot ACK+1/delivery+1/consumer1, final empty queue/count2/full8 graph/portal/isolation PASS. All managed/current SQL/startup/strict original202 headers-body replay/later privacy controls PASS; shipping default-off restoration succeeded.'
+  images: 'Root inspected all six current original images, including375x2021 mobile inbox and1440x5809 maximum submission; content wraps, controls readable, no clipping/credential exposure. Independent full review and all six original image inspections verified; full frozen c619 core277 APPROVED6095552242.'
+  limits: 'Earlier244 numeric observation cause and previous browser timeout causes remain unproven; no shipping timeout/receipt oracle relaxation. Core mock contract scope allowed by277; live provider/account/production volume,278/279/installer/readonly ERP/deployment/full233 not delivered.'
+  next: 'Full frozen c619 core277 APPROVED6095552242; close accurate doc-only final review, approved final push, exact finalPR/main all8. Merge eligible277 then continue278 SQL brain/automatic notes and279 internal IT reporter; full233 active. Do not start dependent implementation before acceptance.'
+
+group_connector_c619_full_approval:
+  runtime_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  receipt: 6095552242
+  scope: 'Full frozen core277 APPROVED after independent exact all8/Gov/actual/quality,2027.NET/1334web incl20 actual Redis, current native/Chromium logs and all six original artifact11664207582 images. Literal pending persistent RabbitMQ restart and strict same-snapshot/final SQL graph closes sole full542 gap. No additional concrete core277 blocker.'
+  remaining: 'Accurate final doc-only review, approved final push and exact finalPR/main gates before integration. Live provider/account/production volume,278/279/installer239/readonly customer ERP/deployment/full233 remain active.'

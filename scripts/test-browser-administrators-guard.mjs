@@ -2,11 +2,151 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { mkdtemp, mkdir, writeFile, unlink, rmdir } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, unlink, rmdir } from "node:fs/promises";
 import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs";
 import { startOwnedCoreReplyProxy, committedReplyEvidence } from "./owned-browser-core-proxy.mjs";
 import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
+import { requireOwnedGroupInbox, verifyOwnedGroupInbox } from "./smoke-browser-group-inbox.mjs";
+import { submissionAbortStage, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
+
+test("submission202 receipt requires completed bounded UTF8 JSON and reports only fixed refusal stages", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function requiredReceipt("), end = source.indexOf("  const sent =", start);
+  assert.ok(start > 0 && end > start);
+  const make = new Function("bounded", "proof", source.slice(start, end) + ";return requiredReceipt;");
+  const receipt = { operationId: "owned-inert-operation", inputFingerprint: "owned-inert-fingerprint" };
+  const encoded = new TextEncoder().encode(JSON.stringify(receipt));
+  for (const fault of [null, "unfinished", "finished-rejected", "finished-timeout", "body-rejected", "body-protocol",
+    "body-timeout", "empty", "oversize", "utf8", "json", "browser-abort", "browser-reset", "browser-truncated",
+    "browser-length", "browser-failed", "browser-private"] ) {
+    const phases = [], bounds = [];
+    const action = make(async (promise, maximum) => {
+      assert.equal(maximum, 20_000); bounds.push(maximum);
+      if (fault === "finished-timeout" || fault?.startsWith("browser-") || fault === "body-timeout" && bounds.length === 2) throw new Error("owned private timeout");
+      return await promise;
+    }, condition => { if (!condition) throw new Error("owned fixed proof refusal"); });
+    const response = {
+      request: () => ({ failure: () => ({ errorText: ({ "browser-abort": "net::ERR_ABORTED", "browser-reset": "net::ERR_CONNECTION_RESET",
+        "browser-truncated": "net::ERR_INCOMPLETE_CHUNKED_ENCODING", "browser-length": "net::ERR_CONTENT_LENGTH_MISMATCH",
+        "browser-failed": "net::ERR_FAILED", "browser-private": "net::ERR_ABORTED owned-private-url" })[fault] }) }),
+      finished: async () => { if (fault === "finished-rejected") throw new Error("owned private stream detail"); return fault === "unfinished" ? new Error("owned private network failure") : null; },
+      body: async () => {
+        if (fault === "body-rejected") throw new Error("owned private body detail");
+        if (fault === "body-protocol") throw new Error("No data found for resource with given identifier: owned-private-url");
+        return fault === "empty" ? new Uint8Array(0) : fault === "oversize" ? new Uint8Array(4097)
+          : fault === "utf8" ? new Uint8Array([0xff]) : fault === "json" ? new TextEncoder().encode("owned-private-invalid-json") : encoded;
+      },
+    };
+    if (fault) await assert.rejects(action(response, phase => phases.push(phase)), /^Error: owned fixed proof refusal$/);
+    else assert.deepEqual(await action(response, phase => phases.push(phase)), receipt);
+    const expected = { unfinished: "replay-stream-failed", "finished-rejected": "replay-stream-wait-failed",
+      "finished-timeout": "replay-stream-wait-failed", "body-rejected": "replay-body-read-failed",
+      "body-protocol": "replay-browser-body-unavailable", "body-timeout": "replay-body-read-failed", empty: "replay-empty-body",
+      oversize: "replay-body-too-large", utf8: "replay-body-invalid-utf8", json: "replay-body-invalid-json",
+      "browser-abort": "replay-request-aborted", "browser-reset": "replay-request-reset", "browser-truncated": "replay-request-truncated",
+      "browser-length": "replay-request-length", "browser-failed": "replay-request-failed", "browser-private": "replay-stream-wait-failed" };
+    assert.equal(phases.at(-1), fault ? expected[fault] : "replay-body-json");
+    assert.ok(phases.every(phase => /^replay-[a-z0-9-]+$/.test(phase) && !phase.includes("owned-private")));
+    assert.ok(bounds.length > 0 && bounds.length <= 2);
+  }
+});
+
+test("actual receipt failure remains a refusal after passive wire and UI projection", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function requiredReceipt("), end = source.indexOf("  const sent =", start);
+  const make = new Function("bounded", "proof", "page", "wireObservation", "submissionAbortStage", "submissionWireStage",
+    source.slice(start, end) + ";return requiredReceipt;");
+  const empty = { bodyStarted: false, wireFinished: false, compressed: false };
+  for (const [wire, accepted, expected] of [[empty, false, "replay-timeout-no-body-observed"],
+    [{ ...empty, bodyStarted: true }, false, "replay-timeout-body-started"],
+    [{ ...empty, bodyStarted: true, compressed: true }, false, "replay-timeout-compressed-body-started"],
+    [{ ...empty, wireFinished: true }, false, "replay-timeout-after-wire-finished"],
+    [empty, true, "replay-timeout-after-accepted-ui"], [null, false, "replay-timeout-after-headers"]]) {
+    const phases = [], url = "owned-private-url";
+    const page = { evaluate: async (_fn, requested) => {
+      assert.equal(requested, url); return { kind: "timeout", headersBeforeAbort: true, headersNearDeadline: false };
+    }, getByText: (text, options) => {
+      assert.equal(text, "Hệ thống đã nhận yêu cầu. Mở Công việc để xem tiến độ và kết quả đã lưu.");
+      assert.deepEqual(options, { exact: true }); return { count: async () => accepted ? 1 : 0 };
+    } };
+    const observer = { read: requested => { assert.equal(requested, url); return wire; } };
+    const receipt = make(async (_promise, maximum) => {
+      assert.equal(maximum, 20_000); throw new Error("owned-private-failure");
+    }, condition => { assert.ok(condition); }, page, observer, submissionAbortStage, submissionWireStage);
+    await assert.rejects(receipt({ url: () => url, request: () => ({ failure: () => ({ errorText: "net::ERR_ABORTED" }) }),
+      finished: async () => null, body: () => { assert.fail("Failed stream body used as receipt"); } }, name => phases.push(name)));
+    assert.equal(phases.at(-1), expected); assert.ok(phases.every(name => !name.includes("private")));
+  }
+});
+
+test("submission company-switch owns early waiter failures without accepting a missing callback", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function completed(", start);
+  assert.ok(start > 0 && end > start);
+  const makeSwitch = new Function("app", "identity", "proof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const app = "http://127.0.0.1:3000", identity = "http://127.0.0.1:8081", selected = "owned-inert-company";
+  const proof = condition => assert.ok(condition);
+  for (const fault of ["callback", "request", "selection"] ) {
+    const failure = new Error("owned-inert-" + fault), phases = [];
+    const callback = fault === "callback" || fault === "selection" ? Promise.reject(failure) : Promise.resolve({ status: () => 303 });
+    const request = fault === "request" || fault === "selection" ? Promise.reject(failure)
+      : Promise.resolve({ url: () => identity + "/realms/aioffice-local/protocol/openid-connect/auth?response_type=code&code_challenge_method=S256" });
+    const target = {
+      waitForResponse: () => callback, waitForRequest: () => request,
+      getByRole: () => ({ selectOption: async value => {
+        assert.equal(selected, value); await new Promise(resolve => setImmediate(resolve));
+        if (fault === "selection") throw failure;
+      } }),
+    };
+    const action = makeSwitch(app, identity, proof, () => { assert.fail("refusal reached current session"); }, phase => phases.push(phase));
+    await assert.rejects(action(target, selected, "owned-switch"), error => error === failure);
+    assert.equal(phases[0], "owned-switch-select");
+    assert.equal(phases.at(-1), fault === "callback" ? "owned-switch-callback" : fault === "request" ? "owned-switch-auth-request" : "owned-switch-select");
+  }
+});
+
+test("submission company-switch still requires provider CodeS256 callback303 and exact current company", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function completed(", start);
+  assert.ok(start > 0 && end > start);
+  const makeSwitch = new Function("app", "identity", "proof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const app = "http://127.0.0.1:3000", identity = "http://127.0.0.1:8081", selected = "owned-inert-company";
+  for (const fault of [null, "pkce", "callback", "company"] ) {
+    const phases = [], actions = [];
+    const target = {
+      waitForResponse: match => { assert.ok(match({ url: () => app + "/api/local/session/oidc/callback?code=owned-inert" }));
+        return Promise.resolve({ status: () => fault === "callback" ? 403 : 303 }); },
+      waitForRequest: match => { const url = identity + "/realms/aioffice-local/protocol/openid-connect/auth?response_type=code&code_challenge_method=" + (fault === "pkce" ? "plain" : "S256");
+        assert.ok(match({ url: () => url })); return Promise.resolve({ url: () => url }); },
+      getByRole: (role, options) => ({ selectOption: async value => { assert.equal("combobox", role); assert.equal(selected, value); actions.push("select"); },
+        waitFor: async () => { assert.equal("button", role); assert.equal("Đăng xuất", options.name); actions.push("workspace"); } }),
+    };
+    const action = makeSwitch(app, identity, condition => { if (!condition) throw new Error("owned switch refused"); },
+      async (page, path) => { assert.equal(target, page); assert.equal(`/api/local/session?companyId=${selected}`, path);
+        actions.push("current"); return { status: 200, text: JSON.stringify({ companyId: fault === "company" ? "other" : selected }) }; }, phase => phases.push(phase));
+    if (fault) await assert.rejects(action(target, selected), /^Error: owned switch refused$/);
+    else { await action(target, selected); assert.deepEqual(actions, ["select", "workspace", "current"]); }
+    assert.ok(phases.every(phase => /^provider-company-switch-(select|auth-request|callback|workspace|current-session)$/.test(phase)));
+  }
+});
+
+test("group inbox browser refuses unowned flags/directories before fixture files, Docker, SQL or network", async () => {
+  const root = resolve("guard-test-no-resources"), owned = join(root, "aioffice-local");
+  const previous = Object.fromEntries(["CI", "GITHUB_ACTIONS", "RUNNER_TEMP"].map(key => [key, process.env[key]]));
+  try {
+    for (const scenario of [{ CI: "false" }, { GITHUB_ACTIONS: "false" }, { RUNNER_TEMP: "" }, { directory: root }, { directory: join(owned, "nested") }]) {
+      const { directory = owned, ...flags } = scenario;
+      Object.assign(process.env, { CI: "true", GITHUB_ACTIONS: "true", RUNNER_TEMP: root }, flags);
+      await assert.rejects(verifyOwnedGroupInbox(directory, null), /^Error: Owned group inbox proof refused\.$/);
+    }
+    requireOwnedGroupInbox(owned, { CI: "true", GITHUB_ACTIONS: "true", RUNNER_TEMP: root });
+    Object.assign(process.env, { CI: "true", GITHUB_ACTIONS: "true", RUNNER_TEMP: root });
+    await assert.rejects(verifyOwnedGroupInbox(owned, { sourceId: "invalid" }), /^Error: Owned group inbox proof refused\.$/);
+  } finally {
+    for (const [key, value] of Object.entries(previous)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+  }
+});
 
 test("submission browser proof refuses unowned paths/flags/hosts before resources", async () => {
   const root = resolve("guard-test-no-resources"), owned = join(root, "aioffice-local");
