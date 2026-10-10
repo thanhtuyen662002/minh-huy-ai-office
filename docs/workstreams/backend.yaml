@@ -5,7 +5,7 @@ current_issue: 277
 current_pr: 283
 current_branch: codex/277-group-durable-ingress
 head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
-state: ready_for_final_review_exact_runtime_success
+state: full_runtime_approved_final_docs_gates_pending
 lease_owner: root-backend-277
 lease_heartbeat_at: '2026-10-10'
 last_checkpoint_at: '2026-10-10'
@@ -1429,8 +1429,14 @@ group_connector_c619_terminal:
   actual: 114164418527
   quality: 114167539832
   screenshot_artifact: 11664207582
-  state: exact_all8_success_full_final_review_pending
+  state: exact_all8_success_full_runtime_approved_final_gates_pending
   evidence: 'Root independently inspected a selected set of80 required retained/new fixed native/browser markers, zero terminal failures;2027.NET/1334web PASS. Actual literal same-container/new-incarnation RabbitMQ restart retained exact persistent original queued reference before any republication. Actual shipping consumer same-snapshot ACK+1/delivery+1/consumer1, final empty queue/count2/full8 graph/portal/isolation PASS. All managed/current SQL/startup/strict original202 headers-body replay/later privacy controls PASS; shipping default-off restoration succeeded.'
-  images: 'Root inspected all six current original images, including375x2021 mobile inbox and1440x5809 maximum submission; content wraps, controls readable, no clipping/credential exposure. Independent full review and own image inspection pending.'
+  images: 'Root inspected all six current original images, including375x2021 mobile inbox and1440x5809 maximum submission; content wraps, controls readable, no clipping/credential exposure. Independent full review and all six original image inspections verified; full frozen c619 core277 APPROVED6095552242.'
   limits: 'Earlier244 numeric observation cause and previous browser timeout causes remain unproven; no shipping timeout/receipt oracle relaxation. Core mock contract scope allowed by277; live provider/account/production volume,278/279/installer/readonly ERP/deployment/full233 not delivered.'
-  next: 'Close full frozen c619 acceptance and accurate doc-only final review, approved final push, exact finalPR/main all8. Merge eligible277 then continue278 SQL brain/automatic notes and279 internal IT reporter; full233 active. Do not start dependent implementation before acceptance.'
+  next: 'Full frozen c619 core277 APPROVED6095552242; close accurate doc-only final review, approved final push, exact finalPR/main all8. Merge eligible277 then continue278 SQL brain/automatic notes and279 internal IT reporter; full233 active. Do not start dependent implementation before acceptance.'
+
+group_connector_c619_full_approval:
+  runtime_head: c619adfd5c7681f76cbe53d9e91b57f0cc8c8161
+  receipt: 6095552242
+  scope: 'Full frozen core277 APPROVED after independent exact all8/Gov/actual/quality,2027.NET/1334web incl20 actual Redis, current native/Chromium logs and all six original artifact11664207582 images. Literal pending persistent RabbitMQ restart and strict same-snapshot/final SQL graph closes sole full542 gap. No additional concrete core277 blocker.'
+  remaining: 'Accurate final doc-only review, approved final push and exact finalPR/main gates before integration. Live provider/account/production volume,278/279/installer239/readonly customer ERP/deployment/full233 remain active.'
