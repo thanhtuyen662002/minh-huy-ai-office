@@ -27,17 +27,10 @@ public sealed class GroupConnectorSpoolAdmission
         // Reject these before content validation, serialization, keys or storage.
         if (payload is null || !payload.IsGroup || payload.IsSelf || payload.IsKnownReportEcho) throw Denied();
         if (enrollment?.Source is null || payload.Event is null || lease?.Account is null || policy is null) throw Denied();
-        RequireCurrent(enrollment, lease, nowUtc, policy);
+        RequireCurrent(enrollment, lease, nowUtc, policy, payload.Event.Kind);
         GroupRoutingPolicy.AuthorizeIngest(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
             enrollment.Source, payload.Event.Identity, payload.IsGroup, payload.IsKnownReportEcho);
         if (lease.OwnerId != payload.ListenerOwnerId || lease.Epoch != payload.ListenerEpoch) throw Denied();
-        var qualification = enrollment.Qualification;
-        if (payload.Event.Kind is GroupSourceEventKind.Edit or GroupSourceEventKind.Recall)
-        {
-            var capability = payload.Event.Kind == GroupSourceEventKind.Edit ? GroupConnectorCapability.EditEvents : GroupConnectorCapability.RecallEvents;
-            if (!qualification.Observations.Any(x => x.Capability == capability && x.Support == GroupConnectorSupport.Supported &&
-                x.EvidenceId != Guid.Empty && x.ObservedAtUtc <= nowUtc && nowUtc - x.ObservedAtUtc <= GroupConnectorQualification.MaximumObservationAge)) throw Denied();
-        }
         payload.Event.Validate();
         if (payload.Text is null || payload.Text.Length > GroupSourceContentProtector.MaximumTextLength ||
             payload.Event.Kind == GroupSourceEventKind.Recall && payload.Text.Length != 0) throw Denied();
@@ -52,9 +45,9 @@ public sealed class GroupConnectorSpoolAdmission
     // Used before decrypting recovered content, including lease/qualification
     // revocation. It cannot replace fresh backend checks at SQL commit.
     internal static void RequireCurrent(GroupConnectorEnrollment enrollment,
-        GroupListenerLeaseSnapshot lease, DateTimeOffset nowUtc, GroupIngressRuntimePolicy policy)
+        GroupListenerLeaseSnapshot lease, DateTimeOffset nowUtc, GroupIngressRuntimePolicy policy, GroupSourceEventKind kind)
     {
-        if (enrollment?.Source is null || lease?.Account is null || policy is null) throw Denied();
+        if (enrollment?.Source is null || lease?.Account is null || policy is null || !Enum.IsDefined(kind)) throw Denied();
         var source = enrollment.Source;
         GroupRoutingPolicy.AuthorizeIngest(enrollment.Authentication, enrollment.Principal, enrollment.Grant,
             source, source.ExternalIdentity, isGroup: true, isKnownReportEcho: false);
@@ -73,6 +66,12 @@ public sealed class GroupConnectorSpoolAdmission
                 enrollment.Artifact.Provider == "synthetic" || enrollment.Artifact.PackageVersion == "owned-fixture" ||
                 !qualification.AllowsLiveProfile(GroupConnectorProfile.Receive, source.Scope.TenantId, source.Scope.CompanyId,
                     source.ConnectorAccountId, source.ExternalIdentity.AccountId, enrollment.Artifact, nowUtc))) throw Denied();
+        if (kind is GroupSourceEventKind.Edit or GroupSourceEventKind.Recall)
+        {
+            var capability = kind == GroupSourceEventKind.Edit ? GroupConnectorCapability.EditEvents : GroupConnectorCapability.RecallEvents;
+            if (!qualification.Observations.Any(x => x.Capability == capability && x.Support == GroupConnectorSupport.Supported &&
+                x.EvidenceId != Guid.Empty && x.ObservedAtUtc <= nowUtc && nowUtc - x.ObservedAtUtc <= GroupConnectorQualification.MaximumObservationAge)) throw Denied();
+        }
     }
 
     internal static UnauthorizedAccessException Denied() => new("Connector spool admission is unavailable.");

@@ -1022,3 +1022,9 @@ group_spool_known_fixture_promotion_repair:
   review: 'Independent review found known synthetic/owned-fixture artifact could be promoted with ControlledAccount metadata, contrary to existing authenticator fence.'
   repair: 'Live explicitly refuses synthetic provider or owned-fixture package; owned synthetic policy requires both markers and Synthetic environment. Separate controlled artifact remains positive; recovery refuses known-fixture promotion before private decrypt.'
   local: '44 focused spool and36 retained authenticator controls PASS80/0skip; original independent closure pending. No filesystem/client/provider operation shipped.'
+
+group_spool_optional_capability_recovery_repair:
+  predecessor: 85985bf
+  review: 'Independent3b4 probe found current missing optional Edit/Recall capability checked only after private decryption.'
+  repair: 'EventKind bound in context/AAD and exact parsed payload equality; current event-specific capability evidence checked before Unprotect and full admission after. Missing/stale/future controls refuse with invalid key, valid events remain positive.'
+  local: '50 spool plus36 retained authenticator controls PASS86/0skip; original independent closure pending. No active filesystem/provider/SQL delivery claim.'

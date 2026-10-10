@@ -150,7 +150,8 @@ public sealed class GroupConnectorSpoolTests
             original with { CredentialEpoch = 2 }, original with { SourceVersion = 2 }, original with { GrantVersion = 2 },
             original with { DeletionGeneration = 1 }, original with { ExternalIdentityHash = new string('A', 64) },
             original with { EventIdentityHash = new string('B', 64) }, original with { BodySha256 = new string('C', 64) },
-            original with { AdmittedAtUtc = original.AdmittedAtUtc.AddTicks(1) }, original with { KeyId = "other-key" }
+            original with { AdmittedAtUtc = original.AdmittedAtUtc.AddTicks(1) }, original with { KeyId = "other-key" },
+            original with { EventKind = GroupSourceEventKind.Edit }
         };
         foreach (var context in changed)
             Assert.Equal("Connector spool content is unavailable.", Assert.Throws<InvalidOperationException>(() => fixture.Protector.Unprotect(context, item.Envelope, fixture.Key)).Message);
@@ -226,6 +227,35 @@ public sealed class GroupConnectorSpoolTests
         var stored = owned.Protector.Protect(owned.Admit(owned.Payload()), owned.Key, "spool-v1");
         var promoted = owned.Enrollment with { Qualification = owned.Qualification(environment: GroupQualificationEnvironment.ControlledAccount) };
         Assert.Throws<UnauthorizedAccessException>(() => owned.Protector.Recover(stored, new byte[16], promoted, owned.Lease, Fixture.Now, GroupIngressRuntimePolicy.Live));
+    }
+
+    [Theory]
+    [InlineData(GroupSourceEventKind.Edit, "missing")]
+    [InlineData(GroupSourceEventKind.Edit, "stale")]
+    [InlineData(GroupSourceEventKind.Edit, "future")]
+    [InlineData(GroupSourceEventKind.Recall, "missing")]
+    [InlineData(GroupSourceEventKind.Recall, "stale")]
+    [InlineData(GroupSourceEventKind.Recall, "future")]
+    public void OptionalEventQualificationIsRequiredBeforeRecoveryDecryption(GroupSourceEventKind kind, string change)
+    {
+        using var fixture = new Fixture();
+        var payload = fixture.Payload(kind == GroupSourceEventKind.Recall ? "" : "owned edit");
+        payload = payload with { Event = payload.Event with { Kind = kind } };
+        var stored = fixture.Protector.Protect(fixture.Admit(payload), fixture.Key, "spool-v1");
+        var current = fixture.Enrollment;
+        var capability = kind == GroupSourceEventKind.Edit ? GroupConnectorCapability.EditEvents : GroupConnectorCapability.RecallEvents;
+        var observations = current.Qualification.Observations.Where(x => change != "missing" || x.Capability != capability)
+            .Select(x => x.Capability != capability ? x : x with { ObservedAtUtc = change == "stale" ? Fixture.Now.AddDays(-31) : Fixture.Now.AddTicks(1) }).ToArray();
+        current = current with
+        {
+            Qualification = new(current.Source.Scope.TenantId, current.Source.Scope.CompanyId,
+            current.Source.ConnectorAccountId, current.Source.ExternalIdentity.AccountId, current.Artifact,
+            GroupQualificationEnvironment.Synthetic, observations)
+        };
+        Assert.Throws<UnauthorizedAccessException>(() => fixture.Protector.Recover(stored, new byte[16], current, fixture.Lease, Fixture.Now, Fixture.Policy));
+        var valid = fixture.Protector.Recover(stored, fixture.Key, fixture.Enrollment, fixture.Lease, Fixture.Now, Fixture.Policy);
+        Assert.Equal(kind, valid.Payload.Event.Kind);
+        Assert.Equal(payload, valid.Payload);
     }
 
     [Fact]

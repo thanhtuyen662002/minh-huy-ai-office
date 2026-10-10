@@ -544,3 +544,12 @@ Live refuses either known fixture marker; the owned synthetic policy requires
 both markers and Synthetic environment.44 focused spool controls and36 retained
 authenticator controls PASS80/0skip, including a distinct controlled-artifact
 positive and synthetic-policy refusal. Original independent closure is required.
+
+The same review reproduced optional-event revocation after decryption: an old
+Edit/Recall spool was decrypted before its currently removed capability was
+rechecked. EventKind is now part of authenticated context/AAD, checked for valid
+enum and exact agreement with decrypted payload. Current event-specific fresh
+capability is required before decryption, then full post-decrypt admission remains.
+Missing/stale/future Edit/Recall controls use an invalid key to prove refusal before
+the private operation; legitimate Edit/Recall stays positive.50 spool plus36
+authenticator controls PASS86/0skip. Independent original-probe closure remains.

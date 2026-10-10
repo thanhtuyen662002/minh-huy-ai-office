@@ -7,7 +7,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 
 public sealed record GroupSpoolContentContext(GroupScope Source, Guid ConnectorAccountId, Guid ServiceId,
     long CredentialEpoch, long SourceVersion, long GrantVersion, long DeletionGeneration,
-    string ExternalIdentityHash, string EventIdentityHash, string BodySha256, DateTimeOffset AdmittedAtUtc, string KeyId);
+    string ExternalIdentityHash, string EventIdentityHash, GroupSourceEventKind EventKind, string BodySha256, DateTimeOffset AdmittedAtUtc, string KeyId);
 
 public sealed record GroupSpoolProtectedContent(GroupSpoolContentContext Context, byte[] Envelope);
 
@@ -39,7 +39,7 @@ public sealed class GroupSpoolContentProtector
             var context = new GroupSpoolContentContext(source.Scope, source.ConnectorAccountId, admission.Enrollment.Principal.ServiceId,
                 admission.Enrollment.Principal.CredentialEpoch, source.Version, admission.Enrollment.Grant.Version, source.DeletionGeneration,
                 source.ExternalIdentity.IndexKey(), GroupIngressIdentity.EventIndex(source.Scope, admission.Payload.Event.RevisionEventId),
-                Convert.ToHexString(SHA256.HashData(clear)), admission.AdmittedAtUtc, keyId);
+                admission.Payload.Event.Kind, Convert.ToHexString(SHA256.HashData(clear)), admission.AdmittedAtUtc, keyId);
             var aad = AssociatedData(context, key);
             var envelope = new byte[29 + clear.Length]; envelope[0] = 1;
             RandomNumberGenerator.Fill(envelope.AsSpan(1, 12));
@@ -61,7 +61,7 @@ public sealed class GroupSpoolContentProtector
             aes.Decrypt(envelope.Slice(1, 12), envelope[29..], envelope.Slice(13, 16), clear, aad);
             if (Convert.ToHexString(SHA256.HashData(clear)) != context.BodySha256) throw Unavailable();
             var payload = GroupServiceAuthenticator.Parse(clear);
-            if (payload.Event.Identity.IndexKey() != context.ExternalIdentityHash ||
+            if (payload.Event.Kind != context.EventKind || payload.Event.Identity.IndexKey() != context.ExternalIdentityHash ||
                 GroupIngressIdentity.EventIndex(context.Source, payload.Event.RevisionEventId) != context.EventIdentityHash) throw Unavailable();
             return new(clear);
         }
@@ -78,7 +78,7 @@ public sealed class GroupSpoolContentProtector
             context.DeletionGeneration != source.DeletionGeneration || context.ExternalIdentityHash != source.ExternalIdentity.IndexKey() ||
             context.AdmittedAtUtc > nowUtc) throw GroupConnectorSpoolAdmission.Denied();
         // Fresh trusted enrollment is checked before resolving private content.
-        GroupConnectorSpoolAdmission.RequireCurrent(current, lease, nowUtc, policy);
+        GroupConnectorSpoolAdmission.RequireCurrent(current, lease, nowUtc, policy, context.EventKind);
         using var clear = Unprotect(context, stored.Envelope, key);
         var payload = GroupServiceAuthenticator.Parse(clear.Body);
         // A restart changes transport ownership, never the logical event.
@@ -91,12 +91,12 @@ public sealed class GroupSpoolContentProtector
         static bool Hash(string? value) => value?.Length == 64 && value.All(x => x is >= '0' and <= '9' or >= 'A' and <= 'F');
         if (context?.Source is null || context.ConnectorAccountId == Guid.Empty || context.ServiceId == Guid.Empty ||
             context.CredentialEpoch <= 0 || context.SourceVersion <= 0 || context.GrantVersion <= 0 || context.DeletionGeneration < 0 ||
-            !Hash(context.ExternalIdentityHash) || !Hash(context.EventIdentityHash) || !Hash(context.BodySha256) || context.AdmittedAtUtc.Offset != TimeSpan.Zero ||
+            !Enum.IsDefined(context.EventKind) || !Hash(context.ExternalIdentityHash) || !Hash(context.EventIdentityHash) || !Hash(context.BodySha256) || context.AdmittedAtUtc.Offset != TimeSpan.Zero ||
             key.Length != 32 || string.IsNullOrEmpty(context.KeyId) || context.KeyId.Length > 64 ||
             context.KeyId.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '_')) throw Unavailable();
         context.Source.Validate();
         return Encoding.ASCII.GetBytes(FormattableString.Invariant(
-            $"aioffice-group-spool-v1\0{context.Source.TenantId:D}/{context.Source.CompanyId:D}/{context.Source.SourceBindingId:D}/{context.ConnectorAccountId:D}/{context.ServiceId:D}/{context.CredentialEpoch}/{context.SourceVersion}/{context.GrantVersion}/{context.DeletionGeneration}/{context.ExternalIdentityHash}/{context.EventIdentityHash}/{context.BodySha256}/{context.AdmittedAtUtc.Ticks}/{context.KeyId}"));
+            $"aioffice-group-spool-v1\0{context.Source.TenantId:D}/{context.Source.CompanyId:D}/{context.Source.SourceBindingId:D}/{context.ConnectorAccountId:D}/{context.ServiceId:D}/{context.CredentialEpoch}/{context.SourceVersion}/{context.GrantVersion}/{context.DeletionGeneration}/{context.ExternalIdentityHash}/{context.EventIdentityHash}/{(int)context.EventKind}/{context.BodySha256}/{context.AdmittedAtUtc.Ticks}/{context.KeyId}"));
     }
     private static InvalidOperationException Unavailable() => new("Connector spool content is unavailable.");
 }
