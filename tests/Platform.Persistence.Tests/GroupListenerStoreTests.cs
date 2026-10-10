@@ -107,6 +107,19 @@ public sealed class GroupListenerStoreTests
     }
 
     [Fact]
+    public async Task ShortenedCurrentLeaseCannotReleaseAnOriginalAckWithLongerExpiry()
+    {
+        using var fixture = new Fixture(); var nonce = Guid.NewGuid(); var original = await fixture.ApplyAsync(nonce: nonce);
+        var stored = await fixture.Auth.Db.GroupListenerLeases.SingleAsync();
+        stored.ExpiresAtUtc = Fixture.Now.AddSeconds(10); await fixture.Auth.Db.SaveChangesAsync();
+        fixture.Auth.Clock.Current = Fixture.Now.AddSeconds(1);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.ApplyAsync(nonce: nonce));
+        Assert.Equal(Fixture.Now.AddSeconds(30), original.Lease.ExpiresAtUtc);
+        Assert.Equal(Fixture.Now.AddSeconds(10), (await fixture.Auth.Db.GroupListenerLeases.AsNoTracking().SingleAsync()).ExpiresAtUtc);
+        Assert.Single(fixture.Auth.Db.GroupListenerCommandReceipts); Assert.Single(fixture.Auth.Db.GroupAccountCoverageGaps);
+    }
+
+    [Fact]
     public async Task NewContextRecoversDurableReceiptAndRetainedEpochAfterProcessRestart()
     {
         using var fixture = new Fixture(); var nonce = Guid.NewGuid(); var first = await fixture.ApplyAsync(nonce: nonce);

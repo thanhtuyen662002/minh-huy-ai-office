@@ -154,7 +154,7 @@ public sealed class GroupListenerStore(PlatformDbContext database, GroupIngressR
                 throw GroupServiceDirectory.Denied();
         }
         else if (receipt.ExpiresAtUtc <= now || current.ExpiresAtUtc <= now || receipt.CommittedAtUtc >= receipt.ExpiresAtUtc ||
-            current.HeartbeatAtUtc < receipt.HeartbeatAtUtc) throw GroupServiceDirectory.Denied();
+            current.HeartbeatAtUtc < receipt.HeartbeatAtUtc || current.ExpiresAtUtc < receipt.ExpiresAtUtc) throw GroupServiceDirectory.Denied();
         return new(new(verified.Account, receipt.OwnerId, receipt.ListenerEpoch, receipt.HeartbeatAtUtc, receipt.ExpiresAtUtc),
             receipt.Changed, receipt.CoverageRecorded, receipt.CommittedAtUtc, true);
     }
