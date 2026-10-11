@@ -226,7 +226,11 @@ internal sealed class GroupWholeBatchCoverage
     }
     private static GroupWorkCommitReceiptRecord CopyReceipt(GroupWorkCommitReceiptRecord x)
     {
-        if (x.DependencyManifest is { Length: > GroupWorkDependencyManifest.MaximumBytes }
+        // Validate scalar size before fingerprint serialization or copying any
+        // variable blob. The owned reader still compares its semantic source set.
+        if (x.SourceSetSha256 is not { Length: 64 }
+            || x.SourceSetSha256.Any(c => c is not (>= '0' and <= '9' or >= 'A' and <= 'F'))
+            || x.DependencyManifest is { Length: > GroupWorkDependencyManifest.MaximumBytes }
             || x.ExpectedEffectSha256 is { Length: > GroupWorkEffectDigest.DigestBytes }) throw Unavailable();
         return new()
         {

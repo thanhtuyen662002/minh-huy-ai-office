@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 using Xunit;
@@ -271,6 +272,8 @@ public sealed class GroupWholeBatchCoverageTests
                     BindingId = scope.SourceBindingId,
                     BatchId = batch,
                     OperationId = operation,
+                    SourceSetSha256 = Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(
+                        string.Join("\n", own.Select(message => message.ToString("D") + "/5"))))),
                     SelectedMessageCount = 20,
                     NoteCount = 0,
                     Outcome = GroupWorkCommitOutcome.NoWork,

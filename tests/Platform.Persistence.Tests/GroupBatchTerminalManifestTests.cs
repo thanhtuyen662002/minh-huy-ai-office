@@ -248,6 +248,37 @@ public sealed class GroupBatchTerminalManifestTests
         var error = Assert.Throws<InvalidOperationException>(action);
         Assert.Equal("Group terminal manifest is not available.", error.Message); Assert.Null(error.InnerException);
     }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("empty")]
+    [InlineData("short")]
+    [InlineData("long")]
+    [InlineData("oversized")]
+    [InlineData("lowercase")]
+    [InlineData("nonhex")]
+    [InlineData("unicode")]
+    public void SourceSetScalarIsBoundedAndCanonicalBeforeLaterInputsOrFingerprintSerialization(string fault)
+    {
+        var f = new Fixture(); f.Input.Receipts[0].SourceSetSha256 = fault switch
+        {
+            "null" => null!,
+            "empty" => "",
+            "short" => new('A', 63),
+            "long" => new('A', 65),
+            "oversized" => new('A', 1_048_576),
+            "lowercase" => new('a', 64),
+            "nonhex" => new('G', 64),
+            "unicode" => new('\uFF21', 64),
+            _ => throw new InvalidOperationException()
+        };
+        var later = new TrappedList<GroupWorkSourceDispositionRecord>(f.Input.Selected,
+            () => throw new Exception("PRIVATE_LATER_INPUT_WAS_ENUMERATED"));
+        var error = Assert.Throws<InvalidOperationException>(() => GroupWholeBatchCoverage.Require(f.Input.Allocation,
+            f.Input.CutoffHeads, f.Input.Receipts, later, f.Input.Raw));
+        Assert.Equal("Whole group batch coverage is not available.", error.Message); Assert.Null(error.InnerException);
+        Assert.Equal(0, later.Read);
+    }
     private sealed class TrappedList<T>(IEnumerable<T> input, Action? before = null) : IReadOnlyList<T>
     {
         internal int Read { get; private set; }
