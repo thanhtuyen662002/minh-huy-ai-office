@@ -55,6 +55,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupWorkCommitReceiptRecord> GroupWorkCommitReceipts => Set<GroupWorkCommitReceiptRecord>();
     public DbSet<GroupWorkSourceDispositionRecord> GroupWorkSourceDispositions => Set<GroupWorkSourceDispositionRecord>();
     public DbSet<GroupWorkRawDispositionRecord> GroupWorkRawDispositions => Set<GroupWorkRawDispositionRecord>();
+    public DbSet<GroupBatchTerminalReceiptRecord> GroupBatchTerminalReceipts => Set<GroupBatchTerminalReceiptRecord>();
+    public DbSet<GroupTerminalFrontierStateRecord> GroupTerminalFrontierStates => Set<GroupTerminalFrontierStateRecord>();
     public DbSet<GroupNotesCommittedOutboxRecord> GroupNotesCommittedOutbox => Set<GroupNotesCommittedOutboxRecord>();
     public DbSet<GroupNotesCommittedItemRecord> GroupNotesCommittedItems => Set<GroupNotesCommittedItemRecord>();
     public DbSet<GroupEditorGrantRecord> GroupEditorGrants => Set<GroupEditorGrantRecord>();
@@ -73,6 +75,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureGroupBatchClaims();
         modelBuilder.ConfigureGroupWorkNotes();
         modelBuilder.ConfigureGroupWorkRawAccounting();
+        modelBuilder.ConfigureGroupBatchTerminal();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));
