@@ -11,7 +11,8 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 
 internal abstract record GroupWholeBatchDependencyVerdict
 {
-    internal sealed record Current(GroupWholeBatchCoverage Coverage, IReadOnlyList<GroupOriginalClaimProvenance> OriginalClaims) : GroupWholeBatchDependencyVerdict;
+    internal sealed record Current(GroupWholeBatchCoverage Coverage, IReadOnlyList<GroupOriginalClaimProvenance> OriginalClaims,
+        IReadOnlyList<GroupWorkEffectLedger> OriginalEffects) : GroupWholeBatchDependencyVerdict;
     internal sealed record Expired(GroupBatchClaimExpiryObservation Observation) : GroupWholeBatchDependencyVerdict;
 }
 
@@ -55,6 +56,7 @@ internal sealed class GroupWholeBatchDependencyReader(PlatformDbContext database
             var originals = await OriginalClaimRows(scope, handle.Receipt.BatchId, epochs).ToArrayAsync(token);
             if (originals.Length != epochs.Length || originals.Select(x => x.Epoch).Distinct().Count() != epochs.Length) throw Unavailable();
             var provenances = new List<GroupOriginalClaimProvenance>(receipts.Length);
+            var effects = new List<GroupWorkEffectLedger>(receipts.Length);
             foreach (var receipt in receipts)
             {
                 if (receipt.ServiceId != handle.Receipt.ServiceId || receipt.CredentialEpoch != handle.Receipt.CredentialEpoch
@@ -63,6 +65,8 @@ internal sealed class GroupWholeBatchDependencyReader(PlatformDbContext database
                     || receipt.ClaimEpoch > handle.Receipt.Epoch || receipt.CommittedAtUtc > now) throw Unavailable();
                 var original = originals.SingleOrDefault(x => x.Epoch == receipt.ClaimEpoch) ?? throw Unavailable();
                 provenances.Add(GroupOriginalClaimProvenance.Require(receipt, original));
+                effects.Add(await new GroupWholeBatchEffectReader(database).RequireLockedAsync(receipt, original,
+                    selected.Where(x => x.OperationId == receipt.OperationId).ToArray(), token));
             }
             foreach (var manifest in coverage.Manifests)
             {
@@ -80,7 +84,8 @@ internal sealed class GroupWholeBatchDependencyReader(PlatformDbContext database
             if (final is GroupBatchClaimFenceVerdict.Expired finalExpiry) return new GroupWholeBatchDependencyVerdict.Expired(finalExpiry.Observation);
             if (UtcNow() < now || database.ChangeTracker.HasChanges()) throw Unavailable();
             token.ThrowIfCancellationRequested();
-            return new GroupWholeBatchDependencyVerdict.Current(coverage, provenances.AsReadOnly());
+            if (effects.Count != receipts.Length || effects.Sum(x => x.NoteCount) != coverage.NoteCount) throw Unavailable();
+            return new GroupWholeBatchDependencyVerdict.Current(coverage, provenances.AsReadOnly(), effects.AsReadOnly());
         }
         catch (Exception error) when (error is SqlException or ArgumentException) { throw Unavailable(); }
     }
