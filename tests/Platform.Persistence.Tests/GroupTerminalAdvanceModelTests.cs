@@ -34,7 +34,7 @@ public sealed class GroupTerminalAdvanceModelTests
     public void SelfAndTerminalForeignKeysBindCompleteExactScopedIdentity()
     {
         using var db = Database(); var entity = db.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(GroupTerminalAdvanceRecord))!;
-        Assert.Equal(5, entity.GetForeignKeys().Count()); Assert.All(entity.GetForeignKeys(), fk => Assert.Equal(DeleteBehavior.Restrict, fk.DeleteBehavior));
+        Assert.Equal(6, entity.GetForeignKeys().Count()); Assert.All(entity.GetForeignKeys(), fk => Assert.Equal(DeleteBehavior.Restrict, fk.DeleteBehavior));
         var previous = Assert.Single(entity.GetForeignKeys(), fk => fk.PrincipalEntityType == entity);
         Assert.Equal(new[] { "TenantId", "CompanyId", "BindingId", "PreviousVersion", "PreviousThroughSequence", "PreviousFingerprint", "PreviousAdvancedAtUtc" },
             previous.Properties.Select(p => p.Name));
