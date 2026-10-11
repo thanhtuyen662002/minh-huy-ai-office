@@ -1,4 +1,4 @@
-"""Owned root-frontier SQL phase after all original117 markers; no model."""
+"""Owned SQL phase after terminal receipts; retained browser checks follow."""
 import base64
 import importlib.util
 import json

@@ -13,7 +13,7 @@ using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
 namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
-// New owned phase after terminal117. Root only: actual old graph reads and
+// New owned phase after terminal receipts. Root only: actual old graph reads and
 // atomic key/advance/cursor effects; no successor/race/DI/model qualification.
 internal static class GroupFrontierRootRuntimeProof
 {
