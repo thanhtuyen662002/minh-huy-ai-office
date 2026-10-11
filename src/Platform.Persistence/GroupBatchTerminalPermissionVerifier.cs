@@ -24,7 +24,7 @@ public sealed class GroupBatchTerminalPermissionVerifier(PlatformDbContext datab
             conditions.Add($"EXISTS (SELECT 1 FROM sys.objects o WHERE o.object_id=OBJECT_ID(N'{name}') AND o.principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_operator_owner'))");
             conditions.Add($"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'SELECT')=1");
             conditions.Add($"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'INSERT')=1");
-            conditions.Add($"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'UPDATE')={(mutable ? 1 : 0)}");
+            if (!mutable) conditions.Add($"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'UPDATE')=0");
             foreach (var permission in new[] { "DELETE", "ALTER", "CONTROL", "TAKE OWNERSHIP" })
                 conditions.Add($"HAS_PERMS_BY_NAME(N'{name}',N'OBJECT',N'{permission}')=0");
             if (mutable)

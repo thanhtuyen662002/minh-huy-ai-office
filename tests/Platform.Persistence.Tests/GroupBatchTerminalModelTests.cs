@@ -148,6 +148,19 @@ public sealed class GroupBatchTerminalModelTests
     }
 
     [Fact]
+    public void MutableCursorProofUsesColumnRightsWithoutRequiringWholeObjectUpdate()
+    {
+        var sql = GroupBatchTerminalPermissionVerifier.VerificationSql;
+        // Retained native42 evidence rejected mutable whole-object UPDATE=1
+        // with scope-column DENYs; accepted cd173 uses this column-only proof.
+        Assert.DoesNotContain("HAS_PERMS_BY_NAME(N'aioffice.GroupTerminalFrontierStates',N'OBJECT',N'UPDATE')", sql);
+        Assert.Contains("HAS_PERMS_BY_NAME(N'aioffice.GroupBatchTerminalReceipts',N'OBJECT',N'UPDATE')=0", sql);
+        foreach (var column in new[] { "ThroughSequence", "LastTerminalBatchId", "Version", "UpdatedAtUtc" })
+            Assert.Contains($"HAS_PERMS_BY_NAME(N'aioffice.GroupTerminalFrontierStates',N'OBJECT',N'UPDATE',N'{column}',N'COLUMN')=1", sql);
+        Assert.Contains("c.name NOT IN (N'ThroughSequence',N'LastTerminalBatchId',N'Version',N'UpdatedAtUtc') AND ISNULL", sql);
+    }
+
+    [Fact]
     public void GeneratedForwardSqlAndPermissionProofParseAndSnapshotHasNoUnversionedChanges()
     {
         using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
