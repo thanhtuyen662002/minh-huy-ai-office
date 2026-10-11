@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 exacte000 Build38139385156/Gov38139385255 ALL8_CLOSED_RED: six prerequisite gates/Gov SUCCESS; native114469909214 source-snapshot SQL51053 ordinal0, quality114477562516 red, artifact0; NET3850 PASS. Actual complete generated migration inventory retains three unmapped tables, all columns/PK included in strict source/shadow72. 117.NET/168Python/four scoped formats PASS. Freeze/review exact8 source+2 state repair before SAME288 push; own fresh120/NET3859/all8/Gov/quality/six originals through actual terminal closure. Private17context/19journal/v3runtime remain unpromoted; later journal source74/shadow72. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233/qualified ERP/deployment/production/merge incomplete."
+next_action: "Draft288 remotee000 all8 CLOSED_RED (Build38139385156 Gov38139385255 native114469909214 quality114477562516); strict complete3-table correction67 source HELD_BEFORE_PUSH after3 actual initial-column guard controls fail. Successor requires all32 names/type/null/userDefined and originalPK in both directions before rowhash; actual cumulative CREATE/ADD/ALTER AST expanded3cases keeps117.NET/168Python/four scopedformat checks PASS. Freeze/review full successor10 relativee000 then SAME288 push; own exact120/3859.NET/all8/Gov/quality/six originals through terminal. Private17/19/v3 archives unpromoted, laterjournal source74/shadow72; actualmodel NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -3583,3 +3583,22 @@ group_cursor_shadow_full_inventory_repair_checkpoint:
     PASS. Actual complete generated migration inventory retains three unmapped tables, all columns/PK included in strict source/shadow72. 117.NET/168Python/four scoped formats PASS. Freeze/review exact8 source+2
     state repair before SAME288 push; own fresh120/NET3859/all8/Gov/quality/six originals through actual terminal closure. Private17context/19journal/v3runtime remain unpromoted; later journal source74/shadow72.
     Actualmodel NOT_RUN_UNEVALUATED/full278/279/233/qualified ERP/deployment/production/merge incomplete.'
+
+group_cursor_shadow_unmapped_shape_guard_checkpoint:
+  actual_remote_head: e000db8a556c99774395a5fcf049c86fc93bce2b
+  held_local_intermediate: 67d0417e0a2eba4ad191e473916857476a6bdbfb
+  held_archive_sha256: 978d6e0b4f6471cead81deb4db26a555cdcc02374423029fb93fa7174cce25b4
+  held_reason: THREE_INDEPENDENT_INITIAL_UNHASHED_COLUMN_GUARD_FAILURES_BEFORE_PUSH
+  correction: TYPED_ALL32_COLUMNS_BIDIRECTIONAL_COLUMN_SHAPE_AND_ORIGINAL_PK_GUARDS_BEFORE_ROW_HASH; source/shadow72 and native120 success receipts unchanged
+  local: 117 selected .NET PASS0fail0skip0warning after typed guards; prior168Python retained unchanged; four scoped format apply/verify checks PASS
+  new_tests: EXPANDED_EXISTING_THREE_ACTUAL_CUMULATIVE_MIGRATION_CREATE_ADD_ALTER_TYPE_NULL_PK_AST_CASES_NO_CASECOUNT_CHANGE
+  source_review: PENDING_FULL_COMPOSITE_TEN_PATH_SOURCE_APPROVAL_BEFORE_PUSH
+  actual120: NOT_RUN_UNQUALIFIED
+  full_dotnet: 3859=[6,520,25,3308]_NOT_RUN
+  model: NOT_RUN_UNEVALUATED
+  full278: INCOMPLETE
+  merge: WITHHELD
+  next: Draft288 remotee000 all8 CLOSED_RED (Build38139385156 Gov38139385255 native114469909214 quality114477562516); strict complete3-table correction67 source HELD_BEFORE_PUSH after3 actual initial-column
+    guard controls fail. Successor requires all32 names/type/null/userDefined and originalPK in both directions before rowhash; actual cumulative CREATE/ADD/ALTER AST expanded3cases keeps117.NET/168Python/four
+    scopedformat checks PASS. Freeze/review full successor10 relativee000 then SAME288 push; own exact120/3859.NET/all8/Gov/quality/six originals through terminal. Private17/19/v3 archives unpromoted, laterjournal
+    source74/shadow72; actualmodel NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete.

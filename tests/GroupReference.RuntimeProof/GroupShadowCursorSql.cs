@@ -20,14 +20,22 @@ internal static class GroupShadowCursorSql
     // These three tables are owned by versioned migrations and have no
     // EF entity. Keep every column and the original primary-key ordering.
     // Cold tests reconcile this inventory with the actual full migration SQL.
-    private static readonly (string Name, string[] Columns, string[] Key)[] MigrationOwnedTables =
+    private readonly record struct MigrationColumn(string Name, string StoreType, bool Nullable = false);
+    private static readonly (string Name, MigrationColumn[] Columns, string[] Key)[] MigrationOwnedTables =
     [
-        ("CustomerAiCreditSettlements", ["SettlementId", "ReservationId", "TenantId", "CompanyId", "AuthorityVersion",
-            "PricingPolicyId", "PricingPolicyVersion", "SettledAiCredits", "ReleasedAiCredits"], ["SettlementId"]),
-        ("CustomerSlaPriorityAdmissions", ["AdmissionId", "TenantId", "CompanyId", "UserId", "AuthorityVersion", "PolicyId",
-            "PolicyVersion", "ServiceClass", "SchedulerPriority", "CreatedAtUtc", "PriorityCeiling"], ["AdmissionId"]),
-        ("ToolExecutionAudit", ["AuditId", "TenantId", "CompanyId", "UserId", "TaskId", "Resource", "Action", "Risk",
-            "Authorized", "DecisionReason", "OccurredAtUtc", "ExecutionId"], ["AuditId"])
+        ("CustomerAiCreditSettlements", [new("SettlementId", "nvarchar(200)"), new("ReservationId", "nvarchar(200)"),
+            new("TenantId", "nvarchar(200)"), new("CompanyId", "nvarchar(200)"), new("AuthorityVersion", "bigint"),
+            new("PricingPolicyId", "nvarchar(200)"), new("PricingPolicyVersion", "bigint"), new("SettledAiCredits", "bigint"),
+            new("ReleasedAiCredits", "bigint")], ["SettlementId"]),
+        ("CustomerSlaPriorityAdmissions", [new("AdmissionId", "nvarchar(200)"), new("TenantId", "nvarchar(200)"),
+            new("CompanyId", "nvarchar(200)"), new("UserId", "nvarchar(200)"), new("AuthorityVersion", "bigint"),
+            new("PolicyId", "nvarchar(200)"), new("PolicyVersion", "bigint"), new("ServiceClass", "nvarchar(200)"),
+            new("SchedulerPriority", "int"), new("CreatedAtUtc", "datetimeoffset"), new("PriorityCeiling", "int")], ["AdmissionId"]),
+        ("ToolExecutionAudit", [new("AuditId", "uniqueidentifier"), new("TenantId", "uniqueidentifier"),
+            new("CompanyId", "uniqueidentifier"), new("UserId", "uniqueidentifier"), new("TaskId", "uniqueidentifier"),
+            new("Resource", "nvarchar(200)"), new("Action", "nvarchar(100)"), new("Risk", "nvarchar(40)"),
+            new("Authorized", "bit"), new("DecisionReason", "nvarchar(200)"), new("OccurredAtUtc", "datetimeoffset"),
+            new("ExecutionId", "nvarchar(200)", true)], ["AuditId"])
     ];
     private const string SourceName = "AIOfficeLocal";
     private const string Schema = "aioffice";
@@ -130,13 +138,30 @@ internal static class GroupShadowCursorSql
         }
         foreach (var table in MigrationOwnedTables)
         {
-            var columns = string.Join(",", table.Columns.Order(StringComparer.Ordinal).Select(Quote));
+            var columns = string.Join(",", table.Columns.OrderBy(x => x.Name, StringComparer.Ordinal).Select(x => Quote(x.Name)));
             var order = string.Join(",", table.Key.Select(Quote));
-            result.Add(Template("rows:" + table.Name, RowHash(name, table.Name, columns, order)));
+            result.Add(Template("rows:" + table.Name, MigrationTableGuard(name, table.Name, table.Columns, table.Key)
+                + RowHash(name, table.Name, columns, order)));
         }
         result.Add(Template("rows:__EFMigrationsHistory", RowHash(name, "__EFMigrationsHistory", "[MigrationId],[ProductVersion]", "[MigrationId]")));
         foreach (var item in CatalogQueries(name)) result.Add(Template("catalog:" + item.Tag, Hash("catalog:" + item.Tag, item.Sql)));
         return result.AsReadOnly();
+    }
+
+    private static string MigrationTableGuard(string database, string table, MigrationColumn[] columns, string[] key)
+    {
+        var expected = string.Join(",", columns.OrderBy(x => x.Name, StringComparer.Ordinal).Select(x =>
+            $"(N'{x.Name}',N'{CanonicalType(x.StoreType)}',CAST({(x.Nullable ? 1 : 0)} AS bit),CAST(0 AS bit))"));
+        var wanted = $"SELECT v.Name,v.StoreType,v.Nullable,v.UserDefined FROM(VALUES {expected})v(Name,StoreType,Nullable,UserDefined)";
+        var actual = ColumnShape(database, table, full: false);
+        var p = $"[{database}].sys.";
+        var actualKey = $"SELECT c.name,ic.key_ordinal FROM {p}indexes i JOIN {p}index_columns ic ON ic.object_id=i.object_id AND ic.index_id=i.index_id "
+            + $"JOIN {p}columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id JOIN {p}tables t ON t.object_id=i.object_id "
+            + $"JOIN {p}schemas s ON s.schema_id=t.schema_id WHERE s.name=N'aioffice' AND t.name=N'{table}' AND i.is_primary_key=1 AND ic.key_ordinal>0";
+        var expectedKey = string.Join(",", key.Select((name, index) => $"(N'{name}',{index + 1})"));
+        var wantedKey = $"SELECT v.Name,v.Ordinal FROM(VALUES {expectedKey})v(Name,Ordinal)";
+        return $"IF EXISTS({actual} EXCEPT {wanted}) OR EXISTS({wanted} EXCEPT {actual}) THROW 51053,N'Owned shadow unmapped columns refused',1;\n"
+            + $"IF EXISTS({actualKey} EXCEPT {wantedKey}) OR EXISTS({wantedKey} EXCEPT {actualKey}) THROW 51053,N'Owned shadow unmapped key refused',1;\n";
     }
 
     private static string RowHash(string database, string table, string columns, string order) => $"""

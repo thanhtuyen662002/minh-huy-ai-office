@@ -69,7 +69,19 @@ public sealed class OwnedCursorMigrationInventoryTests
                 Assert.Contains("COUNT_BIG(*)", command); Assert.Contains(">16384", command);
                 Assert.Contains("DATALENGTH(@payload)>8388608", command);
                 Assert.DoesNotContain("SELECT *", command); Assert.DoesNotContain(" TOP", command);
-                var parser = new TSql160Parser(true); parser.Parse(new StringReader(command), out var errors); Assert.Empty(errors);
+                var parser = new TSql160Parser(true); var parsed = parser.Parse(new StringReader(command), out var errors); Assert.Empty(errors);
+                var shapes = new ShapeValues(); parsed.Accept(shapes);
+                var expectedShape = created.Definition.ColumnDefinitions.Select(column =>
+                    (column.ColumnIdentifier.Value, StoreType(column.DataType),
+                        Assert.Single(column.Constraints.OfType<NullableConstraintDefinition>()).Nullable, false))
+                    .OrderBy(x => x.Value, StringComparer.Ordinal).ToArray();
+                Assert.Equal(2, shapes.Columns.Count);
+                Assert.All(shapes.Columns, actual => Assert.Equal(expectedShape, actual));
+                Assert.Equal(2, shapes.Keys.Count);
+                Assert.All(shapes.Keys, actual => Assert.Equal(new[] { (key, 1) }, actual));
+                Assert.Equal(4, Regex.Matches(command, @"\bEXCEPT\b").Count);
+                Assert.Contains("c.is_nullable,ty.is_user_defined", command);
+                Assert.Contains("i.is_primary_key=1 AND ic.key_ordinal>0", command);
             }
             finally { foreach (var item in snapshots) item.Command.Dispose(); }
         }
@@ -134,6 +146,17 @@ public sealed class OwnedCursorMigrationInventoryTests
             var table = Tables.Single(x => x.SchemaObjectName.BaseIdentifier.Value == node.SchemaObjectName.BaseIdentifier.Value);
             foreach (var column in node.Definition.ColumnDefinitions) table.Definition.ColumnDefinitions.Add(column);
         }
+        public override void ExplicitVisit(AlterTableAlterColumnStatement node)
+        {
+            var table = Tables.Single(x => x.SchemaObjectName.BaseIdentifier.Value == node.SchemaObjectName.BaseIdentifier.Value);
+            var column = table.Definition.ColumnDefinitions.Single(x => x.ColumnIdentifier.Value == node.ColumnIdentifier.Value);
+            if (node.DataType is not null) column.DataType = node.DataType;
+            if (node.AlterTableAlterColumnOption is AlterTableAlterColumnOption.Null or AlterTableAlterColumnOption.NotNull)
+            {
+                foreach (var old in column.Constraints.OfType<NullableConstraintDefinition>().ToArray()) column.Constraints.Remove(old);
+                column.Constraints.Add(new NullableConstraintDefinition { Nullable = node.AlterTableAlterColumnOption == AlterTableAlterColumnOption.Null });
+            }
+        }
     }
 
     private sealed class InventoryValues : TSqlFragmentVisitor
@@ -143,6 +166,46 @@ public sealed class OwnedCursorMigrationInventoryTests
         {
             Assert.Equal("v", node.Alias.Value);
             Inventories.Add(node.RowValues.Select(row => Assert.IsType<StringLiteral>(Assert.Single(row.ColumnValues)).Value).ToArray());
+        }
+    }
+
+    private static string StoreType(DataTypeReference reference)
+    {
+        var type = Assert.IsType<SqlDataTypeReference>(reference);
+        var name = type.SqlDataTypeOption.ToString().ToLowerInvariant();
+        var parameters = type.Parameters.Select(x => x.Value).ToArray();
+        if (parameters.Length == 0 && name is "datetimeoffset" or "datetime2" or "time") parameters = ["7"];
+        return name + (parameters.Length == 0 ? "" : "(" + string.Join(",", parameters) + ")");
+    }
+
+    private sealed class ShapeValues : TSqlFragmentVisitor
+    {
+        public List<(string Name, string StoreType, bool Nullable, bool UserDefined)[]> Columns { get; } = [];
+        public List<(string Name, int Ordinal)[]> Keys { get; } = [];
+        public override void ExplicitVisit(InlineDerivedTable node)
+        {
+            Assert.Equal("v", node.Alias.Value);
+            if (node.Columns.Count == 4)
+            {
+                Assert.Equal(new[] { "Name", "StoreType", "Nullable", "UserDefined" }, node.Columns.Select(x => x.Value));
+                Columns.Add(node.RowValues.Select(row =>
+                    (Assert.IsType<StringLiteral>(row.ColumnValues[0]).Value, Assert.IsType<StringLiteral>(row.ColumnValues[1]).Value,
+                        Bit(row.ColumnValues[2]), Bit(row.ColumnValues[3]))).ToArray());
+            }
+            else
+            {
+                Assert.Equal(new[] { "Name", "Ordinal" }, node.Columns.Select(x => x.Value));
+                Keys.Add(node.RowValues.Select(row => (Assert.IsType<StringLiteral>(row.ColumnValues[0]).Value,
+                    int.Parse(Assert.IsType<IntegerLiteral>(row.ColumnValues[1]).Value, System.Globalization.CultureInfo.InvariantCulture))).ToArray());
+            }
+        }
+
+        private static bool Bit(ScalarExpression expression)
+        {
+            var cast = Assert.IsType<CastCall>(expression);
+            Assert.Equal(SqlDataTypeOption.Bit, Assert.IsType<SqlDataTypeReference>(cast.DataType).SqlDataTypeOption);
+            var value = Assert.IsType<IntegerLiteral>(cast.Parameter).Value; Assert.Contains(value, new[] { "0", "1" });
+            return value == "1";
         }
     }
 }
