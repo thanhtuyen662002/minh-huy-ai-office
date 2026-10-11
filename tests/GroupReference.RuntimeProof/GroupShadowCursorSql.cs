@@ -17,6 +17,18 @@ internal static class GroupShadowCursorSql
     internal const string CursorMigration = "20261011075456_AddGroupSignedTerminalCursor";
     internal const int MaximumSnapshotRowsPerTable = 16384;
     internal const int MaximumSnapshotJsonBytes = 8388608;
+    // These three tables are owned by versioned migrations and have no
+    // EF entity. Keep every column and the original primary-key ordering.
+    // Cold tests reconcile this inventory with the actual full migration SQL.
+    private static readonly (string Name, string[] Columns, string[] Key)[] MigrationOwnedTables =
+    [
+        ("CustomerAiCreditSettlements", ["SettlementId", "ReservationId", "TenantId", "CompanyId", "AuthorityVersion",
+            "PricingPolicyId", "PricingPolicyVersion", "SettledAiCredits", "ReleasedAiCredits"], ["SettlementId"]),
+        ("CustomerSlaPriorityAdmissions", ["AdmissionId", "TenantId", "CompanyId", "UserId", "AuthorityVersion", "PolicyId",
+            "PolicyVersion", "ServiceClass", "SchedulerPriority", "CreatedAtUtc", "PriorityCeiling"], ["AdmissionId"]),
+        ("ToolExecutionAudit", ["AuditId", "TenantId", "CompanyId", "UserId", "TaskId", "Resource", "Action", "Risk",
+            "Authorized", "DecisionReason", "OccurredAtUtc", "ExecutionId"], ["AuditId"])
+    ];
     private const string SourceName = "AIOfficeLocal";
     private const string Schema = "aioffice";
     private static readonly string[] SeedOrder = ["Companies", "GroupConnectorAccounts", "GroupServices",
@@ -84,7 +96,7 @@ internal static class GroupShadowCursorSql
         return new(Template("guard:schema-and-root", guards, identity), Array.AsReadOnly(copies));
     }
 
-    // Uses the complete actual EF owned-table inventory, plus EF history. Unknown/missing user
+    // Uses all EF tables, unmapped migration-owned tables and EF history. Unknown/missing user
     // tables refuse instead of disappearing from a digest. Each result is only tag + 64 hex hash.
     // JSON is generated privately by SQL and bounded after construction; this is NOT a streaming
     // SQL-allocation bound. The orchestrator must bound duration/SQL memory and compare ALL tags.
@@ -97,7 +109,9 @@ internal static class GroupShadowCursorSql
         var model = RequireModel(database);
         var tables = model.GetRelationalModel().Tables.OrderBy(x => x.Name, StringComparer.Ordinal).ToArray();
         if (tables.Length is < 11 or > 128 || tables.Any(x => x.Schema != Schema || x.PrimaryKey is null)) throw Refused();
-        var inventory = string.Join(",", tables.Select(x => "(N'" + x.Name + "')").Append("(N'__EFMigrationsHistory')"));
+        var names = tables.Select(x => x.Name).Concat(MigrationOwnedTables.Select(x => x.Name)).Append("__EFMigrationsHistory").ToArray();
+        if (names.Distinct(StringComparer.Ordinal).Count() != names.Length) throw Refused();
+        var inventory = string.Join(",", names.Order(StringComparer.Ordinal).Select(x => "(N'" + x + "')"));
         var prefix = $"""
             IF DB_ID(N'{name}') IS NULL THROW 51053,N'Owned shadow database refused',1;
             IF EXISTS(SELECT s.name,t.name FROM [{name}].sys.tables t JOIN [{name}].sys.schemas s ON s.schema_id=t.schema_id
@@ -112,6 +126,12 @@ internal static class GroupShadowCursorSql
         {
             var columns = string.Join(",", table.Columns.OrderBy(x => x.Name, StringComparer.Ordinal).Select(x => Quote(x.Name)));
             var order = string.Join(",", table.PrimaryKey!.Columns.Select(x => Quote(x.Name)));
+            result.Add(Template("rows:" + table.Name, RowHash(name, table.Name, columns, order)));
+        }
+        foreach (var table in MigrationOwnedTables)
+        {
+            var columns = string.Join(",", table.Columns.Order(StringComparer.Ordinal).Select(Quote));
+            var order = string.Join(",", table.Key.Select(Quote));
             result.Add(Template("rows:" + table.Name, RowHash(name, table.Name, columns, order)));
         }
         result.Add(Template("rows:__EFMigrationsHistory", RowHash(name, "__EFMigrationsHistory", "[MigrationId],[ProductVersion]", "[MigrationId]")));

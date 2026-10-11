@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 70699683df796a2f6183e5d13b96da32bf88b7b3
+current_target_head: e000db8a556c99774395a5fcf049c86fc93bce2b
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 70699683df796a2f6183e5d13b96da32bf88b7b3
+    head: e000db8a556c99774395a5fcf049c86fc93bce2b
     state: in_progress
-    next: "Draft288 exact706 Build38135054597/Gov38135054553 CLOSED_TERMINAL_RED: six prerequisites/GovSUCCESS, NET3843PASS, native114457110296 operator-configuration, quality114463182232 red, no artifact. Root full native83488/quality3529 read; NET full-byte inspection, not entire verbatim body. Deterministic13 catalog tag producer/strict-reader mismatch reproduced by2 original regression failures then7 new casesPASS; catalog labels fixed and bounded private diagnostics added;168 PythonPASS. Freeze/review exact8 source+2 state repair then SAME288 push and own fresh120/all8/Gov/3850.NET/quality/six originals through terminal. Hosted unique first cause UNPROVEN. Parentb28 qualified119 preserved. Private context/fence/chunks/attempt policy reviewed, unpromoted; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
+    next: "Draft288 exacte000 Build38139385156/Gov38139385255 ALL8_CLOSED_RED: six prerequisite gates/Gov SUCCESS; native114469909214 source-snapshot SQL51053 ordinal0, quality114477562516 red, artifact0; NET3850 PASS. Actual complete generated migration inventory retains three unmapped tables, all columns/PK included in strict source/shadow72. 117.NET/168Python/four scoped formats PASS. Freeze/review exact8 source+2 state repair before SAME288 push; own fresh120/NET3859/all8/Gov/quality/six originals through actual terminal closure. Private17context/19journal/v3runtime remain unpromoted; later journal source74/shadow72. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233/qualified ERP/deployment/production/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 exact706 Build38135054597/Gov38135054553 CLOSED_TERMINAL_RED: six prerequisites/GovSUCCESS, NET3843PASS, native114457110296 operator-configuration, quality114463182232 red, no artifact. Root full native83488/quality3529 read; NET full-byte inspection, not entire verbatim body. Deterministic13 catalog tag producer/strict-reader mismatch reproduced by2 original regression failures then7 new casesPASS; catalog labels fixed and bounded private diagnostics added;168 PythonPASS. Freeze/review exact8 source+2 state repair then SAME288 push and own fresh120/all8/Gov/3850.NET/quality/six originals through terminal. Hosted unique first cause UNPROVEN. Parentb28 qualified119 preserved. Private context/fence/chunks/attempt policy reviewed, unpromoted; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
+next_action: "Draft288 exacte000 Build38139385156/Gov38139385255 ALL8_CLOSED_RED: six prerequisite gates/Gov SUCCESS; native114469909214 source-snapshot SQL51053 ordinal0, quality114477562516 red, artifact0; NET3850 PASS. Actual complete generated migration inventory retains three unmapped tables, all columns/PK included in strict source/shadow72. 117.NET/168Python/four scoped formats PASS. Freeze/review exact8 source+2 state repair before SAME288 push; own fresh120/NET3859/all8/Gov/quality/six originals through actual terminal closure. Private17context/19journal/v3runtime remain unpromoted; later journal source74/shadow72. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233/qualified ERP/deployment/production/merge incomplete."
 
 
 blocked_by:
@@ -2887,3 +2887,37 @@ group_cursor_shadow_catalog_repair_checkpoint:
   full278: INCOMPLETE
   merge: NOT_APPROVED
   next: 'Review exact repair and durable state, then SAME288 push; close fresh exact-head120/all8/Gov/3850.NET/quality/six original images. Repair actual red immediately. Continue existing-Gateway context/DI/durableattempt/restart/noClick acceptance after closure; no partial merge.'
+
+group_cursor_shadow_full_inventory_repair_checkpoint:
+  actual_remote_head: e000db8a556c99774395a5fcf049c86fc93bce2b
+  actual_ci_state: ALL8_CLOSED_TERMINAL_RED
+  build: 38139385156
+  governance: 38139385255
+  governance_conclusion: success
+  native_job: 114469909214
+  quality_job: 114477562516
+  prerequisite_jobs: NET114469908940 Compose114469909048 EF114469909008 Web114469909215 FE114469909182 Deploy114469909005 all SUCCESS
+  native: 83550 bytes SHA30b799392bffea2c25f7c760358f4f46713a758e7473a51f3f365877187bdf55; frozen120 full-byte parser99once21missing0duplicate151overallPASS5FAIL; failure and cleanup sections inspected, entire
+    verbatim body NOT_READ; source-snapshot SQL51053 ordinal0 before shadow creation; root aggregates withheld; artifacts0
+  dotnet: 3850 PASS0Fail0Skip four successful runs [6,520,25,3299]; full-byte parser and all build/aggregate lines inspected, entire verbatim body NOT_READ
+  quality: 3536 bytes SHAd4ff757912178c7d7d4be1615b1ea6076395b848be5a449917c3147f895bd36e ROOT_ENTIRE_BODY_READ; one failed six successful prerequisite results
+  predecessor_source_approval: 6108991067
+  preserved_full_dispatch_and_terminal_comment: 6109459386
+  source_defect: 54 EF tables do not describe all57 application tables retained by actual migrations; ToolExecutionAudit12cols/AuditId, CustomerAiCreditSettlements9cols/SettlementId, CustomerSlaPriorityAdmissions11cols/AdmissionId
+    including later PriorityCeiling are absent from model
+  repair: Add all three unmapped migration-owned tables to both complete bidirectional inventories and bounded full-row hashes; explicit all columns/original PK; strict72 shape/diagnostic-1or0..71; retain
+    eleven-table seed, catalogs/history/ownership/transactions/DDL/data/success/native120 requirements
+  local: 117 selected .NET PASS0fail0skip0warnings;168Python144owned13frontier5network6terminalPASS; four scoped format apply/verify checks and diff PASS; nine new actual generated migration/AST/projection/incomplete-plan
+    cases; all144 SQL literal tags pass unchanged strict reader
+  source_review: PENDING_FULL_FROZEN_TEN_PATH_BEFORE_PUSH
+  successor_native120: NOT_RUN_UNQUALIFIED
+  successor_full_dotnet: 3859=[6,520,25,3308]_NOT_RUN
+  private_context_journal_runtime: UNPROMOTED_ARCHIVES_IMMUTABLE
+  model: NOT_RUN_UNEVALUATED
+  full278: INCOMPLETE
+  merge: NOT_APPROVED
+  document: docs/validation/GROUP_CURSOR_SHADOW_MIGRATION_INVENTORY_REPAIR.md
+  next: 'Draft288 exacte000 Build38139385156/Gov38139385255 ALL8_CLOSED_RED: six prerequisite gates/Gov SUCCESS; native114469909214 source-snapshot SQL51053 ordinal0, quality114477562516 red, artifact0; NET3850
+    PASS. Actual complete generated migration inventory retains three unmapped tables, all columns/PK included in strict source/shadow72. 117.NET/168Python/four scoped formats PASS. Freeze/review exact8 source+2
+    state repair before SAME288 push; own fresh120/NET3859/all8/Gov/quality/six originals through actual terminal closure. Private17context/19journal/v3runtime remain unpromoted; later journal source74/shadow72.
+    Actualmodel NOT_RUN_UNEVALUATED/full278/279/233/qualified ERP/deployment/production/merge incomplete.'

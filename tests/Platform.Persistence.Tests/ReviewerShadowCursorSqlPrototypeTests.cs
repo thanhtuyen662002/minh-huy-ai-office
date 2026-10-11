@@ -209,10 +209,10 @@ public sealed class ReviewerShadowCursorSqlPrototypeTests
     {
         using var db = ColdDatabase(); var snapshots = Prototype.SourceSnapshots(db);
         var model = db.GetService<IDesignTimeModel>().Model.GetRelationalModel();
-        Assert.Equal(model.Tables.Count() + 15, snapshots.Count); // inventory + history +13catalogs
+        Assert.Equal(model.Tables.Count() + 18, snapshots.Count); // inventory +3unmapped migration tables +history +13catalogs
         Assert.Equal(snapshots.Count, snapshots.Select(x => x.Tag).Distinct().Count());
         var rows = snapshots.Where(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal)).ToArray();
-        Assert.Equal(model.Tables.Count() + 1, rows.Length);
+        Assert.Equal(model.Tables.Count() + 4, rows.Length);
         foreach (var table in model.Tables)
         {
             var row = rows.Single(x => x.Tag == "rows:" + table.Name).Command.CommandText;

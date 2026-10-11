@@ -216,8 +216,8 @@ class ShadowFailureDiagnosticTests(unittest.TestCase):
             + '\nFAIL owned reference runtime frontier-cursor-migration\n')
 
     def test_exact_closed_diagnostic_and_each_boundary_ordinal_are_retained(self):
-        for diagnostic in ('sql--2 snapshot=-1', 'sql-0 snapshot=0', 'sql-65535 snapshot=68',
-                           'invalid-operation snapshot=1', 'cancelled snapshot=-1', 'sql-other snapshot=68'):
+        for diagnostic in ('sql--2 snapshot=-1', 'sql-0 snapshot=0', 'sql-65535 snapshot=71',
+                           'invalid-operation snapshot=1', 'cancelled snapshot=-1', 'sql-other snapshot=71'):
             with self.subTest(diagnostic=diagnostic), self.assertRaises(AssertionError) as error:
                 proof.require_shadow_migration_result(self.result(diagnostic=diagnostic), reference)
             self.assertEqual('Owned signed cursor migration failed; phase=original-source-snapshot; diagnostic=' + diagnostic,
@@ -225,7 +225,7 @@ class ShadowFailureDiagnosticTests(unittest.TestCase):
 
     def test_unknown_private_or_noncanonical_diagnostic_refuses_without_echo(self):
         for diagnostic in ('PRIVATE_SQL_PASSWORD snapshot=0', 'sql-65536 snapshot=0', 'sql--3 snapshot=0',
-            'sql-01 snapshot=0', 'sql-1 snapshot=69', 'sql-1 snapshot=-2', 'sql-1 snapshot=00',
+            'sql-01 snapshot=0', 'sql-1 snapshot=72', 'sql-1 snapshot=-2', 'sql-1 snapshot=00',
             'invalid-operation snapshot=0 PRIVATE_SQL_PASSWORD', 'sql-1 snapshot=0\nPRIVATE_SQL_PASSWORD'):
             with self.subTest(diagnostic=diagnostic), self.assertRaises(AssertionError) as error:
                 proof.require_shadow_migration_result(self.result(diagnostic=diagnostic), reference)

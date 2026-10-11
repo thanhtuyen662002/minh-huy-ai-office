@@ -33,7 +33,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             NotSupportedException => "not-supported",
             _ => "other"
         };
-        var ordinal = SnapshotOrdinal is >= 0 and < 69 ? SnapshotOrdinal : -1;
+        var ordinal = SnapshotOrdinal is >= 0 and < 72 ? SnapshotOrdinal : -1;
         return "FAIL owned signed cursor migration diagnostic " + code + " snapshot=" + ordinal.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
@@ -340,7 +340,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
     {
         return await completion.RunAsync(async () =>
         {
-            if (templates.Count != 69 || templates[0].Tag != "inventory"
+            if (templates.Count != 72 || templates[0].Tag != "inventory"
                 || templates.Select(x => x.Tag).Distinct(StringComparer.Ordinal).Count() != templates.Count) throw new InvalidOperationException();
             var result = new Dictionary<string, string>(StringComparer.Ordinal);
             SnapshotOrdinal = -1;
