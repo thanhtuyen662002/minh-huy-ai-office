@@ -40,15 +40,23 @@ internal sealed class GroupBatchTerminalManifest
 
     internal static GroupBatchTerminalManifest Create(GroupWholeBatchDependencyVerdict.Current current, Guid operation)
     {
-        try { return CreateCore(current, operation); }
+        try { return CreateCore(current?.Coverage, current?.OriginalEffects, operation); }
         catch (Exception error) when (error is InvalidOperationException or ArgumentException or OverflowException)
         { throw Unavailable(); }
     }
 
-    private static GroupBatchTerminalManifest CreateCore(GroupWholeBatchDependencyVerdict.Current current, Guid operation)
+    internal static GroupBatchTerminalManifest CreateOriginal(GroupBatchHistoricalGraph historical, Guid operation)
     {
-        if (current?.Coverage is not { } coverage || operation == Guid.Empty) throw Unavailable();
-        var effects = coverage.RequireOriginalEffects(current.OriginalEffects);
+        try { return CreateCore(historical?.Coverage, historical?.OriginalEffects, operation); }
+        catch (Exception error) when (error is InvalidOperationException or ArgumentException or OverflowException)
+        { throw Unavailable(); }
+    }
+
+    private static GroupBatchTerminalManifest CreateCore(GroupWholeBatchCoverage? coverage,
+        IEnumerable<GroupWorkEffectLedger>? originalEffects, Guid operation)
+    {
+        if (coverage is null || originalEffects is null || operation == Guid.Empty) throw Unavailable();
+        var effects = coverage.RequireOriginalEffects(originalEffects);
         using var stream = new MemoryStream(MaximumBytes);
         using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
         writer.Write(Magic);
@@ -121,6 +129,11 @@ internal sealed class GroupBatchTerminalManifest
     internal static void RequireUnchanged(GroupWholeBatchDependencyVerdict.Current current, Guid operation, byte[]? expected)
     {
         var original = Read(expected); var observed = Create(current, operation);
+        if (!CryptographicOperations.FixedTimeEquals(original.encoded, observed.encoded)) throw Unavailable();
+    }
+    internal static void RequireOriginalUnchanged(GroupBatchHistoricalGraph historical, Guid operation, byte[]? expected)
+    {
+        var original = Read(expected); var observed = CreateOriginal(historical, operation);
         if (!CryptographicOperations.FixedTimeEquals(original.encoded, observed.encoded)) throw Unavailable();
     }
     private static InvalidOperationException Unavailable() => new("Group terminal manifest is not available.");

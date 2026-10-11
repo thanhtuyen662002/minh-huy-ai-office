@@ -23,24 +23,32 @@ internal sealed class GroupBatchOwnInputPlan
     internal static GroupBatchOwnInputPlan Require(GroupWholeBatchDependencyVerdict.Current current,
         IEnumerable<GroupBrainRequestOriginMetadata> originRows, CancellationToken token = default)
     {
-        ArgumentNullException.ThrowIfNull(current); ArgumentNullException.ThrowIfNull(originRows); token.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(current);
+        return RequireOriginal(current.Coverage, current.OriginalEffects, originRows, token);
+    }
+
+    internal static GroupBatchOwnInputPlan RequireOriginal(GroupWholeBatchCoverage coverage,
+        IEnumerable<GroupWorkEffectLedger> originalEffects, IEnumerable<GroupBrainRequestOriginMetadata> originRows,
+        CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(originRows); token.ThrowIfCancellationRequested();
         try
         {
-            if (current.Coverage is null) throw Unavailable();
-            var effects = current.Coverage.RequireOriginalEffects(current.OriginalEffects);
+            if (coverage is null) throw Unavailable();
+            var effects = coverage.RequireOriginalEffects(originalEffects);
             var byOperation = effects.ToDictionary(x => x.OperationId);
             var created = new Dictionary<Guid, (GroupWorkEffectLedger Effect, int Ordinal)>();
             foreach (var effect in effects)
                 for (var index = 0; index < effect.OriginalRequestIds.Count; index++)
                     if (!created.TryAdd(effect.OriginalRequestIds[index], (effect, index + 1))) throw Unavailable();
-            var requested = current.Coverage.Manifests.SelectMany(x => x.Dependencies)
+            var requested = coverage.Manifests.SelectMany(x => x.Dependencies)
                 .Where(x => x.Kind == GroupBrainContentKind.RequestRevision).Select(x => x.RecordId).ToHashSet();
             if (requested.Count > MaximumOriginRows) throw Unavailable();
             var origins = new Dictionary<Guid, GroupBrainRequestOriginMetadata>(); var observed = 0;
             foreach (var row in originRows)
             {
                 token.ThrowIfCancellationRequested();
-                if (++observed > MaximumOriginRows || row is null || row.Scope != current.Coverage.Scope
+                if (++observed > MaximumOriginRows || row is null || row.Scope != coverage.Scope
                     || !requested.Contains(row.RequestId) || row.OriginBatchId == Guid.Empty || row.OriginOperationId == Guid.Empty
                     || row.OriginCandidateOrdinal is < 1 or > GroupAutomaticNotePlan.MaximumNotes || row.CreatedAtUtc.Offset != TimeSpan.Zero
                     || row.RequestId != RequestIdentity(row)
@@ -49,7 +57,7 @@ internal sealed class GroupBatchOwnInputPlan
             if (origins.Count != requested.Count) throw Unavailable();
             var parents = byOperation.Keys.ToDictionary(x => x, _ => new HashSet<Guid>());
             var children = byOperation.Keys.ToDictionary(x => x, _ => new HashSet<Guid>()); var edges = 0;
-            foreach (var manifest in current.Coverage.Manifests)
+            foreach (var manifest in coverage.Manifests)
             {
                 token.ThrowIfCancellationRequested();
                 var child = byOperation[manifest.OperationId];
@@ -58,7 +66,7 @@ internal sealed class GroupBatchOwnInputPlan
                     var origin = origins[dependency.RecordId];
                     if (origin.CreatedAtUtc > child.CommittedAtUtc) throw Unavailable();
                     var known = created.TryGetValue(dependency.RecordId, out var original);
-                    if (origin.OriginBatchId != current.Coverage.BatchId)
+                    if (origin.OriginBatchId != coverage.BatchId)
                     { if (known) throw Unavailable(); continue; }
                     if (!known || origin.OriginOperationId != original.Effect.OperationId || origin.OriginCandidateOrdinal != original.Ordinal
                         || origin.CreatedAtUtc != original.Effect.CommittedAtUtc || origin.OriginOperationId == child.OperationId) throw Unavailable();

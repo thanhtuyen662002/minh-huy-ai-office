@@ -12,11 +12,11 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 internal sealed class GroupWorkEffectLedger
 {
     private readonly GroupWorkCommitReceiptRecord originalReceipt;
-    private GroupWorkEffectLedger(GroupScope scope, GroupWorkCommitReceiptRecord work, string fingerprint, Guid[] originalRequestIds)
+    private GroupWorkEffectLedger(GroupScope scope, GroupWorkCommitReceiptRecord work, string fingerprint, Guid[] originalRequestIds, GroupOriginalClaimProvenance originalClaim)
     {
         Scope = scope; BatchId = work.BatchId; OperationId = work.OperationId; NoteCount = work.NoteCount;
         Fingerprint = fingerprint; originalReceipt = work; CommittedAtUtc = work.CommittedAtUtc;
-        OriginalRequestIds = Array.AsReadOnly(originalRequestIds);
+        OriginalRequestIds = Array.AsReadOnly(originalRequestIds); OriginalClaim = originalClaim;
     }
     internal GroupScope Scope { get; }
     internal Guid BatchId { get; }
@@ -25,6 +25,12 @@ internal sealed class GroupWorkEffectLedger
     internal string Fingerprint { get; }
     internal DateTimeOffset CommittedAtUtc { get; }
     internal IReadOnlyList<Guid> OriginalRequestIds { get; }
+    // The same sealed acquisition that was included in the unchanged v1 digest.
+    internal GroupOriginalClaimProvenance OriginalClaim { get; }
+    internal bool MatchesAcquisitionAuthority(GroupBatchClaimReceiptRecord claim) => claim.ServiceId == originalReceipt.ServiceId
+        && claim.CredentialEpoch == originalReceipt.CredentialEpoch && claim.GrantVersion == originalReceipt.GrantVersion
+        && claim.SourceVersion == originalReceipt.SourceVersion && claim.DeletionGeneration == originalReceipt.DeletionGeneration
+        && claim.AccountVersion == originalReceipt.AccountVersion;
     public override string ToString() => "Group original effect ledger (private metadata).";
 
     // A later digest helper must bind the observed graph to the complete
@@ -214,7 +220,7 @@ internal sealed class GroupWorkEffectLedger
         foreach (var item in orderedItems) { writer.Write(item.Ordinal); writer.Write(item.RequestId.ToByteArray()); writer.Write(item.RequestRevision); }
         writer.Flush();
         return new(scope, work, Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))),
-            orderedRequests.Select(x => x.Id).ToArray());
+            orderedRequests.Select(x => x.Id).ToArray(), provenance);
 
         bool InScope(Guid tenant, Guid company, Guid binding) => tenant == scope.TenantId && company == scope.CompanyId && binding == scope.SourceBindingId;
         Guid Identity(string kind, int ordinal) => new(SHA256.HashData(Encoding.ASCII.GetBytes(FormattableString.Invariant(

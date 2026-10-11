@@ -154,6 +154,40 @@ public sealed class GroupBatchOwnInputTests
         Assert.Empty(db.ChangeTracker.Entries()); Assert.Equal(System.Data.ConnectionState.Closed, db.Database.GetDbConnection().State);
     }
 
+    [Fact]
+    public void HistoricalOriginalGraphRetainsFiveContributorOwnInputDagWithoutCurrentVerdict()
+    {
+        var f = new Fixture(); for (var index = 1; index < 5; index++) f.Dependencies[index].Add(f.Ids[index - 1]);
+        var current = f.Build(); var now = f.Input.Allocation.AllocatedAtUtc.AddDays(30);
+        var historical = GroupBatchHistoricalGraph.Require(current.Coverage, current.OriginalEffects, f.Origins, now);
+        Assert.Equal(4, historical.OwnInputs.OwnDependencyCount);
+        Assert.Equal(GroupBatchOwnInputPlan.Require(current, f.Origins).ContributorOrder, historical.OwnInputs.ContributorOrder);
+        f.Heads[0].CurrentRevision = 2; f.Heads[0].BusinessVersion++;
+        Assert.Equal(5, historical.Coverage.NoteCount); Assert.Equal(4, historical.OwnInputs.OwnDependencyCount);
+        Assert.Equal(GroupBatchTerminalManifest.Create(current, Guid.Parse("ed136d1e-afd0-4011-981f-18eb98f4d13d")).Write(),
+            GroupBatchTerminalManifest.CreateOriginal(historical, Guid.Parse("ed136d1e-afd0-4011-981f-18eb98f4d13d")).Write());
+    }
+
+    [Theory]
+    [InlineData("self")]
+    [InlineData("cycle")]
+    [InlineData("missing")]
+    [InlineData("foreign")]
+    [InlineData("origin-substitution")]
+    public void HistoricalGraphCannotBypassOriginalOwnInputDependencies(string fault)
+    {
+        var f = new Fixture(); f.Dependencies[1].Add(f.Ids[0]);
+        if (fault == "self") f.Dependencies[0].Add(f.Ids[0]);
+        if (fault == "cycle") f.Dependencies[0].Add(f.Ids[1]);
+        var current = f.Build(); var origins = f.Origins.ToList();
+        if (fault == "missing") origins.Clear();
+        if (fault == "foreign") origins[0] = origins[0] with { Scope = origins[0].Scope with { CompanyId = Guid.NewGuid() } };
+        if (fault == "origin-substitution") origins[0] = origins[0] with { OriginBatchId = Guid.NewGuid() };
+        var error = Assert.Throws<InvalidOperationException>(() => GroupBatchHistoricalGraph.Require(current.Coverage,
+            current.OriginalEffects, origins, f.Input.Allocation.AllocatedAtUtc.AddDays(30)));
+        Assert.Equal("Group historical original graph is not available.", error.Message); Assert.Null(error.InnerException);
+    }
+
     private sealed class UntrustedRows(IEnumerable<GroupBrainRequestOriginMetadata> rows, Action? after = null) : IEnumerable<GroupBrainRequestOriginMetadata>
     {
         internal bool Disposed;
