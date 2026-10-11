@@ -34,6 +34,30 @@ internal static class GroupAutomaticModelContextRuntimeProof
         var reads = keys.Reads; var writes = keys.Writes;
         var context = GroupAutomaticModelContext.Create(preparation, brain, "owned-synthetic-context", 64000);
         var requestId = Guid.NewGuid(); var request = context.CreateGatewayRequest(requestId); request.Validate();
+        RequirePrivateInput(context, preparation, brain, evidence.Scope, requestId, request);
+        evidence.Observed.Clear(); evidence.Metadata = false; evidence.Payload = false; evidence.Armed = true;
+        try
+        {
+            await new GroupAutomaticModelDependencyFence(database, worker, clock, sources, reader).RequireCurrentAsync(context, token);
+            evidence.RequireComplete(brain.Items.Count != 0);
+        }
+        finally { evidence.Armed = false; }
+        if (keys.Reads != reads || keys.Writes != writes || database.ChangeTracker.HasChanges()
+            || database.Database.CurrentTransaction is not null || database.Database.GetDbConnection().State != connectionState
+            || GroupAutomaticDependencyRuntimeProof.StateFingerprint(await StateAsync()) != state)
+            throw new InvalidOperationException();
+        GroupAutomaticRawRuntimeProof.RequireDetached(database);
+        await requireOriginal(); evidence.Completed++;
+
+        Task<GroupBatchClaimStateRecord> StateAsync() => database.GroupBatchClaimStates.AsNoTracking().SingleAsync(x =>
+            x.TenantId == evidence.Scope.TenantId && x.CompanyId == evidence.Scope.CompanyId && x.BindingId == evidence.Scope.SourceBindingId
+            && x.BatchId == handle.Receipt.BatchId, token);
+    }
+
+    // The owned fixture validates actual shipping input with no SQL or model.
+    internal static void RequirePrivateInput(GroupAutomaticModelContext context, GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, GroupScope scope, Guid requestId, AiGatewayRequest request)
+    {
         using var wire = JsonDocument.Parse(request.Input);
         var current = wire.RootElement.GetProperty("current_sources").EnumerateArray().ToArray();
         var history = wire.RootElement.GetProperty("same_group_history").EnumerateArray().ToArray();
@@ -47,35 +71,18 @@ internal static class GroupAutomaticModelContextRuntimeProof
             || context.Manifest.UsedTokens != Encoding.UTF8.GetByteCount(request.Input) + Encoding.UTF8.GetByteCount(request.ResponseSchema!)
             || !context.RequiresModelTokenizerQualification || request.ResponseSchema != GroupGroundedWorkProposal.ResponseSchema
             || request.Capability != AiCapability.StructuredGeneration || request.RequestId != requestId.ToString("D")
-            || request.TaskId != context.BatchId.ToString("D") || request.TenantId != evidence.Scope.TenantId.ToString("D")
-            || request.CompanyId != evidence.Scope.CompanyId.ToString("D")
+            || request.TaskId != context.BatchId.ToString("D") || request.TenantId != scope.TenantId.ToString("D")
+            || request.CompanyId != scope.CompanyId.ToString("D")
             || request.Input.Contains("OWNED_AUTOMATIC_PRIVATE_SENTINEL", StringComparison.Ordinal)
-            || request.Input.Contains(evidence.Scope.TenantId.ToString("D"), StringComparison.Ordinal)
-            || request.Input.Contains(evidence.Scope.CompanyId.ToString("D"), StringComparison.Ordinal)
-            || request.Input.Contains(evidence.Scope.SourceBindingId.ToString("D"), StringComparison.Ordinal)
+            || request.Input.Contains(scope.TenantId.ToString("D"), StringComparison.Ordinal)
+            || request.Input.Contains(scope.CompanyId.ToString("D"), StringComparison.Ordinal)
+            || request.Input.Contains(scope.SourceBindingId.ToString("D"), StringComparison.Ordinal)
             || preparation.Receipts.Where(x => x.Disposition == GroupSourcePreparationDisposition.Quarantined)
-                .Any(x => request.Input.Contains(x.MessageId.ToString("D"), StringComparison.Ordinal)))
+                .Any(x => current.Any(value => value.GetProperty("message_id").GetString() == x.MessageId.ToString("D"))))
             throw new InvalidOperationException();
         if (history.Length != 0 && (history.Count(x => x.GetProperty("role").GetString() == "source_backed_ai_interpretation") != 2
             || history.Count(x => x.GetProperty("role").GetString() == "host_metadata_attention") != 2
             || history.Any(x => x.GetProperty("it_confirmed").GetBoolean()))) throw new InvalidOperationException();
-        evidence.Observed.Clear(); evidence.Metadata = false; evidence.Payload = false; evidence.Armed = true;
-        try
-        {
-            await new GroupAutomaticModelDependencyFence(database, worker, clock, sources, reader).RequireCurrentAsync(context, token);
-            evidence.RequireComplete(history.Length != 0);
-        }
-        finally { evidence.Armed = false; }
-        if (keys.Reads != reads || keys.Writes != writes || database.ChangeTracker.HasChanges()
-            || database.Database.CurrentTransaction is not null || database.Database.GetDbConnection().State != connectionState
-            || GroupAutomaticDependencyRuntimeProof.StateFingerprint(await StateAsync()) != state)
-            throw new InvalidOperationException();
-        GroupAutomaticRawRuntimeProof.RequireDetached(database);
-        await requireOriginal(); evidence.Completed++;
-
-        Task<GroupBatchClaimStateRecord> StateAsync() => database.GroupBatchClaimStates.AsNoTracking().SingleAsync(x =>
-            x.TenantId == evidence.Scope.TenantId && x.CompanyId == evidence.Scope.CompanyId && x.BindingId == evidence.Scope.SourceBindingId
-            && x.BatchId == handle.Receipt.BatchId, token);
     }
 
     internal sealed class Evidence(GroupScope scope)
