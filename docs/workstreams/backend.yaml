@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 exact113 to terminal; Gov38096849367/sixPrereqsSUCCESS and ROOTFULL.NET114344400163 actual2844 zeroFailSkip. No superseding meaningfulCI; full113/logs/all8/quality/rootOriginals then immediate same288 realred repair. Structuralac28 APPROVED6103648579 ROOTFULL3871/93controls; internal reader8bc APPROVED6103738028 ROOTFULL3526/31controls. New automatic dependency store owns bounded Serializable SQL check, exact DBworkerclock affinity, safe expiry witness-only retirement;17cold entry controls and format PASS, native success unqualified. Freeze full6paths for independent review then preserve/add actual whole-dependency reconstruction in owned fixtures. Complete immutable effect-ledger/originalclaim/own-write-chain/terminalcontiguousfrontier/honestgap/backlog/retry/profile/tokenizer/no-click/279 remain incomplete. Actualmodel NOT_RUN_UNEVALUATED; no partialmerge/full233 claim."
+next_action: "Own278/Draft288 same branch repair remote5fc CLOSEDRED Build38096849478/native114344400101/quality114350227578 at actual_Core501_fixture120s_generation_budget, lastACK unretained; ROOTFULL113 missing20/PASS144/fourfailures/noBrowser, .NET2844 zeroFailSkip/sixPrereqs/Gov38096849367SUCCESS. Structuralac28 and reader8bc sourceapproved ROOTFULL6103648579/6103738028. Public store154 WITHHELD6103810469 ROOTFULL3401/26controls23PASS3parserfail; repair catches parser Argument/Format/Overflow with21cold controls PASS and no rawvalue/inner. Freeze repaired whole scope for independent retained-control review, then reviewed ownedfixture300s finite budget with safe progress diagnostics and same288 exact113 rerun. Do not inherit runtime qualification. Then allcontributor native/effectledger/originalclaim/ownwrite chain/terminalcontiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2606,8 +2606,33 @@ group_278_automatic_dependency_store_preparation:
   dependencies: exact_database_worker_clock_existing_sourcebrain_allcontributor_reader_no_keys_decryption
   expiry: retained_metadata_only_witness_commit_then_deny_no_effects_frontier
   local: focused17_zeroFailSkip_twofile_format_cold_entry_refusals_only
-  source_review: PENDING_FULL_frozen_whole_sixpaths_before_push
+  source_review: WITHHELD6103810469_ROOT_FULL_read3401_persisted_parserP2
   native: NOT_RUN_UNQUALIFIED_successful_whole_reconstruction_expiry_retirement
   completion: NO_effect_ledger_originalclaim_ownwrite_chain_terminal_receipt_frontier_DI
   model: NOT_RUN_UNEVALUATED
   next: own_remote113_terminal_then_review_store_and_native_allcontributor_reconstruction_preserving_all_original_proofs
+
+group_278_manifest113_terminal_5fc:
+  head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+  build: TERMINAL_RED38096849478
+  native: FAILURE114344400101
+  quality: FAILURE114350227578
+  governance: SUCCESS38096849367
+  six_other_prerequisites: SUCCESS
+  root_full_native: required113_missing20_PASS144_failurepatterns4_noBrowserArtifact
+  root_native_log: bytes78407_sha256_fc234ec5a334aac104051c7e10394425c1499b55a30b1cd40730e91d08ecbc8e
+  root_full_dotnet: actual2844_6_520_25_2293_zeroFailSkip_fourSuccessfulRuns
+  cause: actual_Core501_owned_generation_finite120seconds_exceeded_at_00_32_41_lastACK_not_retained
+  history500_pending501_manifest113: UNQUALIFIED_no_native_success_inference
+  next: repair_finite_owned_fixture_budget_safe_progress_diagnostics_then_same288_reviewed_exact113_rerun
+
+group_278_automatic_dependency_parser_repair:
+  original_head: 154529c2692a5ca2df37834947b2b66c1262c201
+  original_review: WITHHELD6103810469_ROOT_FULL_read3401_persisted
+  original_controls: 26_total23PASS3fail_Format_rawvalue_and_Overflow_preopen_parser
+  repair: catch_supported_Argument_Format_Overflow_parser_exceptions_fixed_error_no_inner_or_option_value
+  local: focused21_zeroFailSkip_twofile_format_no_SQL_connection_keys_or_witness
+  source_review: PENDING_FULL_repaired_whole_scope_original_adversarial_controls_required
+  native: NOT_RUN_UNQUALIFIED_successful_reconstruction_expiry_witness
+  model: NOT_RUN_UNEVALUATED
+  next: independent_FULL_review_then_ownedfixture_budget_repair_same288_exact113

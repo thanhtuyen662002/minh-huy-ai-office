@@ -6,6 +6,25 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed partial class GroupBatchSourceReaderTests
 {
     [Theory]
+    [InlineData("MultipleActiveResultSets=owned-private-marker")]
+    [InlineData("Connect Timeout=owned-private-marker")]
+    [InlineData("Connect Timeout=2147483648")]
+    [InlineData("UnknownOption=owned-private-marker")]
+    public async Task AutomaticBatchDependencyStoreMalformedConnectionOptionsExposeOnlyFixedErrorBeforeConnection(string option)
+    {
+        using var f = new Fixture(); await f.CommitAsync(); var handle = await f.ClaimAsync();
+        using var database = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseSqlServer("Server=127.0.0.1,1;Database=never_connect;Integrated Security=true;Encrypt=true;" + option).Options);
+        var source = new GroupBatchSourceReader(database, f.Worker, f.Auth.Clock, f.Keys, new());
+        var brain = new GroupBrainCurrentReader(database, f.Worker, f.Auth.Clock, f.Keys, new());
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new GroupAutomaticBatchDependencyStore(database, f.Worker, f.Auth.Clock, source, brain).RequireCurrentAsync(handle));
+        Assert.Equal("Automatic group batch dependencies are not available.", error.Message); Assert.Null(error.InnerException);
+        Assert.DoesNotContain("owned-private-marker", error.ToString()); Assert.Equal(0, f.Keys.Reads);
+        Assert.False(database.ChangeTracker.HasChanges()); Assert.Null(database.Database.CurrentTransaction);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task AutomaticBatchDependencyStoreRefusesNonSqlAndMarsBeforeKeysOrConnection(bool mars)

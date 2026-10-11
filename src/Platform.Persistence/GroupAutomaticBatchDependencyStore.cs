@@ -18,7 +18,7 @@ public sealed class GroupAutomaticBatchDependencyStore(PlatformDbContext databas
             || !database.Database.IsSqlServer() || database.Database.CurrentTransaction is not null
             || System.Transactions.Transaction.Current is not null || database.ChangeTracker.HasChanges()) throw Unavailable();
         try { if (new SqlConnectionStringBuilder(database.Database.GetConnectionString()).MultipleActiveResultSets) throw Unavailable(); }
-        catch (ArgumentException) { throw Unavailable(); }
+        catch (Exception error) when (error is ArgumentException or FormatException or OverflowException) { throw Unavailable(); }
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         try
