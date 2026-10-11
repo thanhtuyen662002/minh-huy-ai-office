@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 ACTIVE113, Gov38096849367 SUCCESS; exact source9d/native794/repair5fc scoped approvals6103383218/6103421671/6103509982 ROOT FULLread persisted. Close current exact all8/Gov/FULL113/native/.NET/sixOriginals without superseding meaningful CI, fix same288 any red. Prior ec3 Build38093894476/native114335702045/quality114341455901 TERMINAL RED, FULL112 missing19 PASS144 failurepatterns4; HTTPstatus/body/iteration unretained hostedcauseunproven. Wholecoverage kernel40 focused controls only, full bounded raw500/head100/all contributor manifests, valid deletionGeneration0 and40notes PERchunk; larger whole results retained. Freeze narrow kernel for FULL source review; then all-contributor caller-owned SQL current dependencies/own-input-post-effect chains before terminal contiguous frontier. No gap filtering, no model claim: actualmodel NOT_RUN_UNEVALUATED. Native partialchunks/physicalFK/races/brain reconstruction/profile/tokenizer/honestgap/backlog/retry/no-click/279/customer/full233 remain incomplete; no partialmerge."
+next_action: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 exact113 to terminal, Gov38096849367SUCCESS/sixPrereqsSUCCESS/ROOT FULL.NET114344400163 actual2844=[6,520,25,2293]0FailSkip. No superseding meaningfulCI; inspect full113 logs/rootOriginals then any realred same288 immediate repair. Initial structuralab58 fullreview6103599748 WITHHELD ROOTFULL3681 for actual cutoff winner across all history and reportedCount/raw omission/unbounded enumeration. Repaired kernel72focusedPASS keeps original40/valid0generation/40notes PERchunk/whole41, adds actual prior Recall/Edit reader cases, bounded enumeration of all five inputs with actual lengths/copied mutable fields. Freeze cumulative sixpaths for FULL review then caller-owned SQL allcontributors current fingerprints/effectledger/ownwritechains before contiguousfrontier. Native kernel/races/partialchunks/physicalFK/terminal/model/profile/tokenizer/honestgap/backlog/retry/no-click/279/customer/full233 remain unqualified/incomplete. Actualmodel NOT_RUN_UNEVALUATED; no partialmerge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2566,7 +2566,21 @@ group_278_manifest113_owned_dispatch_and_whole_coverage:
   kernel: structural_only_raw500_head100_every_chunk_manifest_receipt_scope_batch_operation_cutoff_selected_raw_relation
   bounds: deletionGeneration0_valid_40notes_PERchunk_larger_whole_results_retained_no_reporter_truncation
   local_kernel: focused40_PASS_zeroFailSkip_twofile_format
-  kernel_review: PENDING_FULL_frozen_whole_narrow_checkpoint
+  kernel_review: WITHHELD6103599748_ROOT_FULL_read3681_persisted_two_P2_repaired_in_next_block
   limits: no_SQL_current_dependency_reconstruction_effect_ledger_ownwrite_chain_terminal_frontier_DI_native_model_acceptance
   model: NOT_RUN_UNEVALUATED
   next: own_exact113_terminal_then_allcontributor_current_SQL_fences_and_contiguous_frontier
+
+group_278_whole_coverage_review_repair:
+  original_head: ab58ebc0af4c3fdbdca4e5b75c4b88dd3484f909
+  original_review: WITHHELD6103599748_ROOT_FULL_read3681_persisted_two_P2
+  original_reproduction: original40PASS_independent9PASS_6failures_actual_priority_head_and_raw_count_overflow
+  repair: explicit_all_history_cutoff_heads_separate_monotone_raw_order_bounded_actual_fiveinput_snapshots_copy_mutable_fields_manifest
+  local: focused72_zeroFailSkip_original40_plus11cutoff_4actualReaderManifest_17enumeration_threefile_format
+  bounds: raw500_head100_every_chunk_manifest_deletionGeneration0_valid_40notes_PERchunk_whole41_retained
+  source_review: PENDING_FULL_frozen_cumulative_sixpaths_before_push
+  native_kernel: NOT_RUN_UNQUALIFIED_no_SQL_terminal_frontier_consumer
+  current_remote: 5fc5b87782f6ab06245a8d757c4e81e0cb670216_owned113_Build38096849478_native114344400101
+  current_dotnet: ROOT_FULL2844_6_520_25_2293_zeroFailSkip_fourSuccessfulRuns_114344400163
+  model: NOT_RUN_UNEVALUATED
+  next: own_current113_terminal_review_repaired_kernel_then_allcontributors_current_SQL_fences

@@ -14,23 +14,54 @@ internal sealed class GroupWholeBatchCoverage
     public override string ToString() => "Group batch coverage (private metadata).";
 
     internal static GroupWholeBatchCoverage Require(GroupBatchAllocationReceipt allocation,
+        IReadOnlyList<GroupPendingRevisionMetadata> cutoffHeads,
         IReadOnlyList<GroupWorkCommitReceiptRecord> receipts, IReadOnlyList<GroupWorkSourceDispositionRecord> selected,
         IReadOnlyList<GroupWorkRawDispositionRecord> raw)
     {
         ArgumentNullException.ThrowIfNull(allocation);
+        ArgumentNullException.ThrowIfNull(cutoffHeads);
         ArgumentNullException.ThrowIfNull(receipts); ArgumentNullException.ThrowIfNull(selected); ArgumentNullException.ThrowIfNull(raw);
+        // Count/indexer/CopyTo on a supplied collection is not evidence of the
+        // enumerated input. Bound every actual enumeration before using it.
+        var revisions = Freeze(allocation.Revisions, GroupBatchAllocationPrefix.MaximumRawRevisions, x => x);
+        var actualHeads = Freeze(cutoffHeads, FrozenGroupBatch.MaximumMessages, x => x);
+        var actualReceipts = Freeze(receipts, FrozenGroupBatch.MaximumMessages, CopyReceipt);
+        var actualSelected = Freeze(selected, FrozenGroupBatch.MaximumMessages, x => new GroupWorkSourceDispositionRecord
+        {
+            TenantId = x.TenantId,
+            CompanyId = x.CompanyId,
+            BindingId = x.BindingId,
+            BatchId = x.BatchId,
+            MessageId = x.MessageId,
+            MessageRevision = x.MessageRevision,
+            OperationId = x.OperationId,
+            Outcome = x.Outcome
+        });
+        var actualRaw = Freeze(raw, GroupBatchAllocationPrefix.MaximumRawRevisions, x => new GroupWorkRawDispositionRecord
+        {
+            TenantId = x.TenantId,
+            CompanyId = x.CompanyId,
+            BindingId = x.BindingId,
+            BatchId = x.BatchId,
+            CommittedSequence = x.CommittedSequence,
+            MessageId = x.MessageId,
+            RawRevision = x.RawRevision,
+            SelectedMessageRevision = x.SelectedMessageRevision,
+            OperationId = x.OperationId,
+            Outcome = x.Outcome,
+            Relation = x.Relation
+        });
         var scope = allocation.Scope;
         if (scope.TenantId == Guid.Empty || scope.CompanyId == Guid.Empty || scope.SourceBindingId == Guid.Empty
             || allocation.BatchId == Guid.Empty || allocation.OperationId == Guid.Empty || allocation.AfterSequence < 0
-            || allocation.Revisions.Count is < 1 or > GroupBatchAllocationPrefix.MaximumRawRevisions
+            || revisions.Length < 1
             || allocation.AllocatedThroughSequence <= allocation.AfterSequence
-            || allocation.AllocatedThroughSequence - allocation.AfterSequence != allocation.Revisions.Count
+            || allocation.AllocatedThroughSequence - allocation.AfterSequence != revisions.Length
             || allocation.ObservedCommittedThroughSequence < allocation.AllocatedThroughSequence
             || allocation.AllocatedAtUtc.Offset != TimeSpan.Zero
-            || receipts.Count is < 1 or > FrozenGroupBatch.MaximumMessages || selected.Count is < 1 or > FrozenGroupBatch.MaximumMessages
-            || raw.Count != allocation.Revisions.Count) throw Unavailable();
-        var revisions = allocation.Revisions.ToArray();
-        var heads = new Dictionary<Guid, GroupPendingRevisionMetadata>();
+            || actualHeads.Length < 1 || actualReceipts.Length < 1 || actualSelected.Length < 1
+            || actualRaw.Length != revisions.Length) throw Unavailable();
+        var previousRevisions = new Dictionary<Guid, long>();
         var identities = new HashSet<(Guid, long)>();
         for (var index = 0; index < revisions.Length; index++)
         {
@@ -42,19 +73,40 @@ internal sealed class GroupWholeBatchCoverage
                 || row.IsHistoricalBackfill != allocation.IsHistoricalBackfill || row.ContentSha256 is null || row.ContentSha256.Length != 64
                 || row.ContentSha256.Any(x => x is not (>= '0' and <= '9' or >= 'A' and <= 'F'))
                 || !Enum.IsDefined(row.Kind) || !identities.Add((row.MessageId, row.Revision))
-                || heads.TryGetValue(row.MessageId, out var previous) && row.Revision <= previous.Revision) throw Unavailable();
-            heads[row.MessageId] = row;
+                || previousRevisions.TryGetValue(row.MessageId, out var previous) && row.Revision <= previous) throw Unavailable();
+            previousRevisions[row.MessageId] = row.Revision;
         }
-        if (heads.Count != selected.Count || heads.Count > FrozenGroupBatch.MaximumMessages) throw Unavailable();
+        // The source reader chooses Recall > Edit > other kinds over ALL
+        // original revisions through the cutoff. The winner can precede this
+        // allocation; allocation rows alone cannot reconstruct its identity.
+        // The owned SQL unit must independently reconstruct these cutoff heads.
+        var heads = new Dictionary<Guid, GroupPendingRevisionMetadata>();
+        foreach (var row in actualHeads)
+        {
+            if (row is null || row.Scope != scope || row.MessageId == Guid.Empty || row.Revision <= 0
+                || row.CommittedSequence <= 0 || row.CommittedSequence > allocation.AllocatedThroughSequence
+                || row.CommittedAtUtc.Offset != TimeSpan.Zero || row.CommittedAtUtc > allocation.AllocatedAtUtc
+                || row.ContentSha256 is null || row.ContentSha256.Length != 64
+                || row.ContentSha256.Any(x => x is not (>= '0' and <= '9' or >= 'A' and <= 'F'))
+                || !Enum.IsDefined(row.Kind) || !previousRevisions.ContainsKey(row.MessageId)
+                || row.Revision > previousRevisions[row.MessageId] || !heads.TryAdd(row.MessageId, row)) throw Unavailable();
+            if (row.CommittedSequence > allocation.AfterSequence)
+            {
+                if (revisions[(int)(row.CommittedSequence - allocation.AfterSequence - 1)].Metadata != row) throw Unavailable();
+            }
+            else if (row.Revision >= revisions.First(x => x.Metadata.MessageId == row.MessageId).Metadata.Revision) throw Unavailable();
+        }
+        if (heads.Count != previousRevisions.Count) throw Unavailable();
+        if (heads.Count != actualSelected.Length) throw Unavailable();
         var dispositions = new Dictionary<Guid, GroupWorkSourceDispositionRecord>();
-        foreach (var row in selected)
+        foreach (var row in actualSelected)
         {
             if (row is null || !Scoped(row.TenantId, row.CompanyId, row.BindingId, row.BatchId) || row.OperationId == Guid.Empty
                 || !heads.TryGetValue(row.MessageId, out var head) || row.MessageRevision != head.Revision
                 || !Enum.IsDefined(row.Outcome) || !dispositions.TryAdd(row.MessageId, row)) throw Unavailable();
         }
         var contributors = new Dictionary<Guid, GroupWorkDependencyManifest>(); var noteCount = 0;
-        foreach (var receipt in receipts)
+        foreach (var receipt in actualReceipts)
         {
             if (receipt is null || !Scoped(receipt.TenantId, receipt.CompanyId, receipt.BindingId, receipt.BatchId) || receipt.OperationId == Guid.Empty
                 || receipt.ServiceId == Guid.Empty || receipt.ClaimEpoch <= 0 || receipt.CredentialEpoch <= 0 || receipt.GrantVersion <= 0
@@ -65,7 +117,7 @@ internal sealed class GroupWholeBatchCoverage
                 || (receipt.NoteCount == 0) != (receipt.Outcome == GroupWorkCommitOutcome.NoWork)
                 || receipt.DependencyManifestVersion != GroupWorkDependencyManifest.Version) throw Unavailable();
             var manifest = GroupWorkDependencyManifest.Read(receipt.DependencyManifest?.ToArray());
-            var own = selected.Where(x => x.OperationId == receipt.OperationId).OrderBy(x => x.MessageId).ToArray();
+            var own = actualSelected.Where(x => x.OperationId == receipt.OperationId).OrderBy(x => x.MessageId).ToArray();
             if (manifest.Scope != scope || manifest.BatchId != allocation.BatchId || manifest.OperationId != receipt.OperationId
                 || manifest.AllocatedThroughSequence != allocation.AllocatedThroughSequence
                 || own.Length != receipt.SelectedMessageCount || manifest.Sources.Count != own.Length
@@ -74,8 +126,7 @@ internal sealed class GroupWholeBatchCoverage
             noteCount += receipt.NoteCount;
         }
         if (dispositions.Values.Any(x => !contributors.ContainsKey(x.OperationId))) throw Unavailable();
-        if (raw.Any(x => x is null)) throw Unavailable();
-        var rows = raw.OrderBy(x => x.CommittedSequence).ToArray();
+        var rows = actualRaw.OrderBy(x => x.CommittedSequence).ToArray();
         for (var index = 0; index < rows.Length; index++)
         {
             var row = rows[index]; var allocated = revisions[index].Metadata;
@@ -90,6 +141,43 @@ internal sealed class GroupWholeBatchCoverage
 
         bool Scoped(Guid tenant, Guid company, Guid binding, Guid batch) => tenant == scope.TenantId && company == scope.CompanyId
             && binding == scope.SourceBindingId && batch == allocation.BatchId;
+    }
+    private static T[] Freeze<T>(IEnumerable<T> source, int maximum, Func<T, T> copy) where T : class
+    {
+        if (source is null) throw Unavailable();
+        var rows = new List<T>(maximum);
+        foreach (var row in source)
+        {
+            if (row is null || rows.Count == maximum) throw Unavailable();
+            rows.Add(copy(row));
+        }
+        return rows.ToArray();
+    }
+    private static GroupWorkCommitReceiptRecord CopyReceipt(GroupWorkCommitReceiptRecord x)
+    {
+        if (x.DependencyManifest is { Length: > GroupWorkDependencyManifest.MaximumBytes }) throw Unavailable();
+        return new()
+        {
+            TenantId = x.TenantId,
+            CompanyId = x.CompanyId,
+            BindingId = x.BindingId,
+            BatchId = x.BatchId,
+            OperationId = x.OperationId,
+            SourceSetSha256 = x.SourceSetSha256,
+            DependencyManifestVersion = x.DependencyManifestVersion,
+            DependencyManifest = x.DependencyManifest?.ToArray(),
+            SelectedMessageCount = x.SelectedMessageCount,
+            NoteCount = x.NoteCount,
+            Outcome = x.Outcome,
+            ServiceId = x.ServiceId,
+            ClaimEpoch = x.ClaimEpoch,
+            CredentialEpoch = x.CredentialEpoch,
+            GrantVersion = x.GrantVersion,
+            SourceVersion = x.SourceVersion,
+            DeletionGeneration = x.DeletionGeneration,
+            AccountVersion = x.AccountVersion,
+            CommittedAtUtc = x.CommittedAtUtc
+        };
     }
     private static InvalidOperationException Unavailable() => new("Whole group batch coverage is not available.");
 }
