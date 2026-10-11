@@ -14,6 +14,8 @@ REPLAY_SUCCESS = "PASS owned frontier root independent process replay original s
 CURSOR_SUCCESS = "PASS owned signed frontier cursor SQL trusted seven field foreign key nonempty partial null closure three tuple attacks four permitted noop updates complete original cursor unchanged"
 CURSOR_SUMMARY = "PASS actual signed frontier cursor SQL four original scopes trusted complete seven field foreign key empty null tuple attacks refused permitted four noop columns complete original and frontier graphs unchanged no latest chain DI or model"
 SUMMARY = "PASS actual root frontiers SQL four original scopes historical expired acquisition atomic key advance cursor all fields readback postflush rollback immutable26 and14 columns missing rebound key independent process replay full original graphs pending501 unchanged no successor DI or model"
+MIGRATION_SUCCESS = "PASS owned signed cursor legacy migration shadow authentic original eleven table closure empty version through UTC unsigned refusals exact51048 full rows history schema security unchanged valid upgrade trusted seven tuple FK repeat unchanged owned database removed no all seven mismatch DI or model"
+MIGRATION_SUMMARY = "PASS actual signed cursor migration one owned shadow authentic original eleven table legacy closure five exact51048 refusals full schema rows history security unchanged positive upgrade trusted tuple FK repeat unchanged original scopes unchanged owned database removed no all seven mismatch DI or model"
 
 
 def _load(name, filename):
@@ -21,6 +23,54 @@ def _load(name, filename):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def require_shadow_sql_network(*, directory, api, installation, reference):
+    reference.require_owned(directory, api)  # Before Docker or operator configuration.
+    assert isinstance(installation, str) and str(uuid.UUID(installation)) == installation and uuid.UUID(installation).int
+    project = 'aioffice-' + uuid.UUID(installation).hex
+    network = project + '_default'
+    inspected = subprocess.run(['docker', 'network', 'inspect', network, '--format',
+        '{{.Id}}|{{index .Labels "com.docker.compose.project"}}|{{index .Labels "com.docker.compose.network"}}'],
+        capture_output=True, text=True, timeout=10)
+    assert inspected.returncode == 0 and not inspected.stderr, 'Owned shadow network inspection failed'
+    fields = inspected.stdout.strip().split('|')
+    assert len(fields) == 3 and re.fullmatch('[0-9a-f]{64}', fields[0]) and fields[1:] == [project, 'default'], \
+        'Owned shadow network identity mismatch'
+    network_id = fields[0]
+    listed = subprocess.run(['docker', 'ps', '--no-trunc', '--quiet', '--filter', 'status=running',
+        '--filter', 'label=com.docker.compose.project=' + project, '--filter', 'label=com.docker.compose.service=sql'],
+        capture_output=True, text=True, timeout=10)
+    assert listed.returncode == 0 and not listed.stderr and re.fullmatch('[0-9a-f]{64}', listed.stdout.strip()), \
+        'Owned shadow SQL container is not unique'
+    identity = listed.stdout.strip()
+    inspected = subprocess.run(['docker', 'inspect', '--type', 'container', '--format',
+        '{{.Id}}|{{.State.Running}}|{{index .Config.Labels "com.docker.compose.project"}}|'
+        '{{index .Config.Labels "com.docker.compose.service"}}|{{with index .NetworkSettings.Networks "' + network + '"}}'
+        '{{.NetworkID}}|{{join .Aliases ","}}{{end}}', identity], capture_output=True, text=True, timeout=10)
+    assert inspected.returncode == 0 and not inspected.stderr, 'Owned shadow SQL container inspection failed'
+    fields = inspected.stdout.strip().split('|')
+    assert len(fields) == 6 and fields[:5] == [identity, 'true', project, 'sql', network_id], \
+        'Owned shadow SQL container identity mismatch'
+    aliases = fields[5].split(',')
+    assert 1 <= len(aliases) <= 8 and len(aliases) == len(set(aliases)) and 'sql' in aliases \
+        and all(re.fullmatch('[A-Za-z0-9_.-]{1,128}', x) for x in aliases), 'Owned shadow SQL alias mismatch'
+
+
+def require_shadow_migration_result(result, reference):
+    lines = result.stdout.splitlines()
+    phases = {'owned-guard', 'original-authentication', 'operator-configuration', 'shadow-create', 'shadow-ownership',
+        'predecessor-migration', 'original-seed', 'legacy-version-check', 'legacy-utc-check', 'empty-preflight',
+        'version-preflight', 'through-preflight', 'utc-preflight', 'unsigned-preflight', 'matching-positive-upgrade',
+        'positive-repeat', 'original-source-unchanged', 'owned-shadow-cleanup', 'complete'}
+    prefix = 'FAIL owned signed cursor migration '
+    if (type(result.returncode) is int and result.returncode == 1 and len(lines) in (2, 3)
+            and (len(lines) == 2 or lines[0] == REPLAY_SUCCESS)
+            and lines[-1] == 'FAIL owned reference runtime frontier-cursor-migration' and lines[-2].startswith(prefix)):
+        phase = lines[-2][len(prefix):]
+        if phase in phases:
+            raise AssertionError('Owned signed cursor migration failed; phase=' + phase)
+    reference.require_reference_result(result, 'frontier-cursor-migration', [REPLAY_SUCCESS, MIGRATION_SUCCESS])
 
 
 def verify(*, directory, api, manifest, sql):
@@ -75,6 +125,7 @@ def verify(*, directory, api, manifest, sql):
     original = original_snapshot(); counts(0)
     suffix = uuid.uuid4().hex; image = "aioffice-automatic-note-proof-" + suffix
     environment = dict(os.environ)
+    environment.pop('AIOFFICE_GROUP_CURSOR_PROOF_OPERATOR_CONNECTION', None)
     environment.update({"AIOFFICE_OWNED_GROUP_REFERENCE_PROOF": "true", "AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION":
         "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password=" + password + ";Encrypt=true;TrustServerCertificate=true",
         "AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY": base64.b64encode(secrets.token_bytes(32)).decode('ascii')})
@@ -109,6 +160,23 @@ def verify(*, directory, api, manifest, sql):
             counts(index + 1); assert original_snapshot() == original, "Cursor contract changed original graphs"
             for source, written in completed.items():
                 assert frontier_snapshot(source) == written, "Cursor contract changed an original frontier"
+        require_shadow_sql_network(directory=directory, api=api, installation=installation, reference=reference)
+        operator_password = manifest['AIOFFICE_SQL_PASSWORD']
+        assert isinstance(operator_password, str) and re.fullmatch(r'[A-Za-z0-9_-]{32,128}', operator_password)
+        shadow_environment = dict(environment)
+        shadow_environment['AIOFFICE_GROUP_CURSOR_PROOF_OPERATOR_CONNECTION'] = (
+            'Server=sql;Database=AIOfficeLocal;User ID=sa;Password=' + operator_password + ';Encrypt=true;TrustServerCertificate=true')
+        # Generated SA is forwarded only to this guarded owned-shadow child;
+        # the original twelve runtime children never receive this credential.
+        shadow_command = command[:-1] + ['-e', 'AIOFFICE_GROUP_CURSOR_PROOF_OPERATOR_CONNECTION', command[-1]]
+        configuration = {key: value for key, value in fixtures[0].items() if key != 'batchId'}
+        result = subprocess.run(shadow_command + ['frontier-cursor-migration'], input=json.dumps(configuration),
+            env=shadow_environment, capture_output=True, text=True, timeout=330)
+        assert not result.stderr, 'Owned cursor migration emitted unexpected diagnostics'
+        require_shadow_migration_result(result, reference)
+        counts(4); assert original_snapshot() == original, 'Cursor migration changed original graphs'
+        for source, written in completed.items():
+            assert frontier_snapshot(source) == written, 'Cursor migration changed an original frontier'
     except BaseException as error:
         failure = error
     finally:
@@ -124,3 +192,4 @@ def verify(*, directory, api, manifest, sql):
     if failure is not None: raise failure
     print(SUMMARY, flush=True)
     print(CURSOR_SUMMARY, flush=True)
+    print(MIGRATION_SUMMARY, flush=True)

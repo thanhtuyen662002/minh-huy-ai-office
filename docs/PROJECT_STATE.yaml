@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: b67f332be7d4ebad1d7419ca12ddee67ce5b957f
+current_target_head: b28ae6914817cbdee7179629e4f1436409ff12b5
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: b67f332be7d4ebad1d7419ca12ddee67ce5b957f
+    head: b28ae6914817cbdee7179629e4f1436409ff12b5
     state: in_progress
-    next: "Draft288 b67 exact Build38122945344/Gov38122945375/all8/native114421254988/full118/3738.NET/quality/six original images CLOSED_SCOPED_SUCCESS; original four roots/replays and strict original202 browser qualified only within owned fixture. Promoted reviewed private12 signed cursor migration51048 sevenfieldFK/nonemptyCHECK and guarded catalog547 rollback/noop phase; preliminary ROOTFULL9163 SHA019c65d19302f64acd5b74e0e33d61076be452f843d1b547f7ac0b74fec06177 independent28NET159Python/sourceonly. Local144NET155Python9CSharp3actualprojectformats compiledunownedguard; prior schemaonlyfull3193. Shared144NET155Python9CSharp3actualprojectformats and compiledunownedguard PASS; complete frozen14path Git source review pending. After ROOT full approval push SAME288 and own fresh all119/all8/Gov/full.NET/quality/six originals to terminal; fix actionable red on SAME branch. Physical51048 legacy refusal, successors/fullprefix/oldreplay/rotation/editRecall/revocationSnapshotRaces/continuation/gaps/nonemptyBrain/multipleContributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/customerERP/production/merge incomplete."
+    next: "Draft288 exactb28 Build38126313902/Gov38126313905/all8/native114431303985/full119/3748.NET/quality114438516635/six originals CLOSED_ROOTFULL_SCOPED_SUCCESS. Complete14 source approved6107295805 ROOTFULL9794 SHA513e6e6f6fe59b635296bc0d2621e9d25c7e1d816f159572c1f289fccf6c1aef. PRIVATE shadow13v1 WITHHELD fourP2; repaired full13v2 archive27a4de66d90f7ca9d6baa54732fad278b316d11f3bb92f63d26869decdcb54bf full3292Persistence164Python9CSharp2formats/unownedguard PASS. Fresh per-probe connections, exact nontruncated typed ownership, initial absence/lost-reply actual inspection and per-resource firstEDI with independent cleanup-success gate. Repaired PRIVATE13v2 preliminary SOURCE CLEAR ROOTFULL13814 SHA6c7d09455822e219c729bac9813348d56f471deeb3c0a5d11da4cdd1f0bcf685 independent116NET164Python9CSharp2formats/unownedguard. Promote SAME288 with durable state; complete15path frozen Git source review and sharedverify required beforepush; after ROOT full Git approval own fresh120/all8/Gov/full.NET/quality/six originals toterminal. Physical legacy51048, successors/fullprefix/oldreplay/rotation/editRecall/revocation races/continuation/gaps/nonemptybrain/multiplecontributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 b67 exact Build38122945344/Gov38122945375/all8/native114421254988/full118/3738.NET/quality/six original images CLOSED_SCOPED_SUCCESS; original four roots/replays and strict original202 browser qualified only within owned fixture. Promoted reviewed private12 signed cursor migration51048 sevenfieldFK/nonemptyCHECK and guarded catalog547 rollback/noop phase; preliminary ROOTFULL9163 SHA019c65d19302f64acd5b74e0e33d61076be452f843d1b547f7ac0b74fec06177 independent28NET159Python/sourceonly. Local144NET155Python9CSharp3actualprojectformats compiledunownedguard; prior schemaonlyfull3193. Shared144NET155Python9CSharp3actualprojectformats and compiledunownedguard PASS; complete frozen14path Git source review pending. After ROOT full approval push SAME288 and own fresh all119/all8/Gov/full.NET/quality/six originals to terminal; fix actionable red on SAME branch. Physical51048 legacy refusal, successors/fullprefix/oldreplay/rotation/editRecall/revocationSnapshotRaces/continuation/gaps/nonemptyBrain/multipleContributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/customerERP/production/merge incomplete."
+next_action: "Draft288 exactb28 Build38126313902/Gov38126313905/all8/native114431303985/full119/3748.NET/quality114438516635/six originals CLOSED_ROOTFULL_SCOPED_SUCCESS. Complete14 source approved6107295805 ROOTFULL9794 SHA513e6e6f6fe59b635296bc0d2621e9d25c7e1d816f159572c1f289fccf6c1aef. PRIVATE shadow13v1 WITHHELD fourP2; repaired full13v2 archive27a4de66d90f7ca9d6baa54732fad278b316d11f3bb92f63d26869decdcb54bf full3292Persistence164Python9CSharp2formats/unownedguard PASS. Fresh per-probe connections, exact nontruncated typed ownership, initial absence/lost-reply actual inspection and per-resource firstEDI with independent cleanup-success gate. Repaired PRIVATE13v2 preliminary SOURCE CLEAR ROOTFULL13814 SHA6c7d09455822e219c729bac9813348d56f471deeb3c0a5d11da4cdd1f0bcf685 independent116NET164Python9CSharp2formats/unownedguard. Promote SAME288 with durable state; complete15path frozen Git source review and sharedverify required beforepush; after ROOT full Git approval own fresh120/all8/Gov/full.NET/quality/six originals toterminal. Physical legacy51048, successors/fullprefix/oldreplay/rotation/editRecall/revocation races/continuation/gaps/nonemptybrain/multiplecontributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
 
 
 blocked_by:
@@ -2690,3 +2690,96 @@ group_278_signed_terminal_cursor_source:
   excluded: successors_stalematchingcursor_fullprefix_rotation_editRecall_keyawaitRevocationSnapshotRaces_continuation_gaps_nonemptyBrain_multiplecontributors_owninput_DI_noClick_model_full278_279_233_production_merge
   document: docs/validation/GROUP_SIGNED_TERMINAL_CURSOR_PREPARATION.md
   next: FULL_promoted_source_review_then_same288_fresh119_CI_owned_until_terminal_and_six_original_views_no_partialmerge
+
+group_278_remote_b28_terminal_closure:
+  head: b28ae6914817cbdee7179629e4f1436409ff12b5
+  state: CLOSED_TERMINAL_SUCCESS_SCOPED119
+  build: 38126313902
+  governance: 38126313905
+  native_job: 114431303985
+  dotnet_job: 114431303680
+  quality_job: 114438516635
+  selected_required: 119
+  selected_once: 119
+  missing: 0
+  duplicates: 0
+  failure_markers: 0
+  overall_pass_lines: 175
+  native_log_bytes: 89552
+  native_log_sha256: 0e4180d20ffaf2800d4172d6bc4933f587c4344f84ae56ce7ea305ee8f328d7f
+  dotnet_passed: 3748
+  dotnet_runs:
+  - 6
+  - 520
+  - 25
+  - 3197
+  dotnet_log_bytes: 996133
+  dotnet_log_sha256: acb1ef07b2b7f4114730cd7adf7cfaa9ef564bb5f792d21bf3b9ea21679ff51a
+  quality_log_bytes: 3455
+  quality_log_sha256: 8eae5666cfc8895e4b4e9556a80f66fb677e1f1df10b499f1c29dc8c66c1ada2
+  quality_results:
+    DOTNET_RESULT: success
+    WEB_RESULT: success
+    WEB_RUNTIME_RESULT: success
+    LOCAL_RUNTIME_RESULT: success
+    INFRASTRUCTURE_RESULT: success
+    DEPLOYMENT_RESULT: success
+    MIGRATIONS_RESULT: success
+  artifact: 11698386257
+  images:
+  - name: workspace.png
+    dimensions:
+    - 1440
+    - 1015
+    sha256: 3f727d6db697e06a208eb6555182e0dbc3d4d3afdd83f0ebfebe16f2b1034ef0
+    root_individually_viewed_original: true
+  - name: task-submission.png
+    dimensions:
+    - 1440
+    - 5809
+    sha256: aedb02bd1d7e2ed6bddf7d4fc39a8955c82a562aa7cf36878f2ec2d293304717
+    root_individually_viewed_original: true
+  - name: task-history.png
+    dimensions:
+    - 1440
+    - 1024
+    sha256: c8d7b564e35c19ba1531e50bdcef37e7ca7738debaf354205c9de01913ed5340
+    root_individually_viewed_original: true
+  - name: group-inbox.png
+    dimensions:
+    - 1440
+    - 1451
+    sha256: 9cdaed9b94824b0af1c729323b20ba4009f66cf50316ec14cce4bd9f20a1a2aa
+    root_individually_viewed_original: true
+  - name: group-inbox-mobile.png
+    dimensions:
+    - 375
+    - 2021
+    sha256: 76202cf78d0c6fbb62599459934dee442316dce9f32f53cc01f8de87b494706d
+    root_individually_viewed_original: true
+  - name: administrators.png
+    dimensions:
+    - 1440
+    - 1000
+    sha256: 14d66f75370fd60a66477723ff40516d8d9bab8ebcb69b0113e6cf1f5dbe3988
+    root_individually_viewed_original: true
+  source_review: APPROVED6107295805_ROOTFULL9794_SHA513e6e6f6fe59b635296bc0d2621e9d25c7e1d816f159572c1f289fccf6c1aef_COMPLETE14
+  qualification: ROOT_FULL_NATIVE_DOTNET_QUALITY_ALL8_GOV_SIX_ORIGINALS_SCOPED119_ONLY_legacy51048_successors_DI_model_full278_merge_excluded
+
+group_278_signed_cursor_legacy_shadow_source:
+  parent: b28ae6914817cbdee7179629e4f1436409ff12b5
+  source_review: PENDING_FULL_PROMOTED15_GIT_CHECKPOINT_AFTER_PRIVATE13v2_CLEAR
+  private_v1: WITHHELD_FOUR_P2_ROOTFULL13618_SHA4597b3dac2c8093c21fca3e32d0ab9cbda50b031e4890177691a0eb6cf38b2cf_original_archive21b6192c744e442ada58936cd1f22016d6f7360006a762a81c5a58adbf452360_preserved
+  private_v2_archive: 27a4de66d90f7ca9d6baa54732fad278b316d11f3bb92f63d26869decdcb54bf
+  local: FULL3292Persistence3197retained95current_zeroFailSkipWarnings_164Python144guard6terminal10root4network_9CSharp2actualprojectformats_compiledunowned_beforestdinconfigSQLcredentialsresources
+  owned_boundary: closedCI_directory_API_generatedComposeProjectDefaultNetworkUniqueRunningSQL_IDlabels_alias_beforeoperatorSecret_thirteenthchildonly_freshconnections_initialAbsent_generatedname_exacttyped_full64byte_BIN2_owner_DBID_independentlostReplyInspection_unknown_foreign_unmarked_neverDrop
+  failure_rule: firstEDI_peroperation_before_rollback_close_postconditions_reader_command_connection_model_disposal_allcleanup_attempted_separatefailed_cleanup_verdict_requiredby547_51048_and_finalsuccess_laterclean_cannoterase
+  native: unchanged_original_root_currentAuthority_history_retained_key_MAC_first_original11tableFKclosure_serialsourceAPPLOCK_actualIMigrator_predecessor_fivephysicallyvalid51048_cases_twoSeparateOldCHECK547_matchingupgrade_trusted7tuple_repeat_69fullrows_schema_security_history_snapshots_originalsource_unchanged_ownedcleanup
+  bounds: 30secondSQL_270operation45independentcleanup330child_old12retain150170_whole50minutes_16384rows8MiB_postConstructionJSON_not_streaming_memory_bound
+  preserved: alloriginal119_and_first12_children_35fulloriginal_and4frontier_graphs_existingshipping_gateways_keys_rights_migrations_workflows_unchanged_new120_summary_onlyaftercompletechecks_cleanup
+  physical: NOT_RUN_UNQUALIFIED_shadow120_migration51048
+  model: NOT_RUN_UNEVALUATED_existing_Gateway
+  excluded: allsevenancestor_mismatch_successors_fullprefix_rotation_editRecall_revocation_races_continuation_gaps_nonemptyBrain_multiplecontributors_owninput_DI_noClick_full278_279_233_customer_production_merge
+  document: docs/validation/GROUP_SIGNED_CURSOR_LEGACY_MIGRATION_PREPARATION.md
+  next: complete_full15_Git_review_sharedverify_then_same288_push_own120_exactCI_to_terminal_no_partial_merge
+  preliminary_review: PRIVATE13v2_SOURCE_CLEAR_ROOTFULL13814_SHA6c7d09455822e219c729bac9813348d56f471deeb3c0a5d11da4cdd1f0bcf685_independent116NET95candidate12original9adjacent_164Python9CSharp2formats_unownedguard_not_publicGit_or_SQL_approval
