@@ -787,6 +787,7 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             "AND DependencyManifestVersion=1 AND DATALENGTH(DependencyManifest)=274 AND SelectedMessageCount=2 "
             "AND EffectLedgerVersion=1 AND DATALENGTH(ExpectedEffectSha256)=32 AND ExpectedEffectSha256<>CONVERT(varbinary(32),REPLICATE(CHAR(0),32));") == "4|4|4"
         print("PASS actual automatic original effect expectations four original scopes version1 digest32 atomic rollback replay two immutable columns denied complete original graphs unchanged no completion or model", flush=True)
+        print("PASS actual automatic original effect graph SQL four original scopes each three current digest comparisons original acquisition six effect tables ciphertext preflight original graphs claim keys pending501 unchanged no completion or model", flush=True)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

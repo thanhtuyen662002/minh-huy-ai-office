@@ -195,6 +195,9 @@ internal static class GroupAutomaticNoteRuntimeProof
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model"
             : "PASS owned automatic note version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model");
+        Console.WriteLine(hostOnly
+            ? "PASS owned automatic host original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model"
+            : "PASS owned automatic note original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model");
 
         Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
             keys, dependencyProof, RequireOriginalAsync, token);

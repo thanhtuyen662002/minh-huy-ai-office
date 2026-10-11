@@ -86,6 +86,8 @@ class OwnedStackGuardTests(unittest.TestCase):
                     automatic_smoke.DEPENDENCY_RUNTIME_LINES[command[-1]])
                 result.stdout = result.stdout.replace(automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[translated[-1]],
                     automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[command[-1]])
+                result.stdout = result.stdout.replace(automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[translated[-1]],
+                    automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[command[-1]])
             return result
         arguments.pop('proof'); arguments.update(sql=sql, automatic=automatic_smoke)
         return arguments, process, calls, queries
@@ -245,6 +247,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             expected = runtime_lines[mode]
             if mode in automatic_smoke.DEPENDENCY_RUNTIME_LINES: expected += '\n' + automatic_smoke.DEPENDENCY_RUNTIME_LINES[mode]
             if mode in automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES: expected += '\n' + automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[mode]
+            if mode in automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES: expected += '\n' + automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[mode]
             return SimpleNamespace(returncode=1 if fault == "child-error" else 0,
                 stdout=expected + ("\nPRIVATE\n" if fault == "extra-output" else "\n"), stderr="PRIVATE" if fault == "stderr" else "")
         arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", manifest={"AIOFFICE_INSTALLATION_ID": installation,
@@ -2373,6 +2376,43 @@ class OwnedStackGuardTests(unittest.TestCase):
                     result = process(command, **kwargs)
                     if command[:2] == ['docker', 'run'] and command[-1] == 'raw-history-commit':
                         marker = automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[command[-1]]
+                        if fault == 'missing': result.stdout = result.stdout.replace(marker + '\n', '')
+                        elif fault == 'duplicate': result.stdout += marker + '\n'
+                        elif fault == 'replace': result.stdout = marker + '\n'
+                        else: result.stdout = marker + '\n' + result.stdout.replace(marker + '\n', '')
+                    return result
+                with patch.dict(os.environ, self.environment, clear=True), patch.object(raw_history_smoke.subprocess, 'run', side_effect=corrupted), patch('builtins.print') as output:
+                    with self.assertRaises(AssertionError): raw_history_smoke.verify(**arguments)
+                    output.assert_not_called()
+
+
+    def test_original_effect_graph_marker_requires_all_three_automatic_profiles(self):
+        for proof in ('notes', 'no_work', 'host_only'):
+            for fault in ('missing', 'duplicate', 'replace', 'reorder'):
+                with self.subTest(proof=proof, fault=fault):
+                    arguments, process, calls, _ = self.automatic_runtime_oracle(None, proof)
+                    def corrupted(command, **kwargs):
+                        result = process(command, **kwargs)
+                        if command[:2] == ['docker', 'run'] and command[-1] in automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES:
+                            marker = automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[command[-1]]
+                            if fault == 'missing': result.stdout = result.stdout.replace(marker + '\n', '')
+                            elif fault == 'duplicate': result.stdout += marker + '\n'
+                            elif fault == 'replace': result.stdout = marker + '\n'
+                            else: result.stdout = marker + '\n' + result.stdout.replace(marker + '\n', '')
+                        return result
+                    with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, 'run', side_effect=corrupted), patch('builtins.print') as output:
+                        with self.assertRaises(AssertionError): automatic_smoke.verify(**arguments)
+                        output.assert_not_called()
+
+
+    def test_raw_history_original_effect_graph_marker_preserves_all_three_prior_results(self):
+        for fault in ('missing', 'duplicate', 'replace', 'reorder'):
+            with self.subTest(fault=fault):
+                arguments, process, calls, _ = self.raw_history_runtime_oracle(None)
+                def corrupted(command, **kwargs):
+                    result = process(command, **kwargs)
+                    if command[:2] == ['docker', 'run'] and command[-1] == 'raw-history-commit':
+                        marker = automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[command[-1]]
                         if fault == 'missing': result.stdout = result.stdout.replace(marker + '\n', '')
                         elif fault == 'duplicate': result.stdout += marker + '\n'
                         elif fault == 'replace': result.stdout = marker + '\n'

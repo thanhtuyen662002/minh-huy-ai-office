@@ -28,6 +28,11 @@ EFFECT_EXPECTATION_RUNTIME_LINES = {
     "automatic-no-work-commit": "PASS owned automatic no-work version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model",
     "automatic-host-commit": "PASS owned automatic host version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model",
     "raw-history-commit": "PASS owned raw history version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model"}
+ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES = {
+    "automatic-note-commit": "PASS owned automatic note original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model",
+    "automatic-no-work-commit": "PASS owned automatic no-work original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model",
+    "automatic-host-commit": "PASS owned automatic host original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model",
+    "raw-history-commit": "PASS owned raw history original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model"}
 RUNTIME_LINES = {
     "automatic-note-prepare": "PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims",
     "automatic-note-expiry": "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
@@ -222,6 +227,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             expected_lines = [expected]
             if mode in DEPENDENCY_RUNTIME_LINES: expected_lines.append(DEPENDENCY_RUNTIME_LINES[mode])
             if mode in EFFECT_EXPECTATION_RUNTIME_LINES: expected_lines.append(EFFECT_EXPECTATION_RUNTIME_LINES[mode])
+            if mode in ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES: expected_lines.append(ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[mode])
             reference.require_reference_result(result, mode, expected_lines)
             unchanged()
             if proof != "coverage" or mode != commit_mode: no_gaps()
