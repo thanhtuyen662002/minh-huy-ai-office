@@ -239,7 +239,7 @@ public sealed class GroupWholeBatchCoverageTests
         Assert.Null(error.InnerException);
     }
 
-    private sealed class Fixture
+    internal sealed class Fixture
     {
         internal readonly List<GroupAllocatedRevision> Revisions = [];
         internal readonly List<GroupPendingRevisionMetadata> CutoffHeads = [];

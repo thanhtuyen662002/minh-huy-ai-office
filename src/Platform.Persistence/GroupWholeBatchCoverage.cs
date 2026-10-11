@@ -6,8 +6,25 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // does not validate current authority/dependencies or release a frontier.
 internal sealed class GroupWholeBatchCoverage
 {
-    private GroupWholeBatchCoverage(GroupWorkDependencyManifest[] manifests, int rawCount, int notes)
-    { Manifests = Array.AsReadOnly(manifests); RawCount = rawCount; NoteCount = notes; }
+    private readonly GroupWorkCommitReceiptRecord[] originalReceipts;
+    private GroupWholeBatchCoverage(GroupBatchAllocationReceipt allocation, GroupWorkDependencyManifest[] manifests,
+        GroupWorkCommitReceiptRecord[] receipts, int rawCount, int notes, string fingerprint)
+    {
+        Scope = allocation.Scope; BatchId = allocation.BatchId; AllocationOperationId = allocation.OperationId;
+        AfterSequence = allocation.AfterSequence; ThroughSequence = allocation.AllocatedThroughSequence;
+        ObservedCommittedThrough = allocation.ObservedCommittedThroughSequence; AllocatedAtUtc = allocation.AllocatedAtUtc;
+        IsHistoricalBackfill = allocation.IsHistoricalBackfill; Manifests = Array.AsReadOnly(manifests);
+        originalReceipts = receipts; RawCount = rawCount; NoteCount = notes; Fingerprint = fingerprint;
+    }
+    internal GroupScope Scope { get; }
+    internal Guid BatchId { get; }
+    internal Guid AllocationOperationId { get; }
+    internal long AfterSequence { get; }
+    internal long ThroughSequence { get; }
+    internal long ObservedCommittedThrough { get; }
+    internal DateTimeOffset AllocatedAtUtc { get; }
+    internal bool IsHistoricalBackfill { get; }
+    internal string Fingerprint { get; }
     internal IReadOnlyList<GroupWorkDependencyManifest> Manifests { get; }
     internal int RawCount { get; }
     internal int NoteCount { get; }
@@ -137,10 +154,64 @@ internal sealed class GroupWholeBatchCoverage
                 || row.Relation != (row.RawRevision == row.SelectedMessageRevision
                     ? GroupWorkRawRelation.SelectedHead : GroupWorkRawRelation.SupersededBySelectedHead)) throw Unavailable();
         }
-        return new(contributors.OrderBy(x => x.Key).Select(x => x.Value).ToArray(), rows.Length, noteCount);
+        var orderedReceipts = actualReceipts.OrderBy(x => x.OperationId).ToArray();
+        // Hash the frozen complete allocation/heads/receipts/selected/raw input.
+        // No later enumerator, caller mutation or provider can replace an input.
+        var frozenAllocation = allocation with { Revisions = Array.AsReadOnly(revisions) };
+        var fingerprint = GroupWorkDependencyManifest.Fingerprint("aioffice-group-whole-batch-coverage-v1", new
+        {
+            Allocation = new
+            {
+                allocation.Scope,
+                allocation.BatchId,
+                allocation.OperationId,
+                allocation.AfterSequence,
+                allocation.AllocatedThroughSequence,
+                allocation.ObservedCommittedThroughSequence,
+                allocation.IsHistoricalBackfill,
+                allocation.SourceVersion,
+                allocation.DeletionGeneration,
+                allocation.AccountVersion,
+                allocation.ServiceId,
+                allocation.CredentialEpoch,
+                allocation.GrantVersion,
+                allocation.AllocatedAtUtc,
+                Revisions = revisions
+            },
+            CutoffHeads = actualHeads.OrderBy(x => x.MessageId).ToArray(),
+            Receipts = orderedReceipts,
+            Selected = actualSelected.OrderBy(x => x.MessageId).ToArray(),
+            Raw = rows
+        });
+        return new(frozenAllocation, contributors.OrderBy(x => x.Key).Select(x => x.Value).ToArray(),
+            orderedReceipts, rows.Length, noteCount, fingerprint);
 
         bool Scoped(Guid tenant, Guid company, Guid binding, Guid batch) => tenant == scope.TenantId && company == scope.CompanyId
             && binding == scope.SourceBindingId && batch == allocation.BatchId;
+    }
+
+    // This verifies sealed structural ledgers against every copied expectation.
+    // SQL/current authorization and own-input dependency checks remain the
+    // responsibility of the future owned terminal transaction.
+    internal IReadOnlyList<GroupWorkEffectLedger> RequireOriginalEffects(IEnumerable<GroupWorkEffectLedger> input)
+    {
+        try
+        {
+            var effects = Freeze(input, FrozenGroupBatch.MaximumMessages, x => x);
+            if (effects.Length != originalReceipts.Length) throw Unavailable();
+            var byOperation = new Dictionary<Guid, GroupWorkEffectLedger>();
+            foreach (var effect in effects)
+            {
+                if (effect.Scope != Scope || effect.BatchId != BatchId || !byOperation.TryAdd(effect.OperationId, effect)) throw Unavailable();
+            }
+            foreach (var receipt in originalReceipts)
+            {
+                if (!byOperation.TryGetValue(receipt.OperationId, out var effect)) throw Unavailable();
+                GroupWorkEffectDigest.RequireUnchanged(receipt, effect);
+            }
+            return Array.AsReadOnly(effects.OrderBy(x => x.OperationId).ToArray());
+        }
+        catch (Exception) { throw Unavailable(); }
     }
     private static T[] Freeze<T>(IEnumerable<T> source, int maximum, Func<T, T> copy) where T : class
     {
@@ -155,7 +226,8 @@ internal sealed class GroupWholeBatchCoverage
     }
     private static GroupWorkCommitReceiptRecord CopyReceipt(GroupWorkCommitReceiptRecord x)
     {
-        if (x.DependencyManifest is { Length: > GroupWorkDependencyManifest.MaximumBytes }) throw Unavailable();
+        if (x.DependencyManifest is { Length: > GroupWorkDependencyManifest.MaximumBytes }
+            || x.ExpectedEffectSha256 is { Length: > GroupWorkEffectDigest.DigestBytes }) throw Unavailable();
         return new()
         {
             TenantId = x.TenantId,
@@ -166,6 +238,8 @@ internal sealed class GroupWholeBatchCoverage
             SourceSetSha256 = x.SourceSetSha256,
             DependencyManifestVersion = x.DependencyManifestVersion,
             DependencyManifest = x.DependencyManifest?.ToArray(),
+            EffectLedgerVersion = x.EffectLedgerVersion,
+            ExpectedEffectSha256 = x.ExpectedEffectSha256?.ToArray(),
             SelectedMessageCount = x.SelectedMessageCount,
             NoteCount = x.NoteCount,
             Outcome = x.Outcome,
