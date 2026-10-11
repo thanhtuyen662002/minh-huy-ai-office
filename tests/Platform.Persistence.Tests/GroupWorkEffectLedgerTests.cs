@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Globalization;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 using Xunit;
 
@@ -9,6 +12,79 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class GroupWorkEffectLedgerTests
 {
+    [Theory]
+    [InlineData("non-sql")]
+    [InlineData("no-owned-transaction")]
+    [InlineData("dirty")]
+    [InlineData("ambient")]
+    [InlineData("missing-staged-receipt")]
+    [InlineData("different-staged-receipt")]
+    [InlineData("duplicate-staged-receipt")]
+    [InlineData("unknown-staged-row")]
+    [InlineData("over-limit")]
+    [InlineData("cancelled")]
+    public async Task ExpectationStagingRefusesUnsafeCallerBeforeConnectionOrReceiptMutation(string fault)
+    {
+        var f = new Fixture(1, 1); var options = new DbContextOptionsBuilder<PlatformDbContext>();
+        if (fault == "non-sql") options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+        else options.UseSqlServer("Server=127.0.0.1,1;Database=never_connect;Integrated Security=true;Connect Timeout=1");
+        using var db = new PlatformDbContext(options.Options); using var cancellation = new CancellationTokenSource();
+        using var ambient = fault == "ambient" ? new System.Transactions.TransactionScope(System.Transactions.TransactionScopeAsyncFlowOption.Enabled) : null;
+        var staged = new List<object> { f.Work }; staged.AddRange(f.Selected); staged.AddRange(f.Requests); staged.AddRange(f.Revisions);
+        staged.AddRange(f.Evidence); staged.AddRange(f.Outboxes); staged.AddRange(f.Items);
+        if (fault == "dirty") db.Add(new GroupWorkCommitReceiptRecord());
+        if (fault == "missing-staged-receipt") staged.Remove(f.Work);
+        if (fault == "different-staged-receipt") staged[0] = new GroupWorkCommitReceiptRecord();
+        if (fault == "duplicate-staged-receipt") staged.Add(f.Work);
+        if (fault == "unknown-staged-row") staged.Add(new object());
+        if (fault == "over-limit") staged.AddRange(Enumerable.Repeat<object>(f.Selected[0], 1023));
+        if (fault == "cancelled") cancellation.Cancel();
+        if (fault == "cancelled") await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            GroupWorkEffectCommitExpectation.StageLockedAsync(db, f.Work, false, staged, cancellation.Token));
+        else
+        {
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                GroupWorkEffectCommitExpectation.StageLockedAsync(db, f.Work, false, staged, cancellation.Token));
+            Assert.Equal("Group original effect expectation is not available.", error.Message); Assert.Null(error.InnerException);
+        }
+        Assert.Equal(0, f.Work.EffectLedgerVersion); Assert.Null(f.Work.ExpectedEffectSha256); Assert.Null(db.Database.CurrentTransaction);
+        Assert.Equal(fault == "dirty", db.ChangeTracker.HasChanges());
+        if (fault != "non-sql") Assert.Equal(System.Data.ConnectionState.Closed, db.Database.GetDbConnection().State);
+    }
+
+    [Fact]
+    public async Task LegacyReplayKeepsAbsenceWithoutQueryOrBackfillAndMalformedCarrierRefuses()
+    {
+        var f = new Fixture(0, 0);
+        using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseSqlServer("Server=127.0.0.1,1;Database=never_connect;Integrated Security=true;Connect Timeout=1").Options);
+        await GroupWorkEffectCommitExpectation.RequireReplayLockedAsync(db, f.Work, false, [], [], [], [], [], [], default);
+        Assert.Equal(0, f.Work.EffectLedgerVersion); Assert.Null(f.Work.ExpectedEffectSha256);
+        f.Work.EffectLedgerVersion = 1;
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => GroupWorkEffectCommitExpectation.RequireReplayLockedAsync(
+            db, f.Work, false, [], [], [], [], [], [], default));
+        Assert.Equal("Group original effect expectation is not available.", error.Message); Assert.Null(error.InnerException);
+        Assert.Equal(System.Data.ConnectionState.Closed, db.Database.GetDbConnection().State); Assert.False(db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public void OriginalClaimLookupActualEfSqlIsBoundedByTwoAndEveryScopeBatchAndOriginalEpochWithoutConnection()
+    {
+        var f = new Fixture(1, 1);
+        using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
+            .UseSqlServer("Server=127.0.0.1,1;Database=never_connect;Integrated Security=true;Connect Timeout=1").Options);
+        var method = typeof(GroupWorkEffectCommitExpectation).GetMethod("OriginalClaimRows", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var query = (IQueryable<GroupBatchClaimReceiptRecord>)method.Invoke(null, new object[] { db, f.Work })!;
+        var sql = query.ToQueryString();
+        Assert.Contains("SELECT TOP(@", sql); Assert.Contains(" int = 2;", sql);
+        foreach (var name in new[] { "TenantId", "CompanyId", "BindingId", "BatchId", "Epoch" }) Assert.Matches("\\[g\\]\\.\\[" + name + "\\] = @", sql);
+        foreach (var id in new[] { f.Work.TenantId, f.Work.CompanyId, f.Work.BindingId, f.Work.BatchId })
+            Assert.Contains(id.ToString("D"), sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("bigint = CAST(2 AS bigint);", sql);
+        new TSql160Parser(true).Parse(new StringReader(sql), out var errors); Assert.Empty(errors);
+        Assert.Equal(System.Data.ConnectionState.Closed, db.Database.GetDbConnection().State); Assert.Empty(db.ChangeTracker.Entries());
+    }
+
     [Theory]
     [InlineData(0, 0)]
     [InlineData(1, 0)]

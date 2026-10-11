@@ -109,6 +109,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                 Outcome = x.Value.Outcome
             }));
             if (automatic) staged.AddRange(RawAccounting());
+            if (automatic) await GroupWorkEffectCommitExpectation.StageLockedAsync(database, receipt, false, staged, cancellationToken);
             database.AddRange(staged);
             await database.SaveChangesAsync(cancellationToken);
             // These fixed effects have already reached SQL. An expired final
@@ -146,6 +147,7 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
             async Task ValidateReplayAsync(GroupWorkCommitReceiptRecord original)
             {
                 GroupWorkDependencyManifest.RequireReplay(original, manifest);
+                if (automatic) _ = GroupWorkEffectDigest.HasExpectation(original);
                 if (original.BatchId != context.BatchId || original.SourceSetSha256 != sourceHash
                     || original.SelectedMessageCount != selected.Count || original.NoteCount != 0 || original.Outcome != GroupWorkCommitOutcome.NoWork
                     || original.ServiceId != handle.Receipt.ServiceId || original.ClaimEpoch <= 0 || original.ClaimEpoch > handle.Receipt.Epoch
@@ -166,6 +168,8 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
                     || await database.GroupNotesCommittedOutbox.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId
                         && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == context.BatchId
                         && x.OperationId == operationId, cancellationToken)) throw Unavailable();
+                if (automatic) await GroupWorkEffectCommitExpectation.RequireReplayLockedAsync(database, original, false,
+                    rows, [], [], [], [], [], cancellationToken);
             }
         }
         catch (Exception error) when (error is SqlException or DbUpdateException or InvalidOperationException or ArgumentException)

@@ -233,6 +233,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 CommittedAtUtc = now,
                 AvailableAtUtc = now
             });
+            if (plan.IsAutomatic) await GroupWorkEffectCommitExpectation.StageLockedAsync(database, receipt, historical, staged, cancellationToken);
             database.AddRange(staged); await database.SaveChangesAsync(cancellationToken);
             await FenceAsync(); if (database.ChangeTracker.HasChanges()) throw Unavailable();
             await transaction.CommitAsync(cancellationToken); return Result(receipt, false);
@@ -274,6 +275,7 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         void ValidateReceipt(GroupWorkCommitReceiptRecord original)
         {
             GroupWorkDependencyManifest.RequireReplay(original, manifest);
+            if (plan.IsAutomatic) _ = GroupWorkEffectDigest.HasExpectation(original);
             if (original.BatchId != context.BatchId || original.SourceSetSha256 != sourceHash || original.SelectedMessageCount != selected.Count
                 || original.NoteCount != payloads.Length || original.Outcome != plan.Outcome
                 || original.ServiceId != handle.Receipt.ServiceId || original.ClaimEpoch <= 0 || original.ClaimEpoch > handle.Receipt.Epoch
@@ -335,6 +337,8 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
                 .OrderBy(x => x.Ordinal).Take(plan.MaximumNotes + 1).ToArrayAsync(cancellationToken);
             if (items.Length != requestIds.Length || items.Where((x, index) => x.Ordinal != index + 1
                 || x.RequestId != requestIds[index] || x.RequestRevision != 1).Any()) throw Unavailable();
+            if (plan.IsAutomatic) await GroupWorkEffectCommitExpectation.RequireReplayLockedAsync(database, original, historical,
+                dispositions, requests, revisions, evidence, outboxes, items, cancellationToken);
         }
         async Task<GroupSourceKeyMaterial> ResolveKeyAsync(string? id)
         {
