@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: fcb758f2f2ef8b0d4a2a405b14593b711a40774a
+current_target_head: 70699683df796a2f6183e5d13b96da32bf88b7b3
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: fcb758f2f2ef8b0d4a2a405b14593b711a40774a
+    head: 70699683df796a2f6183e5d13b96da32bf88b7b3
     state: in_progress
-    next: "Draft288 exactfcb758f Build38131017513/Gov38131017482 CLOSED_TERMINAL_RED: five prerequisites/GovSUCCESS, NET3841PASS2FAIL/3843 proven Windows diagnostic exports, native114445185134 third container-inspect refused, quality114452436304 failure, no artifact. Source642 portability repair approved6108073693 ROOTFULL7029; held unpushed until native terminal. JSON alias projection repair preserves complete ownership and credentials boundaries;165 coldPASS. Freeze/review exact7 new paths then SAME288 push both repairs and own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 qualified119 preserved. Existing-Gateway private context/fence development; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
+    next: "Draft288 exact706 Build38135054597/Gov38135054553 CLOSED_TERMINAL_RED: six prerequisites/GovSUCCESS, NET3843PASS, native114457110296 operator-configuration, quality114463182232 red, no artifact. Root full native83488/quality3529 read; NET full-byte inspection, not entire verbatim body. Deterministic13 catalog tag producer/strict-reader mismatch reproduced by2 original regression failures then7 new casesPASS; catalog labels fixed and bounded private diagnostics added;168 PythonPASS. Freeze/review exact8 source+2 state repair then SAME288 push and own fresh120/all8/Gov/3850.NET/quality/six originals through terminal. Hosted unique first cause UNPROVEN. Parentb28 qualified119 preserved. Private context/fence/chunks/attempt policy reviewed, unpromoted; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 exactfcb758f Build38131017513/Gov38131017482 CLOSED_TERMINAL_RED: five prerequisites/GovSUCCESS, NET3841PASS2FAIL/3843 proven Windows diagnostic exports, native114445185134 third container-inspect refused, quality114452436304 failure, no artifact. Source642 portability repair approved6108073693 ROOTFULL7029; held unpushed until native terminal. JSON alias projection repair preserves complete ownership and credentials boundaries;165 coldPASS. Freeze/review exact7 new paths then SAME288 push both repairs and own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 qualified119 preserved. Existing-Gateway private context/fence development; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
+next_action: "Draft288 exact706 Build38135054597/Gov38135054553 CLOSED_TERMINAL_RED: six prerequisites/GovSUCCESS, NET3843PASS, native114457110296 operator-configuration, quality114463182232 red, no artifact. Root full native83488/quality3529 read; NET full-byte inspection, not entire verbatim body. Deterministic13 catalog tag producer/strict-reader mismatch reproduced by2 original regression failures then7 new casesPASS; catalog labels fixed and bounded private diagnostics added;168 PythonPASS. Freeze/review exact8 source+2 state repair then SAME288 push and own fresh120/all8/Gov/3850.NET/quality/six originals through terminal. Hosted unique first cause UNPROVEN. Parentb28 qualified119 preserved. Private context/fence/chunks/attempt policy reviewed, unpromoted; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
 
 
 blocked_by:
@@ -2865,3 +2865,25 @@ group_278_fcb_native_failure_repair:
     held unpushed until native terminal. JSON alias projection repair preserves complete ownership and credentials boundaries;165 coldPASS. Freeze/review exact7 new
     paths then SAME288 push both repairs and own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 qualified119 preserved. Existing-Gateway
     private context/fence development; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete.'
+
+group_cursor_shadow_catalog_repair_checkpoint:
+  actual_remote_head: 70699683df796a2f6183e5d13b96da32bf88b7b3
+  actual_ci_state: CLOSED_TERMINAL_RED
+  build: 38135054597
+  governance: 38135054553
+  governance_conclusion: success
+  native_job: 114457110296
+  quality_job: 114463182232
+  prerequisite_jobs: 'NET114457110193 Compose114457110269 EF114457110319 Web114457110352 FE114457110361 Deploy114457110370 all SUCCESS'
+  native: '83488 bytes SHA152868a79fbec95b9735e3dd3d3ab7f8ba868053890963cf001966a67df45da2 ROOTFULL;120 required99 once21 absent0 duplicate;151 overallPASS5 failures;operator-configuration before source shadow create;three frontier aggregates withheld;artifact0'
+  dotnet: '3843 PASS0Fail0Skip;1017029 bytes SHAaa24e1a259ddd4d68f9b1240e4333b1b8a2724e901b04e4e82039337b668c435;root full-byte scan and all aggregate/build lines inspected, entire verbatim body NOT_READ'
+  quality: '3529 bytes SHA3c3103c99463bf18218e30dc08985eb197a5b1051501c4f3bdb50b105b8b0634 ROOTFULL;one failed six successful prerequisite results, terminal failure'
+  source_defect: 'All13 catalog templates expect catalog:name while actual SQL returned name; unchanged strict hash reader deterministically refuses. Two source/shadow generated-result regressions fail against original and pass after correcting result labels. Actual hosted first ordinal/error unretained; unique hosted cause UNPROVEN.'
+  repair: 'Keep exact69 inventory/hash payloads/SQL transactions/migrations/ownership/credentials/success receipts; only13 catalog result tags change. Add distinct original-source-snapshot phase and fixed exception category/numeric SQL code/bounded ordinal; malformed or extra diagnostics never echo private text or qualify success.'
+  local: '7 new focused .NET cases PASS after fix;61 retained shadow/guard cases passed before label fix;168 actual Python methods PASS;four scoped format apply/verify exit0/empty. Original two failing tag-regression log preserved.'
+  source_review: PENDING_EXACT_FROZEN_TEN_PATH_REVIEW_BEFORE_PUSH
+  successor_native120: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED
+  full278: INCOMPLETE
+  merge: NOT_APPROVED
+  next: 'Review exact repair and durable state, then SAME288 push; close fresh exact-head120/all8/Gov/3850.NET/quality/six original images. Repair actual red immediately. Continue existing-Gateway context/DI/durableattempt/restart/noClick acceptance after closure; no partial merge.'

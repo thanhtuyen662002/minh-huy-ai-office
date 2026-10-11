@@ -115,7 +115,7 @@ internal static class GroupShadowCursorSql
             result.Add(Template("rows:" + table.Name, RowHash(name, table.Name, columns, order)));
         }
         result.Add(Template("rows:__EFMigrationsHistory", RowHash(name, "__EFMigrationsHistory", "[MigrationId],[ProductVersion]", "[MigrationId]")));
-        foreach (var item in CatalogQueries(name)) result.Add(Template("catalog:" + item.Tag, Hash(item.Tag, item.Sql)));
+        foreach (var item in CatalogQueries(name)) result.Add(Template("catalog:" + item.Tag, Hash("catalog:" + item.Tag, item.Sql)));
         return result.AsReadOnly();
     }
 

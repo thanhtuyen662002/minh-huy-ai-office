@@ -17,6 +17,25 @@ internal static class GroupSignedCursorMigrationRuntimeProof
 {
     internal const string Success = "PASS owned signed cursor legacy migration shadow authentic original eleven table closure empty version through UTC unsigned refusals exact51048 full rows history schema security unchanged valid upgrade trusted seven tuple FK repeat unchanged owned database removed no all seven mismatch DI or model";
     internal static string Phase { get; private set; } = "owned-guard";
+    internal static int SnapshotOrdinal { get; private set; } = -1;
+
+    // Fixed categories and a bounded ordinal only. Never format exception
+    // messages, SQL, tags, connection strings or private input.
+    internal static string FailureDiagnostic(Exception error)
+    {
+        var code = error switch
+        {
+            SqlException sql when sql.Number is >= -2 and <= 65535 => "sql-" + sql.Number.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            SqlException => "sql-other",
+            OperationCanceledException => "cancelled",
+            ArgumentException => "argument",
+            InvalidOperationException => "invalid-operation",
+            NotSupportedException => "not-supported",
+            _ => "other"
+        };
+        var ordinal = SnapshotOrdinal is >= 0 and < 69 ? SnapshotOrdinal : -1;
+        return "FAIL owned signed cursor migration diagnostic " + code + " snapshot=" + ordinal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     internal static async Task RunAsync(GroupScope scope, Guid allocationOperation, GroupExtractionWorkerBinding worker,
         DbContextOptions<PlatformDbContext> runtimeOptions, CancellationToken token)
@@ -50,6 +69,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
         var masterConnection = GroupCursorShadowGuard.DatabaseConnection(trusted, "master");
         var shadowConnection = GroupCursorShadowGuard.DatabaseConnection(trusted, descriptor.Name);
         var identity = new GroupShadowCursorSql.RootIdentity(scope.TenantId, scope.CompanyId, scope.SourceBindingId, worker.ServiceId, batch.Id);
+        Phase = "original-source-snapshot";
         var originalSource = await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), sourceConnection, token);
         int? databaseId = null;
         var createInvoked = false; var existingRefused = false; var initialAbsenceVerified = false;
@@ -323,6 +343,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             if (templates.Count != 69 || templates[0].Tag != "inventory"
                 || templates.Select(x => x.Tag).Distinct(StringComparer.Ordinal).Count() != templates.Count) throw new InvalidOperationException();
             var result = new Dictionary<string, string>(StringComparer.Ordinal);
+            SnapshotOrdinal = -1;
             await WithConnectionAsync(completion, connection, async sql =>
             {
                 await sql.OpenAsync(token);
@@ -330,6 +351,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                 {
                     foreach (var template in templates)
                     {
+                        SnapshotOrdinal = result.Count;
                         template.Command.Connection = sql; template.Command.Transaction = transaction;
                         var reader = await template.Command.ExecuteReaderAsync(token);
                         var hash = await completion.RunAsync(() => ReadSnapshotHashAsync(reader, template.Tag, token), reader.DisposeAsync);
@@ -337,6 +359,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                     }
                 });
             });
+            SnapshotOrdinal = -1;
             return result;
         }, templates.Select<GroupShadowCursorSql.CommandTemplate, Func<ValueTask>>(template => () =>
         {

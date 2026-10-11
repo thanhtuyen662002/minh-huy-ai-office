@@ -64,11 +64,23 @@ def require_shadow_sql_network(*, directory, api, installation, reference):
 
 def require_shadow_migration_result(result, reference):
     lines = result.stdout.splitlines()
-    phases = {'owned-guard', 'original-authentication', 'operator-configuration', 'shadow-create', 'shadow-ownership',
+    phases = {'owned-guard', 'original-authentication', 'operator-configuration', 'original-source-snapshot', 'shadow-create', 'shadow-ownership',
         'predecessor-migration', 'original-seed', 'legacy-version-check', 'legacy-utc-check', 'empty-preflight',
         'version-preflight', 'through-preflight', 'utc-preflight', 'unsigned-preflight', 'matching-positive-upgrade',
         'positive-repeat', 'original-source-unchanged', 'owned-shadow-cleanup', 'complete'}
     prefix = 'FAIL owned signed cursor migration '
+    diagnostic_prefix = prefix + 'diagnostic '
+    if (type(result.returncode) is int and result.returncode == 1 and len(lines) in (3, 4)
+            and (len(lines) == 3 or lines[0] == REPLAY_SUCCESS)
+            and lines[-1] == 'FAIL owned reference runtime frontier-cursor-migration'
+            and lines[-3].startswith(prefix) and lines[-2].startswith(diagnostic_prefix)):
+        phase = lines[-3][len(prefix):]
+        diagnostic = lines[-2][len(diagnostic_prefix):]
+        match = re.fullmatch(r'(sql--[12]|sql-(?:0|[1-9][0-9]{0,4})|sql-other|cancelled|argument|invalid-operation|not-supported|other) snapshot=(-1|0|[1-9][0-9]?)', diagnostic)
+        if (phase in phases and match and -1 <= int(match[2]) < 69
+                and (not match[1].startswith('sql-') or match[1] in ('sql--1', 'sql--2', 'sql-other')
+                     or int(match[1][4:]) <= 65535)):
+            raise AssertionError('Owned signed cursor migration failed; phase=' + phase + '; diagnostic=' + diagnostic)
     if (type(result.returncode) is int and result.returncode == 1 and len(lines) in (2, 3)
             and (len(lines) == 2 or lines[0] == REPLAY_SUCCESS)
             and lines[-1] == 'FAIL owned reference runtime frontier-cursor-migration' and lines[-2].startswith(prefix)):

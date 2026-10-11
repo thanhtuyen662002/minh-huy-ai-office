@@ -389,10 +389,13 @@ try
     Console.WriteLine("PASS owned reference runtime redelivery original SQL receipt and broker ACK");
     return 0;
 }
-catch
+catch (Exception error)
 {
     if (args.Length == 1 && args[0] == "frontier-cursor-migration")
+    {
         Console.WriteLine("FAIL owned signed cursor migration " + GroupSignedCursorMigrationRuntimeProof.Phase);
+        Console.WriteLine(GroupSignedCursorMigrationRuntimeProof.FailureDiagnostic(error));
+    }
     Console.WriteLine("FAIL owned reference runtime " + phase);
     return 1;
 }
