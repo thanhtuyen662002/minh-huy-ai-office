@@ -156,6 +156,15 @@ def require_reference_result(result, mode, expected_lines):
         phase = lines[0][len(prefix):]
         if phase in phases:
             detail = "; phase=" + phase
+    automatic_modes = {"automatic-note-prepare", "automatic-note-expiry", "automatic-note-key-expiry", "automatic-note-commit",
+        "automatic-host-prepare", "automatic-host-expiry", "automatic-host-key-expiry", "automatic-host-commit"}
+    automatic_phases = {"setup", "source", "brain", "model-context-empty", "commit", "readback", "model-context-history", "replay", "immutability"}
+    automatic_prefix = "FAIL owned automatic runtime phase-"
+    if (mode in automatic_modes and result.returncode == 1 and len(lines) == 2
+            and lines[1] == "FAIL owned reference runtime " + mode and lines[0].startswith(automatic_prefix)):
+        automatic_phase = lines[0][len(automatic_prefix):]
+        if automatic_phase in automatic_phases:
+            detail = "; phase=" + automatic_phase
     exit_code = str(result.returncode) if type(result.returncode) is int and -255 <= result.returncode <= 255 else "unknown"
     raise AssertionError("Owned reference executable failed at " + mode + "; exit=" + exit_code + detail)
 

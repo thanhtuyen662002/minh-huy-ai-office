@@ -95,14 +95,20 @@ internal static class GroupAutomaticModelContextRuntimeProof
     private static readonly string[] SourceTables = ["GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts"];
     private static readonly string[] BrainTables = ["GroupCustomerRequests", "GroupRequestRevisions", "GroupRequestEvidence"];
 
+    // EF composes both LINQ bracketed names and the shipping readers' bounded
+    // raw SELECTs with bare schema/table names. Observe each before its reader
+    // opens; recognizing either form never waives the real lock requirement.
+    internal static string[] MaterialTables(string sql) => SourceTables.Concat(BrainTables).Where(table => Regex.IsMatch(sql,
+        @"\b(?:FROM|JOIN)\s+(?:\[aioffice\]|aioffice)\s*\.\s*(?:\[" + table + @"\]|" + table + @"\b)",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)).ToArray();
+
     internal sealed class ReadProbe(Evidence evidence) : DbCommandInterceptor
     {
         public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<DbDataReader> result, CancellationToken token = default)
         {
             if (!evidence.Armed) return result;
-            var tables = SourceTables.Concat(BrainTables).Where(table => Regex.IsMatch(command.CommandText,
-                @"\b(?:FROM|JOIN)\s+\[aioffice\]\.\[" + table + @"\]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)).ToArray();
+            var tables = MaterialTables(command.CommandText);
             if (tables.Length == 0) return result;
             if (command.Transaction is not { IsolationLevel: IsolationLevel.Serializable } transaction || transaction.Connection is null)
                 throw new InvalidOperationException();

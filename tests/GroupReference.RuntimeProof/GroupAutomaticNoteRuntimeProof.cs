@@ -9,6 +9,7 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 // fixed synthetic test inputs; this does not evaluate a model or raw completion.
 internal static class GroupAutomaticNoteRuntimeProof
 {
+    internal static string Phase { get; private set; } = "setup";
     internal static async Task RunAsync(string mode, GroupScope scope, Guid operation,
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
@@ -27,6 +28,7 @@ internal static class GroupAutomaticNoteRuntimeProof
             .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect),
                 new GroupAutomaticDependencyRuntimeProof.ReadProbe(dependencyProof),
                 new GroupAutomaticModelContextRuntimeProof.ReadProbe(modelContextProof)).Options);
+        Phase = "source";
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).ToArrayAsync(token);
         if (references.Length != 2 || references[0].Id != operation || references[0].CommittedSequence != 1
@@ -98,15 +100,18 @@ internal static class GroupAutomaticNoteRuntimeProof
             || plan.HostNotes.Sum(x => x.SourceReferences.Count) != 3
             || plan.SourceDispositions.Count(x => x.Outcome == GroupWorkSourceOutcome.Work) != 1
             || plan.SourceDispositions.Count(x => x.Outcome == GroupWorkSourceOutcome.Quarantined) != 1) throw new InvalidOperationException();
+        Phase = "brain";
         var dependencies = await brain.ReadAsync(handle, [], [], token);
         var effectOperation = Guid.NewGuid();
         var store = new GroupNoteCommitStore(db, worker, clock, sources, brain, keys, new());
         if (keys.Reads != 1 || keys.Writes != 0 || dependencies.Items.Count != 0 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+        if (!hostOnly && step == "commit") Phase = "model-context-empty";
         if (!hostOnly && step == "commit")
             await GroupAutomaticModelContextRuntimeProof.RequireAsync(db, worker, clock, sources, brain, preparation, handle, dependencies,
                 keys, modelContextProof, RequireEmptyEffectsAsync, token);
         // Reuse the exact legacy expiry probe, with its fixed row expectation
         // expanded for this four-note graph. Witness classification is unchanged.
+        Phase = "commit";
         effect.ObserveCommit(step switch { "expiry" => "note-expiry", "key-expiry" => "note-key-expiry", _ => "note-commit" },
             effectOperation, handle.Receipt.ExpiresAtUtc);
         effect.Claim = handle.Receipt;
@@ -144,6 +149,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
         var effectExpectation = await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, scope, effectOperation, token);
         await RequireDependenciesAsync();
+        Phase = "readback";
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
         if (readback.Items.Count != plan.NoteCount) throw new InvalidOperationException();
         for (var index = 0; index < committed.RequestIds.Count; index++)
@@ -170,9 +176,11 @@ internal static class GroupAutomaticNoteRuntimeProof
             }
         }
         await RequireOriginalAsync();
+        if (!hostOnly) Phase = "model-context-history";
         if (!hostOnly)
             await GroupAutomaticModelContextRuntimeProof.RequireAsync(db, worker, clock, sources, brain, preparation, handle, readback,
                 keys, modelContextProof, RequireOriginalAsync, token);
+        Phase = "replay";
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || replay.Scope != committed.Scope || replay.BatchId != committed.BatchId || replay.OperationId != committed.OperationId
             || replay.OutboxId != committed.OutboxId || replay.CommittedAtUtc != committed.CommittedAtUtc || !replay.RequestIds.SequenceEqual(committed.RequestIds))
@@ -188,6 +196,7 @@ internal static class GroupAutomaticNoteRuntimeProof
             || await db.GroupCustomerRequests.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId
                 && x.BindingId == scope.SourceBindingId && (x.AssignedToUserId != null || x.CommittedDueAtUtc != null
                     || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token)) throw new InvalidOperationException();
+        Phase = "immutability";
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticEffectExpectationRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);

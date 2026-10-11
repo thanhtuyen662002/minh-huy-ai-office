@@ -54,6 +54,7 @@ internal static class GroupModelAttemptJournalRuntimeProof
         await RequireEmptyEffectsAsync();
         var stateBefore = await StateAsync();
         var originalState = GroupAutomaticDependencyRuntimeProof.StateFingerprint(stateBefore);
+        evidence.OriginalState = originalState;
         var keysBefore = prepared.Keys.Reads;
 
         if (mode == "model-journal-lost-reply")
@@ -150,13 +151,15 @@ internal static class GroupModelAttemptJournalRuntimeProof
             evidence.RequestId = Guid.NewGuid(); evidence.ExpireAfterFlush = true;
             await RefusedAsync(() => expiry.Store.TryStartAsync(expiry.Context, evidence.RequestId, token));
             var state = await StateAsync();
-            if (!evidence.Flushed || !evidence.RolledBack || !evidence.WitnessOnly || state.ExpiryObservedAtUtc != claim.Receipt.ExpiresAtUtc
+            if (!evidence.Flushed || !evidence.RolledBack || !evidence.WitnessOnly || evidence.WitnessCommitChecks != 1
+                || evidence.WitnessCommits != 1 || state.ExpiryObservedAtUtc != claim.Receipt.ExpiresAtUtc
                 || GroupAutomaticDependencyRuntimeProof.StateFingerprint(withExpiryCleared()) != originalState
                 || await JournalDigestAsync() != digest || await StartsAsync() != 3 || await FailuresAsync() != 2
                 || expiry.Keys.Reads != 1 || expiry.Keys.Writes != 0) throw new InvalidOperationException();
             clock.Current = claim.Receipt.IssuedAtUtc;
             await RefusedAsync(() => expiry.Store.TryStartAsync(expiry.Context, Guid.NewGuid(), token));
-            if (await JournalDigestAsync() != digest || (await StateAsync()).ExpiryObservedAtUtc != claim.Receipt.ExpiresAtUtc)
+            if (await JournalDigestAsync() != digest || (await StateAsync()).ExpiryObservedAtUtc != claim.Receipt.ExpiresAtUtc
+                || evidence.WitnessCommitChecks != 2 || evidence.WitnessCommits != 2)
                 throw new InvalidOperationException();
             GroupBatchClaimStateRecord withExpiryCleared() { state.ExpiryObservedAtUtc = null; return state; }
         }
@@ -229,7 +232,7 @@ internal static class GroupModelAttemptJournalRuntimeProof
     }
 
     private sealed class OwnedJournalReplyLostException : IOException;
-    private sealed class JournalEvidence(GroupScope scope, GroupNoteRuntimeProof.OwnedClock clock)
+    internal sealed class JournalEvidence(GroupScope scope, GroupNoteRuntimeProof.OwnedClock clock)
     {
         internal GroupScope Scope = scope;
         internal GroupNoteRuntimeProof.OwnedClock Clock = clock;
@@ -237,6 +240,56 @@ internal static class GroupModelAttemptJournalRuntimeProof
         internal Guid RequestId;
         internal string? InputIdentity;
         internal bool LoseReply, CommittedReplyLost, ExpireAfterFlush, Flushed, RolledBack, WitnessOnly;
+        internal string? OriginalState;
+        internal bool WitnessSaveIntent, WitnessSaved;
+        internal int WitnessCommitChecks, WitnessCommits;
+
+        internal void RequireWitnessSaveIntent(PlatformDbContext database)
+        {
+            var claim = Claim ?? throw new InvalidOperationException();
+            var pending = database.ChangeTracker.Entries().Where(x => x.State is not (EntityState.Detached or EntityState.Unchanged)).ToArray();
+            if (!ExpireAfterFlush || !Flushed || !RolledBack || WitnessSaved || WitnessSaveIntent || pending.Length != 1
+                || pending[0].Entity is not GroupBatchClaimStateRecord state || pending[0].State != EntityState.Modified
+                || !pending[0].Properties.Where(x => x.IsModified).Select(x => x.Metadata.Name)
+                    .SequenceEqual(new[] { nameof(GroupBatchClaimStateRecord.ExpiryObservedAtUtc) })
+                || pending[0].OriginalValues.GetValue<DateTimeOffset?>(nameof(GroupBatchClaimStateRecord.ExpiryObservedAtUtc)) is not null
+                || state.ExpiryObservedAtUtc != claim.ExpiresAtUtc || !MatchesOriginal(state)
+                || GroupAutomaticDependencyRuntimeProof.StateFingerprint((GroupBatchClaimStateRecord)pending[0].OriginalValues.ToObject()) != OriginalState)
+                throw new InvalidOperationException();
+            WitnessSaveIntent = true;
+        }
+
+        internal bool MatchesOriginal(GroupBatchClaimStateRecord state)
+        {
+            var claim = Claim ?? throw new InvalidOperationException();
+            if (OriginalState is null || state.TenantId != Scope.TenantId || state.CompanyId != Scope.CompanyId
+                || state.BindingId != Scope.SourceBindingId || state.BatchId != claim.BatchId || state.Epoch != claim.Epoch
+                || state.OwnerId != claim.OwnerId || state.OperationId != claim.OperationId || state.IssuedAtUtc != claim.IssuedAtUtc
+                || state.ExpiresAtUtc != claim.ExpiresAtUtc || state.ExpiryObservedAtUtc != claim.ExpiresAtUtc) return false;
+            var original = JsonSerializer.Deserialize<GroupBatchClaimStateRecord>(JsonSerializer.SerializeToUtf8Bytes(state))
+                ?? throw new InvalidOperationException();
+            original.ExpiryObservedAtUtc = null;
+            return GroupAutomaticDependencyRuntimeProof.StateFingerprint(original) == OriginalState;
+        }
+
+        internal void RequireDetachedWitness(PlatformDbContext database)
+        {
+            if (!ExpireAfterFlush || !Flushed || !RolledBack || !WitnessSaved || WitnessSaveIntent
+                || database.ChangeTracker.HasChanges() || database.ChangeTracker.Entries<GroupBatchClaimStateRecord>().Any()
+                || database.ChangeTracker.Entries<GroupModelAttemptStartRecord>().Any()
+                || database.ChangeTracker.Entries<GroupModelAttemptFailureRecord>().Any()) throw new InvalidOperationException();
+        }
+
+        internal async Task RequirePersistedWitnessAsync(PlatformDbContext database, DbTransaction transaction, CancellationToken token)
+        {
+            await RequireLockAsync(transaction, token);
+            var claim = Claim ?? throw new InvalidOperationException();
+            var state = await database.GroupBatchClaimStates.AsNoTracking().SingleAsync(x => x.TenantId == Scope.TenantId
+                && x.CompanyId == Scope.CompanyId && x.BindingId == Scope.SourceBindingId && x.BatchId == claim.BatchId, token);
+            if (!MatchesOriginal(state) || await database.GroupModelAttemptStarts.AsNoTracking().AnyAsync(x =>
+                x.TenantId == Scope.TenantId && x.CompanyId == Scope.CompanyId && x.BindingId == Scope.SourceBindingId
+                && x.RequestId == RequestId, token)) throw new InvalidOperationException();
+        }
         internal async Task RequireLockAsync(DbTransaction transaction, CancellationToken token)
         {
             if (transaction.IsolationLevel != IsolationLevel.Serializable || transaction.Connection is null) throw new InvalidOperationException();
@@ -248,10 +301,26 @@ internal static class GroupModelAttemptJournalRuntimeProof
             if (!string.Equals((string?)await check.ExecuteScalarAsync(token), "Exclusive", StringComparison.Ordinal)) throw new InvalidOperationException();
         }
     }
-    private sealed class JournalFlushProbe(JournalEvidence evidence) : SaveChangesInterceptor
+    internal sealed class JournalFlushProbe(JournalEvidence evidence) : SaveChangesInterceptor
     {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData data, InterceptionResult<int> result,
+            CancellationToken token = default)
+        {
+            if (evidence.ExpireAfterFlush && evidence.RolledBack)
+                evidence.RequireWitnessSaveIntent(data.Context as PlatformDbContext ?? throw new InvalidOperationException());
+            return ValueTask.FromResult(result);
+        }
         public override async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData data, int result, CancellationToken token = default)
         {
+            if (evidence.WitnessSaveIntent)
+            {
+                var witness = data.Context as PlatformDbContext ?? throw new InvalidOperationException();
+                var unit = witness.Database.CurrentTransaction?.GetDbTransaction() ?? throw new InvalidOperationException();
+                if (result != 1) throw new InvalidOperationException();
+                await evidence.RequirePersistedWitnessAsync(witness, unit, token);
+                evidence.WitnessSaveIntent = false; evidence.WitnessSaved = true;
+                return result;
+            }
             if (!evidence.ExpireAfterFlush || evidence.Flushed || data.Context is not PlatformDbContext db
                 || !db.ChangeTracker.Entries<GroupModelAttemptStartRecord>().Any(x => x.Entity.RequestId == evidence.RequestId)) return result;
             var transaction = db.Database.CurrentTransaction?.GetDbTransaction() ?? throw new InvalidOperationException();
@@ -263,8 +332,21 @@ internal static class GroupModelAttemptJournalRuntimeProof
             return result;
         }
     }
-    private sealed class JournalTransactionProbe(JournalEvidence evidence) : DbTransactionInterceptor
+    internal sealed class JournalTransactionProbe(JournalEvidence evidence) : DbTransactionInterceptor
     {
+        public override async ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction, TransactionEventData data,
+            InterceptionResult result, CancellationToken token = default)
+        {
+            if (evidence.ExpireAfterFlush && evidence.RolledBack)
+            {
+                var database = data.Context as PlatformDbContext ?? throw new InvalidOperationException();
+                evidence.RequireDetachedWitness(database);
+                if (evidence.WitnessCommitChecks != evidence.WitnessCommits) throw new InvalidOperationException();
+                await evidence.RequirePersistedWitnessAsync(database, transaction, token);
+                evidence.WitnessCommitChecks++;
+            }
+            return result;
+        }
         public override Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData data, CancellationToken token = default)
         {
             if (evidence.LoseReply && data.Context is PlatformDbContext db
@@ -275,14 +357,12 @@ internal static class GroupModelAttemptJournalRuntimeProof
             }
             if (evidence.ExpireAfterFlush && evidence.RolledBack && data.Context is PlatformDbContext witness)
             {
-                var rows = witness.ChangeTracker.Entries().Where(x => x.State is not (EntityState.Detached or EntityState.Unchanged)).ToArray();
-                // SaveChanges has accepted the witness; only the claim record
-                // remains tracked and the canceled append is already detached.
-                if (rows.Length != 0 || witness.ChangeTracker.Entries<GroupModelAttemptStartRecord>().Any()
-                    || !witness.ChangeTracker.Entries<GroupBatchClaimStateRecord>().Any(x =>
-                        x.Entity.BatchId == evidence.Claim!.BatchId && x.Entity.Epoch == evidence.Claim.Epoch
-                        && x.Entity.ExpiryObservedAtUtc == evidence.Claim.ExpiresAtUtc)) throw new InvalidOperationException();
-                evidence.WitnessOnly = true;
+                // The production store detaches the saved witness in finally.
+                // Carry the actual locked precommit observation across commit;
+                // a second already-retired rewind must recheck it under SQL.
+                evidence.RequireDetachedWitness(witness);
+                if (evidence.WitnessCommitChecks != evidence.WitnessCommits + 1) throw new InvalidOperationException();
+                evidence.WitnessCommits++; evidence.WitnessOnly = true;
             }
             return Task.CompletedTask;
         }

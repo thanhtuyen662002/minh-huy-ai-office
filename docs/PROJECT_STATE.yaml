@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: bf7e9376b1b7c63566533dc1d2664e1e9ed72580
+current_target_head: ff2a77fecdabf24afb6d7191391768c4301da8c3
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: bf7e9376b1b7c63566533dc1d2664e1e9ed72580
+    head: ff2a77fecdabf24afb6d7191391768c4301da8c3
     state: in_progress
-    next: "Draft288 actualbf7 CLOSED_SCOPED120_SUCCESS Build38168182082/Gov38168182076/all8/full3887/ENTIRE quality/six ORIGINAL images. Complete63=61source+two whole states requires fresh immutable Git SOURCE review and ROOT entire receipt/report/machine consumption before one SAME288 push. Rebased local4060=[6,520,25,3509]/176Python/five formatsPASS. Earlier private87/176 preliminary review remains attributed to ab6 unchanged executable content. Own successor native123/full4060/all8/Gov/ENTIRE quality/six ORIGINALs through terminal; repair real red SAME288. Model NOT_RUN_UNEVALUATED; durable original input/chunk/history/profile recovery, tokenizer, WorkerDI/scanner/no-click/279/233/ERP/deployment/merge incomplete."
+    next: "Actualff2 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38172787170/Gov38172787175; full closure6113783522. Private observer repair4106.NET/177Python/four formatsPASS; freeze exact10 paths and obtain independent immutable Git SOURCE review before SAME288 push. Own successor native123/full4106/all8/Gov/ENTIRE quality/six ORIGINAL browser images through terminal. Store26 private review WITHHELD on two concrete proof defects; v2 unpromoted. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 actualbf7 CLOSED_SCOPED120_SUCCESS Build38168182082/Gov38168182076/all8/full3887/ENTIRE quality/six ORIGINAL images. Complete63=61source+two whole states requires fresh immutable Git SOURCE review and ROOT entire receipt/report/machine consumption before one SAME288 push. Rebased local4060=[6,520,25,3509]/176Python/five formatsPASS. Earlier private87/176 preliminary review remains attributed to ab6 unchanged executable content. Own successor native123/full4060/all8/Gov/ENTIRE quality/six ORIGINALs through terminal; repair real red SAME288. Model NOT_RUN_UNEVALUATED; durable original input/chunk/history/profile recovery, tokenizer, WorkerDI/scanner/no-click/279/233/ERP/deployment/merge incomplete."
+next_action: "Actualff2 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38172787170/Gov38172787175; full closure6113783522. Private observer repair4106.NET/177Python/four formatsPASS; freeze exact10 paths and obtain independent immutable Git SOURCE review before SAME288 push. Own successor native123/full4106/all8/Gov/ENTIRE quality/six ORIGINAL browser images through terminal. Store26 private review WITHHELD on two concrete proof defects; v2 unpromoted. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
 
 
 blocked_by:
@@ -3738,3 +3738,12 @@ group_278_complete_model_journal_exhaustion_checkpoint:
     immutable Git SOURCE review and ROOT entire receipt/report/machine consumption before one SAME288 push. Rebased local4060=[6,520,25,3509]/176Python/five formatsPASS. Earlier private87/176
     preliminary review remains attributed to ab6 unchanged executable content. Own successor native123/full4060/all8/Gov/ENTIRE quality/six ORIGINALs through terminal; repair real red
     SAME288. Model NOT_RUN_UNEVALUATED; durable original input/chunk/history/profile recovery, tokenizer, WorkerDI/scanner/no-click/279/233/ERP/deployment/merge incomplete.
+
+owned_sql_observer_repair_checkpoint:
+  predecessor: ff2a77fecdabf24afb6d7191391768c4301da8c3
+  build: 38172787170
+  governance: 38172787175
+  closure: 6113783522
+  result: "Actual all8 terminal red at automatic-note-commit; six prerequisites/Governance passed, browser skipped. Unique hosted cause unproven. Two observer contradictions repaired privately with actual callback regressions; production unchanged."
+  local: "Full4106.NET/177Python/four scoped formats PASS; SQL/model not run. Original frozen counterexamples retained."
+  next: "Actualff2 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38172787170/Gov38172787175; full closure6113783522. Private observer repair4106.NET/177Python/four formatsPASS; freeze exact10 paths and obtain independent immutable Git SOURCE review before SAME288 push. Own successor native123/full4106/all8/Gov/ENTIRE quality/six ORIGINAL browser images through terminal. Store26 private review WITHHELD on two concrete proof defects; v2 unpromoted. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."

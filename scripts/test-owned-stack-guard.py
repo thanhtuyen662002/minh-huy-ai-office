@@ -920,6 +920,23 @@ class OwnedStackGuardTests(unittest.TestCase):
                 company="invalid", service="invalid", source="invalid", events=None, source_key=None, sql=forbidden,
                 command=None, child_environment=None, assert_retained=forbidden)
 
+    def test_automatic_failure_exports_only_closed_phase_without_private_output(self):
+        private = "PRIVATE_PASSWORD_API_KEY_SQL_PAYLOAD"
+        for mode in ("automatic-note-commit", "automatic-host-commit"):
+            for phase in ("setup", "source", "brain", "model-context-empty", "commit", "readback", "model-context-history", "replay", "immutability"):
+                output = "FAIL owned automatic runtime phase-" + phase + "\nFAIL owned reference runtime " + mode
+                with self.subTest(mode=mode, phase=phase), self.assertRaisesRegex(AssertionError, "exit=1; phase=" + phase + "$"):
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=output, returncode=1), mode, ["PASS original"])
+            for output, code, called in (
+                    ("FAIL owned automatic runtime phase-" + private + "\nFAIL owned reference runtime " + mode, 1, mode),
+                    ("FAIL owned automatic runtime phase-commit\nFAIL owned reference runtime " + mode + "\n" + private, 1, mode),
+                    ("FAIL owned automatic runtime phase-commit\nFAIL owned reference runtime " + mode, 2, mode),
+                    ("FAIL owned automatic runtime phase-commit\nFAIL owned reference runtime " + mode, 1, "no-work-expiry")):
+                with self.subTest(output=output), self.assertRaises(AssertionError) as refusal:
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=output, stderr=private, returncode=code), called, ["PASS original"])
+                self.assertNotIn(private, str(refusal.exception))
+                self.assertNotIn("phase=", str(refusal.exception))
+
     def test_reference_success_requires_original_exact_output_and_exit(self):
         expected = ["PASS owned test original"]
         reference_smoke.require_reference_result(SimpleNamespace(stdout=expected[0], returncode=0), "no-work-expiry", expected)

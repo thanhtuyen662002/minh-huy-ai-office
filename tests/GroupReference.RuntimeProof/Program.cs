@@ -406,6 +406,9 @@ catch (Exception error)
         Console.WriteLine("FAIL owned signed cursor migration " + GroupSignedCursorMigrationRuntimeProof.Phase);
         Console.WriteLine(GroupSignedCursorMigrationRuntimeProof.FailureDiagnostic(error));
     }
+    if (args.Length == 1 && phase == args[0] && args[0] is ("automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit"
+        or "automatic-host-prepare" or "automatic-host-expiry" or "automatic-host-key-expiry" or "automatic-host-commit"))
+        Console.WriteLine("FAIL owned automatic runtime phase-" + GroupAutomaticNoteRuntimeProof.Phase);
     Console.WriteLine("FAIL owned reference runtime " + phase);
     return 1;
 }
