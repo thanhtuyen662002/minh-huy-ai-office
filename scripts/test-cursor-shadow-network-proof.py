@@ -1,5 +1,6 @@
 """Cold network grammar/ownership controls only; no actual Docker or SQL."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -45,16 +46,33 @@ class CursorShadowNetworkProofTests(unittest.TestCase):
                 return SimpleNamespace(returncode=1 if fault == 'ps-exit' else 0, stdout=value + '\n', stderr='private' if fault == 'ps-stderr' else '')
             if command[:2] == ['docker', 'inspect']:
                 self.assertEqual(self.container_id, command[-1]); self.assertIn('container', command)
-                values = [self.container_id, 'true', self.project, 'sql', self.network_id, 'sql,' + self.project + '-sql-1']
+                self.assertEqual('{{.Id}}|{{.State.Running}}|{{index .Config.Labels "com.docker.compose.project"}}|'
+                    '{{index .Config.Labels "com.docker.compose.service"}}|{{with index .NetworkSettings.Networks "' + self.network + '"}}'
+                    '{{.NetworkID}}|{{json .Aliases}}{{end}}', command[command.index('--format') + 1])
+                values = [self.container_id, 'true', self.project, 'sql', self.network_id,
+                    json.dumps(['sql', self.project + '-sql-1'])]
                 if fault == 'wrong-id': values[0] = 'c' * 64
                 if fault == 'not-running': values[1] = 'false'
                 if fault == 'wrong-project': values[2] = 'customer'
                 if fault == 'wrong-service': values[3] = 'core'
                 if fault == 'wrong-network': values[4] = 'c' * 64
-                if fault == 'alias-missing': values[5] = 'customer'
-                if fault == 'alias-duplicate': values[5] = 'sql,sql'
-                if fault == 'alias-malformed': values[5] = 'sql,private;value'
-                if fault == 'alias-overflow': values[5] = 'sql,' + ','.join('a' + str(x) for x in range(8))
+                if fault == 'alias-missing': values[5] = '["customer"]'
+                if fault == 'alias-duplicate': values[5] = '["sql","sql"]'
+                if fault == 'alias-malformed': values[5] = '["sql","private;value"]'
+                if fault == 'alias-overflow': values[5] = json.dumps(['sql'] + ['a' + str(x) for x in range(8)])
+                if fault == 'alias-null': values[5] = 'null'
+                if fault == 'alias-object': values[5] = '{"sql":true}'
+                if fault == 'alias-string': values[5] = '"sql"'
+                if fault == 'alias-empty': values[5] = '[]'
+                if fault == 'alias-nonstring': values[5] = '["sql",true]'
+                if fault == 'alias-nested': values[5] = '["sql",["nested"]]'
+                if fault == 'alias-invalid-json': values[5] = '["sql",]'
+                if fault == 'alias-trailing-json': values[5] = '["sql"][]'
+                if fault == 'alias-old-csv': values[5] = 'sql,' + self.project + '-sql-1'
+                if fault == 'alias-observation-overflow': values[5] = json.dumps(['sql', 'a' * 2048])
+                if fault == 'alias-too-long': values[5] = json.dumps(['sql', 'a' * 129])
+                if fault == 'alias-too-deep': values[5] = '[' * 1000 + '0' + ']' * 1000
+                if fault == 'alias-eight': values[5] = json.dumps(['sql'] + ['a' + str(x) for x in range(7)])
                 if fault == 'container-extra': values.append('extra')
                 return SimpleNamespace(returncode=1 if fault == 'inspect-exit' else 0, stdout='|'.join(values) + '\n', stderr='private' if fault == 'inspect-stderr' else '')
             self.fail('Unexpected process crossed the closed inspection boundary')
@@ -83,11 +101,18 @@ class CursorShadowNetworkProofTests(unittest.TestCase):
                     self.assertRaises((AssertionError, ValueError)):
                 proof.require_shadow_sql_network(directory=self.directory, api='http://127.0.0.1:8080', installation=invalid, reference=reference)
 
+    def test_exact_eight_json_aliases_remain_valid_at_closed_capacity(self):
+        process, calls = self.process('alias-eight')
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(proof.subprocess, 'run', process): self.verify()
+        self.assertEqual(3, len(calls))
+
     def test_every_malformed_foreign_absent_partial_or_diagnostic_observation_refuses(self):
         faults = ('network-id','network-project','network-kind','network-extra','network-exit','network-stderr',
             'container-multiple','container-empty','container-short','ps-exit','ps-stderr','wrong-id','not-running',
             'wrong-project','wrong-service','wrong-network','alias-missing','alias-duplicate','alias-malformed',
-            'alias-overflow','container-extra','inspect-exit','inspect-stderr')
+            'alias-overflow','alias-null','alias-object','alias-string','alias-empty','alias-nonstring','alias-nested',
+            'alias-invalid-json','alias-trailing-json','alias-old-csv','alias-observation-overflow','alias-too-long',
+            'alias-too-deep','container-extra','inspect-exit','inspect-stderr')
         for fault in faults:
             process, _ = self.process(fault)
             with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), \

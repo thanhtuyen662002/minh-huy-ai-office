@@ -47,14 +47,19 @@ def require_shadow_sql_network(*, directory, api, installation, reference):
     inspected = subprocess.run(['docker', 'inspect', '--type', 'container', '--format',
         '{{.Id}}|{{.State.Running}}|{{index .Config.Labels "com.docker.compose.project"}}|'
         '{{index .Config.Labels "com.docker.compose.service"}}|{{with index .NetworkSettings.Networks "' + network + '"}}'
-        '{{.NetworkID}}|{{join .Aliases ","}}{{end}}', identity], capture_output=True, text=True, timeout=10)
+        '{{.NetworkID}}|{{json .Aliases}}{{end}}', identity], capture_output=True, text=True, timeout=10)
     assert inspected.returncode == 0 and not inspected.stderr, 'Owned shadow SQL container inspection failed'
     fields = inspected.stdout.strip().split('|')
     assert len(fields) == 6 and fields[:5] == [identity, 'true', project, 'sql', network_id], \
         'Owned shadow SQL container identity mismatch'
-    aliases = fields[5].split(',')
-    assert 1 <= len(aliases) <= 8 and len(aliases) == len(set(aliases)) and 'sql' in aliases \
-        and all(re.fullmatch('[A-Za-z0-9_.-]{1,128}', x) for x in aliases), 'Owned shadow SQL alias mismatch'
+    assert len(fields[5]) <= 2048, 'Owned shadow SQL alias observation overflow'
+    try:
+        aliases = json.loads(fields[5])
+    except (ValueError, RecursionError):
+        raise AssertionError('Owned shadow SQL alias JSON mismatch') from None
+    assert type(aliases) is list and 1 <= len(aliases) <= 8 \
+        and all(type(x) is str and re.fullmatch('[A-Za-z0-9_.-]{1,128}', x) for x in aliases) \
+        and len(aliases) == len(set(aliases)) and 'sql' in aliases, 'Owned shadow SQL alias mismatch'
 
 
 def require_shadow_migration_result(result, reference):

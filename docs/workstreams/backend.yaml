@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 exactfcb758f Build38131017513/Gov38131017482; .NET114445185337 TERMINAL_RED two proven Windows diagnostic exports,3841PASS2FAIL/3843,0skip; native114445185134 remains actively owned120. Minimal test-only repair/shared95PASS/formatPASS prepared; freeze exact4 paths and obtain independent source review. Preserve active native through terminal, capture full logs/quality/six originals if emitted; inspect further real failure before approved SAME288 repair push. Own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 full119 CLOSED. Continue private same-Gateway bounded context and remaining successors/races/DI/noClick acceptance. Actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
+next_action: "Draft288 exactfcb758f Build38131017513/Gov38131017482 CLOSED_TERMINAL_RED: five prerequisites/GovSUCCESS, NET3841PASS2FAIL/3843 proven Windows diagnostic exports, native114445185134 third container-inspect refused, quality114452436304 failure, no artifact. Source642 portability repair approved6108073693 ROOTFULL7029; held unpushed until native terminal. JSON alias projection repair preserves complete ownership and credentials boundaries;165 coldPASS. Freeze/review exact7 new paths then SAME288 push both repairs and own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 qualified119 preserved. Existing-Gateway private context/fence development; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -3478,3 +3478,52 @@ group_278_fcb_portability_repair:
     native through terminal, capture full logs/quality/six originals if emitted; inspect further real failure before approved SAME288 repair push. Own fresh120/all8/Gov/3843.NET/quality/six
     originals through terminal. Parentb28 full119 CLOSED. Continue private same-Gateway bounded context and remaining successors/races/DI/noClick acceptance. Actualmodel
     NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete.
+
+group_278_fcb_native_failure_repair:
+  remote_head: fcb758f2f2ef8b0d4a2a405b14593b711a40774a
+  state: OLD_HEAD_CLOSED_TERMINAL_RED_JSON_REPAIR_PENDING_SOURCE_REVIEW
+  build: 38131017513
+  governance: 38131017482
+  native_job: 114445185134
+  quality_job: 114452436304
+  logs:
+    native:
+      bytes: 83303
+      sha256: 3ebea88686273e7844816154e54c0cf9d55e1910d2779be3bb4cede00df97656
+      root_full_terminal_log_read: true
+    dotnet:
+      bytes: 1025320
+      sha256: 991ae5b33dd85634c1ed4ff4f490fc70ba1742064d33e4edc5116825ecb7066c
+      root_full_terminal_log_read: true
+    quality:
+      bytes: 3529
+      sha256: c3a411e07d02a304146c93ac972fdbfc92c942656065941e6f5922009f3c5867
+      root_full_terminal_log_read: true
+  native_required: 120
+  native_present_once: 99
+  native_missing: 21
+  native_overall_pass: 151
+  native_terminal_failure_markers: 4
+  quality_gates:
+    DOTNET_RESULT: failure
+    WEB_RESULT: success
+    WEB_RUNTIME_RESULT: success
+    LOCAL_RUNTIME_RESULT: failure
+    INFRASTRUCTURE_RESULT: success
+    DEPLOYMENT_RESULT: success
+    MIGRATIONS_RESULT: success
+  artifact_count: 0
+  hosted_diagnostic: EXACT_STDERR_AND_EXIT_UNRETAINED_NO_UNIQUE_CAUSE_CLAIM
+  portability: EXACT_HOSTED_IMAGE_DECLARED28_0_4_STRINGS_JOIN_TYPED_SLICE_RAW_JSON_INCOMPATIBILITY_SUPPORTED_INFERENCE
+  counterevidence: AVAILABLE29_8_1_ACTUAL_CLI_BOUNDED_LOOPBACK_METADATA_ACCEPTS_BOTH_TEMPLATES_NO_DAEMON_OR_SQL
+  source_repair: JSON_ALIAS_ONLY_STRICT2048_CHAR_LIST1_TO8_DISTINCT_ASCII_STRINGS1_TO128_REQUIRES_SQL_ALL_IDENTITIES_UNCHANGED
+  previous_repair_head: 64234e77e92308d2b7cb32bf1375dd547db3cace
+  previous_repair_review: 6108073693
+  local: 165_COLD_COORDINATOR_CONTROLS_PASS_NOT_NATIVE_SQL_MODEL
+  source_review: PENDING_FROZEN_SEVEN_PATH_REVIEW
+  document: docs/validation/GROUP_SHADOW_NETWORK_TEMPLATE_REPAIR.md
+  next: 'Draft288 exactfcb758f Build38131017513/Gov38131017482 CLOSED_TERMINAL_RED: five prerequisites/GovSUCCESS, NET3841PASS2FAIL/3843 proven Windows diagnostic
+    exports, native114445185134 third container-inspect refused, quality114452436304 failure, no artifact. Source642 portability repair approved6108073693 ROOTFULL7029;
+    held unpushed until native terminal. JSON alias projection repair preserves complete ownership and credentials boundaries;165 coldPASS. Freeze/review exact7 new
+    paths then SAME288 push both repairs and own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 qualified119 preserved. Existing-Gateway
+    private context/fence development; actualmodel NOT_RUN_UNEVALUATED and full278/279/233/ERP/production/merge incomplete.'

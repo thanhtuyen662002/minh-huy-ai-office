@@ -96,7 +96,7 @@ class FrontierRootProofTests(unittest.TestCase):
                 return SimpleNamespace(returncode=0, stdout='d'*64+'\n', stderr='')
             if command[:2] == ['docker', 'inspect'] and '.State.Running' in command[-2]:
                 project = 'aioffice-' + uuid.UUID(self.installation).hex
-                return SimpleNamespace(returncode=0, stdout='d'*64+'|true|'+project+'|sql|'+'c'*64+'|sql,'+project+'-sql-1\n', stderr='')
+                return SimpleNamespace(returncode=0, stdout='d'*64+'|true|'+project+'|sql|'+'c'*64+'|'+json.dumps(['sql',project+'-sql-1'])+'\n', stderr='')
             if command[:2] == ['docker', 'inspect']:
                 if fault == 'foreign-container':
                     return SimpleNamespace(returncode=0, stdout='a'*64+'|'+'b'*32, stderr='')
