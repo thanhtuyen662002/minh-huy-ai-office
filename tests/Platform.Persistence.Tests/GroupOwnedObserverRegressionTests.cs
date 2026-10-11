@@ -59,6 +59,64 @@ public sealed class GroupOwnedObserverRegressionTests
         Assert.Empty(evidence.Observed);
     }
 
+    [Theory]
+    [InlineData("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 30 AND 64029 THEN ProtectedContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE\nWHEN DATALENGTH([ProtectedContent]) BETWEEN 30 AND 64029 THEN [ProtectedContent] END AS [ProtectedContent] FROM [aioffice].[GroupRequestRevisions]")]
+    public void CurrentBoundedBrainProjectionObservesBothCapAndCiphertext(string sql)
+    {
+        var evidence = new ContextProof.Evidence(new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
+        evidence.Observed.UnionWith(new[] { "GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts",
+            "GroupCustomerRequests", "GroupRequestRevisions", "GroupRequestEvidence" });
+        // The old observer's DATALENGTH-only branch leaves Payload false.
+        evidence.Metadata = true;
+        Assert.Throws<InvalidOperationException>(() => evidence.RequireComplete(true));
+        Assert.True(ContextProof.HasBoundedRevisionProjection(sql));
+        evidence.ObserveRevision(sql);
+        Assert.True(evidence.Metadata); Assert.True(evidence.Payload);
+        evidence.RequireComplete(true);
+    }
+
+    [Theory]
+    [InlineData("SELECT DATALENGTH(ProtectedContent) AS Length FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 0 AND 64029 THEN ProtectedContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 30 AND 64030 THEN ProtectedContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE WHEN DATALENGTH(OtherContent) BETWEEN 30 AND 64029 THEN ProtectedContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 30 AND 64029 THEN OtherContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 30 AND 64029 THEN ProtectedContent ELSE OtherContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions")]
+    [InlineData("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 30 AND 64029 THEN ProtectedContent END AS OtherContent FROM aioffice.GroupRequestRevisions")]
+    public void LengthMetadataAndMalformedBoundsCannotInventPayloadObservation(string sql)
+    {
+        var evidence = new ContextProof.Evidence(new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
+        Assert.False(ContextProof.HasBoundedRevisionProjection(sql));
+        evidence.ObserveRevision(sql);
+        Assert.True(evidence.Metadata); Assert.False(evidence.Payload);
+        Assert.Throws<InvalidOperationException>(() => evidence.RequireComplete(true));
+    }
+
+    [Fact]
+    public void SeparatePayloadStillRequiresPriorMetadataAndBothHistoryObservations()
+    {
+        var evidence = new ContextProof.Evidence(new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
+        const string payload = "SELECT ProtectedContent FROM aioffice.GroupRequestRevisions";
+        Assert.Throws<InvalidOperationException>(() => evidence.ObserveRevision(payload));
+        Assert.False(evidence.Metadata); Assert.False(evidence.Payload);
+        evidence.ObserveRevision("SELECT DATALENGTH(ProtectedContent) FROM aioffice.GroupRequestRevisions");
+        Assert.True(evidence.Metadata); Assert.False(evidence.Payload);
+        evidence.ObserveRevision(payload);
+        Assert.True(evidence.Payload);
+        Assert.Throws<InvalidOperationException>(() => evidence.RequireComplete(true)); // The other five tables are still mandatory.
+    }
+
+    [Fact]
+    public async Task BoundedProjectionStillCannotBypassActualTransactionGuard()
+    {
+        var evidence = new ContextProof.Evidence(new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid())) { Armed = true };
+        using var command = new SqlCommand("SELECT CASE WHEN DATALENGTH(ProtectedContent) BETWEEN 30 AND 64029 THEN ProtectedContent END AS ProtectedContent FROM aioffice.GroupRequestRevisions");
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await new ContextProof.ReadProbe(evidence).ReaderExecutingAsync(command, null!, default));
+        Assert.Empty(evidence.Observed); Assert.False(evidence.Metadata); Assert.False(evidence.Payload);
+    }
+
     [Fact]
     public async Task DetachedActualSavedWitnessClassifiesAfterExplicitPrecommitObservationAndRewindRecheck()
     {

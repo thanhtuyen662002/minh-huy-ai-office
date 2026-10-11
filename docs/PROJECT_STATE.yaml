@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: ff2a77fecdabf24afb6d7191391768c4301da8c3
+current_target_head: 3cde42437c79703e4d5b0ee5c7c514785a47eae1
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: ff2a77fecdabf24afb6d7191391768c4301da8c3
+    head: 3cde42437c79703e4d5b0ee5c7c514785a47eae1
     state: in_progress
-    next: "Actualff2 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38172787170/Gov38172787175; full closure6113783522. Private observer repair4106.NET/177Python/four formatsPASS; freeze exact10 paths and obtain independent immutable Git SOURCE review before SAME288 push. Own successor native123/full4106/all8/Gov/ENTIRE quality/six ORIGINAL browser images through terminal. Store26 private review WITHHELD on two concrete proof defects; v2 unpromoted. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
+    next: "Actual3cde ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38177530737/Gov38177530736 closure6114395838. Private exact bounded model-history observer repair4117.NET scoped formatsPASS; all Python bytes unchanged177 prior attribution. Freeze exact5, obtain complete independent immutable Git SOURCE approval before SAME288 one push, own successor native123/full4117/all8/Gov/ENTIRE quality/six ORIGINALs to terminal. Preserve unpromoted input-store31 and rebase only after parent repair qualification. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Actualff2 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38172787170/Gov38172787175; full closure6113783522. Private observer repair4106.NET/177Python/four formatsPASS; freeze exact10 paths and obtain independent immutable Git SOURCE review before SAME288 push. Own successor native123/full4106/all8/Gov/ENTIRE quality/six ORIGINAL browser images through terminal. Store26 private review WITHHELD on two concrete proof defects; v2 unpromoted. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
+next_action: "Actual3cde ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38177530737/Gov38177530736 closure6114395838. Private exact bounded model-history observer repair4117.NET scoped formatsPASS; all Python bytes unchanged177 prior attribution. Freeze exact5, obtain complete independent immutable Git SOURCE approval before SAME288 one push, own successor native123/full4117/all8/Gov/ENTIRE quality/six ORIGINALs to terminal. Preserve unpromoted input-store31 and rebase only after parent repair qualification. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
 
 
 blocked_by:
@@ -3747,3 +3747,13 @@ owned_sql_observer_repair_checkpoint:
   result: "Actual all8 terminal red at automatic-note-commit; six prerequisites/Governance passed, browser skipped. Unique hosted cause unproven. Two observer contradictions repaired privately with actual callback regressions; production unchanged."
   local: "Full4106.NET/177Python/four scoped formats PASS; SQL/model not run. Original frozen counterexamples retained."
   next: "Actualff2 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38172787170/Gov38172787175; full closure6113783522. Private observer repair4106.NET/177Python/four formatsPASS; freeze exact10 paths and obtain independent immutable Git SOURCE review before SAME288 push. Own successor native123/full4106/all8/Gov/ENTIRE quality/six ORIGINAL browser images through terminal. Store26 private review WITHHELD on two concrete proof defects; v2 unpromoted. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
+bounded_model_history_observer_checkpoint:
+  predecessor: "3cde42437c79703e4d5b0ee5c7c514785a47eae1"
+  build: 38177530737
+  governance: 38177530736
+  closure: 6114395838
+  result: "Actual all8 red at model-context-history; .NET4106/six prerequisites/Gov pass, journal/browser not reached, cleanup passes. Unique hosted cause unproven. Exact bounded CASE observer contradiction repaired; production unchanged."
+  source: "Recognize exact30..64029 same-column/no-ELSE bounded ciphertext projection as size and payload under existing actual Serializable/source APPLOCK; retain separate metadata-before-payload and complete material sets."
+  local: "ROOT one full solution4117=[6,520,25,3566]0F/S/W, scoped format checksPASS,11new cold regressions.177Python preserved prior attribution, no fresh SQL/model."
+  private_input_plan: "Separate stack31 SOURCE preliminary clear/ROOT4160.NET183Python; unpromoted, native124NOT_RUN. Original review defects/failures retained; fresh rebase/SOURCE/SQL required after this observer repair qualifies."
+  next: "Actual3cde ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38177530737/Gov38177530736 closure6114395838. Private exact bounded model-history observer repair4117.NET scoped formatsPASS; all Python bytes unchanged177 prior attribution. Freeze exact5, obtain complete independent immutable Git SOURCE approval before SAME288 one push, own successor native123/full4117/all8/Gov/ENTIRE quality/six ORIGINALs to terminal. Preserve unpromoted input-store31 and rebase only after parent repair qualification. Model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."

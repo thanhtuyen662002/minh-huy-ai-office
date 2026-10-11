@@ -86,6 +86,15 @@ internal static class GroupAutomaticModelContextRuntimeProof
         internal bool Metadata;
         internal bool Payload;
         internal HashSet<string> Observed { get; } = new(StringComparer.Ordinal);
+        // The current brain reader uses one exact length-guarded CASE to
+        // select ciphertext. That query observes both the cap and payload;
+        // the separate metadata-before-payload reader shape remains supported.
+        internal void ObserveRevision(string sql)
+        {
+            if (HasBoundedRevisionProjection(sql)) { Metadata = true; Payload = true; }
+            else if (Regex.IsMatch(sql, @"\bDATALENGTH\s*\(", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)) Metadata = true;
+            else { if (!Metadata) throw new InvalidOperationException(); Payload = true; }
+        }
         internal void RequireComplete(bool history)
         {
             var expected = history ? SourceTables.Concat(BrainTables) : SourceTables;
@@ -101,6 +110,10 @@ internal static class GroupAutomaticModelContextRuntimeProof
     internal static string[] MaterialTables(string sql) => SourceTables.Concat(BrainTables).Where(table => Regex.IsMatch(sql,
         @"\b(?:FROM|JOIN)\s+(?:\[aioffice\]|aioffice)\s*\.\s*(?:\[" + table + @"\]|" + table + @"\b)",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)).ToArray();
+
+    internal static bool HasBoundedRevisionProjection(string sql) => Regex.IsMatch(sql,
+        @"\bCASE\s+WHEN\s+DATALENGTH\s*\(\s*(?<column>\[ProtectedContent\]|ProtectedContent)\s*\)\s+BETWEEN\s+30\s+AND\s+64029\s+THEN\s+\k<column>\s+END\s+AS\s+(?:\[ProtectedContent\]|ProtectedContent\b)",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     internal sealed class ReadProbe(Evidence evidence) : DbCommandInterceptor
     {
@@ -119,11 +132,7 @@ internal static class GroupAutomaticModelContextRuntimeProof
             check.Parameters.Add(parameter);
             if (!string.Equals((string?)await check.ExecuteScalarAsync(token), "Exclusive", StringComparison.Ordinal))
                 throw new InvalidOperationException();
-            if (tables.Contains("GroupRequestRevisions"))
-            {
-                if (Regex.IsMatch(command.CommandText, @"\bDATALENGTH\s*\(", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)) evidence.Metadata = true;
-                else { if (!evidence.Metadata) throw new InvalidOperationException(); evidence.Payload = true; }
-            }
+            if (tables.Contains("GroupRequestRevisions")) evidence.ObserveRevision(command.CommandText);
             evidence.Observed.UnionWith(tables);
             return result;
         }
