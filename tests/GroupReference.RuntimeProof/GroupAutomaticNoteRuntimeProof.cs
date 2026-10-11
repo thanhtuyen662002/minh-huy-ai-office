@@ -22,9 +22,11 @@ internal static class GroupAutomaticNoteRuntimeProof
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = expectedRows, ExpectedRawRows = 2 };
         var dependencyProof = new GroupAutomaticDependencyRuntimeProof.Evidence(scope);
+        var modelContextProof = new GroupAutomaticModelContextRuntimeProof.Evidence(scope);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
             .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect),
-                new GroupAutomaticDependencyRuntimeProof.ReadProbe(dependencyProof)).Options);
+                new GroupAutomaticDependencyRuntimeProof.ReadProbe(dependencyProof),
+                new GroupAutomaticModelContextRuntimeProof.ReadProbe(modelContextProof)).Options);
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).ToArrayAsync(token);
         if (references.Length != 2 || references[0].Id != operation || references[0].CommittedSequence != 1
@@ -100,6 +102,9 @@ internal static class GroupAutomaticNoteRuntimeProof
         var effectOperation = Guid.NewGuid();
         var store = new GroupNoteCommitStore(db, worker, clock, sources, brain, keys, new());
         if (keys.Reads != 1 || keys.Writes != 0 || dependencies.Items.Count != 0 || db.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+        if (!hostOnly && step == "commit")
+            await GroupAutomaticModelContextRuntimeProof.RequireAsync(db, worker, clock, sources, brain, preparation, handle, dependencies,
+                keys, modelContextProof, RequireEmptyEffectsAsync, token);
         // Reuse the exact legacy expiry probe, with its fixed row expectation
         // expanded for this four-note graph. Witness classification is unchanged.
         effect.ObserveCommit(step switch { "expiry" => "note-expiry", "key-expiry" => "note-key-expiry", _ => "note-commit" },
@@ -165,6 +170,9 @@ internal static class GroupAutomaticNoteRuntimeProof
             }
         }
         await RequireOriginalAsync();
+        if (!hostOnly)
+            await GroupAutomaticModelContextRuntimeProof.RequireAsync(db, worker, clock, sources, brain, preparation, handle, readback,
+                keys, modelContextProof, RequireOriginalAsync, token);
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || replay.Scope != committed.Scope || replay.BatchId != committed.BatchId || replay.OperationId != committed.OperationId
             || replay.OutboxId != committed.OutboxId || replay.CommittedAtUtc != committed.CommittedAtUtc || !replay.RequestIds.SequenceEqual(committed.RequestIds))
@@ -186,6 +194,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         await RequireOriginalAsync();
         await RequireDependenciesAsync();
         if (dependencyProof.Completed != 3) throw new InvalidOperationException();
+        if (modelContextProof.Completed != (hostOnly ? 0 : 2)) throw new InvalidOperationException();
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"
             : "PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority");
@@ -198,6 +207,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model"
             : "PASS owned automatic note original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model");
+        if (!hostOnly) Console.WriteLine(GroupAutomaticModelContextRuntimeProof.Success);
 
         Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
             keys, dependencyProof, RequireOriginalAsync, token);

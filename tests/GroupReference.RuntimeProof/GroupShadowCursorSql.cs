@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using MinhHuy.AIOffice.Platform.Persistence;
 
 namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
@@ -15,6 +16,8 @@ internal static class GroupShadowCursorSql
 {
     internal const string PredecessorMigration = "20261011061648_AddGroupTerminalKeyEnrollment";
     internal const string CursorMigration = "20261011075456_AddGroupSignedTerminalCursor";
+    internal const int SourceSnapshotCount = 74;
+    internal const int ShadowSnapshotCount = 72;
     internal const int MaximumSnapshotRowsPerTable = 16384;
     internal const int MaximumSnapshotJsonBytes = 8388608;
     // These three tables are owned by versioned migrations and have no
@@ -76,7 +79,7 @@ internal static class GroupShadowCursorSql
     {
         RequireIdentity(identity);
         var target = RequireShadowName(shadow?.Name!);
-        var model = RequireModel(database);
+        var model = RequireFrozenCursorModel(database);
         var closure = new HashSet<string>(StringComparer.Ordinal);
         var queue = new Queue<string>(["GroupTerminalFrontierStates"]);
         while (queue.TryDequeue(out var name))
@@ -116,15 +119,15 @@ internal static class GroupShadowCursorSql
     // tables refuse instead of disappearing from a digest. Each result is only tag + 64 hex hash.
     // JSON is generated privately by SQL and bounded after construction; this is NOT a streaming
     // SQL-allocation bound. The orchestrator must bound duration/SQL memory and compare ALL tags.
-    internal static IReadOnlyList<CommandTemplate> SourceSnapshots(PlatformDbContext database) => Snapshots(database, SourceName);
+    internal static IReadOnlyList<CommandTemplate> SourceSnapshots(PlatformDbContext database) =>
+        Snapshots(RequireModel(database), SourceName, SourceSnapshotCount);
     internal static IReadOnlyList<CommandTemplate> ShadowSnapshots(PlatformDbContext database, ShadowDatabase shadow) =>
-        Snapshots(database, RequireShadowName(shadow?.Name!));
+        Snapshots(RequireFrozenCursorModel(database), RequireShadowName(shadow?.Name!), ShadowSnapshotCount);
 
-    private static IReadOnlyList<CommandTemplate> Snapshots(PlatformDbContext database, string name)
+    private static IReadOnlyList<CommandTemplate> Snapshots(IModel model, string name, int expectedCount)
     {
-        var model = RequireModel(database);
         var tables = model.GetRelationalModel().Tables.OrderBy(x => x.Name, StringComparer.Ordinal).ToArray();
-        if (tables.Length is < 11 or > 128 || tables.Any(x => x.Schema != Schema || x.PrimaryKey is null)) throw Refused();
+        if (tables.Length + 18 != expectedCount || tables.Length is < 11 or > 128 || tables.Any(x => x.Schema != Schema || x.PrimaryKey is null)) throw Refused();
         var names = tables.Select(x => x.Name).Concat(MigrationOwnedTables.Select(x => x.Name)).Append("__EFMigrationsHistory").ToArray();
         if (names.Distinct(StringComparer.Ordinal).Count() != names.Length) throw Refused();
         var inventory = string.Join(",", names.Order(StringComparer.Ordinal).Select(x => "(N'" + x + "')"));
@@ -307,6 +310,23 @@ internal static class GroupShadowCursorSql
     {
         if (database is null || database.Database.GetDbConnection().State != ConnectionState.Closed || database.ChangeTracker.HasChanges()) throw Refused();
         return database.GetService<IDesignTimeModel>().Model;
+    }
+
+    // This shadow applies only through the original cursor migration. New source tables
+    // must be hashed in the source inventory and must not be invented in its older target.
+    // Derive every target table/column/FK from the actual historical migration model.
+    private static IModel RequireFrozenCursorModel(PlatformDbContext database)
+    {
+        _ = RequireModel(database);
+        var assembly = database.GetService<IMigrationsAssembly>();
+        var migrations = assembly.Migrations.Keys.ToArray();
+        var target = Array.IndexOf(migrations, CursorMigration);
+        if (target <= 0 || migrations[target - 1] != PredecessorMigration
+            || !assembly.Migrations.TryGetValue(CursorMigration, out var migrationType)) throw Refused();
+        var migration = assembly.CreateMigration(migrationType, database.Database.ProviderName!);
+        var model = database.GetService<IModelRuntimeInitializer>().Initialize(migration.TargetModel, designTime: true);
+        if (model.GetRelationalModel().Tables.Count() + 18 != ShadowSnapshotCount) throw Refused();
+        return model;
     }
 
     private static void RequireIdentity(RootIdentity identity)

@@ -7,10 +7,10 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 internal sealed class GroupNoteEffectPlan
 {
     private GroupNoteEffectPlan(GroupBatchSourcePreparation preparation, Entry[] notes,
-        GroupAutomaticSourceReceipt[] selected, bool automatic)
+        GroupAutomaticSourceReceipt[] selected, bool automatic, GroupAutomaticModelContext? extractionFailure = null)
     {
         Preparation = preparation; Notes = Array.AsReadOnly(notes); Selected = Array.AsReadOnly(selected);
-        IsAutomatic = automatic;
+        IsAutomatic = automatic; ExtractionFailureContext = extractionFailure;
         MaximumNotes = automatic ? GroupAutomaticNotePlan.MaximumNotes : GroupGroundedWorkProposal.MaximumNotes;
         MaximumEvidenceRows = GroupGroundedWorkProposal.MaximumEvidence + (automatic ? 200 : 0);
         Outcome = notes.Any(x => x.Origin == GroupRequestRevisionOrigin.AiExtracted) ? GroupWorkCommitOutcome.Notes : GroupWorkCommitOutcome.Attention;
@@ -21,6 +21,7 @@ internal sealed class GroupNoteEffectPlan
     internal IReadOnlyList<GroupAutomaticSourceReceipt> Selected { get; }
     internal int MaximumNotes { get; }
     internal bool IsAutomatic { get; }
+    internal GroupAutomaticModelContext? ExtractionFailureContext { get; }
     internal int MaximumEvidenceRows { get; }
     internal GroupWorkCommitOutcome Outcome { get; }
     public override string ToString() => "Group fixed note effect plan (private content).";
@@ -35,7 +36,8 @@ internal sealed class GroupNoteEffectPlan
             }, false)).ToArray(), false));
 
     internal static GroupNoteEffectPlan FromAutomatic(GroupAutomaticNotePlan plan) => Project(() => new(plan.Preparation,
-        plan.AiNotes.Select(Entry.FromAi).Concat(plan.HostNotes.Select(Entry.FromHost)).ToArray(), plan.SourceDispositions.ToArray(), true));
+        plan.AiNotes.Select(Entry.FromAi).Concat(plan.HostNotes.Select(x => Entry.FromHost(x, plan.ExtractionFailureContext is not null))).ToArray(),
+        plan.SourceDispositions.ToArray(), true, plan.ExtractionFailureContext));
 
     private static GroupNoteEffectPlan Project(Func<GroupNoteEffectPlan> build)
     {
@@ -71,9 +73,10 @@ internal sealed class GroupNoteEffectPlan
             GroupRequestRevisionOrigin.AiExtracted, GroupRequestVerificationLevel.SourceBackedAiInterpretation,
             GroupRequestEvidenceKind.LiteralSourceQuote, GroupBrainPayloadCodec.EncodeAiNote(note),
             note.Evidence.Select(x => new GroupHostAttentionReference(x.MessageId, x.Revision)).ToArray());
-        internal static Entry FromHost(GroupHostAttentionNote note)
+        internal static Entry FromHost(GroupHostAttentionNote note, bool extractionFailure = false)
         {
-            if (note.Reason is not (GroupHostAttentionReason.UnsupportedMedia or GroupHostAttentionReason.SecretQuarantine)) throw Unavailable();
+            if (note.Reason is not (GroupHostAttentionReason.UnsupportedMedia or GroupHostAttentionReason.SecretQuarantine)
+                && !(extractionFailure && note.Reason == GroupHostAttentionReason.ExtractionFailed)) throw Unavailable();
             return new(GroupNoteKind.NeedsClarification, GroupNoteBusinessStatus.NeedsClarification, GroupRequestRevisionOrigin.HostAttention,
                 GroupRequestVerificationLevel.HostObserved, GroupRequestEvidenceKind.HostMetadataAttention, note.EncodePayload(), note.SourceReferences.ToArray());
         }

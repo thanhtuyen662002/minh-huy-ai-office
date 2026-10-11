@@ -76,7 +76,7 @@ public sealed record OpenAiCompatibleResponsesOptions(
 public sealed class AiProviderExecutionException(
     string message,
     bool isTransient,
-    Exception? innerException = null) : Exception(message, innerException)
+    Exception? innerException = null) : Exception(message, innerException), IAiGatewayProviderFailure
 {
     public bool IsTransient { get; } = isTransient;
 }

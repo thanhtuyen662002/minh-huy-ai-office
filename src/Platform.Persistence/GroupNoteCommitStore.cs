@@ -35,11 +35,27 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         return await CommitCoreAsync(GroupNoteEffectPlan.FromAutomatic(plan), dependencies, operationId, cancellationToken);
     }
 
+    // Fixed host failure, not AI output or a caller-selected exhaustion flag.
+    // The journal is checked under the same locks as every final note effect.
+    public async Task<GroupNoteCommitResult> CommitExtractionFailureAsync(GroupAutomaticModelContext context,
+        Guid operationId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context); cancellationToken.ThrowIfCancellationRequested();
+        var plan = GroupAutomaticNotePlan.CreateExtractionFailure(context);
+        ValidateAutomaticEntry(plan, context.Brain, operationId, cancellationToken);
+        return await CommitCoreAsync(GroupNoteEffectPlan.FromAutomatic(plan), context.Brain, operationId, cancellationToken);
+    }
+
     private async Task<GroupNoteCommitResult> CommitCoreAsync(GroupNoteEffectPlan plan,
         GroupBrainPrivateContext dependencies, Guid operationId, CancellationToken cancellationToken)
     {
         var context = plan.Preparation.Context; var handle = context.Handle; var scope = context.Scope;
         var manifest = plan.IsAutomatic ? GroupWorkDependencyManifest.Create(context, dependencies, operationId) : null;
+        var failedInput = plan.ExtractionFailureContext;
+        if (failedInput is not null && (!ReferenceEquals(failedInput.Preparation, plan.Preparation)
+            || !ReferenceEquals(failedInput.Brain, dependencies) || !ReferenceEquals(dependencies.Handle, handle))) throw Unavailable();
+        var failedInputIdentity = failedInput is null ? null : GroupModelAttemptBudget.InputIdentity(failedInput);
+        DateTimeOffset? minimumJournalTime = failedInput is null ? null : UtcNow();
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); cancellationToken = deadline.Token;
         var payloads = plan.Notes.Select(x => x.Payload).ToArray();
@@ -260,6 +276,20 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
             await ObserveAsync(await brain.RequireUnchangedLockedAsync(dependencies, cancellationToken));
             await permissions.RequireSafeRuntimeAsync(cancellationToken);
             if (effectTime is { } minimum && UtcNow() < minimum) throw GroupServiceDirectory.Denied();
+            if (failedInput is not null)
+            {
+                await new GroupModelAttemptPermissionVerifier(database).RequireSafeRuntimeAsync(cancellationToken);
+                var (starts, failures) = await GroupModelAttemptJournalReader.ReadAsync(database, failedInput,
+                    failedInputIdentity!, cancellationToken);
+                var now = UtcNow();
+                if (now < minimumJournalTime!.Value) throw Unavailable();
+                var budget = GroupModelAttemptBudget.Read(scope, context.BatchId, failedInputIdentity!, starts, failures,
+                    now, cancellationToken);
+                if (budget.Disposition != GroupModelAttemptDisposition.Exhausted) throw Unavailable();
+                minimumJournalTime = now;
+                await new GroupModelAttemptPermissionVerifier(database).RequireSafeRuntimeAsync(cancellationToken);
+                if (UtcNow() < now) throw Unavailable();
+            }
             await ObserveAsync(await claims.InspectCurrentLockedAsync(handle, cancellationToken));
         }
         async Task ObserveAsync(GroupBatchClaimFenceVerdict verdict)
@@ -392,10 +422,19 @@ public sealed class GroupNoteCommitStore(PlatformDbContext database, GroupExtrac
         if (operation == Guid.Empty || dependencies.Handle.Receipt != context.Handle.Receipt || plan.NoteCount is < 1 or > GroupAutomaticNotePlan.MaximumNotes
             || context.HasCoverageGap || context.Items.Count is < 1 or > 100 || plan.SourceDispositions.Count != context.Items.Count
             || plan.Preparation.Receipts.Count != context.Items.Count) throw Unavailable();
+        if (plan.ExtractionFailureContext is { } failed)
+        {
+            if (!ReferenceEquals(failed.Preparation, plan.Preparation) || !ReferenceEquals(failed.Brain, dependencies)
+                || !ReferenceEquals(dependencies.Handle, context.Handle)
+                || context.Handle.Receipt.ServiceId != worker.ServiceId
+                || context.Handle.Receipt.CredentialEpoch != worker.CredentialEpoch) throw GroupServiceDirectory.Denied();
+            if (sources is null || brain is null || !sources.UsesContext(database, worker, clock)
+                || !brain.UsesContext(database, worker, clock)) throw Unavailable();
+        }
         if (!database.Database.IsSqlServer() || database.Database.CurrentTransaction is not null
             || System.Transactions.Transaction.Current is not null || database.ChangeTracker.HasChanges()) throw Unavailable();
         try { if (new SqlConnectionStringBuilder(database.Database.GetConnectionString()).MultipleActiveResultSets) throw Unavailable(); }
-        catch (ArgumentException) { throw Unavailable(); }
+        catch (Exception error) when (error is ArgumentException or FormatException or OverflowException) { throw Unavailable(); }
     }
     private DateTimeOffset UtcNow() { var now = clock.GetUtcNow(); return now.Offset == TimeSpan.Zero ? now : throw Unavailable(); }
     private static bool ValidKeyId(string? id) => !string.IsNullOrEmpty(id) && id.Length <= 64 && id.All(x => char.IsAsciiLetterOrDigit(x) || x is '-' or '_');

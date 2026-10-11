@@ -248,6 +248,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             if mode in automatic_smoke.DEPENDENCY_RUNTIME_LINES: expected += '\n' + automatic_smoke.DEPENDENCY_RUNTIME_LINES[mode]
             if mode in automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES: expected += '\n' + automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[mode]
             if mode in automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES: expected += '\n' + automatic_smoke.ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[mode]
+            if mode in automatic_smoke.MODEL_CONTEXT_RUNTIME_LINES: expected += '\n' + automatic_smoke.MODEL_CONTEXT_RUNTIME_LINES[mode]
             return SimpleNamespace(returncode=1 if fault == "child-error" else 0,
                 stdout=expected + ("\nPRIVATE\n" if fault == "extra-output" else "\n"), stderr="PRIVATE" if fault == "stderr" else "")
         arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", manifest={"AIOFFICE_INSTALLATION_ID": installation,
@@ -296,7 +297,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             with self.subTest(proof=proof), patch.dict(os.environ, self.environment, clear=True), \
                     patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output:
                 automatic_smoke.verify(**arguments)
-            self.assertEqual(1 if proof == "coverage" else 2, len(output.getvalue().splitlines()))
+            self.assertEqual(3 if proof == "notes" else 2, len(output.getvalue().splitlines()))
             projections = [query for query in queries if query.startswith("SELECT LOWER(CONVERT(char(36),")]
             self.assertEqual(3, len(projections))
             self.assertTrue(any("Id)) FROM aioffice.GroupBindings" in query for query in projections))
@@ -348,7 +349,8 @@ class OwnedStackGuardTests(unittest.TestCase):
         arguments, process, calls, queries = self.automatic_runtime_oracle()
         with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, "run", process), patch("sys.stdout", new_callable=io.StringIO) as output:
             automatic_smoke.verify(**arguments)
-        self.assertEqual(2, len(output.getvalue().splitlines()))
+        self.assertEqual(3, len(output.getvalue().splitlines()))
+        self.assertEqual(1, output.getvalue().splitlines().count(automatic_smoke.MODEL_CONTEXT_SUMMARY))
         children = [(command, kwargs) for command, kwargs in calls if command[:2] == ["docker", "run"]]
         self.assertEqual(list(automatic_smoke.RUNTIME_LINES), [command[-1] for command, _ in children])
         self.assertEqual(["docker", "image", "rm"], calls[-1][0][:3])
@@ -379,6 +381,30 @@ class OwnedStackGuardTests(unittest.TestCase):
                         self.assertRaises(AssertionError) as raised:
                     automatic_smoke.verify(**arguments)
                 self.assertNotIn('PRIVATE', str(raised.exception)); self.assertEqual('', output.getvalue())
+
+    def test_automatic_model_context_marker_cannot_be_missing_changed_duplicated_reordered_or_substituted(self):
+        for fault in ('missing', 'changed', 'duplicate', 'reordered', 'only-context', 'extra'):
+            arguments, original_process, calls, _ = self.automatic_runtime_oracle()
+            def process(command, **kwargs):
+                result = original_process(command, **kwargs)
+                if command[:2] == ['docker', 'run'] and command[-1] == 'automatic-note-commit':
+                    lines = result.stdout.splitlines()
+                    marker = automatic_smoke.MODEL_CONTEXT_RUNTIME_LINES[command[-1]]
+                    self.assertEqual(marker, lines[-1])
+                    if fault == 'missing': lines.pop()
+                    elif fault == 'changed': lines[-1] = 'PRIVATE_WRONG_CONTEXT'
+                    elif fault == 'duplicate': lines.append(marker)
+                    elif fault == 'reordered': lines = [lines[-1]] + lines[:-1]
+                    elif fault == 'only-context': lines = [marker]
+                    else: lines.append('PRIVATE_UNRELATED')
+                    result.stdout = '\n'.join(lines) + '\n'
+                return result
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(automatic_smoke.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output, \
+                    self.assertRaises(AssertionError) as raised:
+                automatic_smoke.verify(**arguments)
+            self.assertNotIn('PRIVATE', str(raised.exception)); self.assertEqual('', output.getvalue())
+            self.assertEqual(['docker', 'image', 'rm'], calls[-1][0][:3])
 
     def test_raw_history_dependency_marker_is_required_and_cannot_replace_original_history_evidence(self):
         for fault in ('missing-original', 'missing-dependency', 'duplicate', 'reversed', 'extra'):
@@ -1629,7 +1655,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 9, True, "1"):
+        for slot in (0, 10, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -1717,6 +1743,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final_raw_history = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](eighth_source, 8)
         self.assertEqual(final_raw_history, environment); self.assertEqual(32, len(calls))
+        ninth_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](ninth_source, 9)
+        self.assertTrue(all(environment[name] == value for name, value in final_raw_history.items()))
+        ninth_prefix = "AIOffice__GroupIntake__SourceKeys__9__"
+        self.assertEqual({"TenantId": tenant, "CompanyId": company, "SourceBindingId": ninth_source,
+            "KeyId": "owned-native-source-v1", "SecretRef": "secretref://env/OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY", "IsWriteKey": "true"},
+            {name[len(ninth_prefix):]: value for name, value in environment.items() if name.startswith(ninth_prefix)})
+        final_journal = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](ninth_source, 9)
+        self.assertEqual(final_journal, environment); self.assertEqual(36, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI
@@ -2704,6 +2740,135 @@ class ReferenceChildClosureTests(unittest.TestCase):
         reference_smoke.close_owned_reference_child(None, lambda: kills.append("kill"))
         self.assertEqual([], kills); self.assertEqual([15], child.drains)
         self.assertEqual(1, child.input_closed)
+
+
+
+class ModelJournalProofGuardTests(unittest.TestCase):
+    owned = OwnedStackGuardTests.owned
+    environment = OwnedStackGuardTests.environment
+
+    @staticmethod
+    def proof():
+        spec = importlib.util.spec_from_file_location("model_journal_guard", Path(__file__).with_name("smoke-group-model-attempts.py"))
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        return module
+
+    def test_unowned_journal_refuses_before_credentials_callbacks_sql_or_process(self):
+        proof = self.proof()
+        def forbidden(*args, **kwargs): self.fail("Unowned model journal reached a resource")
+        for invalid in ({"CI": "false"}, {"GITHUB_ACTIONS": "false"}, {"RUNNER_TEMP": "/foreign"}):
+            with self.subTest(invalid=invalid), patch.dict(os.environ, {**self.environment, **invalid}, clear=True), \
+                patch.object(proof.subprocess, 'run', forbidden), self.assertRaises(RuntimeError):
+                proof.verify(directory=self.owned, api='http://127.0.0.1:8080', manifest=None,
+                    tenant='invalid', company='invalid', service='invalid', sql=forbidden, prepare_source=forbidden,
+                    reference=reference_smoke, automatic=automatic_smoke)
+
+    def test_journal_identity_and_credential_bounds_refuse_before_sql(self):
+        proof = self.proof()
+        valid = [str(uuid.uuid4()) for _ in range(4)]
+        def forbidden(*args, **kwargs): self.fail("Invalid model journal identity reached a resource")
+        args = dict(directory=self.owned, api='http://127.0.0.1:8080', manifest={
+            'AIOFFICE_INSTALLATION_ID': valid[3], 'AIOFFICE_RUNTIME_PASSWORD': 'p'*32},
+            tenant=valid[0],company=valid[1],service=valid[2],sql=forbidden,prepare_source=forbidden,
+            reference=reference_smoke,automatic=automatic_smoke)
+        for key in ('tenant','company','service'):
+            for value in (str(uuid.UUID(int=0)), 'PRIVATE_SQL', 'ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB'):
+                with self.subTest(key=key,value=value), patch.dict(os.environ,self.environment,clear=True), \
+                    self.assertRaises((AssertionError,ValueError)):
+                    proof.verify(**{**args,key:value})
+        for password in ('short','p'*129,'PRIVATE_SQL;'+ 'p'*32):
+            with self.subTest(password=password),patch.dict(os.environ,self.environment,clear=True),self.assertRaises(AssertionError):
+                proof.verify(**{**args,'manifest':{**args['manifest'],'AIOFFICE_RUNTIME_PASSWORD':password}})
+
+    def oracle(self, fault=None):
+        proof=self.proof()
+        tenant,company,service,old_source,old_account,source,account,installation=[str(uuid.uuid4()) for _ in range(8)]
+        events=[str(uuid.uuid4()),str(uuid.uuid4())]; phase=-1; calls=[]; queries=[]
+        def sql(query):
+            queries.append(query)
+            if query.startswith('SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupBindings'): return old_source
+            if query.startswith('SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupConnectorAccounts'): return old_account
+            if query.startswith('SELECT LOWER(CONVERT(char(36),ConnectorAccountId))'): return account
+            if 'HASHBYTES' in query:
+                if query.startswith('SET NOCOUNT ON;'):
+                    return '\n'.join(f'{i:02d}|'+'A'*64 for i in range(34))
+                if fault=='retained-journal' and phase>=1 and 'BindingId IN' in query and 'GroupModelAttemptStarts' in query: return 'B'*64
+                if fault=='source-original' and phase>=1 and "BindingId='"+source+"'" in query and 'GroupMessages' in query: return 'B'*64
+                if fault=='exhaustion-journal' and phase==5 and 'BindingId IN' not in query and 'GroupModelAttemptStarts' in query: return 'B'*64
+                return 'A'*64
+            if 'COUNT(DISTINCT InputSha256)' in query: return '2|1|3|1|3' if fault=='input-rebound' else '1|1|3|1|3'
+            if 'CONCAT' in query:
+                if 'GroupModelAttemptStarts' in query:
+                    return '4|2|3' if fault=='fourth-row' and phase>=3 else ('0|0|0','1|0|1','2|1|2','3|2|3','3|2|3')[phase]
+                if 'GroupIngressInbox' in query: return '2|1|2'
+                self.fail('Unexpected model journal aggregate')
+            if 'GroupBatchClaimStates' in query: return '0' if (fault=='witness' and phase==4) or (fault=='exhaustion-claim' and phase==5) else '1'
+            if 'GroupSourceStates' in query: return '0' if fault=='pending-suffix' and phase>=0 else '1'
+            if phase==5 and 'SELECT COUNT(*) FROM aioffice.' in query:
+                table=query.split('FROM aioffice.',1)[1].split(' ',1)[0]
+                if table=='GroupBatchClaimReceipts': return '5'
+                expected={'GroupCustomerRequests':3,'GroupRequestRevisions':3,'GroupRequestEvidence':4,
+                    'GroupWorkCommitReceipts':1,'GroupWorkSourceDispositions':2,'GroupNotesCommittedOutbox':1,
+                    'GroupNotesCommittedItems':3,'GroupWorkRawDispositions':2,'GroupCoverageGaps':0}
+                if fault=='exhaustion-effect' and table=='GroupWorkCommitReceipts': return '0'
+                return str(expected[table])
+            if 'SELECT COUNT(*) FROM aioffice.' in query: return '1' if fault=='effect' and phase>=1 else '0'
+            self.fail('Unexpected model journal SQL')
+        def process(command,**kwargs):
+            nonlocal phase
+            calls.append((command,kwargs))
+            if command[:2]==['docker','build'] or command[:3]==['docker','image','rm']:
+                return SimpleNamespace(returncode=0,stdout='',stderr='')
+            if command[:2]==['docker','inspect']:
+                return SimpleNamespace(returncode=1,stdout='',stderr='Error: No such object: '+command[-1])
+            mode=command[-1];phase=5 if mode=='model-journal-extraction-failure' else list(proof.RUNTIME_LINES).index(mode)
+            line=proof.EXTRACTION_FAILURE_LINE if phase==5 else proof.RUNTIME_LINES[mode]
+            return SimpleNamespace(returncode=1 if fault=='child-error' or (fault=='exhaustion-child' and phase==5) else 0,
+                stdout=line+ ('\nPRIVATE_SQL\n' if fault=='extra-output' or (fault=='exhaustion-output' and phase==5) else '\n'),
+                stderr='PRIVATE_SQL' if fault=='stderr' or (fault=='exhaustion-stderr' and phase==5) else '')
+        args=dict(directory=self.owned,api='http://127.0.0.1:8080',manifest={'AIOFFICE_INSTALLATION_ID':installation,
+            'AIOFFICE_RUNTIME_PASSWORD':'p'*32},tenant=tenant,company=company,service=service,sql=sql,
+            prepare_source=lambda:(source,events,base64.b64encode(b'k'*32).decode('ascii')),
+            reference=reference_smoke,automatic=automatic_smoke)
+        return proof,args,process,calls,queries
+
+    def test_exact_journal_oracle_keeps_all_five_children_and_secret_forwarding_private(self):
+        proof,args,process,calls,queries=self.oracle()
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch('sys.stdout',new_callable=io.StringIO) as output:
+            proof.verify(**args)
+        self.assertEqual([proof.SUMMARY,proof.EXTRACTION_FAILURE_SUMMARY],output.getvalue().splitlines())
+        runs=[(cmd,kwargs) for cmd,kwargs in calls if cmd[:2]==['docker','run']]
+        self.assertEqual([*proof.RUNTIME_LINES,'model-journal-extraction-failure'],[cmd[-1] for cmd,_ in runs])
+        for cmd,kwargs in runs:
+            self.assertEqual(170,kwargs['timeout']);self.assertIn('--read-only',cmd)
+            self.assertNotIn(args['manifest']['AIOFFICE_RUNTIME_PASSWORD'],' '.join(cmd)+kwargs['input'])
+            self.assertNotIn(kwargs['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'],' '.join(cmd)+kwargs['input'])
+        self.assertEqual(2,sum(cmd[:2]==['docker','inspect'] for cmd,_ in calls))
+        self.assertEqual(1,sum(cmd[:3]==['docker','image','rm'] for cmd,_ in calls))
+        self.assertTrue(any('GroupModelAttemptStarts' in query and 'BindingId IN' in query and 'SELECT *' in query for query in queries))
+        self.assertTrue(any('GroupModelAttemptFailures' in query and 'BindingId IN' in query and 'SELECT *' in query for query in queries))
+
+    def test_journal_corruption_or_partial_child_never_prints_success_and_cleanup_still_runs(self):
+        for fault in ('retained-journal','source-original','fourth-row','input-rebound','witness','pending-suffix','effect','child-error','extra-output','stderr'):
+            proof,args,process,calls,_=self.oracle(fault)
+            with self.subTest(fault=fault),patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process), \
+                patch('sys.stdout',new_callable=io.StringIO) as output,self.assertRaises(AssertionError) as error:
+                proof.verify(**args)
+            self.assertEqual('',output.getvalue());self.assertNotIn('PRIVATE_SQL',str(error.exception))
+            self.assertEqual(2,sum(cmd[:2]==['docker','inspect'] for cmd,_ in calls))
+            self.assertEqual(1,sum(cmd[:3]==['docker','image','rm'] for cmd,_ in calls))
+
+    def test_exhaustion_missing_graph_or_private_child_refuses_after_all_five_original_modes(self):
+        for fault in ('exhaustion-journal','exhaustion-claim','exhaustion-effect','exhaustion-child','exhaustion-output','exhaustion-stderr'):
+            proof,args,process,calls,_=self.oracle(fault)
+            with self.subTest(fault=fault),patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process), \
+                patch('sys.stdout',new_callable=io.StringIO) as output,self.assertRaises(AssertionError) as error:
+                proof.verify(**args)
+            self.assertEqual('',output.getvalue());self.assertNotIn('PRIVATE_SQL',str(error.exception))
+            runs=[cmd[-1] for cmd,_ in calls if cmd[:2]==['docker','run']]
+            self.assertEqual([*proof.RUNTIME_LINES,'model-journal-extraction-failure'],runs)
+            self.assertEqual(2,sum(cmd[:2]==['docker','inspect'] for cmd,_ in calls))
+            self.assertEqual(1,sum(cmd[:3]==['docker','image','rm'] for cmd,_ in calls))
 
 
 if __name__ == "__main__":

@@ -48,6 +48,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
 
     public DbSet<GroupBatchClaimStateRecord> GroupBatchClaimStates => Set<GroupBatchClaimStateRecord>();
     public DbSet<GroupBatchClaimReceiptRecord> GroupBatchClaimReceipts => Set<GroupBatchClaimReceiptRecord>();
+    public DbSet<GroupModelAttemptStartRecord> GroupModelAttemptStarts => Set<GroupModelAttemptStartRecord>();
+    public DbSet<GroupModelAttemptFailureRecord> GroupModelAttemptFailures => Set<GroupModelAttemptFailureRecord>();
 
     public DbSet<GroupCustomerRequestRecord> GroupCustomerRequests => Set<GroupCustomerRequestRecord>();
     public DbSet<GroupRequestRevisionRecord> GroupRequestRevisions => Set<GroupRequestRevisionRecord>();
@@ -75,6 +77,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureGroupIngress();
         modelBuilder.ConfigureGroupBatchAllocation();
         modelBuilder.ConfigureGroupBatchClaims();
+        modelBuilder.ConfigureGroupModelAttempts();
         modelBuilder.ConfigureGroupWorkNotes();
         modelBuilder.ConfigureGroupWorkRawAccounting();
         modelBuilder.ConfigureGroupBatchTerminal();

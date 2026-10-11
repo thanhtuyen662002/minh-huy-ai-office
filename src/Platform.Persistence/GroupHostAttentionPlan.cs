@@ -28,7 +28,7 @@ public sealed class GroupHostAttentionPlan
 
     // No caller-selected reason, source IDs, gap flag or model output. Readable
     // media captions remain separate AI candidates; quarantine stays excluded.
-    // ExtractionFailed requires a later durable bounded-retry exhaustion proof.
+    // ExtractionFailed is available only through the journal-fenced writer.
     public static GroupHostAttentionPlan Create(GroupBatchSourcePreparation preparation)
     {
         ArgumentNullException.ThrowIfNull(preparation);
@@ -45,5 +45,18 @@ public sealed class GroupHostAttentionPlan
                 .Select(x => new GroupHostAttentionReference(x.MessageId, x.Revision));
             foreach (var chunk in references.Chunk(10)) notes.Add(new(reason, preparation.Context.HasCoverageGap, chunk));
         }
+    }
+
+    // Internal projection, not an exhaustion capability. The fixed writer
+    // checks durable exhaustion in each source-locked transaction, including
+    // after external key waits and immediately before committing effects.
+    internal static GroupHostAttentionPlan CreateExtractionFailure(GroupBatchSourcePreparation preparation)
+    {
+        var ordinary = Create(preparation);
+        if (preparation.Candidates.Count == 0) throw new InvalidOperationException("Group extraction failure plan is not available.");
+        var failed = preparation.Candidates.OrderBy(x => x.MessageId.ToString("D"), StringComparer.Ordinal)
+            .Select(x => new GroupHostAttentionReference(x.MessageId, x.Revision)).Chunk(10)
+            .Select(x => new GroupHostAttentionNote(GroupHostAttentionReason.ExtractionFailed, preparation.Context.HasCoverageGap, x));
+        return new(preparation, ordinary.Notes.Concat(failed).ToArray());
     }
 }

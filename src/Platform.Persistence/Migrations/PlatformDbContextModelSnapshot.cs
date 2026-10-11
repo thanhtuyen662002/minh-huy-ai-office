@@ -1660,6 +1660,109 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptFailureRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("DeadlineUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Failure")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("ObservedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "RequestId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "RequestId", "StartedAtUtc", "DeadlineUtc");
+
+                    b.ToTable("GroupModelAttemptFailures", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupModelAttemptFailures_Outcome", "[Failure] BETWEEN 1 AND 4");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptFailures_Time", "DATEPART(tz,[ObservedAtUtc])=0 AND [ObservedAtUtc]>=[StartedAtUtc] AND [ObservedAtUtc]<=[DeadlineUtc]");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("ClaimEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ClaimOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("DeadlineUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("InputSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PredecessorOrdinal")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("PredecessorRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "RequestId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "Ordinal")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "ClaimOperationId", "BatchId", "ClaimEpoch");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "PredecessorOrdinal", "PredecessorRequestId");
+
+                    b.ToTable("GroupModelAttemptStarts", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupModelAttemptStarts_Chain", "[Ordinal] BETWEEN 1 AND 3 AND (([Ordinal]=1 AND [PredecessorOrdinal] IS NULL AND [PredecessorRequestId] IS NULL) OR ([Ordinal]>1 AND [PredecessorOrdinal] IS NOT NULL AND [PredecessorOrdinal]=[Ordinal]-1 AND [PredecessorRequestId] IS NOT NULL))");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptStarts_Identity", "[RequestId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimOperationId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimEpoch]>0 AND DATALENGTH([InputSha256])=64 AND [InputSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptStarts_Time", "DATEPART(tz,[StartedAtUtc])=0 AND DATEPART(tz,[DeadlineUtc])=0 AND [DeadlineUtc]>[StartedAtUtc] AND [DeadlineUtc]<=DATEADD(second,120,[StartedAtUtc])");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedItemRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -3324,6 +3427,41 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasForeignKey("TenantId", "CompanyId", "BindingId", "MessageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptFailureRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "RequestId", "StartedAtUtc", "DeadlineUtc")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "RequestId", "StartedAtUtc", "DeadlineUtc")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_GroupModelAttemptFailures_OriginalStart");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "ClaimOperationId", "BatchId", "ClaimEpoch")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "OperationId", "BatchId", "Epoch")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_GroupModelAttemptStarts_OriginalClaim");
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "PredecessorOrdinal", "PredecessorRequestId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "Ordinal", "RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_GroupModelAttemptStarts_Predecessor");
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedItemRecord", b =>

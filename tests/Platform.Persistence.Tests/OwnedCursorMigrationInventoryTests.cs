@@ -22,11 +22,11 @@ public sealed class OwnedCursorMigrationInventoryTests
     public void SnapshotIncludesEveryTableCreatedByActualCompleteMigrationSql(bool shadow)
     {
         using var database = ColdDatabase();
-        var created = MigrationTables(database, shadow ? Sql.PredecessorMigration : Sql.CursorMigration);
+        var created = MigrationTables(database, shadow ? Sql.PredecessorMigration : database.GetService<IMigrationsAssembly>().Migrations.Keys.Order(StringComparer.Ordinal).Last());
         var snapshots = shadow ? Sql.ShadowSnapshots(database, Sql.NewShadow()) : Sql.SourceSnapshots(database);
         try
         {
-            Assert.Equal(58, created.Count); // 54 EF +three unmapped migration tables +history.
+            Assert.Equal(shadow ? 58 : 60, created.Count); // Frozen54/current56 EF +three unmapped migration tables +history.
             Assert.All(created, x => Assert.Equal("aioffice", x.SchemaObjectName.SchemaIdentifier.Value));
             var expected = created.Select(x => x.SchemaObjectName.BaseIdentifier.Value).Order(StringComparer.Ordinal).ToArray();
             Assert.Equal(expected, snapshots.Where(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal))
@@ -39,7 +39,7 @@ public sealed class OwnedCursorMigrationInventoryTests
             Assert.All(values.Inventories, names => Assert.Equal(expected, names.Order(StringComparer.Ordinal)));
             Assert.Equal(2, Regex.Matches(inventory, @"\bEXCEPT\b").Count);
             Assert.Contains("WHERE t.is_ms_shipped=0", inventory);
-            Assert.Equal(72, snapshots.Count);
+            Assert.Equal(shadow ? Sql.ShadowSnapshotCount : Sql.SourceSnapshotCount, snapshots.Count);
             Assert.Equal(ConnectionState.Closed, database.Database.GetDbConnection().State);
             Assert.Empty(database.ChangeTracker.Entries());
         }
@@ -110,7 +110,7 @@ public sealed class OwnedCursorMigrationInventoryTests
         {
             var method = typeof(Proof).GetMethod("SnapshotAsync", BindingFlags.NonPublic | BindingFlags.Static)!;
             var operation = Assert.IsAssignableFrom<Task<Dictionary<string, string>>>(method.Invoke(null,
-                [completion, changed, "invalid connection string must never be parsed", CancellationToken.None]));
+                [completion, changed, Sql.SourceSnapshotCount, "invalid connection string must never be parsed", CancellationToken.None]));
             await Assert.ThrowsAsync<InvalidOperationException>(() => operation);
             completion.RequireClean();
             Assert.Equal(ConnectionState.Closed, database.Database.GetDbConnection().State);

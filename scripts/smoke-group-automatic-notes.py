@@ -33,6 +33,9 @@ ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES = {
     "automatic-no-work-commit": "PASS owned automatic no-work original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model",
     "automatic-host-commit": "PASS owned automatic host original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model",
     "raw-history-commit": "PASS owned raw history original effect graph SQL three current digest comparisons original acquisition six effect queries ciphertext preflight unchanged original graph no completion or model"}
+MODEL_CONTEXT_RUNTIME_LINES = {
+    "automatic-note-commit": "PASS owned automatic model context exact protected Unicode source empty then four scoped AI host history closed Gateway contract two current SQL fences serializable source lock unchanged claim keys effects no provider tokenizer DI or model"}
+MODEL_CONTEXT_SUMMARY = "PASS actual automatic model context SQL exact original Unicode source empty then four protected scoped AI host history complete input schema estimate two current serializable source locks unchanged claim keys effects retained scopes no provider tokenizer DI or model"
 RUNTIME_LINES = {
     "automatic-note-prepare": "PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims",
     "automatic-note-expiry": "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
@@ -228,6 +231,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             if mode in DEPENDENCY_RUNTIME_LINES: expected_lines.append(DEPENDENCY_RUNTIME_LINES[mode])
             if mode in EFFECT_EXPECTATION_RUNTIME_LINES: expected_lines.append(EFFECT_EXPECTATION_RUNTIME_LINES[mode])
             if mode in ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES: expected_lines.append(ORIGINAL_EFFECT_GRAPH_RUNTIME_LINES[mode])
+            if mode in MODEL_CONTEXT_RUNTIME_LINES: expected_lines.append(MODEL_CONTEXT_RUNTIME_LINES[mode])
             reference.require_reference_result(result, mode, expected_lines)
             unchanged()
             if proof != "coverage" or mode != commit_mode: no_gaps()
@@ -297,6 +301,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     if proof == "notes":
         print("PASS actual automatic note combined SQL four protected AI host notes five evidence atomic twenty-one effects both expiry rollback original replay no duplicate unchanged all retained scopes", flush=True)
         print("PASS actual automatic mixed raw SQL two exact selected-head rows same transaction postflush rollback detach full original replay retained raw scopes", flush=True)
+        print(MODEL_CONTEXT_SUMMARY, flush=True)
     elif proof == "no_work":
         print("PASS actual automatic no-work SQL receipt two dispositions expiry rollback exact replay no duplicate no notes outbox model unchanged all retained scopes", flush=True)
         print("PASS actual automatic no-work raw SQL two exact selected-head rows same transaction postflush rollback detach full original replay retained raw scopes", flush=True)

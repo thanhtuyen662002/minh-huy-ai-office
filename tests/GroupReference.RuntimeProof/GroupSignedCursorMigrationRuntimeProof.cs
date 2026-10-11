@@ -35,7 +35,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             NotSupportedException => "not-supported",
             _ => "other"
         };
-        var ordinal = SnapshotOrdinal is >= 0 and < 72 ? SnapshotOrdinal : -1;
+        var ordinal = SnapshotOrdinal is >= 0 and < GroupShadowCursorSql.SourceSnapshotCount ? SnapshotOrdinal : -1;
         return "FAIL owned signed cursor migration diagnostic " + code + " snapshot=" + ordinal.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
@@ -72,7 +72,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
         var shadowConnection = GroupCursorShadowGuard.DatabaseConnection(trusted, descriptor.Name);
         var identity = new GroupShadowCursorSql.RootIdentity(scope.TenantId, scope.CompanyId, scope.SourceBindingId, worker.ServiceId, batch.Id);
         Phase = "original-source-snapshot";
-        var originalSource = await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), sourceConnection, token);
+        var originalSource = await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), GroupShadowCursorSql.SourceSnapshotCount, sourceConnection, token);
         int? databaseId = null;
         var createInvoked = false; var existingRefused = false; var initialAbsenceVerified = false;
         string[] previousHistory = [];
@@ -118,7 +118,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                 || previousHistory.Contains(GroupCursorLegacyProbes.Target, StringComparer.Ordinal)) throw new InvalidOperationException();
             Phase = "original-seed";
             await SeedAsync(advanceOnly: false);
-            var originalShadow = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token);
+            var originalShadow = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token);
             await WithConnectionAsync(completion, shadowConnection, async legacyTemplate =>
             {
                 var legacyCommands = GroupCursorLegacyProbes.LegacyConstraintRefusals(legacyTemplate, scope);
@@ -147,7 +147,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                             var restore = GroupCursorLegacyProbes.RestoreMatchingCursor(shadow, scope);
                             await completion.RunAsync(() => ScalarOneAsync(completion, restore, token), () => DisposeCommand(restore));
                         });
-                        RequireSame(originalShadow, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token));
+                        RequireSame(originalShadow, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token));
                     }
                 }, ProbeCleanup(probes));
             });
@@ -159,7 +159,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             });
             await RequirePreflightRefusalAsync();
             await SeedAsync(advanceOnly: true);
-            RequireSame(originalShadow, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token));
+            RequireSame(originalShadow, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token));
 
             Phase = "matching-positive-upgrade";
             await MigrateAsync(completion, shadowConnection, GroupCursorLegacyProbes.Target, token);
@@ -172,13 +172,13 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                 if (catalog.Length != 1 || catalog[0] != 1 || current.Database.CurrentTransaction is not null
                     || current.Database.GetDbConnection().State != ConnectionState.Closed || current.ChangeTracker.Entries().Any()) throw new InvalidOperationException();
             }, current.DisposeAsync);
-            var upgraded = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token);
+            var upgraded = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token);
             RequireSame(Rows(originalShadow), Rows(upgraded));
             Phase = "positive-repeat";
             await MigrateAsync(completion, shadowConnection, GroupCursorLegacyProbes.Target, token);
-            RequireSame(upgraded, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token));
+            RequireSame(upgraded, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token));
             Phase = "original-source-unchanged";
-            RequireSame(originalSource, await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), sourceConnection, token));
+            RequireSame(originalSource, await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), GroupShadowCursorSql.SourceSnapshotCount, sourceConnection, token));
         }
         catch (Exception error)
         {
@@ -275,7 +275,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
 
         async Task LegacyCheckAsync(SqlCommand command)
         {
-            var before = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token);
+            var before = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token);
             var refused = false;
             try { await ScalarOneAsync(completion, command, token); }
             catch (SqlException error) when (error.Number == 547
@@ -283,12 +283,12 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             { refused = true; }
             completion.RequireClean();
             if (!refused) throw new InvalidOperationException();
-            RequireSame(before, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token));
+            RequireSame(before, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token));
         }
 
         async Task RequirePreflightRefusalAsync()
         {
-            var before = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token);
+            var before = await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token);
             var refused = false;
             try { await MigrateAsync(completion, shadowConnection, GroupCursorLegacyProbes.Target, token); }
             catch (SqlException error) when (error.Number == 51048 && error.Errors.Count == 1
@@ -297,9 +297,9 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             completion.RequireClean();
             if (!refused) throw new InvalidOperationException();
             // Fresh connection after the failed real IMigrator transaction.
-            RequireSame(before, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), shadowConnection, token));
+            RequireSame(before, await SnapshotAsync(completion, GroupShadowCursorSql.ShadowSnapshots(model, descriptor), GroupShadowCursorSql.ShadowSnapshotCount, shadowConnection, token));
             if (!(await HistoryAsync(completion, shadowConnection, token)).SequenceEqual(previousHistory)) throw new InvalidOperationException();
-            RequireSame(originalSource, await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), sourceConnection, token));
+            RequireSame(originalSource, await SnapshotAsync(completion, GroupShadowCursorSql.SourceSnapshots(model), GroupShadowCursorSql.SourceSnapshotCount, sourceConnection, token));
         }
     }
 
@@ -348,11 +348,12 @@ internal static class GroupSignedCursorMigrationRuntimeProof
     }
 
     private static async Task<Dictionary<string, string>> SnapshotAsync(GroupCursorProofCompletion completion, IReadOnlyList<GroupShadowCursorSql.CommandTemplate> templates,
-        string connection, CancellationToken token)
+        int expectedCount, string connection, CancellationToken token)
     {
         return await completion.RunAsync(async () =>
         {
-            if (templates.Count != 72 || templates[0].Tag != "inventory"
+            if (expectedCount is not (GroupShadowCursorSql.SourceSnapshotCount or GroupShadowCursorSql.ShadowSnapshotCount)
+                || templates.Count != expectedCount || templates[0].Tag != "inventory"
                 || templates.Select(x => x.Tag).Distinct(StringComparer.Ordinal).Count() != templates.Count) throw new InvalidOperationException();
             var result = new Dictionary<string, string>(StringComparer.Ordinal);
             SnapshotOrdinal = -1;

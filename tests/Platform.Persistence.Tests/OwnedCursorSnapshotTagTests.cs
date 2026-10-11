@@ -19,7 +19,7 @@ public sealed class OwnedCursorSnapshotTagTests
         using var database = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>().UseSqlServer(
             "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password=synthetic;Encrypt=true;TrustServerCertificate=true").Options);
         var templates = shadow ? Sql.ShadowSnapshots(database, Sql.NewShadow()) : Sql.SourceSnapshots(database);
-        Assert.Equal(72, templates.Count);
+        Assert.Equal(shadow ? 72 : 74, templates.Count);
         try
         {
             foreach (var template in templates)

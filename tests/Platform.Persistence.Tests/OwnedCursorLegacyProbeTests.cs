@@ -25,7 +25,9 @@ public sealed class OwnedCursorLegacyProbeTests
         using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
             .UseSqlServer("Server=127.0.0.1,1;Database=shadow_legacy_cold;Integrated Security=true;TrustServerCertificate=true").Options);
         var migrations = db.GetService<IMigrationsAssembly>().Migrations.Keys.ToArray();
-        Assert.Equal(Probes.Target, migrations[^1]); Assert.Equal(Probes.Predecessor, migrations[^2]);
+        var target = Array.IndexOf(migrations, Probes.Target);
+        Assert.True(target > 0);
+        Assert.Equal(Probes.Predecessor, migrations[target - 1]);
         Assert.Equal(ConnectionState.Closed, db.Database.GetDbConnection().State);
     }
 
