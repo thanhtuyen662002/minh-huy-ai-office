@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
     state: in_progress
-    next: "Draft288 remote67605e1 CLOSED scoped116: all8 Build38105196689/native114369115337/quality114375378335/Gov38105196702 SUCCESS, full116once172PASS/3218.NET/six original images ROOT verified. Local739 terminal schema WITHHELD6104920534 single mutable-object UPDATE P2; per-column repair36PASS now frozen FULL review before next exact-head dispatch. Schema/terminal store/own-input chains/contiguous SQL frontier/expiry/races/no-click/279 remain; own-input private stash9371 held outside repair. Continue same288 owned transaction and actual adversarial nonemptybrain/allchunks/gap-retry proof. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
+    next: "Draft288 remote464607ac961d409ef02d658f9379fc56e39316ce ACTIVE owned CI Build38108833612/native114379946799/Gov38108833538; complete full exact-head116/all8/full.NET/original six images closure. Complete thirteen-path per-column repair APPROVED6105046515 ROOTFULL5040 and41PASS closes original P2. Latest five-path own-input prerequisite promoted directly after304PASS24new280retained/five-format; old9371 stash retained superseded NOT_APPLIED. Freeze complete eight-path own-input code/test/doc/two-state review; continue owned terminal transaction/replay/expiry rollback and authenticated contiguous SQL cursor plus real nonemptybrain/multichunk/race proof. Prior676 CLOSED scoped116/all8/Gov/3218.NET/six originals unchanged. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 remote67605e1 CLOSED scoped116: all8 Build38105196689/native114369115337/quality114375378335/Gov38105196702 SUCCESS, full116once172PASS/3218.NET/six original images ROOT verified. Local739 terminal schema WITHHELD6104920534 single mutable-object UPDATE P2; per-column repair36PASS now frozen FULL review before next exact-head dispatch. Schema/terminal store/own-input chains/contiguous SQL frontier/expiry/races/no-click/279 remain; own-input private stash9371 held outside repair. Continue same288 owned transaction and actual adversarial nonemptybrain/allchunks/gap-retry proof. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
+next_action: "Draft288 remote464607ac961d409ef02d658f9379fc56e39316ce ACTIVE owned CI Build38108833612/native114379946799/Gov38108833538; complete full exact-head116/all8/full.NET/original six images closure. Complete thirteen-path per-column repair APPROVED6105046515 ROOTFULL5040 and41PASS closes original P2. Latest five-path own-input prerequisite promoted directly after304PASS24new280retained/five-format; old9371 stash retained superseded NOT_APPLIED. Freeze complete eight-path own-input code/test/doc/two-state review; continue owned terminal transaction/replay/expiry rollback and authenticated contiguous SQL cursor plus real nonemptybrain/multichunk/race proof. Prior676 CLOSED scoped116/all8/Gov/3218.NET/six originals unchanged. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -2225,7 +2225,7 @@ group_278_terminal_schema_preparation:
   rollback: destructive_Down_refused_reviewed_forward_repair_required
   local: final35PASS_eight_new27retained_zeroFailSkipWarnings_ScriptDom160_pending_model_false_closed_connections_seven_file_format_PASS
   initial_test_repairs: old30_table_count_to32_and_cumulative_ownership_SQL_includes_new_migration_all_prior_assertions_preserved_concurrent_EF_DLL_warning_resolved_serial
-  source_review: WITHHELD739_6104920534_ROOTFULL5299_singleP2_repaired_source_review_pending
+  source_review: WITHHELD739_originalP2_CLOSED_repaired464_APPROVED6105046515_ROOTFULL5040_41PASS_current_CI_active
   actual_SQL: NOT_RUN_UNQUALIFIED_remote676116_predates_this_migration
   terminal_store_own_input_frontier_expiry_races_DI_no_click_full278_279_233_merge: INCOMPLETE
   model: NOT_RUN_UNEVALUATED
@@ -2256,9 +2256,37 @@ group_278_terminal_per_column_permission_repair:
   original_evidence: frozen42cc94dc_auth_permissions_initial_predicates085095105115_logSHA2564c117bf6d97097300581cca15d9ced0fdb816a56930cd9f996e9c82249d66cfb_accepted_cd173_complete6090413905_ROOTread
   repair: remove_only_cursor_whole_object_update_prerequisite_preserve_four_effective_writable_column_checks_all_immutable_inventory_receipt_OBJECT_UPDATE0_and_all_migration_DENYs
   local: final36PASS_nine_new27retained_zeroFailSkipWarnings_actual_SQL160_parse_pendingModelFalse_closed_connection_two_file_format_PASS
-  original_independent_regression: unchanged_required_on_repaired_source
-  source_review: PENDING_FULL_complete_thirteen_paths_includes_separate676_terminal_metadata_closure
-  own_input_work: private_stash9371e02516428c8d30e9d8e49a0bb2868775cd08_HELD_NOT_APPLIED_UNTESTED_excluded
+  original_independent_regression: unchanged_original_probe_PASS_all_four_other_controls_retained_final41PASS
+  source_review: APPROVED6105046515_ROOTFULL5040_SHA2560b53a960b904bfd52807372177727abbb68c8b94118b403e3d576f164f387ba1
+  own_input_work: old9371stash_retained_superseded_NOT_APPLIED_latest_five_tested_formatted_files_promoted_after_full_repair_approval
   native_terminal_schema_effects_cursor_model_full278_279_233_merge: UNQUALIFIED
   model: NOT_RUN_UNEVALUATED
   next: FULL_repaired_source_approval_then_reviewed_exact_CI_owned_SQL_terminal_transaction_replay_expiry_contiguous_progress_and_own_input_chain_proof_same288
+
+group_278_464_dispatched_ci:
+  head: 464607ac961d409ef02d658f9379fc56e39316ce
+  state: ACTIVE_OWNED_CI
+  build: 38108833612
+  governance: 38108833538
+  native: 114379946799
+  dotnet: 114379946773
+  source_review: APPROVED6105046515_ROOTFULL5040_SHA2560b53a960b904bfd52807372177727abbb68c8b94118b403e3d576f164f387ba1
+  independent: final41PASS_36repository_five_original_review_controls_noFailSkip_originalP2_probe_unchanged_PASS
+  scope: source_schema_per_column_repair_dispatch_original116_profiles_only_new_terminal_permissions_insert_cursor_NOT_RUN_UNQUALIFIED
+  next: own_exact_terminal_all8_Gov_full_native116_NET_logs_and_six_original_images_while_continuing_same288
+
+group_278_batch_own_input_prerequisite:
+  parent: 464607ac961d409ef02d658f9379fc56e39316ce
+  implementation: detached_original_requestIDs_and_commitUTC_immutable_v1_effect_bytes_unchanged_scoped_locked_origin_metadata_then_deterministic_DAG
+  origin: exact_requested_set_scope_deterministic_noteID_external_too_original_batch_operation_ordinal_UTC_no_future_self_unknown_samebatch_or_cycles
+  ordering: distinct_contributor_edges_topological_GUID_order_equal_commitUTC_accepted_glossary_external_no_edges
+  bounds: metadata_only2000_union_TOP2001_each_brain20_256000_notes40_raw500_selected100_unchanged
+  query: owned_same_connection_Serializable_savepoints_clean_no_ambient_noMARS_scoped_noTracking_no_cipher_or_businessfields
+  local: shared304PASS_24new280retained_noFailSkip_five_CSharp_format_actual_two_and2000ID_EF_SQL160_generated_no_connection_open_2100_parameter_bound
+  private_to_shared: exact_five_latest_tested_formatted_sources_promoted_directly_9371stash_RETAINED_SUPERSEDED_NOT_APPLIED
+  first_shared_selection: 92PASS_partial_filter_had_nonexistent_class_names_corrected_exact_five_actual_classes304PASS_no_source_change
+  source_review: PENDING_FULL_frozen_eight_paths_code_test_doc_two_state
+  actual_nonemptybrain_multicontributor_chain_SQL: NOT_RUN_UNQUALIFIED_older116profiles_zero_brain_one_contributor
+  terminal_transaction_frontier_expiry_races_DI_no_click_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  next: complete_frozen_source_review_owned_terminal_store_and_actual_adversarial_own_input_chain_SQL_proof_same288

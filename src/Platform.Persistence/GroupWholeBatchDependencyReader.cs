@@ -68,6 +68,8 @@ internal sealed class GroupWholeBatchDependencyReader(PlatformDbContext database
                 effects.Add(await new GroupWholeBatchEffectReader(database).RequireLockedAsync(receipt, original,
                     selected.Where(x => x.OperationId == receipt.OperationId).ToArray(), token));
             }
+            var current = new GroupWholeBatchDependencyVerdict.Current(coverage, provenances.AsReadOnly(), effects.AsReadOnly());
+            _ = await new GroupBatchOwnInputReader(database).RequireLockedAsync(current, token);
             foreach (var manifest in coverage.Manifests)
             {
                 var receipt = receipts.Single(x => x.OperationId == manifest.OperationId);
@@ -85,7 +87,7 @@ internal sealed class GroupWholeBatchDependencyReader(PlatformDbContext database
             if (UtcNow() < now || database.ChangeTracker.HasChanges()) throw Unavailable();
             token.ThrowIfCancellationRequested();
             if (effects.Count != receipts.Length || effects.Sum(x => x.NoteCount) != coverage.NoteCount) throw Unavailable();
-            return new GroupWholeBatchDependencyVerdict.Current(coverage, provenances.AsReadOnly(), effects.AsReadOnly());
+            return current;
         }
         catch (Exception error) when (error is SqlException or ArgumentException) { throw Unavailable(); }
     }

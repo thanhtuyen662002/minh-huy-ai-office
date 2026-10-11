@@ -12,13 +12,19 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 internal sealed class GroupWorkEffectLedger
 {
     private readonly GroupWorkCommitReceiptRecord originalReceipt;
-    private GroupWorkEffectLedger(GroupScope scope, GroupWorkCommitReceiptRecord work, string fingerprint)
-    { Scope = scope; BatchId = work.BatchId; OperationId = work.OperationId; NoteCount = work.NoteCount; Fingerprint = fingerprint; originalReceipt = work; }
+    private GroupWorkEffectLedger(GroupScope scope, GroupWorkCommitReceiptRecord work, string fingerprint, Guid[] originalRequestIds)
+    {
+        Scope = scope; BatchId = work.BatchId; OperationId = work.OperationId; NoteCount = work.NoteCount;
+        Fingerprint = fingerprint; originalReceipt = work; CommittedAtUtc = work.CommittedAtUtc;
+        OriginalRequestIds = Array.AsReadOnly(originalRequestIds);
+    }
     internal GroupScope Scope { get; }
     internal Guid BatchId { get; }
     internal Guid OperationId { get; }
     internal int NoteCount { get; }
     internal string Fingerprint { get; }
+    internal DateTimeOffset CommittedAtUtc { get; }
+    internal IReadOnlyList<Guid> OriginalRequestIds { get; }
     public override string ToString() => "Group original effect ledger (private metadata).";
 
     // A later digest helper must bind the observed graph to the complete
@@ -207,7 +213,8 @@ internal sealed class GroupWorkEffectLedger
         writer.Write(outboxes.Length); if (outboxes.Length != 0) writer.Write(outboxId.ToByteArray());
         foreach (var item in orderedItems) { writer.Write(item.Ordinal); writer.Write(item.RequestId.ToByteArray()); writer.Write(item.RequestRevision); }
         writer.Flush();
-        return new(scope, work, Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))));
+        return new(scope, work, Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))),
+            orderedRequests.Select(x => x.Id).ToArray());
 
         bool InScope(Guid tenant, Guid company, Guid binding) => tenant == scope.TenantId && company == scope.CompanyId && binding == scope.SourceBindingId;
         Guid Identity(string kind, int ordinal) => new(SHA256.HashData(Encoding.ASCII.GetBytes(FormattableString.Invariant(
