@@ -17,7 +17,7 @@ public sealed class GroupIngressModelTests
     {
         using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
         var entities = model.GetEntityTypes().Where(x => x.ClrType.Name.StartsWith("Group", StringComparison.Ordinal)).ToArray();
-        Assert.Equal(15, entities.Length);
+        Assert.Equal(32, entities.Length);
         foreach (var entity in entities)
         {
             Assert.Equal(new[] { "TenantId", "CompanyId" }, entity.FindPrimaryKey()!.Properties.Take(2).Select(x => x.Name));
@@ -67,14 +67,20 @@ public sealed class GroupIngressModelTests
         var migration = new AddGroupSourceIngress();
         var coverage = new AddGroupListenerOwnership();
         var inbox = new AddGroupIngressInbox();
-        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).Concat(inbox.UpOperations).ToArray(), model).Select(x => x.CommandText));
+        var allocation = new AddGroupBatchAllocation();
+        var claims = new AddGroupBatchClaims();
+        var expiry = new AddGroupBatchClaimExpiryFence();
+        var notes = new AddGroupWorkNotes();
+        var raw = new AddGroupWorkRawAccounting();
+        var terminal = new AddGroupBatchTerminal();
+        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).Concat(inbox.UpOperations).Concat(allocation.UpOperations).Concat(claims.UpOperations).Concat(expiry.UpOperations).Concat(notes.UpOperations).Concat(raw.UpOperations).Concat(terminal.UpOperations).ToArray(), model).Select(x => x.CommandText));
         foreach (var table in new[] { "GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants" })
         {
             Assert.Contains($"GRANT SELECT ON OBJECT::[aioffice].[{table}]", sql);
             Assert.Contains($"DENY INSERT, UPDATE, DELETE, ALTER, TAKE OWNERSHIP ON OBJECT::[aioffice].[{table}]", sql);
             Assert.Contains($"HAS_PERMS_BY_NAME(N'aioffice.{table}',N'OBJECT',N'INSERT')=0", GroupIngressPermissionVerifier.VerificationSql);
         }
-        foreach (var table in new[] { "GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts", "GroupIngressInbox" })
+        foreach (var table in new[] { "GroupMessages", "GroupMessageRevisions", "GroupIngressReceipts", "GroupAccountCoverageGaps", "GroupListenerCommandReceipts", "GroupIngressInbox", "GroupBatchAllocations", "GroupBatchAllocatedRevisions", "GroupBatchClaimReceipts" })
         {
             Assert.Contains($"GRANT SELECT, INSERT ON OBJECT::[aioffice].[{table}]", sql);
             Assert.Contains($"DENY UPDATE, DELETE, ALTER, TAKE OWNERSHIP ON OBJECT::[aioffice].[{table}]", sql);
@@ -90,6 +96,16 @@ public sealed class GroupIngressModelTests
         Assert.Throws<NotSupportedException>(() => migration.DownOperations);
         Assert.Throws<NotSupportedException>(() => coverage.DownOperations);
         Assert.Throws<NotSupportedException>(() => inbox.DownOperations);
+        Assert.Throws<NotSupportedException>(() => allocation.DownOperations);
+        Assert.Throws<NotSupportedException>(() => claims.DownOperations);
+        Assert.Throws<NotSupportedException>(() => expiry.DownOperations);
+        Assert.Throws<NotSupportedException>(() => raw.DownOperations);
+        Assert.Contains("GRANT UPDATE ON OBJECT::[aioffice].[GroupBatchClaimStates] ([ExpiryObservedAtUtc])", sql);
+        Assert.Contains("CHECK ([ExpiryObservedAtUtc] IS NULL OR ([ExpiryObservedAtUtc] >= [ExpiresAtUtc]", sql);
+        Assert.Contains("HAS_PERMS_BY_NAME(N'aioffice.GroupBatchClaimStates',N'OBJECT',N'UPDATE',N'ExpiryObservedAtUtc',N'COLUMN')=1", GroupIngressPermissionVerifier.VerificationSql);
+        Assert.Contains("GRANT UPDATE ON OBJECT::[aioffice].[GroupBatchClaimStates] ([Epoch], [OwnerId], [OperationId], [IssuedAtUtc], [ExpiresAtUtc])", sql);
+        Assert.Contains("DENY UPDATE ON OBJECT::[aioffice].[GroupBatchClaimStates] ([TenantId], [CompanyId], [BindingId], [BatchId])", sql);
+        Assert.Contains("HAS_PERMS_BY_NAME(N'aioffice.GroupBatchClaimStates',N'OBJECT',N'UPDATE',N'Epoch',N'COLUMN')=1", GroupIngressPermissionVerifier.VerificationSql);
     }
 
     [Fact]

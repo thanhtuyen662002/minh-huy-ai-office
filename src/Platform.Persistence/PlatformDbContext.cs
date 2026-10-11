@@ -43,6 +43,26 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupIngressOutboxRecord> GroupIngressOutbox => Set<GroupIngressOutboxRecord>();
     public DbSet<GroupIngressInboxRecord> GroupIngressInbox => Set<GroupIngressInboxRecord>();
 
+    public DbSet<GroupBatchAllocationRecord> GroupBatchAllocations => Set<GroupBatchAllocationRecord>();
+    public DbSet<GroupBatchAllocatedRevisionRecord> GroupBatchAllocatedRevisions => Set<GroupBatchAllocatedRevisionRecord>();
+
+    public DbSet<GroupBatchClaimStateRecord> GroupBatchClaimStates => Set<GroupBatchClaimStateRecord>();
+    public DbSet<GroupBatchClaimReceiptRecord> GroupBatchClaimReceipts => Set<GroupBatchClaimReceiptRecord>();
+
+    public DbSet<GroupCustomerRequestRecord> GroupCustomerRequests => Set<GroupCustomerRequestRecord>();
+    public DbSet<GroupRequestRevisionRecord> GroupRequestRevisions => Set<GroupRequestRevisionRecord>();
+    public DbSet<GroupRequestEvidenceRecord> GroupRequestEvidence => Set<GroupRequestEvidenceRecord>();
+    public DbSet<GroupWorkCommitReceiptRecord> GroupWorkCommitReceipts => Set<GroupWorkCommitReceiptRecord>();
+    public DbSet<GroupWorkSourceDispositionRecord> GroupWorkSourceDispositions => Set<GroupWorkSourceDispositionRecord>();
+    public DbSet<GroupWorkRawDispositionRecord> GroupWorkRawDispositions => Set<GroupWorkRawDispositionRecord>();
+    public DbSet<GroupBatchTerminalReceiptRecord> GroupBatchTerminalReceipts => Set<GroupBatchTerminalReceiptRecord>();
+    public DbSet<GroupTerminalFrontierStateRecord> GroupTerminalFrontierStates => Set<GroupTerminalFrontierStateRecord>();
+    public DbSet<GroupNotesCommittedOutboxRecord> GroupNotesCommittedOutbox => Set<GroupNotesCommittedOutboxRecord>();
+    public DbSet<GroupNotesCommittedItemRecord> GroupNotesCommittedItems => Set<GroupNotesCommittedItemRecord>();
+    public DbSet<GroupEditorGrantRecord> GroupEditorGrants => Set<GroupEditorGrantRecord>();
+    public DbSet<GroupGlossaryEntryRecord> GroupGlossaryEntries => Set<GroupGlossaryEntryRecord>();
+    public DbSet<GroupGlossaryRevisionRecord> GroupGlossaryRevisions => Set<GroupGlossaryRevisionRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
@@ -51,6 +71,11 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureCompanyAdministratorAudit();
         modelBuilder.ConfigureTaskSubmissionIntents();
         modelBuilder.ConfigureGroupIngress();
+        modelBuilder.ConfigureGroupBatchAllocation();
+        modelBuilder.ConfigureGroupBatchClaims();
+        modelBuilder.ConfigureGroupWorkNotes();
+        modelBuilder.ConfigureGroupWorkRawAccounting();
+        modelBuilder.ConfigureGroupBatchTerminal();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>
         {
             entity.ToTable("DataSourceSecretBindings", table => table.HasCheckConstraint("CK_DataSourceSecretBindings_Version", "[Version] > 0"));

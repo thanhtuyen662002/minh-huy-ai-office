@@ -1,9 +1,7 @@
-using System.Data;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 
@@ -37,7 +35,7 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
             await permissions.RequireSafeRuntimeAsync(cancellationToken);
             // Wait for prior source commits before reading registry/lease rows.
             // An external revoke completed while queued must win admission.
-            await LockSourceAsync(source, cancellationToken);
+            await GroupSourceTransactionLock.RequireAsync(database, source, cancellationToken);
             phase = "registry-initial";
             var authority = await directory.RequireCurrentAsync(verified.Service, cancellationToken);
             now = clock.GetUtcNow().ToUniversalTime();
@@ -224,18 +222,6 @@ public sealed class GroupIngressStore(PlatformDbContext database, IGroupSourceKe
         if (lease is null || lease.OwnerId != verified.Payload.ListenerOwnerId || lease.Epoch != verified.Payload.ListenerEpoch ||
             lease.ExpiresAtUtc <= now || lease.HeartbeatAtUtc > now || lease.HeartbeatAtUtc.Offset != TimeSpan.Zero || lease.ExpiresAtUtc.Offset != TimeSpan.Zero)
             throw GroupServiceDirectory.Denied();
-    }
-
-    private async Task LockSourceAsync(GroupScope source, CancellationToken cancellationToken)
-    {
-        if (!database.Database.IsSqlServer()) return;
-        await using var command = database.Database.GetDbConnection().CreateCommand();
-        command.Transaction = database.Database.CurrentTransaction?.GetDbTransaction() ?? throw Unavailable();
-        command.CommandTimeout = 10;
-        command.CommandText = "DECLARE @result int; EXEC @result=sys.sp_getapplock @Resource=@resource,@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=5000; SELECT @result;";
-        var parameter = command.CreateParameter(); parameter.ParameterName = "@resource"; parameter.DbType = DbType.String;
-        parameter.Value = $"aioffice:group-ingest:{source.TenantId:N}/{source.CompanyId:N}/{source.SourceBindingId:N}"; command.Parameters.Add(parameter);
-        if (Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken)) < 0) throw Unavailable();
     }
 
     private async Task<GroupMessageRecord?> MessageAsync(GroupScope source, string hash, CancellationToken cancellationToken)

@@ -9,8 +9,46 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class GroupReferenceRuntimeProofGuardTests
 {
     [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void NamespaceInitCannotStandInForActualProcessDeath(int processId) =>
+        Assert.Throws<InvalidOperationException>(() => OwnedGroupReferenceProofGuard.RequireKillableChild(processId));
+
+    [Fact]
+    public void ActualChildCanReachGuardedCrashProof() => OwnedGroupReferenceProofGuard.RequireKillableChild(2);
+
+    [Fact]
+    public void AllocationRollbackRequiresActualSanitizedCommitBoundaryAndNeverAnUnrelatedOperation()
+    {
+        Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal("allocation-rollback", new GroupBatchAllocationCommitException()));
+        Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal("allocation-rollback", new InvalidOperationException("PRIVATE_UNRELATED")));
+        Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal("allocation-rollback", new DbUpdateException("PRIVATE_SQL")));
+        foreach (var mode in new[] { "allocation-deny", "allocation-unsafe" })
+        {
+            Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new UnauthorizedAccessException()));
+            Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new GroupBatchAllocationCommitException()));
+        }
+    }
+
+    [Fact]
+    public void ClaimRefusalsRequireCurrentAuthorityOrTheActualSanitizedCommitBoundary()
+    {
+        Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal("claim-rollback", new GroupBatchClaimCommitException()));
+        foreach (var error in new Exception[] { new DbUpdateException("PRIVATE_SQL"), new GroupBatchAllocationCommitException(),
+            new InvalidOperationException("PRIVATE_UNRELATED"), new UnauthorizedAccessException(), new IOException() })
+            Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal("claim-rollback", error));
+        foreach (var mode in new[] { "claim-deny", "claim-unsafe" })
+        {
+            Assert.True(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new UnauthorizedAccessException()));
+            Assert.False(OwnedGroupReferenceProofGuard.IsExpectedRefusal(mode, new GroupBatchClaimCommitException()));
+        }
+    }
+
+    [Theory]
     [InlineData("deny", true, false, false)]
     [InlineData("unsafe", true, false, false)]
+    [InlineData("work-unsafe", true, false, false)]
     [InlineData("rollback", false, true, false)]
     [InlineData("publish", false, false, false)]
     [InlineData("unknown", false, false, false)]

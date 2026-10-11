@@ -22,8 +22,9 @@ try
     // Test-only executable: guard before stdin, configuration, credentials,
     // SQL, broker or any resource. It has no operator/customer credentials.
     OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup"))
+    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup" or "allocation-hold" or "allocation-replay" or "allocation-deny" or "allocation-rollback" or "allocation-unsafe" or "claim-crash" or "claim-replay" or "claim-fence" or "claim-deny" or "claim-unsafe" or "claim-rollback" or "source-read" or "source-deny" or "source-foreign" or "source-expiry" or "source-key-revoke" or "work-schema" or "work-unsafe" or "brain-fixture" or "brain-read" or "brain-deny" or "brain-foreign" or "brain-policy-deny" or "brain-key-revoke" or "brain-expiry" or "no-work-expiry" or "no-work-commit" or "no-work-mars" or "note-expiry" or "note-key-expiry" or "note-commit" or "effect-brain-fixture" or "host-brain-fixture" or "host-brain-read" or "automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit" or "automatic-no-work-prepare" or "automatic-no-work-expiry" or "automatic-no-work-commit" or "automatic-host-prepare" or "automatic-host-expiry" or "automatic-host-key-expiry" or "automatic-host-commit" or "coverage-prepare" or "coverage-check" or "raw-history-prepare" or "raw-history-expiry" or "raw-history-commit" or "terminal-commit"))
         throw new InvalidOperationException();
+    if (args[0] == "claim-crash") OwnedGroupReferenceProofGuard.RequireKillableChild(Environment.ProcessId);
     phase = "owned-config";
     var json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
     {
@@ -58,6 +59,128 @@ try
     var reference = new GroupIngressDispatchReference(1, scope, outbox.Id, outbox.MessageId, outbox.Revision, outbox.CommittedSequence);
     var inbox = new GroupIngressInboxStore(database, worker, TimeProvider.System);
     phase = args[0];
+    if (args[0] == "terminal-commit")
+    {
+        await GroupTerminalReceiptRuntimeProof.RunAsync(scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("raw-history-", StringComparison.Ordinal))
+    {
+        await GroupRawHistoryRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("coverage-", StringComparison.Ordinal))
+    {
+        await GroupCoverageRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("automatic-no-work-", StringComparison.Ordinal))
+    {
+        await GroupAutomaticNoWorkRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("automatic-note-", StringComparison.Ordinal) || args[0].StartsWith("automatic-host-", StringComparison.Ordinal))
+    {
+        await GroupAutomaticNoteRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0] == "effect-brain-fixture")
+    {
+        await GroupEffectFixtureRuntimeProof.RunAsync(scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("host-brain-", StringComparison.Ordinal))
+    {
+        await GroupHostBrainRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("note-", StringComparison.Ordinal))
+    {
+        await GroupNoteRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("no-work-", StringComparison.Ordinal))
+    {
+        await GroupNoWorkRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("brain-", StringComparison.Ordinal))
+    {
+        await GroupBrainRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("work-", StringComparison.Ordinal))
+    {
+        await GroupWorkNoteSchemaRuntimeProof.RunAsync(args[0], scope, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("source-", StringComparison.Ordinal))
+    {
+        await GroupBatchSourceRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("claim-", StringComparison.Ordinal))
+    {
+        await GroupBatchClaimRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
+    if (args[0].StartsWith("allocation-", StringComparison.Ordinal))
+    {
+        var allocation = new GroupBatchAllocationStore(database, worker, new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), TimeProvider.System);
+        if (args[0] is "allocation-deny" or "allocation-unsafe" or "allocation-rollback")
+        {
+            var refused = false;
+            try { await allocation.AllocateDueAsync(scope, config.EventId, lifetime.Token); }
+            catch (Exception error) when (OwnedGroupReferenceProofGuard.IsExpectedRefusal(args[0], error)) { refused = true; }
+            if (!refused || database.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+            Console.WriteLine("PASS owned allocation runtime refusal " + args[0]);
+            return 0;
+        }
+        GroupBatchAllocationReceipt original;
+        if (args[0] == "allocation-hold")
+        {
+            // Competing fresh SQL contexts start together against an empty reservation.
+            // The source transaction lock must produce one original and stable replays.
+            var creators = await Task.WhenAll(Enumerable.Range(0, 4).Select(async _ =>
+            {
+                await using var creator = new PlatformDbContext(databaseOptions);
+                return await new GroupBatchAllocationStore(creator, worker,
+                    new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), TimeProvider.System)
+                    .AllocateDueAsync(scope, config.EventId, lifetime.Token) ?? throw new InvalidOperationException();
+            }));
+            original = creators.Single(x => !x.WasAlreadyAllocated);
+            if (creators.Any(x => x.BatchId != original.BatchId || x.AllocatedAtUtc != original.AllocatedAtUtc
+                || !x.Revisions.SequenceEqual(original.Revisions))) throw new InvalidOperationException();
+        }
+        else original = await allocation.AllocateDueAsync(scope, config.EventId, lifetime.Token) ?? throw new InvalidOperationException();
+        if (original.WasAlreadyAllocated != (args[0] == "allocation-replay") || original.AfterSequence != 0
+            || original.AllocatedThroughSequence != 2 || original.Revisions.Count != 2 || database.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+        if (args[0] == "allocation-hold")
+        {
+            Console.WriteLine("CHECKPOINT owned allocation committed before receipt delivery"); Console.Out.Flush();
+            await Task.Delay(Timeout.InfiniteTimeSpan, lifetime.Token); // Coordinator kills this inspected owned child only.
+            throw new InvalidOperationException();
+        }
+        using var allocationSlots = new SemaphoreSlim(4);
+        await Task.WhenAll(Enumerable.Range(0, 100).Select(async _ =>
+        {
+            await allocationSlots.WaitAsync(lifetime.Token);
+            try
+            {
+                await using var restarted = new PlatformDbContext(databaseOptions);
+                var replay = await new GroupBatchAllocationStore(restarted, worker,
+                    new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), TimeProvider.System).AllocateDueAsync(scope, config.EventId, lifetime.Token)
+                    ?? throw new InvalidOperationException();
+                if (!replay.WasAlreadyAllocated || replay.BatchId != original.BatchId || replay.AllocatedAtUtc != original.AllocatedAtUtc
+                    || !replay.Revisions.SequenceEqual(original.Revisions) || restarted.ChangeTracker.HasChanges()) throw new InvalidOperationException();
+                if (await new GroupBatchAllocationStore(restarted, worker, GroupBatchTiming.InitialTuning, TimeProvider.System)
+                    .AllocateDueAsync(scope, Guid.NewGuid(), lifetime.Token) is not null) throw new InvalidOperationException();
+            }
+            finally { allocationSlots.Release(); }
+        }));
+        Console.WriteLine("PASS owned allocation runtime100 concurrent original receipts and caught-up cursor");
+        return 0;
+    }
     if (args[0] is "deny" or "rollback" or "unsafe")
     {
         var refused = false;
@@ -152,7 +275,12 @@ try
     if (args[0] == "statistics")
     {
         if (!(await inbox.ReceiveAsync(reference, lifetime.Token)).WasAlreadyReceived) throw new InvalidOperationException();
-        using var statisticsDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        Console.WriteLine(JsonSerializer.Serialize(await ReadBrokerStatisticsAsync(lifetime.Token)));
+        return 0;
+    }
+    async Task<OwnedReferenceBrokerStatistics> ReadBrokerStatisticsAsync(CancellationToken token)
+    {
+        using var statisticsDeadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         statisticsDeadline.CancelAfter(TimeSpan.FromSeconds(10));
         using var handler = new HttpClientHandler { AllowAutoRedirect = false, UseProxy = false, UseCookies = false };
         using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
@@ -169,16 +297,7 @@ try
             used += read;
         }
         if (used is < 1 or > 32768) throw new InvalidOperationException();
-        using var parsed = JsonDocument.Parse(metrics.AsMemory(0, used));
-        var root = parsed.RootElement;
-        static long Counter(JsonElement element, string property) => element.TryGetProperty(property, out var value) ? value.GetInt64() : 0;
-        var statistics = root.TryGetProperty("message_stats", out var counts) ? counts : default;
-        var ack = statistics.ValueKind == JsonValueKind.Object ? Counter(statistics, "ack") : 0;
-        var deliver = statistics.ValueKind == JsonValueKind.Object ? Counter(statistics, "deliver") : 0;
-        var consumers = Counter(root, "consumers");
-        if (ack < 0 || deliver < 0 || consumers < 0) throw new InvalidOperationException();
-        Console.WriteLine(JsonSerializer.Serialize(new { ack, deliver, consumers }));
-        return 0;
+        return OwnedReferenceBrokerStatistics.Parse(metrics.AsMemory(0, used));
     }
     await using var broker = await factory.CreateConnectionAsync(lifetime.Token);
     await using var channel = await broker.CreateChannelAsync(cancellationToken: lifetime.Token);
@@ -238,6 +357,19 @@ try
     };
     await channel.BasicConsumeAsync(queue, false, consumer, lifetime.Token);
     await completion.Task.WaitAsync(lifetime.Token);
+    // Keep this actual replay channel alive until the broker publishes one
+    // coherent exact delivery/ACK snapshot, before disposing the channel.
+    phase = "consume-replay-statistics";
+    using var observedDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+    observedDeadline.CancelAfter(TimeSpan.FromSeconds(30));
+    while (true)
+    {
+        if (!channel.IsOpen || !broker.IsOpen) throw new InvalidOperationException();
+        var observed = await ReadBrokerStatisticsAsync(observedDeadline.Token);
+        if (!channel.IsOpen || !broker.IsOpen) throw new InvalidOperationException();
+        if (observed.Matches(1, 2, 1)) break;
+        await Task.Delay(TimeSpan.FromMilliseconds(100), observedDeadline.Token);
+    }
     Console.WriteLine("PASS owned reference runtime redelivery original SQL receipt and broker ACK");
     return 0;
 }

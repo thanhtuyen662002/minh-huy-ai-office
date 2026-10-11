@@ -504,6 +504,352 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocatedRevisionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("CommittedSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CommittedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ContentSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsHistoricalBackfill")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId", "CommittedSequence");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "CommittedSequence")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "MessageId", "Revision")
+                        .IsUnique();
+
+                    b.ToTable("GroupBatchAllocatedRevisions", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupBatchAllocatedRevisions_Values", "[CommittedSequence] > 0 AND [Revision] > 0 AND [SourceVersion] > 0 AND [DeletionGeneration] >= 0 AND [Kind] IN (1,2,3,4) AND DATEPART(tz,[CommittedAtUtc]) = 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("AccountVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("AfterSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("AllocatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("AllocatedThroughSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CredentialEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("GrantVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsHistoricalBackfill")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("ObservedCommittedThroughSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RawRevisionCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "ServiceId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "AfterSequence")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OperationId")
+                        .IsUnique();
+
+                    b.ToTable("GroupBatchAllocations", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupBatchAllocations_Authority", "[SourceVersion] > 0 AND [DeletionGeneration] >= 0 AND [AccountVersion] > 0 AND [CredentialEpoch] > 0 AND [GrantVersion] > 0 AND DATEPART(tz,[AllocatedAtUtc]) = 0");
+
+                            t.HasCheckConstraint("CK_GroupBatchAllocations_Range", "[AfterSequence] >= 0 AND [AllocatedThroughSequence] > [AfterSequence] AND [ObservedCommittedThroughSequence] >= [AllocatedThroughSequence] AND [RawRevisionCount] BETWEEN 1 AND 500 AND [AllocatedThroughSequence]-[AfterSequence]=[RawRevisionCount]");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimReceiptRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("AccountVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AuthoritySha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("CredentialEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Epoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("GrantVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("IssuedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("RequestedLifetimeTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "OperationId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ServiceId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "Epoch")
+                        .IsUnique();
+
+                    b.ToTable("GroupBatchClaimReceipts", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupBatchClaimReceipts_Authority", "[CredentialEpoch] > 0 AND [GrantVersion] > 0 AND [SourceVersion] > 0 AND [DeletionGeneration] >= 0 AND [AccountVersion] > 0");
+
+                            t.HasCheckConstraint("CK_GroupBatchClaimReceipts_Lease", "[Epoch] > 0 AND [RequestedLifetimeTicks] BETWEEN 100000000 AND 6000000000 AND [ExpiresAtUtc] > [IssuedAtUtc] AND DATEPART(tz,[IssuedAtUtc]) = 0 AND DATEPART(tz,[ExpiresAtUtc]) = 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimStateRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Epoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ExpiryObservedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("IssuedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId");
+
+                    b.ToTable("GroupBatchClaimStates", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupBatchClaimStates_ExpiryObservation", "[ExpiryObservedAtUtc] IS NULL OR ([ExpiryObservedAtUtc] >= [ExpiresAtUtc] AND DATEPART(tz,[ExpiryObservedAtUtc]) = 0)");
+
+                            t.HasCheckConstraint("CK_GroupBatchClaimStates_Lease", "[Epoch] > 0 AND [OwnerId] <> '00000000-0000-0000-0000-000000000000' AND [OperationId] <> '00000000-0000-0000-0000-000000000000' AND [ExpiresAtUtc] > [IssuedAtUtc] AND DATEPART(tz,[IssuedAtUtc]) = 0 AND DATEPART(tz,[ExpiresAtUtc]) = 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchTerminalReceiptRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("AccountVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("AfterSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ClaimEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ClaimOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClaimOwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CommittedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("ContributorCount")
+                        .HasColumnType("int");
+
+                    b.Property<long>("CredentialEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("GrantVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("Manifest")
+                        .IsRequired()
+                        .HasMaxLength(8177)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("ManifestSha256")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varbinary(32)");
+
+                    b.Property<int>("ManifestVersion")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NoteCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RawRevisionCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SelectedMessageCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ThroughSequence")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ServiceId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "AfterSequence")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "ClaimOperationId");
+
+                    b.ToTable("GroupBatchTerminalReceipts", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupBatchTerminalReceipts_Authority", "[OperationId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimOperationId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimOwnerId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimEpoch]>0 AND [CredentialEpoch]>0 AND [GrantVersion]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [AccountVersion]>0 AND DATEPART(tz,[CommittedAtUtc])=0");
+
+                            t.HasCheckConstraint("CK_GroupBatchTerminalReceipts_Manifest", "[ManifestVersion]=1 AND DATALENGTH([Manifest]) BETWEEN 257 AND 8177 AND SUBSTRING([Manifest],1,8)=0x41494F4754524D31 AND DATALENGTH([ManifestSha256])=32 AND HASHBYTES('SHA2_256',[Manifest])=[ManifestSha256]");
+
+                            t.HasCheckConstraint("CK_GroupBatchTerminalReceipts_Range", "[AfterSequence]>=0 AND [ThroughSequence]>[AfterSequence] AND [ThroughSequence]-[AfterSequence]=[RawRevisionCount] AND [RawRevisionCount] BETWEEN 1 AND 500 AND [SelectedMessageCount] BETWEEN 1 AND 100 AND [SelectedMessageCount]<=[RawRevisionCount] AND [ContributorCount] BETWEEN 1 AND [SelectedMessageCount] AND [NoteCount] BETWEEN 0 AND [ContributorCount]*40");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -696,6 +1042,239 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.ToTable("GroupCoverageGaps", "aioffice", t =>
                         {
                             t.HasCheckConstraint("CK_GroupCoverageGaps_Values", "[AfterCommittedSequence] >= 0 AND DATEPART(tz,[OpenedAtUtc]) = 0 AND ([ReconnectedAtUtc] IS NULL OR ([ReconnectedAtUtc] >= [OpenedAtUtc] AND DATEPART(tz,[ReconnectedAtUtc]) = 0))");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupCustomerRequestRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssignedToUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BusinessStatus")
+                        .HasColumnType("int");
+
+                    b.Property<long>("BusinessVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("CommittedDueAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ConfirmedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("CurrentRevision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OriginBatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OriginCandidateOrdinal")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OriginOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestCode")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AssignedToUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ConfirmedByUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "RequestCode")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "DeletionGeneration", "CreatedAtUtc", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OriginBatchId", "OriginOperationId", "OriginCandidateOrdinal")
+                        .IsUnique();
+
+                    b.ToTable("GroupCustomerRequests", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupCustomerRequests_Code", "DATALENGTH([RequestCode])=36 AND LEFT([RequestCode],4)='REQ-' AND SUBSTRING([RequestCode],5,32) NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupCustomerRequests_ITConfirmation", "([ConfirmedByUserId] IS NOT NULL AND [ConfirmedAtUtc] IS NOT NULL) OR ([ConfirmedByUserId] IS NULL AND [ConfirmedAtUtc] IS NULL AND [BusinessStatus] IN (1,3) AND [AssignedToUserId] IS NULL AND [CommittedDueAtUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_GroupCustomerRequests_Times", "DATEPART(tz,[CreatedAtUtc])=0 AND DATEPART(tz,[UpdatedAtUtc])=0 AND [UpdatedAtUtc]>=[CreatedAtUtc] AND ([CommittedDueAtUtc] IS NULL OR DATEPART(tz,[CommittedDueAtUtc])=0) AND ([ConfirmedAtUtc] IS NULL OR (DATEPART(tz,[ConfirmedAtUtc])=0 AND [ConfirmedAtUtc]>=[CreatedAtUtc]))");
+
+                            t.HasCheckConstraint("CK_GroupCustomerRequests_Values", "[OriginCandidateOrdinal] BETWEEN 1 AND 40 AND [Kind] IN (1,2,3,4,5) AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [CurrentRevision]>0 AND [BusinessVersion]>0 AND [BusinessStatus] IN (1,2,3,4,5)");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupEditorGrantRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "UserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "UserId");
+
+                    b.ToTable("GroupEditorGrants", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupEditorGrants_Version", "[Version]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupGlossaryEntryRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllowExtraction")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("CurrentRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("PublishedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "PublishedByUserId");
+
+                    b.ToTable("GroupGlossaryEntries", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupGlossaryEntries_Values", "[CurrentRevision]>0 AND [Version]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND DATEPART(tz,[CreatedAtUtc])=0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupGlossaryRevisionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ContentKeyId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EnvelopeSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<byte[]>("ProtectedContent")
+                        .IsRequired()
+                        .HasMaxLength(64029)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<Guid>("PublishedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "EntryId", "Revision");
+
+                    b.HasIndex("TenantId", "CompanyId", "PublishedByUserId");
+
+                    b.ToTable("GroupGlossaryRevisions", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupGlossaryRevisions_Payload", "DATALENGTH([ProtectedContent]) BETWEEN 30 AND 64029 AND DATALENGTH([ContentKeyId]) BETWEEN 1 AND 64 AND [ContentKeyId] NOT LIKE '%[^0-9A-Za-z_-]%' COLLATE Latin1_General_100_BIN2 AND DATALENGTH([EnvelopeSha256])=64 AND [EnvelopeSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupGlossaryRevisions_Values", "[Revision]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND DATEPART(tz,[CreatedAtUtc])=0");
                         });
                 });
 
@@ -1081,6 +1660,93 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedItemRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OutboxId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("RequestRevision")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "OutboxId", "Ordinal");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "RequestId", "RequestRevision");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OutboxId", "RequestId", "RequestRevision")
+                        .IsUnique();
+
+                    b.ToTable("GroupNotesCommittedItems", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupNotesCommittedItems_Values", "[Ordinal] BETWEEN 1 AND 40 AND [RequestRevision]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedOutboxRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AvailableAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CommittedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsHistoricalBackfill")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("NoteCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PublishAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("PublishedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "PublishedAtUtc", "AvailableAtUtc");
+
+                    b.ToTable("GroupNotesCommittedOutbox", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupNotesCommittedOutbox_Values", "[NoteCount] BETWEEN 1 AND 40 AND [PublishAttempts]>=0 AND DATEPART(tz,[CommittedAtUtc])=0 AND DATEPART(tz,[AvailableAtUtc])=0 AND [AvailableAtUtc]>=[CommittedAtUtc] AND ([PublishedAtUtc] IS NULL OR (DATEPART(tz,[PublishedAtUtc])=0 AND [PublishedAtUtc]>=[CommittedAtUtc]))");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupReaderGrantRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1110,6 +1776,127 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.ToTable("GroupReaderGrants", "aioffice", t =>
                         {
                             t.HasCheckConstraint("CK_GroupReaderGrants_Version", "[Version] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupRequestEvidenceRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("RequestRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("MessageRevision")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "RequestId", "RequestRevision", "Ordinal");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "MessageId", "MessageRevision");
+
+                    b.ToTable("GroupRequestEvidence", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupRequestEvidence_Values", "[RequestRevision]>0 AND [Ordinal] BETWEEN 1 AND 10 AND [MessageRevision]>0 AND [Kind] IN (1,2)");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupRequestRevisionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("AuthorServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long?>("ClaimEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ContentKeyId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EnvelopeSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<int>("Origin")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("ProtectedContent")
+                        .IsRequired()
+                        .HasMaxLength(64029)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<Guid?>("SourceBatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("VerificationLevel")
+                        .HasColumnType("int");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "RequestId", "Revision");
+
+                    b.HasIndex("TenantId", "CompanyId", "AuthorServiceId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AuthorUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "SourceBatchId");
+
+                    b.ToTable("GroupRequestRevisions", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupRequestRevisions_Origin", "([Origin]=1 AND [VerificationLevel]=1 AND [AuthorServiceId] IS NOT NULL AND [AuthorUserId] IS NULL AND [SourceBatchId] IS NOT NULL AND [ClaimEpoch] IS NOT NULL AND [ClaimEpoch]>0) OR ([Origin]=2 AND [VerificationLevel]=2 AND [AuthorServiceId] IS NULL AND [AuthorUserId] IS NOT NULL AND [SourceBatchId] IS NULL AND [ClaimEpoch] IS NULL) OR ([Origin]=3 AND [VerificationLevel]=3 AND [AuthorServiceId] IS NOT NULL AND [AuthorUserId] IS NULL AND [SourceBatchId] IS NOT NULL AND [ClaimEpoch] IS NOT NULL AND [ClaimEpoch]>0)");
+
+                            t.HasCheckConstraint("CK_GroupRequestRevisions_Payload", "DATALENGTH([ProtectedContent]) BETWEEN 30 AND 64029 AND DATALENGTH([ContentKeyId]) BETWEEN 1 AND 64 AND [ContentKeyId] NOT LIKE '%[^0-9A-Za-z_-]%' COLLATE Latin1_General_100_BIN2 AND DATALENGTH([EnvelopeSha256])=64 AND [EnvelopeSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupRequestRevisions_Values", "[Revision]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND DATEPART(tz,[CreatedAtUtc])=0");
                         });
                 });
 
@@ -1211,6 +1998,225 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                             t.HasCheckConstraint("CK_GroupSourceStates_Cursors", "[CommittedSequence] >= [ScheduledThroughSequence] AND [ScheduledThroughSequence] >= 0");
 
                             t.HasCheckConstraint("CK_GroupSourceStates_Pending", "([FirstPendingAtUtc] IS NULL AND [LastPendingAtUtc] IS NULL) OR ([FirstPendingAtUtc] IS NOT NULL AND [LastPendingAtUtc] IS NOT NULL AND [FirstPendingAtUtc] <= [LastPendingAtUtc] AND DATEPART(tz,[FirstPendingAtUtc]) = 0 AND DATEPART(tz,[LastPendingAtUtc]) = 0)");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupTerminalFrontierStateRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("LastTerminalBatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("ThroughSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "LastTerminalBatchId");
+
+                    b.ToTable("GroupTerminalFrontierStates", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupTerminalFrontierStates_Values", "[ThroughSequence]>=0 AND [Version]>0 AND (([ThroughSequence]=0 AND [LastTerminalBatchId] IS NULL) OR ([ThroughSequence]>0 AND [LastTerminalBatchId] IS NOT NULL)) AND DATEPART(tz,[UpdatedAtUtc])=0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("AccountVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ClaimEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CommittedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("CredentialEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeletionGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("DependencyManifest")
+                        .HasMaxLength(6902)
+                        .HasColumnType("varbinary(6902)");
+
+                    b.Property<int>("DependencyManifestVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("EffectLedgerVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<byte[]>("ExpectedEffectSha256")
+                        .HasMaxLength(32)
+                        .HasColumnType("varbinary(32)");
+
+                    b.Property<long>("GrantVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("NoteCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SelectedMessageCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SourceSetSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<long>("SourceVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ServiceId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OperationId")
+                        .IsUnique();
+
+                    b.ToTable("GroupWorkCommitReceipts", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupWorkCommitReceipts_Authority", "[ClaimEpoch]>0 AND [CredentialEpoch]>0 AND [GrantVersion]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [AccountVersion]>0 AND DATEPART(tz,[CommittedAtUtc])=0");
+
+                            t.HasCheckConstraint("CK_GroupWorkCommitReceipts_Counts", "[SelectedMessageCount] BETWEEN 1 AND 100 AND (([Outcome]=2 AND [NoteCount]=0) OR ([Outcome] IN (1,3) AND [NoteCount] BETWEEN 1 AND 40))");
+
+                            t.HasCheckConstraint("CK_GroupWorkCommitReceipts_Dependencies", "([DependencyManifestVersion]=0 AND [DependencyManifest] IS NULL) OR ([DependencyManifestVersion]=1 AND [DependencyManifest] IS NOT NULL AND DATALENGTH([DependencyManifest]) BETWEEN 218 AND 6902)");
+
+                            t.HasCheckConstraint("CK_GroupWorkCommitReceipts_Effects", "([EffectLedgerVersion]=0 AND [ExpectedEffectSha256] IS NULL) OR ([EffectLedgerVersion]=1 AND [DependencyManifestVersion]=1 AND [ExpectedEffectSha256] IS NOT NULL AND DATALENGTH([ExpectedEffectSha256])=32)");
+
+                            t.HasCheckConstraint("CK_GroupWorkCommitReceipts_SourceSet", "DATALENGTH([SourceSetSha256])=64 AND [SourceSetSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkRawDispositionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("CommittedSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int");
+
+                    b.Property<long>("RawRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Relation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("SelectedMessageRevision")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId", "CommittedSequence");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "MessageId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "MessageId", "RawRevision");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OperationId", "CommittedSequence");
+
+                    b.ToTable("GroupWorkRawDispositions", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupWorkRawDispositions_Values", "[CommittedSequence]>0 AND [RawRevision]>0 AND [SelectedMessageRevision]>0 AND [Outcome] IN (1,2,3,4,5,6,7,8) AND (([Relation]=1 AND [RawRevision]=[SelectedMessageRevision]) OR ([Relation]=2 AND [RawRevision]<>[SelectedMessageRevision]))");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkSourceDispositionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("MessageRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId", "MessageId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "MessageId", "MessageRevision");
+
+                    b.ToTable("GroupWorkSourceDispositions", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupWorkSourceDispositions_Values", "[MessageRevision]>0 AND [Outcome] IN (1,2,3,4,5,6,7,8)");
                         });
                 });
 
@@ -1788,6 +2794,118 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocatedRevisionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupMessageRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "MessageId", "Revision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupServiceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimReceiptRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupServiceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimStateRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchTerminalReceiptRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupServiceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "ClaimOperationId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", b =>
                 {
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
@@ -1823,6 +2941,70 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupCustomerRequestRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AssignedToUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ConfirmedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "OriginBatchId", "OriginOperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupEditorGrantRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupGlossaryEntryRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "PublishedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupGlossaryRevisionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "PublishedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupGlossaryEntryRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "EntryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -1956,6 +3138,30 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedItemRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedOutboxRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "OutboxId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupRequestRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "RequestId", "RequestRevision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupNotesCommittedOutboxRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupReaderGrantRecord", b =>
                 {
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
@@ -1975,6 +3181,45 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasForeignKey("TenantId", "CompanyId", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupRequestEvidenceRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupMessageRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "MessageId", "MessageRevision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupRequestRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "RequestId", "RequestRevision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupRequestRevisionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupServiceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AuthorServiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupCustomerRequestRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "SourceBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupServiceGrantRecord", b =>
@@ -2018,6 +3263,89 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupTerminalFrontierStateRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupSourceStateRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchTerminalReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "LastTerminalBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupServiceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkRawDispositionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocatedRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "CommittedSequence")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupWorkSourceDispositionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "MessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupMessageRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "MessageId", "RawRevision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkSourceDispositionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupMessageRevisionRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "MessageId", "MessageRevision")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

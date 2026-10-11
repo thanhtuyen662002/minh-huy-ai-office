@@ -70,10 +70,7 @@ else
             "Primary and backup AI provider identities must differ.");
     }
 
-    var aiHttpClient = new HttpClient
-    {
-        Timeout = TimeSpan.FromSeconds(120)
-    };
+    var aiHttpClient = StructuredResponsesPolicy.CreateProductionClient();
     var primaryAdapter = new OpenAiCompatibleResponsesAdapter(
         aiHttpClient,
         primaryAiOptions);

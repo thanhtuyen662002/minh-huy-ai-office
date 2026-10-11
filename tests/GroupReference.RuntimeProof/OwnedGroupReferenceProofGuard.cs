@@ -5,12 +5,19 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 public static class OwnedGroupReferenceProofGuard
 {
+    public static void RequireKillableChild(int processId)
+    {
+        if (processId <= 1) throw new InvalidOperationException();
+    }
+
     // Permission proof and current grants share the shipping authorization
     // refusal type. An unrelated operation/transport failure is not evidence.
     public static bool IsExpectedRefusal(string mode, Exception error) => mode switch
     {
-        "deny" or "unsafe" => error is UnauthorizedAccessException,
+        "deny" or "unsafe" or "allocation-deny" or "allocation-unsafe" or "claim-deny" or "claim-unsafe" or "work-unsafe" => error is UnauthorizedAccessException,
         "rollback" => error is DbUpdateException,
+        "allocation-rollback" => error is MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationCommitException,
+        "claim-rollback" => error is MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimCommitException,
         _ => false
     };
 

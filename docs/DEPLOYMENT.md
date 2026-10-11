@@ -240,6 +240,10 @@ AIOFFICE_AI_BACKUP_PROVIDER_ID=external-backup
 
 The worker always attempts PRIMARY first. BACKUP is used only after a retryable primary failure such as network failure, timeout, HTTP 408, 429 or 5xx. Permanent primary failures such as invalid credentials or malformed requests fail closed instead of being hidden by backup. A BACKUP without PRIMARY is rejected at worker startup.
 
+The shipping provider client disables redirects and automatic response decompression. Configured provider URLs must use HTTPS and must not contain user-info, query strings or fragments. An explicitly owned loopback fixture may set `<prefix>_ALLOW_INSECURE_LOOPBACK=true` alongside its HTTP loopback URL; this does not permit a remote HTTP provider. Prefixes follow the existing primary/backup/legacy names. Never use the coding agent credentials for runtime calls.
+
+StructuredGeneration uses the strict Responses JSON-schema profile described in [checkpoint verification](validation/GROUP_STRUCTURED_RESPONSES.md). Operators must separately qualify the configured model/profile; this transport checkpoint is not evidence of semantic accuracy or customer activation.
+
 All authorization values are secret material. Do not commit them, print them in smoke output, persist them in a task/checkpoint, or expose them to the browser. A partial provider configuration is rejected at worker startup. The legacy `AIOFFICE_AI_*` single-provider names remain supported as a backward-compatible primary alias when explicit `AIOFFICE_AI_PRIMARY_*` values are absent.
 
 When enabled, the bounded AI executor still verifies the selected read-only SQL data source first, then sends only the durable customer question plus a fixed instruction explaining that no ERP rows have been supplied. The model is not allowed to claim that it queried live ERP data. The checkpoint stores the answer, the provider actually used after any failover, model identity and input/output token counts, but no connection string or secret reference.

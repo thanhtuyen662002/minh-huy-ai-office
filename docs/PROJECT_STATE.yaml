@@ -4,19 +4,19 @@ phase: full-product-completion
 status: active-development
 priority_rule: "security-critical > production-blocker > active-issue > verified-next-slice"
 current_issue: 233
-current_branch: codex/286-restored-browser-receipt
-current_pr: null
-current_target_head: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
-last_verified_commit: 4cfeda58fc3065094952dd30bbc4b41ee47a8b53
+current_branch: codex/278-group-automatic-notes
+current_pr: 288
+current_target_head: b3c7dfb1637f83b8a85032640bbf43503f220fb0
+last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
   backend:
-    issue: 286
-    pr: null
-    branch: codex/286-restored-browser-receipt
-    head: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
+    issue: 278
+    pr: 288
+    branch: codex/278-group-automatic-notes
+    head: b3c7dfb1637f83b8a85032640bbf43503f220fb0
     state: in_progress
-    next: 'Merged285/mainaeb exact Build38041707509/actual114183088426/quality114185755608 FAILURE; Gov38041707526 and six prerequisites SUCCESS. Native application and literal pending RabbitMQ restart PASS. Chromium status202 passed, then historical restoredResponse.json failed before receipt equality; acquisition/JSON/abort cause unproven. Freeze/review286 existing strict original-response reader on this caller, then one Draft and exact PR/main closure before277 acceptance and278 implementation.'
+    next: "Draft288 exact remoteb3c7dfb1637f83b8a85032640bbf43503f220fb0 CLOSED_RED Build38112203893/native114389913437/quality114395898042; Gov38112203900SUCCESS; six prerequisites/GovSUCCESS and ROOT full.NET3450PASS6_520_25_2899 noFailSkip SHA256a1511a1bb7cdffa361befcfc4a39bd004705eeb53a8c88ee59b7973ecb3e4d31. ROOT full80405 native SHA256fb1a939fb66bfd580419e32fae768dcc5bacc3c5f49484a02a25f59f2c59cca1 parsed98of117once150PASS19missing3failure; fullquality/all8/Gov closed, no browser artifact. Bounded indexed40char GUID frame repair prepared150coldPASS+actualSQL160parse; five-path FULL source review pending. Historical6ce6e11 ten-path review also pending. Consume full independent receipts then push same288 and own fresh exact-head117/.NET/all8/Gov/quality/six original images; fix any terminal failure on same branch, no blind rerun. All source receipts87_6105354729/ec_6105464632/finalb3_6105493237 ROOT_FULL consumed. New terminal SQL remains NOT_RUN_UNQUALIFIED until full native receipt. Historical691 full116/3352NET/all8/Gov/quality/originalsix CLOSED at four one-contributor/two-selected/zero-brain scope; prior464 red/676 history preserved. New signed frontier metadata integrity primitive38new+7keys+39frontier=84PASS noFailSkipWarnings/twoformat, eae1bee five-path FULL source APPROVED6105654903 ROOTFULL4563 SHA256b9ff4cced532c44633c60b5ca2f15c0001bba925c72c13c6086c7d47de5ffb0d independent100PASS84retained_new16reviewer/twoformat; excluded fromb3 runtime. New distinct historical original graph/receipt metadata50new253retained=303PASS/sevenformat prepared; ten-path FULL source review pending, no historical SQL/advance/DI authority. Implement immutable signed sequential predecessor schema/latest-leaf cursor fence and historical existing-terminal graph/current Extract bookkeping, outsideSQL retained keys and atomic actualreadback; lastBatch alone cannot prove prefix and old currentdependencies cannot strand genuine terminal after crash/edit/rotation. Continue nonemptybrain/multiplecontributor/owninput/races/gap-retry/DI/no-click. ExistingGateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -24,7 +24,7 @@ critical_paths:
     branch: codex/264-erp-readonly-qualification
     head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
     state: done
-    next: "264/265 accepted after independent frozen e3 and final a7 reviews, exact PR/main gates and actual SQL/Chromium PASS. Conservative standalone engine16/current-database qualifier is shipped; dedicated customer credentials, legacy module profiles and inventory reconciliation remain."
+    next: 'Adapter264/PR265 accepted on main; dedicated least-privilege Medcom/Novo readonly identities and real inventory/import-export production qualification remain product gates. Santino deferred by owner. Do not use elevated configured DB identities for production business-row access or change server permissions without authorization.'
 
   company_selection:
     issue: 266
@@ -32,9 +32,10 @@ critical_paths:
     branch: codex/266-company-selection
     head: a75f31a2761ffe0afcbf067425eb8324789b3554
     state: done
-    next: "266/267 delivered after full frozen review and exact PR/main8 SQL/OIDC/Chromium gates. Invites/role administration/customer/production remain."
+    next: 'Company selection266/PR267 accepted on main. Preserve exact current company/session privacy fences while qualifying the complete production product; no open company-selection implementation lease.'
 
 recent_authoritative_merges:
+  - 'PR287/repair286 and issue277 accepted main2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd: frozen608/full review6096552286; main independent receipt6096704767. Build38044971534/Gov38044971530/all8/actual114192556176/quality114195330891 SUCCESS. All80 required markers,136 PASS,2027.NET/1334web and six ORIGINAL images11667314210 checked independently.277 CLOSED. Native application/literal pending broker restart and Core202/historical strict original receipts PASS. Earlier aeb failure cause unproven.278/279/model/customer/full233 remain outstanding.'
   - 'PR281 requirement correction deliveredmain1b0b7c53273a9405ff8d60b9c1976c6f6cc34519 after full13-doc review6088335989 and byte-equal accepted integration38c3. Exact main Build37985845222/Gov37985845186/all8/actual114007505342/quality114011846100 PASS; plan only, no group feature delivered. Source messages automatically create SQL notes and notify separately configured internal IT destinations; no per-item human approval or customer output.'
   - 'PR274/issue272 deliveredmain09b7d36b23b554fcaa2b3534ddc6faa166cac651 at2026-10-09T19:46:10Z. Full frozen shipping6087833026/final6docs6087900218 approved. FinalPR f3cf3cc7eb8daa2737473f67d298b86858ee00c1 Build37980837971/Gov37980837996/all8/actual113990625301/quality113994648735 PASS. Main Build37982478564/Gov37982478631/all8/actual113996168399/quality114000211598 PASS;1287.NET/1276web. All15 queued/four finalprivate reads and actual receipt-loss/reload/newSID/isolation/revoke-restored Chromium passed; root inspected all4images11641407860.272 CLOSED; full233 remains.'
   - 'PR280 docs-only plan mergedmain9155b987d028ad097e36b5cfebdc2ee8efe6fcb5 after independent exact9bc review6085798484 and all8 PR/main gates. Main Build37965672759/Gov37965672896/actual113939282835/quality113942077440 PASS. Customer group intake275-279 is an unimplemented priority track; do not close those issues or claim feature acceptance.'
@@ -80,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: 'Own286 original restored-source receipt reader after merged285/mainaeb terminal Chromium failure. Local36 Node controls PASS including13 actual historical caller/reader positive/refusals; status202/operation/fingerprint/worker/one graph and existing20s/4096/UTF8 policy unchanged. Freeze/review/push one Draft and close renewed exact PR/main all8/native/Chromium.277 remains OPEN; private278 design/proposed120 primary40 independent labels are unevaluated preparation only. After accepted277/main implement278 automatic SQL brain/notes then279 IT reporter; full233 ACTIVE.'
+next_action: "Draft288 exact remoteb3c7dfb1637f83b8a85032640bbf43503f220fb0 CLOSED_RED Build38112203893/native114389913437/quality114395898042; Gov38112203900SUCCESS; six prerequisites/GovSUCCESS and ROOT full.NET3450PASS6_520_25_2899 noFailSkip SHA256a1511a1bb7cdffa361befcfc4a39bd004705eeb53a8c88ee59b7973ecb3e4d31. ROOT full80405 native SHA256fb1a939fb66bfd580419e32fae768dcc5bacc3c5f49484a02a25f59f2c59cca1 parsed98of117once150PASS19missing3failure; fullquality/all8/Gov closed, no browser artifact. Bounded indexed40char GUID frame repair prepared150coldPASS+actualSQL160parse; five-path FULL source review pending. Historical6ce6e11 ten-path review also pending. Consume full independent receipts then push same288 and own fresh exact-head117/.NET/all8/Gov/quality/six original images; fix any terminal failure on same branch, no blind rerun. All source receipts87_6105354729/ec_6105464632/finalb3_6105493237 ROOT_FULL consumed. New terminal SQL remains NOT_RUN_UNQUALIFIED until full native receipt. Historical691 full116/3352NET/all8/Gov/quality/originalsix CLOSED at four one-contributor/two-selected/zero-brain scope; prior464 red/676 history preserved. New signed frontier metadata integrity primitive38new+7keys+39frontier=84PASS noFailSkipWarnings/twoformat, eae1bee five-path FULL source APPROVED6105654903 ROOTFULL4563 SHA256b9ff4cced532c44633c60b5ca2f15c0001bba925c72c13c6086c7d47de5ffb0d independent100PASS84retained_new16reviewer/twoformat; excluded fromb3 runtime. New distinct historical original graph/receipt metadata50new253retained=303PASS/sevenformat prepared; ten-path FULL source review pending, no historical SQL/advance/DI authority. Implement immutable signed sequential predecessor schema/latest-leaf cursor fence and historical existing-terminal graph/current Extract bookkeping, outsideSQL retained keys and atomic actualreadback; lastBatch alone cannot prove prefix and old currentdependencies cannot strand genuine terminal after crash/edit/rotation. Continue nonemptybrain/multiplecontributor/owninput/races/gap-retry/DI/no-click. ExistingGateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -806,3 +807,1639 @@ group_connector_c619_full_approval:
   receipt: 6095552242
   scope: 'Full frozen core277 APPROVED after independent exact all8/Gov/actual/quality,2027.NET/1334web incl20 actual Redis, current native/Chromium logs and all six original artifact11664207582 images. Literal pending persistent RabbitMQ restart and strict same-snapshot/final SQL graph closes sole full542 gap. No additional concrete core277 blocker.'
   remaining: 'Accurate final doc-only review, approved final push and exact finalPR/main gates before integration. Live provider/account/production volume,278/279/installer239/readonly customer ERP/deployment/full233 remain active.'
+
+# Latest root-owned issue278 implementation frontier; earlier checkpoints remain historical evidence.
+group_278_durable_allocation_checkpoint:
+  parent_head: 22677f97afbf8e37d65d230440c57e0b99b13540
+  parent_review: 6097021504
+  parent_build: 38048764985
+  parent_build_attempt: 2
+  parent_build_state: all8_success_after_one_docker_image_preparation_retry
+  parent_governance: 38048764960
+  local_store_model_ingress_guard_controls: 83
+  local_python_owned_guard_controls: 49
+  migration: AddGroupBatchAllocation
+  native_allocation_modes: implemented_not_executed
+  automatic_sql_notes_delivered: false
+  model_evaluation: UNEVALUATED
+  next: 'Freeze and independently review SQL allocation checkpoint before push; close exact CI/native modes, then fenced claims/scoped current-head brain/notes/atomic outbox and actual model evaluation. Keep278/279/full233 active.'
+
+group_278_allocation_cleanup_repair:
+  reviewed_initial_local_head: c2fa8d63eb6fd37d2dd17afc64444648c39f6eed
+  finding: 'Independent native owned-child cleanup early poll/kill/drain failures skipped later closure steps; no shipping SQL defect inferred.'
+  repair: independently_guarded_partial_stdin_poll_inspected_kill_drain_secondary_inspected_kill_final_bounded_drain_preserve_first_error
+  local_python_controls: 49
+  local_store_and_retained_controls: 83
+  parent_actual: 114204499774
+  parent_quality: 114207355042
+  parent_native_required_markers: 80
+  parent_native_missing_markers: 0
+  parent_native_pass_lines: 136
+  parent_dotnet_tests: 2130
+  parent_browser_artifact: 11669336235
+  parent_browser_root_original_images_inspected: 6
+  state: repaired_source_awaiting_frozen_independent_review
+  next: 'Independently review repaired combined checkpoint before push; own new exact SQL CI/native modes, then claims/brain/notes/outbox. Actual model evaluation/278 acceptance/279/full233 remain incomplete.'
+
+group_278_claim_checkpoint:
+  parent_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
+  parent_scoped_review: 6097301006
+  parent_build: 38050984824
+  parent_actual: 114209890966
+  parent_governance: 38050984773
+  state: local_verified_pending_frozen_review_and_native_execution
+  focused_dotnet_controls: 120
+  owned_python_controls: 49
+  actual_unowned_executable_refusals: 6
+  migration: AddGroupBatchClaims
+  native_claim_modes: implemented_UNEXECUTED
+  automatic_sql_notes_delivered: false
+  model_evaluation: UNEVALUATED
+  next: 'Own parent CI; freeze/review claim checkpoint before approved push. Native SQL claims/brain/notes/atomic outbox/automatic DI/UI/model evaluation/full278/279/233 remain.'
+
+group_278_expiry_repair_checkpoint:
+  withheld_head: 88cb2709401940f26840e706ba053e37d0b22afc
+  blocker: cross_call_expired_nonce_and_public_handle_revive_after_wall_clock_rollback
+  state: repair_local_verified_pending_frozen_independent_review
+  original_independent_counterexamples: 2_retained_unchanged_pending_reexecution
+  final_focused_dotnet_controls: 133
+  claim_controls: 45
+  full_persistence_before_final_old_receipt_guard: 1661
+  final_old_receipt_guard: covered_by_final_focused_controls
+  owned_python_controls: 49
+  actual_unowned_claim_entry_refusals: 6
+  migration: AddGroupBatchClaimExpiryFence
+  behavior: immutable_first_committed_expiry_witness_per_epoch_original_nonce_never_renews_typed_no_allocation_expired_verdict_guarded_retirement
+  internal_effect_consumer_and_savepoint_wrapper: NOT_IMPLEMENTED_requires_native_staged_effect_rollback_proof_with_first_consumer
+  claim_native_execution: UNEXECUTED
+  parent_allocation_head: a50a2f33a0d2b2ec37baaf938d962b0954ce1ed9
+  parent_build: 38050984824
+  parent_governance: 38050984773
+  parent_actual: 114209890966
+  parent_quality: 114213245644
+  parent_exact_all8: SUCCESS
+  parent_required_markers: 84
+  parent_pass_lines: 140
+  parent_dotnet_tests: 2166
+  parent_browser_artifact: 11669194893
+  parent_browser_original_images_root_inspected: 6
+  automatic_sql_notes: incomplete
+  actual_model_evaluation: UNEVALUATED
+  next: 'Freeze/review expiry repair; unchanged2 independent probes must PASS before approved push and renewed native SQL closure. Continue protected service brain and owned effect rollback wrapper, notes/outbox/DI/UI/actual frozen model qualification;278/279/233 stay ACTIVE.'
+
+group_278_source_reader_checkpoint:
+  remote_head: 3a781a4a7c483ae53416dd44ba53f831aa9e656a
+  remote_scoped_review: 6097772273
+  remote_build: 38054218369
+  remote_governance: 38054218293
+  remote_actual: 114219254243
+  remote_quality: 114223100040
+  remote_state: FAILED_claim_crash_namespace_PID1_fixture
+  remote_dotnet_tests: 2212
+  remote_browser_artifact: NONE_native_failed_before_browser
+  local_state: source_reader_and_PID1_repair_verified_pending_frozen_review
+  local_full_persistence_tests: 1697
+  local_source_reader_controls: 32
+  local_process_guard_controls: 4
+  local_owned_python_controls: 52
+  actual_unowned_claim_source_entry_refusals: 11
+  native_source_modes: 5_implemented_UNEXECUTED
+  protected_context_effects: metadata_only_expiry_witness_no_business_writes
+  future_note_effect_rollback_wrapper: NOT_IMPLEMENTED_native_staged_rollback_MARS_gate_required
+  ai_gateway_configuration: existing_worker_environment_loader_required_primary_values_absent_in_checked_scopes_and_default_files_server_access_unknown
+  actual_model_evaluation: UNEVALUATED
+  automatic_notes_and_DI: incomplete
+  next: 'Freeze/review combined source/PID1 repair checkpoint; push only approved source and own all renewed exact-head CI/native gates. Then scoped same-group notes/glossary, grounded bounded qualified context/secret quarantine, atomic notes/evidence/disposition/completion/NotesCommitted, automatic DI/UI and actual frozen model evaluation.278/279/full233 stay ACTIVE.'
+
+group_278_quarantine_checkpoint:
+  remote_head: 686d42ee432b27cf246636c7cf734a6a5a580cad
+  remote_scoped_review: 6098102773
+  remote_build: 38056772338
+  remote_governance: 38056772438
+  remote_actual: 114226761326
+  remote_state: FAILED_retained_listener_original_ACK_before_new_claim_source_modes
+  local_state: cecee_review_WITHHELD6098304670_decoded_assignment_P2_repaired_locally_pending_renewed_review
+  policy: group-secret-quarantine-v1
+  local_policy_controls: 49
+  local_source_preparation_controls: 6
+  retained_source_reader_controls: 32
+  local_combined_focus: 87
+  local_full_persistence: 1752
+  native_positive_preparation_assertion: UNEXECUTED
+  secret_detector_scope: conservative_bounded_known_forms_NoMatch_not_secret_free_proof
+  provider_candidates: host_evidence_ID_revision_kind_UTC_original_nonquarantined_text_no_raw_external_identifiers
+  actual_provider_call_or_model_outputs: NONE_UNEVALUATED
+  worker_notes_effects_or_DI: incomplete
+  next: 'Close exact686 CI before a later approved push. Review frozen quarantine/source-preparation checkpoint, then qualified context and grounded proposals, protected same-group SQL notes/glossary, native note-effect rollback/MARS proof, atomic notes/evidence/dispositions/completion/NotesCommitted, worker DI/UI and actual frozen100/30 model evaluation.278/279/full233 stay ACTIVE.'
+
+
+group_278_quarantine_listener_repair:
+  remote_head: 686d42ee432b27cf246636c7cf734a6a5a580cad
+  remote_build: 38056772338
+  remote_actual: 114226761326
+  remote_quality: 114229033166
+  remote_governance: 38056772438
+  remote_state: FAILED_retained_listener_original_ACK_expected200_got403_six_prerequisites_and_governance_SUCCESS
+  native_claim_source_or_browser_acceptance: NONE_new_modes_not_reached
+  failure_expiry_cause: UNPROVEN_original_deadline_not_logged
+  withheld_local_head: cecee2117b4b761e92d3cb1e6a3baf02c206514a
+  withheld_review: 6098304670
+  finding: decoded_JSON_name_value_separation_loses_supported_credential_assignment
+  unchanged_original_counterexamples: 5_retained_now_PASS_locally
+  repair: decoded_assignment_inspection_and_explicit_foreground_fixture_renewals_outside_unchanged_graph_windows
+  production_listener_duration: unchanged_30seconds
+  original_replay_and_negative_graph_oracles: retained
+  fresh_expiry_denial_timing: one_SQL_server_snapshot_expired_original_live_same_owner_epoch_signed_age_below90s_margin
+  local_policy_and_counterexample_controls: 65
+  local_preparation_controls: 6
+  retained_source_controls: 32
+  local_focused_controls: 103
+  local_full_persistence: 1768
+  local_python_controls: 56
+  state: local_verified_pending_frozen_independent_review_and_renewed_native_CI
+  native_preparation_positive: UNEXECUTED
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  automatic_notes_effects_and_DI: incomplete
+  next: 'Freeze combined repair and require unchanged5 independent counterexamples plus retained oracles/review closure before approved push; own exact renewed all8/native claim/source/browser CI. Continue grounded qualified context/protected notes/effect retirement rollback/glossary/dispositions/completion/outbox/DI/UI;278/279/full233 stay ACTIVE.'
+
+
+group_278_grounded_proposal_checkpoint:
+  remote_head: 2199a508738bf43d952688a6d394a726af6b2160
+  remote_scoped_review: 6098494666
+  remote_build: 38059643216
+  remote_actual: 114235105757
+  remote_governance: 38059643200
+  remote_state: terminal_RED_native_and_quality_six_prerequisites_and_governance_SUCCESS
+  remote_quality: 114239125705
+  root_required_markers_passed: 73
+  root_required_markers_total: 93
+  root_native_pass_lines: 124
+  root_native_failure_markers: 4
+  runtime_failure: source_reader_container_identity_assertion634
+  returned_inspect_bytes: NOT_CAPTURED_unique_runtime_cause_UNPROVEN
+  repair: both_owned_name_lookups_require_container_type_full_ID_label_checks_retained
+  exact_hosted_dotnet_root_verified: 2319
+  source_native_and_preparation_acceptance: WITHHELD_terminal_RED_no_browser_artifact
+  local_state: combined_grounded_proposal_and_native_fixture_repair_pending_frozen_independent_review
+  withheld_predecessor: 787646f6ddcef8cce35f82fb7b14b3b4a0d29bb7
+  withheld_receipt_root_fully_fetched: 6098710405
+  repaired_invariant: needs_clarification_requires_at_least_one_missing_field
+  retained_original_reviewer_controls: 5
+  local_python_controls: 58
+  format: group-work-proposal-v1
+  local_new_controls: 41
+  local_full_persistence: 1814
+  output_utf8_bytes: 64000
+  maximum_notes: 20
+  maximum_total_evidence: 100
+  grounding: exact_current_prepared_host_ID_revision_original_literal_quotes_candidate_dispositions
+  model_authority: NONE_IT_status_SLA_assignee_destination_scope_forbidden
+  customer_deadline: literal_evidenced_wording_not_IT_commitment
+  inferred_text: explicitly_AI_interpretations_literal_matching_not_semantic_proof
+  gateway_test: actual_existing_adapter_with_synthetic_HTTP_response_not_actual_model_evaluation
+  future_effect_or_release_authority: NONE_separate_current_dependency_live_claim_fences_required
+  notes_persistence_or_DI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Freeze combined same288 repair, independently rerun original5 controls and full changed scope before approved push; own renewed exact all93/all8/browser closure. Continue protected same-group brain and qualified context, effect rollback/retirement/native MARS gate, atomic notes/evidence/dispositions/completion/NotesCommitted, worker DI/UI and real frozen model evaluation.278/279/full233 remain ACTIVE.'
+
+
+group_278_brain_content_protection_checkpoint:
+  remote_head: c8b67775c91822ef9f0e28e2a3651669002d5641
+  scoped_review_root_fully_fetched: 6098786534
+  build: 38061609455
+  actual: 114240837316
+  governance: 38061609472
+  remote_state: terminal_RED_browser_six_prerequisites_and_governance_SUCCESS
+  exact_native_acceptance: WITHHELD_root88_of93_browser_ABORTED_no_artifact
+  local_state: c2d47c85f6d5c89cdde241d4be6f69391f96e1dc_scoped_APPROVED_6098855148_root_fully_fetched_UNPUSHED
+  primitive_review_root_fully_fetched: 6098855148
+  new_controls: 8
+  focused_controls_including_retained_source: 13
+  maximum_clear_utf8_bytes: 64000
+  maximum_envelope_bytes: 64029
+  purpose: distinct_brain_request_revision_and_glossary_revision_AES256_GCM
+  authenticated_coordinates: full_source_scope_kind_record_revision_source_version_deletion_generation_keyID
+  key_resolution_and_authority: NONE_primitive_only_reuse_existing_scoped_provider_in_future_store
+  notes_schema_store_effects_release_DI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Own exactc8 CI terminal/all93/all8/original images; freeze/review content primitive without next push before closure. Implement versioned scoped protected notes/glossary and store-owned effect rollback/expiry retirement, qualified context/DI/UI and actual frozen model qualification.278/279/full233 ACTIVE.'
+
+
+group_278_work_schema_and_document_observation_checkpoint:
+  parent_local_head: c2d47c85f6d5c89cdde241d4be6f69391f96e1dc
+  remote_head: c8b67775c91822ef9f0e28e2a3651669002d5641
+  build: 38061609455
+  actual: 114240837316
+  quality: 114245095778
+  governance: 38061609472
+  remote_state: terminal_RED_browser_original_restored_receipt_ABORTED
+  six_prerequisites_and_governance: SUCCESS
+  root_hosted_dotnet_passed: 2365
+  root_hosted_dotnet_skipped: 0
+  root_native_markers_exact_once: 88
+  root_native_markers_required: 93
+  root_native_pass_lines: 144
+  root_native_failure_markers: 3
+  source_held_key_revocation_and_expiry_actual: PASS
+  browser_artifact: NONE
+  browser_abort_product_cause: UNPROVEN
+  browser_observation_repair: guarded_reinstall_after_new_CodeS256_document_and_issued_SID_fence
+  strict_original_receipt_body_scope_worker_graph_oracles: retained
+  browser_helper_controls: 26
+  schema_tables: 10
+  migration: 20261010150902_AddGroupWorkNotes
+  full_local_persistence_passed: 1831
+  full_local_persistence_skipped: 0
+  python_guard_controls: 61
+  ef_model_drift: NONE
+  new_schema_actual_sql: NOT_RUN
+  frozen_independent_review: APPROVED6099239328_root_fully_fetched_pushed1be
+  renewed_native_required_markers: 94
+  private_reader_note_store_effect_rollback_raw_completion_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Review frozen whole changed scope, retain original independent controls, push approved exact checkpoint only. Own renewed all94/native/all8/six original images and fix SAME288 terminal failures; continue first effect consumer source-lock/savepoint rollback/expiry witness/native MARS, scoped current brain/context/notes/outbox/automatic DI/UI and frozen real100/30 model qualification.278/279/full233 remain ACTIVE.'
+
+
+group_278_current_brain_reader_checkpoint:
+  remote_head: 1be34eef2124a74a5cd496fe486416ebdf79814d
+  scoped_schema_review_root_fully_fetched: 6099239328
+  build: 38064795318
+  actual: 114250149831
+  governance: 38064795319
+  remote_state: IN_PROGRESS_native_six_prerequisites_and_governance_SUCCESS
+  required_native_markers: 94
+  exact_native_acceptance: UNVERIFIED_pending_all94_all8_six_original_browser_images
+  local_state: current_private_reader_pending_frozen_review
+  new_reader_controls: 41
+  full_local_persistence_passed: 1872
+  full_local_persistence_failed: 0
+  full_local_persistence_skipped: 0
+  maximum_selected_kind_record_pairs: 20
+  maximum_aggregate_envelope_bytes: 256000
+  resolver_lifetime: bounded_two_minutes_outside_SQL_late_material_disposal
+  dependency_fences: sealed_live_claim_current_Extract_head_revision_cipher_business_glossary_evidence_winning_source
+  expiry: read_only_witness_commit_before_denial_no_effect_writes
+  opaque_payload_semantics_relevance_selection_tokenizer_future_release: incomplete
+  actual_native_brain_read: NOT_RUN
+  note_store_effect_rollback_raw_completion_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Own exact1be CI terminal and repair SAME288 if red; independently review frozen private reader before approved later push. Implement actual native brain reads and closed qualified context/tokenizer, first owned note-effect rollback/expiry witness/native MARS, atomic notes/evidence/raw coverage/completion/outbox and automatic DI/UI plus frozen real100/30 model eval.278/279/full233 remain ACTIVE.'
+
+
+group_278_reader_repair_checkpoint:
+  remote_head: 1be34eef2124a74a5cd496fe486416ebdf79814d
+  build: 38064795318
+  governance: 38064795319
+  actual: 114250149831
+  quality: 114254406235
+  remote_all_eight_and_governance: SUCCESS
+  root_full_native_log_required_exact_once: 94
+  root_full_native_log_pass_lines: 150
+  root_full_native_log_failure_markers: 0
+  root_full_hosted_dotnet_passed: 2382
+  root_full_hosted_dotnet_failed: 0
+  root_full_hosted_dotnet_skipped: 0
+  original_browser_artifact: 11674668995
+  root_original_browser_images_inspected: 6
+  schema_native_checkpoint: verified_only
+  rejected_reader_head: d8fa37da1442baf4220fb211687721d7473cfbf1
+  withheld_reader_review_root_fully_fetched: 6099513302
+  original_counterexamples: actual_public_selection_21_despite_Count1_and_extracted_final_permission_await_expiry
+  repairs: bounded_Take21_copied_aggregate20_before_SQL_keys_and_work_proof_before_final_claim_verdict
+  frozen_repaired_reader_review: APPROVED6099559192_root_fully_fetched_pushed_b195
+  full_repaired_local_persistence_passed: 1880
+  full_repaired_local_persistence_failed: 0
+  full_repaired_local_persistence_skipped: 0
+  native_brain_read: NOT_RUN
+  note_effect_raw_completion_DI_UI: incomplete
+  model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Freeze and independently review repaired private reader before push; continue native brain read and first owned effect rollback/witness-only expiry/native MARS, qualified context/tokenizer, atomic notes/raw completion/outbox and automatic DI/UI.278/279/full233 ACTIVE.'
+
+
+group_278_native_brain_read_preparation:
+  remote_head: b195e2e4d87ada379c43aad68dd7b08502015e14
+  repaired_reader_review_root_fully_fetched_before_push: 6099559192
+  build: 38066869303
+  governance: 38066869297
+  actual: 114256181577
+  remote_state: IN_PROGRESS_six_prerequisites_and_governance_SUCCESS
+  local_native_proof_review: PENDING
+  local_brain_guard_controls_passed: 79
+  local_python_controls_passed: 64
+  actual_unowned_entry_modes_refused_before_config: 7
+  changed_native_read_execution: NOT_RUN
+  new_native_brain_markers: 3
+  required_future_native_markers_exact_once: 97
+  fixture: operator_synthetic_protected_six_rows_new_monotone_epoch4_original_three_receipts_unchanged
+  key_reader: existing_ConfiguredGroupSourceKeyProvider_outside_SQL
+  clear_key_and_payload_log_export: forbidden
+  note_effect_raw_coverage_completion_DI_UI: incomplete
+  model_evaluation: NOT_RUN_UNEVALUATED
+  next: 'Own b195 exact CI; freeze/review prepared native brain controls before approved later push. Continue closed qualified context/tokenizer and first owned effect rollback/witness-only expiry/native MARS, atomic notes/raw completion/outbox and automatic DI/UI.278/279/full233 ACTIVE.'
+
+group_278_closed_brain_payload_checkpoint:
+  remote_head: 0201fc5e53b3d9d96d655faa077330ca12732629
+  scoped_native_preparation_review_root_fully_fetched_before_push: 6099748082
+  build: 38068576171
+  governance: 38068576300
+  governance_state: SUCCESS
+  actual: 114261152085
+  native_state: PENDING
+  web_job: 114261152125
+  web_state: terminal_RED_future_transaction_wall_clock_test_race
+  web_repair: scoped_Date_only_freeze_original_401_no_claim_oracles_retained_production_unchanged
+  parent_b195_all_eight_and_governance: SUCCESS
+  parent_b195_root_native_exact_once: 94
+  parent_b195_root_native_pass_lines: 150
+  parent_b195_root_native_failure_markers: 0
+  parent_b195_root_hosted_dotnet_passed: 2431
+  parent_b195_root_hosted_dotnet_failed: 0
+  parent_b195_root_hosted_dotnet_skipped: 0
+  parent_b195_original_browser_artifact: 11675436987
+  parent_b195_root_original_images_inspected: 6
+  local_focused_payload_controls_passed: 38
+  local_full_persistence_passed: 1918
+  local_full_persistence_failed: 0
+  local_full_persistence_skipped: 0
+  closed_private_formats: group_brain_ai_note_v1_and_group_brain_glossary_v1
+  actual_original_source_semantics_qualified_context_tokenizer_provider_effects: NOT_QUALIFIED
+  frozen_payload_and_web_test_review: PENDING
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  required_native_markers_exact_once: 97
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_locked_dependency_preparation:
+  remote_head: 0201fc5e53b3d9d96d655faa077330ca12732629
+  local_parent: e0c51aa7d9c0ad674563a74a9f59428d633c2a5b
+  selected_public_reader_behavior: retained_original_fences_and_private_metadata_checks
+  internal_sql_entry: Serializable_savepoint_supported_clean_tracker_sealed_context
+  internal_expired_result: observation_only_no_write_or_commit
+  focused_relevant_controls_passed: 175
+  focused_relevant_controls_failed: 0
+  focused_relevant_controls_skipped: 0
+  new_nonSql_missingSqlTransaction_current_expired_refusals: 4
+  actual_internal_native_read_effect_rollback_savepoint_retention_MARS: NOT_QUALIFIED
+  independent_frozen_review: PENDING
+  first_owned_effect_store: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_no_work_consumer_preparation:
+  remote_head: 0201fc5e53b3d9d96d655faa077330ca12732629
+  local_parent: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  codec_scoped_approval_root_fully_fetched: 6099923155
+  locked_dependency_scoped_approval_root_fully_fetched: 6099975987
+  prepared_consumer: fixed_selected_model_NoWork_receipt_and_dispositions
+  savepoint_order: source_lock_before_savepoint_flush_then_final_dependencies
+  expired_final_verdict: rollback_detach_then_witness_only_retirement_and_denial
+  supported_storage: SQL_Server_only_MARS_refused_before_open_actual_savepoint_required
+  actual_entry_refusals_passed: 8
+  full_local_persistence_passed: 1930
+  full_local_persistence_failed: 0
+  full_local_persistence_skipped: 0
+  native_effect_commit_rollback_lock_retention_MARS: NOT_QUALIFIED
+  independent_frozen_consumer_review: PENDING
+  protected_notes_host_attention_raw_completion_outbox_DI_UI: incomplete
+  real_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_no_work_native_preparation:
+  remote_head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  build: 38070427348
+  governance: 38070427346
+  governance_state: SUCCESS
+  actual: 114266525657
+  native_state: PENDING
+  parent_0201_native: SUCCESS_root_97exactonce_153PASS_0failure
+  parent_0201_hosted_dotnet_passed: 2431
+  parent_0201_original_browser_artifact: 11676735449
+  parent_0201_root_original_images_inspected: 6
+  parent_0201_overall: RED_original_OIDC_wallclock_race_and_quality_dependency
+  scoped_codec_review_root_full_fetched: 6099923155
+  scoped_locked_review_root_full_fetched: 6099975987
+  scoped_consumer_review_root_full_fetched: 6100082455
+  local_consumer_parent: 7335b34f02734988f4197f3a7874d260e9be62d6
+  consumer_independent_controls_passed: 193
+  root_full_persistence_passed: 1930
+  root_full_persistence_failed: 0
+  root_full_persistence_skipped: 0
+  native_preparation_build_warnings: 0
+  native_preparation_build_errors: 0
+  actual_unowned_modes_refused_before_configuration: 3
+  retained_python_guard_controls_passed: 64
+  native_NoWork_effects_rollback_lock_retention_replay_MARS: NOT_RUN_UNQUALIFIED
+  native_checkpoint_independent_frozen_review: PENDING
+  new_fixed_actual_NoWork_markers: 2
+  required_future_native_markers_exact_once: 99
+  protected_notes_attention_raw_completion_outbox_context_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_broker_observation_lifetime_repair:
+  remote_head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  build: 38070427348
+  governance: 38070427346
+  governance_state: SUCCESS
+  actual: 114266525657
+  required_quality: 114269539108
+  build_native_quality_state: terminal_RED_original_reference_snapshot_undercount
+  observed_ack_delivery_consumers: 1_2_1
+  retained_expected_ack_delivery_consumers: 2_3_1
+  underlying_cause: UNPROVEN
+  root_native_full_log_pass_lines: 111
+  root_native_missing_required_markers: 37
+  root_native_terminal_failure_markers: 8
+  downstream_reader_brain_browser: NOT_RUN
+  current_browser_artifact: NONE
+  six_prerequisites: SUCCESS
+  root_hosted_dotnet_passed: 2473
+  root_hosted_dotnet_failed: 0
+  root_hosted_dotnet_skipped: 0
+  held_channel_new_exact_before_kill: 0_1_1
+  replay_channel_new_exact_before_disposal: 1_2_1
+  observation_bound_seconds: 30
+  original_handler_bound_seconds: 10
+  original_restart_and_Rabbit_graph_oracles: retained_exact
+  shipping_source_apps_schema_workflows: unchanged_by_repair
+  local_decoder_controls_passed: 12
+  local_python_controls_passed: 65
+  local_actual_NoWork_unowned_guard_modes_passed: 3
+  consumer_scoped_approval_root_full_fetched: 6100082455
+  native_preparation_scoped_approval_root_full_fetched: 6100158811
+  repair_independent_frozen_review: PENDING
+  renewed_actual_native_acceptance: NOT_RUN_UNQUALIFIED
+  required_future_native_markers_exact_once: 99
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  protected_notes_attention_raw_completion_context_outbox_DI_UI: incomplete
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_protected_note_consumer_preparation:
+  remote_head: 0b68cae7ecfa9b342bc592cb96a8a8c9155d17f4
+  remote_build: 38070427348
+  remote_actual: 114266525657
+  remote_state: terminal_RED_original_reference_counter_undercount_cause_UNPROVEN
+  local_broker_repair_parent: 450738eab84591e121e091927f010af9edfe1f9c
+  broker_repair_frozen_review: pending_receipt_root_fetch
+  prepared_store: fixed_protected_new_requests_revisions_literal_evidence_dispositions_atomic_NotesCommitted
+  operation_identity: scope_batch_operation_and_ordinal_metadata_only_deterministic
+  key_resolution: existing_scoped_source_key_provider_outside_SQL_bounded_late_disposal
+  preflight_and_effects: pinned_Serializable_fresh_exact_source_brain_authority_claim
+  savepoint_order: transaction_source_lock_then_savepoint_then_flush_then_final_fences
+  expired_final_verdict: rollback_all_staged_effects_detach_clean_tracker_witness_only_commit_and_denial
+  replay: exact_original_protected_revision1_evidence_dispositions_outbox_items_and_original_ids_timestamp
+  confirmed_IT_existing_requests: never_written_or_reset_by_consumer
+  initial_business_status: New_or_NeedsClarification_missing_fields_or_unverified_relation
+  actual_entry_controls_passed: 13
+  root_full_current_persistence_passed: 1955
+  root_full_current_persistence_failed: 0
+  root_full_current_persistence_skipped: 0
+  changed_format_build_and_diff: PASS
+  note_checkpoint_independent_frozen_review: PENDING
+  native_protected_writes_replay_flush_rollback_expiry_key_rotation_history: NOT_RUN_UNQUALIFIED
+  host_attention_raw_coverage_completion_context_automatic_DI_UI: incomplete
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_protected_note_native_preparation:
+  current_remote_head: 450738eab84591e121e091927f010af9edfe1f9c
+  current_build: 38072401233
+  current_native: 114272345912
+  current_governance: 38072401239
+  current_state: native_IN_PROGRESS_six_prerequisites_and_governance_SUCCESS
+  current_scope_review: APPROVED6100312871_root_FULL_fetched_before_exact_push
+  current_scope_required_markers: 99
+  local_store_head: ddac10daeedbeeae9fce12e4be0d22c80099d96b
+  local_store_review: APPROVED6100428398_root_FULL_fetched
+  local_store_independent_focused_controls: 67_PASS_zero_failures_skips
+  local_native_preparation: build0W0E_65Python_three_note_guards_three_NoWork_guards_PASS
+  prepared_note_modes: epoch7_flush11_rollback_epoch8_key_await_expiry_epoch9_protected_commit_exact_replay
+  original_claim_receipts_and_source_NoWork_graphs: immutable_full_hashes_preserved
+  SQL_observation: actual_effect_queries_and_exclusive_source_APPLOCK_before_savepoint_after_rollback
+  key_provider: existing_configured_scoped_source_provider_outside_SQL
+  direct_internal_key_disposal_qualification: NOT_QUALIFIED_no_visibility_widening
+  proposed_note_scope_required_markers: 102
+  prepared_native_note_execution: NOT_RUN_UNQUALIFIED
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  host_attention_raw_completion_context_tokenizer_automatic_DI_UI: incomplete
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_note_oracles_and_statistics_child_repair:
+  failed_remote_head: 450738eab84591e121e091927f010af9edfe1f9c
+  build: 38072401233
+  native: 114272345912
+  quality: 114275847815
+  governance: 38072401239
+  remote_state: terminal_RED_six_prerequisites_and_governance_SUCCESS
+  root_full_native: 106PASS_44missing_required99_4terminal_failures_noartifact
+  root_full_dotnet: 2493_projects6_520_25_1942_zero_failures_skips
+  failed_phase: first_held_child_statistics_nonzero_actual_stderr_exit_not_captured
+  code_conflict: held_and_concurrent_statistics_same_docker_name
+  repair: distinct_validated_statistics_name_all_other_owned_arguments_preserved
+  frozen_note_preparation: 33a46570192a3d758c15ba585d1c296cb58b5a79
+  note_preparation_review: WITHHELD6100516983_root_FULL_fetched
+  proof_P2_repairs: armed_key_expiry_stage_flush_savepoint_rollback_and_full_new_graph_after_each_replay_refusal
+  root_actual_probe_graph_controls: 11_PASS
+  root_combined_note_entry_and_probe_controls: 24_PASS_zero_failures_skips
+  root_python_controls: 67_PASS
+  actual_unowned_note_and_NoWork_modes: six_PASS_before_configuration
+  production_crypto_visibility: unchanged_only_test_executable_probe_friend
+  prior_store_review: APPROVED6100428398_root_FULL_fetched
+  repaired_checkpoint_review: PENDING
+  required_markers_after_approved_push: 102_all_retained_and_new_exactly_once
+  actual_note_SQL_and_model: NOT_RUN_UNQUALIFIED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_host_attention_payload_preparation:
+  local_parent_head: 884af2a4dcfd446cf152979f253192b4c9d81c9c
+  prior_note_oracle_and_stats_repair_review: PENDING
+  format: group_brain_host_attention_v1
+  interpretation_role: host_metadata_attention
+  reasons: unsupported_media_secret_quarantine_extraction_failed
+  references: one_to_ten_canonical_nonzero_unique_message_ids_positive_revisions_no_quotes
+  quarantine_policy: exact_current_version_only_for_quarantine_others_null
+  private_decoding: existing_strict_UTF8_64KiB_closed_duplicate_name_known_secret_JSON_boundary
+  authority: format_only_no_source_truth_scope_SQL_retry_exhaustion_provider_IT_authority
+  new_host_format_controls: 29_PASS
+  retained_AI_glossary_controls: 38_PASS
+  combined_local_controls: 67_PASS_zero_failures_skips
+  schema_keys_provider_DI_reports: unchanged_no_activation
+  future_schema: versioned_expand_explicit_HostAttention_HostObserved_before_new_writes
+  future_gap_semantics: known_work_still_recorded_honest_partial_coverage_zero_message_gaps_separate_identity
+  frozen_checkpoint_review: PENDING
+  host_SQL_commit_replay_rollback_completion_pipeline: NOT_RUN_UNQUALIFIED
+  actual_model_evaluation: NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_metadata_witness_savepoint_repair:
+  withheld_frozen_head: 884af2a4dcfd446cf152979f253192b4c9d81c9c
+  withheld_review: 6100627326_root_FULL_fetched
+  closed_prior_findings: original_two_note_oracles_statistics_name_lead_next_action
+  reproduced_remaining_P2: actual_EF_automatic_witness_savepoint_false_failure
+  repaired_classification: exact_original_scoped_claim_one_Modified_ExpiryObserved_null_to_exact_expiry_only
+  lock_observation: actual_Exclusive_source_APPLOCK_before_every_metadata_or_effect_savepoint
+  forbidden_key_expiry: clean_effect_savepoint_mixed_foreign_other_fields_stage_flush_rollback
+  new_metadata_classifier_controls: 12_PASS
+  complete_local_probe_graph_classifier_controls: 23_PASS
+  combined_store_entry_and_observer_controls: 36_PASS_zero_failures_skips
+  host_codec_local_head: 7243d6b0a74adb95b8456a062135d28302b614b6
+  host_codec_controls: 67_PASS_29new_38retained
+  combined_native_repair_and_codec_review: PENDING
+  future_required_markers: 102_exactly_once_all_originals_retained
+  native_notes_model_full_278_279_233: ACTIVE_INCOMPLETE_NOT_RUN_UNQUALIFIED
+
+group_278_host_actual_enumeration_repair:
+  combined_review_frozen_head: ccb95b67da713b5daa6e5d1ef71d771272d155f5
+  reproduced_P2: IList_false_Count_1_LINQ_fastpath_dropped_ten_actual_references
+  repair: direct_bounded_foreach_reject_eleventh_actual_item_dispose_no_caller_Count_indexer
+  permanent_new_controls: five_false_advertised_sizes_and_unbounded_sentinel_disposal_PASS
+  host_format_controls: 34_PASS
+  retained_AI_glossary_controls: 38_PASS
+  combined_local_codec_controls: 72_PASS_zero_failures_skips
+  native_witness_observer_and_entry_controls: 36_PASS_zero_failures_skips
+  renewed_combined_source_review: PENDING_before_exact_push
+  frozen_native_required_markers: 102_exactly_once_all99_retained
+  host_SQL_model_full_acceptance: NOT_RUN_UNQUALIFIED_ACTIVE_INCOMPLETE
+
+group_278_host_origin_reader_preparation:
+  source_approved_remote_head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
+  remote_combined_review: 6100743752_root_FULL_before_exact_push
+  exact_build: 38075629274_FAILURE
+  exact_governance: 38075629275_SUCCESS
+  exact_native: 114281880568_FAILURE
+  migration: 20261010182105_AddGroupHostAttentionOrigin
+  operations: replace_only_origin_CK_preserve_exact_old_AI_IT_clauses_add_explicit_host_3_3
+  runtime_rights_and_relationships: unchanged
+  rollback: narrowing_refused_forward_repair_required
+  reader: exact_host_closed_payload_refs_reason_unconfirmed_attention_head_metadata_evidence
+  provenance: request_origin_verification_separate_business_confirmation_null_for_glossary
+  selection: direct_bounded_combined_actual_enumeration_without_IList_Count_indexer_fastpath
+  new_reader_controls: 34_PASS
+  new_migration_controls: 2_PASS
+  complete_reader_model_controls: 240_PASS_zero_failures_skips
+  full_local_persistence: 2048_PASS_zero_failures_skips
+  schema_gates: format_no_pending_model_forward_only_script_YAML2_diff_PASS
+  independent_frozen_review: PENDING_before_later_push
+  native_host_pipeline_model_full_acceptance: NOT_RUN_UNQUALIFIED_ACTIVE_INCOMPLETE
+
+group_278_original_source_enumeration_repair:
+  local_parent_head: bad30f989f5ce7fe1ccad0f460e7a6ec51fb796f
+  original_source_bound: direct_actual_enumeration_preserve_all100_refuse_101_before_keys_dispose
+  new_controls: 4_PASS_zero_failures_skips
+  first_test_failure: incorrect_expected_fixed_error_wording_repaired_rerun_green
+  complete_local_persistence: 2052_PASS_zero_failures_skips
+  migration_review_finding: bad30_executable_UTF8_BOM_CHARSET_gate_reproduced
+  migration_repair: UTF8_without_BOM_LF_no_operation_change
+  full_changed_executable_format: PASS
+  exact_remote_dotnet_log: dfba_114281880418_FULL_root_collected_2563_projects_6_520_25_2012_zeroFailSkip
+  native_current_remote: 114281880568_FAILURE_no_current_SQL_acceptance
+  renewed_combined_frozen_review: PENDING_before_later_push
+  full_278_279_233_model: ACTIVE_INCOMPLETE_NOT_RUN_UNQUALIFIED
+
+group_278_deterministic_host_attention_plan:
+  local_parent_head: ae83e8e095b2f2b1c2367b61b4f1331233cc74ce
+  prior_schema_reader_review: bad30_WITHHELD6100842865_root_FULL_fetched_UTF8BOM_only_repaired_ae83_renewed_pending
+  authority: sealed_preparation_only_readable_media_quarantine_format_metadata_not_effects
+  grouping: canonical_ordinal_GUID_order_per_reason_chunks10_no_truncation
+  semantic_preservation: caption_candidates_quarantine_exclusion_partialgap_knowntext_terminal_recalls_obsolete_changed
+  extraction_failed: unavailable_without_future_durable_bounded_retry_exhaustion_proof
+  source_dispositions: plan_does_not_consume_sources_future_atomic_single_per_message_required
+  new_plan_controls: 9_PASS_zero_failures_skips
+  strong_source_enumeration_controls: 4_PASS_valid_first_ID_overflow_not_foreign_lookup_false_positive
+  combined_focused_controls: 13_PASS_zero_failures_skips
+  prior_full_local_persistence: 2052_PASS_before_plan
+  changed_plan_format_and_YAML_diff: PASS
+  frozen_independent_review: PENDING_before_later_push
+  SQL_key_provider_DI_outbound_activation: none
+  full_278_279_233_model: ACTIVE_INCOMPLETE_NOT_RUN_UNQUALIFIED
+
+group_278_dfba_native_gap_fixture_repair:
+  remote_head: dfba2936c5d9fa42c58b0855717cd6134a7f617e
+  build: 38075629274_FAILURE
+  governance: 38075629275_SUCCESS
+  native: 114281880568_FAILURE
+  quality: 114286293916_FAILURE_upstream_native
+  full_native: root_FULL_130_PASS_23_missing_of_102_4_failure_markers_no_Chromium
+  full_dotnet: root_FULL_2563_6_520_25_2012_zero_failures_skips
+  proven_defect: same_account_listener_expired_gap_retained_by_spool_propagates_to_source_NoWork_preparation_rejects
+  independent_diagnosis: three_actual_reader_listener_policy_gap_controls_and_three_actual_EF_observer_controls_PASS
+  repair: separate_clean_owned_SQL_effect_fixture_after_original_97_oracles
+  listener_provenance: operator_seeded_exact_30s_server_UTC_after_Core_ready_no_Acquire_Renew_or_continuity_claim
+  source_provenance: two_distinct_actual_signed_Core_commits_configured_scoped_key_slot3_preserve0_1_2
+  preparation: actual_inbox_allocation_claims1_3_retirement_existing_protected_brain4_actual_reader_expiry_witness
+  oracles: original_five_effect_aggregates_scope_counts_full_graph_replays_atomic_outbox_retained_all102
+  retained_source: original_source_brain_claims_allocation_account_gap_lease_command_registry_exact_each_phase
+  production_guards: NoWork_and_Note_gap_refusal_reader_any_same_account_gap_unchanged
+  diagnostics: fixed_phase_and_bounded_exit_only_no_raw_child_or_exception_data
+  new_local_controls: 18_PASS_zero_failures_skips
+  current_python_controls: 77_PASS_inert_guards_callbacks_only
+  current_build: zero_warnings_errors
+  full_local_persistence: 2079_PASS_zero_failures_skips
+  unowned_CLI: seven_actual_modes_original_guard_before_stdin_configuration
+  original_oracles: original97_try_prefix_AST_and_all_aggregate_markers_equal_frozen_dfba
+  independent_frozen_review: PENDING_before_push
+  schema_source_review: ae83_APPROVED6100882673_root_FULL_fetched
+  deterministic_plan_review: 9de9_APPROVED6100923911_root_FULL_fetched
+  future_host_native: preserved_in_named_Git_stash_three_unreviewed_files_not_in_repair
+  native_and_actual_model: UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_owned_effect_proof_review_repair:
+  reviewed_head: dd2154505c97f89157215dd79a5d7fb8f46968eb
+  withheld_receipt: 6101233127_root_FULL_fetched
+  receipt_order: actual_ServiceId_CredentialEpoch_Nonce_full_key
+  clean_immutable_baseline: before_child_full_source_cipher_revisions_receipts_gaps_outbox_stable_state_fields
+  comparison: immediate_after_and_every_subsequent_effect_gate
+  allowed_additions: exact_pending_cursor_transition_empty_effect_tables_original_inbox_all_copied_allocation_metadata_claim_prefix
+  new_schema_controls: 5_PASS_actual_EF_relational_model_no_SQL_connection
+  current_python_controls: 81_PASS_inert_callbacks_and_actual_prefix_mutation_oracles
+  retained_full_persistence: 2079_PASS_before_five_new_schema_controls
+  historical_UTF8: four_lines_restored_exact_predecessor9de9_wording
+  original_oracles: original97_try_prefix_AST_and_aggregate_multiset_unchanged
+  renewed_frozen_review: PENDING_before_exact_push
+  native_SQL_and_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_owned_effect_pending_anchor_repair:
+  reviewed_head: 415fe359bf594bb734419ab0e945a1f30f5a789f
+  withheld_receipt: 6101294070_root_FULL_fetched
+  prior_findings: two_P2_and_four_exact_historical_UTF8_restorations_CLOSED
+  demonstrated_assumption: actual_ingress_reanchors_pending_after_source_save_final_authority_latency
+  repair: UTC_nonnull_ordered_pending_at_or_after_commits_full_prestate_frozen_exact_projected_poststate
+  current_python: 81_PASS_inert_actual_prefix_controls_allow_reanchored_anchors
+  focused_dotnet: 7_PASS_six_actual_model_controls_one_retained_actual_public_store_latency_control_zeroFailSkip
+  changed_CSharp_format: VERIFY_PASS
+  original_oracles: original97_try_prefix_AST_and_aggregate_multiset_unchanged
+  renewed_frozen_review: PENDING_before_exact_push
+  native_SQL_and_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_host_brain_native_preparation:
+  parent_source_head: 5ff28553de183458aea4931b66d2d406790c9a25
+  parent_source_review: SCOPED_APPROVED6101335600_root_FULL_fetched_before_exact_push
+  exact_parent_build: 38080032149_in_progress
+  exact_parent_governance: 38080032175_SUCCESS
+  exact_parent_native: 114294879898_in_progress
+  exact_parent_dotnet: 114294879800_in_progress
+  source: preserved_stash_adapted_only_after_original102_clean_effect_scope_epoch9
+  native_proof: actual_claim_replay_source_and_protected_brain_reader_configured_scoped_keys_final_fence
+  reason_provenance: three_synthetic_operator_fixtures_not_production_host_reason_or_retry_truth
+  SQL_origin_control: rolled_back_host3_AIverification1_must_specific547_origin_CK_then_positive_host3_3
+  metadata: closed8192_UTF8_unique_fields_canonical_IDs_strict_bounds_exact_order_cipher_hashes_only
+  graph: ten_operator_rows_no_disposition_outbox_completion_complete_prior_graph_claims_unchanged
+  current_python: 88_PASS_seven_new_pure_fixture_controls
+  current_native_build: zero_warnings_errors
+  actual_unowned_modes: nine_guard_before_stdin_configuration_resources
+  retained_oracles: original_verify_AST_and_all102_markers_plus_one_required_host_aggregate103
+  format: actual_changed_native_CSharp_APPLY_and_VERIFY_PASS
+  frozen_independent_review: PENDING_before_later_push
+  native_SQL_model_pipeline: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE
+
+group_278_combined_automatic_note_plan:
+  local_parent_head: 57776744eb21c1821262a57125a73c200ef31102
+  exact_remote_head: 5ff28553de183458aea4931b66d2d406790c9a25
+  exact_build_native: 38080032149_114294879898_in_progress
+  exact_governance_prerequisites: 38080032175_and_all_six_SUCCESS
+  exact_dotnet: root_FULL_2636_projects6_520_25_2085_zeroFailSkip
+  authority: exact_sealed_preparation_instance_validated_grounded_proposal_existing_fixed_host_plan_only
+  separation: immutable_AI_interpretations_and_host_observations_no_IT_or_destination_authority
+  preservation: all40_bounded_notes_all100_selected_heads_one_planned_receipt_per_source_no_truncation
+  outcomes: Work_with_attention_text_NoWork_with_media_Attention_quarantine_recall_obsolete_changed_retained
+  gaps: flag_preserved_known_work_retained_no_gap_only_completion_or_persistence_authority
+  retry_failure: never_synthesized_without_durable_bounded_exhaustion_proof
+  new_focused_controls: 10_PASS_actual_reader_preparation_parser_synthetic_interpretations_zeroFailSkip
+  first_compile_failure: unavailable_fixture_lease_property_corrected_to_actual_stored_lease
+  format: changed_plan_CSharp_APPLY_and_VERIFY_PASS
+  frozen_independent_review: PENDING_before_later_push
+  SQL_keys_provider_DI_effects: none_existing_consumers_guards_unchanged
+  full_278_279_233_actual_model: ACTIVE_INCOMPLETE_NOT_RUN_UNEVALUATED
+
+group_278_automatic_note_capacity_expansion:
+  source_parent: 57a328cf3c450de86ce9d25ea12926b1cb565a9f
+  source_parent_review: SCOPED_APPROVED6101478951_root_FULL_fetched
+  host_preparation_review: SCOPED_APPROVED6101445392_root_FULL_fetched
+  exact_remote: 5ff28553de183458aea4931b66d2d406790c9a25
+  exact_parent_CI: Build38080032149_native114294879898_active_Gov_and_all_six_prerequisites_SUCCESS
+  exact_parent_dotnet: root_FULL2636_projects6_520_25_2085_zeroFailSkip
+  migration: 20261010194626_ExpandGroupAutomaticNoteCapacity_only_four_bounds20_to40_forward_only
+  other_clauses: exact_original_constraints_preserved_no_columns_keys_rights_data_or_worker_change
+  standalone_AI_consumer: original20_no_media_no_gap_guards_unchanged
+  reader: original20_selected_records_future_complete_bounded_chunks_required
+  cold_model_controls: 12_PASS_two_new_ten_retained_actual_EF_forward_SQL160_snapshot_noFailSkip
+  full_local_persistence: 2097_PASS_zeroFailSkip
+  python_oracles: 91_PASS_three_new_actual_probe_controls_inert_not_SQL_acceptance
+  future_native: twenty_rollback_boundary_cases20_21_40_0_41_specific_CK547_full_graph_unchanged_required104
+  format: actual_changed_CSharp_APPLY_VERIFY_PASS
+  frozen_independent_review: PENDING_before_any_push
+  native_SQL_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_5ff_native_closure_and_combined_writer:
+  exact_parent_head: 5ff28553de183458aea4931b66d2d406790c9a25
+  build_governance: 38080032149_38080032175_SUCCESS
+  native_quality: 114294879898_114299950359_SUCCESS_all_eight
+  root_FULL_native: all102_exactly_once_158_PASS_zero_failure_markers
+  root_FULL_dotnet: 2636_projects6_520_25_2085_zeroFailSkip
+  root_browser: all_six_ORIGINAL_images11680029776_visually_inspected
+  qualification: frozen_parent_standalone_effect_scope_only_not_host104_or_combined_automatic_or_model
+  source_parent: bbbb4382154906a86e78a8a69b8c852f6f0e5c31
+  source_parent_review: SCOPED_APPROVED6101577796_root_FULL_fetched
+  previous_reviews: host577_6101445392_plan57a_6101478951_root_FULL_fetched
+  combined_writer: sealed_plan_same_atomic_key_fence_savepoint_witness_replay_engine
+  separation: AI1_1_literal_evidence_Host3_3_metadata_evidence_unconfirmed_no_IT_or_retry_authority
+  preservation: one_disposition_per_selected_source_all40_notes_all300_bounded_evidence_rows_sentinel
+  receipt: mixed_Notes_host_only_Attention_same_atomic_metadata_outbox_and_all_items
+  gaps: deny_until_durable_coverage_carrier_no_zero_note_or_raw_completion_authority
+  standalone_AI: original20_no_media_no_gap_entry_guards_unchanged
+  focused_controls: 31_PASS_fifteen_new_actual_entry_three_new_projection_thirteen_retained_legacy_zeroFailSkip
+  full_local_persistence: 2115_PASS_zeroFailSkip_changed_CSharp_format_VERIFY_PASS
+  future_native: existing104_exercises_legacy_wrapper_combined_SQL_effect_replay_expiry_authority_proof_required
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_loader_no_second_client
+  frozen_independent_review: PENDING_before_any_push
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_automatic_mixed_native_proof_source:
+  source_parent: b95d25c84681d8e71f91f958af03b55d5eade087
+  parent_review: SCOPED_APPROVED6101661330_root_FULL_fetched_before_push
+  parent_build_governance: Build38082610088_active_Gov38082610070_SUCCESS_six_prerequisites_SUCCESS
+  parent_native: 114302453580_active_original104_host_capacity_not_automatic_SQL
+  parent_FULL_dotnet: 2666_projects6_520_25_2115_zeroFailSkip_four_successful_projects
+  enrollment: separately_owned_synthetic_account_source_key_slot4_existing_loader_original0to3_retained
+  input: actual_Core_two_media_readable_caption_and_fixed_synthetic_quarantine_exact_UTF8_hashes
+  preparation: actual_shipping_inbox_allocation_claim_sources_brain_empty_no_gaps_fixed_synthetic_AI
+  effects: mixed21_rows_receipt1_dispositions2_heads4_revisions4_evidence5_outbox1_items4
+  separation: exact_AI1_1_literal_Host3_3_metadata_unconfirmed_no_IT_authority_no_secret_text
+  future_expiry: post_flush_source_lock_savepoint_rollback_clean_detach_only_witness_and_key_await_no_effects_clock_rollback_denied
+  future_replay: exact_original_ID_time_ciphertext_graph_changed_plan_and_new_nonce_refused
+  retained_graphs: all_prior_sources_accounts_claims_brain_grants_portal_full_private_hashes_every_phase
+  local: runtime_proof_BUILD_zeroWarnError_Python100_PASS_format_VERIFY_unowned13_guards_original104_verify_AST_diff_PASS
+  frozen_independent_review: PENDING_before_push
+  native_SQL_actual_model: NOT_RUN_UNQUALIFIED_NOT_RUN_UNEVALUATED
+  next: close_exact_parent_CI_then_review_push_native105_all8_FULL_logs_six_originals_host_only_max40_authority_races_remaining
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_automatic_native_cleanup_repair:
+  source_parent: 7e0a005822d63f76d51bfd233d2de4872d3174e6
+  full_ten_file_review: WITHHELD6101820549_root_FULL_fetched_read_two_P2_only
+  findings: daemon_child_after_Docker_caller_timeout_and_duplicate_BindingId_snapshot_order
+  repair: guarded_typed_container_inspect_exact_owned64ID_32label_two_bounded_removal_attempts_partial_startup_rechecked
+  independent_cleanup: image_removal_attempted_regardless_errors_first_failure_preserved_PASS_only_after_cleanup
+  SQL_order: unique_fixed_order_columns_full33_prior_graph_queries_preserved
+  local_controls: 105_Python_PASS_retained100_plus_five_adversarial_cleanup_controls_unique_order_oracle
+  retained_CSharp_reference: unchanged_from_frozen7e_build_format_unowned13_original104_module_preserved
+  frozen_independent_review: SCOPED_APPROVED6101872861_root_FULL_fetched_read
+  exact_remote_CI: b95_Build38082610088_native114302453580_ACTIVE_Gov_six_prerequisites_SUCCESS_root_FULLdotnet2666_zeroFailSkip
+  native_SQL_model: repair_source_only_new_automatic105_NOT_RUN_UNQUALIFIED_model_NOT_RUN_UNEVALUATED
+  next: close_exact_parent104_CI_then_FULL_repair_review_push_only_approved_head_own_new105_all8_logs_six_originals
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_automatic_no_work_writer:
+  source_parent: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  parent_repair_review: SCOPED_APPROVED6101872861_root_FULL_fetched_read
+  parent_remote_CI: b95_Build38082610088_native114302453580_ACTIVE104_Gov_six_prerequisites_SUCCESS_root_FULLdotnet2666
+  entry: same_sealed_GroupAutomaticNotePlan_no_notes_no_gap_complete1to100_exact_selected_source_revision_receipts
+  outcomes: NoWork_Recalled_ObsoleteGeneration_ChangedAfterCutoff_preserved_not_silently_relabelled
+  denials: host_attention_media_quarantine_work_notes_foreign_handles_SQL_MARS_dirty_caller_ambient_cancelled_before_effects
+  engine: original_atomic_receipt_disposition_fences_source_APPLOCK_savepoint_witness_detach_monotone_clock
+  replay: exact_original_revision_AND_typed_outcome_no_new_nonce_duplicate
+  legacy: original_ValidateInput_and_source_hash_unchanged_all_model_text_no_media_no_gap_NoWork_only
+  focused: 19_new_actual_entry_plus8_retained_legacy_PASS_zeroFailSkip_positive_guarded_open_not_SQL_acceptance
+  full_local_persistence: 2134_PASS_zeroFailSkip_changed_CSharp_format_VERIFY_PASS
+  frozen_independent_review: SCOPED_APPROVED6101948302_root_FULL_fetched_read
+  native_SQL: new_automatic_no_note_commit_replay_expiry_authority_NOT_RUN_UNQUALIFIED
+  effects: no_notes_outbox_IT_assignment_status_raw_allocation_completion_schema_or_Gateway_config_change
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_reused
+  next: frozen_source_review_while_closing_b95_then_push570_native105_and_add_actual_no_note_owned_SQL_proof
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_b95_closure_and_automatic_no_work_native_source:
+  exact_parent_remote: b95d25c84681d8e71f91f958af03b55d5eade087
+  parent_build_governance_all8: 38082610088_38082610070_SUCCESS_native114302453580_quality114308112389_SUCCESS
+  parent_root_FULL_native: 104_required_exactly_once160_PASS_zero_failure_markers
+  parent_root_FULL_dotnet: 2666_projects6_520_25_2115_zeroFailSkip_four_successful_projects
+  parent_root_browser: six_ORIGINAL_images11681164564_visually_inspected
+  parent_qualification: frozen_shared_legacy_wrapper_host_reader_capacity_only_not_automatic105_no_note_model_wholefeature
+  exact_remote: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  remote_source_review: SCOPED_APPROVED6101872861_root_FULL_fetched_before_push
+  remote_build_native: Build38084668247_native114308583350_ACTIVE105
+  remote_governance_six_prerequisites: Gov38084668280_and_all_six_SUCCESS
+  remote_root_FULL_dotnet: 2666_projects6_520_25_2115_zeroFailSkip
+  local_source_parent: cf1c9ed7ba60fe3719c22416781f0920cf592fec
+  local_source_parent_review: SCOPED_APPROVED6101948302_root_FULL_fetched_read
+  no_work_fixture: distinct_owned_scope_key_slot5_original0to4_preserved_ready_before30second_fixture_lease_actual_Core_two_empty_plain_ACKs
+  no_work_preparation: actual_shipping_inbox_raw2_allocation1_claim_epochs1to2_source_private_brain_sealed_plan_no_model
+  future_expiry: three_staged_flushed_receipt_dispositions_source_APPLOCK_savepoint_rollback_detach_only_witness_backwards_clock_denial
+  future_commit: atomic1receipt2NoWork_exact_revisions_original_ID_time_hash_full_effect_graph_replay_new_nonce_refusal_no_notes_outbox_keys_writes
+  snapshots: full33_retained_closed_queries_one_SQL_call33_ordered_index_tagged_hashes_missing_extra_duplicate_reordered_malformed_refuse
+  local_controls: 112_Python_PASS_DebugRelease_BUILD_zeroWarnError_changedformat_VERIFY_PASS_unowned16_original104_reference_bytes_fourUTF8PythonASTs
+  frozen_independent_review: SCOPED_APPROVED6102067087_root_FULL_fetched_read
+  native_SQL: new_automatic_empty_plain_NoWork_NOT_RUN_UNQUALIFIED_future_required106
+  outcome_limits: recall_obsolete_changed_cold_entry_only_native_current_authority_races_still_required
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_reused_no_client_or_config
+  next: close_exact570_native105_all8_FULLlogs_six_ORIGINALs_and_frozen_new_proof_review_then_push_approved106_scope
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_host_only_automatic_native_source:
+  source_parent: 06d98b52b405e8d92d013ba44d637e6badcf6d6d
+  parent_source_review: SCOPED_APPROVED6102067087_root_FULL_fetched_read
+  exact_remote: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  remote_CI: Build38084668247_native114308583350_ACTIVE105_Gov38084668280_six_prerequisites_SUCCESS_root_FULLdotnet2666
+  fixture: separate_owned_slot6_original0to5_preserved_Core_ready_before30second_operator_lease_two_actual_empty_Media_ACKs_no_model
+  sealed_plan: zero_AI_one_UnsupportedMedia_Host3_3_unconfirmed_two_metadata_references_two_Attention_source_dispositions
+  future_graph: nine_rows_receiptAttention1_dispositions2_head1_revision1_metadata_evidence2_outbox1_item1
+  future_expiry: same_source_APPLOCK_savepoint_rollback_clean_detach_exact_witness_clock_rollback_denial_and_external_write_key_expiry_no_effects
+  future_replay: original_ID_time_protected_payload_full7graph_equal_new_nonce_duplicate_refusal_reads3_writes1_no_AI_IT_authority
+  observer: fixed_test_only_expected9_11_21_original_default11_witness_classifier_unchanged
+  local: 117_Python_PASS_DebugRelease_BUILD_zeroWarnError_changedformat_VERIFY_PASS_unowned20_original104bytes_fourUTF8ASTs
+  frozen_independent_review: PENDING_before_later_push
+  native_SQL_actual_model: host_only107_NOT_RUN_UNQUALIFIED_model_NOT_RUN_UNEVALUATED
+  gateway: existing_loader_reused_no_second_client_or_configuration
+  next: close570105_then_exact_approved06d106_and_own_CI_then_reviewed_host107_max40_authority_and_remaining_feature
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+automatic_sql_guid_runtime_repair:
+  failed_head: 570dedb8b5ba30713124dc42a8418d588e6a0dc5
+  build: 38084668247
+  native: 114308583350
+  quality: 114312741730
+  evidence: 'Root fetched/read full failed native log: first automatic coordinator strict canonical SQL GUID projection failure; six prerequisites/Gov SUCCESS/FULL.NET2666. Original aggregate block reached, but19 of105 required whole-run markers absent; no full native/all8/browser qualification.'
+  repair: 'Only three internal GUID SQL projections and shared oracle updated;119Python PASS/two added all-three-profile GUID controls. Shipping/schema/workflows/original104/fixture/expiry/full33/cleanup unchanged; independent repair review pending.'
+  prior_reviews: '06d source scoped APPROVED6102067087 and bef ten-file source scoped APPROVED6102145588 ROOT FULLread. Native106/107 NOT_RUN_UNQUALIFIED; failed570 must be repaired before any acceptance.'
+  next: 'Full frozen repair review/rootFULLreceipt, push repaired same288 with approved local ancestors after terminal570; own107 exact CI through actual terminal closure, repair any new failure on samePR; no partialmerge/model/product claim.'
+
+exact_coverage_dependency_snapshot:
+  remote_head: 28065657acbf9a596fefaeb7e2b587a07309a642
+  build: 38086639444
+  governance: 38086639370
+  native: 114314414446
+  evidence: 'Remote280 renewed107 CI ACTIVE/GovSUCCESS. RootFULL scoped repair6102206802 and prior06d6102067087/bef6102145588 read. Source changes below are local/unpushed; no remote107/new-source/native/model acceptance.'
+  implementation: 'Exact scoped source/account gap metadata snapshots replace bool-only comparisons around key/release and locked effect dependency fences; both kinds read independently,256plus1 sentinel/malformed beforekeys. PublicHasCoverageGap remains conservative; no schema/permission/provider/completion/new gap effects.'
+  local: '26new coverage controls and all319 source-reader tests/full2160Persistence zeroFailSkip; changed format/fullRelease0W0E PASS. InMemory only; original570 failed evidence preserved. ERP264/company266 critical-path blocks untouched.'
+  review: 'Scoped source APPROVED6102317836 ROOT FULLfetched/read;319retained+16independent controls,8counterexamples fail on280/pass4b, actual frozen SQLServer translation/SQL160, full9file scopes/formatRelease0W0E. Native/concurrent/fullfeature/model/merge withheld.'
+  next: 'Own remote280107 terminal CI; later approved source/proof push must qualify its own exact native108. Required durable gap/backlog/zero-message carrier/raw terminal frontier/runtime remain; permanent overflow refusal does not satisfy received-work policy.'
+
+exact_coverage_native_preparation:
+  source_parent: 4b711e85fe6e043a453e6886f8da5572416f107a
+  scope: 'Fourth closed owned profile slot7 actual Core ingress then source-reader gap reconnection/additions/key-await refusal; complete256 and257 beforekeys. Fixed private material disposal/zeroing inspection only; no production API/schema/right/model delta.'
+  local: '122Python PASS/22actualunowned beforeresources/fourUTF8AST/original104bytes/allfourcoldrenderedprofiles/changedCSharpformat/DebugRelease0W0E. All33 retained snapshots and original profiles required.'
+  qualification: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED
+  next: 'Frozen full proof review after checkpoint; own active280107 terminal CI before push then own exact108/all8/FULL.NET2711 prediction/six ORIGINALs. No independent-process concurrency, complete gap workflow or full278 acceptance claimed.'
+
+automatic_container_absence_repair:
+  failed_head: 28065657acbf9a596fefaeb7e2b587a07309a642
+  failed_build: 38086639444
+  failed_native: 114314414446
+  failed_quality: 114319788181
+  governance: 38086639370
+  evidence: 'RootFULL107required21absent137PASS4failurepatterns; first automatic parent cleanup absence assertion, no native107/all8/browser qualification. Six prerequisites/Gov SUCCESS/FULL.NET2685 zeroFailSkip four runs. Original inspect value shape unretained/unproven.'
+  reproduction: 'Actual Docker29.8.1 CLI against own loopback HTTP404/empty privateconfig: return1/stdoutLF/exactownederror, old check rejects; no real daemon/resource activation.'
+  repair: 'Only two absence stdout checks accept exactempty/LF/CRLF; return1/exactownedname-or-ID errors/labels/reinspect/IDonlyremove/timeouts/firsterror unchanged.125Python including three new bounded methods PASS.'
+  approved_prerequisites: '4b scoped6102317836 and f7 scoped6102427093 ROOT FULLfetched/read; native108 remains NOT_RUN_UNQUALIFIED.'
+  raw_wip_stash: 15c25ae56174dc1bfa78c11c8282b41d5a410ab2
+  next: 'Full frozen repair review then samePR reviewed-source108 push/CI closure; preserve failed570/280 evidence and model NOT_RUN_UNEVALUATED; no partialmerge.'
+
+group_278_raw_selected_head_accounting:
+  source_parent: 30a5e8c669351091379ca5aa408ba14a2172611a
+  active_remote_build: 38089462537
+  active_remote_governance: 38089462538
+  active_remote_native: 114322730774
+  parent_source_review: SCOPED_APPROVED6102573838_ROOT_FULL_fetched_read
+  implementation: 'Automatic note and automatic NoWork commits stage immutable metadata-only raw allocation rows beside the existing receipt/selected dispositions/notes/outbox in the SAME transaction and savepoint. Legacy entry paths add no raw rows. Complete freshly fenced dense1to500 allocation is validated; only selected message IDs receive raw links to the exact selected head/outcome. Original replay checks all11 fields, count and sequence with a501 sentinel.'
+  migration: '20261010213659_AddGroupWorkRawAccounting additive table, scoped five-field PK/four restrictive scoped FKs/four indexes/positive revision and closed outcome-relation checks/operator ownership/SELECT INSERT only/all11 column UPDATE denied. No plaintext/new provider/old-table change; forward repair only.'
+  local: '29 new focused PASS, including actual InMemory ingress/allocation/read at500 and501; full2189Persistence zeroFailSkip; fullRelease solution0Warn0Error; changed CSharp format and diff PASS. Existing schema gates include the new30th Group table and preserve every scoped FK/owner/column DENY requirement. Synthetic/InMemory/SQL160 parsing are NOT native runtime acceptance.'
+  review: SCOPED_APPROVED6102696398_ROOT_FULL_fetched_read
+  native: NOT_RUN_UNQUALIFIED_atomic_raw_rows_replay_postflush_rollback_immutability_scoped_FKs_max500_required
+  scope_limits: 'Selected-head accounting is not whole-batch completion; unselected allocation remains unaccounted. Superseded relation means different from the selected head, which can win recall priority or cutoff selection; it does not assert each raw body was model input. No terminal frontier, model quality, independent-process race or no-click pipeline claim.'
+  retained_stash: 15c25ae56174dc1bfa78c11c8282b41d5a410ab2
+  next: "Source53e scoped approved/rootFULLread; separate raw-native proof prepared/pending frozen review; own active30a108 through terminal before any later push. Physical FK/max500/current races/full terminal coverage still required."
+  actual_model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_and_loader_reused
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+
+group_278_raw_native_preparation:
+  source_parent: 53eccb93a5338d2db6a0d6d556c67e77f05fd782
+  parent_source_review: SCOPED_APPROVED6102696398_ROOT_FULL_fetched_read
+  remote_parent: 30a5e8c669351091379ca5aa408ba14a2172611a
+  parent_CI: Build38089462537_native114322730774_ACTIVE108_Gov38089462538_six_prerequisites_SUCCESS_ROOT_FULLdotnet2711_zeroFailSkip_four_runs
+  observer: 'Additional independent bounded501 raw metadata reader requires every11 field/count/order/selected parent/allocation; separate private full raw digest around original replay/changed plan/new nonce refusals. Legacy seven-table21mixed9host3NoWork and default11 counts/fullgraph/witness classifier stay exact. Automatic-only flushed raw2 before expiry, raw0 after rollback, no tracked raw after store returns; no-row key expiry and coverage raw0.'
+  immutable_rights: 'Actual owned runtime executes all11 closed no-op column UPDATE attempts and DELETE WHERE1=0; only SQL229 qualifies permission refusal, followed by unchanged original seven-table and raw graphs. Existing actual effective table/global/ownership/column permission verifier required; no grant/rights mutation.'
+  coordinator: 'Full original33 indexed complete snapshots byte-preserved; appended34th scoped full raw graph, same one bounded SQL call. Original104/four profile/mode markers and seven-table counts preserved. Additional three closed raw aggregate markers only after all observations/cleanup succeed; future111 required.'
+  local: '128Python PASS including20 raw malformed/expiry/retained adjacent subcases;21 new raw observer plus23 retained44focused PASS/full2210Persistence zeroFailSkip; DebugRelease proof build0Warn0Error/changedformat VERIFY/diff PASS;22 actual unowned refusals before resources/four UTF8AST/four cold profile renders. These are not native SQL or model acceptance.'
+  limits: 'Only two selected revision1 heads are used by current owned profiles. InMemory observer500/501 is not actual native raw500. Physical scoped FK attacks, raw history/partial chunks/full-frontier/all-contributor races remain separate required work. No new provider/client/production resource/schema/shipping delta versus approved source53e.'
+  source_review: PENDING_full_frozen10file_proof_review_before_push
+  native: NOT_RUN_UNQUALIFIED_renewed_exact111_mandatory
+  actual_model: NOT_RUN_UNEVALUATED_existing_Gateway_configuration_reused
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge_or_checkpoint_stop
+
+group_278_raw_history_fixture_preparation:
+  issue: 278
+  pr: 288
+  scope: owned_test_only_501_core_fixture_no_shipping_or_schema_delta
+  parent: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
+  parent_proof_review: 6102829342
+  parent_review_root_full_read: true
+  local_python: 133_pass_callback_oracle_only_all501_utc_ack25_refusals
+  owned_remote111_head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
+  build: 38091747428
+  governance: 38091747436
+  native_job: 114329405046
+  raw_native111: ACTIVE_NOT_YET_QUALIFIED
+  prior30a108: all8_governance_full108_once_full2711_zeroFailSkip_sixOriginal11684211653_root_verified
+  actual_core501: NOT_RUN_UNQUALIFIED
+  native500_history_suffix501: NOT_RUN_UNQUALIFIED
+  real_model: NOT_RUN_UNEVALUATED
+  next: separate_owned_history_profile_preserve_original104_four_profiles_and_full34_retained_snapshots
+
+group_278_owned_ci_boundary_test_repair:
+  issue: 278
+  pr: 288
+  failed_head: d286e266445f43a3f7023dfaa44d73b9c8a3a22c
+  build: 38091747428
+  failed_dotnet_job: 114329405159
+  root_full_log_read: true
+  full_ci_counts: 2761_total_2760_pass_1_fail_0_skip
+  failure: known_entity_plus_one_IsTransient_true_approx2seconds_fixed_diagnostic_not_retained_cause_unproven
+  scope: one_test_only_finite30s_and_stronger_copy_diagnostic_oracle_shipping_unchanged
+  local: structured90_fullPersistence2210_zeroFailSkip_changed_format_pass
+  repair_head: bc87bc51b2895812acb0900054ba9ee0c34aae17
+  review: SCOPED_APPROVED6102993149_ROOT_FULL_fetched_read
+  native111: ACTIVE_NOT_YET_QUALIFIED
+  next: preserve_meaningful_native_job_then_reviewed_repair_head_exact_ci_closure_same288
+
+group_278_raw_history_native_preparation:
+  issue: 278
+  pr: 288
+  parent: bc87bc51b2895812acb0900054ba9ee0c34aae17
+  fixture_review: SCOPED_APPROVED6102945756_ROOT_FULL_read
+  boundary_repair_review: SCOPED_APPROVED6102993149_ROOT_FULL_read
+  scope: separate_fifth_owned_test_profile_no_shipping_provider_schema_delta
+  modes: raw_history_prepare_expiry_commit_owned_gate_before_config_resources
+  fixture: actual_Core501_references_two_messages499_edits_allocated500_observed501
+  cutoff: first_revision499_ChangedAfterCutoff_current500_in_pending501_second_empty1_NoWork
+  accounting: raw500_all11_scoped_fields_twoSelected498Superseded_same_transaction_original3_effects
+  expiry_replay_rights: full503_rollback_detach_witness_only_clock_rollback_denied_original_replay_newnonce_refusal_all11_noopUpdates_Delete_SQL229
+  pending: scheduled500_committed501_firstPending_originalSuffix501_committedAt_lastPending_retained
+  preservation: original104_four_old_modes_full34_snapshots_seven_effect_tables_fullgraphs_cleanup_scoped_source_account_lease_grants_gaps_commands
+  local: 136Python_16corruption_subcases_34focused_dotnet_zeroFailSkip_Release0Warn0Error_changedformat_25unowned_5UTF8AST_fourOldCold_plusHistory_tenSyntheticParser_PASS
+  workflow: only_local_runtime_timeout40_to50_minutes_for_bounded120s_fixture_and_three170s_processes_prior33min_job
+  future_native_predicates: 112_all111_retained_plus_one_history_aggregate_after_successful_owned_cleanup
+  source_review: SCOPED_APPROVED6103138411_ROOT_FULL_read4259_persisted
+  actual501_native500_suffix501: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED_existing_Gateway_loader_reused
+  full_278_279_233: ACTIVE_INCOMPLETE_no_partial_merge
+  next: preserve_active_d286111_terminal_then_reviewed_repair_and_native112_exact_ci_closure_same288
+
+group_278_raw_history_exact_ci:
+  remote_head: ec3e8f79ff5ca772e2499ac3c8555c133425d1f8
+  source_review: SCOPED_APPROVED6103138411_ROOT_FULL_fetched_read4259_persisted
+  build: 38093894476
+  governance: 38093894474
+  native_job: 114335702045
+  dotnet_job: 114335701871
+  native112: ACTIVE_NOT_YET_QUALIFIED
+  prior_d286_build: TERMINAL_RED38091747428_quality114335195433_dotnet114329405159_one_of2761_failed_causeunproven
+  prior_d286_native: SUCCESS114329405046_ROOT_FULL111_once167PASS_sixOriginal11685495120
+  history500_suffix501: NOT_RUN_UNQUALIFIED_until_current_exact_native112
+  model: NOT_RUN_UNEVALUATED
+  next: own_current112_terminal_full_logs_images_same288_repair_then_allcontributor_manifests_terminal_frontier_pipeline
+
+group_278_dependency_manifest_preparation:
+  status: SOURCE_SCHEMA_LOCAL_VERIFIED_NOT_NATIVE_QUALIFIED
+  source_review: PENDING_FULL_frozen_whole_checkpoint_before_push
+  format: version1_fixed162header_sources100x56_brain20x57_exact218to6902_metadata_only
+  receipt: additive20261010231206_version0null_legacy_version1bounded_appendonly_atomic_automatic_only
+  replay: complete_original_version1_bytes_legacy0null_compatible_no_terminal_permission
+  revalidation: internal_ownedSerializable_SQL_only_current_authority_allocation_source_brain_cipher_coverage_no_keys_no_frontier
+  local: focused40_fullPersistence2263_zeroFailSkip_format14files_SQL160_actualEF
+  native: NOT_RUN_receipt_fields_locked_reconstruction_rollback_replay_races_current112_predates_schema
+  selection_profile: explicit_contributors_only_relevance_pool_provider_tokenizer_context_chunking_incomplete
+  terminal: NOT_ENABLED_all_raw_all_contributors_contiguous_frontier_required
+  model: NOT_RUN_UNEVALUATED
+  next: independent_frozen_FULL_review_then_native_manifest_proof_same288_after_current112_terminal
+
+group_278_manifest_native_preparation:
+  source_base: 9d7d9ccc62e1511f46665eaf49a83925bb777edd
+  source_review: PENDING_FULL_frozen_separate_native_checkpoint_before_push
+  modes: existing25_unchanged_four_committed_automatic_scopes_no_new_mode
+  observation: independent_actual_receipt_two_sources_zero_brain274bytes_scopedIDs_cutoff_exact_heads_digest
+  atomicity: actual_postflush_before_expiry_same_savepoint_zero_receipt_after_rollback_original_replay
+  immutability: both_actual_columns_closed_noop_UPDATE_SQL229_digest_unchanged
+  preservation: frozen112_reference_fourprofiles_history_cleanup_original_graphs_plus_one_future113_marker
+  local: observer23_fullPersistence2286_zeroFailSkip_Python136_format6_Release0W0E_25actualunowned
+  native113: NOT_RUN_UNQUALIFIED_current_remote112_predates_manifest_schema
+  reconstruction: NOT_RUN_nonempty_brain_fullfingerprints_locked_current_dependencies_races
+  own_write_chain: preeffect_inputs_future_terminal_requires_explicit_input_to_posteffect_heads
+  terminal: NOT_ENABLED
+  model: NOT_RUN_UNEVALUATED
+  next: scoped_FULL_review_then_owned_exact113_after_current112_terminal_no_partialmerge
+
+group_278_history_edit_qualification_repair:
+  prior_ec3: TERMINAL_RED_Build38093894476_native114335702045_quality114341455901
+  root_native: FULL112_required_missing19_PASS144_failurepatterns4_noBrowserArtifact
+  root_dotnet: FULL2774_zeroFailSkip_fourSuccessfulRuns
+  prior_governance: SUCCESS38093894474_sixOtherPrerequisiteJobsSUCCESS
+  hosted_cause: UNPROVEN_HTTPstatus_body_iteration_unretained_CoreEditACK_assertion
+  defect: empty_synthetic_history_observations_cannot_admit_Edit_under_unchanged_current_Core_contract
+  repair: initial_history_only_synthetic_EditEvents_supported_generatedEvidenceUTC_closedbool_no_live_policy_change
+  local: directAuth7_fullPersistence2293_zeroFailSkip_Python137_Csharpformat
+  source_review: SCOPED_APPROVED6103509982_ROOT_FULL_read2955_persisted
+  source9d_review: SCOPED_APPROVED6103383218_ROOT_FULL_read3057_persisted
+  native794_review: SCOPED_APPROVED6103421671_ROOT_FULL_read2972_persisted
+  next_native113: NOT_RUN_UNQUALIFIED
+  structural_coverage: stash583594a29f30ece17e646187352a5139e0c76b32_focused40_only_no_native_frontier
+  model: NOT_RUN_UNEVALUATED
+  next: reviewed_chain_push_same288_own_exact113_CI_then_restore_allcontributor_kernel
+
+group_278_manifest113_owned_dispatch_and_whole_coverage:
+  remote_head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+  build: 38096849478
+  governance: 38096849367
+  native_job: 114344400101
+  dotnet_job: 114344400163
+  source_reviews: ROOT_FULL_read_persisted_6103383218_6103421671_6103509982_scoped_only
+  native113: ACTIVE_NOT_YET_QUALIFIED
+  dotnet: prediction2844_6_520_25_2293_NOT_full_log_evidence
+  prior_ec3: TERMINAL_RED_ROOT_FULL112_missing19_PASS144_failurepatterns4_no_browser_artifact
+  kernel: structural_only_raw500_head100_every_chunk_manifest_receipt_scope_batch_operation_cutoff_selected_raw_relation
+  bounds: deletionGeneration0_valid_40notes_PERchunk_larger_whole_results_retained_no_reporter_truncation
+  local_kernel: focused40_PASS_zeroFailSkip_twofile_format
+  kernel_review: WITHHELD6103599748_ROOT_FULL_read3681_persisted_two_P2_repaired_in_next_block
+  limits: no_SQL_current_dependency_reconstruction_effect_ledger_ownwrite_chain_terminal_frontier_DI_native_model_acceptance
+  model: NOT_RUN_UNEVALUATED
+  next: own_exact113_terminal_then_allcontributor_current_SQL_fences_and_contiguous_frontier
+
+group_278_whole_coverage_review_repair:
+  original_head: ab58ebc0af4c3fdbdca4e5b75c4b88dd3484f909
+  original_review: WITHHELD6103599748_ROOT_FULL_read3681_persisted_two_P2
+  original_reproduction: original40PASS_independent9PASS_6failures_actual_priority_head_and_raw_count_overflow
+  repair: explicit_all_history_cutoff_heads_separate_monotone_raw_order_bounded_actual_fiveinput_snapshots_copy_mutable_fields_manifest
+  local: focused72_zeroFailSkip_original40_plus11cutoff_4actualReaderManifest_17enumeration_threefile_format
+  bounds: raw500_head100_every_chunk_manifest_deletionGeneration0_valid_40notes_PERchunk_whole41_retained
+  source_review: SCOPED_APPROVED6103648579_ROOT_FULL_read3871_persisted_93independentPASS
+  native_kernel: NOT_RUN_UNQUALIFIED_no_SQL_terminal_frontier_consumer
+  current_remote: 5fc5b87782f6ab06245a8d757c4e81e0cb670216_owned113_Build38096849478_native114344400101
+  current_dotnet: ROOT_FULL2844_6_520_25_2293_zeroFailSkip_fourSuccessfulRuns_114344400163
+  model: NOT_RUN_UNEVALUATED
+  next: own_current113_terminal_review_repaired_kernel_then_allcontributors_current_SQL_fences
+
+group_278_whole_dependency_reader_preparation:
+  structural_review: SCOPED_APPROVED6103648579_ROOT_FULL_read3871_persisted_93independentPASS_two_originalP2_closed
+  original_withheld: RETAINED6103599748_ROOT_FULL_read3681_persisted_actual_cutoff_winner_and_raw_count_overflow
+  reader: internal_unwired_caller_owned_SqlServer_serializable_savepoint_cleantracker_no_ambient_no_commit_retirement_keys_frontier
+  affinity: same_database_instance_worker_binding_clock_source_and_brain_dependencies
+  reads: receipts101_selected101_raw501_all_history_cutoff_TOP1_per_100ids_full_structural_kernel_every_sourcebrain_manifest_sourcehash
+  fences: fresh_current_claim_effective_permissions_numeric_receipt_authority_epoch_time_all_contributors_final_clock
+  local: focused22_zeroFailSkip_four_actual_EF_SQL160_TOPbounds_closedconnections_fourfile_format
+  source_review: SCOPED_APPROVED6103738028_ROOT_FULL_read3526_persisted_31independentPASS
+  native: NOT_RUN_UNQUALIFIED_current_remote5fc113_predates_kernel_and_reader
+  completion: NO_effect_ledger_original_claim_provenance_ownwrite_chain_terminal_receipt_frontier_DI
+  model: NOT_RUN_UNEVALUATED
+  next: own_remote113_terminal_FULL_review_reader_then_native_allcontributor_reconstruction_and_complete_effect_ledger
+
+group_278_automatic_dependency_store_preparation:
+  reader_review: SCOPED_APPROVED6103738028_ROOT_FULL_read3526_persisted_31independentPASS
+  scope: existing_claim_and_trusted_worker_instant_current_dependencies_not_completion_or_future_write_authority
+  transaction: own_SqlServer_Serializable_two_minute_deadline_no_MARS_ambient_caller_transaction_dirty_tracker
+  dependencies: exact_database_worker_clock_existing_sourcebrain_allcontributor_reader_no_keys_decryption
+  expiry: retained_metadata_only_witness_commit_then_deny_no_effects_frontier
+  local: focused17_zeroFailSkip_twofile_format_cold_entry_refusals_only
+  source_review: WITHHELD6103810469_ROOT_FULL_read3401_persisted_parserP2
+  native: NOT_RUN_UNQUALIFIED_successful_whole_reconstruction_expiry_retirement
+  completion: NO_effect_ledger_originalclaim_ownwrite_chain_terminal_receipt_frontier_DI
+  model: NOT_RUN_UNEVALUATED
+  next: own_remote113_terminal_then_review_store_and_native_allcontributor_reconstruction_preserving_all_original_proofs
+
+group_278_manifest113_terminal_5fc:
+  head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+  build: TERMINAL_RED38096849478
+  native: FAILURE114344400101
+  quality: FAILURE114350227578
+  governance: SUCCESS38096849367
+  six_other_prerequisites: SUCCESS
+  root_full_native: required113_missing20_PASS144_failurepatterns4_noBrowserArtifact
+  root_native_log: bytes78407_sha256_fc234ec5a334aac104051c7e10394425c1499b55a30b1cd40730e91d08ecbc8e
+  root_full_dotnet: actual2844_6_520_25_2293_zeroFailSkip_fourSuccessfulRuns
+  cause: actual_Core501_owned_generation_finite120seconds_exceeded_at_00_32_41_lastACK_not_retained
+  history500_pending501_manifest113: UNQUALIFIED_no_native_success_inference
+  next: repair_finite_owned_fixture_budget_safe_progress_diagnostics_then_same288_reviewed_exact113_rerun
+
+group_278_automatic_dependency_parser_repair:
+  original_head: 154529c2692a5ca2df37834947b2b66c1262c201
+  original_review: WITHHELD6103810469_ROOT_FULL_read3401_persisted
+  original_controls: 26_total23PASS3fail_Format_rawvalue_and_Overflow_preopen_parser
+  repair: catch_supported_Argument_Format_Overflow_parser_exceptions_fixed_error_no_inner_or_option_value
+  local: focused21_zeroFailSkip_twofile_format_no_SQL_connection_keys_or_witness
+  source_review: SCOPED_APPROVED6103842996_ROOT_FULL_read3764_persisted_30controls_original3failures_closed
+  native: NOT_RUN_UNQUALIFIED_successful_reconstruction_expiry_witness
+  model: NOT_RUN_UNEVALUATED
+  next: independent_FULL_review_then_ownedfixture_budget_repair_same288_exact113
+
+group_278_raw_history_finite_budget_repair:
+  failed_head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+  source_base: 26935b53799c5f4ed2a44c8ca93934c702683b59
+  failure: actual_Core501_serial_fixture120seconds_deadline_lastACK_unretained
+  repair: owned_test_only_finite300seconds_overall_budget_checked_before_edit_after_validACK
+  diagnostic: lastAcceptedSequence2to501_elapsedSeconds0to300_closed_no_payload_ID_key_response_body
+  preservation: all501_exactACK_UTC_twoOriginals499edits_20scoped30secondRenewals_initialEditObservation_ownedgate_percall_process_joblimits_original113
+  local: 138PythonPASS_callback_clock_only_121_299_999_slowWindows_300_301_before_afterACK_refusals
+  source_review: SCOPED_APPROVED6103863094_ROOT_FULL_read3661_persisted_138Python8independent
+  native: NOT_RUN_UNQUALIFIED_actual501Core_SQL500_pending501_manifest113
+  model: NOT_RUN_UNEVALUATED
+  next: repaired_store_and_fixture_scoped_FULL_reviews_then_same288_exact113_terminal_CI_closure
+
+group_278_whole_dependency_native_preparation:
+  source_base: b6f7d89013abccf992271fb0530793f14cbe3e30
+  source_reviews: ROOT_FULL_read_persisted6103648579_6103738028_6103842996_6103863094_scoped_only
+  scope: additive_owned_test_only_existing_four_profiles_three_instant_dependency_checks_each_no_new_mode_grant_shipping_schema_workflow
+  observed_sql: all4_receipt_selected_raw_originalrevision_categories_actual_Serializable_Exclusive_source_transaction_lock_before_reader_opens_no_MARS
+  preservation: originalfullgraphs_raw_manifest_claimmetadata_keycounts_connectionstate_cleantracker_replay_rights_expiry_pending501_ownership_cleanup_original113
+  local: 20coldCsharp_140Python20output_corruption_scenarios_Release0W0E_fivefileformat
+  source_review: SCOPED_APPROVED6103979540_ROOT_FULL_read4039_persisted_140Python28coldCsharp
+  native114: NOT_RUN_UNQUALIFIED_successful_whole_dependencies
+  current_remote113: CLOSED_RED38099379279_native114351943971_quality114357440592_Gov38099379280SUCCESS_sixPrereqsSUCCESS
+  current_dotnet: ROOT_FULL2959_6_520_25_2408_zeroFailSkip_fourSuccessfulRuns_114351944083
+  limits: each_current_fixture_one_receipt_twoSelected_zeroContributingBrain_no_allchunk_nonemptybrain_races_ledger_frontier_model_acceptance
+  model: NOT_RUN_UNEVALUATED
+  next: own113terminal_FULL_review_then_exact114_same288_continue_complete_effectledger_and_no_click_product
+
+group_278_original_claim_provenance_preparation:
+  source_base: c86fee024818e54e4eabd65957fe71bb5ff1ded2
+  scope: every_original_contributor_immutable_acquisition_scope_epoch_owner_nonce_authority_versions_manifest_hash_UTC_commit_inside_original_lease
+  read: scoped_tenant_company_binding_batch_requested_epochs_ordered_TOP101_no_keys_decryption_model_effect_write
+  preservation: all_previous_current_claim_worker_permissions_Serializable_source_lock_each_manifest_and_final_fences
+  local: 83focused_zeroFailSkip_fivefileformat_actual_EF_SQL160_scoped_bigint_epoch_parameters_without_connection
+  in_memory: actual_acquisition_and_source_manifest_structural_NoWork_receipt_not_SQL_business_commit_expired_handle_denied
+  source_review: SCOPED_APPROVED6104074051_ROOT_FULL_read3853_persisted_73selected10independent
+  prior_native_source_review: SCOPED_APPROVED6103979540_ROOT_FULL4039_persisted_140Python28coldCsharp
+  native_provenance: NOT_RUN_UNQUALIFIED
+  original_claim: earlier_commit_evidence_only_never_current_write_authority
+  complete_effect_ledger_and_terminal_frontier: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+  next: own_remote113_terminal_FULL_review_then_exact114_same288_continue_effectledger_and_no_click_product
+
+group_278_original_effect_ledger_preparation:
+  source_base: 707102b35c0ccfd7781865c1a485656f84a96758
+  scope: bounded_structural_original_create_graph_fingerprint_selected_requests_revision1_evidence_outbox_items_originalclaim_manifest
+  preservation: original_deterministic_IDs_scope_operation_UTC_authority_AI_interpretation_host_observation_not_IT_confirmation
+  bounds: 100selected_40notes_20AI20host_100AI200hostEvidence_10pernote_256000cipherBytes
+  original_graph: all_immutable_create_metadata_cipher_exact_digest_evidence_items_included_later_IT_head_and_publishing_progress_excluded_without_granting_authority
+  no_work: zero_business_graph_and_no_Work_Quarantined_Attention_dispositions
+  local: 81synthetic_structural_controls_zeroFailSkip_twofileformat_not_SQL_AEAD_authentication_or_model_quality
+  prior_provenance_review: SCOPED_APPROVED6104074051_ROOT_FULL3853_persisted_73selected10independent
+  source_review: SCOPED_APPROVED6104144245_ROOT_FULL_read4008_persisted_81retained14independent
+  stored_expected_digest_atomic_writers_and_current_SQL_reader: NOT_IMPLEMENTED
+  terminal_frontier: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+  next: own113terminal_FULL_review_then_versioned_expected_effect_storage_atomic_staging_and_locked_allcontributor_checks_same288
+
+group_278_b6f_terminal_browser_failure:
+  remote_head: b6f7d89013abccf992271fb0530793f14cbe3e30
+  state: CLOSED_TERMINAL_RED
+  build: 38099379279
+  native: 114351943971
+  quality: 114357440592
+  governance: SUCCESS38099379280
+  other_six_prerequisites: SUCCESS
+  root_full_dotnet: actual2959_6_520_25_2408_zeroFailSkip_fourSuccessfulRuns_114351944083
+  root_full_frozen113: 105each_once_8missing_161PASS_2terminalfailuremarkers
+  log: 80490bytes_SHA25606c94880e1b6b9f1b3aa44e482631b2885618acc97af9816da40fc008e16a687
+  qualified_scope: owned_actual501_group_Core_ingress_raw500_498superseded_pending501_rollback_replay_immutable_rights_four_v1_manifest_SQL_paths_only
+  browser_originals: NOT_PRODUCED_native_failed_during_browser
+  failure: actual_archive_held_private_detail_company_switch_callback_waiter15000ms_unhandled_rejection_at01_15_35
+  cause: unobserved_early_waiter_structurally_reproduced_hosted_selector_provider_timeout_reason_UNPROVEN
+  limits: full113_all8_browser_later_currentSQL_provenance_effectledger_terminal_model_fullfeature_UNQUALIFIED
+  next: same288_narrow_waiter_repair_frozen_review_then_exact114_terminal_closure
+
+group_278_archive_switch_waiter_repair:
+  source_base: e04d37fa6f42dee2797e60663f377b3b11775ec4
+  repair: immediately_observe_both_original_waiter_rejections_then_await_original_promises_closed_phase_stages_parent_fixed_catch_finally
+  preservation: same15_20_30second_limits_provider_Code_S256_challenge_callback303_exact_current_company_originalPASS_route_isolation_membership_restore_cleanup_screenshots
+  local: 39NodePASS_zeroFailSkip_two_new_methods_early_rejection_provider_and_session_refusal_inert_page_objects_syntaxPASS
+  prior_effect_review: SCOPED_APPROVED6104144245_ROOT_FULL4008_persisted_81retained14independent
+  source_review: SCOPED_APPROVED6104201429_ROOT_FULL3727_persisted_39retained9independent
+  new_exact114: ACTIVE38102129917_native114360048235_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED
+  next: reviewed_same288_chain_push_then_own_exact114_all8_Gov_full_logs_original_six_images_terminal
+
+group_278_4abd_owned_dispatch:
+  head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
+  build: 38102129917
+  governance: 38102129916
+  native: 114360048235
+  state: ACTIVE114_root_owns_terminal_all8_full_logs_original_six_images
+  source_review: SCOPED_APPROVED6104201429_ROOT_FULL3727_SHA256f52d1d63a38fec38b60635b1d96d00e7424a38dd1ff0c2ef42a86381aa9413a3
+  expected_effect_preparation: UNCOMMITTED_not_in_remote_schema_or_writer
+  model: NOT_RUN_UNEVALUATED
+
+group_278_expected_effect_storage_preparation:
+  source_base: 2828188_after_reviewed4abd_dispatch
+  migration: 20261011012609_AddGroupWorkEffectExpectation
+  storage: default0_nullable_varbinary32_closed_v1_requires_dependency1_explicit_runtime_UPDATE_DENY_forward_repair_only
+  helper: complete_copied_receipt_binding_mutate_only_after_checks_once_then_fixed_time_expected_original_graph_compare
+  local: 125focusedPASS_zeroFailSkip_81retained41new3dependency_SQL160_parse_7file_format_no_pending_model_changes
+  writer_and_locked_graph_reader: NOT_WIRED_no_atomic_SQL_effect_or_completion_qualification
+  source_review: PENDING_FULL_frozen_complete_checkpoint
+  current_remote: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f_ACTIVE114_excludes_this_schema_helper
+  model: NOT_RUN_UNEVALUATED
+  next: independent_FULL_review_then_atomic_automatic_staging_legacy_replay_current_locked_complete_graph_compare_original_native_proofs
+
+group_278_effect_atomic_writer_source:
+  source_base: e3de684d5d0137df3a82162f2ed5ecfcc9b3990e
+  storage_review: SCOPED_APPROVED6104306771_ROOTFULL4028_SHA2569269fdf82aafd494ca48c845160982d17670e1fbf1eaeab860658d1a523cd9df_125repository22independent
+  change: automatic_note_and_NoWork_stage_digest_with_graph_before_same_owned_receipt_INSERT_replay_compare_original_claim_and_full_read_graph
+  preservation: all_original_manual_legacy_replay_assertions_keys_decrypt_fences_source_locks_savepoint_expiry_retirement_detach_and_connection_ownership
+  helper: caller_owned_serializable_savepoint_clean_sameconnection_noambient_noMARS_original_claim_scope_batch_epoch_TOP2_staged1022_closed_types
+  local: 186focusedPASS_zeroFailSkip_119retained12new55original_writer_entry_4file_format_actual_EF_lookup_SQL160_closed_connection
+  actual_SQL: NOT_RUN_UNQUALIFIED_remote4abd114_predates_storage_and_writer
+  source_review: PENDING_FULL_frozen_complete_checkpoint
+  completion_frontier: NOT_IMPLEMENTED
+  model: NOT_RUN_UNEVALUATED
+  next: FULL_source_review_then_add_owned_actual_four_scope_atomic_expectation_replay_immutable_rights_and_current_allcontributor_graph_proofs
+
+group_278_effect_expectation_native_preparation:
+  source_base: fc9a19d5882f9ab97133b1fec6a45a58bbab3f2b
+  profiles: same_original_mixed_NoWork_host_raw500_pending501_no_new_fixture_or_customer_scope
+  new_observation: stored_v1_digest32_nonzero_before_expiry_rollback_and_every_original_graph_callback_two_explicit_noop_columns_SQL229_unchanged_digest
+  preservation: all_prior114_markers_graph_predicates_row_counts_keys_claim_source_lock_savepoint_expiry_witness_snapshots_cleanup_and_pending501
+  output: original_result_retained_dependency_then_additive_effect_child_line_exact_order_once_one_new_parent_aggregate_after_four_owned_scopes
+  local: 54observerPASS_43retained11new_142PythonPASS_140retained2new_methods16adversarial_cases_6CSharp_format
+  first_test_harness_error: two_methods_in_wrong_class_16AttributeErrors_closed_by_moving_only_new_methods_final142PASS
+  native115: NOT_RUN_UNQUALIFIED_remote4abd114_excludes_storage_writer_and_this_proof
+  source_review: PENDING_FULL_frozen_complete_checkpoint
+  model: NOT_RUN_UNEVALUATED
+  next: FULL_frozen_review_and_prior_exact114_terminal_then_reviewed_same288_new_exact115_full_all8_Gov_logs_original_six_images
+
+group_278_locked_original_effect_reader:
+  source_base: 8cd93aeccda4f06cd22ac93574e16142456054f7
+  native_preparation_review: SCOPED_APPROVED6104414910_ROOTFULL4458_SHA256e8770ed594891a3220462d2eed9c56183bdc1c9da18427a664a614c2d901b35f_54repository142Python11independent
+  change: every_original_contributor_v1_expected_digest_exact_request_revision1_evidence_outbox_item_graph_fixedtime_comparison_under_existing_current_fences
+  bounded_read: scoped_TOP41_requests_revisions_items_TOP301_evidence_TOP2_outbox_SQL_DATALENGTH_preflight_40notes256000bytes_percontributor_no_payload_before_budget
+  preservation: original_acquisition_provenance_wholecoverage_each_source_brain_manifest_current_claim_permissions_source_lock_Serializable_final_fences_no_keys_writes_or_completion
+  local: 268focusedPASS_zeroFailSkip_248retained20new_actual_EF_SQL160_six_scoped_queries_closed_connection_Release0W0E_3file_format
+  legacy: replay_unchanged0null_current_integrity_refused_without_backfill
+  source_review: PENDING_FULL_frozen_complete_checkpoint
+  actual_SQL: NOT_RUN_UNQUALIFIED_remote4abd114_excludes_storage_writers_and_reader
+  terminal_frontier_no_click: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+  next: FULL_source_review_add_all_effect_table_original_acquisition_native_observation_and_adversarial_graph_proofs_then_exact115_terminal_closure
+
+group_278_4abd_terminal_qualification:
+  remote_head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
+  state: CLOSED_TERMINAL_SUCCESS_SCOPED114
+  build: 38102129917
+  native: 114360048235
+  quality: 114365757987
+  governance: SUCCESS38102129916
+  all8: SUCCESS
+  root_full_native: 114each_once_170PASS_zeroFailures_84825bytes_SHA256ac0f747bc7cedd527c73eac7eb786f02ad18195204f7c6597176aa9d31451cb6
+  root_full_quality: 3455bytes_SHA2565e1111e9e383fadeb64cd6a58b1659748cf60deeccff8f206b6136e422859843
+  root_full_dotnet: 3111_6_520_25_2560_zeroFailSkip_fourSuccessfulRuns_114360048263
+  original_images: six11689185335_ROOT_individually_viewed_layout_original_browser_assertions_required
+  qualified_scope: four_original_onecontributor_twoselected_zerobrain_current_SQL_dependencies_acquisition_provenance_claim_keys_source_lock_Serializable_original_graphs_and_browser
+  preserved_history: all_prior_failures_and_limited_successful_subscopes_earlier_hosted_timeout_cause_UNPROVEN
+  later_effect_expectations_writers_reader: NOT_RUN_UNQUALIFIED
+  terminal_frontier_no_click_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+  next: review_stacked_reader_and_owned_effect_graph_observer_then_dispatch_new_exact_head_own_terminal_all8_full_logs_original_images
+
+group_278_original_effect_graph_native_preparation:
+  source_base: 12cf62376186c7fbda26a72818b4b0449ffab4be
+  reader_review: SCOPED_APPROVED6104489473_ROOTFULL5082_SHA25670615b43488faa2a54d0de400c457222d7704804d2b95a5707c88c8b3e57372f_20new12independent_actualEF_inertADO
+  prior_native: remote4abd114_CLOSED_SUCCESS_all8_Gov_full_logs3111dotnet_sixoriginals_excludes_new_effect_graph
+  observer: retain_four_original_categories_add_six_acquisition_and_effect_tables_each_actual_Serializable_sameconnection_source_Exclusive_APPLOCK_before_reader
+  ciphertext_preflight: metadata_before_payload_both_required_observations_reset_each_check
+  profiles: same_four_original_onecontributor_twoselected_zerobrain_each_three_current_digest_checks_original_graph_keys_claim_pending501_preserved
+  output: fourth_exact_child_line_after_original_three_new_one_parent_aggregate115to116_all115_retained
+  local: 77CSharpPASS_two_runs54plus23_zeroFailSkip_144PythonPASS_all142prior_methods_preserved2new16refusals_Release0W0E_5file_format
+  initial_filter: incorrect_manifest_class_selected54_then_correct_actual_class23_PASS_no_claim_first_run77
+  source_review: PENDING_FULL_frozen_complete_checkpoint_includes_separate64eeb114_metadata_closure
+  actual_native116_SQL_corruption_races: NOT_RUN_UNQUALIFIED
+  terminal_frontier_no_click_model_full278_279_233_merge: INCOMPLETE_model_NOT_RUN_UNEVALUATED
+  next: FULL_frozen_review_then_new_exact116_dispatch_own_all8_Gov_full_logs_original_six_images_continue_real_adversarial_chains_and_terminal_product
+
+group_278_676_owned_dispatch:
+  head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
+  build: 38105196689
+  governance: 38105196702
+  native: 114369115337
+  state: ACTIVE116_root_owns_terminal_all8_full_logs_original_six_images
+  source_review: SCOPED_APPROVED6104580831_ROOTFULL5678_SHA25671ab71db9d348b31ecf845660bf810360aa26a1045f27f1f6ad96285d9fa238c
+  expected_effect_sql: NOT_YET_QUALIFIED
+  frontier: local_metadata_kernel_only_not_in_remote676
+  model: NOT_RUN_UNEVALUATED
+
+group_278_contiguous_terminal_frontier_preparation:
+  source: GroupContiguousTerminalFrontier_internal_metadata_only
+  local_verification: 39PASS_zero_failure_skip_two_file_format_PASS
+  scope: scoped_dense_allocations_completed_prefix_only_actual100_bound101_refusal_explicit_continuation
+  terminal_authentication: UNIMPLEMENTED_shape_only_requires_owned_SQL_complete_graph_recheck
+  sql_schema_writer_frontier_DI_no_click: NOT_IMPLEMENTED
+  gap_attention_retry: NOT_IMPLEMENTED_retained_flag_only
+  source_review: SCOPED_APPROVED6104646480_ROOTFULL4435_SHA256ff4ab6d6ac7876ae8eb62f326ac1a7953855e0bb08dd6a22239bc72794a20f08
+  remote676_native116: separately_ACTIVE_excludes_this_kernel
+  model: NOT_RUN_UNEVALUATED
+
+group_278_terminal_manifest_preparation:
+  source: GroupBatchTerminalManifest_internal_closed_AIOGTRM1_metadata_only
+  coverage: complete_detached_original_allocation_raw_versions_cutoff_heads_receipts_expectations_selected_raw_fingerprint
+  encoding: header177_contributor80_total257_to8177_max100_all_contributors_required
+  local_verification: 272PASS_53new_68coverage_131original_effect_20reader_zeroFailSkip_four_file_format_PASS
+  expected_effect_binding: every_exact_copied_v1_receipt_full_sealed_original_graph
+  authorization_and_SQL: NOT_IMPLEMENTED_shape_and_structural_expectation_only
+  own_input_chains_terminal_store_frontier_DI_no_click: NOT_IMPLEMENTED
+  source_review: SCOPED_APPROVED050_6104754222_ROOTFULL4092_parent222_P2_closed
+  remote676_native116: separately_ACTIVE_excludes_this_manifest_coverage_extension
+  model: NOT_RUN_UNEVALUATED
+
+group_278_terminal_manifest_source_set_repair:
+  parent: 2222178a0a40ceedb7498d0754ce0a5b36775b66
+  finding: independent_malformed_and_1MiB_source_set_scalar_accepted_before_hashing_two_denial_probes_failed
+  repair: CopyReceipt_canonical64_uppercase_ASCII_hex_before_blob_copy_or_serialization
+  semantic_source_set_check: unchanged_locked_reader_required
+  local_verification: 280PASS_61terminal_219retained_zeroFailSkipWarning_three_file_format_PASS
+  controls: eight_null_empty_short_long_oversized_lowercase_nonhex_Unicode_before_later_enumeration
+  source_review: SCOPED_APPROVED6104754222_ROOTFULL4092_SHA256bef57fc9968eeaa94fba93f2f814250147972f3ffcf74a45e958ed822299a25c
+  schema_preparation: restored_APPLIED_after_complete050_review_schema_now_versioned_preparation
+  remote676_native116: separately_ACTIVE_excludes_this_repair
+  model: NOT_RUN_UNEVALUATED
+
+group_278_050_review_closure:
+  head: 050a98c112d8d7aa2e639c6e707200b8c34d24bb
+  parent_review: WITHHELD6104734957_ROOTFULL4062_SHA256421067e9c010f4553549666cf414978fc24d4b2195bf27499cd67d7e542a4284
+  repair_review: SCOPED_APPROVED6104754222_ROOTFULL4092_SHA256bef57fc9968eeaa94fba93f2f814250147972f3ffcf74a45e958ed822299a25c
+  independent_verification: 295PASS_280repo_two_exact_original_denials_13retained_independent
+  scope: complete_seven_paths_metadata_preparation_no_runtime_full278_merge
+  remote676_dotnet: CLOSED_SUCCESS114369115405_full3218_6_520_25_2667_zeroFailSkip_886024bytes_SHA256804a31d4b88ac3331660f7a0f507ab8a16c6838928f22ebf895617cc6301d562
+  remote676_native116: still_ACTIVE_root_owns_terminal
+  model: NOT_RUN_UNEVALUATED
+
+group_278_terminal_schema_preparation:
+  source_base: ca087f5e84de8e36b91e9a6aae7d3ec46afc8218
+  restored_schema_stash: 55a9ba54f94d1d8a49d577ba1562bbcf0d8c9ed6_APPLIED_after_complete050_source_approval_retained_private
+  migration: 20261011025104_AddGroupBatchTerminal
+  expansion: two_metadata_tables_plus_original_claim_scoped_batch_operation_alternate_key_no_existing_column_or_data_mutation
+  receipt: immutable_scoped_batch_operation_after_interval_AIOGTRM1_257to8177_SHA256_raw500_selected100_contributor100_notes40each_original_claim_and_authority_UTC
+  cursor: separate_scoped_contiguous_through_last_receipt_version_UTC_existing_ingest_markers_and_rights_preserved
+  effective_rights: existing_operator_owner_appendonly_receipt_all_columns_DENY_four_cursor_writable_columns_only_new_column_failclosed_inventory_chains_full_old_proof
+  rollback: destructive_Down_refused_reviewed_forward_repair_required
+  local: final35PASS_eight_new27retained_zeroFailSkipWarnings_ScriptDom160_pending_model_false_closed_connections_seven_file_format_PASS
+  initial_test_repairs: old30_table_count_to32_and_cumulative_ownership_SQL_includes_new_migration_all_prior_assertions_preserved_concurrent_EF_DLL_warning_resolved_serial
+  source_review: WITHHELD739_originalP2_CLOSED_repaired464_APPROVED6105046515_ROOTFULL5040_41PASS_current_CI_active
+  actual_SQL: NOT_RUN_UNQUALIFIED_remote676116_predates_this_migration
+  terminal_store_own_input_frontier_expiry_races_DI_no_click_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+  next: FULL_source_review_then_owned_SQL_terminal_transaction_chain_authentication_contiguous_cursor_and_native_adversarial_proof_same288
+
+group_278_676_terminal_qualification:
+  remote_head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
+  state: CLOSED_TERMINAL_SUCCESS_SCOPED116
+  build: 38105196689
+  native: 114369115337
+  quality: 114375378335
+  governance: SUCCESS38105196702
+  all8: SUCCESS
+  root_full_native: 116each_once_172PASS_zeroFailures_85322bytes_SHA2560e7ca03696b6fcf92c66891453617313fb63d45d7f0be1a6f78f3ce486a195a0
+  root_full_quality: 3457bytes_SHA256d1eea1e0cb817089ef554c8bca3adcbdca916a38b0828804e5591dcc8ce7090b_sevenPrerequisitesEachSuccessOnce
+  root_full_dotnet: 3218_6_520_25_2667_zeroFailSkip_fourSuccessfulRuns_114369115405_886024bytes_SHA256804a31d4b88ac3331660f7a0f507ab8a16c6838928f22ebf895617cc6301d562
+  original_images: six11689274053_ROOT_individually_viewed_layout_original_browser_assertions_required_longSubmission_resized_for_display
+  qualified_scope: four_original_onecontributor_twoselected_zerobrain_atomic_expected_digest_SQL229_immutable_columns_locked_original_acquisition_effect_graph_metadata_before_cipher_source_APPLOCK_Serializable_and_browser_raw500_pending501
+  preserved_history: all_prior_failure_evidence_retained_earlier_selector_provider_timeout_cause_UNPROVEN
+  local_terminal_schema_writer_own_input_frontier_DI_no_click_adversarial_races_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+  next: reviewed_per_column_schema_repair_next_exact_CI_then_owned_terminal_transaction_actual_multi_contributor_nonemptybrain_and_own_input_SQL_proof
+
+group_278_terminal_per_column_permission_repair:
+  parent: 739d01afdbc79b451d6d75454a261b697cac5b1a
+  parent_review: WITHHELD6104920534_ROOTFULL5299_SHA2565b4d608bc1e5d219cc7ecdd650ae9e069a0b667626fe5f8d222a6e2210a5caa5
+  finding: mutable_cursor_OBJECT_UPDATE1_repeats_known_scope_column_DENY_native42_refusal
+  original_evidence: frozen42cc94dc_auth_permissions_initial_predicates085095105115_logSHA2564c117bf6d97097300581cca15d9ced0fdb816a56930cd9f996e9c82249d66cfb_accepted_cd173_complete6090413905_ROOTread
+  repair: remove_only_cursor_whole_object_update_prerequisite_preserve_four_effective_writable_column_checks_all_immutable_inventory_receipt_OBJECT_UPDATE0_and_all_migration_DENYs
+  local: final36PASS_nine_new27retained_zeroFailSkipWarnings_actual_SQL160_parse_pendingModelFalse_closed_connection_two_file_format_PASS
+  original_independent_regression: unchanged_original_probe_PASS_all_four_other_controls_retained_final41PASS
+  source_review: APPROVED6105046515_ROOTFULL5040_SHA2560b53a960b904bfd52807372177727abbb68c8b94118b403e3d576f164f387ba1
+  own_input_work: old9371stash_retained_superseded_NOT_APPLIED_latest_five_tested_formatted_files_promoted_after_full_repair_approval
+  native_terminal_schema_effects_cursor_model_full278_279_233_merge: UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED
+  next: FULL_repaired_source_approval_then_reviewed_exact_CI_owned_SQL_terminal_transaction_replay_expiry_contiguous_progress_and_own_input_chain_proof_same288
+
+group_278_464_dispatched_ci:
+  head: 464607ac961d409ef02d658f9379fc56e39316ce
+  state: CLOSED_TERMINAL_FAILURE_FIX_SAME288
+  build: 38108833612
+  governance: 38108833538
+  native: 114379946799
+  dotnet: 114379946773
+  source_review: APPROVED6105046515_ROOTFULL5040_SHA2560b53a960b904bfd52807372177727abbb68c8b94118b403e3d576f164f387ba1
+  independent: final41PASS_36repository_five_original_review_controls_noFailSkip_originalP2_probe_unchanged_PASS
+  scope: source_schema_per_column_repair_dispatch_original116_profiles_only_new_terminal_permissions_insert_cursor_NOT_RUN_UNQUALIFIED
+  next: own_exact_terminal_all8_Gov_full_native116_NET_logs_and_six_original_images_while_continuing_same288
+
+group_278_batch_own_input_prerequisite:
+  parent: 464607ac961d409ef02d658f9379fc56e39316ce
+  implementation: detached_original_requestIDs_and_commitUTC_immutable_v1_effect_bytes_unchanged_scoped_locked_origin_metadata_then_deterministic_DAG
+  origin: exact_requested_set_scope_deterministic_noteID_external_too_original_batch_operation_ordinal_UTC_no_future_self_unknown_samebatch_or_cycles
+  ordering: distinct_contributor_edges_topological_GUID_order_equal_commitUTC_accepted_glossary_external_no_edges
+  bounds: metadata_only2000_union_TOP2001_each_brain20_256000_notes40_raw500_selected100_unchanged
+  query: owned_same_connection_Serializable_savepoints_clean_no_ambient_noMARS_scoped_noTracking_no_cipher_or_businessfields
+  local: shared304PASS_24new280retained_noFailSkip_five_CSharp_format_actual_two_and2000ID_EF_SQL160_generated_no_connection_open_2100_parameter_bound
+  private_to_shared: exact_five_latest_tested_formatted_sources_promoted_directly_9371stash_RETAINED_SUPERSEDED_NOT_APPLIED
+  first_shared_selection: 92PASS_partial_filter_had_nonexistent_class_names_corrected_exact_five_actual_classes304PASS_no_source_change
+  source_review: c82_WITHHELD_head_finding_CLOSED691_APPROVED6105177458_ROOTFULL5401_369PASS_no_actual_SQL_acceptance
+  actual_nonemptybrain_multicontributor_chain_SQL: NOT_RUN_UNQUALIFIED_older116profiles_zero_brain_one_contributor
+  terminal_transaction_frontier_expiry_races_DI_no_click_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  next: complete_frozen_source_review_owned_terminal_store_and_actual_adversarial_own_input_chain_SQL_proof_same288
+
+group_278_464_terminal_failure_and_repair:
+  failed_head: 464607ac961d409ef02d658f9379fc56e39316ce
+  state: CLOSED_TERMINAL_FAILURE_FIX_SAME288
+  build: 38108833612
+  native: 114379946799
+  dotnet: 114379946773
+  quality: 114380506790
+  governance_and_other_prerequisites: SUCCESS38108833538_five_other_Build_prerequisites_SUCCESS
+  native_failure: bootstrap_SQL_Server_varbinary8177_exceeds_fixed8000_only_two_shipping_preflight_PASS_zero_required116_no_browser_artifacts_secondary_ACTION_errors_retained_requalification_pending
+  dotnet_failure: original_four_StructuralCoverageAcceptsActualReaderPriorityHeadsInsideAndBeforeAllocation_cases_CopyReceipt_fixture_SourceSetSHA_default_empty_canonical_guard_unchanged
+  full_logs: native99427_SHA25668a85cf346cc6998df6356ee8afcf257b2ea27a6292a6d5f87e85d50690e27a7_dotnet1141786_SHA2562e4a6c41417f981bd23228ceb980bfced9a8b3b8e819b81e115de7332bf84214_quality6150_SHA25656ca7d930e7ba0c6e3e077e0754a447e193bddb630c2338119b36b2c892b58e0
+  full_dotnet: attempted3327_pass3323_failed4_runs6_520_25_2776_no_runtime_acceptance
+  repair_parent: c82e6340479276ace313a0bd12fa8484dd63b62c
+  physical_repair: unmerged_unapplied_CREATE_model_migration_Designer_snapshot_varbinaryMax_logical8177_maxlength_and_DATALENGTH_check_all_checks_FKs_indexes_permissions_Down_preserved
+  fixture_repair: actual_single_selected_message_revision_shipping_SourceSetSHA_formula_all_four_cases_and_positive_negative_assertions_preserved_production_guards_unchanged
+  local: fullPersistence2801PASS_noFailSkipWarnings_original_four_cases_new_engine_binary_limit_regression_six_CSharp_format_SQL160_pendingModelFalse_closed_connection
+  own_input_parent_review: WITHHELD6105133070_ROOTFULL5660_SHA256bba85ec1dfa9c9b314cd08d53a638f596110d9c66cdd2e66250950f078454406_318PASS_no_other_source_blocker
+  durable_repair: exactly_three_current_heads676_to_remote464_history_676_blocks_preserved_local_c82_unpushed_source_currentCI_failure_recorded
+  source_review: APPROVED691_6105177458_ROOTFULL5401_369PASS_source_only_new_exact_CI_ACTIVE
+  next: FULL_repair_approval_then_reviewed_same288_push_new_exact_head_all8_Gov_full116_NET_original_six_owned_terminal_closure
+  actual_terminal_rights_insert_cursor_own_input_chains_full278_279_233_merge: UNQUALIFIED_INCOMPLETE
+  model: NOT_RUN_UNEVALUATED
+
+group_278_691_dispatched_ci:
+  head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
+  state: ACTIVE_OWNED_CI
+  build: 38109741737
+  native: 114382645109
+  dotnet: SUCCESS114382644992_FULL3352PASS_6_520_25_2801_noFailSkip_all_passed_counts_equal_totals
+  dotnet_log: ROOT_FULL913975bytes_SHA256af588144ad0e15896df6dea55e16e2820d8dab355c16e3aeb5c42ca3788b3f80
+  governance: SUCCESS38109741851
+  six_prerequisites: SUCCESS_native_quality_and_original_six_images_pending
+  source_review: APPROVED6105177458_ROOTFULL5401_SHA2569c7426b2671a2db63abbe4625bec99b89fd4825d2b258c9ab86921345e759515_369PASS_six_format_closes_c82_three_heads_and_four_cutoff_source_cases
+  next: own_exact_head_all8_native116_quality_full_logs_and_original_six_images_through_terminal_while_continuing_same288
+  actual_terminal_permissions_insert_cursor_own_input_SQL_full278_merge: NOT_RUN_UNQUALIFIED
+
+group_278_owned_terminal_receipt_consumer:
+  parent: 691714683f291fcd5c2a7c32d87852d5ac73c91a
+  implementation: owned_two_minute_Serializable_source_APPLOCK_before_effect_savepoint_appendonly_terminal_receipt_current_all_contributor_rechecks
+  proof: complete_scope_counts_range_manifest_SHA_original_terminal_acquisition_owner_epoch_all_authority_versions_original_commit_window_and_current_live_lease
+  original_claims: actual_bounded100_unique_complete_sealed_effect_set_scope_batch_commitUTC_authorityHash_no_collection_count_trust
+  fences: three_whole_reads_new_commit_two_replay_reads_full_source_brain_own_input_effect_graph_permission_current_claim_monotonic_store_clock_before_commit
+  written_row: actual_scoped_noTracking_TOP3_SQL_readback_after_SaveChanges_exact_prepared_manifest_and_commitUTC_additional_to_valid_provenance_result_from_validated_actual_row
+  expiry: rollback_effect_savepoint_detach_all_staged_before_existing_witness_only_commit_trusted_observed_expiry_retained_on_clock_rollback_cancellation_preserved
+  replay: scoped_batch_OR_operation_collision_bound_three_original_acquisition_and_unchanged_graph_current_later_lease_can_replay_cannot_restage_substituted_original
+  local: shared353PASS_49new304retained_zeroFailSkipWarnings_four_CSharp_format_actual_scoped_SQL160_cold_queries_closed_connection
+  initial_guard_assertion: one_test_expected_InvalidOperation_but_existing_foreign_worker_policy_UnauthorizedAccess_corrected_exact_test_exception_only_finalPASS
+  source_review: APPROVED87e163b_6105354729_ROOTFULL5595_368controls_fourformat_source_only_actualSQL_NOT_RUN_UNQUALIFIED
+  actual_receipt_insert_readback_replay_expiry_permission_races_SQL: NOT_RUN_UNQUALIFIED
+  cursor_gap_retry_multichunk_nonemptybrain_DI_no_click_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  next: complete_FULL_source_review_then_native_owned_transaction_corruption_replay_expiry_proof_and_authenticated_contiguous_SQL_frontier_same288
+
+group_278_terminal_receipt_native_phase:
+  parent: 87e163b1063e7153cca734dc4462507f29623e9f
+  source_review: APPROVEDec144ea_6105464632_ROOTFULL6163_SHA25646b39231b7cbf0531ba274f162acb6efbf0abf30749db31fc1e6785fc7ac3e20_independent50NET156Python_threeformat_source_only
+  previous_consumer_review: APPROVED6105354729_ROOTFULL5595_SHA256809b7d772bfb929ec0518504488b14cd9ece172a74566e940146ffcf1e08e02d_368controls_fourformat_source_only
+  execution: owned_disposable_CI_guard_before_config_SQL_Docker_after_complete_original116_gates_one_additive_aggregate_marker_four_closed_unique_metadata_fixtures_TOP5_sentinel
+  SQL_plan: actual_terminal_stage_insert_readback_then_expiry_savepoint_rollback_detach_before_single_witness_readback_clockrollback_denial_three_additional_acquisitions_per_scope
+  replay_rights_plan: new_valid_commit_exact257byte_one_contributor_manifest_all24receipt_fields_original_terminal_claim_actual_original_and_later_lease_replay_nonce_collision_24actual_SQL229_noop_column_denials
+  preservation: original_effect_raw_complete_graph_original_claim_receipts_scoped_source_grants_frontier_source_account_service_and_portal_full_ordered_tagged_SQL_digests_pending501_no_keys_no_new_cursor_or_notes
+  local: shared833NET_PASS49new784retained_zeroFailSkipWarnings_threeformat_Python4new144retained_PASS
+  cold_negative_controls: exact_four_closed_unique_fixture_JSON_duplicate_keys_foreign_oversize_guard_before_resources_missing_duplicate_wrong_marker_nonzero_exit_stderr_original_mutation_missing_extra_receipt_cleanup_failure
+  unchanged: all_original116_assertions_three_dependency_checks_runtime_timeouts_guard_cleanup_migrations_v1_serialization_existing_gateway_and_production_DI
+  actual_terminal_SQL_runtime: NOT_EXECUTED_UNQUALIFIED_b3_fixture_metadata_transport_refused_before_terminal_child
+  parent691CI: CLOSED_ALL8_Gov_SUCCESS_ROOT_full116_once172PASS_full3352NET_quality_six_original_images_at_retained_scope
+  cursor_multicontributor_nonemptybrain_owninput_SQL_corruption_races_cancellation_session_gap_retry_DI_no_click_full278_279_233_merge: INCOMPLETE
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  next: repair_terminal_fixture_bounded_GUID_transport_same288_then_FULL_source_review_new_exact_head_native117_all8_Gov_quality_six_originals_and_signed_frontier_SQL_history_application
+
+group_278_repaired_storage_691_closure:
+  head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
+  state: CLOSED_TERMINAL_SUCCESS_SCOPED116
+  build_governance: Build38109741737_all8_SUCCESS_Gov38109741851_SUCCESS
+  native: job114382645109_full85323bytes_SHA2568532042c9bc6485345c373261c01f5034309e373db651cbc9d0e2e2c64347e08_ROOT116required_once172PASS_zero_failure_missing_duplicate
+  dotnet: job114382644992_full913975bytes_SHA256af588144ad0e15896df6dea55e16e2820d8dab355c16e3aeb5c42ca3788b3f80_ROOT3352PASS6_520_25_2801_zeroFailSkip_all_attempted_passed
+  quality: job114388035097_full3454bytes_SHA256f39ab97b302fb91e57404e10599c4f241247569338bc598f2893457c8e2c93ff_ROOT_FULL_READ_seven_predecessors_SUCCESS
+  browser: artifact11692126093_ROOT_individually_viewed_all_six_ORIGINAL_PNGs_desktop_mobile_usable_no_synthetic_replacements
+  accepted_scope: repaired_physical_SQL_manifest_MAX_bootstrap_four_retained_cutoff_fixtures_original_four_one_contributor_two_selected_zero_brain_profiles_pending501_preserved
+  history: prior464_terminal_failures_and676_scope_preserved
+  reviewed_next: consumer87e163b_6105354729_ROOTFULL5595_native_phaseec144ea_6105464632_ROOTFULL6163_source_only
+  new_terminal_SQL_frontier_owninput_nonemptybrain_multichunk_races_DI_no_click_model_full278_279_233_merge: UNQUALIFIED_INCOMPLETE
+  qualification_document: docs/validation/GROUP_TERMINAL_STORAGE_691_QUALIFICATION.md
+  next: focused_three_path_closure_review_then_reviewed_exact_head_CI_required117_retaining_original116_same288
+
+group_278_signed_terminal_frontier_integrity:
+  parent: b3c7dfb1637f83b8a85032640bbf43503f220fb0
+  source_review: APPROVEDeae1bee_6105654903_ROOTFULL4563_SHA256b9ff4cced532c44633c60b5ca2f15c0001bba925c72c13c6086c7d47de5ffb0d_independent100PASS_twoformat_source_primitive_only
+  implemented: metadata_only_AIOGFAD1_closed322_to385bytes_including32byte_HMAC_full_envelope_SHA256_identity_versions_scope_range_UTC_predecessor_terminal_current_actor_authority_KeyId_bound
+  keys: reuse_existing_exact_scope_IGroupSourceKeyProvider_CompositeSecretResolver_retained_immutable_scope_KeyId_material_no_new_secret_store_AI_client_config_or_plaintext_source
+  derivation: HKDF_SHA256_fixed_versioned_scope_salt_purpose_aioffice_group_terminal_advance_integrity_v1_excludes_mutable_authority_derived_bytes_zeroed
+  guards: actual_bounds_before_allocation_strict_ASCII_KeyId_EOF_genesis_successor_shape_positive_versions_exactUTC_detached_copies_fixed_inner_free_errors_PeekKeyId_untrusted
+  local: shared84PASS38new7retainedkeys39retainedfrontier_zeroFailSkipWarnings_twoformat_private_same84PASS
+  controls: independent_manual_binary_layout_RFC_extract_expand_every_byte_mutation_unkeyed_checksum_forgery_wrong_scope_same_material_wrong_disposed_keys_retained_rotation_malformed_range_version_dates_hashes_KeyId_truncation_EOF_bounds_copies
+  design_corrections: mutable_lastBatch_not_fullprefix_authentication_current_target_dependency_versions_can_strand_genuine_terminal_after_crash_edit_recall_rotation
+  future_chain: versioned_append_only_signed_advance_exact_terminal_interval_self_predecessor_FKs_explicit_root_allNULL_later_allNOTNULL_sequential_unique_scope_version_no_fork_cursor_exact_signed_latest_leaf_includingUTC
+  future_store: authenticate_historical_target_full_original_graph_fresh_current_Extract_rights_scope_retained_key_await_outsideSQL_byte_exact_locked_reread_sign_after_verified_predecessor_atomic_advance_cursor_actualreadback_expiry_rollback_detach_before_witness_cancellation_replay
+  unauthorized_or_unimplemented: primitive_is_not_graph_proof_or_current_authority_schema_SQL_advance_store_historical_reader_key_await_fences_DI_native_prefix_races_NO_IMPLEMENTATION
+  initial_graph_factor_prototype: UNVERIFIED_SUPERSEDED_NOT_PROMOTED_no_fake_Current_old_handle_or_old_current_clock_in_shipping
+  parent_b3CI: ACTIVE_OWNED_Build38112203893_native114389913437_six_prerequisites_Gov38112203900_SUCCESS_fullNET3450PASS_not_superseded
+  actual_model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  full278_279_233_customer_production_activation_merge: INCOMPLETE
+  next: repair_b3_terminal_transport_same288_full_historical_metadata_source_review_then_fresh_native117_and_signed_chain_actual_SQL_history_atomic_frontier_store_application
+
+group_278_historical_terminal_metadata_proof:
+  parent: eae1bee23ed7fa421a31c764a00724342f34e977
+  source_review: PENDING_FULL_ten_paths_seven_CSharp_validation_document_two_state
+  implemented: distinct_sealed_original_graph_actual_observationUTC_complete_frozen_coverage_effect_expectations_bound_original_acquisitions_own_input_DAG_and_independent_historical_terminal_receipt_comparison
+  provenance: same_immutable_original_claim_already_in_v1_effect_digest_retained_on_sealed_ledger_no_supplied_provenance_substitution_same_epoch_exact_acquisition_window_owner_operation_required
+  history: actual_original_commit_inside_original_lease_expiry_may_precede_today_genuine_later_terminal_acquisition_retains_earlier_contributors_no_fake_Current_old_handle_or_old_current_clock
+  bounds: actual_effect_enumeration100_plus101sentinel_disposed_private_diagnostics_requested_cancellation_actualUTC_readonly_sealed_graph_origins2000_cap_complete_own_DAG
+  preservation: byte_identical_v1_effect_and_terminal_manifests_current_creation_store_live_source_brain_authority_lease_checks_all_SQL_migrations_workflows_integrity_keys_ciphertext_AI_config_unchanged
+  local: shared_and_private303PASS50new253retained_zeroFailSkipWarnings_seven_CSharp_format_verification
+  controls: all_terminal_fields_recomputed_carrier_hash_matching_claim_receipt_authority_substitutions_same_epoch_nonce_owner_window_actual_expiry_later_acquisition_missing_foreign_effects_enumeration_disposal_cancellation_private_errors_five_contributor_nonempty_own_DAG_cycles_missing_foreign_origins_current_historical_canonical_bytes
+  document: docs/validation/GROUP_HISTORICAL_TERMINAL_PROOF.md
+  authority_or_SQL: NONE_pure_evidence_only_no_current_Extract_signed_prefix_SQL_reader_advancement_cursor_or_DI
+  actual_SQL_nonemptybrain_multicontributor_owninput_restart_rotation_key_races_cancellation: NOT_RUN_UNQUALIFIED
+  parent_b3CI: CLOSED_RED_Build38112203893_native114389913437_quality114395898042_Gov38112203900_six_prerequisites_SUCCESS_root3450NET_98of117once150PASS19missing3failure_no_images_terminal_not_executed
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  full278_279_233_production_merge: INCOMPLETE
+  next: FULL_ten_path_source_review_repair_terminal_fixture_bounded_SQLcmd_transport_same288_then_fresh_native117_all8_Gov_quality_originalsix_and_actual_historical_SQL_graph_signed_chain_atomic_store_DI_no_click
+
+group_278_terminal_receipt_b3_ci_failure:
+  head: b3c7dfb1637f83b8a85032640bbf43503f220fb0
+  state: CLOSED_TERMINAL_RED_IMPLEMENTATION_FAILURE
+  build_governance: Build38112203893_all8_terminal_native_and_quality_FAILURE_six_prerequisites_SUCCESS_Gov38112203900_SUCCESS
+  native: job114389913437_ROOT_full80405bytes_SHA256fb1a939fb66bfd580419e32fae768dcc5bacc3c5f49484a02a25f59f2c59cca1_98of117_required_once150PASS19missing3failure
+  dotnet: job114389913348_ROOT_full3450PASS6_520_25_2899_zeroFailSkip_SHA256a1511a1bb7cdffa361befcfc4a39bd004705eeb53a8c88ee59b7973ecb3e4d31
+  quality: job114395898042_ROOT_FULL_READ3529bytes_SHA2562151ec54d60db39fc834da06aba63b3e2f7153e000704b036768e76721ccb123_LOCAL_RUNTIME_FAILURE_six_other_predecessors_SUCCESS
+  failure: terminal_fixture_FOR_JSON_PATH_unterminated_string_column254_before_terminal_child_or_receipt_write_shared_SQLcmd_default_variable_width256_W_reader
+  browser: NOT_EXECUTED_NO_ARTIFACT
+  terminal_SQL: NOT_EXECUTED_UNQUALIFIED_fixture_metadata_transport_refused_before_resource_build
+  remedy: bounded_indexed_GUID_frames_fit_default_width80_no_shared_reader_flag_change_keep_TOP5_exact4_closed_scope_uniqueness_and_all_original117_assertions
+  native_fullfeature_model: UNQUALIFIED_INCOMPLETE_NOT_RUN_UNEVALUATED
+  next: repair_same288_focused_cold_transport_controls_FULL_source_review_then_new_exact_head117_all8_Gov_quality_six_original_images_no_blind_rerun
+
+group_278_terminal_fixture_frame_repair:
+  parent: 6ce6e11bdb6f561fabea2049229d35f154fb825d
+  source_review: PENDING_FULL_five_paths_two_Python_validation_document_two_state
+  failed_remote: b3c7dfb1637f83b8a85032640bbf43503f220fb0_CLOSED_RED_Build38112203893_native114389913437_quality114395898042_Gov38112203900SUCCESS_no_images_terminal_NOT_EXECUTED
+  repair: SQL_TOP5_candidates_each_six_ordered_indexed_GUID_frames_fixed_varchar40_below_default_SQLcmd_output80_and_variable256_no_shared_reader_flag_change
+  parser: exact24frames_four_closed_unique_scopes_40characters_expected_fixture_and_field_ordinals_in_order_canonical_nonempty_UUIDs_exact_tenant_company_unique_source_event_batch
+  refusals: missing_extra_fifth_candidate_reordered_duplicate_truncated_wrong_index_malformed_foreign_metadata_before_build_child_or_receipt_effects
+  local: six_terminal_cold_tests_two_new144retained_owned_stack_guards_total150PASS_actual_captured_query_SQL160_parse_no_connection
+  preservation: all_original117markers_graph_snapshot_predicates_guard_before_resources_child_STDOUT_EXIT_STDERR_rules_timeouts_cleanup_secrets_environment_SQL_flags_production_migrations_current_store_and_historical_proof_unchanged
+  document: docs/validation/GROUP_TERMINAL_TRANSPORT_B3_REPAIR.md
+  ancestor_integrity: eae1bee_APPROVED6105654903_ROOTFULL4563_100PASS_source_only
+  ancestor_historical: 6ce6e11_ten_paths_FULL_source_review_PENDING_shared_private303PASS50new253retained_sevenformat_pure_evidence_only
+  actual_terminal_SQL: NOT_EXECUTED_UNQUALIFIED_pending_new_reviewed_exact_head_full_native117
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  full278_279_233_SQL_frontier_DI_customer_production_merge: INCOMPLETE
+  next: FULL_source_review_repair_and_historical_checkpoint_ROOT_full_consumption_then_push_same288_and_own_new_exact_head117_dotNET_all8_Gov_quality_six_original_images_fix_terminal_failures_on_same_branch_then_SQL_history_signed_chain_DI

@@ -112,7 +112,7 @@ jobs:
   local-runtime:
     name: Complete local stack integration
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/configure-docker-cache
@@ -131,6 +131,7 @@ jobs:
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
+          python scripts/test-terminal-receipt-proof.py
           node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh
