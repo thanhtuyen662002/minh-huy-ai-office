@@ -11,6 +11,8 @@ import uuid
 
 SUCCESS = "PASS owned frontier root SQL original history after expired acquisition atomic key advance cursor actual all fields readback postflush clock rollback all three effects empty immutable26 and14 column denials missing rebound key no effects"
 REPLAY_SUCCESS = "PASS owned frontier root independent process replay original signed version time fingerprint all original graphs unchanged no extra advance key or cursor"
+CURSOR_SUCCESS = "PASS owned signed frontier cursor SQL trusted seven field foreign key nonempty partial null closure three tuple attacks four permitted noop updates complete original cursor unchanged"
+CURSOR_SUMMARY = "PASS actual signed frontier cursor SQL four original scopes trusted complete seven field foreign key empty null tuple attacks refused permitted four noop columns complete original and frontier graphs unchanged no latest chain DI or model"
 SUMMARY = "PASS actual root frontiers SQL four original scopes historical expired acquisition atomic key advance cursor all fields readback postflush rollback immutable26 and14 columns missing rebound key independent process replay full original graphs pending501 unchanged no successor DI or model"
 
 
@@ -101,6 +103,12 @@ def verify(*, directory, api, manifest, sql):
             counts(index + 1); assert original_snapshot() == original, "Frontier replay changed original graphs"
             for source, written in completed.items():
                 assert frontier_snapshot(source) == written, "Independent process replay changed original frontier"
+            result = subprocess.run(command + ["frontier-cursor-contract"], input=json.dumps(configuration), env=environment, capture_output=True, text=True, timeout=170)
+            assert not result.stderr, "Owned cursor contract emitted unexpected diagnostics"
+            reference.require_reference_result(result, "frontier-cursor-contract", [REPLAY_SUCCESS, CURSOR_SUCCESS])
+            counts(index + 1); assert original_snapshot() == original, "Cursor contract changed original graphs"
+            for source, written in completed.items():
+                assert frontier_snapshot(source) == written, "Cursor contract changed an original frontier"
     except BaseException as error:
         failure = error
     finally:
@@ -115,3 +123,4 @@ def verify(*, directory, api, manifest, sql):
             if failure is None: failure = error
     if failure is not None: raise failure
     print(SUMMARY, flush=True)
+    print(CURSOR_SUMMARY, flush=True)

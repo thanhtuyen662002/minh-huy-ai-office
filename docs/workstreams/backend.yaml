@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 77f78278d189a9a60b784e3af78fa1388c14c7fc
+head: b67f332be7d4ebad1d7419ca12ddee67ce5b957f
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 actual remote77f78278d189a9a60b784e3af78fa1388c14c7fc CLOSED_ROOT_FULL_TERMINAL_RED Build38118871590/native114409281277_body_after202_beforeJSON_beforeRedis/sixPrerequisitesSUCCESS/Gov38118871592SUCCESS/full.NET3604/quality114415824043LOCAL_RUNTIMEfailure_noArtifact. ROOT full native80644 SHAbe40b181eca250dea4b0ca87bd4893d05c87ffbb47c5afe578759cb7a05a4138 selected117_105once12missing160overall3failure; unique hosted body cause UNPROVEN. Leaf0ce/storebc6 APPROVEDROOTFULL6106406446_6968/6106580871_9373 independent124/168. Combined13-path source prepared: strict original browser finished_body20s_max4096_fixed refusal_noFallback_noRetry_preserveAllGates and new actual root SQL phase candidate. Private3187Persistence75new3112retained/154Python144guard6terminal4root/60Node21new39retained_twoactualprojectformat; shared134PASS75observer44store15leaf/60Node/154Python/twoactualprojectformat; full frozen13-path review pending. Four original scopes after expired acquisition atomic root key_advance_cursor actual all fields readback postflush rollback immutable26and14denials missing_reboundkeys eight independent root_replay children all35original/allpriorfrontier snapshots NOT_RUN_UNQUALIFIED. After ROOT full source approval push SAME288 and own fresh selected118 CI until terminal; fix actionable red samebranch no blind rerun. Then successor_prefix_oldreplay_rotations_editRecall_keyawaitRevocationSnapshotRace_signedCursorMigration_continuation_gaps_nonemptyBrain_multipleContributors_owninputs_DI_noClick. ExistingGateway actualmodel NOT_RUN_UNEVALUATED; full278_279_233_ERP_customer_production_merge incomplete."
+next_action: "Draft288 b67 exact Build38122945344/Gov38122945375/all8/native114421254988/full118/3738.NET/quality/six original images CLOSED_SCOPED_SUCCESS; original four roots/replays and strict original202 browser qualified only within owned fixture. Promoted reviewed private12 signed cursor migration51048 sevenfieldFK/nonemptyCHECK and guarded catalog547 rollback/noop phase; preliminary ROOTFULL9163 SHA019c65d19302f64acd5b74e0e33d61076be452f843d1b547f7ac0b74fec06177 independent28NET159Python/sourceonly. Local144NET155Python9CSharp3actualprojectformats compiledunownedguard; prior schemaonlyfull3193. Shared144NET155Python9CSharp3actualprojectformats and compiledunownedguard PASS; complete frozen14path Git source review pending. After ROOT full approval push SAME288 and own fresh all119/all8/Gov/full.NET/quality/six originals to terminal; fix actionable red on SAME branch. Physical51048 legacy refusal, successors/fullprefix/oldreplay/rotation/editRecall/revocationSnapshotRaces/continuation/gaps/nonemptyBrain/multipleContributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/customerERP/production/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -3306,3 +3306,49 @@ group_278_owned_browser_expiry_receipt_repair:
   actual_browser: NOT_RUN_UNQUALIFIED_repair_not_proven_by_cold_controls
   document: docs/validation/GROUP_BROWSER_EXPIRY_RECEIPT_REPAIR.md
   next: full_frozen_source_review_then_same288_push_own_complete_exact118_native_browser_quality_images_fix_any_terminal_red
+
+group_278_remote_b67_terminal_closure:
+  head: b67f332be7d4ebad1d7419ca12ddee67ce5b957f
+  state: CLOSED_TERMINAL_SUCCESS_SCOPED118
+  build: 38122945344
+  governance: 38122945375
+  native_job: 114421254988
+  dotnet_job: 114421254944
+  quality_job: 114428724038
+  selected_required: 118
+  selected_once: 118
+  missing: 0
+  duplicates: 0
+  failure_markers: 0
+  native_log_bytes: 89279
+  native_log_sha256: e9d673946c16decfc8fc6bd73353f21b9db97ba39fb59574a3fdb1e7b852df6a
+  dotnet_passed: 3738
+  dotnet_runs:
+  - 6
+  - 520
+  - 25
+  - 3187
+  quality_results:
+    DOTNET_RESULT: success
+    WEB_RESULT: success
+    WEB_RUNTIME_RESULT: success
+    LOCAL_RUNTIME_RESULT: success
+    INFRASTRUCTURE_RESULT: success
+    DEPLOYMENT_RESULT: success
+    MIGRATIONS_RESULT: success
+  artifact: 11697056412
+  qualification: ROOT_FULL_NATIVE_DOTNET_QUALITY_ALL8_GOV_SIX_ORIGINALS_SCOPED118_ONLY_no119_successor_DI_model_full278_merge
+group_278_signed_terminal_cursor_source:
+  parent: b67f332be7d4ebad1d7419ca12ddee67ce5b957f
+  source_review: PENDING_FULL_PROMOTED_FOURTEEN_PATH_GIT_CHECKPOINT
+  preliminary_review: PRIVATE12_NO_P1_P2_ROOTFULL9163_SHA019c65d19302f64acd5b74e0e33d61076be452f843d1b547f7ac0b74fec06177_independent28NET155retainedPython4own_formats_unownedguard_SOURCE_ONLY
+  migration: 20261011075456_AddGroupSignedTerminalCursor_transactional51048preDDL_no_rewrite_no_backfill_no_Down
+  schema: existing7fields_positiveVersionThrough_nonnullBatch_UTC0_exact7field_restrictiveFK_to_signedAdvance_retainedold4FKandvaluesCHECK_no_secret_or_rights_changes
+  limit: FK_matches_existing_tuple_not_MAC_not_latest_shippingsignedstore_still_required_oldervalidtuple_physically_possible
+  local: 144PASS134retained6schema4actualSQLcontrols_zeroFailSkipWarnings_Python155_9CSharp3actualprojectformats_actualcompiled_unownedguard_beforeconfigSQLkeys_priorfull3193schemaonly
+  native: guarded_trustedcatalog_exact7mapping_3tuple547FK_Through0BatchNULL547signedCHECK_4permitted1row_noops_eachSerial_sourceAPPLOCK_finallyrollback_full7bytecursor_unchanged12children_full35original13reads_allpriorfrontier30reads
+  preservation: original118markers_root8children_originalsnapshotASTs_and_program_guard_and_allshippingproviders_keys_rights_unchanged_new_cursor_summary119_onlyafterallsuccesscleanup
+  physical: NOT_RUN_UNQUALIFIED_119_SQL_catalog547_and_migration51048_legacy_refusal
+  excluded: successors_stalematchingcursor_fullprefix_rotation_editRecall_keyawaitRevocationSnapshotRaces_continuation_gaps_nonemptyBrain_multiplecontributors_owninput_DI_noClick_model_full278_279_233_production_merge
+  document: docs/validation/GROUP_SIGNED_TERMINAL_CURSOR_PREPARATION.md
+  next: FULL_promoted_source_review_then_same288_fresh119_CI_owned_until_terminal_and_six_original_views_no_partialmerge

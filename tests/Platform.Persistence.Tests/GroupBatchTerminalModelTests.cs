@@ -63,15 +63,16 @@ public sealed class GroupBatchTerminalModelTests
         Assert.Equal(new[] { "TenantId", "CompanyId", "BindingId" }, frontier.FindPrimaryKey()!.Properties.Select(p => p.Name));
         Assert.Equal(7, frontier.GetProperties().Count());
         Assert.Equal("LastTerminalBatchId", Assert.Single(frontier.GetProperties(), p => p.IsNullable).Name);
-        Assert.Equal(4, frontier.GetForeignKeys().Count());
+        Assert.Equal(5, frontier.GetForeignKeys().Count());
         Assert.All(frontier.GetForeignKeys(), fk => Assert.Equal(DeleteBehavior.Restrict, fk.DeleteBehavior));
         var terminal = Assert.Single(frontier.GetForeignKeys(), fk => fk.PrincipalEntityType.ClrType == typeof(GroupBatchTerminalReceiptRecord));
         Assert.Equal(new[] { "TenantId", "CompanyId", "BindingId", "LastTerminalBatchId" }, terminal.Properties.Select(p => p.Name));
         Assert.Equal(new[] { "TenantId", "CompanyId", "BindingId", "BatchId" }, terminal.PrincipalKey.Properties.Select(p => p.Name));
         Assert.Contains(frontier.GetForeignKeys(), fk => fk.PrincipalEntityType.ClrType == typeof(GroupSourceStateRecord));
         Assert.DoesNotContain(model.FindEntityType(typeof(GroupSourceStateRecord))!.GetProperties(), p => p.Name.Contains("Terminal", StringComparison.Ordinal));
-        Assert.Contains("([ThroughSequence]=0 AND [LastTerminalBatchId] IS NULL)", Assert.Single(frontier.GetCheckConstraints()).Sql);
-        Assert.Contains("([ThroughSequence]>0 AND [LastTerminalBatchId] IS NOT NULL)", Assert.Single(frontier.GetCheckConstraints()).Sql);
+        var legacyValues = Assert.Single(frontier.GetCheckConstraints(), c => c.Name == "CK_GroupTerminalFrontierStates_Values").Sql;
+        Assert.Contains("([ThroughSequence]=0 AND [LastTerminalBatchId] IS NULL)", legacyValues);
+        Assert.Contains("([ThroughSequence]>0 AND [LastTerminalBatchId] IS NOT NULL)", legacyValues);
     }
 
     [Fact]
@@ -175,7 +176,7 @@ public sealed class GroupBatchTerminalModelTests
         foreach (var table in tables)
         {
             var entity = model.GetEntityTypes().Single(e => e.GetTableName() == table.Name);
-            Assert.Equal(table.CheckConstraints.Count, entity.GetCheckConstraints().Count());
+            Assert.Equal(table.CheckConstraints.Count + (table.Name == "GroupTerminalFrontierStates" ? 1 : 0), entity.GetCheckConstraints().Count());
             foreach (var check in table.CheckConstraints) Assert.Equal(check.Sql, entity.GetCheckConstraints().Single(c => c.Name == check.Name).Sql);
         }
         Assert.Equal(ConnectionState.Closed, db.Database.GetDbConnection().State);

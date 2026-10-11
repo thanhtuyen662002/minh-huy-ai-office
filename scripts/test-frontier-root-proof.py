@@ -33,7 +33,7 @@ class FrontierRootProofTests(unittest.TestCase):
                 proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=None, sql=forbidden)
 
     def oracle(self, fault=None):
-        roots = replays = 0; calls = []; queries = []
+        roots = replays = cursors = 0; calls = []; queries = []
         def sql(query):
             queries.append(query)
             if query.startswith('SELECT CONVERT(varchar(40)'):
@@ -51,6 +51,8 @@ class FrontierRootProofTests(unittest.TestCase):
                 self.assertEqual(35 if original else 3, count)
                 marker = 'B' if ((original and roots and fault == 'original-mutation') or (not original and replays and fault == 'replay-mutation')) else 'A'
                 if not original and roots > 1 and fault == 'prior-frontier-mutation' and self.rows[0]['sourceId'] in query: marker = 'B'
+                if cursors and ((original and fault == 'cursor-original') or (not original and fault == 'cursor-mutation')): marker = 'B'
+                if not original and roots > 1 and cursors > 1 and fault == 'cursor-prior' and self.rows[0]['sourceId'] in query: marker = 'B'
                 lines = [str(i)+':'+marker*64 for i in range(count)]
                 if fault == 'truncated-original' and original: lines.pop()
                 if fault == 'truncated-frontier' and not original: lines.pop()
@@ -58,23 +60,27 @@ class FrontierRootProofTests(unittest.TestCase):
                 return '\n'.join(lines)
             self.fail('Unexpected SQL shape')
         def process(command, **arguments):
-            nonlocal roots, replays
+            nonlocal roots, replays, cursors
             calls.append((command, arguments))
             if command[:2] == ['docker', 'build']:
                 if fault == 'build-timeout': raise subprocess.TimeoutExpired(command, arguments['timeout'])
                 return SimpleNamespace(returncode=1 if fault == 'build' else 0, stdout='', stderr='')
             if command[:2] == ['docker', 'run']:
-                replay = command[-1] == 'frontier-root-replay'
-                if fault == ('replay-timeout' if replay else 'root-timeout'): raise subprocess.TimeoutExpired(command, arguments['timeout'])
-                if replay: replays += 1
+                replay = command[-1] == 'frontier-root-replay'; cursor = command[-1] == 'frontier-cursor-contract'
+                if fault == ('cursor-timeout' if cursor else 'replay-timeout' if replay else 'root-timeout'): raise subprocess.TimeoutExpired(command, arguments['timeout'])
+                if cursor: cursors += 1
+                elif replay: replays += 1
                 else: roots += 1
-                output = (proof.REPLAY_SUCCESS if replay else proof.SUCCESS)+'\n'
+                output = proof.REPLAY_SUCCESS+'\n'+proof.CURSOR_SUCCESS+'\n' if cursor else (proof.REPLAY_SUCCESS if replay else proof.SUCCESS)+'\n'
+                if cursor and fault == 'cursor-missing': output = proof.REPLAY_SUCCESS+'\n'
+                if cursor and fault == 'cursor-duplicate': output += proof.CURSOR_SUCCESS+'\n'
+                if cursor and fault == 'cursor-wrong': output = proof.CURSOR_SUCCESS+'\n'
                 if fault == 'missing-success': output = ''
                 if fault == 'duplicate-success': output += output
                 if fault == 'wrong-success': output = 'PASS another mode\n'
                 if fault == 'wrong-replay' and replay: output = proof.SUCCESS+'\n'
-                return SimpleNamespace(returncode=1 if fault == 'exit' else 0, stdout=output,
-                    stderr='private detail' if fault == 'stderr' else '')
+                return SimpleNamespace(returncode=1 if fault == 'exit' or (cursor and fault == 'cursor-exit') else 0, stdout=output,
+                    stderr='private detail' if fault == 'stderr' or (cursor and fault == 'cursor-stderr') else '')
             if command[:2] == ['docker', 'inspect']:
                 if fault == 'foreign-container':
                     return SimpleNamespace(returncode=0, stdout='a'*64+'|'+'b'*32, stderr='')
@@ -90,25 +96,25 @@ class FrontierRootProofTests(unittest.TestCase):
             proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=self.manifest, sql=sql)
         return output.getvalue()
 
-    def test_four_roots_eight_distinct_children_replay_and_all_original_full_row_snapshots_are_required(self):
+    def test_four_roots_twelve_distinct_children_replay_cursor_and_all_original_full_row_snapshots_are_required(self):
         sql, process, calls, queries = self.oracle()
-        self.assertEqual(proof.SUMMARY+'\n', self.run_proof(sql, process))
+        self.assertEqual(proof.SUMMARY+'\n'+proof.CURSOR_SUMMARY+'\n', self.run_proof(sql, process))
         children = [(command, arguments) for command, arguments in calls if command[:2] == ['docker', 'run']]
-        self.assertEqual(8, len(children))
+        self.assertEqual(12, len(children))
         for index, (command, arguments) in enumerate(children):
-            self.assertEqual('frontier-root-replay' if index % 2 else 'frontier-root', command[-1])
+            self.assertEqual(('frontier-root','frontier-root-replay','frontier-cursor-contract')[index % 3], command[-1])
             self.assertEqual(170, arguments['timeout']); self.assertTrue(arguments['capture_output'])
             for required in ('--init', '--rm', '--read-only', '--cap-drop', 'ALL', 'no-new-privileges:true', '/tmp:rw,noexec,nosuid,size=16m'):
                 self.assertIn(required, command)
             configuration = json.loads(arguments['input'])
-            self.assertEqual({k: v for k, v in self.rows[index//2].items() if k != 'batchId'}, configuration)
+            self.assertEqual({k: v for k, v in self.rows[index//3].items() if k != 'batchId'}, configuration)
             visible = ' '.join(command)+arguments['input']
             self.assertNotIn(self.manifest['AIOFFICE_RUNTIME_PASSWORD'], visible)
             self.assertNotIn(arguments['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'], visible)
         self.assertEqual(1, len({arguments['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'] for _, arguments in children}))
         originals = [q for q in queries if q.startswith('SET NOCOUNT ON;') and 'aioffice.GroupMessages ' in q]
         frontiers = [q for q in queries if q.startswith('SET NOCOUNT ON;') and 'aioffice.GroupTerminalAdvances ' in q]
-        self.assertEqual(9, len(originals)); self.assertEqual(20, len(frontiers))
+        self.assertEqual(13, len(originals)); self.assertEqual(30, len(frontiers))
         for table in ('GroupWorkRawDispositions', 'GroupBatchClaimReceipts', 'GroupBatchTerminalReceipts', 'TaskCheckpoints'):
             self.assertTrue(all(table in query for query in originals))
         self.assertTrue(all('INCLUDE_NULL_VALUES' in query and 'SELECT *' in query for query in originals+frontiers))
@@ -124,6 +130,17 @@ class FrontierRootProofTests(unittest.TestCase):
         for fault in ('build', 'build-timeout', 'root-timeout', 'replay-timeout', 'missing-success', 'duplicate-success',
                 'wrong-success', 'wrong-replay', 'exit', 'stderr', 'extra-frontier', 'missing-frontier', 'original-mutation',
                 'truncated-frontier', 'replay-mutation', 'prior-frontier-mutation', 'foreign-container', 'cleanup'):
+            sql, process, calls, _ = self.oracle(fault)
+            with self.subTest(fault=fault), self.assertRaises((AssertionError, subprocess.TimeoutExpired)), patch('sys.stdout', new_callable=io.StringIO) as output:
+                self.run_proof(sql, process)
+            self.assertEqual('', output.getvalue())
+            self.assertTrue(any(command[:2] == ['docker', 'inspect'] for command, _ in calls))
+            self.assertTrue(any(command[:3] == ['docker', 'image', 'rm'] for command, _ in calls))
+            self.assertFalse(any(command[:2] == ['docker', 'rm'] for command, _ in calls))
+
+    def test_cursor_timeout_protocol_or_any_original_frontier_mutation_withholds_both_summaries(self):
+        for fault in ('cursor-timeout','cursor-exit','cursor-missing','cursor-duplicate','cursor-wrong','cursor-stderr',
+                'cursor-mutation','cursor-original','cursor-prior'):
             sql, process, calls, _ = self.oracle(fault)
             with self.subTest(fault=fault), self.assertRaises((AssertionError, subprocess.TimeoutExpired)), patch('sys.stdout', new_callable=io.StringIO) as output:
                 self.run_proof(sql, process)

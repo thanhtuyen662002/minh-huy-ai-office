@@ -36,14 +36,35 @@ internal static class GroupBatchTerminalModelConfiguration
         });
         model.Entity<GroupTerminalFrontierStateRecord>(entity =>
         {
-            entity.ToTable("GroupTerminalFrontierStates", table => table.HasCheckConstraint("CK_GroupTerminalFrontierStates_Values",
-                "[ThroughSequence]>=0 AND [Version]>0 AND (([ThroughSequence]=0 AND [LastTerminalBatchId] IS NULL) OR ([ThroughSequence]>0 AND [LastTerminalBatchId] IS NOT NULL)) AND DATEPART(tz,[UpdatedAtUtc])=0"));
+            entity.ToTable("GroupTerminalFrontierStates", table =>
+            {
+                table.HasCheckConstraint("CK_GroupTerminalFrontierStates_Values",
+                    "[ThroughSequence]>=0 AND [Version]>0 AND (([ThroughSequence]=0 AND [LastTerminalBatchId] IS NULL) OR ([ThroughSequence]>0 AND [LastTerminalBatchId] IS NOT NULL)) AND DATEPART(tz,[UpdatedAtUtc])=0");
+                // Empty progress is represented by absence. A persisted cursor
+                // must reference all seven fields of its signed advance.
+                table.HasCheckConstraint("CK_GroupTerminalFrontierStates_Signed",
+                    "[ThroughSequence]>0 AND [Version]>0 AND [LastTerminalBatchId] IS NOT NULL AND DATEPART(tz,[UpdatedAtUtc])=0");
+            });
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId });
             entity.HasOne<CompanyRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupBindingRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.BindingId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupSourceStateRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupBatchTerminalReceiptRecord>().WithMany()
                 .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.BindingId, BatchId = x.LastTerminalBatchId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GroupTerminalAdvanceRecord>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.TenantId,
+                    x.CompanyId,
+                    x.BindingId,
+                    x.Version,
+                    x.ThroughSequence,
+                    BatchId = x.LastTerminalBatchId,
+                    AdvancedAtUtc = x.UpdatedAtUtc
+                })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.Version, x.ThroughSequence, x.BatchId, x.AdvancedAtUtc })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_GroupTerminalFrontierStates_SignedAdvance");
         });
     }
 }

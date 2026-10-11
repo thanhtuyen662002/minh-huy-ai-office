@@ -2212,8 +2212,12 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
                     b.HasIndex("TenantId", "CompanyId", "BindingId", "LastTerminalBatchId");
 
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "Version", "ThroughSequence", "LastTerminalBatchId", "UpdatedAtUtc");
+
                     b.ToTable("GroupTerminalFrontierStates", "aioffice", t =>
                         {
+                            t.HasCheckConstraint("CK_GroupTerminalFrontierStates_Signed", "[ThroughSequence]>0 AND [Version]>0 AND [LastTerminalBatchId] IS NOT NULL AND DATEPART(tz,[UpdatedAtUtc])=0");
+
                             t.HasCheckConstraint("CK_GroupTerminalFrontierStates_Values", "[ThroughSequence]>=0 AND [Version]>0 AND (([ThroughSequence]=0 AND [LastTerminalBatchId] IS NULL) OR ([ThroughSequence]>0 AND [LastTerminalBatchId] IS NOT NULL)) AND DATEPART(tz,[UpdatedAtUtc])=0");
                         });
                 });
@@ -3536,6 +3540,13 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "BindingId", "LastTerminalBatchId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupTerminalAdvanceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "Version", "ThroughSequence", "LastTerminalBatchId", "UpdatedAtUtc")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "Version", "ThroughSequence", "BatchId", "AdvancedAtUtc")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_GroupTerminalFrontierStates_SignedAdvance");
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupWorkCommitReceiptRecord", b =>
