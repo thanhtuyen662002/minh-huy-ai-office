@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
+current_target_head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
+    head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
     state: in_progress
-    next: "Draft288 exact remote4abd9c5 CLOSED SUCCESS: Build38102129917/native114360048235/quality114365757987/Gov38102129916/all8; ROOTFULL frozen114 eachonce170PASS/noFailures,3111.NET zeroFailSkip,six original images11689185335 individually viewed. Scoped original four-profile current dependency and acquisition provenance qualified, not later expectation storage/atomic writer/effect reader. Prior b6f terminalred preserved. Later source e3/fc9/8cd approved ROOTFULL receipts6104306771/6104358397/6104414910; reader12cf SCOPED_APPROVED6104489473_ROOTFULL5082; native116 observer9ac frozen review pending. Complete owned all-effect-table/preflight observation, review full stacked source, dispatch new exact head and own all8/native/Gov/full logs/images; continue allchunk/nonemptybrain/ownwrite/races/terminalfrontier/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
+    next: "Draft288 exact remote67605e1 ACTIVE116: Build38105196689/native114369115337/Gov38105196702; source stack e3/fc9/8cd/12cf/9ac+676 scoped approved ROOTFULL6104306771/6104358397/6104414910/6104489473/6104580831. Root owns exact all8/quality/Gov/full116/.NET/six original images to terminal and immediate same288 realred repair. Previous4abd CLOSED scoped114/all8/Gov,170PASS/3111.NET/six originals; does not qualify new expectation schema/writer/reader. Continue versioned terminal receipt and authenticated contiguous frontier, allchunks/nonemptybrain/ownwrite/races/pending-gap-retry/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 exact remote4abd9c5 CLOSED SUCCESS: Build38102129917/native114360048235/quality114365757987/Gov38102129916/all8; ROOTFULL frozen114 eachonce170PASS/noFailures,3111.NET zeroFailSkip,six original images11689185335 individually viewed. Scoped original four-profile current dependency and acquisition provenance qualified, not later expectation storage/atomic writer/effect reader. Prior b6f terminalred preserved. Later source e3/fc9/8cd approved ROOTFULL receipts6104306771/6104358397/6104414910; reader12cf SCOPED_APPROVED6104489473_ROOTFULL5082; native116 observer9ac frozen review pending. Complete owned all-effect-table/preflight observation, review full stacked source, dispatch new exact head and own all8/native/Gov/full logs/images; continue allchunk/nonemptybrain/ownwrite/races/terminalfrontier/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
+next_action: "Draft288 exact remote67605e1 ACTIVE116: Build38105196689/native114369115337/Gov38105196702; source stack e3/fc9/8cd/12cf/9ac+676 scoped approved ROOTFULL6104306771/6104358397/6104414910/6104489473/6104580831. Root owns exact all8/quality/Gov/full116/.NET/six original images to terminal and immediate same288 realred repair. Previous4abd CLOSED scoped114/all8/Gov,170PASS/3111.NET/six originals; does not qualify new expectation schema/writer/reader. Continue versioned terminal receipt and authenticated contiguous frontier, allchunks/nonemptybrain/ownwrite/races/pending-gap-retry/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -2157,3 +2157,14 @@ group_278_original_effect_graph_native_preparation:
   actual_native116_SQL_corruption_races: NOT_RUN_UNQUALIFIED
   terminal_frontier_no_click_model_full278_279_233_merge: INCOMPLETE_model_NOT_RUN_UNEVALUATED
   next: FULL_frozen_review_then_new_exact116_dispatch_own_all8_Gov_full_logs_original_six_images_continue_real_adversarial_chains_and_terminal_product
+
+group_278_676_owned_dispatch:
+  head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
+  build: 38105196689
+  governance: 38105196702
+  native: 114369115337
+  state: ACTIVE116_root_owns_terminal_all8_full_logs_original_six_images
+  source_review: SCOPED_APPROVED6104580831_ROOTFULL5678_SHA25671ab71db9d348b31ecf845660bf810360aa26a1045f27f1f6ad96285d9fa238c
+  expected_effect_sql: NOT_YET_QUALIFIED
+  frontier: local_metadata_kernel_only_not_in_remote676
+  model: NOT_RUN_UNEVALUATED

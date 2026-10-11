@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
+head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 exact remote4abd9c5 CLOSED SUCCESS: Build38102129917/native114360048235/quality114365757987/Gov38102129916/all8; ROOTFULL frozen114 eachonce170PASS/noFailures,3111.NET zeroFailSkip,six original images11689185335 individually viewed. Scoped original four-profile current dependency and acquisition provenance qualified, not later expectation storage/atomic writer/effect reader. Prior b6f terminalred preserved. Later source e3/fc9/8cd approved ROOTFULL receipts6104306771/6104358397/6104414910; reader12cf SCOPED_APPROVED6104489473_ROOTFULL5082; native116 observer9ac frozen review pending. Complete owned all-effect-table/preflight observation, review full stacked source, dispatch new exact head and own all8/native/Gov/full logs/images; continue allchunk/nonemptybrain/ownwrite/races/terminalfrontier/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
+next_action: "Draft288 exact remote67605e1 ACTIVE116: Build38105196689/native114369115337/Gov38105196702; source stack e3/fc9/8cd/12cf/9ac+676 scoped approved ROOTFULL6104306771/6104358397/6104414910/6104489473/6104580831. Root owns exact all8/quality/Gov/full116/.NET/six original images to terminal and immediate same288 realred repair. Previous4abd CLOSED scoped114/all8/Gov,170PASS/3111.NET/six originals; does not qualify new expectation schema/writer/reader. Continue versioned terminal receipt and authenticated contiguous frontier, allchunks/nonemptybrain/ownwrite/races/pending-gap-retry/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2819,3 +2819,14 @@ group_278_original_effect_graph_native_preparation:
   actual_native116_SQL_corruption_races: NOT_RUN_UNQUALIFIED
   terminal_frontier_no_click_model_full278_279_233_merge: INCOMPLETE_model_NOT_RUN_UNEVALUATED
   next: FULL_frozen_review_then_new_exact116_dispatch_own_all8_Gov_full_logs_original_six_images_continue_real_adversarial_chains_and_terminal_product
+
+group_278_676_owned_dispatch:
+  head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
+  build: 38105196689
+  governance: 38105196702
+  native: 114369115337
+  state: ACTIVE116_root_owns_terminal_all8_full_logs_original_six_images
+  source_review: SCOPED_APPROVED6104580831_ROOTFULL5678_SHA25671ab71db9d348b31ecf845660bf810360aa26a1045f27f1f6ad96285d9fa238c
+  expected_effect_sql: NOT_YET_QUALIFIED
+  frontier: local_metadata_kernel_only_not_in_remote676
+  model: NOT_RUN_UNEVALUATED
