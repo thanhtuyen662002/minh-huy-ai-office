@@ -124,4 +124,31 @@ public sealed class OwnedCursorShadowGuardTests
         Assert.Throws<InvalidOperationException>(() => Guard.DropDatabase(foreign, name, owner, 10));
         Assert.Equal(ConnectionState.Closed, wrong.State); Assert.Equal(ConnectionState.Closed, foreign.State);
     }
+
+    [Theory]
+    [InlineData("create")]
+    [InlineData("inspect")]
+    public void DatabaseIdResultUsesClosedSqlIntProjectionWithoutChangingOwnedParameters(string kind)
+    {
+        var owner = Guid.NewGuid(); var name = Guard.DatabaseName(owner.ToString("N"));
+        using var master = new SqlConnection(Guard.DatabaseConnection(Operator(), "master"));
+        using var command = kind == "create" ? Guard.CreateDatabase(master, name) : Guard.InspectOwnership(master, name, owner);
+        var sql = kind == "create" ? command.CommandText : Assert.IsType<string>(command.Parameters["@inspection"].Value);
+        var script = Assert.IsType<TSqlScript>(new TSql160Parser(true).Parse(new StringReader(sql), out var errors));
+        Assert.Empty(errors);
+        var batch = Assert.Single(script.Batches);
+        var query = Assert.IsType<QuerySpecification>(Assert.IsType<SelectStatement>(batch.Statements.Last()).QueryExpression);
+        var cast = Assert.IsType<CastCall>(Assert.IsType<SelectScalarExpression>(query.SelectElements[0]).Expression);
+        Assert.Equal(SqlDataTypeOption.Int, Assert.IsType<SqlDataTypeReference>(cast.DataType).SqlDataTypeOption);
+        var function = Assert.IsType<FunctionCall>(cast.Parameter);
+        Assert.Equal("DB_ID", function.FunctionName.Value);
+        Assert.Null(function.CallTarget);
+        Assert.Equal("@database", Assert.IsType<VariableReference>(Assert.Single(function.Parameters)).Name);
+        Assert.Equal(name, command.Parameters["@database"].Value);
+        Assert.Equal(SqlDbType.NVarChar, command.Parameters["@database"].SqlDbType);
+        Assert.Equal(128, command.Parameters["@database"].Size);
+        Assert.Equal(kind == "create" ? 1 : 2, query.SelectElements.Count);
+        Assert.Equal(ConnectionState.Closed, master.State);
+        Assert.Null(command.Transaction);
+    }
 }

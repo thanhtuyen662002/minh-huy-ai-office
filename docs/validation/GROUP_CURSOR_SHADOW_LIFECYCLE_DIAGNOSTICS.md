@@ -111,3 +111,54 @@ images remain NOT_RUN_UNQUALIFIED before its owned CI execution. Full changed
 Git SOURCE review is required before pushing. Private53 is still unpromoted;
 the dc5 context19 promoter is permanently dormant for the failed parent.
 Actual model remains **NOT_RUN_UNEVALUATED** and full278/merge incomplete.
+
+## 7d05 terminal closure and explicit SQL result type
+
+Exact `7d05c19b8a690535e34016a7f72d064f05988cfa` is CLOSED RED:
+Build38158738532/native114527019715/quality114535665182 failed;
+Governance38158738506 and six prerequisites succeeded. Full .NET3885
+passed with four successful runs and zero failures/skips. Native120 has
+99 once/21 missing/0 duplicates/five failure markers. No browser artifact
+exists. Root read failure/cleanup sections and the entire quality3529-byte
+log. Full native/.NET byte parsing is not an entire verbatim read. Complete
+prior handoff paragraphs and evidence are preserved in comment6111997168.
+
+The observed failure is `shadow-create-non-int; invalid-operation; snapshot=-1`.
+The CREATE scalar await completed and its strict validator refused a non-int
+CLR result. First-error retention separates this from subsequent resource
+cleanup. The precise CLR subtype and engine cause remain **UNPROVEN**.
+Original72-template snapshot and both encoding controls completed.
+Native83562-byte SHA256 is
+`a9d62d260a237534e06ef86ce76c403aa5182968cbb9730fa31b8401528f10f4`;
+quality3529-byte SHA256 is
+`31794cbaa52440040969e28617381078aebb9957b3080c0d107829099f452e9f`.
+
+The successor declares `CAST(DB_ID(@database) AS int)` in the final CREATE
+projection and the present-database ownership inspection. This declares a
+closed SQL result protocol consistent with the documented
+[DB_ID int return type](https://learn.microsoft.com/en-us/sql/t-sql/functions/db-id-transact-sql?view=sql-server-ver17).
+It does not establish why the preceding hosted scalar had another CLR type.
+No caller-side conversion, alternate type acceptance or identifier change is
+introduced. CREATE still uses the same existence refusal, quoted dynamic DDL
+and typed name. Strict actual CLR int greater than4, two-field/one-row/one-result
+ownership reading, exact ownership token/DB_ID, first error, exact51070 execute
+refusal,45-second cleanup and every snapshot/encoding control remain required.
+
+Two structural SQL parser controls check both exact int casts and their
+DB_ID/typed-name operands before connection. All fourteen original classifier
+cases and all fifteen Python frontier methods remain unchanged. These tests
+do not qualify an actual SQL result or successful migration. The complete
+five changed Git paths, including both whole durable states, require fresh
+independent SOURCE review before one push. Root owns successor native120,
+full3887=[6,520,25,3336],all8/Governance/quality and six ORIGINAL browser images
+through terminal; the repair is NOT_RUN_UNQUALIFIED before that execution.
+
+Private exhaustion v1's malformed-connection finding is preserved. Privatev2
+normalizes those automatic-entry errors and adds four regressions; immutable
+1022-file archiveSHA
+`e2a1b5b886f328a0290bd833ee638c126681ba9c50904c539645b9be4b79e226`
+has61 cumulative source paths with fullLOCAL4058/176Python/3formatter scopes
+passing. This is unpromoted local source; fresh independent review, native123,
+measured tokenizer/window, Gateway profile, Worker DI/coordinator/no-click,
+279/233/ERP/deployment and merge remain incomplete. Real model evaluation is
+**NOT_RUN_UNEVALUATED**. Consolidation tied to the failed7d05 parent is dormant.

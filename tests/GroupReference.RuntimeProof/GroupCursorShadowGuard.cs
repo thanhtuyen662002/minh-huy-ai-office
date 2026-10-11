@@ -82,7 +82,7 @@ internal static class GroupCursorShadowGuard
             IF DB_ID(@database) IS NOT NULL THROW 51070, 'Owned cursor shadow already exists.', 1;
             DECLARE @sql nvarchar(max)=N'CREATE DATABASE '+QUOTENAME(@database);
             EXEC(@sql);
-            SELECT DB_ID(@database);
+            SELECT CAST(DB_ID(@database) AS int);
             """, master) { CommandTimeout = 30 };
         command.Parameters.Add("@database", SqlDbType.NVarChar, 128).Value = name;
         return command;
@@ -128,7 +128,7 @@ internal static class GroupCursorShadowGuard
         // Bind the closed inspection statement as data. Dynamic execution is
         // required because an absent database must not bind its sys catalog.
         var inspection = $"""
-            SELECT DB_ID(@database) AS [DatabaseId],CASE
+            SELECT CAST(DB_ID(@database) AS int) AS [DatabaseId],CASE
                 WHEN EXISTS(SELECT 1 FROM [{name}].sys.extended_properties
                     WHERE class=0 AND major_id=0 AND minor_id=0 AND name=@property AND {ExactOwnershipPredicate}) THEN 1
                 WHEN NOT EXISTS(SELECT 1 FROM [{name}].sys.extended_properties
