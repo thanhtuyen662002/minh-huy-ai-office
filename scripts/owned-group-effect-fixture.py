@@ -31,9 +31,16 @@ def prepare_raw_history(*, directory, api, tenant, company, service, sql, identi
     account = sql(f"SELECT LOWER(CONVERT(char(36),ConnectorAccountId)) FROM aioffice.GroupBindings "
         f"WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{source}';")
     assert str(uuid.UUID(account)) == account and uuid.UUID(account).int != 0
-    deadline = time.monotonic() + 120
+    # This is a serial actual-Core fixture, including20 scoped SQL renewals.
+    # Retain a finite overall budget without constraining501 real admissions
+    # to less than a quarter second each on a shared hosted runner.
+    started = time.monotonic(); budget_seconds = 300
+    def require_budget(last_sequence):
+        elapsed = time.monotonic() - started
+        assert elapsed < budget_seconds, \
+            f"Owned raw history generation deadline exceeded (lastSequence={last_sequence}, elapsedSeconds={max(0, min(budget_seconds, int(elapsed)))})"
     for sequence in range(3, 502):
-        assert time.monotonic() < deadline, "Owned raw history generation deadline exceeded"
+        require_budget(sequence - 1)
         if (sequence - 3) % 25 == 0:
             # Test-only operator renewal of this already seeded fixture lease.
             # An expired/foreign owner is refused; no new epoch, listener
@@ -52,7 +59,7 @@ def prepare_raw_history(*, directory, api, tenant, company, service, sql, identi
         assert value["messageId"] == originals[0][1]["messageId"] and type(value["revision"]) is int and value["revision"] == sequence - 1
         assert type(value["committedSequence"]) is int and value["committedSequence"] == sequence and value["wasAlreadyCommitted"] is False
         require_ack_time(value)
-        assert time.monotonic() < deadline, "Owned raw history generation deadline exceeded"
+        require_budget(sequence)
     scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND BindingId='{source}'"
     assert sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupMessageRevisions WHERE {scope}),N'|',"
         f"(SELECT COUNT(*) FROM aioffice.GroupIngressReceipts WHERE {scope}),N'|',"

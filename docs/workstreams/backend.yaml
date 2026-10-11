@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Own278/Draft288 same branch repair remote5fc CLOSEDRED Build38096849478/native114344400101/quality114350227578 at actual_Core501_fixture120s_generation_budget, lastACK unretained; ROOTFULL113 missing20/PASS144/fourfailures/noBrowser, .NET2844 zeroFailSkip/sixPrereqs/Gov38096849367SUCCESS. Structuralac28 and reader8bc sourceapproved ROOTFULL6103648579/6103738028. Public store154 WITHHELD6103810469 ROOTFULL3401/26controls23PASS3parserfail; repair catches parser Argument/Format/Overflow with21cold controls PASS and no rawvalue/inner. Freeze repaired whole scope for independent retained-control review, then reviewed ownedfixture300s finite budget with safe progress diagnostics and same288 exact113 rerun. Do not inherit runtime qualification. Then allcontributor native/effectledger/originalclaim/ownwrite chain/terminalcontiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
+next_action: "Own278/Draft288 immediate samePR repair for CLOSEDRED5fc Build38096849478/native114344400101/quality114350227578 actual_Core501 serialgeneration120s deadline. Root full113 missing20/144PASS/fourfailurepatterns/noBrowser and full2844.NET/sixPrereqs/GovSUCCESS retained. Fixture-only finite300s overallbudget with bounded lastACKsequence/elapsed diagnostic;138PythonPASS preserve501exactACK/UTC/Coreingress/20guarded30srenewals/ownedgate/percall/process/joblimits and original113. Frozen whole5path budget source review plus repaired publicstore269 cumulative6path review pending ROOTFULL before push; parentreader8bc/kernelac28 scopedapproved. Then reviewed chain same288 exact113 CIclosure and add owned allcontributor currentSQL checks/immutableeffectledger/originalclaim/ownwritechain/terminalcontiguousfrontier/no-click/279. Realmodel NOT_RUN_UNEVALUATED; full233 incomplete/no partialmerge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2636,3 +2636,16 @@ group_278_automatic_dependency_parser_repair:
   native: NOT_RUN_UNQUALIFIED_successful_reconstruction_expiry_witness
   model: NOT_RUN_UNEVALUATED
   next: independent_FULL_review_then_ownedfixture_budget_repair_same288_exact113
+
+group_278_raw_history_finite_budget_repair:
+  failed_head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+  source_base: 26935b53799c5f4ed2a44c8ca93934c702683b59
+  failure: actual_Core501_serial_fixture120seconds_deadline_lastACK_unretained
+  repair: owned_test_only_finite300seconds_overall_budget_checked_before_edit_after_validACK
+  diagnostic: lastAcceptedSequence2to501_elapsedSeconds0to300_closed_no_payload_ID_key_response_body
+  preservation: all501_exactACK_UTC_twoOriginals499edits_20scoped30secondRenewals_initialEditObservation_ownedgate_percall_process_joblimits_original113
+  local: 138PythonPASS_callback_clock_only_121_299_999_slowWindows_300_301_before_afterACK_refusals
+  source_review: PENDING_FULL_frozen_whole_fivepaths_before_push
+  native: NOT_RUN_UNQUALIFIED_actual501Core_SQL500_pending501_manifest113
+  model: NOT_RUN_UNEVALUATED
+  next: repaired_store_and_fixture_scoped_FULL_reviews_then_same288_exact113_terminal_CI_closure

@@ -689,13 +689,24 @@ class OwnedStackGuardTests(unittest.TestCase):
             if fault != 'counts': self.assertFalse(any(name == 'raw-counts' for name, _ in calls))
 
     def test_raw_history_fixture_deadline_refuses_before_or_after_an_edit_ack(self):
-        for times, posts in (([0, 121], 2), ([0, 1, 121], 3)):
+        for times, posts in (([0, 300], 2), ([0, 1, 300], 3), ([0, 301], 2), ([0, 1, 301], 3)):
             arguments, calls, _ = self.raw_history_callbacks()
             with self.subTest(times=times), patch.dict(os.environ, self.environment, clear=True), \
-                    patch.object(effect_fixture.time, 'monotonic', side_effect=times), self.assertRaises(AssertionError):
+                    patch.object(effect_fixture.time, 'monotonic', side_effect=times), self.assertRaises(AssertionError) as raised:
                 effect_fixture.prepare_raw_history(**arguments)
+            self.assertEqual(f'Owned raw history generation deadline exceeded (lastSequence={posts}, elapsedSeconds=300)', str(raised.exception))
             self.assertEqual(posts, len([value for name, value in calls if name == 'post']))
             self.assertFalse(any(name == 'raw-counts' for name, _ in calls))
+
+    def test_raw_history_fixture_keeps_all501_ack_checks_through_a_bounded_slow_core_window(self):
+        for elapsed in (121, 299.999):
+            arguments, calls, events = self.raw_history_callbacks()
+            with self.subTest(elapsed=elapsed), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(effect_fixture.time, 'monotonic', side_effect=[0] + [elapsed] * 998):
+                _, actual = effect_fixture.prepare_raw_history(**arguments)
+            self.assertEqual(events, actual); self.assertEqual(501, len([value for name, value in calls if name == 'post']))
+            self.assertEqual(20, len([value for name, value in calls if name == 'renew']))
+            self.assertEqual(1, len([value for name, value in calls if name == 'raw-counts']))
 
     def test_raw_history_fixture_owned_guard_precedes_callbacks_or_time(self):
         arguments, calls, _ = self.raw_history_callbacks()
