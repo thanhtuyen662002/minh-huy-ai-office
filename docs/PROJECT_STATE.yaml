@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
     state: in_progress
-    next: "Draft288 remote691714683f291fcd5c2a7c32d87852d5ac73c91a ACTIVE owned CI Build38109741737/native114382645109/Gov38109741851; six prerequisites/GovSUCCESS and root full.NET3352PASS6_520_25_2801 noFailSkip. Close original116/native/all8/quality/originalsix without canceling meaningful pending run. Owned terminal consumer87e163b1063e7153cca734dc4462507f29623e9f APPROVED6105354729 ROOTFULL5595 SHA256809b7d772bfb929ec0518504488b14cd9ece172a74566e940146ffcf1e08e02d 368controls/fourformat source only. New additive terminal native phase seven code/test/workflow paths plus doc/two state freeze FULL ten-path independent review; shared833.NET49new784retained and Python4new144retained PASS/threeformat. Only after full source approval and meaningful691 closure dispatch same288 fresh exact-head CI with original116 plus separate terminal INSERT/readback/expiry rollback/witness/replay/immutable24 phase. Actual terminal SQL/native remains NOT_RUN_UNQUALIFIED. Next authenticated contiguous SQL cursor, multi-contributor/nonemptybrain/own-input chains, gap-retry/DI/no-click. Prior464 red/676 scoped acceptance histories preserved. Actualmodel NOT_RUN_UNEVALUATED existingGateway only; full278/279/233 incomplete/no partialmerge."
+    next: "Draft288 remote691714683f291fcd5c2a7c32d87852d5ac73c91a CLOSED all8 Build38109741737/Gov38109741851/native114382645109/quality114388035097 SUCCESS. ROOT full116 required once172PASS0failure/fullNET3352PASS6_520_25_2801 noFailSkip/fullquality3454 and all six ORIGINAL images11692126093 viewed. Physical SQL bootstrap/four retained cutoff fixtures repaired at original four one-contributor/two-selected/zero-brain scope only. Owned terminal consumer87e163b APPROVED6105354729 ROOTFULL5595 368controls/fourformat. Additive native phaseec144ea APPROVED6105464632 ROOTFULL6163 SHA25646b39231b7cbf0531ba274f162acb6efbf0abf30749db31fc1e6785fc7ac3e20 independent50NET156Python/threeformat; root local833NET148Python. After focused closure/state approval push same288 reviewed terminal checkpoints, capture fresh exact HEAD/Build/Gov/native IDs and close full117 required aggregates/all8/quality/six originals. Actual new terminal SQL remains NOT_RUN_UNQUALIFIED until fresh native execution. Continue authenticated contiguous SQL cursor, multi-contributor/nonemptybrain/own-input chains, gap-retry/DI/no-click. Prior464 red/676 scoped acceptance histories preserved. Actualmodel NOT_RUN_UNEVALUATED existingGateway only; full278/279/233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 remote691714683f291fcd5c2a7c32d87852d5ac73c91a ACTIVE owned CI Build38109741737/native114382645109/Gov38109741851; six prerequisites/GovSUCCESS and root full.NET3352PASS6_520_25_2801 noFailSkip. Close original116/native/all8/quality/originalsix without canceling meaningful pending run. Owned terminal consumer87e163b1063e7153cca734dc4462507f29623e9f APPROVED6105354729 ROOTFULL5595 SHA256809b7d772bfb929ec0518504488b14cd9ece172a74566e940146ffcf1e08e02d 368controls/fourformat source only. New additive terminal native phase seven code/test/workflow paths plus doc/two state freeze FULL ten-path independent review; shared833.NET49new784retained and Python4new144retained PASS/threeformat. Only after full source approval and meaningful691 closure dispatch same288 fresh exact-head CI with original116 plus separate terminal INSERT/readback/expiry rollback/witness/replay/immutable24 phase. Actual terminal SQL/native remains NOT_RUN_UNQUALIFIED. Next authenticated contiguous SQL cursor, multi-contributor/nonemptybrain/own-input chains, gap-retry/DI/no-click. Prior464 red/676 scoped acceptance histories preserved. Actualmodel NOT_RUN_UNEVALUATED existingGateway only; full278/279/233 incomplete/no partialmerge."
+next_action: "Draft288 remote691714683f291fcd5c2a7c32d87852d5ac73c91a CLOSED all8 Build38109741737/Gov38109741851/native114382645109/quality114388035097 SUCCESS. ROOT full116 required once172PASS0failure/fullNET3352PASS6_520_25_2801 noFailSkip/fullquality3454 and all six ORIGINAL images11692126093 viewed. Physical SQL bootstrap/four retained cutoff fixtures repaired at original four one-contributor/two-selected/zero-brain scope only. Owned terminal consumer87e163b APPROVED6105354729 ROOTFULL5595 368controls/fourformat. Additive native phaseec144ea APPROVED6105464632 ROOTFULL6163 SHA25646b39231b7cbf0531ba274f162acb6efbf0abf30749db31fc1e6785fc7ac3e20 independent50NET156Python/threeformat; root local833NET148Python. After focused closure/state approval push same288 reviewed terminal checkpoints, capture fresh exact HEAD/Build/Gov/native IDs and close full117 required aggregates/all8/quality/six originals. Actual new terminal SQL remains NOT_RUN_UNQUALIFIED until fresh native execution. Continue authenticated contiguous SQL cursor, multi-contributor/nonemptybrain/own-input chains, gap-retry/DI/no-click. Prior464 red/676 scoped acceptance histories preserved. Actualmodel NOT_RUN_UNEVALUATED existingGateway only; full278/279/233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -2346,7 +2346,7 @@ group_278_owned_terminal_receipt_consumer:
 
 group_278_terminal_receipt_native_phase:
   parent: 87e163b1063e7153cca734dc4462507f29623e9f
-  source_review: PENDING_FULL_frozen_ten_paths_seven_runtime_test_workflow_doc_two_state
+  source_review: APPROVEDec144ea_6105464632_ROOTFULL6163_SHA25646b39231b7cbf0531ba274f162acb6efbf0abf30749db31fc1e6785fc7ac3e20_independent50NET156Python_threeformat_source_only
   previous_consumer_review: APPROVED6105354729_ROOTFULL5595_SHA256809b7d772bfb929ec0518504488b14cd9ece172a74566e940146ffcf1e08e02d_368controls_fourformat_source_only
   execution: owned_disposable_CI_guard_before_config_SQL_Docker_after_complete_original116_gates_one_additive_aggregate_marker_four_closed_unique_metadata_fixtures_TOP5_sentinel
   SQL_plan: actual_terminal_stage_insert_readback_then_expiry_savepoint_rollback_detach_before_single_witness_readback_clockrollback_denial_three_additional_acquisitions_per_scope
@@ -2356,7 +2356,22 @@ group_278_terminal_receipt_native_phase:
   cold_negative_controls: exact_four_closed_unique_fixture_JSON_duplicate_keys_foreign_oversize_guard_before_resources_missing_duplicate_wrong_marker_nonzero_exit_stderr_original_mutation_missing_extra_receipt_cleanup_failure
   unchanged: all_original116_assertions_three_dependency_checks_runtime_timeouts_guard_cleanup_migrations_v1_serialization_existing_gateway_and_production_DI
   actual_terminal_SQL_runtime: NOT_RUN_UNQUALIFIED_pending_fresh_reviewed_exact_head_native_log
-  parent691CI: ACTIVE_OWNED_Build38109741737_native114382645109_six_prerequisites_GovSUCCESS_fullNET3352PASS_not_superseded
+  parent691CI: CLOSED_ALL8_Gov_SUCCESS_ROOT_full116_once172PASS_full3352NET_quality_six_original_images_at_retained_scope
   cursor_multicontributor_nonemptybrain_owninput_SQL_corruption_races_cancellation_session_gap_retry_DI_no_click_full278_279_233_merge: INCOMPLETE
   model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
-  next: FULL_ten_path_source_review_then_close691_and_new_exact_native_phase_same288_before_cursor_and_application_work
+  next: focused_closure_state_review_then_new_exact_native_phase117_same288_before_cursor_and_application_work
+
+group_278_repaired_storage_691_closure:
+  head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
+  state: CLOSED_TERMINAL_SUCCESS_SCOPED116
+  build_governance: Build38109741737_all8_SUCCESS_Gov38109741851_SUCCESS
+  native: job114382645109_full85323bytes_SHA2568532042c9bc6485345c373261c01f5034309e373db651cbc9d0e2e2c64347e08_ROOT116required_once172PASS_zero_failure_missing_duplicate
+  dotnet: job114382644992_full913975bytes_SHA256af588144ad0e15896df6dea55e16e2820d8dab355c16e3aeb5c42ca3788b3f80_ROOT3352PASS6_520_25_2801_zeroFailSkip_all_attempted_passed
+  quality: job114388035097_full3454bytes_SHA256f39ab97b302fb91e57404e10599c4f241247569338bc598f2893457c8e2c93ff_ROOT_FULL_READ_seven_predecessors_SUCCESS
+  browser: artifact11692126093_ROOT_individually_viewed_all_six_ORIGINAL_PNGs_desktop_mobile_usable_no_synthetic_replacements
+  accepted_scope: repaired_physical_SQL_manifest_MAX_bootstrap_four_retained_cutoff_fixtures_original_four_one_contributor_two_selected_zero_brain_profiles_pending501_preserved
+  history: prior464_terminal_failures_and676_scope_preserved
+  reviewed_next: consumer87e163b_6105354729_ROOTFULL5595_native_phaseec144ea_6105464632_ROOTFULL6163_source_only
+  new_terminal_SQL_frontier_owninput_nonemptybrain_multichunk_races_DI_no_click_model_full278_279_233_merge: UNQUALIFIED_INCOMPLETE
+  qualification_document: docs/validation/GROUP_TERMINAL_STORAGE_691_QUALIFICATION.md
+  next: focused_three_path_closure_review_then_reviewed_exact_head_CI_required117_retaining_original116_same288
