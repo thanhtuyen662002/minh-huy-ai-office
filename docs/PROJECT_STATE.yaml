@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 013a807f139372d24037067d19cfe1dbd7370815
+current_target_head: 77f78278d189a9a60b784e3af78fa1388c14c7fc
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 013a807f139372d24037067d19cfe1dbd7370815
+    head: 77f78278d189a9a60b784e3af78fa1388c14c7fc
     state: in_progress
-    next: "Draft288 actual remote013a807f139372d24037067d19cfe1dbd7370815 CLOSED_TERMINAL_SUCCESS_SCOPED117 Build38115318877 all8SUCCESS/Gov38115318868SUCCESS/native114398953852 full85937bytes SHA2565e87c03475041396f2786d885a437a288216d8857157226df10bc28663126798 ROOT117requiredOnce173PASSzeroMissingDuplicateFailure/full.NET1143989540483538PASS6_520_25_2987 zeroFailSkip/quality114405529178FULLsevenSuccess/six original artifact11694121182 individually ROOT viewed. Historical readerf1/schema4ed/carrier8d full source approvals ROOTFULL persisted; actual history/signed frontier SQL unqualified. New key-enrollment twelveCSharp plus two validation/two state paths full source review pending, private3053PersistencePASS21new3032retained zeroFailSkipWarnings/twelveformat/model synchronized. Immutable scope-KeyId material fingerprint and restrictive advance-key FK; early migration refuses pre-existing advance history rather than blind enrollment; no independent provider/config/secretstore. After full source review push SAME288 and own new exact-head CI closure. Continue original historical SQL rotation/revocation/physical chain/key carrier constraints/rights, finite retained-key inventory outsideSQL then exact locked reread, authentic latest leaf/cursor contract/atomic advance/readback/crash replay, nonemptybrain/multiplecontributors/own-input/gap-retry/DI/no-click. Earlier b3 red/691 scoped green and all source/ERP history preserved. Existing Gateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233/customer/production incomplete/no partial merge."
+    next: "Draft288 actual remote77f78278d189a9a60b784e3af78fa1388c14c7fc ACTIVE_OWNED Build38118871590/native114409281277/Gov38118871592SUCCESS. All16 key-enrollment source APPROVED6106328325 ROOTFULL9424 SHA25646b59059a045f234f4f4f0db98acbd11dda4128f3255639e6e9a645a4d8c02a5 independent112PASS/twelveformat; actual new history/keys/chain SQL remains unqualified. Parent013 CLOSED_ROOT_FULL_SCOPED117 all8/Gov/native117selected173overall/3538NET/quality/sixOriginals preserved. New pure latest leaf five-path source checkpoint prepared private94PASS15new79retained/twoformat; full review pending, no SQL/latest authority/prefix/store qualification. Continue owned77 CI to terminal, immediately fix actionable red same288; reviewed next push only after closure. Implement finite all-enrolled retained-key resolution outside SQL, exact locked reread/fresh Extract/original historical graph/authentic latest cursor/exact next interval/atomic advance-key-cursor/readback/lost-reply replay. Then physical schema/history/key/chain/cursor/race controls, nonemptybrain/multiplecontributors/owninputs/gap-retry/DI/no-click. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/production incomplete/no partial merge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 actual remote013a807f139372d24037067d19cfe1dbd7370815 CLOSED_TERMINAL_SUCCESS_SCOPED117 Build38115318877 all8SUCCESS/Gov38115318868SUCCESS/native114398953852 full85937bytes SHA2565e87c03475041396f2786d885a437a288216d8857157226df10bc28663126798 ROOT117requiredOnce173PASSzeroMissingDuplicateFailure/full.NET1143989540483538PASS6_520_25_2987 zeroFailSkip/quality114405529178FULLsevenSuccess/six original artifact11694121182 individually ROOT viewed. Historical readerf1/schema4ed/carrier8d full source approvals ROOTFULL persisted; actual history/signed frontier SQL unqualified. New key-enrollment twelveCSharp plus two validation/two state paths full source review pending, private3053PersistencePASS21new3032retained zeroFailSkipWarnings/twelveformat/model synchronized. Immutable scope-KeyId material fingerprint and restrictive advance-key FK; early migration refuses pre-existing advance history rather than blind enrollment; no independent provider/config/secretstore. After full source review push SAME288 and own new exact-head CI closure. Continue original historical SQL rotation/revocation/physical chain/key carrier constraints/rights, finite retained-key inventory outsideSQL then exact locked reread, authentic latest leaf/cursor contract/atomic advance/readback/crash replay, nonemptybrain/multiplecontributors/own-input/gap-retry/DI/no-click. Earlier b3 red/691 scoped green and all source/ERP history preserved. Existing Gateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233/customer/production incomplete/no partial merge."
+next_action: "Draft288 actual remote77f78278d189a9a60b784e3af78fa1388c14c7fc ACTIVE_OWNED Build38118871590/native114409281277/Gov38118871592SUCCESS. All16 key-enrollment source APPROVED6106328325 ROOTFULL9424 SHA25646b59059a045f234f4f4f0db98acbd11dda4128f3255639e6e9a645a4d8c02a5 independent112PASS/twelveformat; actual new history/keys/chain SQL remains unqualified. Parent013 CLOSED_ROOT_FULL_SCOPED117 all8/Gov/native117selected173overall/3538NET/quality/sixOriginals preserved. New pure latest leaf five-path source checkpoint prepared private94PASS15new79retained/twoformat; full review pending, no SQL/latest authority/prefix/store qualification. Continue owned77 CI to terminal, immediately fix actionable red same288; reviewed next push only after closure. Implement finite all-enrolled retained-key resolution outside SQL, exact locked reread/fresh Extract/original historical graph/authentic latest cursor/exact next interval/atomic advance-key-cursor/readback/lost-reply replay. Then physical schema/history/key/chain/cursor/race controls, nonemptybrain/multiplecontributors/owninputs/gap-retry/DI/no-click. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/production incomplete/no partial merge."
 
 
 blocked_by:
@@ -2524,9 +2524,9 @@ group_278_terminal_013_exact_head_qualification:
 
 group_278_immutable_terminal_key_enrollment_source:
   parent: 8d5106f001a0662a6354518b1974e41935647b32
-  source_review: PENDING_FULL_sixteen_paths_twelve_CSharp_key_validation_013closure_validation_two_state
+  source_review: APPROVED6106328325_ROOTFULL9424_SHA25646b59059a045f234f4f4f0db98acbd11dda4128f3255639e6e9a645a4d8c02a5_independent112PASS_twelveformat_SCOPED_SOURCE_SCHEMA
   carrier_source: APPROVED6106154180_ROOTFULL7257_independent124PASS_twoformat_no_prefix_or_runtime_authority
-  actual_remote: 013a807f139372d24037067d19cfe1dbd7370815_CLOSED_TERMINAL_SUCCESS_SCOPED117_all8_Gov_ROOTfull3538NET_quality_six_originals_viewed
+  actual_remote: 77f78278d189a9a60b784e3af78fa1388c14c7fc_ACTIVE_OWNED_Build38118871590_native114409281277_Gov38118871592SUCCESS
   expansion: immutable_GroupTerminalAdvanceKeys14columns_scoped_ordinal_KeyId_PK_material_authority_hash32_actor_versionUTC_company_source_service_restrictiveFKs_advance_exactScopeKeyId_restrictiveFK_no_existing_advance_columns_envelope_cursor_or_runtime_change
   versioned_migration: 20261011061648_AddGroupTerminalKeyEnrollment
   legacy: before_anyDDL_refuse_all_preexisting_signed_advances_require_reviewed_original_key_mapping_migration_no_current_material_backfill_or_rebaseline_forwardrepair_only
@@ -2542,4 +2542,19 @@ group_278_immutable_terminal_key_enrollment_source:
   model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
   full278_279_233_customer_production_merge: INCOMPLETE
   document: docs/validation/GROUP_TERMINAL_KEY_ENROLLMENT.md
-  next: full_frozen_source_review_then_push_same288_own_new_exact_CI_continue_physical_keys_chain_history_tests_and_latest_leaf_atomic_store_cursor_contract_DI
+  next: source_APPROVED_ROOTFULL_own77_CI_then_finite_material_inventory_latestleaf_atomic_store_actual_SQL_cursor_DI
+
+group_278_authenticated_latest_terminal_leaf_source:
+  parent: 77f78278d189a9a60b784e3af78fa1388c14c7fc
+  source_review: PENDING_FULL_five_paths_two_CSharp_validation_two_state
+  key_enrollment_source: APPROVED6106328325_ROOTFULL9424_independent112PASS_twelveformat_actual_SQL_NOT_RUN
+  actual_remote: 77f78278d189a9a60b784e3af78fa1388c14c7fc_ACTIVE_OWNED_Build38118871590_native114409281277_Gov38118871592SUCCESS
+  proof: caller_actual_descending_TOP2_bounded_enumeration_empty_chain_only_absent_or_scoped_zero_metadata_root_exact1_successor_exact2_authenticate_latest_all26_previous_envelope_and_only_relied_SQL_projections_cursor_exact_version_through_batch_signedUTC
+  anchor: prior_MAC_inductive_only_after_owned_store_original_history_nextprefix_fresh_authority_immutable_keys_before_everySign_not_entire_historical_carrier_reconstruction_or_FK_pairwise_trust
+  local: private94PASS15new79retained_shared112PASS15new97retained_zeroFailSkipWarnings_twoCSharpformat
+  excluded: actual_SQL_latestness_keyinventory_currentrights_originalhistory_trustedgenesis_cursorwrites_advance_store_DI_model
+  actual_schema_history_frontier_SQL: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  full278_279_233_customer_production_merge: INCOMPLETE
+  document: docs/validation/GROUP_TERMINAL_FRONTIER_LEAF_PROOF.md
+  next: full_frozen_source_review_own77_terminal_CI_then_owned_atomic_store_physical_history_keys_chain_cursor_races_DI
