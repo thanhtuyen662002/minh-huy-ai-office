@@ -13,8 +13,9 @@ original Chromium images. This is scoped runtime evidence, not feature completio
 | Required quality gates | `114405529178` | 3461; `feb58b2a5cd660e7b4ac1cf8e6d60f14ab60ff58bbdb4595b4ed0eb9d2b72c5f` |
 | Six original browser PNGs | `11694121182` | exact artifact `browser-workspace-013a807f139372d24037067d19cfe1dbd7370815` |
 
-All 117 required frozen native aggregates occur exactly once, with 173 PASS lines,
-zero missing/duplicate required markers and zero terminal failure markers. Full
+All 117 selected required native/browser markers, including 18 Chromium markers,
+occur exactly once, with 173 PASS lines overall, zero missing/duplicate selected
+required markers and zero terminal failure markers. Full
 .NET totals are 3538 = 6 + 520 + 25 + 2987, zero failures/skips across four successful
 test runs. The complete quality log contains each of its seven predecessor
 results exactly once as success. Browser artifact identity matches the exact
