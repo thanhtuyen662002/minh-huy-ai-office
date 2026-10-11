@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: b3c7dfb1637f83b8a85032640bbf43503f220fb0
+head: 013a807f139372d24037067d19cfe1dbd7370815
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 exact remoteb3c7dfb1637f83b8a85032640bbf43503f220fb0 CLOSED_RED Build38112203893/native114389913437/quality114395898042; Gov38112203900SUCCESS; six prerequisites/GovSUCCESS and ROOT full.NET3450PASS6_520_25_2899 noFailSkip SHA256a1511a1bb7cdffa361befcfc4a39bd004705eeb53a8c88ee59b7973ecb3e4d31. ROOT full80405 native SHA256fb1a939fb66bfd580419e32fae768dcc5bacc3c5f49484a02a25f59f2c59cca1 parsed98of117once150PASS19missing3failure; fullquality/all8/Gov closed, no browser artifact. Bounded indexed40char GUID frame repair prepared150coldPASS+actualSQL160parse; five-path FULL source review pending. Historical6ce6e11 ten-path review also pending. Consume full independent receipts then push same288 and own fresh exact-head117/.NET/all8/Gov/quality/six original images; fix any terminal failure on same branch, no blind rerun. All source receipts87_6105354729/ec_6105464632/finalb3_6105493237 ROOT_FULL consumed. New terminal SQL remains NOT_RUN_UNQUALIFIED until full native receipt. Historical691 full116/3352NET/all8/Gov/quality/originalsix CLOSED at four one-contributor/two-selected/zero-brain scope; prior464 red/676 history preserved. New signed frontier metadata integrity primitive38new+7keys+39frontier=84PASS noFailSkipWarnings/twoformat, eae1bee five-path FULL source APPROVED6105654903 ROOTFULL4563 SHA256b9ff4cced532c44633c60b5ca2f15c0001bba925c72c13c6086c7d47de5ffb0d independent100PASS84retained_new16reviewer/twoformat; excluded fromb3 runtime. New distinct historical original graph/receipt metadata50new253retained=303PASS/sevenformat prepared; ten-path FULL source review pending, no historical SQL/advance/DI authority. Implement immutable signed sequential predecessor schema/latest-leaf cursor fence and historical existing-terminal graph/current Extract bookkeping, outsideSQL retained keys and atomic actualreadback; lastBatch alone cannot prove prefix and old currentdependencies cannot strand genuine terminal after crash/edit/rotation. Continue nonemptybrain/multiplecontributor/owninput/races/gap-retry/DI/no-click. ExistingGateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233 incomplete/no partialmerge."
+next_action: "Draft288 remote013a807f139372d24037067d19cfe1dbd7370815 ACTIVE_OWNED Build38115318877/native114398953852/.NET114398954048; Gov38115318868 SUCCESS. Remain through full117/.NET/all8/quality/six-original-image closure; inspect actionable terminal failures and repair SAME branch, no blind retry or meaningful CI supersession. Source ancestors eae6105654903/6ce6105828232/0136105858330 FULL scoped approved and ROOT independently full-read/persisted. New separate historical SQL reader source prepared323PASS20new303retained/fourformat; seven-path FULL source review pending; actual historical SQL NOT_RUN_UNQUALIFIED. New terminal SQL awaits current117; previous b3 terminal transport implementation failure CLOSED_RED/full logs preserved and prior691 scoped116/3352NET/all8/Gov/sixoriginals closed. Next actual historical reconstruction/current rotation-revocation, signed predecessor schema/latest authentic leaf and cursor fence/outsideSQL retained keys/atomic advance readback, nonemptybrain/multiplecontributor/own-input/races/gap-retry/DI/no-click. Existing Gateway only real model NOT_RUN_UNEVALUATED, full278/279/233/customer/production incomplete; no partial merge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -3105,3 +3105,24 @@ group_278_terminal_fixture_frame_repair:
   model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
   full278_279_233_SQL_frontier_DI_customer_production_merge: INCOMPLETE
   next: FULL_source_review_repair_and_historical_checkpoint_ROOT_full_consumption_then_push_same288_and_own_new_exact_head117_dotNET_all8_Gov_quality_six_original_images_fix_terminal_failures_on_same_branch_then_SQL_history_signed_chain_DI
+
+group_278_historical_sql_reader_source:
+  parent: 013a807f139372d24037067d19cfe1dbd7370815
+  source_review: PENDING_FULL_seven_paths_two_source_two_tests_validation_two_state
+  actual_remote: 013a807f139372d24037067d19cfe1dbd7370815_ACTIVE_OWNED_Build38115318877_native114398953852_dotNET114398954048_Gov38115318868SUCCESS
+  ancestors: eae6105654903_ROOTFULL4563_6ce6105828232_ROOTFULL6176_0136105858330_ROOTFULL5644_all_scoped_source_APPROVED_independently_refetched_persisted
+  local: shared_private323PASS20new303retained_zeroFailSkipWarnings_fourCSharpformat
+  authorization: fresh_current_Extract_directory_effective_terminal_work_ingress_rights_exact_trusted_worker_credential_current_source_account_service_enrollment_deletion_generation
+  owned_boundary: caller_pinned_SQLServer_Serializable_savepoints_noambient_noMARS_cleantracker_sameconnection_sourceAPPLOCK_directory_recheck_linked2min_realUTC_final_permission_directory_transaction_recheck
+  historical_evidence: original_dense_allocation_ingress_cutoff_Recall_Edit_winners_original_work_effect_claim_owninput_DAG_all24terminal_fields_original_lifetime_no_fakeCurrent_or_oldclock
+  bounds: terminal2_sentinel_exact1_257to8177_manifest_digest32_work101_exact_atmost100_payload_lengths_before_selection_selected101_raw501_epochs102_origins2001_exact_atmost2000_existing256000_cipher_per_contributor
+  result: sealed_detached_historical_graph_interval_manifest_hash_operation_commitUTC_returned_byte_copies_no_present_authority_or_signed_prefix
+  cold_controls: actual_EF_SQL160_queries_no_connection_payload_preflight_malformed_bounds_duplicates_cancel_missingowned_foreigncurrentworker_and_mutable_rows_export_detachment
+  unchanged: production_DI_current_terminal_store_schema_signed_integrity_keys_AI_Gateway_configuration_workflows_native117_original_graphs_timeouts_cleanup_ERP_company_selection
+  excluded: key_resolution_decryption_SQLwrites_transactioncommit_witnessretirement_cursor_advance_signature_DIactivation_model_call
+  actual_historical_SQL: NOT_RUN_UNQUALIFIED
+  actual_terminal_SQL: PENDING_UNQUALIFIED_current013_native117
+  model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  full278_279_233_customer_production_merge: INCOMPLETE
+  document: docs/validation/GROUP_HISTORICAL_SQL_READER.md
+  next: full_frozen_source_review_then_after_owned013_terminal_CI_closure_push_reviewed_same288_continue_actual_history_and_signed_chain_atomic_advancement_DI

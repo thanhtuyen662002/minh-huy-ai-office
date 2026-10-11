@@ -348,6 +348,28 @@ public sealed class GroupBatchTerminalCommitProofTests
         Assert.All(historical.OriginalEffects, x => Assert.Equal(1, x.OriginalClaim.Epoch)); Assert.Equal(2, receipt.ClaimEpoch);
     }
 
+    [Fact]
+    public void HistoricalSqlEvidenceDetachesReceiptBytesAndOriginalRowsWithoutClaimingPresentAuthority()
+    {
+        var f = new Fixture(); var receipt = f.Stage();
+        var graph = GroupBatchHistoricalGraph.Require(f.Current.Coverage, f.Current.OriginalEffects, [], f.Now.AddDays(1));
+        var originalBytes = receipt.Manifest.ToArray();
+        var evidence = GroupBatchHistoricalTerminalEvidence.Require(graph, f.Original, receipt, graph.ObservedAtUtc);
+        var originalOwner = evidence.OriginalGraph.OriginalEffects[0].OriginalClaim.OwnerId;
+        var committed = evidence.CommittedAtUtc; var operation = evidence.OperationId;
+        receipt.Manifest[0] ^= 1; receipt.ManifestSha256[0] ^= 1;
+        receipt.OperationId = Guid.NewGuid(); receipt.CommittedAtUtc = f.Now.AddDays(2); f.Original.OwnerId = Guid.NewGuid();
+        var exported = evidence.WriteManifest(); exported[0] ^= 1;
+        Assert.Equal(originalBytes, evidence.WriteManifest());
+        Assert.Equal(committed, evidence.CommittedAtUtc); Assert.Equal(operation, evidence.OperationId);
+        Assert.Equal(originalOwner, evidence.OriginalGraph.OriginalEffects[0].OriginalClaim.OwnerId);
+        var manifest = GroupBatchTerminalManifest.Read(evidence.WriteManifest());
+        Assert.Equal(manifest.Fingerprint, evidence.ManifestSha256); Assert.Equal(manifest.Scope, evidence.Scope);
+        Assert.Equal(manifest.BatchId, evidence.BatchId); Assert.Equal(manifest.AfterSequence, evidence.AfterSequence);
+        Assert.Equal(manifest.ThroughSequence, evidence.ThroughSequence);
+        Assert.Equal("Group historical terminal evidence (private metadata).", evidence.ToString());
+    }
+
     private sealed class Fixture
     {
         internal readonly GroupWholeBatchCoverageTests.Fixture Input = new();
