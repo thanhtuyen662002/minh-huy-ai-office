@@ -67,6 +67,7 @@ def require_shadow_migration_result(result, reference):
     phases = {'owned-guard', 'original-authentication', 'operator-configuration', 'original-source-snapshot', 'shadow-create', 'shadow-ownership',
         'shadow-absence-command', 'shadow-absence-open', 'shadow-absence-execute', 'shadow-absence-result', 'shadow-absence-check',
         'shadow-create-command', 'shadow-create-open', 'shadow-create-execute', 'shadow-create-result',
+        'shadow-create-null', 'shadow-create-dbnull', 'shadow-create-system-id', 'shadow-create-non-int', 'shadow-create-validated',
         'predecessor-migration', 'original-seed', 'legacy-version-check', 'legacy-utc-check', 'empty-preflight',
         'version-preflight', 'through-preflight', 'utc-preflight', 'unsigned-preflight', 'matching-positive-upgrade',
         'positive-repeat', 'original-source-unchanged', 'owned-shadow-cleanup', 'complete'}

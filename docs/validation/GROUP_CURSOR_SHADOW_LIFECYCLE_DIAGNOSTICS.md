@@ -73,3 +73,41 @@ remain private, with their immutable archives and prior preliminary reviews
 preserved. Actual121/122, tokenizer/provider profile, Worker DI, automatic
 coordinator, full278/279/233, ERP/deployment and merge are incomplete.
 Real model quality remains **NOT_RUN_UNEVALUATED**.
+
+## dc5 terminal closure and scalar versus cleanup observation
+
+The preceding sections are historical preparation for dc5. Actual HEAD
+`dc5e62f058e14003a6015ad0073d47e8444a68b6` is now CLOSED RED:
+Build38153824595/native114512562985/quality114520928815 failed;
+Governance38153824577 and all six prerequisites succeeded. Full .NET3871
+passed without failures/skips. Native120 has99 once/21 missing/0 duplicates,
+five failure markers. No browser artifact exists. Entire quality was read;
+entire native/.NET verbatim reads are not claimed. Complete old HANDOFF
+paragraphs and terminal evidence are preserved in PR288 comment6111365786.
+
+The actual error is `shadow-create-result; invalid-operation; snapshot=-1`.
+`ExecuteScalarAsync` completed. Its strict scalar validation and subsequent
+command/connection cleanup shared that phase. The unique cause remains
+**UNPROVEN**; no SQL behavior repair or provider execution is claimed.
+
+The successor keeps the exact CREATE SQL and actual `int > 4` requirement.
+A closed result validator uses only five fixed observation literals:
+`shadow-create-null`, `shadow-create-dbnull`, `shadow-create-non-int`,
+`shadow-create-system-id`, and `shadow-create-validated`. NULL, DBNull,
+other CLR types and integers at most4 still throw. Accepted integers advance
+the phase before cleanup. Cleanup never overwrites that phase, so a scalar
+refusal followed by cleanup failure retains the primary scalar observation;
+successful scalar validation followed by cleanup failure is distinguishable.
+It does not yet identify which cleanup resource failed. No result value,
+type name, conversion, ToString, SQL identifier or private exception is logged.
+
+Fourteen new cold .NET cases cover refused shapes including hostile formatting,
+valid int5/intMax, and both first-error cleanup sequences. The two existing
+Python diagnostic methods extend only their closed phase inputs and private
+lookalike refusals; the other13 methods remain AST-identical. These controls
+cannot qualify actual SQL, a migration, or a forged successful transcript.
+Successor native120/all8/full3885=[6,520,25,3334]/quality/six original browser
+images remain NOT_RUN_UNQUALIFIED before its owned CI execution. Full changed
+Git SOURCE review is required before pushing. Private53 is still unpromoted;
+the dc5 context19 promoter is permanently dormant for the failed parent.
+Actual model remains **NOT_RUN_UNEVALUATED** and full278/merge incomplete.

@@ -99,7 +99,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                     createInvoked = true;
                     var result = await create.ExecuteScalarAsync(token);
                     Phase = "shadow-create-result";
-                    databaseId = result is int id && id > 4 ? id : throw new InvalidOperationException();
+                    databaseId = RequireCreatedDatabaseId(result);
                 }, () => DisposeCommand(create));
             });
             Phase = "shadow-ownership";
@@ -418,6 +418,21 @@ internal static class GroupSignedCursorMigrationRuntimeProof
     private static ValueTask DisposeCommand(SqlCommand command)
     {
         command.Dispose(); return ValueTask.CompletedTask;
+    }
+
+    internal static int RequireCreatedDatabaseId(object? result)
+    {
+        // Closed type patterns only: never format, convert or inspect private
+        // result values. Successful validation precedes resource cleanup.
+        Phase = result switch
+        {
+            null => "shadow-create-null",
+            DBNull => "shadow-create-dbnull",
+            int systemId when systemId <= 4 => "shadow-create-system-id",
+            int => "shadow-create-validated",
+            _ => "shadow-create-non-int"
+        };
+        return result is int id && id > 4 ? id : throw new InvalidOperationException();
     }
 
     private static Func<ValueTask>[] ProbeCleanup(SqlCommand[] commands) => commands.SelectMany(command => new Func<ValueTask>[]

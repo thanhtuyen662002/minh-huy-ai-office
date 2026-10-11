@@ -243,7 +243,9 @@ class ShadowFailureDiagnosticTests(unittest.TestCase):
     def test_lifecycle_subphases_keep_first_failure_closed_and_never_qualify_success(self):
         phases = ('shadow-absence-command', 'shadow-absence-open', 'shadow-absence-execute',
             'shadow-absence-result', 'shadow-absence-check', 'shadow-create-command',
-            'shadow-create-open', 'shadow-create-execute', 'shadow-create-result')
+            'shadow-create-open', 'shadow-create-execute', 'shadow-create-result',
+            'shadow-create-null', 'shadow-create-dbnull', 'shadow-create-system-id',
+            'shadow-create-non-int', 'shadow-create-validated')
         for phase in phases:
             with self.subTest(phase=phase), self.assertRaises(AssertionError) as error:
                 proof.require_shadow_migration_result(self.result(phase=phase, diagnostic='invalid-operation snapshot=-1'), reference)
@@ -255,7 +257,10 @@ class ShadowFailureDiagnosticTests(unittest.TestCase):
     def test_lifecycle_lookalikes_private_suffixes_and_cleanup_replacement_do_not_escape(self):
         for phase in ('shadow-absence', 'shadow-create-result PRIVATE_SQL_PASSWORD',
             'shadow-absence-open\nPRIVATE_SQL_PASSWORD', 'shadow-absence-command-extra',
-            'shadow-create-execute;Password=PRIVATE_SQL_PASSWORD'):
+            'shadow-create-execute;Password=PRIVATE_SQL_PASSWORD',
+            'shadow-create-null PRIVATE_SQL_PASSWORD', 'shadow-create-dbnull\nPRIVATE_SQL_PASSWORD',
+            'shadow-create-system-id=1', 'shadow-create-non-int System.String',
+            'shadow-create-validated-extra'):
             with self.subTest(phase=phase), self.assertRaises(AssertionError) as error:
                 proof.require_shadow_migration_result(self.result(phase=phase), reference)
             self.assertEqual('Owned reference executable failed at frontier-cursor-migration; exit=1', str(error.exception))

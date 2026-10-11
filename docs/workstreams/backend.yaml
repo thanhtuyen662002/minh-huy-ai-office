@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: ba66c1b840fb9c39325e1f8d44772109112cd7c2
+head: dc5e62f058e14003a6015ad0073d47e8444a68b6
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 exactba66 all8 CLOSED_RED: Build38149003034/Gov38149002949/native114498290468/quality114506787518; six prerequisites/full3871.NET PASS, actual shadow-create invalid-operation snapshot=-1. Original72 snapshots and both encoding controls completed before that phase; unique lifecycle branch UNPROVEN. Nine fixed redacted lifecycle subphases retain typed results/ownership/first-error cleanup and strict72/32typed unmapped columns/originalPK. Root123.NET/170Python/2format checks PASS; all13oldfrontiermethods AST retained. Freeze complete6 source with whole states, independent SOURCE approval BEFORE one SAME288 push; own successor120/full3871/all8/Gov/quality/six originals to terminal and repair real red immediately. Context19 promoters DORMANT; journal/runtime/response private unpromoted. Model NOT_RUN_UNEVALUATED/tokenizer/DI/coordinator/full278/279/233/ERP/deployment/merge incomplete."
+next_action: "Draft288 exactdc5 CLOSED_RED: Build38153824595/native114512562985/quality114520928815 FAILED; Gov38153824577/six prerequisites/full3871.NET PASS. Actual shadow-create-result invalid-operation snapshot=-1; unique cause UNPROVEN scalar validation versus subsequent resource cleanup. Five fixed scalar observations retain unchanged CREATE SQL/int>4/all72 snapshots/typed32/originalPK/ownership/first-error/45second cleanup. ROOT137.NET/170Python/fourformat PASS; other13frontiermethods AST retained. Complete7 Git SOURCE review before one SAME288 successor push; own actual120/full3885=[6,520,25,3334]/all8/Gov/quality/six originals through terminal, immediately fix real red. Private53 unpromoted; dc5 context19 promoter permanently dormant. Actual model NOT_RUN_UNEVALUATED/tokenizer/profile/DI/coordinator/exhaustion/full278/279/233/ERP/deployment/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -3860,3 +3860,109 @@ group_278_shadow_lifecycle_diagnostic_checkpoint:
     cleanup and strict72/32typed unmapped columns/originalPK. Root123.NET/170Python/2format checks PASS; all13oldfrontiermethods AST retained. Freeze complete6 source with whole states,
     independent SOURCE approval BEFORE one SAME288 push; own successor120/full3871/all8/Gov/quality/six originals to terminal and repair real red immediately. Context19 promoters DORMANT;
     journal/runtime/response private unpromoted. Model NOT_RUN_UNEVALUATED/tokenizer/DI/coordinator/full278/279/233/ERP/deployment/merge incomplete.'
+
+group_278_remote_dc5_shadow_scalar_ambiguous_terminal_closure:
+  head: dc5e62f058e14003a6015ad0073d47e8444a68b6
+  state: ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE
+  build: 38153824595
+  governance: 38153824577
+  jobs:
+    Deployment contract and container builds:
+      id: 114512562824
+      conclusion: success
+    Complete local stack integration:
+      id: 114512562985
+      conclusion: failure
+    FE container runtime smoke:
+      id: 114512563020
+      conclusion: success
+    .NET format, build and tests:
+      id: 114512563062
+      conclusion: success
+    Docker Compose validation:
+      id: 114512563078
+      conclusion: success
+    EF Core migration integrity:
+      id: 114512563093
+      conclusion: success
+    Web tests, type-check and build:
+      id: 114512563143
+      conclusion: success
+    Required quality gates:
+      id: 114520928815
+      conclusion: failure
+  native:
+    bytes: 83558
+    sha256: b7cd0584581263af07af950a9c2f872b15afbf337efd10dbb4017897fc83b327
+    required: 120
+    once: 99
+    missing: 21
+    duplicates: 0
+    failure_markers: 5
+    entire_verbatim_root_read: false
+  dotnet:
+    total: 3871
+    projects:
+    - 6
+    - 520
+    - 25
+    - 3320
+    failed: 0
+    skipped: 0
+    successful_runs: 4
+    full_byte_parser: true
+    entire_verbatim_root_read: false
+    sha256: d8cd2fba733c52250beec58cac2ac7bdbe74d5186877810d17b4adac121b8b07
+  quality:
+    bytes: 3529
+    sha256: dd5eedbf27f34260a0ff6173fa627f06301fe14b20759dd9180b97239d36e75d
+    entire_root_read: true
+    results:
+      DOTNET_RESULT: success
+      WEB_RESULT: success
+      WEB_RUNTIME_RESULT: success
+      LOCAL_RUNTIME_RESULT: failure
+      INFRASTRUCTURE_RESULT: success
+      DEPLOYMENT_RESULT: success
+      MIGRATIONS_RESULT: success
+  artifacts: 0
+  full_prior_handoff_preserved_comment: 6111365786
+  failure: shadow-create-result invalid-operation snapshot=-1
+  unique_hosted_cause: 'UNPROVEN: scalar validation OR command/connection cleanup within phase shadow-create-result'
+  dc5_context19_promoter: PERMANENTLY_DORMANT_FAILED_PARENT
+  actual_model: NOT_RUN_UNEVALUATED
+  full278: INCOMPLETE
+  merge: WITHHELD
+group_278_shadow_scalar_diagnostic_checkpoint:
+  parent: dc5e62f058e14003a6015ad0073d47e8444a68b6
+  source_review: PENDING_COMPLETE_SEVEN_PATH_GIT_SOURCE_REVIEW_BEFORE_PUSH
+  classification: DIAGNOSTIC_ONLY_UNIQUE_HOSTED_CAUSE_UNPROVEN_NO_SQL_REPAIR_CLAIM
+  phases:
+  - shadow-create-null
+  - shadow-create-dbnull
+  - shadow-create-non-int
+  - shadow-create-system-id
+  - shadow-create-validated
+  retained: UNCHANGED_CREATE_SQL_ACTUAL_INT_GT4_72SNAPSHOTS_32TYPED_UNMAPPED_COLUMNS_ORIGINAL_PK_ENCODING_CONTROLS_STRICT_OWNERSHIP_FIRST_ERROR_45SEC_CLEANUP
+  local:
+    dotnet: 137
+    added_dotnet_cases: 14
+    python: 170
+    format_checks: 4
+    original_frontier_methods_ast_unchanged: 13
+    extended_diagnostic_methods: 2
+    failed: 0
+    skipped: 0
+    compiler_warnings: 0
+  successor_native120: NOT_RUN_UNQUALIFIED
+  successor_full_dotnet: 3885=[6,520,25,3334]_NOT_RUN
+  private53: UNPROMOTED_PRELIMINARY_SOURCE_REVIEW_NOT_FAILED_PARENT_RUNTIME_ACCEPTANCE
+  actual_model: NOT_RUN_UNEVALUATED
+  worker_di: false
+  full278: INCOMPLETE
+  merge: WITHHELD
+  next: 'Draft288 exactdc5 CLOSED_RED: Build38153824595/native114512562985/quality114520928815 FAILED; Gov38153824577/six prerequisites/full3871.NET PASS. Actual shadow-create-result
+    invalid-operation snapshot=-1; unique cause UNPROVEN scalar validation versus subsequent resource cleanup. Five fixed scalar observations retain unchanged CREATE SQL/int>4/all72
+    snapshots/typed32/originalPK/ownership/first-error/45second cleanup. ROOT137.NET/170Python/fourformat PASS; other13frontiermethods AST retained. Complete7 Git SOURCE review before
+    one SAME288 successor push; own actual120/full3885=[6,520,25,3334]/all8/Gov/quality/six originals through terminal, immediately fix real red. Private53 unpromoted; dc5 context19
+    promoter permanently dormant. Actual model NOT_RUN_UNEVALUATED/tokenizer/profile/DI/coordinator/exhaustion/full278/279/233/ERP/deployment/merge incomplete.'
