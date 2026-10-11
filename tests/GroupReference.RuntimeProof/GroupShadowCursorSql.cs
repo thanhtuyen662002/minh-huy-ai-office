@@ -56,6 +56,14 @@ internal static class GroupShadowCursorSql
     internal sealed record SeedPlan(CommandTemplate Guard, IReadOnlyList<CommandTemplate> Copies);
     internal static ShadowDatabase NewShadow() => ShadowDatabase.Create();
 
+    // Fixed read-only engine controls use the exact serializer applied to every
+    // snapshot. An empty result and one NULL-valued row must remain distinct.
+    internal static IReadOnlyList<CommandTemplate> SnapshotEncodingControls() => Array.AsReadOnly(new[]
+    {
+        Template("snapshot-control:empty", Hash("snapshot-control:empty", "SELECT CAST(NULL AS int) AS [Value] WHERE 1=0")),
+        Template("snapshot-control:null-row", Hash("snapshot-control:null-row", "SELECT CAST(NULL AS int) AS [Value] WHERE 1=1"))
+    });
+
     internal static string RequireShadowName(string name)
     {
         const string prefix = "GroupCursorShadow_";
@@ -171,7 +179,7 @@ internal static class GroupShadowCursorSql
         """;
 
     private static string Hash(string tag, string sql) => $"""
-        DECLARE @payload nvarchar(max)=({sql} FOR JSON PATH,INCLUDE_NULL_VALUES);
+        DECLARE @payload nvarchar(max)=COALESCE(({sql} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]');
         IF @payload IS NULL OR DATALENGTH(@payload)>{MaximumSnapshotJsonBytes} THROW 51054,N'Owned shadow snapshot bytes refused',1;
         SELECT N'{tag}' AS [Tag],CONVERT(char(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),@payload)),2) AS [Sha256];
         """;

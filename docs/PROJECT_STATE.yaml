@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: e000db8a556c99774395a5fcf049c86fc93bce2b
+current_target_head: 653b07ae2533c024262b04c4cae79ff0ba33ca14
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: e000db8a556c99774395a5fcf049c86fc93bce2b
+    head: 653b07ae2533c024262b04c4cae79ff0ba33ca14
     state: in_progress
-    next: "Draft288 remotee000 all8 CLOSED_RED (Build38139385156 Gov38139385255 native114469909214 quality114477562516); strict complete3-table correction67 source HELD_BEFORE_PUSH after3 actual initial-column guard controls fail. Successor requires all32 names/type/null/userDefined and originalPK in both directions before rowhash; actual cumulative CREATE/ADD/ALTER AST expanded3cases keeps117.NET/168Python/four scopedformat checks PASS. Freeze/review full successor10 relativee000 then SAME288 push; own exact120/3859.NET/all8/Gov/quality/six originals through terminal. Private17/19/v3 archives unpromoted, laterjournal source74/shadow72; actualmodel NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete."
+    next: "Draft288 exact653 all8 CLOSED_RED: Build38144853642/Gov38144853646/native114485958046/quality114493461321; six prerequisites/full3859.NET PASS, original-source-snapshot SQL51054 ordinal5, unique hosted row/null/byte branch UNPROVEN. Canonical empty scalar JSON repair keeps strict72/full58rows/13catalogs/32typed unmapped columns/originalPK and all prior scopes. Root123 focused.NET including12 new cases/zeroFailSkipWarning/four scopedformat checks PASS; two fixed engine empty/null-row controls PREPARED_NOT_RUN. Freeze complete6 source including whole states, independent SOURCE approval, then one SAME288 push; own fresh120/3871.NET=[6,520,25,3320]/all8/Gov/quality/six originals through terminal and repair real red immediately. Private17context/20journal/8runtime unpromoted; parent120 notqualified/promoter dormant. Model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 remotee000 all8 CLOSED_RED (Build38139385156 Gov38139385255 native114469909214 quality114477562516); strict complete3-table correction67 source HELD_BEFORE_PUSH after3 actual initial-column guard controls fail. Successor requires all32 names/type/null/userDefined and originalPK in both directions before rowhash; actual cumulative CREATE/ADD/ALTER AST expanded3cases keeps117.NET/168Python/four scopedformat checks PASS. Freeze/review full successor10 relativee000 then SAME288 push; own exact120/3859.NET/all8/Gov/quality/six originals through terminal. Private17/19/v3 archives unpromoted, laterjournal source74/shadow72; actualmodel NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete."
+next_action: "Draft288 exact653 all8 CLOSED_RED: Build38144853642/Gov38144853646/native114485958046/quality114493461321; six prerequisites/full3859.NET PASS, original-source-snapshot SQL51054 ordinal5, unique hosted row/null/byte branch UNPROVEN. Canonical empty scalar JSON repair keeps strict72/full58rows/13catalogs/32typed unmapped columns/originalPK and all prior scopes. Root123 focused.NET including12 new cases/zeroFailSkipWarning/four scopedformat checks PASS; two fixed engine empty/null-row controls PREPARED_NOT_RUN. Freeze complete6 source including whole states, independent SOURCE approval, then one SAME288 push; own fresh120/3871.NET=[6,520,25,3320]/all8/Gov/quality/six originals through terminal and repair real red immediately. Private17context/20journal/8runtime unpromoted; parent120 notqualified/promoter dormant. Model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete."
 
 
 blocked_by:
@@ -2940,3 +2940,127 @@ group_cursor_shadow_unmapped_shape_guard_checkpoint:
     guard controls fail. Successor requires all32 names/type/null/userDefined and originalPK in both directions before rowhash; actual cumulative CREATE/ADD/ALTER AST expanded3cases keeps117.NET/168Python/four
     scopedformat checks PASS. Freeze/review full successor10 relativee000 then SAME288 push; own exact120/3859.NET/all8/Gov/quality/six originals through terminal. Private17/19/v3 archives unpromoted, laterjournal
     source74/shadow72; actualmodel NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete.
+
+group_278_remote_653_snapshot_failure_closure:
+  head: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+  state: ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE
+  build: 38144853642
+  governance: 38144853646
+  jobs:
+  - id: 114485957885
+    name: FE container runtime smoke
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: success
+  - id: 114485958017
+    name: Web tests, type-check and build
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: success
+  - id: 114485958022
+    name: Deployment contract and container builds
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: success
+  - id: 114485958038
+    name: EF Core migration integrity
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: success
+  - id: 114485958046
+    name: Complete local stack integration
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: failure
+  - id: 114485958101
+    name: .NET format, build and tests
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: success
+  - id: 114485958107
+    name: Docker Compose validation
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: success
+  - id: 114493461321
+    name: Required quality gates
+    head_sha: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+    status: completed
+    conclusion: failure
+  native: 114485958046
+  quality: 114493461321
+  artifacts: 0
+  native_log:
+    bytes: 83554
+    sha256: ca39a88ded152a676349c7dc44fa646d08a34f53efd1c74a146f20720b7cf6e4
+    full_byte_frozen120_parser: true
+    once: 99
+    missing: 21
+    duplicates: 0
+    pass_lines: 151
+    failure_lines: 5
+    entire_verbatim_root_read: false
+    actual_failure_cleanup_sections_root_read: true
+  quality_log:
+    bytes: 3528
+    sha256: 931f0c213841ac96585418fe9ccec141f414ed5b967449941add0e21b36a60b2
+    entire_verbatim_root_read: true
+    results:
+      DOTNET_RESULT: success
+      WEB_RESULT: success
+      WEB_RUNTIME_RESULT: success
+      LOCAL_RUNTIME_RESULT: failure
+      INFRASTRUCTURE_RESULT: success
+      DEPLOYMENT_RESULT: success
+      MIGRATIONS_RESULT: success
+  dotnet:
+    total: 3859
+    projects:
+    - 6
+    - 520
+    - 25
+    - 3308
+    failed: 0
+    skipped: 0
+    successful_runs: 4
+    full_byte_parser: true
+    entire_verbatim_root_read: false
+    bytes: 1020262
+    sha256: f69bf60f47961f902954df88e4038ca896b3c4d92f821aa2273c32e52a8e5d4d
+  failure: original-source-snapshot SQL51054 ordinal5; compiled original plan maps to rows:CustomerSlaPolicyRevisions
+  unique_hosted_cause: 'UNPROVEN: existing51054 conflates row bound, scalar JSON NULL and byte bound. Compatible empty-table defect requires actual-engine qualification.'
+  preserved_previous_active_handoff_comment: 6110109708
+  actual_model: NOT_RUN_UNEVALUATED
+  full278: INCOMPLETE
+  merge: WITHHELD
+group_278_canonical_empty_snapshot_checkpoint:
+  parent: 653b07ae2533c024262b04c4cae79ff0ba33ca14
+  source_review: PENDING_COMPLETE_FROZEN_SIX_PATH_GIT_REVIEW_BEFORE_PUSH
+  repair: COALESCE_ONLY_SCALAR_FOR_JSON_NULL_TO_CANONICAL_EMPTY_ARRAY_ALL_ORIGINAL_PROJECTIONS_ORDER_AND_BOUNDS_RETAINED
+  engine_controls: TWO_FIXED_EMPTY_AND_ONE_NULL_ROW_EXACT_UTF16_SHA_SAME_SERIALIZABLE_UNIT_STRICT_READER_FIRST_FAILURE_DISPOSAL_PREPARED_NOT_RUN
+  retained: STRICT72_SNAPSHOTS_FULL58TABLE_ROWS_13CATALOGS_ALL32TYPED_UNMAPPED_COLUMNS_ORIGINALPK_COMPLETE_MIGRATIONS_SEED11_SOURCE_EFFECT_PERMISSION_AND_OWNERSHIP_CONTROLS
+  local:
+    passed: 123
+    new_cases: 12
+    retained_cases: 111
+    failed: 0
+    skipped: 0
+    compiler_warnings: 0
+    scoped_format_apply_verify: 4
+    log_bytes: 26349
+    log_sha256: 8bf66fc9de238db360cb7fcb157b6794b2b879cd9ee7f0900764194d39757f81
+    python: UNCHANGED_COORDINATOR_FIXTURE_SOURCE_NO_NEW_EXECUTION_ATTRIBUTED
+  native120: NOT_RUN_UNQUALIFIED
+  full_dotnet: 3871=[6,520,25,3320]_NOT_RUN
+  private_context17: UNPROMOTED_PARENT120_NOT_QUALIFIED_DORMANT_PROMOTER
+  private_journal20: UNPROMOTED_SOURCE74_SHADOW72
+  private_runtime8: UNPROMOTED_SQL122_NOT_RUN
+  actual_model: NOT_RUN_UNEVALUATED
+  worker_di: false
+  full278: INCOMPLETE
+  merge: WITHHELD
+  next: 'Draft288 exact653 all8 CLOSED_RED: Build38144853642/Gov38144853646/native114485958046/quality114493461321; six prerequisites/full3859.NET PASS, original-source-snapshot SQL51054
+    ordinal5, unique hosted row/null/byte branch UNPROVEN. Canonical empty scalar JSON repair keeps strict72/full58rows/13catalogs/32typed unmapped columns/originalPK and all prior scopes.
+    Root123 focused.NET including12 new cases/zeroFailSkipWarning/four scopedformat checks PASS; two fixed engine empty/null-row controls PREPARED_NOT_RUN. Freeze complete6 source including
+    whole states, independent SOURCE approval, then one SAME288 push; own fresh120/3871.NET=[6,520,25,3320]/all8/Gov/quality/six originals through terminal and repair real red immediately.
+    Private17context/20journal/8runtime unpromoted; parent120 notqualified/promoter dormant. Model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deploy/merge incomplete.'

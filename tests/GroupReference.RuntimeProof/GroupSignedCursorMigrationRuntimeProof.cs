@@ -1,6 +1,8 @@
 using System.Data;
 using System.Data.Common;
 using System.Runtime.ExceptionServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -349,6 +351,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
                 await sql.OpenAsync(token);
                 await WithTransactionAsync(completion, sql, token, async transaction =>
                 {
+                    await VerifySnapshotEncodingAsync(completion, sql, transaction, token);
                     foreach (var template in templates)
                     {
                         SnapshotOrdinal = result.Count;
@@ -365,6 +368,34 @@ internal static class GroupSignedCursorMigrationRuntimeProof
         {
             template.Command.Dispose(); return ValueTask.CompletedTask;
         }).ToArray());
+    }
+
+    private static async Task VerifySnapshotEncodingAsync(GroupCursorProofCompletion completion, SqlConnection sql,
+        SqlTransaction transaction, CancellationToken token)
+    {
+        var controls = GroupShadowCursorSql.SnapshotEncodingControls();
+        await completion.RunAsync(async () =>
+        {
+            foreach (var control in controls)
+            {
+                control.Command.Connection = sql; control.Command.Transaction = transaction;
+                var reader = await control.Command.ExecuteReaderAsync(token);
+                var hash = await completion.RunAsync(() => ReadSnapshotHashAsync(reader, control.Tag, token), reader.DisposeAsync);
+                RequireSnapshotEncodingControlResult(control.Tag, hash);
+            }
+        }, controls.Select<GroupShadowCursorSql.CommandTemplate, Func<ValueTask>>(control => () => DisposeCommand(control.Command)).ToArray());
+    }
+
+    internal static void RequireSnapshotEncodingControlResult(string tag, string hash)
+    {
+        var expectedJson = tag switch
+        {
+            "snapshot-control:empty" => "[]",
+            "snapshot-control:null-row" => "[{\"Value\":null}]",
+            _ => throw new InvalidOperationException()
+        };
+        var expected = Convert.ToHexString(SHA256.HashData(Encoding.Unicode.GetBytes(expectedJson)));
+        if (!StringComparer.Ordinal.Equals(expected, hash)) throw new InvalidOperationException();
     }
 
     private static async Task WithConnectionAsync(GroupCursorProofCompletion completion, string connection,
