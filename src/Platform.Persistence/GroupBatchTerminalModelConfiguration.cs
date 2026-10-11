@@ -18,7 +18,9 @@ internal static class GroupBatchTerminalModelConfiguration
                     "[OperationId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimOperationId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimOwnerId]<>'00000000-0000-0000-0000-000000000000' AND [ClaimEpoch]>0 AND [CredentialEpoch]>0 AND [GrantVersion]>0 AND [SourceVersion]>0 AND [DeletionGeneration]>=0 AND [AccountVersion]>0 AND DATEPART(tz,[CommittedAtUtc])=0");
             });
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.BindingId, x.BatchId });
-            entity.Property(x => x.Manifest).HasMaxLength(GroupBatchTerminalManifest.MaximumBytes).HasColumnType("varbinary(8177)");
+            // SQL Server limits varbinary(n) to 8000. Keep the 8177-byte logical
+            // bound in the model and CHECK while using a legal physical type.
+            entity.Property(x => x.Manifest).HasMaxLength(GroupBatchTerminalManifest.MaximumBytes).HasColumnType("varbinary(max)");
             entity.Property(x => x.ManifestSha256).HasMaxLength(32).HasColumnType("varbinary(32)");
             entity.HasOne<CompanyRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<GroupBindingRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.BindingId }).OnDelete(DeleteBehavior.Restrict);

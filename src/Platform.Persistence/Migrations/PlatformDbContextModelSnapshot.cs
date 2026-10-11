@@ -797,7 +797,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.Property<byte[]>("Manifest")
                         .IsRequired()
                         .HasMaxLength(8177)
-                        .HasColumnType("varbinary(8177)");
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("ManifestSha256")
                         .IsRequired()

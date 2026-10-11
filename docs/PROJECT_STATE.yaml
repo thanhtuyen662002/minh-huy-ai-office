@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
+current_target_head: 464607ac961d409ef02d658f9379fc56e39316ce
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 67605e1059b71fd11b4fe32c21e0c93fb2b4df7b
+    head: 464607ac961d409ef02d658f9379fc56e39316ce
     state: in_progress
-    next: "Draft288 remote464607ac961d409ef02d658f9379fc56e39316ce ACTIVE owned CI Build38108833612/native114379946799/Gov38108833538; complete full exact-head116/all8/full.NET/original six images closure. Complete thirteen-path per-column repair APPROVED6105046515 ROOTFULL5040 and41PASS closes original P2. Latest five-path own-input prerequisite promoted directly after304PASS24new280retained/five-format; old9371 stash retained superseded NOT_APPLIED. Freeze complete eight-path own-input code/test/doc/two-state review; continue owned terminal transaction/replay/expiry rollback and authenticated contiguous SQL cursor plus real nonemptybrain/multichunk/race proof. Prior676 CLOSED scoped116/all8/Gov/3218.NET/six originals unchanged. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233 incomplete/no partialmerge."
+    next: "Draft288 remote464607ac961d409ef02d658f9379fc56e39316ce CLOSED RED Build38108833612/native114379946799/dotnet114379946773/quality114380506790; Gov38108833538 and five other prerequisite jobs SUCCESS. Full logs retained: bootstrap illegal varbinary8177/max8000, four old cutoff fixtures missing canonical SourceSetSHA, zero required116 execution/no browser artifacts. Local c82 own-input WITHHELD6105133070 ROOTFULL5660 solely three stale676 current-head fields;318PASS no other source blocker. Fix three fields to remote464, legal varbinary(max) while8177 model/CHECK unchanged and authentic fixture checksum; fullPersistence2801PASS/six-format. Freeze complete nine-path repair review before next same288 exact-head CI; root owns terminal closure. Continue owned terminal transaction/replay/expiry/frontier and actual own-input SQL chains after review. Prior676 scoped116 qualification/history unchanged. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 remote464607ac961d409ef02d658f9379fc56e39316ce ACTIVE owned CI Build38108833612/native114379946799/Gov38108833538; complete full exact-head116/all8/full.NET/original six images closure. Complete thirteen-path per-column repair APPROVED6105046515 ROOTFULL5040 and41PASS closes original P2. Latest five-path own-input prerequisite promoted directly after304PASS24new280retained/five-format; old9371 stash retained superseded NOT_APPLIED. Freeze complete eight-path own-input code/test/doc/two-state review; continue owned terminal transaction/replay/expiry rollback and authenticated contiguous SQL cursor plus real nonemptybrain/multichunk/race proof. Prior676 CLOSED scoped116/all8/Gov/3218.NET/six originals unchanged. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233 incomplete/no partialmerge."
+next_action: "Draft288 remote464607ac961d409ef02d658f9379fc56e39316ce CLOSED RED Build38108833612/native114379946799/dotnet114379946773/quality114380506790; Gov38108833538 and five other prerequisite jobs SUCCESS. Full logs retained: bootstrap illegal varbinary8177/max8000, four old cutoff fixtures missing canonical SourceSetSHA, zero required116 execution/no browser artifacts. Local c82 own-input WITHHELD6105133070 ROOTFULL5660 solely three stale676 current-head fields;318PASS no other source blocker. Fix three fields to remote464, legal varbinary(max) while8177 model/CHECK unchanged and authentic fixture checksum; fullPersistence2801PASS/six-format. Freeze complete nine-path repair review before next same288 exact-head CI; root owns terminal closure. Continue owned terminal transaction/replay/expiry/frontier and actual own-input SQL chains after review. Prior676 scoped116 qualification/history unchanged. Actualmodel NOT_RUN_UNEVALUATED/full278/279/233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -2265,7 +2265,7 @@ group_278_terminal_per_column_permission_repair:
 
 group_278_464_dispatched_ci:
   head: 464607ac961d409ef02d658f9379fc56e39316ce
-  state: ACTIVE_OWNED_CI
+  state: CLOSED_TERMINAL_FAILURE_FIX_SAME288
   build: 38108833612
   governance: 38108833538
   native: 114379946799
@@ -2285,8 +2285,31 @@ group_278_batch_own_input_prerequisite:
   local: shared304PASS_24new280retained_noFailSkip_five_CSharp_format_actual_two_and2000ID_EF_SQL160_generated_no_connection_open_2100_parameter_bound
   private_to_shared: exact_five_latest_tested_formatted_sources_promoted_directly_9371stash_RETAINED_SUPERSEDED_NOT_APPLIED
   first_shared_selection: 92PASS_partial_filter_had_nonexistent_class_names_corrected_exact_five_actual_classes304PASS_no_source_change
-  source_review: PENDING_FULL_frozen_eight_paths_code_test_doc_two_state
+  source_review: WITHHELD_c82_6105133070_ROOTFULL5660_only_three_current_head_fields318PASS_repair_FULL_review_pending
   actual_nonemptybrain_multicontributor_chain_SQL: NOT_RUN_UNQUALIFIED_older116profiles_zero_brain_one_contributor
   terminal_transaction_frontier_expiry_races_DI_no_click_full278_279_233_merge: INCOMPLETE
   model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
   next: complete_frozen_source_review_owned_terminal_store_and_actual_adversarial_own_input_chain_SQL_proof_same288
+
+group_278_464_terminal_failure_and_repair:
+  failed_head: 464607ac961d409ef02d658f9379fc56e39316ce
+  state: CLOSED_TERMINAL_FAILURE_FIX_SAME288
+  build: 38108833612
+  native: 114379946799
+  dotnet: 114379946773
+  quality: 114380506790
+  governance_and_other_prerequisites: SUCCESS38108833538_five_other_Build_prerequisites_SUCCESS
+  native_failure: bootstrap_SQL_Server_varbinary8177_exceeds_fixed8000_only_two_shipping_preflight_PASS_zero_required116_no_browser_artifacts_secondary_ACTION_errors_retained_requalification_pending
+  dotnet_failure: original_four_StructuralCoverageAcceptsActualReaderPriorityHeadsInsideAndBeforeAllocation_cases_CopyReceipt_fixture_SourceSetSHA_default_empty_canonical_guard_unchanged
+  full_logs: native99427_SHA25668a85cf346cc6998df6356ee8afcf257b2ea27a6292a6d5f87e85d50690e27a7_dotnet1141786_SHA2562e4a6c41417f981bd23228ceb980bfced9a8b3b8e819b81e115de7332bf84214_quality6150_SHA25656ca7d930e7ba0c6e3e077e0754a447e193bddb630c2338119b36b2c892b58e0
+  full_dotnet: attempted3327_pass3323_failed4_runs6_520_25_2776_no_runtime_acceptance
+  repair_parent: c82e6340479276ace313a0bd12fa8484dd63b62c
+  physical_repair: unmerged_unapplied_CREATE_model_migration_Designer_snapshot_varbinaryMax_logical8177_maxlength_and_DATALENGTH_check_all_checks_FKs_indexes_permissions_Down_preserved
+  fixture_repair: actual_single_selected_message_revision_shipping_SourceSetSHA_formula_all_four_cases_and_positive_negative_assertions_preserved_production_guards_unchanged
+  local: fullPersistence2801PASS_noFailSkipWarnings_original_four_cases_new_engine_binary_limit_regression_six_CSharp_format_SQL160_pendingModelFalse_closed_connection
+  own_input_parent_review: WITHHELD6105133070_ROOTFULL5660_SHA256bba85ec1dfa9c9b314cd08d53a638f596110d9c66cdd2e66250950f078454406_318PASS_no_other_source_blocker
+  durable_repair: exactly_three_current_heads676_to_remote464_history_676_blocks_preserved_local_c82_unpushed_source_currentCI_failure_recorded
+  source_review: PENDING_FULL_frozen_nine_paths_model_migration_Designer_snapshot_two_tests_schema_doc_two_state
+  next: FULL_repair_approval_then_reviewed_same288_push_new_exact_head_all8_Gov_full116_NET_original_six_owned_terminal_closure
+  actual_terminal_rights_insert_cursor_own_input_chains_full278_279_233_merge: UNQUALIFIED_INCOMPLETE
+  model: NOT_RUN_UNEVALUATED

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
 using Xunit;
 
@@ -39,6 +41,8 @@ public sealed partial class GroupBatchSourceReaderTests
             BindingId = scope.SourceBindingId,
             BatchId = context.BatchId,
             OperationId = operation,
+            SourceSetSha256 = Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(
+                FormattableString.Invariant($"{entry.MessageId:D}/{entry.Revision}")))),
             SelectedMessageCount = 1,
             NoteCount = 0,
             Outcome = GroupWorkCommitOutcome.NoWork,

@@ -28,7 +28,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     BatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OperationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ManifestVersion = table.Column<int>(type: "int", nullable: false),
-                    Manifest = table.Column<byte[]>(type: "varbinary(8177)", maxLength: 8177, nullable: false),
+                    Manifest = table.Column<byte[]>(type: "varbinary(max)", maxLength: 8177, nullable: false),
                     ManifestSha256 = table.Column<byte[]>(type: "varbinary(32)", maxLength: 32, nullable: false),
                     AfterSequence = table.Column<long>(type: "bigint", nullable: false),
                     ThroughSequence = table.Column<long>(type: "bigint", nullable: false),

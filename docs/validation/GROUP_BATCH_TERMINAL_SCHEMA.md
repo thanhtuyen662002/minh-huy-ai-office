@@ -26,6 +26,49 @@ This is source/schema preparation only. Native remote67605e1/116 remains separat
 
 Review of frozen739d01a identified the mutable whole-object UPDATE=1 prerequisite. Retained native42cc94dc evidence had already refused that pattern with immutable scope-column DENYs; accepted cd17377db0ba28667b77dec562746c961d2668ba removed it from the original ingress proof. The new cursor now follows the same effective per-column pattern: require all four writable columns and inventory every remaining column as immutable. Receipt whole-object UPDATE=0 and all original migration DENYs remain unchanged. A regression explicitly refuses the unsafe whole-object prerequisite while checking every retained column condition. Final focused verification is36 PASS, nine new27retained, zero failures/skips/warnings, and two changed-file formatting checks pass. There is no new native cursor-rights execution from this repair.
 
-Parent WITHHELD review6104920534 was independently refetched/read in full by root:5299 characters, SHA256 `5b4d608bc1e5d219cc7ecdd650ae9e069a0b667626fe5f8d222a6e2210a5caa5`. Its four independent safe controls pass and its original permission regression must be rerun unchanged on the repaired frozen source. No other scoped blocker was found; repaired source approval remains pending.
+Parent WITHHELD review6104920534 was independently refetched/read in full by root:5299 characters, SHA256 `5b4d608bc1e5d219cc7ecdd650ae9e069a0b667626fe5f8d222a6e2210a5caa5`. Complete repaired source review6105046515 was then ROOTFULL refetched/read/persisted:5040 characters, SHA256 `0b53a960b904bfd52807372177727abbb68c8b94118b403e3d576f164f387ba1`. All41 controls pass, including the unchanged original permission regression and four other independent controls. This closes that source finding; it did not establish SQL engine execution.
 
 Separately, remote676 native116 is now CLOSED SUCCESS/all8/Governance with the complete scope and remaining limits recorded in `GROUP_ORIGINAL_EFFECT_116_QUALIFICATION.md`. It still excludes this migration and repaired prerequisite. Unfinished own-input source work is held privately outside this repair checkpoint and has not been tested or approved.
+
+## First SQL engine execution — failed464 and repair
+
+Reviewed head `464607ac961d409ef02d658f9379fc56e39316ce` reached terminal
+failure on Build38108833612. Native114379946799 failed during bootstrap:
+SQL Server rejected `varbinary(8177)` because fixed `varbinary(n)` has an
+8,000-byte maximum. The additional `ACTION` syntax messages are retained in the
+full log; fresh native execution is required to establish closure. ScriptDom
+syntax parsing and EF snapshot agreement had not checked that engine limit.
+Only two shipping preflight PASS lines ran; the required116 profiles and all
+six original browser artifacts did not run.
+
+The unmerged, unapplied terminal migration now uses physical `varbinary(max)`
+in the model, migration, Designer and snapshot. Its logical model maximum8177,
+the `DATALENGTH BETWEEN 257 AND 8177` constraint, magic/digest checks, all other
+checks/FKs/indexes, ownership/DENYs and forward-only Down are preserved. This
+repairs the original CREATE before it can execute; no deployed schema or data
+is edited. A new regression checks actual generated numeric binary declarations
+against the engine's8,000-byte limit while retaining the8177 manifest bound.
+
+Dotnet114379946773 independently failed four retained
+`StructuralCoverageAcceptsActualReaderPriorityHeadsInsideAndBeforeAllocation`
+cases (Recall/Edit, before/inside allocation). Their structural fixture omitted
+`SourceSetSha256`, leaving an empty value rejected by the unchanged canonical
+guard. The fixture now computes the same single-source SHA256 as the shipping
+commit store from the actual selected message ID/revision. All four existing
+cases and all original positive/negative assertions remain. The production
+guard and source/brain/effect validation are unchanged.
+
+Full failure evidence is retained: native99,427 bytes SHA256
+`68a85cf346cc6998df6356ee8afcf257b2ea27a6292a6d5f87e85d50690e27a7`;
+.NET1,141,786 bytes SHA256
+`2e4a6c41417f981bd23228ceb980bfced9a8b3b8e819b81e115de7332bf84214`;
+quality6,150 bytes SHA256
+`56ca7d930e7ba0c6e3e077e0754a447e193bddb630c2338119b36b2c892b58e0`.
+The four .NET runs attempted `[6,520,25,2776]`:3323 passed and four failed.
+Governance and the five other prerequisite Build jobs succeeded; the aggregate
+quality gate correctly failed for .NET and local runtime. Frozenc82e634 own-input
+source review is separate and its ACTIVE464 state is a historical snapshot.
+
+New exact-head CI closure, actual terminal runtime permissions/insertion/cursor,
+own-input SQL chains and full278/279/233 acceptance remain pending. Actual model
+evaluation remains **NOT_RUN_UNEVALUATED**.

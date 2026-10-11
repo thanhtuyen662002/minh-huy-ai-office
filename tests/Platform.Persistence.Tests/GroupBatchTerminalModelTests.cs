@@ -22,7 +22,7 @@ public sealed class GroupBatchTerminalModelTests
         var entity = model.FindEntityType(typeof(GroupBatchTerminalReceiptRecord))!;
         Assert.Equal(new[] { "TenantId", "CompanyId", "BindingId", "BatchId" }, entity.FindPrimaryKey()!.Properties.Select(x => x.Name));
         Assert.Equal(GroupBatchTerminalManifest.MaximumBytes, entity.FindProperty("Manifest")!.GetMaxLength());
-        Assert.Equal("varbinary(8177)", entity.FindProperty("Manifest")!.GetColumnType());
+        Assert.Equal("varbinary(max)", entity.FindProperty("Manifest")!.GetColumnType());
         Assert.Equal(32, entity.FindProperty("ManifestSha256")!.GetMaxLength());
         Assert.Equal("varbinary(32)", entity.FindProperty("ManifestSha256")!.GetColumnType());
         Assert.All(entity.GetProperties(), p => Assert.False(p.IsNullable));
@@ -178,6 +178,21 @@ public sealed class GroupBatchTerminalModelTests
             Assert.Equal(table.CheckConstraints.Count, entity.GetCheckConstraints().Count());
             foreach (var check in table.CheckConstraints) Assert.Equal(check.Sql, entity.GetCheckConstraints().Single(c => c.Name == check.Name).Sql);
         }
+        Assert.Equal(ConnectionState.Closed, db.Database.GetDbConnection().State);
+    }
+
+    [Fact]
+    public void GeneratedBinaryDeclarationsRespectSqlServerPhysicalLimitWithoutReducingManifestBound()
+    {
+        using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
+        var sql = string.Join('\n', db.GetService<IMigrationsSqlGenerator>().Generate(new AddGroupBatchTerminal().UpOperations, model).Select(c => c.CommandText));
+        // ScriptDom accepts varbinary(8177) syntactically, but SQL Server rejects
+        // that size before applying this migration. Check the engine limit too.
+        foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(sql, @"\bvarbinary\((\d+)\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            Assert.InRange(int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), 1, 8000);
+        Assert.Contains("[Manifest] varbinary(max) NOT NULL", sql);
+        Assert.Contains("DATALENGTH([Manifest]) BETWEEN 257 AND 8177", sql);
+        Assert.Equal(8177, GroupBatchTerminalManifest.MaximumBytes);
         Assert.Equal(ConnectionState.Closed, db.Database.GetDbConnection().State);
     }
 }
