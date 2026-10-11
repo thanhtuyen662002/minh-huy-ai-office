@@ -106,6 +106,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
         var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
+        var effectExpectation = await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, scope, effectOperation, token);
         await RequireDependenciesAsync();
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || committed != replay with { WasAlreadyCommitted = false }) throw new InvalidOperationException();
@@ -118,11 +119,13 @@ internal static class GroupAutomaticNoWorkRuntimeProof
         await RequireOriginalAsync();
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
+        await GroupAutomaticEffectExpectationRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
         await RequireDependenciesAsync();
         if (dependencyProof.Completed != 3) throw new InvalidOperationException();
         Console.WriteLine("PASS owned automatic no-work actual atomic receipt two exact NoWork dispositions original replay new nonce refusal no notes outbox or model");
         Console.WriteLine("PASS owned automatic no-work whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock");
+        Console.WriteLine("PASS owned automatic no-work version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model");
 
         Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
             keys, dependencyProof, RequireOriginalAsync, token);
@@ -132,6 +135,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
             if (await GroupNoteRuntimeProof.TargetRowsAsync(db, scope, effectOperation, token) != 3
                 || await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token) != rawGraph
                 || await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token) != manifestGraph
+                || await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, scope, effectOperation, token) != effectExpectation
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph) throw new InvalidOperationException();
             RequireClean(db);
         }
@@ -200,6 +204,7 @@ internal static class GroupAutomaticNoWorkRuntimeProof
                 throw new InvalidOperationException();
             await GroupAutomaticRawRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, 2, token);
             await GroupAutomaticManifestRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token);
+            await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token);
             effect.Flushed = true; effect.Advance(); return result;
         }
     }

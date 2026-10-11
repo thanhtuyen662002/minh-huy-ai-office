@@ -84,6 +84,8 @@ class OwnedStackGuardTests(unittest.TestCase):
             if command[-1] == 'raw-history-commit':
                 result.stdout = result.stdout.replace(automatic_smoke.DEPENDENCY_RUNTIME_LINES[translated[-1]],
                     automatic_smoke.DEPENDENCY_RUNTIME_LINES[command[-1]])
+                result.stdout = result.stdout.replace(automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[translated[-1]],
+                    automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[command[-1]])
             return result
         arguments.pop('proof'); arguments.update(sql=sql, automatic=automatic_smoke)
         return arguments, process, calls, queries
@@ -242,6 +244,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             mode = command[-1]; phase = list(runtime_lines).index(mode)
             expected = runtime_lines[mode]
             if mode in automatic_smoke.DEPENDENCY_RUNTIME_LINES: expected += '\n' + automatic_smoke.DEPENDENCY_RUNTIME_LINES[mode]
+            if mode in automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES: expected += '\n' + automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[mode]
             return SimpleNamespace(returncode=1 if fault == "child-error" else 0,
                 stdout=expected + ("\nPRIVATE\n" if fault == "extra-output" else "\n"), stderr="PRIVATE" if fault == "stderr" else "")
         arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", manifest={"AIOFFICE_INSTALLATION_ID": installation,
@@ -2342,6 +2345,42 @@ class OwnedStackGuardTests(unittest.TestCase):
         for value, size in [(original[:256], 600), (original[:-1], 600), ("NULL", 600), ("gg" * 600, 600), ("AA" * 4001, 4001)]:
             with self.subTest(length=len(value), expected_bytes=size), self.assertRaises(AssertionError):
                 submission_smoke.require_stored_event_hex(value, size)
+
+
+    def test_original_effect_expectation_marker_is_additive_exact_and_required_for_all_three_automatic_profiles(self):
+        for proof in ('notes', 'no_work', 'host_only'):
+            for fault in ('missing', 'duplicate', 'replace', 'reorder'):
+                with self.subTest(proof=proof, fault=fault):
+                    arguments, process, calls, _ = self.automatic_runtime_oracle(None, proof)
+                    def corrupted(command, **kwargs):
+                        result = process(command, **kwargs)
+                        if command[:2] == ['docker', 'run'] and command[-1] in automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES:
+                            marker = automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[command[-1]]
+                            if fault == 'missing': result.stdout = result.stdout.replace(marker + '\n', '')
+                            elif fault == 'duplicate': result.stdout += marker + '\n'
+                            elif fault == 'replace': result.stdout = marker + '\n'
+                            else: result.stdout = marker + '\n' + result.stdout.replace(marker + '\n', '')
+                        return result
+                    with patch.dict(os.environ, self.environment, clear=True), patch.object(automatic_smoke.subprocess, 'run', side_effect=corrupted), patch('builtins.print') as output:
+                        with self.assertRaises(AssertionError): automatic_smoke.verify(**arguments)
+                        output.assert_not_called()
+
+    def test_raw_history_effect_expectation_marker_cannot_replace_or_omit_original_history_and_dependency(self):
+        for fault in ('missing', 'duplicate', 'replace', 'reorder'):
+            with self.subTest(fault=fault):
+                arguments, process, calls, _ = self.raw_history_runtime_oracle(None)
+                def corrupted(command, **kwargs):
+                    result = process(command, **kwargs)
+                    if command[:2] == ['docker', 'run'] and command[-1] == 'raw-history-commit':
+                        marker = automatic_smoke.EFFECT_EXPECTATION_RUNTIME_LINES[command[-1]]
+                        if fault == 'missing': result.stdout = result.stdout.replace(marker + '\n', '')
+                        elif fault == 'duplicate': result.stdout += marker + '\n'
+                        elif fault == 'replace': result.stdout = marker + '\n'
+                        else: result.stdout = marker + '\n' + result.stdout.replace(marker + '\n', '')
+                    return result
+                with patch.dict(os.environ, self.environment, clear=True), patch.object(raw_history_smoke.subprocess, 'run', side_effect=corrupted), patch('builtins.print') as output:
+                    with self.assertRaises(AssertionError): raw_history_smoke.verify(**arguments)
+                    output.assert_not_called()
 
 
 class HostBrainFixtureMetadataTests(unittest.TestCase):

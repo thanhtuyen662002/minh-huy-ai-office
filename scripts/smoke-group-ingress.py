@@ -782,6 +782,11 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             "AND SUBSTRING(DependencyManifest,161,2)=0x0200;") == "4|4|4"
         print("PASS actual automatic manifest SQL four original version1 receipts exact scoped source identities cutoff metadata same savepoint rollback original replay immutable both columns no terminal or model claim", flush=True)
         print("PASS actual automatic whole dependency SQL four original scopes each three current manifest reconstructions serializable source lock unchanged graphs claim key counts pending501 no completion or model", flush=True)
+        assert sql(f"SELECT CONCAT(COUNT(*),N'|',COUNT(DISTINCT BatchId),N'|',COUNT(DISTINCT OperationId)) "
+            f"FROM aioffice.GroupWorkCommitReceipts WHERE TenantId='{tenant}' AND CompanyId='{company}' "
+            "AND DependencyManifestVersion=1 AND DATALENGTH(DependencyManifest)=274 AND SelectedMessageCount=2 "
+            "AND EffectLedgerVersion=1 AND DATALENGTH(ExpectedEffectSha256)=32 AND ExpectedEffectSha256<>CONVERT(varbinary(32),REPLICATE(CHAR(0),32));") == "4|4|4"
+        print("PASS actual automatic original effect expectations four original scopes version1 digest32 atomic rollback replay two immutable columns denied complete original graphs unchanged no completion or model", flush=True)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

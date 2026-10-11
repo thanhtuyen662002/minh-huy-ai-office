@@ -23,6 +23,11 @@ DEPENDENCY_RUNTIME_LINES = {
     "automatic-no-work-commit": "PASS owned automatic no-work whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock",
     "automatic-host-commit": "PASS owned automatic host whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock",
     "raw-history-commit": "PASS owned raw history whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock"}
+EFFECT_EXPECTATION_RUNTIME_LINES = {
+    "automatic-note-commit": "PASS owned automatic note version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model",
+    "automatic-no-work-commit": "PASS owned automatic no-work version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model",
+    "automatic-host-commit": "PASS owned automatic host version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model",
+    "raw-history-commit": "PASS owned raw history version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model"}
 RUNTIME_LINES = {
     "automatic-note-prepare": "PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims",
     "automatic-note-expiry": "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
@@ -216,6 +221,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             assert not result.stderr, "Owned automatic note executable emitted unexpected diagnostics"
             expected_lines = [expected]
             if mode in DEPENDENCY_RUNTIME_LINES: expected_lines.append(DEPENDENCY_RUNTIME_LINES[mode])
+            if mode in EFFECT_EXPECTATION_RUNTIME_LINES: expected_lines.append(EFFECT_EXPECTATION_RUNTIME_LINES[mode])
             reference.require_reference_result(result, mode, expected_lines)
             unchanged()
             if proof != "coverage" or mode != commit_mode: no_gaps()

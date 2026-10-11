@@ -137,6 +137,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
         var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
+        var effectExpectation = await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, scope, effectOperation, token);
         await RequireDependenciesAsync();
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
         if (readback.Items.Count != plan.NoteCount) throw new InvalidOperationException();
@@ -181,6 +182,7 @@ internal static class GroupAutomaticNoteRuntimeProof
                     || x.ConfirmedByUserId != null || x.ConfirmedAtUtc != null), token)) throw new InvalidOperationException();
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
+        await GroupAutomaticEffectExpectationRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
         await RequireDependenciesAsync();
         if (dependencyProof.Completed != 3) throw new InvalidOperationException();
@@ -190,6 +192,9 @@ internal static class GroupAutomaticNoteRuntimeProof
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock"
             : "PASS owned automatic note whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock");
+        Console.WriteLine(hostOnly
+            ? "PASS owned automatic host version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model"
+            : "PASS owned automatic note version1 effect expectation32 same atomic graph rollback replay two immutable columns denied no completion or model");
 
         Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
             keys, dependencyProof, RequireOriginalAsync, token);
@@ -200,6 +205,7 @@ internal static class GroupAutomaticNoteRuntimeProof
                 || await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token) != graph
                 || await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token) != rawGraph
                 || await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token) != manifestGraph
+                || await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, scope, effectOperation, token) != effectExpectation
                 || db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null) throw new InvalidOperationException();
             GroupAutomaticRawRuntimeProof.RequireDetached(db);
         }

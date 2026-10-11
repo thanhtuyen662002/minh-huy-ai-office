@@ -259,6 +259,7 @@ internal static class GroupNoteRuntimeProof
             {
                 await GroupAutomaticRawRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, 2, token);
                 await GroupAutomaticManifestRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token);
+                await GroupAutomaticEffectExpectationRuntimeProof.RequireAsync(db, new(receipt.TenantId, receipt.CompanyId, receipt.BindingId), effect.Operation, token);
             }
             effect.Flushed = true;
             if (effect.ExpireAfterFlush) effect.Advance();

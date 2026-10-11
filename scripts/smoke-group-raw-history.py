@@ -114,6 +114,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             assert not result.stderr, "Owned raw history executable emitted unexpected diagnostics"
             expected_lines = [expected]
             if mode == "raw-history-commit": expected_lines.append(automatic.DEPENDENCY_RUNTIME_LINES[mode])
+            if mode == "raw-history-commit": expected_lines.append(automatic.EFFECT_EXPECTATION_RUNTIME_LINES[mode])
             reference.require_reference_result(result, mode, expected_lines)
             unchanged(); no_gaps()
             assert immutable() == immutable_before, "Owned raw history changed protected source originals"
