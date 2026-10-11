@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: b6f7d89013abccf992271fb0530793f14cbe3e30
     state: in_progress
-    next: "Own Draft288 remote b6f7d89 Build38099379279/native114351943971 ACTIVE113 through terminal; Gov/sixPrereqsSUCCESS/ROOTFULL.NET2959 retained. Observerc86/provenance707 source approvals6103979540/6104074051 ROOTFULL4039/3853 persisted, actual native114 NOT_RUN. New complete bounded original create graph fingerprint checks selected/request/revision/evidence/outbox/items and original claim, canonical immutable metadata/cipher, NoWork zero graph,40notes/256000bytes,81syntheticfocused/format2 PASS; freeze FULL five-path review before push. No stored expected digest/SQL/auth/completion yet. Then expand versioned expected-effect digest atomically in automatic writers and fenced per-contributor reads, preserving legacy and original proof assertions. Continue nonemptybrain/allchunks/mutations/races/ownwrite/terminalcontiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
+    next: "Draft288 remote b6f CLOSED RED Build38099379279/native114351943971/quality114357440592; Gov38099379280/sixPrereqsSUCCESS/ROOTFULL.NET2959 zeroFailSkip. Frozen113 has105once/8missing/161PASS/2fail/no browserartifact; actual501 group ingress/raw500/pending501/history and four manifest SQL predicates once, overall113/all8 withheld. Actual archive held-detail company-switch callback15s unhandled waiter; selector/provider cause UNPROVEN. Narrow waiter repair observes rejection immediately but awaits same promises/fixed stages;39Node controls/syntax PASS. Freeze FULL fivepath review then reviewed exact114 chain same288 and own CI to terminal. Observerc86/provenance707/structural-effecte04 approvals6103979540/6104074051/6104144245 ROOTFULL persisted; native currentSQL/provenance/effectstorage/atomicgraph/terminal/no-click/model not qualified. Continue versioned expected effect digest storage/automatic staging/locked allcontributors, nonemptybrain/allchunks/races/ownwrite/contiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own Draft288 remote b6f7d89 Build38099379279/native114351943971 ACTIVE113 through terminal; Gov/sixPrereqsSUCCESS/ROOTFULL.NET2959 retained. Observerc86/provenance707 source approvals6103979540/6104074051 ROOTFULL4039/3853 persisted, actual native114 NOT_RUN. New complete bounded original create graph fingerprint checks selected/request/revision/evidence/outbox/items and original claim, canonical immutable metadata/cipher, NoWork zero graph,40notes/256000bytes,81syntheticfocused/format2 PASS; freeze FULL five-path review before push. No stored expected digest/SQL/auth/completion yet. Then expand versioned expected-effect digest atomically in automatic writers and fenced per-contributor reads, preserving legacy and original proof assertions. Continue nonemptybrain/allchunks/mutations/races/ownwrite/terminalcontiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
+next_action: "Draft288 remote b6f CLOSED RED Build38099379279/native114351943971/quality114357440592; Gov38099379280/sixPrereqsSUCCESS/ROOTFULL.NET2959 zeroFailSkip. Frozen113 has105once/8missing/161PASS/2fail/no browserartifact; actual501 group ingress/raw500/pending501/history and four manifest SQL predicates once, overall113/all8 withheld. Actual archive held-detail company-switch callback15s unhandled waiter; selector/provider cause UNPROVEN. Narrow waiter repair observes rejection immediately but awaits same promises/fixed stages;39Node controls/syntax PASS. Freeze FULL fivepath review then reviewed exact114 chain same288 and own CI to terminal. Observerc86/provenance707/structural-effecte04 approvals6103979540/6104074051/6104144245 ROOTFULL persisted; native currentSQL/provenance/effectstorage/atomicgraph/terminal/no-click/model not qualified. Continue versioned expected effect digest storage/automatic staging/locked allcontributors, nonemptybrain/allchunks/races/ownwrite/contiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -1997,7 +1997,7 @@ group_278_whole_dependency_native_preparation:
   local: 20coldCsharp_140Python20output_corruption_scenarios_Release0W0E_fivefileformat
   source_review: SCOPED_APPROVED6103979540_ROOT_FULL_read4039_persisted_140Python28coldCsharp
   native114: NOT_RUN_UNQUALIFIED_successful_whole_dependencies
-  current_remote113: ACTIVE38099379279_native114351943971_Gov38099379280SUCCESS_sixPrereqsSUCCESS
+  current_remote113: CLOSED_RED38099379279_native114351943971_quality114357440592_Gov38099379280SUCCESS_sixPrereqsSUCCESS
   current_dotnet: ROOT_FULL2959_6_520_25_2408_zeroFailSkip_fourSuccessfulRuns_114351944083
   limits: each_current_fixture_one_receipt_twoSelected_zeroContributingBrain_no_allchunk_nonemptybrain_races_ledger_frontier_model_acceptance
   model: NOT_RUN_UNEVALUATED
@@ -2027,8 +2027,37 @@ group_278_original_effect_ledger_preparation:
   no_work: zero_business_graph_and_no_Work_Quarantined_Attention_dispositions
   local: 81synthetic_structural_controls_zeroFailSkip_twofileformat_not_SQL_AEAD_authentication_or_model_quality
   prior_provenance_review: SCOPED_APPROVED6104074051_ROOT_FULL3853_persisted_73selected10independent
-  source_review: PENDING_FULL_frozen_whole_fivepaths_before_push
+  source_review: SCOPED_APPROVED6104144245_ROOT_FULL_read4008_persisted_81retained14independent
   stored_expected_digest_atomic_writers_and_current_SQL_reader: NOT_IMPLEMENTED
   terminal_frontier: INCOMPLETE
   model: NOT_RUN_UNEVALUATED
   next: own113terminal_FULL_review_then_versioned_expected_effect_storage_atomic_staging_and_locked_allcontributor_checks_same288
+
+group_278_b6f_terminal_browser_failure:
+  remote_head: b6f7d89013abccf992271fb0530793f14cbe3e30
+  state: CLOSED_TERMINAL_RED
+  build: 38099379279
+  native: 114351943971
+  quality: 114357440592
+  governance: SUCCESS38099379280
+  other_six_prerequisites: SUCCESS
+  root_full_dotnet: actual2959_6_520_25_2408_zeroFailSkip_fourSuccessfulRuns_114351944083
+  root_full_frozen113: 105each_once_8missing_161PASS_2terminalfailuremarkers
+  log: 80490bytes_SHA25606c94880e1b6b9f1b3aa44e482631b2885618acc97af9816da40fc008e16a687
+  qualified_scope: owned_actual501_group_Core_ingress_raw500_498superseded_pending501_rollback_replay_immutable_rights_four_v1_manifest_SQL_paths_only
+  browser_originals: NOT_PRODUCED_native_failed_during_browser
+  failure: actual_archive_held_private_detail_company_switch_callback_waiter15000ms_unhandled_rejection_at01_15_35
+  cause: unobserved_early_waiter_structurally_reproduced_hosted_selector_provider_timeout_reason_UNPROVEN
+  limits: full113_all8_browser_later_currentSQL_provenance_effectledger_terminal_model_fullfeature_UNQUALIFIED
+  next: same288_narrow_waiter_repair_frozen_review_then_exact114_terminal_closure
+
+group_278_archive_switch_waiter_repair:
+  source_base: e04d37fa6f42dee2797e60663f377b3b11775ec4
+  repair: immediately_observe_both_original_waiter_rejections_then_await_original_promises_closed_phase_stages_parent_fixed_catch_finally
+  preservation: same15_20_30second_limits_provider_Code_S256_challenge_callback303_exact_current_company_originalPASS_route_isolation_membership_restore_cleanup_screenshots
+  local: 39NodePASS_zeroFailSkip_two_new_methods_early_rejection_provider_and_session_refusal_inert_page_objects_syntaxPASS
+  prior_effect_review: SCOPED_APPROVED6104144245_ROOT_FULL4008_persisted_81retained14independent
+  source_review: PENDING_FULL_frozen_whole_fivepaths_before_push
+  new_exact114: NOT_RUN_UNQUALIFIED
+  model: NOT_RUN_UNEVALUATED
+  next: reviewed_same288_chain_push_then_own_exact114_all8_Gov_full_logs_original_six_images_terminal

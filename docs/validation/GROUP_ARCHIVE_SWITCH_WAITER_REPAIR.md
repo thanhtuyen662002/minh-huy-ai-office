@@ -1,0 +1,17 @@
+# Owned browser waiter repair — issue 278 / Draft 288
+
+## Exact terminal evidence
+
+Remote b6f7d89013abccf992271fb0530793f14cbe3e30 is **CLOSED TERMINAL RED**: Build38099379279/native114351943971/quality114357440592 failure; Governance38099379280 and six other prerequisites success. Root FULL .NET114351944083 confirms2959=[6,520,25,2408], zero failures/skips and four successful runs. Root FULL frozen113 predicate inspection finds105 exactly once,8 missing,161 total PASS lines and2 terminal failure markers. No original browser artifact was produced. Full native log80490 bytes SHA25606c94880e1b6b9f1b3aa44e482631b2885618acc97af9816da40fc008e16a687; full quality log confirms the local-runtime gate failed.
+
+The exact owned history and manifest parent predicates each occur once after their successful scoped checks. This qualifies actual501 Core ingress, allocated/raw500 with498 superseded rows and retained pending501, rollback/replay/immutable rights, and the four original v1 manifest commit paths. These are disposable group-message SQL fixtures. Full113/browser/all8 and the later current-dependency/provenance/effect-ledger/model/full-feature paths remain unqualified.
+
+At01:15:35 UTC the actual Chromium process exited with an unhandled15-second `page.waitForResponse` timeout in archive `switchCompany`, called by the held private-detail/company-switch scenario. The original waiter had no rejection handler while selection and the authorization waiter were still being awaited. That early-rejection orchestration defect is reproducible in the actual extracted helper. The hosted selector/provider reason for not delivering the callback was not retained and remains **UNPROVEN**.
+
+## Narrow repair and verification
+
+The archive helper now immediately observes both waiters' rejections and subsequently awaits the same original promises. An absent/failed authorization or callback still refuses. Fixed select/auth-request/callback/workspace/current-session stages let a failure reach the existing private parent catch and owned restoration `finally`, as in the existing submission helper. The held private-detail switch has its own closed phase prefix. The15/20/30-second limits, actual provider Code/S256/challenge/callback303/current-company predicates, all original PASS lines, routing/late-reply isolation, membership restoration, cleanup and screenshots remain required.
+
+39 retained-plus-new Node controls PASS, zero failures/skips, and script syntax check PASS. Two new methods cover early callback/authorization/selection rejection while selection yields, original failure propagation, valid provider switching and response-type/PKCE/challenge/callback/current-session status/company refusal. These use inert page objects; they do not reproduce the hosted browser timeout cause or qualify successful navigation/cleanup.
+
+Prior structural fingerprint e04d37fa6f42dee2797e60663f377b3b11775ec4 is scoped approved6104144245 ROOT FULL4008 characters read/persisted,81 retained plus14 independent structural controls. Observerc86 and provenance707 approvals are separately retained. Freeze this complete five-path repair for independent review, then push the reviewed same-PR chain and own its exact114/all8/Governance/full logs/original six images to terminal. Immediately repair any real failure. Expected-effect storage/atomic staging/current graph comparison, complete terminal frontier/no-click behavior and actual model evaluation remain unfinished. **NOT_RUN_UNEVALUATED** is the actual model status; no partial merge or production activation.

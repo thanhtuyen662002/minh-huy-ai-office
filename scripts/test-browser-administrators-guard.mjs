@@ -131,6 +131,59 @@ test("submission company-switch still requires provider CodeS256 callback303 and
   }
 });
 
+test("archive company-switch observes early waiter failures while preserving original refusal and cleanup control", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function openHistory(", start);
+  assert.ok(start > 0 && end > start);
+  const makeSwitch = new Function("app", "identity", "requireProof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const app = "http://127.0.0.1:3000", identity = "http://127.0.0.1:8081", selected = "owned-inert-company";
+  for (const fault of ["callback", "request", "selection"]) {
+    const failure = new Error("owned-inert-" + fault), phases = [];
+    const callback = fault === "callback" || fault === "selection" ? Promise.reject(failure) : Promise.resolve({ status: () => 303 });
+    const authorization = fault === "request" || fault === "selection" ? Promise.reject(failure)
+      : Promise.resolve({ url: () => identity + "/realms/aioffice-local/protocol/openid-connect/auth?response_type=code&code_challenge_method=S256&code_challenge=owned" });
+    const page = {
+      waitForResponse: () => callback, waitForRequest: () => authorization,
+      getByRole: () => ({ selectOption: async value => {
+        assert.equal(selected, value); await new Promise(resolve => setImmediate(resolve)); if (fault === "selection") throw failure;
+      } }),
+    };
+    const action = makeSwitch(app, identity, assert.ok, () => assert.fail("refusal reached current session"), phase => phases.push(phase));
+    let restored = false;
+    try { await assert.rejects(action(page, selected, "late-private-detail-company-switch"), error => error === failure); }
+    finally { restored = true; }
+    assert.equal(restored, true); assert.equal(phases[0], "late-private-detail-company-switch-select");
+    assert.equal(phases.at(-1), "late-private-detail-company-switch-" + (fault === "callback" ? "callback" : fault === "request" ? "auth-request" : "select"));
+  }
+});
+
+test("archive company-switch still requires exact provider code challenge callback303 and current company", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function openHistory(", start);
+  const makeSwitch = new Function("app", "identity", "requireProof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const app = "http://127.0.0.1:3000", identity = "http://127.0.0.1:8081", selected = "owned-inert-company";
+  for (const fault of [null, "response-type", "pkce", "challenge", "callback", "status", "company"]) {
+    const phases = [], actions = [];
+    const page = {
+      waitForResponse: match => { assert.ok(match({ url: () => app + "/api/local/session/oidc/callback?code=owned-inert" })); return Promise.resolve({ status: () => fault === "callback" ? 403 : 303 }); },
+      waitForRequest: match => {
+        const url = identity + "/realms/aioffice-local/protocol/openid-connect/auth?response_type=" + (fault === "response-type" ? "token" : "code")
+          + "&code_challenge_method=" + (fault === "pkce" ? "plain" : "S256") + (fault === "challenge" ? "" : "&code_challenge=owned");
+        assert.ok(match({ url: () => url })); return Promise.resolve({ url: () => url });
+      },
+      getByRole: (role, options) => ({ selectOption: async value => { assert.equal(role, "combobox"); assert.equal(options.name, "Chuyển công ty"); assert.equal(selected, value); actions.push("select"); },
+        waitFor: async () => { assert.equal(role, "button"); assert.equal(options.name, "Đăng xuất"); actions.push("workspace"); } }),
+    };
+    const action = makeSwitch(app, identity, condition => { if (!condition) throw new Error("owned fixed archive refusal"); }, async (receivedPage, path) => {
+      assert.equal(page, receivedPage); assert.equal(`/api/local/session?companyId=${selected}`, path); actions.push("current");
+      return { status: fault === "status" ? 401 : 200, text: JSON.stringify({ companyId: fault === "company" ? "other" : selected }) };
+    }, phase => phases.push(phase));
+    if (fault) await assert.rejects(action(page, selected), /^Error: owned fixed archive refusal$/);
+    else { await action(page, selected); assert.deepEqual(actions, ["select", "workspace", "current"]); }
+    assert.ok(phases.every(phase => /^provider-company-switch-(select|auth-request|callback|workspace|current-session)$/.test(phase)));
+  }
+});
+
 test("group inbox browser refuses unowned flags/directories before fixture files, Docker, SQL or network", async () => {
   const root = resolve("guard-test-no-resources"), owned = join(root, "aioffice-local");
   const previous = Object.fromEntries(["CI", "GITHUB_ACTIONS", "RUNNER_TEMP"].map(key => [key, process.env[key]]));

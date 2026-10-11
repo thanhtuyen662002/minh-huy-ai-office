@@ -34,14 +34,23 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     return { status: response.status, cache: response.headers.get("cache-control"), text: await response.text() };
   }, path);
   const cookie = async context => (await context.cookies(app)).find(item => item.name === "aioffice_browser_session")?.value;
-  async function switchCompany(page, target) {
+  async function switchCompany(page, target, phase = "provider-company-switch") {
     const callback = page.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     const authorization = page.waitForRequest(request => request.url().startsWith(identity + "/realms/aioffice-local/protocol/openid-connect/auth?"));
+    // Observe both early rejections while selection may still be pending.
+    // Await the same original promises below: a missing event still fails and
+    // reaches the parent's fixed stage and owned restoration finally.
+    callback.catch(() => {}); authorization.catch(() => {});
+    stage(phase + "-select");
     await page.getByRole("combobox", { name: "Chuyển công ty", exact: true }).selectOption(target);
+    stage(phase + "-auth-request");
     const request = new URL((await authorization).url()); requireProof(request.searchParams.get("response_type") === "code"
       && request.searchParams.get("code_challenge_method") === "S256" && request.searchParams.get("code_challenge"));
+    stage(phase + "-callback");
     requireProof((await callback).status() === 303);
+    stage(phase + "-workspace");
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    stage(phase + "-current-session");
     const context = await get(page, `/api/local/session?companyId=${target}`); requireProof(context.status === 200 && JSON.parse(context.text).companyId === target);
   }
   async function openHistory(page) {
@@ -158,7 +167,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     });
     await ownerPage.getByRole("button", { name: "Cập nhật trạng thái", exact: true }).click(); await bounded(reached);
     requireProof(!capturedFailure);
-    await switchCompany(ownerPage, originalCompany); release(); await bounded(fulfilled); await ownerPage.unroute(routePattern);
+    await switchCompany(ownerPage, originalCompany, "late-private-detail-company-switch"); release(); await bounded(fulfilled); await ownerPage.unroute(routePattern);
     requireProof(attempted && !capturedFailure);
     requireProof(await ownerPage.getByText(answer, { exact: true }).count() === 0 && await ownerPage.getByRole("region", { name: "Công việc của tôi", exact: true }).count() === 0);
     requireProof((await get(ownerPage, `/api/local/tasks/${fixture.taskIds[0]}/history?companyId=${originalCompany}`)).status === 404);
