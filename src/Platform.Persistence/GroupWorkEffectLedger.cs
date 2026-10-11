@@ -11,14 +11,30 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // create graph; immutable original revision/evidence/items remain included.
 internal sealed class GroupWorkEffectLedger
 {
-    private GroupWorkEffectLedger(GroupScope scope, Guid batch, Guid operation, int notes, string fingerprint)
-    { Scope = scope; BatchId = batch; OperationId = operation; NoteCount = notes; Fingerprint = fingerprint; }
+    private readonly GroupWorkCommitReceiptRecord originalReceipt;
+    private GroupWorkEffectLedger(GroupScope scope, GroupWorkCommitReceiptRecord work, string fingerprint)
+    { Scope = scope; BatchId = work.BatchId; OperationId = work.OperationId; NoteCount = work.NoteCount; Fingerprint = fingerprint; originalReceipt = work; }
     internal GroupScope Scope { get; }
     internal Guid BatchId { get; }
     internal Guid OperationId { get; }
     internal int NoteCount { get; }
     internal string Fingerprint { get; }
     public override string ToString() => "Group original effect ledger (private metadata).";
+
+    // A later digest helper must bind the observed graph to the complete
+    // immutable receipt snapshot. Expected-digest fields are excluded to
+    // avoid a self-reference while staging or comparing that expectation.
+    internal bool MatchesReceipt(GroupWorkCommitReceiptRecord current) => current.TenantId == originalReceipt.TenantId
+        && current.CompanyId == originalReceipt.CompanyId && current.BindingId == originalReceipt.BindingId
+        && current.BatchId == originalReceipt.BatchId && current.OperationId == originalReceipt.OperationId
+        && current.SourceSetSha256 == originalReceipt.SourceSetSha256 && current.DependencyManifestVersion == originalReceipt.DependencyManifestVersion
+        && current.DependencyManifest is not null && current.DependencyManifest.AsSpan().SequenceEqual(originalReceipt.DependencyManifest)
+        && current.SelectedMessageCount == originalReceipt.SelectedMessageCount && current.NoteCount == originalReceipt.NoteCount
+        && current.Outcome == originalReceipt.Outcome && current.ServiceId == originalReceipt.ServiceId && current.ClaimEpoch == originalReceipt.ClaimEpoch
+        && current.CredentialEpoch == originalReceipt.CredentialEpoch && current.GrantVersion == originalReceipt.GrantVersion
+        && current.SourceVersion == originalReceipt.SourceVersion && current.DeletionGeneration == originalReceipt.DeletionGeneration
+        && current.AccountVersion == originalReceipt.AccountVersion && current.CommittedAtUtc == originalReceipt.CommittedAtUtc
+        && current.CommittedAtUtc.Offset == originalReceipt.CommittedAtUtc.Offset;
 
     internal static GroupWorkEffectLedger Require(GroupWorkCommitReceiptRecord receipt, GroupBatchClaimReceiptRecord originalClaim,
         bool historical, IReadOnlyList<GroupWorkSourceDispositionRecord> selectedRows,
@@ -191,7 +207,7 @@ internal sealed class GroupWorkEffectLedger
         writer.Write(outboxes.Length); if (outboxes.Length != 0) writer.Write(outboxId.ToByteArray());
         foreach (var item in orderedItems) { writer.Write(item.Ordinal); writer.Write(item.RequestId.ToByteArray()); writer.Write(item.RequestRevision); }
         writer.Flush();
-        return new(scope, work.BatchId, work.OperationId, work.NoteCount, Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))));
+        return new(scope, work, Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))));
 
         bool InScope(Guid tenant, Guid company, Guid binding) => tenant == scope.TenantId && company == scope.CompanyId && binding == scope.SourceBindingId;
         Guid Identity(string kind, int ordinal) => new(SHA256.HashData(Encoding.ASCII.GetBytes(FormattableString.Invariant(

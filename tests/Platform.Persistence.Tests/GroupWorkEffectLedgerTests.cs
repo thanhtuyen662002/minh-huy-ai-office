@@ -15,6 +15,146 @@ public sealed class GroupWorkEffectLedgerTests
     [InlineData(0, 1)]
     [InlineData(1, 1)]
     [InlineData(20, 20)]
+    public void ExpectedEffectDigestStagesOnceAndComparesCompleteOriginalGraph(int ai, int host)
+    {
+        var f = new Fixture(ai, host); var original = f.Require();
+        Assert.False(GroupWorkEffectDigest.HasExpectation(f.Work));
+        GroupWorkEffectDigest.Stage(f.Work, original);
+        Assert.Equal(1, f.Work.EffectLedgerVersion);
+        Assert.Equal(Convert.FromHexString(original.Fingerprint), f.Work.ExpectedEffectSha256);
+        Assert.True(GroupWorkEffectDigest.HasExpectation(f.Work));
+        GroupWorkEffectDigest.RequireUnchanged(f.Work, f.Require());
+        var stored = f.Work.ExpectedEffectSha256;
+        var error = Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.Stage(f.Work, original));
+        Assert.Equal("Group original effect expectation is not available.", error.Message); Assert.Null(error.InnerException);
+        Assert.Same(stored, f.Work.ExpectedEffectSha256); Assert.Equal(1, f.Work.EffectLedgerVersion);
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("company")]
+    [InlineData("binding")]
+    [InlineData("batch")]
+    [InlineData("operation")]
+    [InlineData("source-hash")]
+    [InlineData("manifest-version")]
+    [InlineData("manifest-null")]
+    [InlineData("manifest-bytes")]
+    [InlineData("selected-count")]
+    [InlineData("note-count")]
+    [InlineData("outcome")]
+    [InlineData("service")]
+    [InlineData("claim")]
+    [InlineData("credential")]
+    [InlineData("grant")]
+    [InlineData("source")]
+    [InlineData("deletion")]
+    [InlineData("account")]
+    [InlineData("committed-time")]
+    [InlineData("committed-offset")]
+    public void DigestNeverBindsASealedGraphToAChangedReceiptOrMutatesOnRefusal(string fault)
+    {
+        var f = new Fixture(1, 1); var original = f.Require();
+        switch (fault)
+        {
+            case "tenant": f.Work.TenantId = Guid.NewGuid(); break;
+            case "company": f.Work.CompanyId = Guid.NewGuid(); break;
+            case "binding": f.Work.BindingId = Guid.NewGuid(); break;
+            case "batch": f.Work.BatchId = Guid.NewGuid(); break;
+            case "operation": f.Work.OperationId = Guid.NewGuid(); break;
+            case "source-hash": f.Work.SourceSetSha256 = new('C', 64); break;
+            case "manifest-version": f.Work.DependencyManifestVersion = 0; break;
+            case "manifest-null": f.Work.DependencyManifest = null; break;
+            case "manifest-bytes": f.Work.DependencyManifest![^1] ^= 1; break;
+            case "selected-count": f.Work.SelectedMessageCount++; break;
+            case "note-count": f.Work.NoteCount++; break;
+            case "outcome": f.Work.Outcome = GroupWorkCommitOutcome.Attention; break;
+            case "service": f.Work.ServiceId = Guid.NewGuid(); break;
+            case "claim": f.Work.ClaimEpoch++; break;
+            case "credential": f.Work.CredentialEpoch++; break;
+            case "grant": f.Work.GrantVersion++; break;
+            case "source": f.Work.SourceVersion++; break;
+            case "deletion": f.Work.DeletionGeneration++; break;
+            case "account": f.Work.AccountVersion++; break;
+            case "committed-time": f.Work.CommittedAtUtc = f.Work.CommittedAtUtc.AddTicks(1); break;
+            case "committed-offset": f.Work.CommittedAtUtc = f.Work.CommittedAtUtc.ToOffset(TimeSpan.FromHours(7)); break;
+            default: throw new ArgumentOutOfRangeException(nameof(fault));
+        }
+        Assert.False(original.MatchesReceipt(f.Work));
+        var error = Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.Stage(f.Work, original));
+        Assert.Equal("Group original effect expectation is not available.", error.Message); Assert.Null(error.InnerException);
+        Assert.Equal(0, f.Work.EffectLedgerVersion); Assert.Null(f.Work.ExpectedEffectSha256);
+        f.Work.EffectLedgerVersion = 1; f.Work.ExpectedEffectSha256 = Convert.FromHexString(original.Fingerprint);
+        Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.RequireUnchanged(f.Work, original));
+    }
+
+    [Theory]
+    [InlineData(-1, -1, 1)]
+    [InlineData(2, 32, 1)]
+    [InlineData(0, 0, 1)]
+    [InlineData(0, 32, 1)]
+    [InlineData(1, -1, 1)]
+    [InlineData(1, 0, 1)]
+    [InlineData(1, 31, 1)]
+    [InlineData(1, 33, 1)]
+    [InlineData(1, 32, 0)]
+    [InlineData(1, 32, 2)]
+    public void MalformedVersionLengthOrLegacyDependencyRefusesWithFixedPrivateDiagnostics(int version, int length, int dependency)
+    {
+        var f = new Fixture(1, 0); var graph = f.Require();
+        f.Work.EffectLedgerVersion = version; f.Work.ExpectedEffectSha256 = length < 0 ? null : new byte[length];
+        f.Work.DependencyManifestVersion = dependency;
+        var stored = f.Work.ExpectedEffectSha256;
+        foreach (Action call in new Action[] { () => GroupWorkEffectDigest.HasExpectation(f.Work),
+            () => GroupWorkEffectDigest.Stage(f.Work, graph), () => GroupWorkEffectDigest.RequireUnchanged(f.Work, graph) })
+        {
+            var error = Assert.Throws<InvalidOperationException>(call);
+            Assert.Equal("Group original effect expectation is not available.", error.Message); Assert.Null(error.InnerException);
+        }
+        Assert.Same(stored, f.Work.ExpectedEffectSha256); Assert.Equal(version, f.Work.EffectLedgerVersion);
+    }
+
+    [Fact]
+    public void StoredExpectationDetectsResignedCipherKeyAndDigestChangesButPermitsLaterItAndPublishProgress()
+    {
+        var f = new Fixture(1, 1); GroupWorkEffectDigest.Stage(f.Work, f.Require());
+        f.Requests[0].CurrentRevision = 9; f.Requests[0].BusinessVersion = 11;
+        f.Requests[0].BusinessStatus = GroupNoteBusinessStatus.Resolved;
+        f.Outboxes[0].PublishedAtUtc = f.Work.CommittedAtUtc.AddMinutes(1); f.Outboxes[0].PublishAttempts = 3;
+        f.Selected.Reverse(); f.Revisions.Reverse(); f.Requests.Reverse(); f.Evidence.Reverse(); f.Items.Reverse();
+        GroupWorkEffectDigest.RequireUnchanged(f.Work, f.Require());
+        var revision = f.Revisions[0]; revision.ContentKeyId = "replacement-key";
+        Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.RequireUnchanged(f.Work, f.Require()));
+        revision.ContentKeyId = "owned-key"; revision.ProtectedContent[10] ^= 1;
+        revision.EnvelopeSha256 = Convert.ToHexString(SHA256.HashData(revision.ProtectedContent));
+        Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.RequireUnchanged(f.Work, f.Require()));
+        revision.ProtectedContent[10] ^= 1; revision.EnvelopeSha256 = Convert.ToHexString(SHA256.HashData(revision.ProtectedContent));
+        GroupWorkEffectDigest.RequireUnchanged(f.Work, f.Require());
+        f.Work.ExpectedEffectSha256![0] ^= 1;
+        Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.RequireUnchanged(f.Work, f.Require()));
+    }
+
+    [Fact]
+    public void LegacyMissingExpectationCannotQualifyEffectsAndSealedGraphDoesNotBorrowReceiptBuffers()
+    {
+        var f = new Fixture(0, 0); var graph = f.Require();
+        Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.RequireUnchanged(f.Work, graph));
+        var manifest = f.Work.DependencyManifest!.ToArray(); f.Work.DependencyManifest![^1] ^= 1;
+        Assert.False(graph.MatchesReceipt(f.Work)); f.Work.DependencyManifest = manifest;
+        Assert.True(graph.MatchesReceipt(f.Work)); GroupWorkEffectDigest.Stage(f.Work, graph);
+        Assert.True(graph.MatchesReceipt(f.Work)); GroupWorkEffectDigest.RequireUnchanged(f.Work, graph);
+        f.Work.DependencyManifestVersion = 0; f.Work.DependencyManifest = null;
+        f.Work.EffectLedgerVersion = 0; f.Work.ExpectedEffectSha256 = null;
+        Assert.False(GroupWorkEffectDigest.HasExpectation(f.Work));
+        Assert.Throws<InvalidOperationException>(() => GroupWorkEffectDigest.RequireUnchanged(f.Work, graph));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 0)]
+    [InlineData(0, 1)]
+    [InlineData(1, 1)]
+    [InlineData(20, 20)]
     public void CompleteOriginalCreateGraphsAndEmptyNoWorkHavePrivateStableFingerprints(int ai, int host)
     {
         var f = new Fixture(ai, host); var result = f.Require();

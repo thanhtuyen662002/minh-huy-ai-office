@@ -85,6 +85,10 @@ public sealed class GroupWorkCommitReceiptRecord
     public string SourceSetSha256 { get; set; } = "";
     public int DependencyManifestVersion { get; set; }
     public byte[]? DependencyManifest { get; set; }
+    // Expand compatibility: legacy0/null has no original-effect expectation.
+    // A later terminal caller must require v1 and compare the complete graph.
+    public int EffectLedgerVersion { get; set; }
+    public byte[]? ExpectedEffectSha256 { get; set; }
     public int SelectedMessageCount { get; set; }
     public int NoteCount { get; set; }
     public GroupWorkCommitOutcome Outcome { get; set; }
