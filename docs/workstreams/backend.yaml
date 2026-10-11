@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 7d05c19b8a690535e34016a7f72d064f05988cfa
+head: ab6c4a2dc6a68548c6689f38cdccff6fe02d08fb
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 exact7d05 CLOSED_RED: Build38158738532/native114527019715/quality114535665182 FAILED; Gov38158738506/six prerequisites/full3885.NET PASS. Actual shadow-create-non-int is strict non-int scalar refusal; exact subtype/engine cause UNPROVEN. Explicit SQL int projections retain CLR int>4/ownership/51070/first-error/72snapshot/typed32/45second cleanup. ROOT139.NET/170Python/fourformat PASS; all15frontiermethods unchanged. Complete5 Git SOURCE review before one SAME288 successor push; own actual120/full3887=[6,520,25,3336]/all8/Gov/quality/six originals through terminal and repair real red. Private61v2 unpromoted/fullLOCAL4058/176Python/3formatsPASS; fresh independent review/native123 still required. Model NOT_RUN_UNEVALUATED; tokenizer/profile/DI/coordinator/no-click/278/279/233/ERP/deployment/merge incomplete."
+next_action: "Draft288 exactab6 CLOSED_RED: Build38163818947/native114542090262/quality114548646158 FAILED; Gov38163819004/six prerequisites/full3887.NET PASS. Actual owned SQL shadow upgrade/refusals/cleanup PASS; Chromium202 replay timeout-after-accepted-ui remains unqualified. Disposable10sec client response timer clears only after complete EOF; unread exits cancel/abort; authority/receipt/strict original browser gates retained. ROOT48 client tests/typecheck/production build PASS; original four timer regressions reproduced. Complete5 Git SOURCE review before one SAME288 push; own native120/full3887/all8/Gov/entire quality/six ORIGINALs through terminal, fix real red immediately. Private61 preliminary clear is not SOURCE or promotion approval; actualmodel NOT_RUN_UNEVALUATED/durable input-chunk recovery/tokenizer/profile/WorkerDI/scanner/no-click/278/279/233/ERP/deployment/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -4075,3 +4075,164 @@ group_278_shadow_database_id_int_protocol_checkpoint:
     ROOT139.NET/170Python/fourformat PASS; all15frontiermethods unchanged. Complete5 Git SOURCE review before one SAME288 successor push; own actual120/full3887=[6,520,25,3336]/all8/Gov/quality/six
     originals through terminal and repair real red. Private61v2 unpromoted/fullLOCAL4058/176Python/3formatsPASS; fresh independent review/native123 still required. Model NOT_RUN_UNEVALUATED;
     tokenizer/profile/DI/coordinator/no-click/278/279/233/ERP/deployment/merge incomplete.'
+
+group_278_remote_ab6_browser_replay_terminal_closure:
+  head: ab6c4a2dc6a68548c6689f38cdccff6fe02d08fb
+  state: ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE
+  build: 38163818947
+  governance: 38163819004
+  source_receipt: 6112179363
+  jobs:
+    .NET format, build and tests:
+      id: 114542090252
+      conclusion: success
+    Complete local stack integration:
+      id: 114542090262
+      conclusion: failure
+    EF Core migration integrity:
+      id: 114542090290
+      conclusion: success
+    Deployment contract and container builds:
+      id: 114542090292
+      conclusion: success
+    Docker Compose validation:
+      id: 114542090303
+      conclusion: success
+    Web tests, type-check and build:
+      id: 114542090361
+      conclusion: success
+    FE container runtime smoke:
+      id: 114542090495
+      conclusion: success
+    Required quality gates:
+      id: 114548646158
+      conclusion: failure
+  native:
+    bytes: 85982
+    sha256: 45382f917670157796429aebab9fb917b0229aee45f55a0afa1e8b5f0e575a3b
+    required: 120
+    once: 113
+    missing: 7
+    duplicates: 0
+    failure_markers: 3
+    sql_shadow: ACTUAL_OWNED_UPGRADE_FIVE_REFUSALS_AND_CLEANUP_PASS
+    browser: FAILED_SUBMISSION_REAL_CORE202_HEADERS_REPLAY_TIMEOUT_AFTER_ACCEPTED_UI
+    entire_verbatim_root_read: false
+  dotnet:
+    total: 3887
+    projects:
+    - 6
+    - 520
+    - 25
+    - 3336
+    failed: 0
+    skipped: 0
+    successful_runs: 4
+    full_byte_parser: true
+    entire_verbatim_root_read: false
+    sha256: 8a56c3bcc0e81826d1c86342595e9a78c07cbe0cf60f7d5041d36c0009a97f0c
+  quality:
+    bytes: 3528
+    sha256: 4284e667dda6758c04a6383c61d2e7bd62ddacfcca6d9e68b74a3ba3cdacaf0c
+    entire_root_read: true
+    results:
+      DOTNET_RESULT: success
+      WEB_RESULT: success
+      WEB_RUNTIME_RESULT: success
+      LOCAL_RUNTIME_RESULT: failure
+      INFRASTRUCTURE_RESULT: success
+      DEPLOYMENT_RESULT: success
+      MIGRATIONS_RESULT: success
+  artifacts: 0
+  full_prior_handoff_preserved_comment: 6112557052
+  unique_hosted_transport_cause: UNPROVEN
+  success_consolidation: DORMANT_FAILED_PARENT
+  actual_model: NOT_RUN_UNEVALUATED
+  full278: INCOMPLETE
+  merge: WITHHELD
+group_278_submission_response_deadline_checkpoint:
+  parent: ab6c4a2dc6a68548c6689f38cdccff6fe02d08fb
+  source_review: PENDING_COMPLETE_FIVE_PATH_GIT_SOURCE_REVIEW_BEFORE_PUSH
+  change: DISPOSABLE_TEN_SECOND_RESPONSE_DEADLINE_CLEARED_AFTER_COMPLETE_EOF_BEFORE_AUTHORITY_CHECK_UNREAD_PATHS_ABORT_AND_CANCEL
+  original_four_regressions: REPRODUCED_WITH_CONTROLLED_CLOCK_AND_REAL_ABORTSIGNALS
+  retained: OWNER_CANCELLATION_FRESH_AUTHORITY_IMMUTABLE_INPUT_EXACT202_RECEIPT_BOUNDED_EOF_UTF8_JSON_ORIGINAL_NATIVE_GATE_BYTE_UNCHANGED
+  local:
+    client_cases: 48
+    added_cases: 9
+    failed: 0
+    skipped: 0
+    typecheck: PASS
+    production_build: PASS
+    generated_next_env_tsconfig_changes: OBSERVED_AND_RESTORED_TO_CLEAN_PARENT
+    native_browser: NOT_RUN_UNQUALIFIED
+  original_gate_retained:
+  - path: scripts/smoke-browser-task-submission.mjs
+    git_blob_sha256: e6d3b1936d49ba315dc66540f4165158ee9c2c8bbe99d0c8c152e05e7631dd70
+    unchanged: true
+  - path: scripts/owned-browser-submission-lifecycle.mjs
+    git_blob_sha256: 60a5ed4e0f19aea3f9e0c03cdc9f1e6ea1f0de225a40a02ce4ecf11682b51ef4
+    unchanged: true
+  - path: scripts/test-browser-administrators-guard.mjs
+    git_blob_sha256: 9104b8d94053e46830946f9453c5d8f8d068a7f65bd9a0545e741e465b9f1850
+    unchanged: true
+  - path: scripts/test-owned-browser-submission-lifecycle.mjs
+    git_blob_sha256: 9463fdcaf61484c07443fe525398fb9e962ffa11865327dedac1aabc0222fa9b
+    unchanged: true
+  - path: scripts/smoke-browser-oidc.mjs
+    git_blob_sha256: ed568e072cee9c412dbe49af2ed516f3e4f600b9f04df4bdb629691a9d9ebf81
+    unchanged: true
+  - path: scripts/test-owned-expiry-receipt.mjs
+    git_blob_sha256: fa5de68763b6f9cef823135e4c8c254b0c4323ef3497dfbb601412b3e8ea394d
+    unchanged: true
+  - path: apps/web/lib/bounded-request-json.ts
+    git_blob_sha256: 76becb2387881c83fb6ca4c59f8ca0203b9c3c7af91298d21f624d77c7981666
+    unchanged: true
+  - path: apps/web/lib/task-submission-bff.ts
+    git_blob_sha256: a59d4b01639969af3d6a5aaa8c21d29510dfa3ebe8619acd245c287bea93bec5
+    unchanged: true
+  - path: apps/web/lib/local-ai-bff.ts
+    git_blob_sha256: 4234e55bd34cf8967bf5246985ddbae8d567258928ca7032e988f2519e72ce18
+    unchanged: true
+  - path: apps/web/components/use-local-session.ts
+    git_blob_sha256: 9b02aa018c59e43627575372a27ffabf53dfa638c1eac74416516f181073a3f9
+    unchanged: true
+  logs:
+  - path: D:\CodexPrivateTasks\aioffice-283-browser\submission-response-deadline-baseline-v1.log
+    bytes: 6478
+    sha256: b372e6870450e7c40bdcd8307800aea604de830d8f56a21e94af40e7ed904e3a
+    outcome: EXPECTED_BASELINE_FOUR_FAILURES
+  - path: D:\CodexPrivateTasks\aioffice-283-browser\submission-response-deadline-focused-v1.log
+    bytes: 463
+    sha256: 92156a0dfaafe02f3842a555e23423347a79223634c976138680acbd1c9c5c0f
+    outcome: PASS
+  - path: D:\CodexPrivateTasks\aioffice-283-browser\submission-response-deadline-typecheck-v1.log
+    bytes: 141
+    sha256: a3a7be1f7e9c5bc4c9b0aa66141b04c79e5e7fd7b7524ef3e7b90c3f490ff47a
+    outcome: PASS
+  - path: D:\CodexPrivateTasks\aioffice-283-browser\submission-response-deadline-build-v1.log
+    bytes: 2199
+    sha256: dde0fd3f2d669591daf07b26d5f9dfbeb10cb202521ad59e5c065d5c0efcdcdc
+    outcome: PASS
+  successor_native120: NOT_RUN_UNQUALIFIED
+  successor_full_dotnet: 3887=[6,520,25,3336]_NOT_RUN
+  private61:
+    archive_sha256: b62768f97398e2ca29b3ec3ffc1dbe4868afbca51ac0870bab9bce7d51e80185
+    full_local_dotnet: 4060
+    python: 176
+    formatter_scopes: 5
+    independent_review: PRELIMINARY_PRIVATE_SOURCE_REVIEW_CLEAR_NOT_PUBLIC_SOURCE_OR_PROMOTION_APPROVAL
+    native123: NOT_RUN_UNQUALIFIED
+    promotion: WITHHELD_FAILED_PARENT_REQUIRES_SUCCESSOR_REBASE_AND_COMPLETE63_SOURCE_REVIEW
+  durable_input_selection_and_chunk_recovery: false
+  model_tokenizer_profile: false
+  worker_di: false
+  automatic_no_click: false
+  actual_model: NOT_RUN_UNEVALUATED
+  unique_hosted_transport_cause: UNPROVEN
+  full278: INCOMPLETE
+  merge: WITHHELD
+  next: 'Draft288 exactab6 CLOSED_RED: Build38163818947/native114542090262/quality114548646158 FAILED; Gov38163819004/six prerequisites/full3887.NET PASS. Actual owned SQL shadow upgrade/refusals/cleanup
+    PASS; Chromium202 replay timeout-after-accepted-ui remains unqualified. Disposable10sec client response timer clears only after complete EOF; unread exits cancel/abort; authority/receipt/strict
+    original browser gates retained. ROOT48 client tests/typecheck/production build PASS; original four timer regressions reproduced. Complete5 Git SOURCE review before one SAME288 push;
+    own native120/full3887/all8/Gov/entire quality/six ORIGINALs through terminal, fix real red immediately. Private61 preliminary clear is not SOURCE or promotion approval; actualmodel
+    NOT_RUN_UNEVALUATED/durable input-chunk recovery/tokenizer/profile/WorkerDI/scanner/no-click/278/279/233/ERP/deployment/merge incomplete.'
