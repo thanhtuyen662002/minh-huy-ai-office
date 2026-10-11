@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: b28ae6914817cbdee7179629e4f1436409ff12b5
+current_target_head: fcb758f2f2ef8b0d4a2a405b14593b711a40774a
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: b28ae6914817cbdee7179629e4f1436409ff12b5
+    head: fcb758f2f2ef8b0d4a2a405b14593b711a40774a
     state: in_progress
-    next: "Draft288 exactb28 Build38126313902/Gov38126313905/all8/native114431303985/full119/3748.NET/quality114438516635/six originals CLOSED_ROOTFULL_SCOPED_SUCCESS. Complete14 source approved6107295805 ROOTFULL9794 SHA513e6e6f6fe59b635296bc0d2621e9d25c7e1d816f159572c1f289fccf6c1aef. PRIVATE shadow13v1 WITHHELD fourP2; repaired full13v2 archive27a4de66d90f7ca9d6baa54732fad278b316d11f3bb92f63d26869decdcb54bf full3292Persistence164Python9CSharp2formats/unownedguard PASS. Fresh per-probe connections, exact nontruncated typed ownership, initial absence/lost-reply actual inspection and per-resource firstEDI with independent cleanup-success gate. Repaired PRIVATE13v2 preliminary SOURCE CLEAR ROOTFULL13814 SHA6c7d09455822e219c729bac9813348d56f471deeb3c0a5d11da4cdd1f0bcf685 independent116NET164Python9CSharp2formats/unownedguard. Promote SAME288 with durable state; complete15path frozen Git source review and sharedverify required beforepush; after ROOT full Git approval own fresh120/all8/Gov/full.NET/quality/six originals toterminal. Physical legacy51048, successors/fullprefix/oldreplay/rotation/editRecall/revocation races/continuation/gaps/nonemptybrain/multiplecontributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
+    next: "Draft288 exactfcb758f Build38131017513/Gov38131017482; .NET114445185337 TERMINAL_RED two proven Windows diagnostic exports,3841PASS2FAIL/3843,0skip; native114445185134 remains actively owned120. Minimal test-only repair/shared95PASS/formatPASS prepared; freeze exact4 paths and obtain independent source review. Preserve active native through terminal, capture full logs/quality/six originals if emitted; inspect further real failure before approved SAME288 repair push. Own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 full119 CLOSED. Continue private same-Gateway bounded context and remaining successors/races/DI/noClick acceptance. Actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 exactb28 Build38126313902/Gov38126313905/all8/native114431303985/full119/3748.NET/quality114438516635/six originals CLOSED_ROOTFULL_SCOPED_SUCCESS. Complete14 source approved6107295805 ROOTFULL9794 SHA513e6e6f6fe59b635296bc0d2621e9d25c7e1d816f159572c1f289fccf6c1aef. PRIVATE shadow13v1 WITHHELD fourP2; repaired full13v2 archive27a4de66d90f7ca9d6baa54732fad278b316d11f3bb92f63d26869decdcb54bf full3292Persistence164Python9CSharp2formats/unownedguard PASS. Fresh per-probe connections, exact nontruncated typed ownership, initial absence/lost-reply actual inspection and per-resource firstEDI with independent cleanup-success gate. Repaired PRIVATE13v2 preliminary SOURCE CLEAR ROOTFULL13814 SHA6c7d09455822e219c729bac9813348d56f471deeb3c0a5d11da4cdd1f0bcf685 independent116NET164Python9CSharp2formats/unownedguard. Promote SAME288 with durable state; complete15path frozen Git source review and sharedverify required beforepush; after ROOT full Git approval own fresh120/all8/Gov/full.NET/quality/six originals toterminal. Physical legacy51048, successors/fullprefix/oldreplay/rotation/editRecall/revocation races/continuation/gaps/nonemptybrain/multiplecontributors/owninput/DI/noClick remain. Existing Gateway actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
+next_action: "Draft288 exactfcb758f Build38131017513/Gov38131017482; .NET114445185337 TERMINAL_RED two proven Windows diagnostic exports,3841PASS2FAIL/3843,0skip; native114445185134 remains actively owned120. Minimal test-only repair/shared95PASS/formatPASS prepared; freeze exact4 paths and obtain independent source review. Preserve active native through terminal, capture full logs/quality/six originals if emitted; inspect further real failure before approved SAME288 repair push. Own fresh120/all8/Gov/3843.NET/quality/six originals through terminal. Parentb28 full119 CLOSED. Continue private same-Gateway bounded context and remaining successors/races/DI/noClick acceptance. Actualmodel NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete."
 
 
 blocked_by:
@@ -2783,3 +2783,36 @@ group_278_signed_cursor_legacy_shadow_source:
   document: docs/validation/GROUP_SIGNED_CURSOR_LEGACY_MIGRATION_PREPARATION.md
   next: complete_full15_Git_review_sharedverify_then_same288_push_own120_exactCI_to_terminal_no_partial_merge
   preliminary_review: PRIVATE13v2_SOURCE_CLEAR_ROOTFULL13814_SHA6c7d09455822e219c729bac9813348d56f471deeb3c0a5d11da4cdd1f0bcf685_independent116NET95candidate12original9adjacent_164Python9CSharp2formats_unownedguard_not_publicGit_or_SQL_approval
+
+group_278_fcb_portability_repair:
+  head: fcb758f2f2ef8b0d4a2a405b14593b711a40774a
+  state: DOTNET_TERMINAL_RED_NATIVE_ACTIVE_REPAIR_SOURCE_REVIEW_PENDING
+  build: 38131017513
+  governance: 38131017482
+  governance_conclusion: success
+  native_job: 114445185134
+  native: ACTIVE120_UNQUALIFIED
+  dotnet_job: 114445185337
+  dotnet_passed: 3841
+  dotnet_failed: 2
+  dotnet_skipped: 0
+  dotnet_totals:
+  - 6
+  - 520
+  - 25
+  - 3292
+  dotnet_log_bytes: 1025320
+  dotnet_log_sha256: 991ae5b33dd85634c1ed4ff4f490fc70ba1742064d33e4edc5116825ecb7066c
+  prior_source_review: APPROVED6107912144_ROOTFULL11251_SHA701af37a5748f408d03d4518d4bbfc0205f641f8b66f24c3f0056d64a8358eff_MISSED_DIAGNOSTIC_WRITE_PORTABILITY
+  cause: TWO_WINDOWS_SCRATCH_DIAGNOSTIC_EXPORTS_DIRECTORY_NOT_FOUND_ON_LINUX_PROVEN_NOT_INFRASTRUCTURE
+  repair: REMOVE_TWO_UNUSED_EXPORTS_PROJECTION_JSON_IMPORT_ALL_ASSERTIONS_AND25_PROTOTYPE_CASES_UNCHANGED
+  local: SHARED95PASS_ZERO_FAIL_SKIP_WARNINGS_CHANGED_PROJECT_FORMAT_PASS
+  independent_audit: FULL15_AND_ADJACENT_WRITES_NO_FURTHER_PORTABILITY_BLOCKER_ROOTFULL3552_SHA930dd54974d4b5812b6b6e8aa99c4d02fa24698b5c6700829246dd74644dd6a9
+  source_review: PENDING_FROZEN_FOUR_PATH_REPAIR
+  document: docs/validation/GROUP_SHADOW_TEST_PORTABILITY_REPAIR.md
+  real_model: NOT_RUN_UNEVALUATED_EXISTING_GATEWAY
+  next: Draft288 exactfcb758f Build38131017513/Gov38131017482; .NET114445185337 TERMINAL_RED two proven Windows diagnostic exports,3841PASS2FAIL/3843,0skip; native114445185134
+    remains actively owned120. Minimal test-only repair/shared95PASS/formatPASS prepared; freeze exact4 paths and obtain independent source review. Preserve active
+    native through terminal, capture full logs/quality/six originals if emitted; inspect further real failure before approved SAME288 repair push. Own fresh120/all8/Gov/3843.NET/quality/six
+    originals through terminal. Parentb28 full119 CLOSED. Continue private same-Gateway bounded context and remaining successors/races/DI/noClick acceptance. Actualmodel
+    NOT_RUN_UNEVALUATED; full278/279/233/ERP/production/merge incomplete.

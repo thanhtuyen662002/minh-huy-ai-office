@@ -1,7 +1,6 @@
 extern alias GroupReferenceProof;
 
 using System.Data;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -41,18 +40,6 @@ public sealed class ReviewerShadowCursorSqlPrototypeTests
         }
         Assert.Equal(SeedTables.Order(), closure.Order());
         Assert.Equal(ConnectionState.Closed, db.Database.GetDbConnection().State);
-        var proof = SeedTables.Select(x => new
-        {
-            Table = x,
-            Columns = byTable[x].GetProperties().Select(p => new { p.Name, Type = p.GetColumnType(), p.IsNullable }).ToArray(),
-            Foreign = byTable[x].GetForeignKeys().Select(f => new
-            {
-                Parent = f.PrincipalEntityType.GetTableName(),
-                Child = f.Properties.Select(p => p.Name).ToArray(),
-                Principal = f.PrincipalKey.Properties.Select(p => p.Name).ToArray()
-            }).ToArray()
-        });
-        File.WriteAllText("D:/CodexReviewScratch/shadow51048-real-model-closure.json", JsonSerializer.Serialize(proof, new JsonSerializerOptions { WriteIndented = true }));
     }
 
     private static Prototype.RootIdentity Identity() => new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
@@ -102,13 +89,6 @@ public sealed class ReviewerShadowCursorSqlPrototypeTests
         using var db = ColdDatabase(); var shadow = Prototype.NewShadow(); var plan = Prototype.BuildSeedPlan(db, shadow, Identity());
         var source = Prototype.SourceSnapshots(db); var target = Prototype.ShadowSnapshots(db, shadow);
         foreach (var item in plan.Copies.Prepend(plan.Guard).Concat(source).Concat(target)) Parse(item.Command.CommandText);
-        File.WriteAllText("D:/CodexReviewScratch/shadow51048-rendered-sql.json", JsonSerializer.Serialize(new
-        {
-            Schema = plan.Guard.Command.CommandText,
-            Copies = plan.Copies.Select(x => new { x.Tag, Sql = x.Command.CommandText, Parameters = x.Command.Parameters.Cast<SqlParameter>().Select(p => new { p.ParameterName, Type = p.SqlDbType.ToString() }) }),
-            SourceSnapshots = source.Select(x => new { x.Tag, Sql = x.Command.CommandText }),
-            ShadowSnapshots = target.Select(x => new { x.Tag, Sql = x.Command.CommandText })
-        }, new JsonSerializerOptions { WriteIndented = true }));
         Assert.Equal(ConnectionState.Closed, db.Database.GetDbConnection().State);
     }
 
