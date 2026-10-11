@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: b6f7d89013abccf992271fb0530793f14cbe3e30
+head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-11'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Draft288 remote b6f CLOSED RED Build38099379279/native114351943971/quality114357440592; Gov38099379280/sixPrereqsSUCCESS/ROOTFULL.NET2959 zeroFailSkip. Frozen113 has105once/8missing/161PASS/2fail/no browserartifact; actual501 group ingress/raw500/pending501/history and four manifest SQL predicates once, overall113/all8 withheld. Actual archive held-detail company-switch callback15s unhandled waiter; selector/provider cause UNPROVEN. Narrow waiter repair observes rejection immediately but awaits same promises/fixed stages;39Node controls/syntax PASS. Freeze FULL fivepath review then reviewed exact114 chain same288 and own CI to terminal. Observerc86/provenance707/structural-effecte04 approvals6103979540/6104074051/6104144245 ROOTFULL persisted; native currentSQL/provenance/effectstorage/atomicgraph/terminal/no-click/model not qualified. Continue versioned expected effect digest storage/automatic staging/locked allcontributors, nonemptybrain/allchunks/races/ownwrite/contiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
+next_action: "Draft288 exact remote4abd9c5 Build38102129917/native114360048235 and Gov38102129916 ACTIVE114 after ROOTFULL scoped approvals6103979540/6104074051/6104144245/6104201429 persisted. Root owns exact all8/quality/Gov/full114/.NET/six original images to terminal and immediate same288 realred repair. Current native114/provenance successful reconstruction NOT_YET_QUALIFIED; b6f earlier full113/all8/browser CLOSEDRED with scoped501 group history/manifest SQL only. Continue versioned expected-effect storage and complete receipt binding, then atomic automatic staging/current locked allcontributor graph comparison, nonemptybrain/allchunks/races/ownwrite/frontier/no-click/279. Actualmodel NOT_RUN_UNEVALUATED/full278/233 incomplete/no partialmerge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -2719,7 +2719,17 @@ group_278_archive_switch_waiter_repair:
   preservation: same15_20_30second_limits_provider_Code_S256_challenge_callback303_exact_current_company_originalPASS_route_isolation_membership_restore_cleanup_screenshots
   local: 39NodePASS_zeroFailSkip_two_new_methods_early_rejection_provider_and_session_refusal_inert_page_objects_syntaxPASS
   prior_effect_review: SCOPED_APPROVED6104144245_ROOT_FULL4008_persisted_81retained14independent
-  source_review: PENDING_FULL_frozen_whole_fivepaths_before_push
-  new_exact114: NOT_RUN_UNQUALIFIED
+  source_review: SCOPED_APPROVED6104201429_ROOT_FULL3727_persisted_39retained9independent
+  new_exact114: ACTIVE38102129917_native114360048235_UNQUALIFIED
   model: NOT_RUN_UNEVALUATED
   next: reviewed_same288_chain_push_then_own_exact114_all8_Gov_full_logs_original_six_images_terminal
+
+group_278_4abd_owned_dispatch:
+  head: 4abd9c51b2355c6b747b8b8f3c8d4c12d867434f
+  build: 38102129917
+  governance: 38102129916
+  native: 114360048235
+  state: ACTIVE114_root_owns_terminal_all8_full_logs_original_six_images
+  source_review: SCOPED_APPROVED6104201429_ROOT_FULL3727_SHA256f52d1d63a38fec38b60635b1d96d00e7424a38dd1ff0c2ef42a86381aa9413a3
+  expected_effect_preparation: UNCOMMITTED_not_in_remote_schema_or_writer
+  model: NOT_RUN_UNEVALUATED
