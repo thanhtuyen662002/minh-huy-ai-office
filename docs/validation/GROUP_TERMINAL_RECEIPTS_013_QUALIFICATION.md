@@ -35,9 +35,12 @@ and a different terminal operation refuses. Complete original graph snapshots,
 original claim bytes, raw accounting/pending revision 501 and zero frontier rows
 remain unchanged. The adversarial lease windows use the explicit owned clock.
 
-This closes the previous `b3c7dfb` implementation failure caused by truncated
-variable-width fixture JSON. The repaired transport preserves shared sqlcmd flags,
-all later coordinator bytes, cleanup/timeouts and frozen aggregate counts. No
+This completes the terminal phase that failed at `b3c7dfb` with unterminated
+fixture JSON and repairs independently reproduced default-width truncation.
+The raw hosted fixture bytes were not retained, so the unique hosted cause
+remains unproven. Current green evidence qualifies the bounded repaired transport;
+it does not retroactively supply those missing bytes. Shared sqlcmd flags, all
+later coordinator bytes, cleanup/timeouts and frozen counts are preserved. No
 blind infrastructure retry was used.
 
 ## Remaining work
