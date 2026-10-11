@@ -46,6 +46,7 @@ public sealed partial class GroupBatchSourceReaderTests
     [InlineData("SelectedRows", 101, "GroupWorkSourceDispositions")]
     [InlineData("RawRows", 501, "GroupWorkRawDispositions")]
     [InlineData("CutoffRows", 1, "GroupMessageRevisions")]
+    [InlineData("OriginalClaimRows", 101, "GroupBatchClaimReceipts")]
     public void WholeDependencyReaderActualBoundedEfQueriesParseSql160WithoutConnecting(string method, int maximum, string table)
     {
         using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>()
@@ -53,7 +54,8 @@ public sealed partial class GroupBatchSourceReaderTests
         var scope = new GroupScope(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         var worker = new GroupExtractionWorkerBinding(scope.TenantId, scope.CompanyId, Guid.NewGuid(), 1);
         var reader = new GroupWholeBatchDependencyReader(db, worker, TimeProvider.System, null!, null!);
-        object[] parameters = method == "CutoffRows" ? [scope, Guid.NewGuid(), 500L] : [scope, Guid.NewGuid()];
+        object[] parameters = method == "CutoffRows" ? [scope, Guid.NewGuid(), 500L]
+            : method == "OriginalClaimRows" ? [scope, Guid.NewGuid(), new long[] { 1, 3 }] : [scope, Guid.NewGuid()];
         var query = (IQueryable)typeof(GroupWholeBatchDependencyReader).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(reader, parameters)!;
         var sql = query.ToQueryString();
@@ -63,6 +65,13 @@ public sealed partial class GroupBatchSourceReaderTests
         foreach (var column in new[] { "TenantId", "CompanyId", "BindingId", method == "CutoffRows" ? "MessageId" : "BatchId" })
             Assert.Contains("[" + column + "] =", sql);
         if (method == "CutoffRows") { Assert.Contains("[CommittedSequence] <=", sql); Assert.Contains("CASE", sql); Assert.DoesNotContain("AfterSequence", sql); }
+        if (method == "OriginalClaimRows")
+        {
+            var epochParameters = System.Text.RegularExpressions.Regex.Match(sql, @"\[Epoch\] IN \((@\w+), (@\w+)\)");
+            Assert.True(epochParameters.Success);
+            Assert.Contains("DECLARE " + epochParameters.Groups[1].Value + " bigint = CAST(1 AS bigint);", sql);
+            Assert.Contains("DECLARE " + epochParameters.Groups[2].Value + " bigint = CAST(3 AS bigint);", sql);
+        }
         Assert.Equal(System.Data.ConnectionState.Closed, db.Database.GetDbConnection().State);
     }
 

@@ -1,0 +1,17 @@
+# Original chunk claim provenance — issue 278 / Draft 288
+
+Each contributor to the whole-batch dependency check must match its original immutable acquisition receipt. The scoped SQL query selects only the contributor epochs for that tenant, company, source binding and batch, ordered by epoch with a101-row sentinel. Missing or duplicate epochs refuse. The existing current claim, source lock, permissions, source/brain fingerprints and final fence remain required.
+
+The metadata check requires the exact batch/work operation and version1 manifest; source and per-chunk note counts; known outcome; original claim scope, epoch, owner and acquisition nonce; all service/credential/grant/source/deletion/account versions; and the manifest's complete authority fingerprint. Acquisition lifetime must match the stored UTC interval and existing10-second/10-minute bounds. The original commit must be at or after acquisition and strictly before expiration. Comparison uses interval subtraction to preserve valid maximum UTC boundaries without date arithmetic overflow.
+
+An old lease may prove the authority for its earlier commit after that lease expires. It does not grant authority to the current worker. Returned provenance is immutable copied metadata with a fixed private `ToString`; no content key, plaintext, model call or business effect is read or written by this check. The current dependency reader returns it only after every existing contributor dependency and current fence succeeds. The public instant-check store still owns its existing Serializable transaction and expiry retirement; this adds no completion receipt or frontier.
+
+## Verification and limits
+
+83 focused controls PASS, zero failures/skips: original reader entry guards,49 provenance controls, one actual shipping InMemory acquisition/source-manifest control, and the bounded SQL query tests. The fifth actual EF query renders scoped parameters, exactly the requested two `bigint` epoch values, ordered `TOP101`, and parses with SQL160 without connecting. The initial test incorrectly expected `OPENJSON`; the rendered query uses two scalar parameters, and the corrected test verifies those actual values. Changed-five-file canonical formatter verification PASS.
+
+The InMemory control uses an actual immutable acquisition receipt and actual source manifest, but constructs a structural NoWork receipt. It proves earlier-commit metadata can be retained while the expired handle is denied by the current claim store. It is not a SQL business commit or model evaluation.
+
+Owned remote b6f7d89013abccf992271fb0530793f14cbe3e30 Build38099379279/native114351943971 remains separately active113. Source-only whole-dependency observer c86fee024818e54e4eabd65957fe71bb5ff1ded2 is scoped approved6103979540, ROOT FULL4039 characters read/persisted;140 Python and28 independent cold C# controls pass. Neither evidence qualifies this later provenance change or successful SQL reconstruction. Freeze this full eight-path checkpoint for independent review before pushing; own the earlier CI to terminal first.
+
+Successful SQL provenance across all contributors, nonempty brain, partial chunks, mutations/races, complete immutable business-effect ledger, own input-to-post-effect chains, terminal contiguous frontier and shipped no-click behavior remain unqualified. Actual model evaluation remains **NOT_RUN_UNEVALUATED**. Full278/279/233 and merge/production acceptance remain incomplete.
