@@ -781,6 +781,7 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             "AND SUBSTRING(DependencyManifest,1,8)=0x41494F4744455031 "
             "AND SUBSTRING(DependencyManifest,161,2)=0x0200;") == "4|4|4"
         print("PASS actual automatic manifest SQL four original version1 receipts exact scoped source identities cutoff metadata same savepoint rollback original replay immutable both columns no terminal or model claim", flush=True)
+        print("PASS actual automatic whole dependency SQL four original scopes each three current manifest reconstructions serializable source lock unchanged graphs claim key counts pending501 no completion or model", flush=True)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

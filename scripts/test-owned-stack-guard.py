@@ -81,6 +81,9 @@ class OwnedStackGuardTests(unittest.TestCase):
             result = original_process(translated, **kwargs)
             calls[-1] = (command, kwargs)
             result.stdout = result.stdout.replace(automatic_smoke.NO_WORK_RUNTIME_LINES[translated[-1]], raw_history_smoke.RUNTIME_LINES[command[-1]])
+            if command[-1] == 'raw-history-commit':
+                result.stdout = result.stdout.replace(automatic_smoke.DEPENDENCY_RUNTIME_LINES[translated[-1]],
+                    automatic_smoke.DEPENDENCY_RUNTIME_LINES[command[-1]])
             return result
         arguments.pop('proof'); arguments.update(sql=sql, automatic=automatic_smoke)
         return arguments, process, calls, queries
@@ -238,6 +241,7 @@ class OwnedStackGuardTests(unittest.TestCase):
                 return SimpleNamespace(returncode=1, stdout="", stderr="Error: No such object: " + command[-1])
             mode = command[-1]; phase = list(runtime_lines).index(mode)
             expected = runtime_lines[mode]
+            if mode in automatic_smoke.DEPENDENCY_RUNTIME_LINES: expected += '\n' + automatic_smoke.DEPENDENCY_RUNTIME_LINES[mode]
             return SimpleNamespace(returncode=1 if fault == "child-error" else 0,
                 stdout=expected + ("\nPRIVATE\n" if fault == "extra-output" else "\n"), stderr="PRIVATE" if fault == "stderr" else "")
         arguments = dict(directory=self.owned, api="http://127.0.0.1:8080", manifest={"AIOFFICE_INSTALLATION_ID": installation,
@@ -348,6 +352,47 @@ class OwnedStackGuardTests(unittest.TestCase):
             self.assertNotIn("p" * 32, " ".join(command)); self.assertNotIn("p" * 32, kwargs["input"])
             self.assertIn("AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY", kwargs["env"])
         self.assertTrue(any("CAST(NULL AS datetimeoffset(7))" in query for query in queries))
+
+    def test_automatic_dependency_markers_are_exact_and_required_for_each_current_profile(self):
+        for proof in ('notes', 'no_work', 'host_only'):
+            for fault in ('missing', 'changed', 'duplicate', 'reversed', 'extra'):
+                arguments, original_process, _, _ = self.automatic_runtime_oracle(proof=proof)
+                def process(command, **kwargs):
+                    result = original_process(command, **kwargs)
+                    if command[:2] == ['docker', 'run'] and command[-1] in automatic_smoke.DEPENDENCY_RUNTIME_LINES:
+                        lines = result.stdout.splitlines()
+                        if fault == 'missing': lines = lines[:1]
+                        elif fault == 'changed': lines[1] = 'PRIVATE_WRONG_DEPENDENCY_MARKER'
+                        elif fault == 'duplicate': lines.append(lines[1])
+                        elif fault == 'reversed': lines.reverse()
+                        else: lines.append('PRIVATE_UNRELATED')
+                        result.stdout = '\n'.join(lines) + '\n'
+                    return result
+                with self.subTest(proof=proof, fault=fault), patch.dict(os.environ, self.environment, clear=True), \
+                        patch.object(automatic_smoke.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output, \
+                        self.assertRaises(AssertionError) as raised:
+                    automatic_smoke.verify(**arguments)
+                self.assertNotIn('PRIVATE', str(raised.exception)); self.assertEqual('', output.getvalue())
+
+    def test_raw_history_dependency_marker_is_required_and_cannot_replace_original_history_evidence(self):
+        for fault in ('missing-original', 'missing-dependency', 'duplicate', 'reversed', 'extra'):
+            arguments, original_process, _, _ = self.raw_history_runtime_oracle()
+            def process(command, **kwargs):
+                result = original_process(command, **kwargs)
+                if command[:2] == ['docker', 'run'] and command[-1] == 'raw-history-commit':
+                    lines = result.stdout.splitlines()
+                    if fault == 'missing-original': lines = lines[1:]
+                    elif fault == 'missing-dependency': lines = lines[:1]
+                    elif fault == 'duplicate': lines.append(lines[1])
+                    elif fault == 'reversed': lines.reverse()
+                    else: lines.append('PRIVATE_UNRELATED')
+                    result.stdout = '\n'.join(lines) + '\n'
+                return result
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(raw_history_smoke.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output, \
+                    self.assertRaises(AssertionError) as raised:
+                raw_history_smoke.verify(**arguments)
+            self.assertNotIn('PRIVATE', str(raised.exception)); self.assertEqual('', output.getvalue())
 
     def test_automatic_runtime_oracle_denies_wrong_child_outputs_and_restores_owned_image(self):
         for fault in ("child-error", "extra-output", "stderr", "retained-mutation", "source-mutation", "gap", "partial-effect", "expiry-effect"):

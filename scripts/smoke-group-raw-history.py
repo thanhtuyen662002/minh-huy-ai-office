@@ -112,7 +112,9 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         for mode, expected in RUNTIME_LINES.items():
             result = subprocess.run([*command, mode], input=configuration, env=environment, capture_output=True, text=True, timeout=170)
             assert not result.stderr, "Owned raw history executable emitted unexpected diagnostics"
-            reference.require_reference_result(result, mode, [expected])
+            expected_lines = [expected]
+            if mode == "raw-history-commit": expected_lines.append(automatic.DEPENDENCY_RUNTIME_LINES[mode])
+            reference.require_reference_result(result, mode, expected_lines)
             unchanged(); no_gaps()
             assert immutable() == immutable_before, "Owned raw history changed protected source originals"
             assert digest("GroupSourceStates", "BindingId", columns) == expected_state, "Owned raw history lost its exact pending suffix"

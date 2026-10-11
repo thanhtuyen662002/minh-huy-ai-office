@@ -21,8 +21,10 @@ internal static class GroupAutomaticNoteRuntimeProof
         var expectedRows = hostOnly ? 9 : 21;
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var effect = new GroupNoteRuntimeProof.EffectEvidence(scope, clock) { ExpectedRows = expectedRows, ExpectedRawRows = 2 };
+        var dependencyProof = new GroupAutomaticDependencyRuntimeProof.Evidence(scope);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
-            .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect)).Options);
+            .AddInterceptors(new GroupNoteRuntimeProof.FlushProbe(effect), new GroupNoteRuntimeProof.RollbackProbe(effect),
+                new GroupAutomaticDependencyRuntimeProof.ReadProbe(dependencyProof)).Options);
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).ToArrayAsync(token);
         if (references.Length != 2 || references[0].Id != operation || references[0].CommittedSequence != 1
@@ -135,6 +137,7 @@ internal static class GroupAutomaticNoteRuntimeProof
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
         var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
+        await RequireDependenciesAsync();
         var readback = await brain.ReadAsync(handle, committed.RequestIds, [], token);
         if (readback.Items.Count != plan.NoteCount) throw new InvalidOperationException();
         for (var index = 0; index < committed.RequestIds.Count; index++)
@@ -167,6 +170,7 @@ internal static class GroupAutomaticNoteRuntimeProof
             throw new InvalidOperationException();
         await RequireOriginalAsync();
         if (!hostOnly) await RefusedAsync(() => store.CommitAutomaticAsync(GroupAutomaticNotePlan.Create(preparation, Proposal(true)), dependencies, effectOperation, token));
+        await RequireDependenciesAsync();
         await RequireOriginalAsync();
         var reads = keys.Reads; var writes = keys.Writes;
         await RefusedAsync(() => store.CommitAutomaticAsync(plan, dependencies, Guid.NewGuid(), token));
@@ -178,9 +182,17 @@ internal static class GroupAutomaticNoteRuntimeProof
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
+        await RequireDependenciesAsync();
+        if (dependencyProof.Completed != 3) throw new InvalidOperationException();
         Console.WriteLine(hostOnly
             ? "PASS owned automatic host actual protected UnsupportedMedia note two metadata evidence two Attention dispositions atomic NotesCommitted original replay new nonce refusal no AI or IT authority"
             : "PASS owned automatic note protected mixed four notes five evidence two dispositions atomic NotesCommitted exact original replay changed plan new nonce denied no IT authority");
+        Console.WriteLine(hostOnly
+            ? "PASS owned automatic host whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock"
+            : "PASS owned automatic note whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock");
+
+        Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
+            keys, dependencyProof, RequireOriginalAsync, token);
 
         async Task RequireOriginalAsync()
         {

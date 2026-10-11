@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+current_target_head: b6f7d89013abccf992271fb0530793f14cbe3e30
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
+    head: b6f7d89013abccf992271fb0530793f14cbe3e30
     state: in_progress
-    next: "Own278/Draft288 immediate samePR repair for CLOSEDRED5fc Build38096849478/native114344400101/quality114350227578 actual_Core501 serialgeneration120s deadline. Root full113 missing20/144PASS/fourfailurepatterns/noBrowser and full2844.NET/sixPrereqs/GovSUCCESS retained. Fixture-only finite300s overallbudget with bounded lastACKsequence/elapsed diagnostic;138PythonPASS preserve501exactACK/UTC/Coreingress/20guarded30srenewals/ownedgate/percall/process/joblimits and original113. Frozen whole5path budget source review plus repaired publicstore269 cumulative6path review pending ROOTFULL before push; parentreader8bc/kernelac28 scopedapproved. Then reviewed chain same288 exact113 CIclosure and add owned allcontributor currentSQL checks/immutableeffectledger/originalclaim/ownwritechain/terminalcontiguousfrontier/no-click/279. Realmodel NOT_RUN_UNEVALUATED; full233 incomplete/no partialmerge."
+    next: "Own278/Draft288 remoteb6f7d89 Build38099379279/native114351943971 ACTIVE113 through exactterminal; Gov38099379280/sixPrereqsSUCCESS and ROOTFULL.NET114351944083 actual2959=[6,520,25,2408]zeroFailSkip. No superseding meaningfulCI. Kernelac28/reader8bc/publicstore269/budgetb6f scopedROOTFULL approvals6103648579/6103738028/6103842996/6103863094 retained alongside originalWITHHELDs/failures. New additive owned native preparation calls whole-current dependency store3times in each existing4automatic fixtures; actualsession Serializable/exclusive source lock for4materialcategories, originalgraphs/raw/manifest/claimmetadata/keycounts/connection/tracker/pending501 unchanged.20cold Csharp/140Python/Release0W0E/format5 PASS, successfulSQL NOT_RUN. Freeze12path FULL review then exact114 after owned113terminal. Continue nonemptybrain/allchunk/contributor mutation/races/immutableeffectledger/originalclaim/ownwritechain/terminalcontiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 immediate samePR repair for CLOSEDRED5fc Build38096849478/native114344400101/quality114350227578 actual_Core501 serialgeneration120s deadline. Root full113 missing20/144PASS/fourfailurepatterns/noBrowser and full2844.NET/sixPrereqs/GovSUCCESS retained. Fixture-only finite300s overallbudget with bounded lastACKsequence/elapsed diagnostic;138PythonPASS preserve501exactACK/UTC/Coreingress/20guarded30srenewals/ownedgate/percall/process/joblimits and original113. Frozen whole5path budget source review plus repaired publicstore269 cumulative6path review pending ROOTFULL before push; parentreader8bc/kernelac28 scopedapproved. Then reviewed chain same288 exact113 CIclosure and add owned allcontributor currentSQL checks/immutableeffectledger/originalclaim/ownwritechain/terminalcontiguousfrontier/no-click/279. Realmodel NOT_RUN_UNEVALUATED; full233 incomplete/no partialmerge."
+next_action: "Own278/Draft288 remoteb6f7d89 Build38099379279/native114351943971 ACTIVE113 through exactterminal; Gov38099379280/sixPrereqsSUCCESS and ROOTFULL.NET114351944083 actual2959=[6,520,25,2408]zeroFailSkip. No superseding meaningfulCI. Kernelac28/reader8bc/publicstore269/budgetb6f scopedROOTFULL approvals6103648579/6103738028/6103842996/6103863094 retained alongside originalWITHHELDs/failures. New additive owned native preparation calls whole-current dependency store3times in each existing4automatic fixtures; actualsession Serializable/exclusive source lock for4materialcategories, originalgraphs/raw/manifest/claimmetadata/keycounts/connection/tracker/pending501 unchanged.20cold Csharp/140Python/Release0W0E/format5 PASS, successfulSQL NOT_RUN. Freeze12path FULL review then exact114 after owned113terminal. Continue nonemptybrain/allchunk/contributor mutation/races/immutableeffectledger/originalclaim/ownwritechain/terminalcontiguousfrontier/no-click/279; actualmodel NOT_RUN_UNEVALUATED/full233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -1970,7 +1970,7 @@ group_278_automatic_dependency_parser_repair:
   original_controls: 26_total23PASS3fail_Format_rawvalue_and_Overflow_preopen_parser
   repair: catch_supported_Argument_Format_Overflow_parser_exceptions_fixed_error_no_inner_or_option_value
   local: focused21_zeroFailSkip_twofile_format_no_SQL_connection_keys_or_witness
-  source_review: PENDING_FULL_repaired_whole_scope_original_adversarial_controls_required
+  source_review: SCOPED_APPROVED6103842996_ROOT_FULL_read3764_persisted_30controls_original3failures_closed
   native: NOT_RUN_UNQUALIFIED_successful_reconstruction_expiry_witness
   model: NOT_RUN_UNEVALUATED
   next: independent_FULL_review_then_ownedfixture_budget_repair_same288_exact113
@@ -1983,7 +1983,22 @@ group_278_raw_history_finite_budget_repair:
   diagnostic: lastAcceptedSequence2to501_elapsedSeconds0to300_closed_no_payload_ID_key_response_body
   preservation: all501_exactACK_UTC_twoOriginals499edits_20scoped30secondRenewals_initialEditObservation_ownedgate_percall_process_joblimits_original113
   local: 138PythonPASS_callback_clock_only_121_299_999_slowWindows_300_301_before_afterACK_refusals
-  source_review: PENDING_FULL_frozen_whole_fivepaths_before_push
+  source_review: SCOPED_APPROVED6103863094_ROOT_FULL_read3661_persisted_138Python8independent
   native: NOT_RUN_UNQUALIFIED_actual501Core_SQL500_pending501_manifest113
   model: NOT_RUN_UNEVALUATED
   next: repaired_store_and_fixture_scoped_FULL_reviews_then_same288_exact113_terminal_CI_closure
+
+group_278_whole_dependency_native_preparation:
+  source_base: b6f7d89013abccf992271fb0530793f14cbe3e30
+  source_reviews: ROOT_FULL_read_persisted6103648579_6103738028_6103842996_6103863094_scoped_only
+  scope: additive_owned_test_only_existing_four_profiles_three_instant_dependency_checks_each_no_new_mode_grant_shipping_schema_workflow
+  observed_sql: all4_receipt_selected_raw_originalrevision_categories_actual_Serializable_Exclusive_source_transaction_lock_before_reader_opens_no_MARS
+  preservation: originalfullgraphs_raw_manifest_claimmetadata_keycounts_connectionstate_cleantracker_replay_rights_expiry_pending501_ownership_cleanup_original113
+  local: 20coldCsharp_140Python20output_corruption_scenarios_Release0W0E_fivefileformat
+  source_review: PENDING_FULL_frozen_whole_twelvepaths_before_push
+  native114: NOT_RUN_UNQUALIFIED_successful_whole_dependencies
+  current_remote113: ACTIVE38099379279_native114351943971_Gov38099379280SUCCESS_sixPrereqsSUCCESS
+  current_dotnet: ROOT_FULL2959_6_520_25_2408_zeroFailSkip_fourSuccessfulRuns_114351944083
+  limits: each_current_fixture_one_receipt_twoSelected_zeroContributingBrain_no_allchunk_nonemptybrain_races_ledger_frontier_model_acceptance
+  model: NOT_RUN_UNEVALUATED
+  next: own113terminal_FULL_review_then_exact114_same288_continue_complete_effectledger_and_no_click_product

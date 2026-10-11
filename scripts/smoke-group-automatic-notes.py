@@ -18,6 +18,11 @@ SOURCE_TABLES = (("GroupMessages", "Id"), ("GroupMessageRevisions", "CommittedSe
     ("GroupReaderGrants", "UserId"), ("GroupEditorGrants", "UserId"), ("GroupServiceGrants", "ServiceId,Capability"))
 EFFECT_TABLES = ("GroupWorkCommitReceipts", "GroupWorkSourceDispositions", "GroupCustomerRequests", "GroupRequestRevisions",
     "GroupRequestEvidence", "GroupNotesCommittedOutbox", "GroupNotesCommittedItems")
+DEPENDENCY_RUNTIME_LINES = {
+    "automatic-note-commit": "PASS owned automatic note whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock",
+    "automatic-no-work-commit": "PASS owned automatic no-work whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock",
+    "automatic-host-commit": "PASS owned automatic host whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock",
+    "raw-history-commit": "PASS owned raw history whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock"}
 RUNTIME_LINES = {
     "automatic-note-prepare": "PASS owned automatic note actual inbox and allocation exact two media references empty effects and claims",
     "automatic-note-expiry": "PASS owned automatic note twenty-one flushed SQL effects rollback source lock retained clean detach only expiry witness clock rollback denied",
@@ -209,7 +214,9 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         for mode, expected in runtime_lines.items():
             result = subprocess.run([*command, mode], input=configuration, env=environment, capture_output=True, text=True, timeout=170)
             assert not result.stderr, "Owned automatic note executable emitted unexpected diagnostics"
-            reference.require_reference_result(result, mode, [expected])
+            expected_lines = [expected]
+            if mode in DEPENDENCY_RUNTIME_LINES: expected_lines.append(DEPENDENCY_RUNTIME_LINES[mode])
+            reference.require_reference_result(result, mode, expected_lines)
             unchanged()
             if proof != "coverage" or mode != commit_mode: no_gaps()
             else:

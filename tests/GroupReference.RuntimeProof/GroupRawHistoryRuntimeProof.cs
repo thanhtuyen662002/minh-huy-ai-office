@@ -19,8 +19,9 @@ internal static class GroupRawHistoryRuntimeProof
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var effect = new EffectEvidence(scope, clock);
+        var dependencyProof = new GroupAutomaticDependencyRuntimeProof.Evidence(scope);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
-            .AddInterceptors(new FlushProbe(effect), new RollbackProbe(effect)).Options);
+            .AddInterceptors(new FlushProbe(effect), new RollbackProbe(effect), new GroupAutomaticDependencyRuntimeProof.ReadProbe(dependencyProof)).Options);
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).Take(502).ToArrayAsync(token);
         RequireReferences(scope, operation, references);
@@ -120,9 +121,11 @@ internal static class GroupRawHistoryRuntimeProof
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 500, token);
         var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
+        await RequireDependenciesAsync();
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || committed != replay with { WasAlreadyCommitted = false }) throw new InvalidOperationException();
         await RequireOriginalAsync();
+        await RequireDependenciesAsync();
         var refused = false;
         try { await store.CommitAutomaticAsync(plan, dependencies, Guid.NewGuid(), token); }
         catch (InvalidOperationException error) when (error.Message == "Group work commit is unavailable." && error.InnerException is null) { refused = true; }
@@ -131,7 +134,13 @@ internal static class GroupRawHistoryRuntimeProof
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
+        await RequireDependenciesAsync();
+        if (dependencyProof.Completed != 3) throw new InvalidOperationException();
         Console.WriteLine("PASS owned raw history atomic500 raw rows cutoff499 ChangedAfterCutoff and empty1 NoWork original replay new nonce refused immutable runtime rights pending501 unchanged");
+        Console.WriteLine("PASS owned raw history whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock");
+
+        Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
+            keys, dependencyProof, RequireOriginalAsync, token);
 
         async Task RequireOriginalAsync()
         {

@@ -19,8 +19,9 @@ internal static class GroupAutomaticNoWorkRuntimeProof
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var effect = new EffectEvidence(scope, clock);
+        var dependencyProof = new GroupAutomaticDependencyRuntimeProof.Evidence(scope);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
-            .AddInterceptors(new FlushProbe(effect), new RollbackProbe(effect)).Options);
+            .AddInterceptors(new FlushProbe(effect), new RollbackProbe(effect), new GroupAutomaticDependencyRuntimeProof.ReadProbe(dependencyProof)).Options);
         var references = await db.GroupIngressOutbox.AsNoTracking().Where(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId).OrderBy(x => x.CommittedSequence).ToArrayAsync(token);
         if (references.Length != 2 || references[0].Id != operation || references[0].CommittedSequence != 1
@@ -105,9 +106,11 @@ internal static class GroupAutomaticNoWorkRuntimeProof
         var graph = await GroupNoteRuntimeProof.CommitGraphDigestAsync(db, scope, effectOperation, token);
         var rawGraph = await GroupAutomaticRawRuntimeProof.RequireAsync(db, scope, effectOperation, 2, token);
         var manifestGraph = await GroupAutomaticManifestRuntimeProof.RequireAsync(db, scope, effectOperation, token);
+        await RequireDependenciesAsync();
         var replay = await store.CommitAutomaticAsync(plan, dependencies, effectOperation, token);
         if (!replay.WasAlreadyCommitted || committed != replay with { WasAlreadyCommitted = false }) throw new InvalidOperationException();
         await RequireOriginalAsync();
+        await RequireDependenciesAsync();
         var refused = false;
         try { await store.CommitAutomaticAsync(plan, dependencies, Guid.NewGuid(), token); }
         catch (InvalidOperationException error) when (error.Message == "Group work commit is unavailable." && error.InnerException is null) { refused = true; }
@@ -116,7 +119,13 @@ internal static class GroupAutomaticNoWorkRuntimeProof
         await GroupAutomaticRawRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await GroupAutomaticManifestRuntimeProof.RequireImmutableAsync(db, scope, effectOperation, token);
         await RequireOriginalAsync();
+        await RequireDependenciesAsync();
+        if (dependencyProof.Completed != 3) throw new InvalidOperationException();
         Console.WriteLine("PASS owned automatic no-work actual atomic receipt two exact NoWork dispositions original replay new nonce refusal no notes outbox or model");
+        Console.WriteLine("PASS owned automatic no-work whole dependency SQL three current reconstruction checks original graphs claim keys unchanged serializable source lock");
+
+        Task RequireDependenciesAsync() => GroupAutomaticDependencyRuntimeProof.RequireAsync(db, handle, worker, clock, sources, brain,
+            keys, dependencyProof, RequireOriginalAsync, token);
 
         async Task RequireOriginalAsync()
         {
