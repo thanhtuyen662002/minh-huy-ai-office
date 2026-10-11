@@ -16,7 +16,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 5fc5b87782f6ab06245a8d757c4e81e0cb670216
     state: in_progress
-    next: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 exact113 to terminal, Gov38096849367SUCCESS/sixPrereqsSUCCESS/ROOT FULL.NET114344400163 actual2844=[6,520,25,2293]0FailSkip. No superseding meaningfulCI; inspect FULL113/logs/rootOriginals then immediate same288 any realred repair. Structuralac28 full6path sourceAPPROVED6103648579 ROOTFULL3871/persisted93independentPASS; originalab58WITHHELD6103599748 retained, both actualcutoff/rawCount P2 closed. Next internal unwired allcontributor SQLdependency reader22focusedPASS/fourbounded actualEF SQL160closedqueries; sameDBworkerclock affinity/currentclaim/permissions/fullrawheadchunkcoverage/every sourcebrain manifest/sourcehash. Freeze7pathsource for FULL review. Native kernel/reader/current reconstruction/nonemptybrain/physicalFK/partialchunks/races/effectledger/originalclaim/owninputposteffect/terminalcontiguousfrontier/honestgap/backlog/retry/profile/tokenizer/no-click/279/customer/full233 incomplete. Actualmodel NOT_RUN_UNEVALUATED; no partialmerge."
+    next: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 exact113 to terminal; Gov38096849367/sixPrereqsSUCCESS and ROOTFULL.NET114344400163 actual2844 zeroFailSkip. No superseding meaningfulCI; full113/logs/all8/quality/rootOriginals then immediate same288 realred repair. Structuralac28 APPROVED6103648579 ROOTFULL3871/93controls; internal reader8bc APPROVED6103738028 ROOTFULL3526/31controls. New automatic dependency store owns bounded Serializable SQL check, exact DBworkerclock affinity, safe expiry witness-only retirement;17cold entry controls and format PASS, native success unqualified. Freeze full6paths for independent review then preserve/add actual whole-dependency reconstruction in owned fixtures. Complete immutable effect-ledger/originalclaim/own-write-chain/terminalcontiguousfrontier/honestgap/backlog/retry/profile/tokenizer/no-click/279 remain incomplete. Actualmodel NOT_RUN_UNEVALUATED; no partialmerge/full233 claim."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 exact113 to terminal, Gov38096849367SUCCESS/sixPrereqsSUCCESS/ROOT FULL.NET114344400163 actual2844=[6,520,25,2293]0FailSkip. No superseding meaningfulCI; inspect FULL113/logs/rootOriginals then immediate same288 any realred repair. Structuralac28 full6path sourceAPPROVED6103648579 ROOTFULL3871/persisted93independentPASS; originalab58WITHHELD6103599748 retained, both actualcutoff/rawCount P2 closed. Next internal unwired allcontributor SQLdependency reader22focusedPASS/fourbounded actualEF SQL160closedqueries; sameDBworkerclock affinity/currentclaim/permissions/fullrawheadchunkcoverage/every sourcebrain manifest/sourcehash. Freeze7pathsource for FULL review. Native kernel/reader/current reconstruction/nonemptybrain/physicalFK/partialchunks/races/effectledger/originalclaim/owninputposteffect/terminalcontiguousfrontier/honestgap/backlog/retry/profile/tokenizer/no-click/279/customer/full233 incomplete. Actualmodel NOT_RUN_UNEVALUATED; no partialmerge."
+next_action: "Own278/Draft288 remote5fc5b877 Build38096849478/native114344400101 exact113 to terminal; Gov38096849367/sixPrereqsSUCCESS and ROOTFULL.NET114344400163 actual2844 zeroFailSkip. No superseding meaningfulCI; full113/logs/all8/quality/rootOriginals then immediate same288 realred repair. Structuralac28 APPROVED6103648579 ROOTFULL3871/93controls; internal reader8bc APPROVED6103738028 ROOTFULL3526/31controls. New automatic dependency store owns bounded Serializable SQL check, exact DBworkerclock affinity, safe expiry witness-only retirement;17cold entry controls and format PASS, native success unqualified. Freeze full6paths for independent review then preserve/add actual whole-dependency reconstruction in owned fixtures. Complete immutable effect-ledger/originalclaim/own-write-chain/terminalcontiguousfrontier/honestgap/backlog/retry/profile/tokenizer/no-click/279 remain incomplete. Actualmodel NOT_RUN_UNEVALUATED; no partialmerge/full233 claim."
 
 
 blocked_by:
@@ -1931,8 +1931,21 @@ group_278_whole_dependency_reader_preparation:
   reads: receipts101_selected101_raw501_all_history_cutoff_TOP1_per_100ids_full_structural_kernel_every_sourcebrain_manifest_sourcehash
   fences: fresh_current_claim_effective_permissions_numeric_receipt_authority_epoch_time_all_contributors_final_clock
   local: focused22_zeroFailSkip_four_actual_EF_SQL160_TOPbounds_closedconnections_fourfile_format
-  source_review: PENDING_FULL_frozen_whole_sevenpaths_before_push
+  source_review: SCOPED_APPROVED6103738028_ROOT_FULL_read3526_persisted_31independentPASS
   native: NOT_RUN_UNQUALIFIED_current_remote5fc113_predates_kernel_and_reader
   completion: NO_effect_ledger_original_claim_provenance_ownwrite_chain_terminal_receipt_frontier_DI
   model: NOT_RUN_UNEVALUATED
   next: own_remote113_terminal_FULL_review_reader_then_native_allcontributor_reconstruction_and_complete_effect_ledger
+
+group_278_automatic_dependency_store_preparation:
+  reader_review: SCOPED_APPROVED6103738028_ROOT_FULL_read3526_persisted_31independentPASS
+  scope: existing_claim_and_trusted_worker_instant_current_dependencies_not_completion_or_future_write_authority
+  transaction: own_SqlServer_Serializable_two_minute_deadline_no_MARS_ambient_caller_transaction_dirty_tracker
+  dependencies: exact_database_worker_clock_existing_sourcebrain_allcontributor_reader_no_keys_decryption
+  expiry: retained_metadata_only_witness_commit_then_deny_no_effects_frontier
+  local: focused17_zeroFailSkip_twofile_format_cold_entry_refusals_only
+  source_review: PENDING_FULL_frozen_whole_sixpaths_before_push
+  native: NOT_RUN_UNQUALIFIED_successful_whole_reconstruction_expiry_retirement
+  completion: NO_effect_ledger_originalclaim_ownwrite_chain_terminal_receipt_frontier_DI
+  model: NOT_RUN_UNEVALUATED
+  next: own_remote113_terminal_then_review_store_and_native_allcontributor_reconstruction_preserving_all_original_proofs
