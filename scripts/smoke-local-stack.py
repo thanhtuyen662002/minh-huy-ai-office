@@ -1199,6 +1199,11 @@ def main():
     terminal_spec.loader.exec_module(terminal_proof)
     terminal_proof.verify(directory=directory, api=api, manifest=manifest,
         sql=lambda query: group_proof.owned_sql(compose, legacy_environment, query))
+    frontier_spec = importlib.util.spec_from_file_location("frontier_root_proof", Path("scripts/smoke-group-frontier-root.py"))
+    frontier_proof = importlib.util.module_from_spec(frontier_spec)
+    frontier_spec.loader.exec_module(frontier_proof)
+    frontier_proof.verify(directory=directory, api=api, manifest=manifest,
+        sql=lambda query: group_proof.owned_sql(compose, legacy_environment, query))
     print("PASS complete local stack integration")
 
 
