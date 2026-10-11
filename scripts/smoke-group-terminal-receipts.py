@@ -40,6 +40,22 @@ def require_fixtures(text, tenant, company):
     return rows
 
 
+def require_fixture_frames(text, tenant, company):
+    # sqlcmd defaults to 80-column output and 256-character large values.
+    # Each indexed GUID frame is exactly40 ASCII characters; no large JSON
+    # cell, wrapping, shared CLI flag change or permissive reassembly.
+    assert isinstance(text, str) and 1 <= len(text.encode("utf-8")) <= 4096
+    lines = text.splitlines()
+    assert len(lines) == 24
+    names = ("tenantId", "companyId", "serviceId", "sourceId", "eventId", "batchId")
+    rows = [{} for _ in range(4)]
+    for index, line in enumerate(lines):
+        row, field = divmod(index, 6)
+        assert len(line) == 40 and line.startswith(f"{row + 1}:{field + 1}:")
+        rows[row][names[field]] = line[4:]
+    return require_fixtures(json.dumps(rows), tenant, company)
+
+
 def verify(*, directory, api, manifest, sql):
     reference = _load("terminal_reference_boundary", "smoke-group-reference.py")
     reference.require_owned(directory, api)  # Before configuration/SQL/process.
@@ -49,15 +65,17 @@ def verify(*, directory, api, manifest, sql):
     password = manifest["AIOFFICE_RUNTIME_PASSWORD"]
     assert isinstance(password, str) and re.fullmatch(r"[A-Za-z0-9_-]{32,128}", password) and callable(sql)
     base = f"TenantId='{tenant}' AND CompanyId='{company}'"
-    query = ("SELECT TOP(5) LOWER(CONVERT(char(36),w.TenantId)) AS tenantId,LOWER(CONVERT(char(36),w.CompanyId)) AS companyId,"
-        "LOWER(CONVERT(char(36),a.ServiceId)) AS serviceId,LOWER(CONVERT(char(36),w.BindingId)) AS sourceId,"
-        "LOWER(CONVERT(char(36),a.OperationId)) AS eventId,LOWER(CONVERT(char(36),a.Id)) AS batchId "
+    query = ("SELECT CONVERT(varchar(40),CONCAT(f.fixtureOrdinal,':',v.fieldOrdinal,':',LOWER(CONVERT(char(36),v.id)))) "
+        "FROM (SELECT TOP(5) ROW_NUMBER() OVER(ORDER BY w.BindingId) AS fixtureOrdinal,"
+        "w.TenantId AS tenantId,w.CompanyId AS companyId,a.ServiceId AS serviceId,w.BindingId AS sourceId,"
+        "a.OperationId AS eventId,a.Id AS batchId "
         "FROM aioffice.GroupWorkCommitReceipts w JOIN aioffice.GroupBatchAllocations a ON a.TenantId=w.TenantId "
         "AND a.CompanyId=w.CompanyId AND a.BindingId=w.BindingId AND a.Id=w.BatchId "
         f"WHERE w.TenantId='{tenant}' AND w.CompanyId='{company}' AND w.DependencyManifestVersion=1 "
         "AND DATALENGTH(w.DependencyManifest)=274 AND w.SelectedMessageCount=2 AND SUBSTRING(w.DependencyManifest,161,2)=0x0200 "
-        "ORDER BY w.BindingId FOR JSON PATH;")
-    fixtures = require_fixtures(sql(query), tenant, company)
+        "ORDER BY w.BindingId) f CROSS APPLY (VALUES (1,f.tenantId),(2,f.companyId),(3,f.serviceId),"
+        "(4,f.sourceId),(5,f.eventId),(6,f.batchId)) v(fieldOrdinal,id) ORDER BY f.fixtureOrdinal,v.fieldOrdinal;")
+    fixtures = require_fixture_frames(sql(query), tenant, company)
     source_list = ','.join("'" + value["sourceId"] + "'" for value in fixtures)
     original_tables = [(table, order) for table, order in automatic.SOURCE_TABLES if table not in ("GroupBatchClaimStates", "GroupBatchClaimReceipts")]
     original_tables += [("GroupWorkRawDispositions", "BatchId,CommittedSequence"), ("GroupTerminalFrontierStates", "BindingId")]

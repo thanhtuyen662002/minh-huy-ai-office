@@ -57,7 +57,11 @@ class TerminalReceiptProofTests(unittest.TestCase):
         phase = 0; calls = []; queries = []
         def sql(query):
             queries.append(query)
-            if query.startswith('SELECT TOP(5)'): return json.dumps(self.rows)
+            if query.startswith('SELECT CONVERT(varchar(40)'):
+                self.assertIn('SELECT TOP(5)', query)
+                self.assertNotIn('FOR JSON', query)
+                text = self.frames(self.rows)
+                return text[:-1] if fault == 'truncated-fixture' else text
             if query.startswith('SET NOCOUNT ON;'):
                 count = query.count('SELECT CONCAT')
                 return '\n'.join(str(i)+':'+('B' if fault == 'original-mutation' and phase else 'A')*64 for i in range(count))
@@ -107,6 +111,41 @@ class TerminalReceiptProofTests(unittest.TestCase):
             self.assertEqual('', output.getvalue())
             self.assertTrue(any(command[:2] == ['docker', 'inspect'] for command, _ in calls))
             self.assertTrue(any(command[:3] == ['docker', 'image', 'rm'] for command, _ in calls))
+
+    @staticmethod
+    def frames(rows):
+        names = ('tenantId', 'companyId', 'serviceId', 'sourceId', 'eventId', 'batchId')
+        return '\n'.join(f'{row + 1}:{field + 1}:{values[name]}' for row, values in enumerate(rows)
+            for field, name in enumerate(names))
+
+    def test_fixed_frames_fit_both_default_sqlcmd_widths_and_preserve_all_fixture_values(self):
+        text = self.frames(self.rows)
+        self.assertEqual(24, len(text.splitlines()))
+        self.assertTrue(all(len(line.encode('ascii')) == 40 for line in text.splitlines()))
+        self.assertEqual(self.rows, proof.require_fixture_frames(text, self.tenant, self.company))
+        self.assertEqual(self.rows, proof.require_fixture_frames(text.replace('\n', '\r\n'), self.tenant, self.company))
+        # The old single large JSON cell truncates under documented default256.
+        with self.assertRaises(json.JSONDecodeError): json.loads(json.dumps(self.rows)[:256])
+        with self.assertRaises(AssertionError): proof.require_fixture_frames(json.dumps(self.rows)[:256], self.tenant, self.company)
+
+    def test_missing_extra_reordered_duplicate_malformed_and_foreign_frames_fail_before_children(self):
+        text = self.frames(self.rows); lines = text.splitlines()
+        cases = [text[:-1], '\n'.join(lines[:-1]), '\n'.join([*lines, *lines[:6]]),
+            '\n'.join(reversed(lines)), '\n'.join([lines[0], *lines[:-1]]),
+            text.replace('1:1:', '1:2:', 1), text.replace('1:1:', '0:1:', 1), text.replace('1:1:', '1|1:', 1),
+            ' '*4097, text.replace(self.tenant, str(uuid.uuid4()), 1)]
+        for value in cases:
+            with self.subTest(value=value[:50]), self.assertRaises(AssertionError):
+                proof.require_fixture_frames(value, self.tenant, self.company)
+        for field in ('sourceId', 'eventId', 'batchId'):
+            value = copy.deepcopy(self.rows); value[1][field] = value[0][field]
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                proof.require_fixture_frames(self.frames(value), self.tenant, self.company)
+        sql, process, calls, _ = self.oracle('truncated-fixture')
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(proof.subprocess, 'run', process), \
+                patch('sys.stdout', new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+            proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=self.manifest, sql=sql)
+        self.assertEqual([], calls); self.assertEqual('', output.getvalue())
 
 
 if __name__ == '__main__': unittest.main()
