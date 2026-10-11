@@ -13,6 +13,9 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtractionWorkerBinding worker,
     TimeProvider clock, IGroupSourceKeyProvider keys, GroupSourceContentProtector protector)
 {
+    internal bool UsesContext(PlatformDbContext context, GroupExtractionWorkerBinding binding, TimeProvider time) =>
+        ReferenceEquals(database, context) && worker == binding && ReferenceEquals(clock, time);
+
     public async Task<GroupBatchSourceContext> ReadAsync(GroupBatchClaimHandle handle, IReadOnlyList<Guid> messageIds,
         CancellationToken cancellationToken = default)
     {

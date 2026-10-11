@@ -53,6 +53,9 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
     public const int MaximumSelectedRevisions = 20;
     public const int MaximumSelectedEnvelopeBytes = 256000;
 
+    internal bool UsesContext(PlatformDbContext context, GroupExtractionWorkerBinding binding, TimeProvider time) =>
+        ReferenceEquals(database, context) && worker == binding && ReferenceEquals(clock, time);
+
     public async Task<GroupBrainPrivateContext> ReadAsync(GroupBatchClaimHandle handle,
         IReadOnlyList<Guid> requestIds, IReadOnlyList<Guid> glossaryIds, CancellationToken cancellationToken = default)
     {
