@@ -131,6 +131,7 @@ jobs:
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
+          python scripts/test-terminal-receipt-proof.py
           node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh

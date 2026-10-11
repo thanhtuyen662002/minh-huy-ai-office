@@ -22,7 +22,7 @@ try
     // Test-only executable: guard before stdin, configuration, credentials,
     // SQL, broker or any resource. It has no operator/customer credentials.
     OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup" or "allocation-hold" or "allocation-replay" or "allocation-deny" or "allocation-rollback" or "allocation-unsafe" or "claim-crash" or "claim-replay" or "claim-fence" or "claim-deny" or "claim-unsafe" or "claim-rollback" or "source-read" or "source-deny" or "source-foreign" or "source-expiry" or "source-key-revoke" or "work-schema" or "work-unsafe" or "brain-fixture" or "brain-read" or "brain-deny" or "brain-foreign" or "brain-policy-deny" or "brain-key-revoke" or "brain-expiry" or "no-work-expiry" or "no-work-commit" or "no-work-mars" or "note-expiry" or "note-key-expiry" or "note-commit" or "effect-brain-fixture" or "host-brain-fixture" or "host-brain-read" or "automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit" or "automatic-no-work-prepare" or "automatic-no-work-expiry" or "automatic-no-work-commit" or "automatic-host-prepare" or "automatic-host-expiry" or "automatic-host-key-expiry" or "automatic-host-commit" or "coverage-prepare" or "coverage-check" or "raw-history-prepare" or "raw-history-expiry" or "raw-history-commit"))
+    if (args.Length != 1 || args[0] is not ("publish" or "publish-existing" or "inspect-pending" or "statistics" or "consume-hold" or "consume-replay" or "duplicates" or "deny" or "rollback" or "unsafe" or "recovery-startup" or "allocation-hold" or "allocation-replay" or "allocation-deny" or "allocation-rollback" or "allocation-unsafe" or "claim-crash" or "claim-replay" or "claim-fence" or "claim-deny" or "claim-unsafe" or "claim-rollback" or "source-read" or "source-deny" or "source-foreign" or "source-expiry" or "source-key-revoke" or "work-schema" or "work-unsafe" or "brain-fixture" or "brain-read" or "brain-deny" or "brain-foreign" or "brain-policy-deny" or "brain-key-revoke" or "brain-expiry" or "no-work-expiry" or "no-work-commit" or "no-work-mars" or "note-expiry" or "note-key-expiry" or "note-commit" or "effect-brain-fixture" or "host-brain-fixture" or "host-brain-read" or "automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit" or "automatic-no-work-prepare" or "automatic-no-work-expiry" or "automatic-no-work-commit" or "automatic-host-prepare" or "automatic-host-expiry" or "automatic-host-key-expiry" or "automatic-host-commit" or "coverage-prepare" or "coverage-check" or "raw-history-prepare" or "raw-history-expiry" or "raw-history-commit" or "terminal-commit"))
         throw new InvalidOperationException();
     if (args[0] == "claim-crash") OwnedGroupReferenceProofGuard.RequireKillableChild(Environment.ProcessId);
     phase = "owned-config";
@@ -59,6 +59,11 @@ try
     var reference = new GroupIngressDispatchReference(1, scope, outbox.Id, outbox.MessageId, outbox.Revision, outbox.CommittedSequence);
     var inbox = new GroupIngressInboxStore(database, worker, TimeProvider.System);
     phase = args[0];
+    if (args[0] == "terminal-commit")
+    {
+        await GroupTerminalReceiptRuntimeProof.RunAsync(scope, config.EventId, worker, databaseOptions, lifetime.Token);
+        return 0;
+    }
     if (args[0].StartsWith("raw-history-", StringComparison.Ordinal))
     {
         await GroupRawHistoryRuntimeProof.RunAsync(args[0], scope, config.EventId, worker, databaseOptions, lifetime.Token);
