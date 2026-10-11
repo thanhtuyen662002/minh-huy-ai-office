@@ -82,18 +82,24 @@ internal static class GroupSignedCursorMigrationRuntimeProof
             Phase = "shadow-create";
             await WithConnectionAsync(completion, masterConnection, async inspectionConnection =>
             {
-                var observed = await InspectAsync(inspectionConnection, token);
+                var observed = await InspectAsync(inspectionConnection, token, traceAbsence: true);
+                Phase = "shadow-absence-check";
                 if (observed.Id is not null) throw new InvalidOperationException();
             });
             initialAbsenceVerified = true;
             await WithConnectionAsync(completion, masterConnection, async master =>
             {
+                Phase = "shadow-create-command";
                 var create = GroupCursorShadowGuard.CreateDatabase(master, descriptor.Name);
                 await completion.RunAsync(async () =>
                 {
+                    Phase = "shadow-create-open";
                     await master.OpenAsync(token);
+                    Phase = "shadow-create-execute";
                     createInvoked = true;
-                    databaseId = await create.ExecuteScalarAsync(token) is int id && id > 4 ? id : throw new InvalidOperationException();
+                    var result = await create.ExecuteScalarAsync(token);
+                    Phase = "shadow-create-result";
+                    databaseId = result is int id && id > 4 ? id : throw new InvalidOperationException();
                 }, () => DisposeCommand(create));
             });
             Phase = "shadow-ownership";
@@ -177,7 +183,7 @@ internal static class GroupSignedCursorMigrationRuntimeProof
         catch (Exception error)
         {
             failure = ExceptionDispatchInfo.Capture(error); failedPhase = Phase;
-            existingRefused = Phase == "shadow-create" && error is SqlException { Number: 51070 };
+            existingRefused = Phase == "shadow-create-execute" && error is SqlException { Number: 51070 };
         }
         finally
         {
@@ -221,13 +227,17 @@ internal static class GroupSignedCursorMigrationRuntimeProof
         completion.RequireClean();
         token.ThrowIfCancellationRequested();
 
-        async Task<(int? Id, int OwnerState)> InspectAsync(SqlConnection master, CancellationToken inspectionToken)
+        async Task<(int? Id, int OwnerState)> InspectAsync(SqlConnection master, CancellationToken inspectionToken, bool traceAbsence = false)
         {
+            if (traceAbsence) Phase = "shadow-absence-command";
             var inspection = GroupCursorShadowGuard.InspectOwnership(master, descriptor.Name, owner);
             return await completion.RunAsync(async () =>
             {
+                if (traceAbsence) Phase = "shadow-absence-open";
                 await master.OpenAsync(inspectionToken);
+                if (traceAbsence) Phase = "shadow-absence-execute";
                 var reader = await inspection.ExecuteReaderAsync(inspectionToken);
+                if (traceAbsence) Phase = "shadow-absence-result";
                 return await completion.RunAsync(() => ReadOwnershipAsync(reader, inspectionToken), reader.DisposeAsync);
             }, () => DisposeCommand(inspection));
         }

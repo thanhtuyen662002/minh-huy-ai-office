@@ -240,5 +240,29 @@ class ShadowFailureDiagnosticTests(unittest.TestCase):
         result = self.result(); result.stdout = result.stdout.replace(proof.REPLAY_SUCCESS, proof.MIGRATION_SUCCESS)
         with self.assertRaises(AssertionError): proof.require_shadow_migration_result(result, reference)
 
+    def test_lifecycle_subphases_keep_first_failure_closed_and_never_qualify_success(self):
+        phases = ('shadow-absence-command', 'shadow-absence-open', 'shadow-absence-execute',
+            'shadow-absence-result', 'shadow-absence-check', 'shadow-create-command',
+            'shadow-create-open', 'shadow-create-execute', 'shadow-create-result')
+        for phase in phases:
+            with self.subTest(phase=phase), self.assertRaises(AssertionError) as error:
+                proof.require_shadow_migration_result(self.result(phase=phase, diagnostic='invalid-operation snapshot=-1'), reference)
+            self.assertEqual('Owned signed cursor migration failed; phase=' + phase + '; diagnostic=invalid-operation snapshot=-1', str(error.exception))
+            forged = self.result(phase=phase); forged.returncode = 0
+            with self.assertRaisesRegex(AssertionError, '^Owned reference executable failed at frontier-cursor-migration; exit=0$'):
+                proof.require_shadow_migration_result(forged, reference)
+
+    def test_lifecycle_lookalikes_private_suffixes_and_cleanup_replacement_do_not_escape(self):
+        for phase in ('shadow-absence', 'shadow-create-result PRIVATE_SQL_PASSWORD',
+            'shadow-absence-open\nPRIVATE_SQL_PASSWORD', 'shadow-absence-command-extra',
+            'shadow-create-execute;Password=PRIVATE_SQL_PASSWORD'):
+            with self.subTest(phase=phase), self.assertRaises(AssertionError) as error:
+                proof.require_shadow_migration_result(self.result(phase=phase), reference)
+            self.assertEqual('Owned reference executable failed at frontier-cursor-migration; exit=1', str(error.exception))
+        replaced = self.result(phase='shadow-create-execute')
+        replaced.stdout = replaced.stdout.replace('FAIL owned reference runtime', 'FAIL owned signed cursor migration owned-shadow-cleanup\nFAIL owned reference runtime')
+        with self.assertRaisesRegex(AssertionError, '^Owned reference executable failed at frontier-cursor-migration; exit=1$'):
+            proof.require_shadow_migration_result(replaced, reference)
+
 
 if __name__ == '__main__': unittest.main()
