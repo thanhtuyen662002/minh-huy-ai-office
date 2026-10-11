@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
+current_target_head: b3c7dfb1637f83b8a85032640bbf43503f220fb0
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
+    head: b3c7dfb1637f83b8a85032640bbf43503f220fb0
     state: in_progress
-    next: "Draft288 remote691714683f291fcd5c2a7c32d87852d5ac73c91a CLOSED all8 Build38109741737/Gov38109741851/native114382645109/quality114388035097 SUCCESS. ROOT full116 required once172PASS0failure/fullNET3352PASS6_520_25_2801 noFailSkip/fullquality3454 and all six ORIGINAL images11692126093 viewed. Physical SQL bootstrap/four retained cutoff fixtures repaired at original four one-contributor/two-selected/zero-brain scope only. Owned terminal consumer87e163b APPROVED6105354729 ROOTFULL5595 368controls/fourformat. Additive native phaseec144ea APPROVED6105464632 ROOTFULL6163 SHA25646b39231b7cbf0531ba274f162acb6efbf0abf30749db31fc1e6785fc7ac3e20 independent50NET156Python/threeformat; root local833NET148Python. After focused closure/state approval push same288 reviewed terminal checkpoints, capture fresh exact HEAD/Build/Gov/native IDs and close full117 required aggregates/all8/quality/six originals. Actual new terminal SQL remains NOT_RUN_UNQUALIFIED until fresh native execution. Continue authenticated contiguous SQL cursor, multi-contributor/nonemptybrain/own-input chains, gap-retry/DI/no-click. Prior464 red/676 scoped acceptance histories preserved. Actualmodel NOT_RUN_UNEVALUATED existingGateway only; full278/279/233 incomplete/no partialmerge."
+    next: "Draft288 exact remoteb3c7dfb1637f83b8a85032640bbf43503f220fb0 ACTIVE_OWNED Build38112203893/native114389913437/Gov38112203900; six prerequisites/GovSUCCESS and ROOT full.NET3450PASS6_520_25_2899 noFailSkip SHA256a1511a1bb7cdffa361befcfc4a39bd004705eeb53a8c88ee59b7973ecb3e4d31. Close fresh full117 aggregates retaining original116 once/all8/quality/six ORIGINAL images; do not supersede meaningful active run. All source receipts87_6105354729/ec_6105464632/finalb3_6105493237 ROOT_FULL consumed. New terminal SQL remains NOT_RUN_UNQUALIFIED until full native receipt. Historical691 full116/3352NET/all8/Gov/quality/originalsix CLOSED at four one-contributor/two-selected/zero-brain scope; prior464 red/676 history preserved. New signed frontier metadata integrity primitive38new+7keys+39frontier=84PASS noFailSkipWarnings/twoformat, frozen five-path FULL source review pending; excluded fromb3 runtime. Implement immutable signed sequential predecessor schema/latest-leaf cursor fence and historical existing-terminal graph/current Extract bookkeping, outsideSQL retained keys and atomic actualreadback; lastBatch alone cannot prove prefix and old currentdependencies cannot strand genuine terminal after crash/edit/rotation. Continue nonemptybrain/multiplecontributor/owninput/races/gap-retry/DI/no-click. ExistingGateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233 incomplete/no partialmerge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Draft288 remote691714683f291fcd5c2a7c32d87852d5ac73c91a CLOSED all8 Build38109741737/Gov38109741851/native114382645109/quality114388035097 SUCCESS. ROOT full116 required once172PASS0failure/fullNET3352PASS6_520_25_2801 noFailSkip/fullquality3454 and all six ORIGINAL images11692126093 viewed. Physical SQL bootstrap/four retained cutoff fixtures repaired at original four one-contributor/two-selected/zero-brain scope only. Owned terminal consumer87e163b APPROVED6105354729 ROOTFULL5595 368controls/fourformat. Additive native phaseec144ea APPROVED6105464632 ROOTFULL6163 SHA25646b39231b7cbf0531ba274f162acb6efbf0abf30749db31fc1e6785fc7ac3e20 independent50NET156Python/threeformat; root local833NET148Python. After focused closure/state approval push same288 reviewed terminal checkpoints, capture fresh exact HEAD/Build/Gov/native IDs and close full117 required aggregates/all8/quality/six originals. Actual new terminal SQL remains NOT_RUN_UNQUALIFIED until fresh native execution. Continue authenticated contiguous SQL cursor, multi-contributor/nonemptybrain/own-input chains, gap-retry/DI/no-click. Prior464 red/676 scoped acceptance histories preserved. Actualmodel NOT_RUN_UNEVALUATED existingGateway only; full278/279/233 incomplete/no partialmerge."
+next_action: "Draft288 exact remoteb3c7dfb1637f83b8a85032640bbf43503f220fb0 ACTIVE_OWNED Build38112203893/native114389913437/Gov38112203900; six prerequisites/GovSUCCESS and ROOT full.NET3450PASS6_520_25_2899 noFailSkip SHA256a1511a1bb7cdffa361befcfc4a39bd004705eeb53a8c88ee59b7973ecb3e4d31. Close fresh full117 aggregates retaining original116 once/all8/quality/six ORIGINAL images; do not supersede meaningful active run. All source receipts87_6105354729/ec_6105464632/finalb3_6105493237 ROOT_FULL consumed. New terminal SQL remains NOT_RUN_UNQUALIFIED until full native receipt. Historical691 full116/3352NET/all8/Gov/quality/originalsix CLOSED at four one-contributor/two-selected/zero-brain scope; prior464 red/676 history preserved. New signed frontier metadata integrity primitive38new+7keys+39frontier=84PASS noFailSkipWarnings/twoformat, frozen five-path FULL source review pending; excluded fromb3 runtime. Implement immutable signed sequential predecessor schema/latest-leaf cursor fence and historical existing-terminal graph/current Extract bookkeping, outsideSQL retained keys and atomic actualreadback; lastBatch alone cannot prove prefix and old currentdependencies cannot strand genuine terminal after crash/edit/rotation. Continue nonemptybrain/multiplecontributor/owninput/races/gap-retry/DI/no-click. ExistingGateway only actualmodel NOT_RUN_UNEVALUATED; full278/279/233 incomplete/no partialmerge."
 
 
 blocked_by:
@@ -2359,7 +2359,7 @@ group_278_terminal_receipt_native_phase:
   parent691CI: CLOSED_ALL8_Gov_SUCCESS_ROOT_full116_once172PASS_full3352NET_quality_six_original_images_at_retained_scope
   cursor_multicontributor_nonemptybrain_owninput_SQL_corruption_races_cancellation_session_gap_retry_DI_no_click_full278_279_233_merge: INCOMPLETE
   model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
-  next: focused_closure_state_review_then_new_exact_native_phase117_same288_before_cursor_and_application_work
+  next: close_exact_b3_Build38112203893_native114389913437_Gov38112203900_full117_all8_quality_six_originals_then_signed_frontier_schema_history_and_application
 
 group_278_repaired_storage_691_closure:
   head: 691714683f291fcd5c2a7c32d87852d5ac73c91a
@@ -2375,3 +2375,22 @@ group_278_repaired_storage_691_closure:
   new_terminal_SQL_frontier_owninput_nonemptybrain_multichunk_races_DI_no_click_model_full278_279_233_merge: UNQUALIFIED_INCOMPLETE
   qualification_document: docs/validation/GROUP_TERMINAL_STORAGE_691_QUALIFICATION.md
   next: focused_three_path_closure_review_then_reviewed_exact_head_CI_required117_retaining_original116_same288
+
+group_278_signed_terminal_frontier_integrity:
+  parent: b3c7dfb1637f83b8a85032640bbf43503f220fb0
+  source_review: PENDING_FULL_five_paths_primitive_tests_ADR_two_state
+  implemented: metadata_only_AIOGFAD1_closed322_to385bytes_including32byte_HMAC_full_envelope_SHA256_identity_versions_scope_range_UTC_predecessor_terminal_current_actor_authority_KeyId_bound
+  keys: reuse_existing_exact_scope_IGroupSourceKeyProvider_CompositeSecretResolver_retained_immutable_scope_KeyId_material_no_new_secret_store_AI_client_config_or_plaintext_source
+  derivation: HKDF_SHA256_fixed_versioned_scope_salt_purpose_aioffice_group_terminal_advance_integrity_v1_excludes_mutable_authority_derived_bytes_zeroed
+  guards: actual_bounds_before_allocation_strict_ASCII_KeyId_EOF_genesis_successor_shape_positive_versions_exactUTC_detached_copies_fixed_inner_free_errors_PeekKeyId_untrusted
+  local: shared84PASS38new7retainedkeys39retainedfrontier_zeroFailSkipWarnings_twoformat_private_same84PASS
+  controls: independent_manual_binary_layout_RFC_extract_expand_every_byte_mutation_unkeyed_checksum_forgery_wrong_scope_same_material_wrong_disposed_keys_retained_rotation_malformed_range_version_dates_hashes_KeyId_truncation_EOF_bounds_copies
+  design_corrections: mutable_lastBatch_not_fullprefix_authentication_current_target_dependency_versions_can_strand_genuine_terminal_after_crash_edit_recall_rotation
+  future_chain: versioned_append_only_signed_advance_exact_terminal_interval_self_predecessor_FKs_explicit_root_allNULL_later_allNOTNULL_sequential_unique_scope_version_no_fork_cursor_exact_signed_latest_leaf_includingUTC
+  future_store: authenticate_historical_target_full_original_graph_fresh_current_Extract_rights_scope_retained_key_await_outsideSQL_byte_exact_locked_reread_sign_after_verified_predecessor_atomic_advance_cursor_actualreadback_expiry_rollback_detach_before_witness_cancellation_replay
+  unauthorized_or_unimplemented: primitive_is_not_graph_proof_or_current_authority_schema_SQL_advance_store_historical_reader_key_await_fences_DI_native_prefix_races_NO_IMPLEMENTATION
+  initial_graph_factor_prototype: UNVERIFIED_SUPERSEDED_NOT_PROMOTED_no_fake_Current_old_handle_or_old_current_clock_in_shipping
+  parent_b3CI: ACTIVE_OWNED_Build38112203893_native114389913437_six_prerequisites_Gov38112203900_SUCCESS_fullNET3450PASS_not_superseded
+  actual_model: NOT_RUN_UNEVALUATED_existing_AI_Gateway_only
+  full278_279_233_customer_production_activation_merge: INCOMPLETE
+  next: FULL_five_path_source_review_own_b3_native117_to_terminal_then_signed_chain_migration_historical_graph_owned_SQL_store_and_application_acceptance_same288
