@@ -25,7 +25,7 @@ public sealed class OwnedCursorSnapshotEncodingTests
         try
         {
             Assert.Equal(shadow ? Sql.ShadowSnapshotCount : Sql.SourceSnapshotCount, templates.Count);
-            Assert.Equal(shadow ? 58 : 60, templates.Count(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal)));
+            Assert.Equal(shadow ? 58 : 61, templates.Count(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal)));
             foreach (var template in templates)
             {
                 RequireCanonicalSerializer(template.Command.CommandText);

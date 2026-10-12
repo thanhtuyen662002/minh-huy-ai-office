@@ -9,6 +9,85 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class GroupBatchClaimStoreTests
 {
     [Fact]
+    public async Task AllocationResumeReturnsTheOriginalScopedLedgerAcrossFreshDatabaseContexts()
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var claimed = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        using var restarted = new PlatformDbContext(fixture.Auth.Options);
+        var allocation = await fixture.StoreFor(restarted).ReadCurrentAllocationAsync(claimed.CurrentHandle!);
+        var original = await restarted.GroupBatchAllocations.AsNoTracking().SingleAsync();
+        var rows = await restarted.GroupBatchAllocatedRevisions.AsNoTracking().OrderBy(x => x.CommittedSequence).ToArrayAsync();
+        Assert.Equal(fixture.Scope, allocation.Scope); Assert.Equal(fixture.Batch, allocation.BatchId);
+        Assert.Equal(original.OperationId, allocation.OperationId); Assert.True(allocation.WasAlreadyAllocated);
+        Assert.Equal(rows.Select(x => (x.MessageId, x.Revision, x.CommittedSequence, x.ContentSha256)),
+            allocation.Revisions.Select(x => (x.Metadata.MessageId, x.Metadata.Revision, x.Metadata.CommittedSequence, x.Metadata.ContentSha256)));
+        Assert.Equal(1, await restarted.GroupBatchAllocations.CountAsync());
+        Assert.Equal(1, await restarted.GroupBatchClaimReceipts.CountAsync());
+        Assert.False(restarted.ChangeTracker.HasChanges());
+    }
+
+    [Theory]
+    [InlineData("grant")]
+    [InlineData("source")]
+    [InlineData("account")]
+    [InlineData("company")]
+    [InlineData("service")]
+    [InlineData("epoch")]
+    [InlineData("role")]
+    public async Task AllocationResumeDoesNotReleaseMetadataAfterCurrentAuthorityRevocation(string changed)
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var claimed = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        await fixture.ChangeAuthorityAsync(changed);
+        using var restarted = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(restarted).ReadCurrentAllocationAsync(claimed.CurrentHandle!));
+        Assert.False(restarted.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public async Task AllocationResumePersistsExpiryWitnessAndCannotReleaseAfterClockRollbackOrReplacement()
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        using (var db = new PlatformDbContext(fixture.Auth.Options))
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(db).ReadCurrentAllocationAsync(first.CurrentHandle!));
+        Assert.Equal(first.Receipt.ExpiresAtUtc, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        fixture.Auth.Clock.Current -= TimeSpan.FromTicks(1);
+        using (var db = new PlatformDbContext(fixture.Auth.Options))
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(db).ReadCurrentAllocationAsync(first.CurrentHandle!));
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        var second = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        using var restarted = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(restarted).ReadCurrentAllocationAsync(first.CurrentHandle!));
+        Assert.Equal(fixture.Batch, (await fixture.StoreFor(restarted).ReadCurrentAllocationAsync(second.CurrentHandle!)).BatchId);
+    }
+
+    [Fact]
+    public async Task AllocationResumeRejectsTamperedOriginalLedgerWithoutCreatingAReplacement()
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var claimed = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        (await fixture.Auth.Db.GroupBatchAllocatedRevisions.SingleAsync()).ContentSha256 = new string('C', 64);
+        await fixture.Auth.Db.SaveChangesAsync(); fixture.Auth.Db.ChangeTracker.Clear();
+        using var restarted = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.StoreFor(restarted).ReadCurrentAllocationAsync(claimed.CurrentHandle!));
+        Assert.Equal(1, await restarted.GroupBatchAllocations.CountAsync());
+        Assert.Equal(1, await restarted.GroupBatchClaimReceipts.CountAsync());
+        Assert.False(restarted.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public async Task AllocationResumeHonorsCancellationBeforeAccessingADisposedDatabase()
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var claimed = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Db.Dispose();
+        using var canceled = new CancellationTokenSource(); canceled.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(() => fixture.Store.ReadCurrentAllocationAsync(claimed.CurrentHandle!, canceled.Token));
+    }
+
+    [Fact]
     public async Task ExpiredNonceRemainsMetadataAcrossClockRollbackAndFirstWitnessNeverMovesWithinEpoch()
     {
         using var fixture = await Fixture.CreateAsync(); var owner = Guid.NewGuid(); var operation = Guid.NewGuid();

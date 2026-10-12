@@ -1672,7 +1672,7 @@ class OwnedStackGuardTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 10, True, "1"):
+        for slot in (0, 12, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -1770,6 +1770,16 @@ class OwnedStackGuardTests(unittest.TestCase):
         final_journal = environment.copy()
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](ninth_source, 9)
         self.assertEqual(final_journal, environment); self.assertEqual(36, len(calls))
+        for slot, secret_name in ((10, "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY"), (11, "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY")):
+            retained = environment.copy(); source_id = str(uuid.uuid4())
+            namespace["enroll_owned_source"](source_id, slot)
+            self.assertTrue(all(environment[name] == value for name, value in retained.items()))
+            self.assertEqual("secretref://env/" + secret_name, environment[f"AIOffice__GroupIntake__SourceKeys__{slot}__SecretRef"])
+            self.assertEqual(source_id, environment[f"AIOffice__GroupIntake__SourceKeys__{slot}__SourceBindingId"])
+            enrolled = environment.copy()
+            with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source_id, slot)
+            self.assertEqual(enrolled, environment)
+        self.assertEqual(44, len(calls))
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

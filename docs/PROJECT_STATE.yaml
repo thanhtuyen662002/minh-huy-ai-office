@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: dba06bcae5af3252cff006e65f17464b67d60574
+current_target_head: a40ebe669141cfacb5f92cf7990aa90126b16217
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: dba06bcae5af3252cff006e65f17464b67d60574
+    head: a40ebe669141cfacb5f92cf7990aa90126b16217
     state: in_progress
-    next: "Actualdba ALL8RED Build38189544559/Gov38189544542 closure6116354625: model-journal-cap exit1 without retained phase;99of123/24missing/5failure/noimages. Six prerequisites/Gov green and hosted4131.NET. Private proof-only closed phase/kind diagnostic preserves all assertions, timeouts, four concurrent contexts and SQL operations. Fresh4140.NET=[6,520,25,3589],15focused=9new+6guards,163Python=[154,9],2formats PASS. Review exact8, obtain Git SOURCE, one SAME288 push and own fresh native123/full4140/all8/Gov/quality/six ORIGINALs through terminal. Source-derived5s contention is a possibility, not observed hosted causality; no blind rerun or false repair qualification. Store31/history/binding/result stay private until qualified parent; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
+    next: "Parenta40ebe6 native123/full4140/all8/Gov/entire quality/six ORIGINAL images CLOSED_GREEN at closure6117137342. Original-input31 rebased with both current diagnostic overlaps preserved; fresh full solution4194=[6,520,25,3643] and189Python=[154,9,15,5,6] PASS. Exact33 includes complete current durable histories and this scoped checkpoint. Obtain immutable private and Git SOURCE reviews, then one SAME288 push; own successor native124/full4194/all8/Gov/entire quality/six ORIGINALs through terminal. Empty-history input store proof remains NOT_RUN; model NOT_RUN_UNEVALUATED. Earlierdba journal cap failure cause remains unproven. History/profile/tokenizer/provider/durable result/WorkerDI/coordinator/scanner/no-click/279/233/ERP/deployment/merge remain incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Actualdba ALL8RED Build38189544559/Gov38189544542 closure6116354625: model-journal-cap exit1 without retained phase;99of123/24missing/5failure/noimages. Six prerequisites/Gov green and hosted4131.NET. Private proof-only closed phase/kind diagnostic preserves all assertions, timeouts, four concurrent contexts and SQL operations. Fresh4140.NET=[6,520,25,3589],15focused=9new+6guards,163Python=[154,9],2formats PASS. Review exact8, obtain Git SOURCE, one SAME288 push and own fresh native123/full4140/all8/Gov/quality/six ORIGINALs through terminal. Source-derived5s contention is a possibility, not observed hosted causality; no blind rerun or false repair qualification. Store31/history/binding/result stay private until qualified parent; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
+next_action: "Parenta40ebe6 native123/full4140/all8/Gov/entire quality/six ORIGINAL images CLOSED_GREEN at closure6117137342. Original-input31 rebased with both current diagnostic overlaps preserved; fresh full solution4194=[6,520,25,3643] and189Python=[154,9,15,5,6] PASS. Exact33 includes complete current durable histories and this scoped checkpoint. Obtain immutable private and Git SOURCE reviews, then one SAME288 push; own successor native124/full4194/all8/Gov/entire quality/six ORIGINALs through terminal. Empty-history input store proof remains NOT_RUN; model NOT_RUN_UNEVALUATED. Earlierdba journal cap failure cause remains unproven. History/profile/tokenizer/provider/durable result/WorkerDI/coordinator/scanner/no-click/279/233/ERP/deployment/merge remain incomplete."
 
 
 blocked_by:
@@ -3791,3 +3791,16 @@ group_model_journal_closed_diagnostics_checkpoint:
   local: 'Fresh full4140.NET=[6,520,25,3589] PASS;15focused=9new closed/concurrent diagnostic controls+6 retained ownership guards PASS. Fresh163Python=[154,9] PASS including3 new actual projector tests and all151 previous owned controls. Two unchanged frontier/cursor suites totaling20 are inherited, not rerun. Two final format verifies PASS/empty after retained21 WHITESPACE initial diagnostics and one scoped apply. Initial14 focused predates the added concurrency control, not added to15 as distinct cases.'
   scope: 'Five proof/test paths plus this documentation and whole lead/backend durable states. Production CSharp, schemas, migrations, provider/Gateway, configuration, WorkerDI, frontend and all outside paths remain unchanged. This fixes observability only; successor actual native123 is NOT_RUN and no SQL/liveness/model acceptance is inferred.'
   next: 'Consume full independent private8 and exact Git SOURCE reviews; push one SAME288 checkpoint, then own fresh native123/full4140/all8/Governance/entire quality/six original images through terminal. Immediately repair an actual terminal failure on SAME288. Rebase private store31/guarded helpers onto a qualified green parent only. Full278/279/233/history/profile/tokenizer/model/result-store/chunk/restart/coordinator/scanner/WorkerDI/no-click/ERP/installer/deployment/merge remain incomplete.'
+original_input_plan_stacked_checkpoint:
+  parent: "a40ebe669141cfacb5f92cf7990aa90126b16217"
+  parent_build: 38197025149
+  parent_governance: 38197025151
+  parent_native_job: 114641862115
+  parent_quality_job: 114648623607
+  parent_closure: 6117137342
+  result: "Parent closed proof diagnostics qualified only; no actual cause inferred for earlierdba model-journal-cap failure."
+  source: "Immutable original allocation, bounded input codec/recovery and additive append-only SQL input plan store; migration20261011203117. Both Program and owned guard merge inputs/results retained. Existing Gateway only; no WorkerDI activation."
+  local: "Fresh full .NET solution4194=[6,520,25,3643], zero failures/skips/warnings; fresh189Python=[154,9,15,5,6] PASS on immutable rebased31. Prior scoped format/EF evidence remains historical; fresh checks recorded separately."
+  review: "Prior private31 preliminary review retained as historical; merged current overlaps and full exact33 still require current immutable source review. No public Git SOURCE approval or successor runtime qualification inferred."
+  limitation: "Native124 storage/restart/expiry covers empty history only and remains NOT_RUN. Actual model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
+  next: "Parenta40ebe6 native123/full4140/all8/Gov/entire quality/six ORIGINAL images CLOSED_GREEN at closure6117137342. Original-input31 rebased with both current diagnostic overlaps preserved; fresh full solution4194=[6,520,25,3643] and189Python=[154,9,15,5,6] PASS. Exact33 includes complete current durable histories and this scoped checkpoint. Obtain immutable private and Git SOURCE reviews, then one SAME288 push; own successor native124/full4194/all8/Gov/entire quality/six ORIGINALs through terminal. Empty-history input store proof remains NOT_RUN; model NOT_RUN_UNEVALUATED. Earlierdba journal cap failure cause remains unproven. History/profile/tokenizer/provider/durable result/WorkerDI/coordinator/scanner/no-click/279/233/ERP/deployment/merge remain incomplete."

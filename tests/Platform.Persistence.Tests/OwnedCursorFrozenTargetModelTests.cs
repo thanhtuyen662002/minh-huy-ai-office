@@ -22,19 +22,19 @@ public sealed class OwnedCursorFrozenTargetModelTests
         var frozen = database.GetService<IModelRuntimeInitializer>().Initialize(migration.TargetModel, designTime: true);
         var current = database.GetService<IDesignTimeModel>().Model.GetRelationalModel().Tables.Select(x => x.Name).Order().ToArray();
         var historical = frozen.GetRelationalModel().Tables.Select(x => x.Name).Order().ToArray();
-        Assert.Equal(56, current.Length);
+        Assert.Equal(57, current.Length);
         Assert.Equal(54, historical.Length);
         var source = Sql.SourceSnapshots(database);
         var shadow = Sql.ShadowSnapshots(database, Sql.NewShadow());
         try
         {
-            Assert.Equal(74, source.Count); Assert.Equal(72, shadow.Count);
+            Assert.Equal(75, source.Count); Assert.Equal(72, shadow.Count);
             Assert.Equal(current.Concat(new[] { "ToolExecutionAudit", "CustomerAiCreditSettlements", "CustomerSlaPriorityAdmissions" }).Order(), source.Where(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal)
                 && x.Tag != "rows:__EFMigrationsHistory").Select(x => x.Tag[5..]).Order());
             Assert.Equal(historical.Concat(new[] { "ToolExecutionAudit", "CustomerAiCreditSettlements", "CustomerSlaPriorityAdmissions" }).Order(), shadow.Where(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal)
                 && x.Tag != "rows:__EFMigrationsHistory").Select(x => x.Tag[5..]).Order());
-            Assert.Equal(new[] { "GroupModelAttemptFailures", "GroupModelAttemptStarts" }, current.Except(historical).Order());
-            foreach (var name in new[] { "GroupModelAttemptFailures", "GroupModelAttemptStarts" })
+            Assert.Equal(new[] { "GroupAutomaticInputPlans", "GroupModelAttemptFailures", "GroupModelAttemptStarts" }, current.Except(historical).Order());
+            foreach (var name in new[] { "GroupAutomaticInputPlans", "GroupModelAttemptFailures", "GroupModelAttemptStarts" })
             {
                 Assert.Contains("(N'" + name + "')", source[0].Command.CommandText);
                 Assert.DoesNotContain("(N'" + name + "')", shadow[0].Command.CommandText);

@@ -504,6 +504,59 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupAutomaticInputPlanRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("FormatVersion")
+                        .HasColumnType("int");
+
+                    b.Property<long>("OriginalClaimEpoch")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("OriginalClaimOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(32000)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("PlanSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "BatchId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "OriginalClaimOperationId", "BatchId", "OriginalClaimEpoch");
+
+                    b.ToTable("GroupAutomaticInputPlans", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupAutomaticInputPlans_Format", "[FormatVersion]=2 AND DATALENGTH([Plan]) BETWEEN 256 AND 32000");
+
+                            t.HasCheckConstraint("CK_GroupAutomaticInputPlans_Identity", "[OriginalClaimOperationId]<>'00000000-0000-0000-0000-000000000000' AND [OriginalClaimEpoch]>0 AND DATALENGTH([PlanSha256])=64 AND [PlanSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupAutomaticInputPlans_Time", "DATEPART(tz,[CreatedAtUtc])=0");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocatedRevisionRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -3083,6 +3136,23 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasForeignKey("TenantId", "CompanyId", "ConnectorAccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupAutomaticInputPlanRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBatchClaimReceiptRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "OriginalClaimOperationId", "BatchId", "OriginalClaimEpoch")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "OperationId", "BatchId", "Epoch")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_GroupAutomaticInputPlans_OriginalClaim");
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupBatchAllocatedRevisionRecord", b =>

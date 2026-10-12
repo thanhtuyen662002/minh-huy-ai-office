@@ -131,7 +131,16 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
     // Expiry retirement commits in this metadata-only unit before denial. The
     // internal verdict requires an effect consumer to own rollback/retirement;
     // it must never commit staged effects just to preserve an expiry witness.
-    public async Task RequireCurrentAsync(GroupBatchClaimHandle handle, CancellationToken cancellationToken = default)
+    public async Task RequireCurrentAsync(GroupBatchClaimHandle handle, CancellationToken cancellationToken = default) =>
+        _ = await ReadCurrentAllocationAsync(handle, cancellationToken);
+
+    // Metadata-only resume input for the future automatic consumer. The
+    // original allocation is restored under the same current Extract/source
+    // lock as the public claim fence. This result is not protected content or
+    // authority across a later key/provider wait. Source reads/effects must
+    // still fence independently. No allocation nonce is invented on restart.
+    public async Task<GroupBatchAllocationReceipt> ReadCurrentAllocationAsync(GroupBatchClaimHandle handle,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(handle);
         ValidateEntry(handle.Receipt.Scope, cancellationToken);
@@ -144,6 +153,7 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
             await transaction.CommitAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (verdict is GroupBatchClaimFenceVerdict.Expired) throw GroupServiceDirectory.Denied();
+            return ((GroupBatchClaimFenceVerdict.Current)verdict).Allocation;
         }
         catch (DbUpdateException) { throw new GroupBatchClaimCommitException(); }
         catch (Exception error) when (error is SqlException or OverflowException or ArgumentOutOfRangeException or EncoderFallbackException)
