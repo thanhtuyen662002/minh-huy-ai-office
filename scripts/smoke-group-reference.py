@@ -165,6 +165,17 @@ def require_reference_result(result, mode, expected_lines):
         automatic_phase = lines[0][len(automatic_prefix):]
         if automatic_phase in automatic_phases:
             detail = "; phase=" + automatic_phase
+    journal_modes = {"model-journal-prepare", "model-journal-lost-reply", "model-journal-resume", "model-journal-cap", "model-journal-expiry"}
+    journal_phases = {"setup", "claim", "preparation", "lost-reply", "resume", "cap-ready", "cap-claim", "cap-preparation",
+        "cap-start", "cap-failure", "cap-aggregate", "cap-counts", "cap-fourth", "physical-rows", "physical-chain", "physical-claim",
+        "physical-predecessor", "physical-unique", "physical-failure-start", "physical-start-update", "physical-start-delete",
+        "physical-failure-update", "physical-failure-delete", "expiry", "final", "unknown"}
+    journal_kinds = {"source-lock", "journal", "denied", "cancelled", "sql-timeout", "sql-deadlock", "other"}
+    if (mode in journal_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
+            and lines[1] == "FAIL owned reference runtime " + mode):
+        match = re.fullmatch(r"FAIL owned model journal runtime phase-([a-z-]+) kind-([a-z-]+)", lines[0])
+        if match and match[1] in journal_phases and match[2] in journal_kinds:
+            detail = "; phase=" + match[1] + "; kind=" + match[2]
     exit_code = str(result.returncode) if type(result.returncode) is int and -255 <= result.returncode <= 255 else "unknown"
     raise AssertionError("Owned reference executable failed at " + mode + "; exit=" + exit_code + detail)
 

@@ -2888,5 +2888,46 @@ class ModelJournalProofGuardTests(unittest.TestCase):
             self.assertEqual(1,sum(cmd[:3]==['docker','image','rm'] for cmd,_ in calls))
 
 
+MODES = ('model-journal-prepare', 'model-journal-lost-reply', 'model-journal-resume', 'model-journal-cap', 'model-journal-expiry')
+PHASES = ('setup','claim','preparation','lost-reply','resume','cap-ready','cap-claim','cap-preparation','cap-start','cap-failure',
+          'cap-aggregate','cap-counts','cap-fourth','physical-rows','physical-chain','physical-claim','physical-predecessor',
+          'physical-unique','physical-failure-start','physical-start-update','physical-start-delete','physical-failure-update',
+          'physical-failure-delete','expiry','final','unknown')
+KINDS = ('source-lock','journal','denied','cancelled','sql-timeout','sql-deadlock','other')
+
+class ModelJournalDiagnosticTests(unittest.TestCase):
+    def test_actual_projector_accepts_only_closed_failure_detail_and_still_fails(self):
+        for mode in MODES:
+            for phase in PHASES:
+                for kind in KINDS:
+                    with self.subTest(mode=mode, phase=phase, kind=kind):
+                        wire = f'FAIL owned model journal runtime phase-{phase} kind-{kind}\nFAIL owned reference runtime {mode}\n'
+                        with self.assertRaises(AssertionError) as observed:
+                            reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=1), mode, ['PASS original'])
+                        self.assertEqual(str(observed.exception), f'Owned reference executable failed at {mode}; exit=1; phase={phase}; kind={kind}')
+
+    def test_malformed_foreign_extra_or_secret_child_output_is_never_projected(self):
+        private = 'PRIVATE_JOURNAL_DIAGNOSTIC_8673'
+        mode = 'model-journal-cap'
+        valid = f'FAIL owned model journal runtime phase-cap-start kind-source-lock\nFAIL owned reference runtime {mode}'
+        cases = [(valid.replace('cap-start',private),1,mode), (valid.replace('source-lock',private),1,mode),
+                 (valid+'\n'+private,1,mode), (valid,2,mode), (valid,True,mode),
+                 (valid,1,'no-work-expiry'), (valid.replace(mode,'model-journal-expiry'),1,mode),
+                 (valid+' '+private,1,mode), (valid.replace('kind-source-lock','kind-source-lock '+private),1,mode)]
+        for wire, code, called in cases:
+            with self.subTest(code=code, called=called):
+                with self.assertRaises(AssertionError) as observed:
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,stderr=private,returncode=code), called, ['PASS original'])
+                self.assertNotIn(private,str(observed.exception))
+                self.assertNotIn('; phase=',str(observed.exception))
+
+    def test_exact_original_success_is_preserved_and_diagnostics_never_count_as_success(self):
+        for mode in MODES:
+            reference_smoke.require_reference_result(SimpleNamespace(stdout='PASS original\n',returncode=0),mode,['PASS original'])
+            for wire in ['PASS original\nextra','FAIL owned model journal runtime phase-final kind-other\nFAIL owned reference runtime '+mode]:
+                with self.assertRaises(AssertionError):
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=0),mode,['PASS original'])
+
+
 if __name__ == "__main__":
     unittest.main()

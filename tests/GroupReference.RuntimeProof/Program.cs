@@ -409,6 +409,9 @@ catch (Exception error)
     if (args.Length == 1 && phase == args[0] && args[0] is ("automatic-note-prepare" or "automatic-note-expiry" or "automatic-note-key-expiry" or "automatic-note-commit"
         or "automatic-host-prepare" or "automatic-host-expiry" or "automatic-host-key-expiry" or "automatic-host-commit"))
         Console.WriteLine("FAIL owned automatic runtime phase-" + GroupAutomaticNoteRuntimeProof.Phase);
+    if (args.Length == 1 && phase == args[0] && args[0] is ("model-journal-prepare" or "model-journal-lost-reply"
+        or "model-journal-resume" or "model-journal-cap" or "model-journal-expiry"))
+        Console.WriteLine(GroupModelAttemptJournalRuntimeProof.FailureDiagnostic(error));
     Console.WriteLine("FAIL owned reference runtime " + phase);
     return 1;
 }
