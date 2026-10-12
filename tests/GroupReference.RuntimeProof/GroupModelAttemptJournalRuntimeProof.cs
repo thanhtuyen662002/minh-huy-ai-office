@@ -129,10 +129,13 @@ internal static class GroupModelAttemptJournalRuntimeProof
         else if (mode == "model-journal-cap")
         {
             diagnostic.Phase = JournalPhase.CapReady;
-            // Four actual contexts/claims/readers start together. The original
-            // source lock must let exactly one consume the last ordinal.
+            // Four actual contexts/claims/readers start together. A losing
+            // contender may receive the shipping source lock's bounded refusal.
+            // Exactly one must still commit the last ordinal; no call is retried.
             using var ready = new SemaphoreSlim(0, 4);
+            using var started = new SemaphoreSlim(0, 4);
             var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var finish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var tasks = Enumerable.Range(0, 4).Select(async _ =>
             {
                 await using var contender = new PlatformDbContext(options);
@@ -143,26 +146,51 @@ internal static class GroupModelAttemptJournalRuntimeProof
                     PrepareAsync(contender, replayClaim.CurrentHandle ?? throw new InvalidOperationException(), "owned-synthetic-journal"), diagnostic);
                 if (GroupModelAttemptBudget.InputIdentity(input.Context) != identity) throw new InvalidOperationException();
                 ready.Release(); await release.Task.WaitAsync(token);
-                var result = await ObserveAsync(JournalPhase.CapStart, () =>
-                    input.Store.TryStartAsync(input.Context, Guid.NewGuid(), token), diagnostic);
-                if (input.Keys.Reads != 1 || input.Keys.Writes != 0 || contender.ChangeTracker.HasChanges()) throw new InvalidOperationException();
-                if (result.Permit is not null)
+                var request = Guid.NewGuid();
+                CapStartOutcome<GroupModelAttemptStartResult> outcome;
+                try
+                {
+                    outcome = await ObserveAsync(JournalPhase.CapStart, () => ObserveCapStartCoreAsync(
+                        () => input.Store.TryStartAsync(input.Context, request, token), CleanReleased, token), diagnostic);
+                    if (!CleanReleased()) throw new InvalidOperationException();
+                }
+                finally { started.Release(); }
+                // All four starts finish before the winning failure append.
+                // This preserves the original winning context/permit while
+                // removing an unrelated second race for the same source lock.
+                await finish.Task.WaitAsync(token);
+                if (outcome.Result?.Permit is { } permit)
                 {
                     var failed = await ObserveAsync(JournalPhase.CapFailure, () =>
-                        input.Store.RecordFailureAsync(input.Context, result.Permit, GroupModelAttemptFailure.Interrupted, token), diagnostic);
+                        input.Store.RecordFailureAsync(input.Context, permit, GroupModelAttemptFailure.Interrupted, token), diagnostic);
                     if (failed.Disposition != GroupModelAttemptDisposition.Exhausted || failed.ConsumedAttempts != 3) throw new InvalidOperationException();
                 }
-                return result;
+                if (!CleanReleased()) throw new InvalidOperationException();
+                return (Request: request, Outcome: outcome);
+
+                bool CleanReleased() => input.Keys.Reads == 1 && input.Keys.Writes == 0 && !contender.ChangeTracker.HasChanges()
+                    && contender.Database.CurrentTransaction is null && contender.Database.GetDbConnection().State == ConnectionState.Closed;
             }).ToArray();
             for (var i = 0; i < 4; i++) await ready.WaitAsync(token);
             release.SetResult();
             diagnostic.Phase = JournalPhase.CapAggregate;
+            for (var i = 0; i < 4; i++) await started.WaitAsync(token);
+            finish.SetResult();
             var results = await Task.WhenAll(tasks);
             diagnostic.Phase = JournalPhase.CapCounts;
-            var winning = results.Single(x => x.Permit is not null);
-            if (winning.Permit!.Start.Ordinal != 3 || winning.Permit.Start.ClaimEpoch != 3
-                || results.Any(x => x.WasAlreadyStarted || x.Budget.ConsumedAttempts != 3)
+            var winningIndex = RequireCapWinner(results.Select(x => x.Outcome).ToArray(), x => x.Permit is not null,
+                x => !x.WasAlreadyStarted && x.Budget.ConsumedAttempts == 3);
+            var winning = results[winningIndex].Outcome.Result!;
+            if (results.Select(x => x.Request).Distinct().Count() != 4
+                || winning.Permit!.Start.RequestId != results[winningIndex].Request
+                || winning.Permit.Start.Ordinal != 3 || winning.Permit.Start.ClaimEpoch != 3
                 || await StartsAsync() != 3 || await FailuresAsync() != 2) throw new InvalidOperationException();
+            var losers = results.Where((_, index) => index != winningIndex).Select(x => x.Request).ToArray();
+            if (await database.GroupModelAttemptStarts.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId
+                && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && losers.Contains(x.RequestId), token)
+                || await database.GroupModelAttemptFailures.AsNoTracking().AnyAsync(x => x.TenantId == scope.TenantId
+                && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && losers.Contains(x.RequestId), token))
+                throw new InvalidOperationException();
             var digest = await JournalDigestAsync();
             diagnostic.Phase = JournalPhase.CapFourth;
             var fourth = await store.TryStartAsync(context, Guid.NewGuid(), token);
@@ -470,6 +498,45 @@ internal static class GroupModelAttemptJournalRuntimeProof
     }
     internal static Task<T> ObserveAsync<T>(JournalPhase phase, Func<Task<T>> call, JournalDiagnostic diagnostic) =>
         ObserveCoreAsync(phase, call, failure => Interlocked.CompareExchange(ref diagnostic.FirstFailure, failure, null));
+
+    internal sealed record CapStartOutcome<T>(T? Result, bool SourceLockRefused) where T : class;
+
+    // Inert proof seam. Only the exact shipping lock refusal, a live caller and
+    // a fully released/unchanged contender can become a losing outcome. The
+    // lock API exposes no engine return number; no specific timeout is inferred.
+    internal static async Task<CapStartOutcome<T>> ObserveCapStartCoreAsync<T>(Func<Task<T>> call,
+        Func<bool> cleanReleased, CancellationToken token) where T : class
+    {
+        token.ThrowIfCancellationRequested();
+        try { return new(await call() ?? throw new InvalidOperationException(), false); }
+        catch (InvalidOperationException error) when (error.GetType() == typeof(InvalidOperationException)
+            && error.Message == "Group source transaction is not available.")
+        {
+            token.ThrowIfCancellationRequested();
+            if (!cleanReleased()) throw;
+            token.ThrowIfCancellationRequested();
+            return new(null, true);
+        }
+    }
+
+    internal static int RequireCapWinner<T>(IReadOnlyList<CapStartOutcome<T>> results,
+        Func<T, bool> hasPermit, Func<T, bool> valid) where T : class
+    {
+        if (results.Count != 4) throw new InvalidOperationException();
+        var winner = -1;
+        for (var i = 0; i < results.Count; i++)
+        {
+            var outcome = results[i];
+            if (outcome is null || outcome.SourceLockRefused != (outcome.Result is null)) throw new InvalidOperationException();
+            if (outcome.Result is not { } result) continue;
+            if (!valid(result)) throw new InvalidOperationException();
+            if (!hasPermit(result)) continue;
+            if (winner != -1) throw new InvalidOperationException();
+            winner = i;
+        }
+        if (winner == -1) throw new InvalidOperationException();
+        return winner;
+    }
 
     // Inert execution seam: runs exactly the supplied operation once and never
     // retries, opens resources, swallows failures or prints exception data.

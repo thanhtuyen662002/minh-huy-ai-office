@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: a40ebe669141cfacb5f92cf7990aa90126b16217
+current_target_head: 5b69bcec1aca3b15552d08b1c9c65ea052496142
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: a40ebe669141cfacb5f92cf7990aa90126b16217
+    head: 5b69bcec1aca3b15552d08b1c9c65ea052496142
     state: in_progress
-    next: "Parenta40ebe6 native123/full4140/all8/Gov/entire quality/six ORIGINAL images CLOSED_GREEN at closure6117137342. Original-input31 rebased with both current diagnostic overlaps preserved; fresh full solution4194=[6,520,25,3643] and189Python=[154,9,15,5,6] PASS. Exact33 includes complete current durable histories and this scoped checkpoint. Obtain immutable private and Git SOURCE reviews, then one SAME288 push; own successor native124/full4194/all8/Gov/entire quality/six ORIGINALs through terminal. Empty-history input store proof remains NOT_RUN; model NOT_RUN_UNEVALUATED. Earlierdba journal cap failure cause remains unproven. History/profile/tokenizer/provider/durable result/WorkerDI/coordinator/scanner/no-click/279/233/ERP/deployment/merge remain incomplete."
+    next: "Actual5b69bce ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38203250982/Gov38203251025 closure6118047452. Native124 failed cap-start/source-lock; no engine return code or unique cause observed.99of124 once/25missing/0duplicate/5failure; six prerequisites/full4194.NET/Gov PASS; original-input proof and browser not reached. Private proof-only cap repair4217.NET=[6,520,25,3666]/38focused including23new PASS; two formats PASS. Four actual start calls remain concurrent and execute once; exact source-lock refusal requires live token/unchanged released contender; exactly one winning third start and zero loser rows still required. Record its failure after all starts complete. Freeze exact5 and fully consume independent private/Git SOURCE reviews before one SAME288 push. Own successor native124/full4217/all8/Gov/entire quality/six ORIGINAL images through terminal. Unchanged189Python inherited, not a fresh run. Current39v2 result source preliminarily clear but parent RED blocks rebase/promotion; model NOT_RUN_UNEVALUATED/full278/279/233/history/profile/tokenizer/WorkerDI/no-click/ERP/deployment/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Parenta40ebe6 native123/full4140/all8/Gov/entire quality/six ORIGINAL images CLOSED_GREEN at closure6117137342. Original-input31 rebased with both current diagnostic overlaps preserved; fresh full solution4194=[6,520,25,3643] and189Python=[154,9,15,5,6] PASS. Exact33 includes complete current durable histories and this scoped checkpoint. Obtain immutable private and Git SOURCE reviews, then one SAME288 push; own successor native124/full4194/all8/Gov/entire quality/six ORIGINALs through terminal. Empty-history input store proof remains NOT_RUN; model NOT_RUN_UNEVALUATED. Earlierdba journal cap failure cause remains unproven. History/profile/tokenizer/provider/durable result/WorkerDI/coordinator/scanner/no-click/279/233/ERP/deployment/merge remain incomplete."
+next_action: "Actual5b69bce ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38203250982/Gov38203251025 closure6118047452. Native124 failed cap-start/source-lock; no engine return code or unique cause observed.99of124 once/25missing/0duplicate/5failure; six prerequisites/full4194.NET/Gov PASS; original-input proof and browser not reached. Private proof-only cap repair4217.NET=[6,520,25,3666]/38focused including23new PASS; two formats PASS. Four actual start calls remain concurrent and execute once; exact source-lock refusal requires live token/unchanged released contender; exactly one winning third start and zero loser rows still required. Record its failure after all starts complete. Freeze exact5 and fully consume independent private/Git SOURCE reviews before one SAME288 push. Own successor native124/full4217/all8/Gov/entire quality/six ORIGINAL images through terminal. Unchanged189Python inherited, not a fresh run. Current39v2 result source preliminarily clear but parent RED blocks rebase/promotion; model NOT_RUN_UNEVALUATED/full278/279/233/history/profile/tokenizer/WorkerDI/no-click/ERP/deployment/merge incomplete."
 
 
 blocked_by:
@@ -3804,3 +3804,16 @@ original_input_plan_stacked_checkpoint:
   review: "Prior private31 preliminary review retained as historical; merged current overlaps and full exact33 still require current immutable source review. No public Git SOURCE approval or successor runtime qualification inferred."
   limitation: "Native124 storage/restart/expiry covers empty history only and remains NOT_RUN. Actual model NOT_RUN_UNEVALUATED; full278/279/233/ERP/deployment/merge incomplete."
   next: "Parenta40ebe6 native123/full4140/all8/Gov/entire quality/six ORIGINAL images CLOSED_GREEN at closure6117137342. Original-input31 rebased with both current diagnostic overlaps preserved; fresh full solution4194=[6,520,25,3643] and189Python=[154,9,15,5,6] PASS. Exact33 includes complete current durable histories and this scoped checkpoint. Obtain immutable private and Git SOURCE reviews, then one SAME288 push; own successor native124/full4194/all8/Gov/entire quality/six ORIGINALs through terminal. Empty-history input store proof remains NOT_RUN; model NOT_RUN_UNEVALUATED. Earlierdba journal cap failure cause remains unproven. History/profile/tokenizer/provider/durable result/WorkerDI/coordinator/scanner/no-click/279/233/ERP/deployment/merge remain incomplete."
+model_journal_cap_refusal_checkpoint:
+  parent: "5b69bcec1aca3b15552d08b1c9c65ea052496142"
+  parent_build: 38203250982
+  parent_governance: 38203251025
+  parent_native: 114661044158
+  parent_quality: 114669269755
+  parent_closure: 6118047452
+  result: "Actual cap-start/source-lock refusal is now observed. Underlying engine return code, detailed cause and prior dba failure cause remain unproven. Full4194.NET/six prerequisites/Gov pass; later124 input-plan/native/browser qualification absent."
+  source: "Proof-only legal losing outcome for exact shipping InvalidOperationException source-lock text/type, live caller and clean released context. Every other failure stays fatal. Four original current contexts/claims/readers still race once; one actual third-ordinal permit, original identity, stable claim/predecessor timing, no loser start/failure rows, exact three starts/two failures and all nine named physical probes remain mandatory. Winning failure append waits for all starts without rebinding the winning context/permit. No retry or refill."
+  local: "Fresh complete solution4217=[6,520,25,3666] PASS with zero failures/skips/warnings;38 focused includes23 new closed refusal/outcome/budget controls and15 retained diagnostics/ownership controls. All Python, schemas, production code, configured5s app-lock timeout and old success markers are RAW parent equal;189 Python evidence is inherited."
+  limitation: "Cold callback controls are not actual SQL concurrency or physical deadline evidence. Successor native124/all8 is NOT_RUN. The source API exposes no engine result; accepting this bounded refusal does not label it a timeout or diagnose prior incidents."
+  private_result: "Immutable current39v2 cleanup/enrollment source preliminarily clear and fully ROOT consumed; original Native5/current39v1 WITHHELD failures retained. Actual parent red blocks result promotion. Future rebase/current whole state/Git SOURCE/native125 remain required."
+  next: "Actual5b69bce ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38203250982/Gov38203251025 closure6118047452. Native124 failed cap-start/source-lock; no engine return code or unique cause observed.99of124 once/25missing/0duplicate/5failure; six prerequisites/full4194.NET/Gov PASS; original-input proof and browser not reached. Private proof-only cap repair4217.NET=[6,520,25,3666]/38focused including23new PASS; two formats PASS. Four actual start calls remain concurrent and execute once; exact source-lock refusal requires live token/unchanged released contender; exactly one winning third start and zero loser rows still required. Record its failure after all starts complete. Freeze exact5 and fully consume independent private/Git SOURCE reviews before one SAME288 push. Own successor native124/full4217/all8/Gov/entire quality/six ORIGINAL images through terminal. Unchanged189Python inherited, not a fresh run. Current39v2 result source preliminarily clear but parent RED blocks rebase/promotion; model NOT_RUN_UNEVALUATED/full278/279/233/history/profile/tokenizer/WorkerDI/no-click/ERP/deployment/merge incomplete."
