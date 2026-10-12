@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -60,7 +61,17 @@ class TerminalReceiptProofTests(unittest.TestCase):
             if query.startswith('SELECT CONVERT(varchar(40)'):
                 self.assertIn('SELECT TOP(5)', query)
                 self.assertNotIn('FOR JSON', query)
-                text = self.frames(self.rows)
+                rows = self.rows
+                if fault in ('extra-exhaustion', 'fifth-original'):
+                    extra = {**self.rows[0], **{name: str(uuid.uuid4()) for name in ('sourceId','eventId','batchId')}}
+                    candidates = [*zip(self.rows, ((1,4),(2,0),(3,1),(2,0))),
+                        (extra, (3,3) if fault == 'extra-exhaustion' else (1,4))]
+                    signatures = {(int(a),int(b)) for a,b in re.findall(r'w\.Outcome=(\d+) AND w\.NoteCount=(\d+)',query)}
+                    # This is a cold SQL oracle, not actual SQL execution. An
+                    # absent original-signature restriction reproduces the
+                    # old five matching receipts and strict30-frame refusal.
+                    rows = [row for row,signature in candidates if not signatures or signature in signatures]
+                text = self.frames(rows)
                 return text[:-1] if fault == 'truncated-fixture' else text
             if query.startswith('SET NOCOUNT ON;'):
                 count = query.count('SELECT CONCAT')
@@ -102,6 +113,32 @@ class TerminalReceiptProofTests(unittest.TestCase):
         snapshots = [query for query in queries if query.startswith('SET NOCOUNT ON;')]
         self.assertEqual(5, len(snapshots))
         self.assertTrue(all('GroupWorkRawDispositions' in query and 'GroupTerminalFrontierStates' in query for query in snapshots))
+
+    def test_separate_exhaustion_receipt_does_not_replace_or_expand_original_four(self):
+        sql, process, calls, queries = self.oracle('extra-exhaustion')
+        with patch.dict(os.environ,self.environment,clear=True), patch.object(proof.subprocess,'run',process), \
+                patch('sys.stdout',new_callable=io.StringIO) as output:
+            proof.verify(directory=self.directory,api='http://127.0.0.1:8080',manifest=self.manifest,sql=sql)
+        self.assertEqual(proof.SUMMARY+'\n',output.getvalue())
+        self.assertEqual({(1,4),(2,0),(3,1)}, {(int(a),int(b)) for a,b in
+            re.findall(r'w\.Outcome=(\d+) AND w\.NoteCount=(\d+)',queries[0])})
+        children = [arguments for command,arguments in calls if command[:2] == ['docker','run']]
+        self.assertEqual(self.rows,[{**json.loads(item['input']),'batchId':row['batchId']} for item,row in zip(children,self.rows)])
+
+    def test_fifth_original_signature_still_refuses_before_any_child(self):
+        sql, process, calls, _ = self.oracle('fifth-original')
+        with patch.dict(os.environ,self.environment,clear=True), patch.object(proof.subprocess,'run',process), \
+                patch('sys.stdout',new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+            proof.verify(directory=self.directory,api='http://127.0.0.1:8080',manifest=self.manifest,sql=sql)
+        self.assertEqual([],calls); self.assertEqual('',output.getvalue())
+
+    def test_widening_to_exhaustion_signature_reproduces_original_frame_failure(self):
+        sql, process, calls, _ = self.oracle('extra-exhaustion')
+        with patch.dict(os.environ,self.environment,clear=True), patch.object(proof.subprocess,'run',process), \
+                patch.object(proof,'ORIGINAL_RECEIPT_SIGNATURES',((1,4),(2,0),(3,1),(3,3))), \
+                patch('sys.stdout',new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+            proof.verify(directory=self.directory,api='http://127.0.0.1:8080',manifest=self.manifest,sql=sql)
+        self.assertEqual([],calls); self.assertEqual('',output.getvalue())
 
     def test_terminal_failures_never_emit_success_and_always_attempt_owned_cleanup(self):
         for fault in ('build', 'missing-success', 'duplicate-success', 'wrong-success', 'exit', 'stderr', 'original-mutation', 'missing-receipt', 'extra-receipt', 'cleanup'):

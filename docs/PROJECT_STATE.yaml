@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: f09a651ec15961eaa0084ae49b2c91253476743f
+current_target_head: 569218873806eecea27ec1be8b62a1539cacab3f
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: f09a651ec15961eaa0084ae49b2c91253476743f
+    head: 569218873806eecea27ec1be8b62a1539cacab3f
     state: in_progress
-    next: "Actualf09 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38181009270/Gov38181009267 closure6114922836. Narrow private quarantine-metadata proof repair4131.NET/14focused/scoped formatsPASS; original1FAIL1PASS retained, unique hosted cause unproven. Freeze exact5, complete independent private/Git SOURCE before one SAME288 push, own successor native123/full4131/all8/Gov/ENTIRE quality/six ORIGINALs to terminal. Production/Python unchanged177 inherited. Input-store31/hints remain private; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
+    next: "Actual569 ALL8 RED Build38185099284/Gov38185099276 closure6115441980: model/journal/exhaustion SQLPASS, terminal fixture strict24 fails;101of123/22missing/noimages. Narrow private original-signature query repair180Python=[151,9,15,5]PASS; actual original1FAIL retained, .NET4131 inherited unchanged CSharp. Consume exact5 private/Git SOURCE, one SAME288 push, own successor native123/full4131/all8/Gov/entire quality/six ORIGINALs to terminal. Store31/history/attempt binding remain private; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Actualf09 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38181009270/Gov38181009267 closure6114922836. Narrow private quarantine-metadata proof repair4131.NET/14focused/scoped formatsPASS; original1FAIL1PASS retained, unique hosted cause unproven. Freeze exact5, complete independent private/Git SOURCE before one SAME288 push, own successor native123/full4131/all8/Gov/ENTIRE quality/six ORIGINALs to terminal. Production/Python unchanged177 inherited. Input-store31/hints remain private; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
+next_action: "Actual569 ALL8 RED Build38185099284/Gov38185099276 closure6115441980: model/journal/exhaustion SQLPASS, terminal fixture strict24 fails;101of123/22missing/noimages. Narrow private original-signature query repair180Python=[151,9,15,5]PASS; actual original1FAIL retained, .NET4131 inherited unchanged CSharp. Consume exact5 private/Git SOURCE, one SAME288 push, own successor native123/full4131/all8/Gov/entire quality/six ORIGINALs to terminal. Store31/history/attempt binding remain private; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
 
 
 blocked_by:
@@ -3767,3 +3767,13 @@ model_quarantine_metadata_proof_checkpoint:
   local: "Four solution projects4131=[6,520,25,3580]0F/S/W,14focused balanced-budget controls,2scoped formatsPASS. Initial solution command missing3assets retained; full Persistence3580 passed, remaining551 afterrestore.177Python inherited."
   private_input_plan: "f09 separate stack31 preliminary source clear/4171.NET183Python; unpromoted/native124NOT_RUN. Current inputplan124 helpers remain guarded against actually red parent. Private history hints uncompiled/unconnected."
   next: "Actualf09 ALL8_CLOSED_TERMINAL_RED_SAME_PR_REPAIR_ACTIVE Build38181009270/Gov38181009267 closure6114922836. Narrow private quarantine-metadata proof repair4131.NET/14focused/scoped formatsPASS; original1FAIL1PASS retained, unique hosted cause unproven. Freeze exact5, complete independent private/Git SOURCE before one SAME288 push, own successor native123/full4131/all8/Gov/ENTIRE quality/six ORIGINALs to terminal. Production/Python unchanged177 inherited. Input-store31/hints remain private; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."
+terminal_original_fixtures_proof_checkpoint:
+  parent: "569218873806eecea27ec1be8b62a1539cacab3f"
+  build: 38185099284
+  governance: 38185099276
+  closure: 6115441980
+  result: "Actual native model/journal/extraction-failure SQL markers PASS, terminal fixture24-frame assertion failure; all8 RED. Returned frames absent: source-derived fifth overlap is a reproduced cold counterexample, not unique hosted causality."
+  source: "Original signature AI4/NoWork0/Attention1 selection added; TOP5/four closed scopes/24 indexed frames/dependency guards/immutable graphs/ownership/lifetime/cleanup retained. Production CSharp/schema/config/DI/Gateway unchanged."
+  local: "Fresh180Python=[151,9,15,5]0F/E;3new controls, actual original5691FAIL0ERROR retained. Parent .NET4131=[6,520,25,3580] inherited, not fresh local run. Native123 successor NOT_RUN."
+  private_followers: "Store31 source clear but actual569 parent RED blocks promotion. Historyv2 and original-attempt binding private; fullSQL/DI/provider/coordinator/restart unfinished."
+  next: "Actual569 ALL8 RED Build38185099284/Gov38185099276 closure6115441980: model/journal/exhaustion SQLPASS, terminal fixture strict24 fails;101of123/22missing/noimages. Narrow private original-signature query repair180Python=[151,9,15,5]PASS; actual original1FAIL retained, .NET4131 inherited unchanged CSharp. Consume exact5 private/Git SOURCE, one SAME288 push, own successor native123/full4131/all8/Gov/entire quality/six ORIGINALs to terminal. Store31/history/attempt binding remain private; model NOT_RUN_UNEVALUATED/full278/279/233/ERP/deployment/merge incomplete."

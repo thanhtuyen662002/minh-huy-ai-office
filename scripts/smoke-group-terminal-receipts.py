@@ -11,6 +11,12 @@ import uuid
 SUCCESS = "PASS owned terminal receipt actual SQL insert readback immutable24 columns expiry postflush rollback witness only clock rollback original and later lease replay nonce collision original effects unchanged no cursor or model"
 SUMMARY = "PASS actual terminal receipts SQL four original scopes insert readback immutable24 columns postflush expiry rollback witness only clock rollback later lease replay nonce collision full original graphs pending501 unchanged no cursor or model"
 
+# Closed signatures asserted by the four original upstream fixtures: AI4,
+# ordinary/raw-history NoWork0, and UnsupportedMedia Attention1. The later
+# exhausted-journal Attention3 has the same two-source manifest shape and is
+# a separate retained fixture. TOP5 still detects an extra original match.
+ORIGINAL_RECEIPT_SIGNATURES = ((1, 4), (2, 0), (3, 1))
+
 
 def _load(name, filename):
     spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(filename))
@@ -65,6 +71,7 @@ def verify(*, directory, api, manifest, sql):
     password = manifest["AIOFFICE_RUNTIME_PASSWORD"]
     assert isinstance(password, str) and re.fullmatch(r"[A-Za-z0-9_-]{32,128}", password) and callable(sql)
     base = f"TenantId='{tenant}' AND CompanyId='{company}'"
+    signatures = ' OR '.join(f"(w.Outcome={outcome} AND w.NoteCount={count})" for outcome, count in ORIGINAL_RECEIPT_SIGNATURES)
     query = ("SELECT CONVERT(varchar(40),CONCAT(f.fixtureOrdinal,':',v.fieldOrdinal,':',LOWER(CONVERT(char(36),v.id)))) "
         "FROM (SELECT TOP(5) ROW_NUMBER() OVER(ORDER BY w.BindingId) AS fixtureOrdinal,"
         "w.TenantId AS tenantId,w.CompanyId AS companyId,a.ServiceId AS serviceId,w.BindingId AS sourceId,"
@@ -73,6 +80,7 @@ def verify(*, directory, api, manifest, sql):
         "AND a.CompanyId=w.CompanyId AND a.BindingId=w.BindingId AND a.Id=w.BatchId "
         f"WHERE w.TenantId='{tenant}' AND w.CompanyId='{company}' AND w.DependencyManifestVersion=1 "
         "AND DATALENGTH(w.DependencyManifest)=274 AND w.SelectedMessageCount=2 AND SUBSTRING(w.DependencyManifest,161,2)=0x0200 "
+        f"AND ({signatures}) "
         "ORDER BY w.BindingId) f CROSS APPLY (VALUES (1,f.tenantId),(2,f.companyId),(3,f.serviceId),"
         "(4,f.sourceId),(5,f.eventId),(6,f.batchId)) v(fieldOrdinal,id) ORDER BY f.fixtureOrdinal,v.fieldOrdinal;")
     fixtures = require_fixture_frames(sql(query), tenant, company)
