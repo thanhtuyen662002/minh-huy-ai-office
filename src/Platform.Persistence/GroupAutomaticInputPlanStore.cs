@@ -22,6 +22,30 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
         }, token);
     }
 
+    // Used only inside the journal's owned serializable unit after its full
+    // source/brain/current-claim fences. It opens no nested transaction and
+    // authenticates the original receipt and complete closed stored bytes.
+    internal async Task RequireOriginalUnchangedLockedAsync(GroupBatchClaimHandle handle,
+        GroupAutomaticInputPlan expected, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(handle); ArgumentNullException.ThrowIfNull(expected); token.ThrowIfCancellationRequested();
+        worker.Validate(); handle.Receipt.Scope.Validate();
+        if (handle.Receipt.Scope.TenantId != worker.TenantId || handle.Receipt.Scope.CompanyId != worker.CompanyId
+            || handle.Receipt.ServiceId != worker.ServiceId || handle.Receipt.CredentialEpoch != worker.CredentialEpoch)
+            throw GroupServiceDirectory.Denied();
+        if (sources is null || brain is null || !sources.UsesContext(database, worker, clock) || !brain.UsesContext(database, worker, clock)
+            || !database.Database.IsSqlServer() || database.Database.CurrentTransaction is not { } sql
+            || sql.GetDbTransaction().IsolationLevel != System.Data.IsolationLevel.Serializable
+            || !sql.SupportsSavepoints || System.Transactions.Transaction.Current is not null || database.ChangeTracker.HasChanges()) throw Unavailable();
+        try { if (new SqlConnectionStringBuilder(database.Database.GetConnectionString()).MultipleActiveResultSets) throw Unavailable(); }
+        catch (Exception error) when (error is ArgumentException or FormatException or OverflowException) { throw Unavailable(); }
+        RequireScope(handle, expected.Dependencies);
+        await new GroupAutomaticInputPlanPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+        var row = await ReadLockedAsync(handle, token) ?? throw Unavailable();
+        var original = await DecodeAsync(handle, row, UtcNow(), token);
+        if (!CryptographicOperations.FixedTimeEquals(original.Encode(), expected.Encode())) throw Unavailable();
+    }
+
     internal async Task<GroupAutomaticInputPlan> PersistAsync(GroupAutomaticInputPlan plan,
         GroupBatchSourcePreparation preparation, GroupBrainPrivateContext currentBrain,
         CancellationToken token = default)

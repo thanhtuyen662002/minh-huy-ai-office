@@ -8,10 +8,12 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // A start permit is returned only after the append is committed. It is not a
 // work-note capability; callers must fence again after a provider wait and the
 // effect store must validate all dependencies inside its own final transaction.
-internal sealed class GroupModelAttemptPermit(GroupAutomaticModelContext context, GroupModelAttemptStarted start)
+internal sealed class GroupModelAttemptPermit(GroupAutomaticModelContext context, GroupModelAttemptStarted start,
+    GroupModelAttemptOriginalBinding? original = null)
 {
     internal GroupAutomaticModelContext Context { get; } = context;
     internal GroupModelAttemptStarted Start { get; } = start;
+    internal GroupModelAttemptOriginalBinding? Original { get; } = original;
     public override string ToString() => "Committed group model attempt (private metadata).";
 }
 internal sealed record GroupModelAttemptStartResult(GroupModelAttemptBudgetDecision Budget,
@@ -27,13 +29,36 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
     private const string Savepoint = "GroupModelAttemptJournalWrites";
 
     internal Task<GroupModelAttemptStartResult> TryStartAsync(GroupAutomaticModelContext context, Guid requestId,
-        CancellationToken token = default)
+        CancellationToken token = default) => TryStartCoreAsync(context, requestId, null, token);
+
+    internal Task<GroupModelAttemptStartResult> TryStartOriginalAsync(GroupAutomaticInputPlan plan,
+        GroupAutomaticInputPlan.RestoredChunk restored, Guid requestId, CancellationToken token = default)
+    {
+        var original = GroupModelAttemptOriginalBinding.Create(plan, restored, token);
+        return TryStartCoreAsync(original.Context, requestId, original, token);
+    }
+
+    // The result store reuses this same owned transaction, lock, full original
+    // plan authentication, savepoint, expiry witness and staged-row cleanup.
+    // Its additional fence runs before and after both manifest inspections.
+    internal Task<T> InOriginalCurrentUnitAsync<T>(GroupModelAttemptOriginalBinding original,
+        Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation,
+        Func<CancellationToken, Task> additionalFence, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(original); ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(additionalFence); token.ThrowIfCancellationRequested();
+        ValidateEntry(original.Context);
+        return InCurrentUnitAsync(original.Context, original, operation, token, additionalFence);
+    }
+
+    private Task<GroupModelAttemptStartResult> TryStartCoreAsync(GroupAutomaticModelContext context, Guid requestId,
+        GroupModelAttemptOriginalBinding? originalPlan, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(context); token.ThrowIfCancellationRequested();
         if (requestId == Guid.Empty) throw Unavailable();
         ValidateEntry(context);
         var identity = GroupModelAttemptBudget.InputIdentity(context);
-        return InCurrentUnitAsync<GroupModelAttemptStartResult>(context, async (now, staged, cancellationToken) =>
+        return InCurrentUnitAsync<GroupModelAttemptStartResult>(context, originalPlan, async (now, staged, cancellationToken) =>
         {
             var (starts, failures) = await ReadJournalAsync(context, identity, cancellationToken);
             var decision = GroupModelAttemptBudget.Read(context.Scope, context.BatchId, identity, starts, failures, now, cancellationToken);
@@ -76,7 +101,7 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             if (after.Disposition != GroupModelAttemptDisposition.Wait) throw Unavailable();
             database.Add(record); staged.Add(record);
             await database.SaveChangesAsync(cancellationToken);
-            return new(after, new(context, start), false);
+            return new(after, new(context, start, originalPlan), false);
         }, token);
     }
 
@@ -88,7 +113,8 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
         ValidateEntry(context);
         var identity = GroupModelAttemptBudget.InputIdentity(context);
         if (permit.Start.Scope != context.Scope || permit.Start.BatchId != context.BatchId || permit.Start.InputSha256 != identity) throw Unavailable();
-        return InCurrentUnitAsync(context, async (now, staged, cancellationToken) =>
+        if (permit.Original is { } original && !ReferenceEquals(original.Context, context)) throw Unavailable();
+        return InCurrentUnitAsync(context, permit.Original, async (now, staged, cancellationToken) =>
         {
             var scope = context.Scope;
             var (starts, failures) = await ReadJournalAsync(context, identity, cancellationToken);
@@ -123,13 +149,15 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
         }, token);
     }
 
-    private async Task<T> InCurrentUnitAsync<T>(GroupAutomaticModelContext context,
-        Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation, CancellationToken token)
+    private async Task<T> InCurrentUnitAsync<T>(GroupAutomaticModelContext context, GroupModelAttemptOriginalBinding? original,
+        Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation, CancellationToken token,
+        Func<CancellationToken, Task>? additionalFence = null)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); token = deadline.Token;
         var handle = context.Preparation.Context.Handle;
-        var expected = GroupWorkDependencyManifest.Read(GroupWorkDependencyManifest.Create(context.Preparation.Context, context.Brain, Guid.NewGuid()));
+        var expected = original?.Plan.Dependencies ?? GroupWorkDependencyManifest.Read(
+            GroupWorkDependencyManifest.Create(context.Preparation.Context, context.Brain, Guid.NewGuid()));
         var claims = new GroupBatchClaimStore(database, worker, clock);
         var permissions = new GroupModelAttemptPermissionVerifier(database);
         var staged = new List<object>();
@@ -157,12 +185,17 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             async Task<GroupBatchClaimFenceVerdict> InspectAsync()
             {
                 await permissions.RequireSafeRuntimeAsync(token);
+                if (additionalFence is not null) await additionalFence(token);
                 var current = await sources.RequireManifestUnchangedLockedAsync(handle, expected, token);
                 if (current is GroupBatchClaimFenceVerdict.Current)
                     current = await brain.RequireManifestUnchangedLockedAsync(handle, expected, token);
                 if (current is GroupBatchClaimFenceVerdict.Current)
                 {
+                    if (original is not null)
+                        await new GroupAutomaticInputPlanStore(database, worker, clock, sources, brain)
+                            .RequireOriginalUnchangedLockedAsync(handle, original.Plan, token);
                     await permissions.RequireSafeRuntimeAsync(token);
+                    if (additionalFence is not null) await additionalFence(token);
                     current = await claims.InspectCurrentLockedAsync(handle, token);
                 }
                 return current;

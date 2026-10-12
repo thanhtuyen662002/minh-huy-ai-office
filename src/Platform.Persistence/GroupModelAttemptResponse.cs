@@ -4,6 +4,11 @@ using MinhHuyAiOffice.Shared.Contracts;
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
 internal enum GroupModelAttemptResponseDisposition { Parsed = 1, InvalidOutput = 2, Expired = 3 }
+internal sealed record GroupModelAttemptObservedOutput(string ProviderId, string Model, long InputTokens,
+    long OutputTokens, DateTimeOffset ObservedAtUtc)
+{
+    public override string ToString() => "Group model output observation (private metadata).";
+}
 
 // Structural response only. This class neither invokes a provider nor grants
 // SQL effects, exhaustion or current authority after a provider wait. The
@@ -13,11 +18,12 @@ internal sealed class GroupModelAttemptResponse
 {
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     private GroupModelAttemptResponse(GroupModelAttemptPermit permit, GroupModelAttemptResponseDisposition disposition,
-        GroupGroundedWorkProposal? proposal)
-    { Permit = permit; Disposition = disposition; Proposal = proposal; }
+        GroupGroundedWorkProposal? proposal, GroupModelAttemptObservedOutput? observed = null)
+    { Permit = permit; Disposition = disposition; Proposal = proposal; Observed = observed; }
     internal GroupModelAttemptPermit Permit { get; }
     internal GroupModelAttemptResponseDisposition Disposition { get; }
     internal GroupGroundedWorkProposal? Proposal { get; }
+    internal GroupModelAttemptObservedOutput? Observed { get; }
     public override string ToString() => "Group model attempt response (private structural result).";
 
     internal static GroupModelAttemptResponse Parse(GroupModelAttemptPermit permit, AiGatewayResponse? response,
@@ -62,7 +68,8 @@ internal sealed class GroupModelAttemptResponse
         if (completed < began) throw Unavailable();
         if (completed >= start.DeadlineUtc) return Result(GroupModelAttemptResponseDisposition.Expired);
         return proposal is null ? Result(GroupModelAttemptResponseDisposition.InvalidOutput)
-            : new(permit, GroupModelAttemptResponseDisposition.Parsed, proposal);
+            : new(permit, GroupModelAttemptResponseDisposition.Parsed, proposal,
+                new(response!.ProviderId!, response.Model, response.InputTokens, response.OutputTokens, completed));
 
         GroupModelAttemptResponse Result(GroupModelAttemptResponseDisposition disposition) => new(permit, disposition, null);
         DateTimeOffset UtcNow()

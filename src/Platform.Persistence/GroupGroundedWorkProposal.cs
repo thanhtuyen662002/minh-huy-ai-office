@@ -93,15 +93,21 @@ public sealed class GroupGroundedWorkProposal
         """;
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
 
+    private readonly string validatedOutput;
     private GroupGroundedWorkProposal(GroupBatchSourcePreparation preparation, GroupGroundedWorkNote[] notes,
-        GroupProposalSourceReceipt[] dispositions)
-    { Preparation = preparation; Notes = Array.AsReadOnly(notes); SourceDispositions = Array.AsReadOnly(dispositions); }
+        GroupProposalSourceReceipt[] dispositions, string validatedOutput)
+    { Preparation = preparation; Notes = Array.AsReadOnly(notes); SourceDispositions = Array.AsReadOnly(dispositions); this.validatedOutput = validatedOutput; }
     internal GroupBatchSourcePreparation Preparation { get; }
     public GroupScope Scope => Preparation.Scope;
     public Guid BatchId => Preparation.BatchId;
     public IReadOnlyList<GroupGroundedWorkNote> Notes { get; }
     public IReadOnlyList<GroupProposalSourceReceipt> SourceDispositions { get; }
     public override string ToString() => "Group grounded work proposal (private content).";
+
+    // Exact bytes of the already closed, grounded and quarantined output.
+    // Recovery must parse them against fresh original sources again. Exporting
+    // private content supplies no persistence, SQL authority or IT confirmation.
+    internal byte[] EncodeValidatedOutput() => StrictUtf8.GetBytes(validatedOutput);
 
     public static GroupGroundedWorkProposal Parse(GroupBatchSourcePreparation preparation, string? output)
     {
@@ -175,7 +181,7 @@ public sealed class GroupGroundedWorkProposal
                 dispositions.Add(new(source.MessageId, source.Revision, parsed));
             }
             if (!seen.SetEquals(candidates.Keys)) throw Unavailable();
-            return new(preparation, notes.ToArray(), dispositions.ToArray());
+            return new(preparation, notes.ToArray(), dispositions.ToArray(), output!);
         }
         catch (JsonException) { throw Unavailable(); }
         catch (ArgumentException) { throw Unavailable(); }

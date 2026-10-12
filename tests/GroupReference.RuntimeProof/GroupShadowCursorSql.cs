@@ -16,7 +16,7 @@ internal static class GroupShadowCursorSql
 {
     internal const string PredecessorMigration = "20261011061648_AddGroupTerminalKeyEnrollment";
     internal const string CursorMigration = "20261011075456_AddGroupSignedTerminalCursor";
-    internal const int SourceSnapshotCount = 75;
+    internal const int SourceSnapshotCount = 76;
     internal const int ShadowSnapshotCount = 72;
     internal const int MaximumSnapshotRowsPerTable = 16384;
     internal const int MaximumSnapshotJsonBytes = 8388608;

@@ -1751,6 +1751,104 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptResultRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ChunkOrdinal")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("DeadlineUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("EncryptionKeyId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<int>("FormatVersion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InputSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset>("ObservedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("PersistedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PlanSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<byte[]>("ProtectedResult")
+                        .IsRequired()
+                        .HasMaxLength(66029)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ProtectedResultSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength()
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "BindingId", "RequestId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "PlanSha256", "ChunkOrdinal")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "RequestId", "StartedAtUtc", "DeadlineUtc");
+
+                    b.ToTable("GroupModelAttemptResults", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_GroupModelAttemptResults_Format", "[FormatVersion]=1 AND DATALENGTH([ProtectedResult]) BETWEEN 229 AND 66029 AND SUBSTRING([ProtectedResult],1,1)=0x01");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptResults_Hashes", "DATALENGTH([PlanSha256])=64 AND [PlanSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2 AND DATALENGTH([InputSha256])=64 AND [InputSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2 AND DATALENGTH([ProtectedResultSha256])=64 AND [ProtectedResultSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptResults_Identity", "[RequestId]<>'00000000-0000-0000-0000-000000000000' AND [OperationId]<>'00000000-0000-0000-0000-000000000000' AND [ChunkOrdinal] BETWEEN 1 AND 100");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptResults_Key", "DATALENGTH([EncryptionKeyId]) BETWEEN 1 AND 64 AND LEN([EncryptionKeyId])=DATALENGTH([EncryptionKeyId]) AND [EncryptionKeyId] NOT LIKE '%[^0-9A-Za-z_-]%' COLLATE Latin1_General_100_BIN2");
+
+                            t.HasCheckConstraint("CK_GroupModelAttemptResults_Time", "DATEPART(tz,[StartedAtUtc])=0 AND DATEPART(tz,[DeadlineUtc])=0 AND DATEPART(tz,[ObservedAtUtc])=0 AND DATEPART(tz,[PersistedAtUtc])=0 AND [ObservedAtUtc]>=[StartedAtUtc] AND [ObservedAtUtc]<[DeadlineUtc] AND [PersistedAtUtc]>=[ObservedAtUtc] AND [PersistedAtUtc]<[DeadlineUtc]");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -3508,6 +3606,25 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_GroupModelAttemptFailures_OriginalStart");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptResultRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupAutomaticInputPlanRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "PlanSha256")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "BatchId", "PlanSha256")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_GroupModelAttemptResults_OriginalPlan");
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "RequestId", "StartedAtUtc", "DeadlineUtc")
+                        .HasPrincipalKey("TenantId", "CompanyId", "BindingId", "BatchId", "InputSha256", "RequestId", "StartedAtUtc", "DeadlineUtc")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_GroupModelAttemptResults_OriginalStart");
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.GroupModelAttemptStartRecord", b =>
