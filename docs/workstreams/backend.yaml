@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 562c77cc7ce7578ba8b35d929afb6327f55c85fc
+head: 606e1f821fd3e4326bf9211b69da75bf8901806d
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-14'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Actual562 history127 CLOSED_RED6155592211: history-selection/original-plan/result process replacement PASS, then terminal strict24-frame refusal; native105once/22missing/0duplicate/4failure, full4483.NET/five other prerequisites/Gov PASS; quality LOCAL_RUNTIME failure and no Chromium. Raw frame count/identities unobserved. Source overlap: legitimate history AI4 matches old broad receipt shape. Four original fixture slots4/5/6/8 now stamped with closed roles before Core events/claims; shared terminal/frontier selector retains TOP5/strict24/fixed role ordinals/full scoped joins/signatures/manifest and all graphs/cleanup. Fresh233 Python/10 suites PASS; initial stale inert-test failures retained. Review exact repair source, push once SAME288 and own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS terminal. Existing Gateway metadata remains withheld until qualified parent. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete."
+next_action: "Actual606 cancelled by directly captured GitHub50m0s job-timeout annotation; closure6156909652. All SQL/source/history/terminal/frontier/cursor/migration summaries PASS, native112/127once/15missing/0duplicate/1failure; Chromium incomplete/no artifact. Full4483.NET, five other prerequisites and Governance PASS; quality LOCAL_RUNTIME cancelled. Only local-runtime outer budget50-to60 repaired: actual setup+SQL49m56s plus retained browser62s requires over50m; SQL slowdown cause unmeasured. Every127 gate and per-operation deadline retained. Review exact source and push once SAME288; own successor all8/Gov/fullquality/six originals through terminal. Private Gateway metadata/reducer withheld pending qualified parent/review. Reuse existing Gateway/loader; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deployment/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -4662,3 +4662,18 @@ bounded_history_original_cohort_repair_checkpoint:
     source, push once SAME288 and own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS terminal. Existing Gateway
     metadata remains withheld until qualified parent. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge
     incomplete.'
+bounded_history_runtime_job_budget_repair_checkpoint:
+  cancelled_head: "606e1f821fd3e4326bf9211b69da75bf8901806d"
+  build: 38473816195
+  governance: 38473816196
+  native_job: 115559377421
+  dotnet_job: 115559377448
+  quality_job: 115578793134
+  closure: 6156909652
+  actual: "Native cancelled, quality failure, six prerequisites/Governance success; frozen127=112once/15missing/0duplicate/1failure. Full.NET4483=[6,520,25,3932] PASS. SQL/history/original cohort/terminal/frontier/cursor/migration summaries PASS; Chromium incomplete/no artifact."
+  diagnosis: "Direct check-run annotation: The job has exceeded the maximum execution time of 50m0s. Setup75s, SQL2921s=48m41s SUCCESS; browser cancelled after22s. SQL slowdown cause unmeasured. Cleanup removes containers/volumes; network still-in-use warning, full removal not claimed."
+  repair: "Only local-runtime whole-job timeout50 to60. Observed current pre-browser49m56s plus unchanged-source qualified d118 browser62s and artifact/cleanup12s estimates51m10s; bounded margin, no pass guarantee. All127 gates, per-operation deadlines and same fixture continuity unchanged."
+  verification: "Workflow semantic comparison permits only job timeout; source diff/unique-key durable state preservation. No new unit test needed for one orchestration scalar; complete successor hosted SQL/Chromium/all8 CI is required. Prior233 Python and actual4483.NET are historical exact606 evidence, not fresh successor results."
+  next: "Actual606 cancelled by directly captured GitHub50m0s job-timeout annotation; closure6156909652. All SQL/source/history/terminal/frontier/cursor/migration summaries PASS, native112/127once/15missing/0duplicate/1failure; Chromium incomplete/no artifact. Full4483.NET, five other prerequisites and Governance PASS; quality LOCAL_RUNTIME cancelled. Only local-runtime outer budget50-to60 repaired: actual setup+SQL49m56s plus retained browser62s requires over50m; SQL slowdown cause unmeasured. Every127 gate and per-operation deadline retained. Review exact source and push once SAME288; own successor all8/Gov/fullquality/six originals through terminal. Private Gateway metadata/reducer withheld pending qualified parent/review. Reuse existing Gateway/loader; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deployment/merge incomplete."
+  model: "NOT_RUN_UNEVALUATED"
+  merge: false

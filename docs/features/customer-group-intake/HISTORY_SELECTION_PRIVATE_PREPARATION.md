@@ -177,3 +177,35 @@ full4483.NET/all8/Governance/fullquality/six individual ORIGINAL images. Gateway
 metadata integration remains withheld on this failed parent. Use the existing
 provider loader; model NOT_RUN_UNEVALUATED. Full278/279/233 and production
 acceptance remain incomplete.
+
+## Actual606 outer job timeout and bounded orchestration repair
+
+Build38473816195/Governance38473816196 exact606e1f821fd3e4326bf9211b69da75bf8901806d
+closed with native115559377421 CANCELLED and quality115578793134 FAILURE,
+closure6156909652. The direct native check-run annotation says the job exceeded
+50m0s. All SQL, history, original terminal/frontier/cursor and migration
+summaries pass, but Chromium stops after three required markers. Strict127 has
+112 once,15 missing,0 duplicates,1 terminal failure; no screenshots/artifact.
+Full4483.NET and five other prerequisites/Governance pass. This is incomplete
+qualification; the quality gate correctly rejects LOCAL_RUNTIME_RESULT=cancelled.
+
+The observed SQL step takes48m41s, following75s setup. The prior qualified d118
+uses identical browser source and takes62s browser plus12s artifact/cleanup.
+That comparison estimates51m10s total with current SQL timing; its cause of
+slowdown remains unmeasured and the estimate is not a guarantee. Increase only
+the local-runtime outer job timeout50 to60 minutes, leaving all127 markers,
+per-operation/SQL/reader/model/child/browser deadlines and fixture continuity
+unchanged. The cancelled cleanup removed containers/volumes but reported its
+network still in use; full network removal is not claimed.
+
+A workflow semantic comparison allows exactly that one scalar. Deep unique-key
+state comparisons preserve all earlier checkpoints and other workstreams. A
+new unit test would mirror the timeout literal; the relevant verification is
+the complete successor hosted SQL/Chromium run, all8/Governance/entire quality
+and six individually inspected original artifact images. The earlier233 Python
+and4483.NET results remain bound to606 and are not successor results. Review,
+commit and push once on SAME288, then keep ownership through CI closure.
+
+Reuse the existing Gateway/loader. Private metadata/reducer candidates remain
+withheld on this cancelled parent; model NOT_RUN_UNEVALUATED. Full278/279/233,
+ERP, Windows installation, deployment and merge acceptance remain incomplete.
