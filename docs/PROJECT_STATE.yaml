@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: cc288f254a9cf816be2052a172b490c82de10950
+current_target_head: 82cf8c0f42d41c8465e8feb42ab8e385dbea13a3
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: cc288f254a9cf816be2052a172b490c82de10950
+    head: 82cf8c0f42d41c8465e8feb42ab8e385dbea13a3
     state: in_progress
-    next: "Parentcc288f2 all8 CLOSED_RED6148339150; native102/125once23missing0dup5failure concurrent-reads/other, hosted4399/fiveother/Gov PASS. Manual ADO APPLOCK bypasses EF scalar observer; exact hosted throw site unproven. Proof-only repair observes genuine EF result metadata after Shared/currentpre-fences, exact context/connection/currentSerializableTX/expectedsource APPLOCK_MODE Shared, unsuppressed fourdistinctTX rendezvous; no production lock/fence/deadline changes. Fresh4412=[6,520,25,3861]/13new observer controls, format2 and200Python PASS. Precursor source-change refusal retained; currentv2 is evidence. Consume currentprivate5 and actualGit SOURCE reviews then one SAME288 push/owned125/full4412/all8/Gov/wholequality/sixoriginals through terminal. NewSQL125 NOT_RUN_UNQUALIFIED, first Shared-observed expiry witness still needs separate fresh genuine SQL fixture. History4445/214/helpers WITHHELDparentRED; existingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
+    next: "Parent82cf8c0 original125/full4412/all8/Gov/fullquality/sixoriginals CLOSED_GREEN6149753465. Private first Shared expiry12 fresh4437=[6,520,25,3886]/25new and209Python/format4/unownedprocess/seven126parser cold controls PASS. Fresh slot16 accepted epoch1 witnessNULL, exact replay/preparation beforeexpiry; actual EF scopedclaim Shared, complete disposal/closed session/baseline2, differentSerializable Exclusive first one-field originaltime witness save1/detachedcommit and shippingdenial plus complete observation/readback/rewind/zeroexpiredkeys/full old+newgraphs/bothcleanup. Existing12/13 and original125 unchanged; no production source/schema/Gateway/loader/DI change. Consume frozen12 and actualGit SOURCE/helper review, one SAME288 push then own actual126/full4437/all8/Gov/entirequality/sixoriginals terminal; newSQL126 NOT_RUN_UNQUALIFIED. Rebase history4445/214 only after qualified successor; final history union127. ExistingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Parentcc288f2 all8 CLOSED_RED6148339150; native102/125once23missing0dup5failure concurrent-reads/other, hosted4399/fiveother/Gov PASS. Manual ADO APPLOCK bypasses EF scalar observer; exact hosted throw site unproven. Proof-only repair observes genuine EF result metadata after Shared/currentpre-fences, exact context/connection/currentSerializableTX/expectedsource APPLOCK_MODE Shared, unsuppressed fourdistinctTX rendezvous; no production lock/fence/deadline changes. Fresh4412=[6,520,25,3861]/13new observer controls, format2 and200Python PASS. Precursor source-change refusal retained; currentv2 is evidence. Consume currentprivate5 and actualGit SOURCE reviews then one SAME288 push/owned125/full4412/all8/Gov/wholequality/sixoriginals through terminal. NewSQL125 NOT_RUN_UNQUALIFIED, first Shared-observed expiry witness still needs separate fresh genuine SQL fixture. History4445/214/helpers WITHHELDparentRED; existingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
+next_action: "Parent82cf8c0 original125/full4412/all8/Gov/fullquality/sixoriginals CLOSED_GREEN6149753465. Private first Shared expiry12 fresh4437=[6,520,25,3886]/25new and209Python/format4/unownedprocess/seven126parser cold controls PASS. Fresh slot16 accepted epoch1 witnessNULL, exact replay/preparation beforeexpiry; actual EF scopedclaim Shared, complete disposal/closed session/baseline2, differentSerializable Exclusive first one-field originaltime witness save1/detachedcommit and shippingdenial plus complete observation/readback/rewind/zeroexpiredkeys/full old+newgraphs/bothcleanup. Existing12/13 and original125 unchanged; no production source/schema/Gateway/loader/DI change. Consume frozen12 and actualGit SOURCE/helper review, one SAME288 push then own actual126/full4437/all8/Gov/entirequality/sixoriginals terminal; newSQL126 NOT_RUN_UNQUALIFIED. Rebase history4445/214 only after qualified successor; final history union127. ExistingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
 
 
 blocked_by:
@@ -3910,3 +3910,16 @@ accepted_original_result_EF_observer_checkpoint:
   history: "Private history14 fresh4445/214 and seven static-cleared helpers remain WITHHELD_PARENT_RED; rebase after actual qualified successor."
   provider: "ExistingGateway/loader reused; availabilityv7 only36namedslots+3referencedfilesmetadata checked absent, deployedserver unavailable for inspection. Model NOT_RUN_UNEVALUATED."
   next: "Parentcc288f2 all8 CLOSED_RED6148339150; native102/125once23missing0dup5failure concurrent-reads/other, hosted4399/fiveother/Gov PASS. Manual ADO APPLOCK bypasses EF scalar observer; exact hosted throw site unproven. Proof-only repair observes genuine EF result metadata after Shared/currentpre-fences, exact context/connection/currentSerializableTX/expectedsource APPLOCK_MODE Shared, unsuppressed fourdistinctTX rendezvous; no production lock/fence/deadline changes. Fresh4412=[6,520,25,3861]/13new observer controls, format2 and200Python PASS. Precursor source-change refusal retained; currentv2 is evidence. Consume currentprivate5 and actualGit SOURCE reviews then one SAME288 push/owned125/full4412/all8/Gov/wholequality/sixoriginals through terminal. NewSQL125 NOT_RUN_UNQUALIFIED, first Shared-observed expiry witness still needs separate fresh genuine SQL fixture. History4445/214/helpers WITHHELDparentRED; existingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
+
+first_shared_result_expiry_proof_checkpoint:
+  parent: 82cf8c0f42d41c8465e8feb42ab8e385dbea13a3
+  parent_build: 38421695390
+  parent_governance: 38421695348
+  parent_closure: 6149753465
+  parent_scope: Actual original125/full4412/all8/Gov/fullquality/sixoriginals qualified; first Shared physical witness NOT inferred.
+  slice: Separate fresh slot16 exactepoch1 replay witnessNULL; actual claim Shared then fully disposed/closed/baseline2, differentExclusive originaltime one-field save1/detachedcommit; exactdenial/full evidence/readback/rewind/keys1-0/fullgraphs/bothcleanup.
+  local: Fresh4437=[6,520,25,3886]/4412retained+25new;209Python/format4;unownedprocess/seven126parser cold controls PASS. Initial failed compile retained; focused subsets not additive.
+  physical: ActualSQL126/first Shared-observed physical witness NOT_RUN_UNQUALIFIED; original125 remains mandatory; futurehistory127.
+  provider: ExistingGateway/loader reused; v7 named36slots+3referencedfiles absent locally; deployed server unavailable for inspection. Model NOT_RUN_UNEVALUATED.
+  history: Rebase queued history off qualified successor; oldcc helpers remain withheld and cannot run against failed parent.
+  next: Parent82cf8c0 original125/full4412/all8/Gov/fullquality/sixoriginals CLOSED_GREEN6149753465. Private first Shared expiry12 fresh4437=[6,520,25,3886]/25new and209Python/format4/unownedprocess/seven126parser cold controls PASS. Fresh slot16 accepted epoch1 witnessNULL, exact replay/preparation beforeexpiry; actual EF scopedclaim Shared, complete disposal/closed session/baseline2, differentSerializable Exclusive first one-field originaltime witness save1/detachedcommit and shippingdenial plus complete observation/readback/rewind/zeroexpiredkeys/full old+newgraphs/bothcleanup. Existing12/13 and original125 unchanged; no production source/schema/Gateway/loader/DI change. Consume frozen12 and actualGit SOURCE/helper review, one SAME288 push then own actual126/full4437/all8/Gov/entirequality/sixoriginals terminal; newSQL126 NOT_RUN_UNQUALIFIED. Rebase history4445/214 only after qualified successor; final history union127. ExistingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED.

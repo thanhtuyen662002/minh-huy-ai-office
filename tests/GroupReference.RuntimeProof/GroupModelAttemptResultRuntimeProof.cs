@@ -14,7 +14,7 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 // Prepared disposable SQL proof. Synthetic output exercises storage only;
 // it never invokes or qualifies a provider, model, note effect or coordinator.
-internal static class GroupModelAttemptResultRuntimeProof
+internal static partial class GroupModelAttemptResultRuntimeProof
 {
     internal const string PrepareLine = "PASS owned attempt result source allocation no claims plans starts results effects provider or model";
     internal const string CommitLine = "PASS owned attempt result actual original SQL start encrypted accepted output committed reply interrupted fresh context byte exact replay one result zero failures no notes provider or model";
@@ -37,8 +37,13 @@ internal static class GroupModelAttemptResultRuntimeProof
         ResultDiagnostic diagnostic, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-        if (mode is not ("attempt-result-prepare" or "attempt-result-commit" or "attempt-result-resume" or "attempt-result-deadline"))
+        if (mode is not ("attempt-result-prepare" or "attempt-result-commit" or "attempt-result-resume" or "attempt-result-deadline" or "attempt-result-shared-expiry"))
             throw new InvalidOperationException();
+        if (mode == "attempt-result-shared-expiry")
+        {
+            await RunSharedExpiryAsync(scope, operation, worker, options, diagnostic, token);
+            return;
+        }
         if (mode == "attempt-result-prepare")
         {
             await GroupAutomaticNoteRuntimeProof.RunAsync("automatic-note-prepare", scope, operation, worker, options, token);
@@ -418,7 +423,8 @@ internal static class GroupModelAttemptResultRuntimeProof
     {
         Setup, Claim, Preparation, ResumeRead, ResumeOutput, ResumeStart, ConcurrentReads, ConcurrentClaim,
         ConcurrentPreparation, ConcurrentRead, ConcurrentChecks, RetrySuppression, FailureSuppression,
-        AttemptStart, Commit, Deadline, Final
+        AttemptStart, Commit, Deadline, Final, SharedExpiryReplay, SharedExpiryPreparation,
+        SharedExpiryRead, SharedExpiryEvidence, SharedExpiryReadback, SharedExpiryRewind
     }
     internal enum FailureKind { Other, SourceLock, SourceLockMissingTransaction, SourceLockWaitTimeout, SourceLockCancelled, SourceLockDeadlock, SourceLockRejected, Result, Plan, Journal, Denied, Cancelled, SqlTimeout, SqlDeadlock }
     internal sealed class PhaseFailure(ResultPhase phase, FailureKind kind) : InvalidOperationException("Owned result proof failed.")
@@ -565,6 +571,12 @@ internal static class GroupModelAttemptResultRuntimeProof
             ResultPhase.Commit => "commit",
             ResultPhase.Deadline => "deadline",
             ResultPhase.Final => "final",
+            ResultPhase.SharedExpiryReplay => "shared-expiry-replay",
+            ResultPhase.SharedExpiryPreparation => "shared-expiry-preparation",
+            ResultPhase.SharedExpiryRead => "shared-expiry-read",
+            ResultPhase.SharedExpiryEvidence => "shared-expiry-evidence",
+            ResultPhase.SharedExpiryReadback => "shared-expiry-readback",
+            ResultPhase.SharedExpiryRewind => "shared-expiry-rewind",
             _ => "unknown"
         } : "unknown";
         var kind = error is PhaseFailure k ? k.Kind switch

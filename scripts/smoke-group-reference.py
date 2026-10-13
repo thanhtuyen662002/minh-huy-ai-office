@@ -176,10 +176,10 @@ def require_reference_result(result, mode, expected_lines):
         match = re.fullmatch(r"FAIL owned model journal runtime phase-([a-z-]+) kind-([a-z-]+)", lines[0])
         if match and match[1] in journal_phases and match[2] in journal_kinds:
             detail = "; phase=" + match[1] + "; kind=" + match[2]
-    result_modes = {"attempt-result-prepare", "attempt-result-commit", "attempt-result-resume", "attempt-result-deadline"}
+    result_modes = {"attempt-result-prepare", "attempt-result-commit", "attempt-result-resume", "attempt-result-deadline", "attempt-result-shared-expiry"}
     result_phases = {"setup", "claim", "preparation", "resume-read", "resume-output", "resume-start", "concurrent-reads",
         "concurrent-claim", "concurrent-preparation", "concurrent-read", "concurrent-checks", "retry-suppression",
-        "failure-suppression", "attempt-start", "commit", "deadline", "final", "unknown"}
+        "failure-suppression", "attempt-start", "commit", "deadline", "final", "shared-expiry-replay", "shared-expiry-preparation", "shared-expiry-read", "shared-expiry-evidence", "shared-expiry-readback", "shared-expiry-rewind", "unknown"}
     result_kinds = {"source-lock", "source-lock-missing-transaction", "source-lock-wait-timeout", "source-lock-cancelled", "source-lock-deadlock", "source-lock-rejected", "result", "plan", "journal", "denied", "cancelled", "sql-timeout", "sql-deadlock", "other"}
     if (mode in result_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
             and lines[1] == "FAIL owned reference runtime " + mode):
