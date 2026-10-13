@@ -7,6 +7,127 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class OwnedAttemptResultDiagnosticTests
 {
+    [Fact]
+    public async Task FourDistinctContextsPrepareOnceSequentiallyThenAllFourReadsOverlapAndDrain()
+    {
+        using var bounded = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var diagnostic = new Proof.ResultDiagnostic(); var activeSetup = 0; var prepared = 0; var entered = 0; var completed = 0;
+        var created = new List<int>(); var disposed = new List<int>(); var prepareCalls = new int[4]; var readCalls = new int[4];
+        var allEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await Proof.RunPreparedConcurrentReadsAsync(index => { created.Add(index); return index; }, async (index, context, _) =>
+        {
+            Assert.Equal(index, context); Assert.Equal(0, entered); Assert.Equal(1, Interlocked.Increment(ref activeSetup));
+            prepareCalls[index]++; await Task.Yield(); Interlocked.Decrement(ref activeSetup); prepared++;
+        }, async (index, context, token) =>
+        {
+            Assert.Equal(index, context); Assert.Equal(4, prepared); Assert.Equal(0, activeSetup); readCalls[index]++;
+            if (Interlocked.Increment(ref entered) == 4) allEntered.TrySetResult();
+            await allEntered.Task.WaitAsync(token); Interlocked.Increment(ref completed);
+        }, context => { Assert.Equal(4, completed); disposed.Add(context); return ValueTask.CompletedTask; }, diagnostic, bounded.Token);
+        Assert.Equal([0, 1, 2, 3], created); Assert.Equal(created, disposed); Assert.Equal(4, completed);
+        Assert.All(prepareCalls, count => Assert.Equal(1, count)); Assert.All(readCalls, count => Assert.Equal(1, count));
+        Assert.Null(diagnostic.FirstFailure);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task AnyPreparationSourceLockFailureDisposesEveryCreatedContextAndLaunchesNoRead(int failedIndex)
+    {
+        var diagnostic = new Proof.ResultDiagnostic(); var created = new List<int>(); var disposed = new List<int>();
+        var prepareCalls = new int[4]; var reads = 0;
+        var failure = await Assert.ThrowsAsync<Proof.PhaseFailure>(() => Proof.RunPreparedConcurrentReadsAsync(
+            index => { created.Add(index); return index; }, (index, _, _) =>
+            {
+                prepareCalls[index]++;
+                if (index == failedIndex) throw new InvalidOperationException("Group source transaction is not available.");
+                return Task.CompletedTask;
+            }, (_, _, _) => { reads++; return Task.CompletedTask; },
+            context => { disposed.Add(context); return ValueTask.CompletedTask; }, diagnostic, default));
+        Assert.Equal(Proof.ResultPhase.ConcurrentPreparation, failure.Phase); Assert.Equal(Proof.FailureKind.SourceLock, failure.Kind);
+        Assert.Same(failure, diagnostic.FirstFailure); Assert.Equal(0, reads); Assert.Equal(failedIndex + 1, created.Count);
+        Assert.Equal(created, disposed); Assert.All(prepareCalls.Take(failedIndex + 1), count => Assert.Equal(1, count));
+        Assert.All(prepareCalls.Skip(failedIndex + 1), count => Assert.Equal(0, count));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task ContextFactoryFailureDisposesOnlyOwnedContextsWithoutContinuingSetup(int failedIndex)
+    {
+        var diagnostic = new Proof.ResultDiagnostic(); var created = new List<int>(); var disposed = new List<int>();
+        var factoryCalls = 0; var prepared = 0; var reads = 0;
+        var failure = await Assert.ThrowsAsync<Proof.PhaseFailure>(() => Proof.RunPreparedConcurrentReadsAsync(index =>
+        {
+            factoryCalls++;
+            if (index == failedIndex) throw new InvalidOperationException("PRIVATE_RESULT_DIAGNOSTIC_FACTORY");
+            created.Add(index); return index;
+        }, (_, _, _) => { prepared++; return Task.CompletedTask; }, (_, _, _) => { reads++; return Task.CompletedTask; },
+            context => { disposed.Add(context); return ValueTask.CompletedTask; }, diagnostic, default));
+        Assert.Equal(Proof.FailureKind.Other, failure.Kind); Assert.Equal(Proof.ResultPhase.ConcurrentPreparation, failure.Phase);
+        Assert.Equal(failedIndex + 1, factoryCalls); Assert.Equal(failedIndex, prepared); Assert.Equal(0, reads);
+        Assert.Equal(created, disposed); Assert.Null(failure.InnerException); Assert.DoesNotContain("PRIVATE_RESULT_DIAGNOSTIC", failure.ToString());
+    }
+
+    [Fact]
+    public async Task CallerCancelledDuringPreparationCannotLaunchPartialReadSetAndReleasesOwnedContexts()
+    {
+        using var caller = new CancellationTokenSource(); var diagnostic = new Proof.ResultDiagnostic();
+        var created = 0; var disposed = 0; var reads = 0;
+        var failure = await Assert.ThrowsAsync<Proof.PhaseFailure>(() => Proof.RunPreparedConcurrentReadsAsync(
+            index => { created++; return index; }, (index, _, token) =>
+            {
+                if (index == 2) { caller.Cancel(); token.ThrowIfCancellationRequested(); }
+                return Task.CompletedTask;
+            }, (_, _, _) => { reads++; return Task.CompletedTask; },
+            _ => { disposed++; return ValueTask.CompletedTask; }, diagnostic, caller.Token));
+        Assert.Equal(Proof.FailureKind.Cancelled, failure.Kind); Assert.Equal(3, created); Assert.Equal(created, disposed); Assert.Equal(0, reads);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task AnyActualReadRefusalStillFailsCancelsAndDrainsAllFourPreparedContexts(int failedIndex)
+    {
+        using var bounded = new CancellationTokenSource(TimeSpan.FromSeconds(5)); var diagnostic = new Proof.ResultDiagnostic();
+        var first = new Proof.PhaseFailure(Proof.ResultPhase.ConcurrentRead, Proof.FailureKind.SourceLock);
+        var prepared = 0; var entered = 0; var drained = 0; var disposed = 0; var readCalls = new int[4];
+        var allEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failure = await Assert.ThrowsAsync<Proof.PhaseFailure>(() => Proof.RunPreparedConcurrentReadsAsync(index => index,
+            (_, _, _) => { prepared++; return Task.CompletedTask; }, async (index, _, token) =>
+            {
+                readCalls[index]++;
+                try
+                {
+                    if (Interlocked.Increment(ref entered) == 4) allEntered.TrySetResult();
+                    await allEntered.Task.WaitAsync(token);
+                    if (index == failedIndex) throw first;
+                    await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                }
+                finally { Interlocked.Increment(ref drained); }
+            }, _ => { Assert.Equal(4, drained); disposed++; return ValueTask.CompletedTask; }, diagnostic, bounded.Token));
+        Assert.Same(first, failure); Assert.Same(first, diagnostic.FirstFailure); Assert.Equal(4, prepared); Assert.Equal(4, drained);
+        Assert.Equal(4, disposed); Assert.All(readCalls, count => Assert.Equal(1, count)); Assert.False(bounded.IsCancellationRequested);
+    }
+
+    [Fact]
+    public async Task SuccessfulFourReadsCannotHideAnyCleanupFailureAndEveryContextIsReleased()
+    {
+        var diagnostic = new Proof.ResultDiagnostic(); var reads = 0; var disposed = 0;
+        var failure = await Assert.ThrowsAsync<Proof.PhaseFailure>(() => Proof.RunPreparedConcurrentReadsAsync(index => index,
+            (_, _, _) => Task.CompletedTask, (_, _, _) => { reads++; return Task.CompletedTask; }, _ =>
+            { disposed++; return ValueTask.FromException(new InvalidOperationException("PRIVATE_RESULT_DIAGNOSTIC_DISPOSE")); }, diagnostic, default));
+        Assert.Equal(4, reads); Assert.Equal(4, disposed); Assert.Equal(Proof.ResultPhase.ConcurrentChecks, failure.Phase);
+        Assert.Equal(Proof.FailureKind.Other, failure.Kind); Assert.Null(failure.InnerException);
+        Assert.DoesNotContain("PRIVATE_RESULT_DIAGNOSTIC", failure.ToString());
+    }
+
     [Theory]
     [InlineData("source", "source-lock")]
     [InlineData("result", "result")]

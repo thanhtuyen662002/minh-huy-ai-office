@@ -1,6 +1,5 @@
 extern alias RuntimeWorker;
 
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -307,46 +306,63 @@ public sealed class StructuredResponsesAdapterTests
     public async Task Total_deadline_retains_all_four_owned_slots_until_noncooperative_work_and_cleanup_finish(string stage)
     {
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var started = 0; var disposed = 0;
-        var handler = new Handler(async (_, token) =>
+        var allEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = 0; var disposed = 0;
+        void EnterStage()
         {
-            Interlocked.Increment(ref started);
-            if (stage == "headers") await gate.Task;
-            if (stage == "callback") token.Register(() => gate.Task.GetAwaiter().GetResult());
+            if (Interlocked.Increment(ref entered) == 4) allEntered.TrySetResult();
+        }
+        var handler = new Handler(async (_, _) =>
+        {
+            if (stage == "headers") { EnterStage(); await gate.Task; }
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ScriptContent(async stream =>
                 {
-                    if (stage is "body" or "callback") await gate.Task;
+                    if (stage == "body") { EnterStage(); await gate.Task; }
+                    if (stage == "callback") await gate.Task;
                     await stream.WriteAsync(Encoding.UTF8.GetBytes(Envelope()));
-                    if (stage == "eof") await gate.Task;
+                    if (stage == "eof") { EnterStage(); await gate.Task; }
                 }, dispose: () =>
                 {
-                    if (stage == "dispose") gate.Task.GetAwaiter().GetResult();
+                    if (stage == "dispose") { EnterStage(); gate.Task.GetAwaiter().GetResult(); }
                     Interlocked.Increment(ref disposed);
+                }, onCopy: token =>
+                {
+                    // HttpClient's SendAsync token can be unlinked once headers
+                    // return. Exercise the actual bounded body's cancellation.
+                    if (stage == "callback") token.Register(() => { EnterStage(); gate.Task.GetAwaiter().GetResult(); });
                 })
             };
         });
         using var client = new HttpClient(handler);
         var adapter = new OpenAiCompatibleResponsesAdapter(client, Options(TimeSpan.FromMilliseconds(250)));
-        var watch = Stopwatch.StartNew();
         var calls = Enumerable.Range(0, 4).Select(_ => adapter.ExecuteAsync(Request())).ToArray();
         try
         {
-            await Until(() => Volatile.Read(ref started) == 4);
-            foreach (var call in calls)
+            // Bound the callers independently of waiting for all four Task.Run
+            // delegates to reach their deliberately noncooperative stage. Pool
+            // startup under parallel test load is not provider deadline latency.
+            var failures = await Task.WhenAll(calls.Select(call =>
+                Assert.ThrowsAsync<AiProviderExecutionException>(() => call))).WaitAsync(TimeSpan.FromSeconds(3));
+            foreach (var failure in failures)
             {
-                var failure = await Assert.ThrowsAsync<AiProviderExecutionException>(() => call);
                 Assert.Contains("deadline", failure.Message, StringComparison.Ordinal);
                 Assert.Null(failure.InnerException);
             }
-            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3));
+            await allEntered.Task.WaitAsync(TimeSpan.FromSeconds(4));
+            Assert.Equal(4, Volatile.Read(ref entered));
+            Assert.Equal(0, Volatile.Read(ref disposed));
+            Assert.False(gate.Task.IsCompleted);
             var occupied = await Assert.ThrowsAsync<AiProviderExecutionException>(() => adapter.ExecuteAsync(Request()));
             Assert.Contains("capacity", occupied.Message, StringComparison.Ordinal);
             Assert.Equal(4, handler.Calls);
         }
-        finally { gate.TrySetResult(); }
-        await Until(() => Volatile.Read(ref disposed) == 4);
+        finally
+        {
+            gate.TrySetResult();
+            await Until(() => Volatile.Read(ref disposed) == 4);
+        }
         await EventuallySuccess(adapter);
         Assert.Equal(5, handler.Calls);
     }
@@ -673,9 +689,12 @@ public sealed class StructuredResponsesAdapterTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage message, CancellationToken token)
         { Interlocked.Increment(ref calls); return action(message, token); }
     }
-    private sealed class ScriptContent(Func<Stream, Task> write, long? declared = null, Action? dispose = null) : HttpContent
+    private sealed class ScriptContent(Func<Stream, Task> write, long? declared = null, Action? dispose = null,
+        Action<CancellationToken>? onCopy = null) : HttpContent
     {
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) => write(stream);
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken cancellationToken)
+        { onCopy?.Invoke(cancellationToken); return write(stream); }
         protected override Task<Stream> CreateContentReadStreamAsync() => throw new InvalidOperationException("Unbounded stream factory must never be called.");
         protected override bool TryComputeLength(out long length) { length = declared ?? 0; return declared.HasValue; }
         protected override void Dispose(bool disposing) { if (disposing) dispose?.Invoke(); base.Dispose(disposing); }

@@ -82,9 +82,9 @@ internal static class GroupModelAttemptResultRuntimeProof
             try
             {
                 diagnostic.Phase = ResultPhase.ConcurrentReads;
-                await RunConcurrentReadsAsync(async (_, currentToken) =>
+                var prepared = new Dictionary<PlatformDbContext, Prepared>();
+                await RunPreparedConcurrentReadsAsync(_ => new PlatformDbContext(options), async (_, contender, currentToken) =>
                 {
-                    await using var contender = new PlatformDbContext(options);
                     var replay = await ObserveAsync(ResultPhase.ConcurrentClaim, async () =>
                     {
                         var result = await new GroupBatchClaimStore(contender, worker, clock).TryAcquireAsync(scope, allocation.Id,
@@ -94,6 +94,10 @@ internal static class GroupModelAttemptResultRuntimeProof
                     }, diagnostic);
                     var fresh = await ObserveAsync(ResultPhase.ConcurrentPreparation,
                         () => PrepareAsync(contender, replay.CurrentHandle!, currentToken), diagnostic);
+                    prepared.Add(contender, fresh);
+                }, async (_, contender, currentToken) =>
+                {
+                    var fresh = prepared[contender];
                     var accepted = await ObserveAsync(ResultPhase.ConcurrentRead, async () =>
                         await fresh.Results.ReadOriginalAsync(fresh.Plan, fresh.Chunk, currentToken) ?? throw new InvalidOperationException(), diagnostic);
                     await ObserveAsync(ResultPhase.ConcurrentChecks, () =>
@@ -102,7 +106,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                         if (fresh.Keys.Reads != 2 || fresh.Keys.Writes != 0) throw new InvalidOperationException();
                         RequireClean(contender); return Task.FromResult(true);
                     }, diagnostic);
-                }, diagnostic, token);
+                }, contender => contender.DisposeAsync(), diagnostic, token);
             }
             finally { CryptographicOperations.ZeroMemory(bytes); }
             diagnostic.Phase = ResultPhase.RetrySuppression;
@@ -355,6 +359,54 @@ internal static class GroupModelAttemptResultRuntimeProof
             Interlocked.CompareExchange(ref diagnostic.FirstFailure, failure, null);
             throw failure;
         }
+    }
+
+    // Prepare four distinct contexts once, without making their many short
+    // source-locked setup units contend with each other. The actual original
+    // result reads still start together and retain all current SQL fences.
+    // Setup failure releases all owned contexts and never launches any read.
+    internal static async Task RunPreparedConcurrentReadsAsync<T>(Func<int, T> create,
+        Func<int, T, CancellationToken, Task> prepare, Func<int, T, CancellationToken, Task> read,
+        Func<T, ValueTask> dispose, ResultDiagnostic diagnostic, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var contexts = new List<T>(4);
+        PhaseFailure? failure = null;
+        try
+        {
+            for (var index = 0; index < 4; index++)
+            {
+                token.ThrowIfCancellationRequested();
+                var context = create(index);
+                contexts.Add(context);
+                await ObserveAsync(ResultPhase.ConcurrentPreparation, async () =>
+                {
+                    await prepare(index, context, token);
+                    return true;
+                }, diagnostic);
+            }
+            await RunConcurrentReadsAsync((index, currentToken) => read(index, contexts[index], currentToken), diagnostic, token);
+        }
+        catch (Exception error)
+        {
+            failure = diagnostic.FirstFailure ?? error as PhaseFailure
+                ?? new PhaseFailure(ResultPhase.ConcurrentPreparation, Kind(error));
+            Interlocked.CompareExchange(ref diagnostic.FirstFailure, failure, null);
+        }
+        finally
+        {
+            foreach (var context in contexts)
+            {
+                try { await dispose(context); }
+                catch (Exception error)
+                {
+                    var cleanup = new PhaseFailure(ResultPhase.ConcurrentChecks, Kind(error));
+                    Interlocked.CompareExchange(ref diagnostic.FirstFailure, cleanup, null);
+                    failure ??= diagnostic.FirstFailure;
+                }
+            }
+        }
+        if (failure is not null) throw failure;
     }
 
     // Four one-shot operations start together. A failed preparation cannot
