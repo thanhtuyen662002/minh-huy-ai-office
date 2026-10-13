@@ -28,6 +28,14 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
 {
     private const string Savepoint = "GroupModelAttemptJournalWrites";
 
+    // Structural/context validation shared with the fixed accepted-result
+    // read unit. This grants no current SQL authority or mutation capability.
+    internal void RequireOriginalReadEntry(GroupModelAttemptOriginalBinding original, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(original); token.ThrowIfCancellationRequested();
+        ValidateEntry(original.Context);
+    }
+
     internal Task<GroupModelAttemptStartResult> TryStartAsync(GroupAutomaticModelContext context, Guid requestId,
         CancellationToken token = default) => TryStartCoreAsync(context, requestId, null, token);
 

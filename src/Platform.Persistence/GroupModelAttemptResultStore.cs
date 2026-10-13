@@ -18,21 +18,21 @@ internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, G
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token, timeout.Token);
         token = deadline.Token;
         var original = GroupModelAttemptOriginalBinding.Create(plan, restored, token);
-        var metadata = await UnitAsync(original, async (now, stagedRows, ct) =>
+        var metadata = await ReadUnitAsync(original, async (now, ct) =>
         {
             var row = await MetadataAsync(original, ct);
             if (row is not null) _ = await AuthenticateAsync(original, row, now, ct);
             return row;
-        }, null, token);
+        }, token);
         if (metadata is null) return null;
         using var key = await ResolveKeyAsync(original, metadata.EncryptionKeyId, token);
-        return await UnitAsync(original, async (now, _, ct) =>
+        return await ReadUnitAsync(original, async (now, ct) =>
         {
             var current = await MetadataAsync(original, ct) ?? throw Unavailable();
             if (current != metadata || key.KeyId != current.EncryptionKeyId) throw Unavailable();
             var start = await AuthenticateAsync(original, current, now, ct);
             return await DecodeAsync(original, restored, current, start, key, now, ct);
-        }, null, token);
+        }, token);
     }
 
     internal async Task<GroupModelAttemptResult> PersistOriginalAsync(GroupAutomaticInputPlan plan,
@@ -109,6 +109,65 @@ internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, G
         }
         finally { CryptographicOperations.ZeroMemory(encoded); }
     }
+
+    // Fixed accepted-result reads keep two complete current units separated
+    // by key resolution. Shared applies only to these read units; persistence
+    // and journal mutation continue using their unchanged Exclusive wrapper.
+    private async Task<T> ReadUnitAsync<T>(GroupModelAttemptOriginalBinding original,
+        Func<DateTimeOffset, CancellationToken, Task<T>> operation, CancellationToken token)
+    {
+        var context = original.Context;
+        new GroupModelAttemptJournalStore(database, worker, clock, sources, brain).RequireOriginalReadEntry(original, token);
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var expected = original.Plan.Dependencies;
+        try
+        {
+            var began = UtcNow();
+            await using var unit = await DataSourceRegistrationTransaction.BeginAsync(database, token);
+            await new GroupModelAttemptPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+            await new GroupModelAttemptResultPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+            var readLock = await GroupSourceReadLock.AcquireAsync(database, context.Scope, token);
+            await InspectAsync();
+            var now = UtcNow(); if (now < began) throw Unavailable();
+            var result = await operation(now, token);
+            await InspectAsync();
+            if (UtcNow() < now || database.ChangeTracker.HasChanges()) throw Unavailable();
+            await unit.CommitAsync(token);
+            token.ThrowIfCancellationRequested();
+            if (UtcNow() < now) throw Unavailable();
+            return result;
+
+            async Task InspectAsync()
+            {
+                await new GroupModelAttemptPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+                await new GroupModelAttemptResultPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+                var current = await sources.RequireManifestUnchangedLockedAsync(context.Preparation.Context.Handle, expected, token, readLock);
+                if (current is GroupBatchClaimFenceVerdict.Current)
+                    current = await brain.RequireManifestUnchangedLockedAsync(context.Preparation.Context.Handle, expected, token, readLock);
+                if (current is GroupBatchClaimFenceVerdict.Current)
+                {
+                    await new GroupAutomaticInputPlanStore(database, worker, clock, sources, brain)
+                        .RequireOriginalUnchangedLockedAsync(context.Preparation.Context.Handle, original.Plan, token);
+                    await new GroupModelAttemptPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+                    await new GroupModelAttemptResultPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+                    current = await claims.InspectCurrentLockedAsync(context.Preparation.Context.Handle, token, readLock);
+                }
+                if (current is GroupBatchClaimFenceVerdict.Expired expired) throw new ReadExpired(expired.Observation);
+            }
+        }
+        catch (ReadExpired expired)
+        {
+            // The await-using unit above has rolled back and restored/disposed
+            // its session before this fresh Exclusive metadata-only unit.
+            await claims.RetireObservedExpiryAsync(expired.Observation, token);
+            throw GroupServiceDirectory.Denied();
+        }
+        catch (Exception error) when (error is Microsoft.Data.SqlClient.SqlException or DbUpdateException or ArgumentException or OverflowException)
+        { throw Unavailable(); }
+    }
+
+    private sealed class ReadExpired(GroupBatchClaimExpiryObservation observation) : Exception
+    { internal GroupBatchClaimExpiryObservation Observation { get; } = observation; }
 
     private async Task<T> UnitAsync<T>(GroupModelAttemptOriginalBinding original,
         Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation,

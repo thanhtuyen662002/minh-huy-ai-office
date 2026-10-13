@@ -147,7 +147,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
     // coverage dependency. This owns no commit or expiry witness. A future
     // terminal consumer must own its transaction and staged-effect rollback.
     internal async Task<GroupBatchClaimFenceVerdict> RequireManifestUnchangedLockedAsync(GroupBatchClaimHandle handle,
-        GroupWorkDependencyManifest manifest, CancellationToken token)
+        GroupWorkDependencyManifest manifest, CancellationToken token, GroupSourceReadLock? readLock = null)
     {
         ValidateLockedEntry(handle, token);
         if (manifest.Scope != handle.Receipt.Scope || manifest.BatchId != handle.Receipt.BatchId
@@ -155,7 +155,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         var claims = new GroupBatchClaimStore(database, worker, clock);
         var permissions = new GroupWorkNotePermissionVerifier(database);
         await permissions.RequireSafeRuntimeAsync(token);
-        var verdict = await claims.InspectCurrentLockedAsync(handle, token);
+        var verdict = await claims.InspectCurrentLockedAsync(handle, token, readLock);
         if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
         var allocation = ((GroupBatchClaimFenceVerdict.Current)verdict).Allocation;
         if (allocation.AllocatedThroughSequence != manifest.AllocatedThroughSequence) throw Unavailable();
@@ -164,7 +164,7 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
             || current.Snapshots.Where((snapshot, index) => snapshot.Head.Revision != manifest.Sources[index].Revision
                 || GroupWorkDependencyManifest.SourceFingerprint(snapshot) != manifest.Sources[index].SnapshotSha256).Any()) throw Unavailable();
         await permissions.RequireSafeRuntimeAsync(token);
-        return await claims.InspectCurrentLockedAsync(handle, token);
+        return await claims.InspectCurrentLockedAsync(handle, token, readLock);
     }
 
     private async Task<(GroupBatchCoverageSnapshot Coverage, GroupBatchSourceSnapshot[] Snapshots)> ReadLockedAsync(GroupBatchClaimHandle handle,

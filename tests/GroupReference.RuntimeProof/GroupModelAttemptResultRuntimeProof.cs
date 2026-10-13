@@ -83,7 +83,15 @@ internal static class GroupModelAttemptResultRuntimeProof
             {
                 diagnostic.Phase = ResultPhase.ConcurrentReads;
                 var prepared = new Dictionary<PlatformDbContext, Prepared>();
-                await RunPreparedConcurrentReadsAsync(_ => new PlatformDbContext(options), async (_, contender, currentToken) =>
+                var readers = new OriginalResultReadCohort();
+                var probes = new Dictionary<PlatformDbContext, OriginalResultReadProbe>();
+                await RunPreparedConcurrentReadsAsync(_ =>
+                {
+                    var probe = new OriginalResultReadProbe(readers);
+                    var contender = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options).AddInterceptors(probe).Options);
+                    probes.Add(contender, probe);
+                    return contender;
+                }, async (_, contender, currentToken) =>
                 {
                     var replay = await ObserveAsync(ResultPhase.ConcurrentClaim, async () =>
                     {
@@ -98,6 +106,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                 }, async (_, contender, currentToken) =>
                 {
                     var fresh = prepared[contender];
+                    probes[contender].Armed = true;
                     var accepted = await ObserveAsync(ResultPhase.ConcurrentRead, async () =>
                         await fresh.Results.ReadOriginalAsync(fresh.Plan, fresh.Chunk, currentToken) ?? throw new InvalidOperationException(), diagnostic);
                     await ObserveAsync(ResultPhase.ConcurrentChecks, () =>
@@ -107,6 +116,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                         RequireClean(contender); return Task.FromResult(true);
                     }, diagnostic);
                 }, contender => contender.DisposeAsync(), diagnostic, token);
+                readers.RequireComplete();
             }
             finally { CryptographicOperations.ZeroMemory(bytes); }
             diagnostic.Phase = ResultPhase.RetrySuppression;
@@ -330,6 +340,60 @@ internal static class GroupModelAttemptResultRuntimeProof
                 && db.ChangeTracker.Entries<GroupModelAttemptResultRecord>().Any())
             { evidence.LoseReply = false; evidence.ReplyLost = true; throw new OwnedResultReplyLostException(); }
             return Task.CompletedTask;
+        }
+    }
+
+    // Every genuine original-result reader must hold its own actual Shared
+    // SQL transaction before ANY reader proceeds. This fails if the shipped
+    // path is still Exclusive, serializes the readers, or drops one reader.
+    private sealed class OriginalResultReadCohort
+    {
+        private readonly HashSet<DbTransaction> transactions = [];
+        private readonly TaskCompletionSource all = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal async Task ArriveAsync(DbTransaction transaction, CancellationToken token)
+        {
+            lock (transactions)
+            {
+                if (!transactions.Add(transaction) || transactions.Count > 4) throw new InvalidOperationException();
+                if (transactions.Count == 4) all.TrySetResult();
+            }
+            await all.Task.WaitAsync(TimeSpan.FromSeconds(15), token);
+        }
+        internal void RequireComplete()
+        { lock (transactions) { if (transactions.Count != 4 || !all.Task.IsCompletedSuccessfully) throw new InvalidOperationException(); } }
+    }
+
+    private sealed class OriginalResultReadProbe(OriginalResultReadCohort cohort) : DbCommandInterceptor
+    {
+        internal bool Armed;
+        private bool arrived;
+        public override async ValueTask<object?> ScalarExecutedAsync(DbCommand command, CommandExecutedEventData data,
+            object? result, CancellationToken token = default)
+        {
+            if (!Armed || !command.CommandText.Contains("sys.sp_getapplock", StringComparison.Ordinal)) return result;
+            if (!command.CommandText.Contains("@LockMode='Shared'", StringComparison.Ordinal)
+                || command.Transaction is null || command.Transaction.IsolationLevel != IsolationLevel.Serializable
+                || Convert.ToInt32(result) < 0) throw new InvalidOperationException();
+            await using var mode = command.Connection!.CreateCommand();
+            mode.Transaction = command.Transaction; mode.CommandTimeout = 10;
+            mode.CommandText = "SELECT APPLOCK_MODE('public',@resource,'Transaction');";
+            var resource = mode.CreateParameter(); resource.ParameterName = "@resource";
+            resource.Value = command.Parameters["@resource"].Value; mode.Parameters.Add(resource);
+            if (await mode.ExecuteScalarAsync(token) is not string held || held != "Shared") throw new InvalidOperationException();
+            if (!arrived)
+            {
+                arrived = true;
+                await cohort.ArriveAsync(command.Transaction, token);
+            }
+            return result;
+        }
+        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData data,
+            InterceptionResult<int> result, CancellationToken token = default)
+        {
+            if (Armed && (command.CommandText.Contains("INSERT", StringComparison.OrdinalIgnoreCase)
+                || command.CommandText.Contains("UPDATE", StringComparison.OrdinalIgnoreCase)
+                || command.CommandText.Contains("DELETE", StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException();
+            return ValueTask.FromResult(result);
         }
     }
 

@@ -161,7 +161,7 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
     }
 
     internal async Task<GroupBatchClaimFenceVerdict> InspectCurrentLockedAsync(GroupBatchClaimHandle handle,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, GroupSourceReadLock? readLock = null)
     {
         ArgumentNullException.ThrowIfNull(handle);
         ValidateScope(handle.Receipt.Scope, cancellationToken);
@@ -170,7 +170,8 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
         var permissions = new GroupIngressPermissionVerifier(database);
         var directory = new GroupExtractionDirectory(database, worker);
         await permissions.RequireSafeRuntimeAsync(cancellationToken);
-        await GroupSourceTransactionLock.RequireAsync(database, scope, cancellationToken);
+        if (readLock is null) await GroupSourceTransactionLock.RequireAsync(database, scope, cancellationToken);
+        else await readLock.RequireAsync(database, scope, cancellationToken);
         await directory.RequireCurrentAsync(handle.Authority, cancellationToken);
         var now = UtcNow();
         var original = await Receipts(scope).SingleOrDefaultAsync(x => x.OperationId == handle.Receipt.OperationId, cancellationToken)
@@ -191,6 +192,20 @@ public sealed class GroupBatchClaimStore(PlatformDbContext database, GroupExtrac
     }
 
     // Caller must have rolled back ALL effect writes and detached their EF
+    // An expired Shared read must be completely disposed before calling this
+    // metadata-only unit. Preserve its original observation across clock
+    // rollback; a fresh RequireCurrentAsync could otherwise erase known expiry.
+    internal async Task RetireObservedExpiryAsync(GroupBatchClaimExpiryObservation observation, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(observation);
+        ValidateEntry(observation.Handle.Receipt.Scope, token);
+        await using var unit = await DataSourceRegistrationTransaction.BeginAsync(database, token);
+        await RetireExpiredLockedAsync(observation, token);
+        if (database.ChangeTracker.HasChanges()) throw Unavailable();
+        await unit.CommitAsync(token);
+        token.ThrowIfCancellationRequested();
+    }
+
     // entries before this operation. It does not commit the caller's unit.
     // The first effect consumer needs an owned savepoint/transaction wrapper
     // and native rollback proof; no such consumer is shipped at this checkpoint.

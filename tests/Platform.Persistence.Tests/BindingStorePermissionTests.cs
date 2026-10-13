@@ -79,6 +79,7 @@ public sealed class BindingStorePermissionTests
 
     private sealed class SyntheticCommand(SyntheticConnection connection) : DbCommand
     {
+        private readonly DbParameterCollection parameters = new Microsoft.Data.SqlClient.SqlCommand().Parameters;
         [System.Diagnostics.CodeAnalysis.AllowNull]
         public override string CommandText { get; set; } = "";
         public override int CommandTimeout { get; set; }
@@ -87,13 +88,13 @@ public sealed class BindingStorePermissionTests
         public override UpdateRowSource UpdatedRowSource { get; set; }
         protected override DbConnection? DbConnection { get; set; } = connection;
         protected override DbTransaction? DbTransaction { get; set; }
-        protected override DbParameterCollection DbParameterCollection => throw new NotSupportedException();
+        protected override DbParameterCollection DbParameterCollection => parameters;
         public override void Cancel() { }
         public override void Prepare() { }
         public override int ExecuteNonQuery() => throw new NotSupportedException();
         public override object? ExecuteScalar() { connection.Calls++; connection.Commands.Add(CommandText); connection.LastTransaction = DbTransaction; if (connection.Fault is not null) throw connection.Fault; return connection.ResultForCommand is null ? connection.Result : connection.ResultForCommand(CommandText); }
         public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult(ExecuteScalar()); }
-        protected override DbParameter CreateDbParameter() => throw new NotSupportedException();
+        protected override DbParameter CreateDbParameter() => new Microsoft.Data.SqlClient.SqlParameter();
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotSupportedException();
     }
 

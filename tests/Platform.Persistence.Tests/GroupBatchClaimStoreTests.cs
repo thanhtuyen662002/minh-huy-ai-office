@@ -9,6 +9,38 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 public sealed class GroupBatchClaimStoreTests
 {
     [Fact]
+    public async Task Separate_expiry_retirement_preserves_the_original_observation_after_clock_rollback()
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        var expired = Assert.IsType<GroupBatchClaimFenceVerdict.Expired>(await fixture.Store.InspectCurrentLockedAsync(first.CurrentHandle!, default));
+        fixture.Auth.Clock.Current = first.Receipt.IssuedAtUtc;
+        using var fresh = new PlatformDbContext(fixture.Auth.Options);
+        await fixture.StoreFor(fresh).RetireObservedExpiryAsync(expired.Observation, default);
+        Assert.Equal(first.Receipt.ExpiresAtUtc, (await fixture.StateAsync()).ExpiryObservedAtUtc);
+        Assert.False(fresh.ChangeTracker.HasChanges());
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(fresh).RequireCurrentAsync(first.CurrentHandle!));
+    }
+
+    [Theory]
+    [InlineData("replacement")]
+    [InlineData("grant")]
+    public async Task Separate_expiry_retirement_cannot_claim_success_after_replacement_or_revocation(string changed)
+    {
+        using var fixture = await Fixture.CreateAsync();
+        var first = await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Auth.Clock.Current = first.Receipt.ExpiresAtUtc;
+        var expired = Assert.IsType<GroupBatchClaimFenceVerdict.Expired>(await fixture.Store.InspectCurrentLockedAsync(first.CurrentHandle!, default));
+        if (changed == "replacement") await fixture.AcquireAsync(Guid.NewGuid(), Guid.NewGuid());
+        else await fixture.ChangeAuthorityAsync("grant");
+        using var fresh = new PlatformDbContext(fixture.Auth.Options);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.StoreFor(fresh).RetireObservedExpiryAsync(expired.Observation, default));
+        Assert.Null((await fixture.StateAsync()).ExpiryObservedAtUtc);
+        Assert.False(fresh.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
     public async Task AllocationResumeReturnsTheOriginalScopedLedgerAcrossFreshDatabaseContexts()
     {
         using var fixture = await Fixture.CreateAsync();
