@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 82cf8c0f42d41c8465e8feb42ab8e385dbea13a3
+current_target_head: d11888c779850a062e2cf2e8acea9a9c975a57a8
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 82cf8c0f42d41c8465e8feb42ab8e385dbea13a3
+    head: d11888c779850a062e2cf2e8acea9a9c975a57a8
     state: in_progress
-    next: "Parent82cf8c0 original125/full4412/all8/Gov/fullquality/sixoriginals CLOSED_GREEN6149753465. Private first Shared expiry12 fresh4437=[6,520,25,3886]/25new and209Python/format4/unownedprocess/seven126parser cold controls PASS. Fresh slot16 accepted epoch1 witnessNULL, exact replay/preparation beforeexpiry; actual EF scopedclaim Shared, complete disposal/closed session/baseline2, differentSerializable Exclusive first one-field originaltime witness save1/detachedcommit and shippingdenial plus complete observation/readback/rewind/zeroexpiredkeys/full old+newgraphs/bothcleanup. Existing12/13 and original125 unchanged; no production source/schema/Gateway/loader/DI change. Consume frozen12 and actualGit SOURCE/helper review, one SAME288 push then own actual126/full4437/all8/Gov/entirequality/sixoriginals terminal; newSQL126 NOT_RUN_UNQUALIFIED. Rebase history4445/214 only after qualified successor; final history union127. ExistingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
+    next: "Parentd11888c native126/full4437/all8/Gov/entire quality/six individual byte-bound ORIGINALS CLOSED_GREEN6151904308. Bounded same-group history14 rebased on qualified parent, three overlaps retain all current first Shared expiry/observer proofs. Fresh full4483=[6,520,25,3932]/46new/format6 and223Python plus three compiled unowned modes PASS. Consume full current private16 and actual Git SOURCE reviews before one SAME288 push; own final native127/full4483/all8/Gov/entirequality/sixORIGINALS through terminal. HistorySQL127 NOT_RUN_UNQUALIFIED; model NOT_RUN_UNEVALUATED. ExistingGateway profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/full233/ERP/installer/deploy/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Parent82cf8c0 original125/full4412/all8/Gov/fullquality/sixoriginals CLOSED_GREEN6149753465. Private first Shared expiry12 fresh4437=[6,520,25,3886]/25new and209Python/format4/unownedprocess/seven126parser cold controls PASS. Fresh slot16 accepted epoch1 witnessNULL, exact replay/preparation beforeexpiry; actual EF scopedclaim Shared, complete disposal/closed session/baseline2, differentSerializable Exclusive first one-field originaltime witness save1/detachedcommit and shippingdenial plus complete observation/readback/rewind/zeroexpiredkeys/full old+newgraphs/bothcleanup. Existing12/13 and original125 unchanged; no production source/schema/Gateway/loader/DI change. Consume frozen12 and actualGit SOURCE/helper review, one SAME288 push then own actual126/full4437/all8/Gov/entirequality/sixoriginals terminal; newSQL126 NOT_RUN_UNQUALIFIED. Rebase history4445/214 only after qualified successor; final history union127. ExistingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED."
+next_action: "Parentd11888c native126/full4437/all8/Gov/entire quality/six individual byte-bound ORIGINALS CLOSED_GREEN6151904308. Bounded same-group history14 rebased on qualified parent, three overlaps retain all current first Shared expiry/observer proofs. Fresh full4483=[6,520,25,3932]/46new/format6 and223Python plus three compiled unowned modes PASS. Consume full current private16 and actual Git SOURCE reviews before one SAME288 push; own final native127/full4483/all8/Gov/entirequality/sixORIGINALS through terminal. HistorySQL127 NOT_RUN_UNQUALIFIED; model NOT_RUN_UNEVALUATED. ExistingGateway profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/full233/ERP/installer/deploy/merge incomplete."
 
 
 blocked_by:
@@ -3923,3 +3923,18 @@ first_shared_result_expiry_proof_checkpoint:
   provider: ExistingGateway/loader reused; v7 named36slots+3referencedfiles absent locally; deployed server unavailable for inspection. Model NOT_RUN_UNEVALUATED.
   history: Rebase queued history off qualified successor; oldcc helpers remain withheld and cannot run against failed parent.
   next: Parent82cf8c0 original125/full4412/all8/Gov/fullquality/sixoriginals CLOSED_GREEN6149753465. Private first Shared expiry12 fresh4437=[6,520,25,3886]/25new and209Python/format4/unownedprocess/seven126parser cold controls PASS. Fresh slot16 accepted epoch1 witnessNULL, exact replay/preparation beforeexpiry; actual EF scopedclaim Shared, complete disposal/closed session/baseline2, differentSerializable Exclusive first one-field originaltime witness save1/detachedcommit and shippingdenial plus complete observation/readback/rewind/zeroexpiredkeys/full old+newgraphs/bothcleanup. Existing12/13 and original125 unchanged; no production source/schema/Gateway/loader/DI change. Consume frozen12 and actualGit SOURCE/helper review, one SAME288 push then own actual126/full4437/all8/Gov/entirequality/sixoriginals terminal; newSQL126 NOT_RUN_UNQUALIFIED. Rebase history4445/214 only after qualified successor; final history union127. ExistingGateway/profile/tokenizer/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/233/ERP/installer/deploy/merge incomplete; model NOT_RUN_UNEVALUATED.
+bounded_history_selection_firstexpiry_checkpoint:
+  parent: "d11888c779850a062e2cf2e8acea9a9c975a57a8"
+  parent_build: 38437836670
+  parent_governance: 38437836659
+  parent_native_job: 115436373229
+  parent_quality_job: 115453262591
+  parent_closure: 6151904308
+  source: "Fixed same-group code/reply/recent/glossary metadata selection; fresh BrainReader authority/decryption and original history/plan restoration. No provider/client/loader or WorkerDI activation."
+  preservation: "Current1084 parent plus ten additions; exact14 code/doc paths with three explicit overlap merges. Slot16 expiry, old raw-history/result modes and diagnostic catch retained. Eleven other history files RAW previous cc; selected Program CRLF-to-LF canonical equal after actual format refusal. Every outside1080 RAW parent unchanged."
+  local: "Fresh4483=[6,520,25,3932],4437 retained plus46history; four fullTRX PASS/zero failure skip warning. Format6 and223Python=[157,9,15,5,6,8,9,9,5] PASS. Three compiled new modes unowned refuse before stdin/config. Entire1094 source RAW before/after tests equal."
+  failures: "V1/V2 rebase anchor/count findings preserved WITHHELD/INERT; approved V3 extracted only after actual126 closure. Initial verifierV2 restore then449 Program ENDOFLINE diagnostics retained; canonical LF correction and fresh verifierV3/distinct logs are current evidence. No failed run is promoted as passed."
+  parent_scope: "First Shared physical original-expiry witness/rewind denial and original125 empty-history proof qualified by actual126 only; synthetic output does not qualify a model or Worker path."
+  limitation: "HistorySQL127 NOT_RUN_UNQUALIFIED; proposed physical fixture four request revisions/zero glossary. Nonempty glossary/overflow/revocation races and process-kill recovery not proven. HasAdditionalHistory needs durable/model disclosure; profile/tokenizer/window/fallback/production DI/no-click remain unqualified."
+  provider: "Reuse current FromEnvironment/OrderedFailoverAiGateway. Required AIOFFICE_AI_PRIMARY_BASE_URL/MODEL/AUTHORIZATION in protected ignored backend EnvironmentFile or approved Worker secret injection; checked local configuration absent, server store unavailable for inspection. Model NOT_RUN_UNEVALUATED."
+  next: "Parentd11888c native126/full4437/all8/Gov/entire quality/six individual byte-bound ORIGINALS CLOSED_GREEN6151904308. Bounded same-group history14 rebased on qualified parent, three overlaps retain all current first Shared expiry/observer proofs. Fresh full4483=[6,520,25,3932]/46new/format6 and223Python plus three compiled unowned modes PASS. Consume full current private16 and actual Git SOURCE reviews before one SAME288 push; own final native127/full4483/all8/Gov/entirequality/sixORIGINALS through terminal. HistorySQL127 NOT_RUN_UNQUALIFIED; model NOT_RUN_UNEVALUATED. ExistingGateway profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/full233/ERP/installer/deploy/merge incomplete."

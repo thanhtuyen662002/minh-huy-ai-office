@@ -640,14 +640,14 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             # Separate owned synthetic source; preserve the original key row.
             # No production registry/configuration or credentials are touched.
             source_id = str(uuid.UUID(source_id))
-            assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16)
+            assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16)
             prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
             assert not any(name.startswith(prefix) for name in private_environment)
             if slot == 16:
-                # Slots14/15 remain reserved for the sequenced history slice.
+                # Slot15 remains reserved for the sequenced history recovery slice.
                 assert not any(name.endswith("__SourceBindingId") and value == source_id
                     for name, value in private_environment.items())
-            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY", 6: "OWNED_HOST_GROUP_CONTENT_KEY", 7: "OWNED_COVERAGE_GROUP_CONTENT_KEY", 8: "OWNED_RAW_HISTORY_GROUP_CONTENT_KEY", 9: "OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY", 10: "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY", 11: "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY", 12: "OWNED_ATTEMPT_RESULT_GROUP_CONTENT_KEY", 13: "OWNED_ATTEMPT_RESULT_DEADLINE_GROUP_CONTENT_KEY", 16: "OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY"}[slot]
+            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY", 6: "OWNED_HOST_GROUP_CONTENT_KEY", 7: "OWNED_COVERAGE_GROUP_CONTENT_KEY", 8: "OWNED_RAW_HISTORY_GROUP_CONTENT_KEY", 9: "OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY", 10: "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY", 11: "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY", 12: "OWNED_ATTEMPT_RESULT_GROUP_CONTENT_KEY", 13: "OWNED_ATTEMPT_RESULT_DEADLINE_GROUP_CONTENT_KEY", 14: "OWNED_HISTORY_SELECTION_GROUP_CONTENT_KEY", 16: "OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY"}[slot]
             private_environment[secret_name] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
             for name, value in {"TenantId": tenant, "CompanyId": company, "SourceBindingId": source_id,
                     "KeyId": "owned-managed-source-v1" if slot == 2 else "owned-native-source-v1", "SecretRef": "secretref://env/" + secret_name, "IsWriteKey": "true"}.items():
@@ -854,6 +854,29 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             return new_source, new_events, private_environment["OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY"]
         expiry_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
             service=service, sql=sql, prepare_source=prepare_expiry_source, reference=reference_proof, automatic=automatic_proof)
+        history_spec = importlib.util.spec_from_file_location("owned_history_selection", Path(__file__).with_name("smoke-group-history-selection.py"))
+        history_proof = importlib.util.module_from_spec(history_spec)
+        history_spec.loader.exec_module(history_proof)
+        history_continuation = {}
+        def prepare_history_source():
+            spec = importlib.util.spec_from_file_location("owned_history_base_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            spec = importlib.util.spec_from_file_location("owned_history_followup_fixture", Path(__file__).with_name("owned-group-history-fixture.py"))
+            continuation = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(continuation)
+            new_source, new_events, append = continuation.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 14), post_event=call, fixture=fixture)
+            assert not history_continuation
+            history_continuation.update(source=new_source, append=append)
+            return new_source, new_events, private_environment["OWNED_HISTORY_SELECTION_GROUP_CONTENT_KEY"]
+        def append_history_followup(source_id):
+            assert source_id == history_continuation["source"]
+            return history_continuation["append"](source_id)
+        history_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_history_source, append_followup=append_history_followup,
+            reference=reference_proof, automatic=automatic_proof)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
