@@ -14,6 +14,7 @@ spec = importlib.util.spec_from_file_location('frontier_root_proof_test', Path(_
 proof = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(proof)
 reference = proof._load('frontier_root_result_reference', 'smoke-group-reference.py')
+cold = proof._load('frontier_original_cohort_cold', 'test-original-group-fixtures.py')
 
 
 class FrontierRootProofTests(unittest.TestCase):
@@ -39,9 +40,9 @@ class FrontierRootProofTests(unittest.TestCase):
             queries.append(query)
             if query.startswith('SELECT CONVERT(varchar(40)'):
                 self.assertIn('SELECT TOP(5)', query); self.assertIn('JOIN aioffice.GroupBatchTerminalReceipts', query)
-                names = ('tenantId', 'companyId', 'serviceId', 'sourceId', 'eventId', 'batchId')
-                rows = self.rows + [self.rows[0]] if fault == 'fifth-fixture' else self.rows
-                frames = '\n'.join(f'{i+1}:{j+1}:{row[name]}' for i, row in enumerate(rows) for j, name in enumerate(names))
+                records = cold.candidates(self.rows)
+                if fault == 'fifth-fixture': records.append(records[0])
+                frames = cold.cold_frames(query,records)
                 return frames[:-1] if fault == 'truncated-fixture' else frames
             if query.startswith('SELECT COUNT(*) FROM aioffice.'):
                 if fault == 'preexisting': return '1'

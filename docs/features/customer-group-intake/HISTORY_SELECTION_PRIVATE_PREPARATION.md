@@ -141,3 +141,39 @@ full4483.NET, all8 gates, Governance, full quality and six original browser
 images before qualifying history or integrating the private Gateway metadata
 prototype. Actual model remains **NOT_RUN_UNEVALUATED**; full278/279/233 and
 production acceptance remain incomplete.
+
+## Original cohort identity repair after actual ordinal successor
+
+Exact562c77cc7ce7578ba8b35d929afb6327f55c85fc Build38464907000 and
+Governance38464907007 closed RED6155592211. Native115529027167 reached the
+history selection/original plan/result/separate-process replacement summary,
+then refused the terminal fixture's strict24-frame cardinality. Strict127 has
+105 once,22missing,0duplicates,4failure markers. All4483.NET, five other
+prerequisites and Governance pass; quality115546999326 LOCAL_RUNTIME fails.
+Chromium was not reached. The raw frames were not captured: actual count,
+identities and order are unknown. No observed30 or unique SQL cause is claimed.
+
+The source-derived overlap is concrete: the new history AI4 receipt satisfies
+the old two-source manifest/signature selector. Stamp only owned synthetic
+fixture slots4/5/6/8 with closed per-role DisplayNames before any Core event,
+source state, allocation or claim. Existing version/authority/lease and all
+post-enrollment baselines remain. One shared full-scope selector uses those
+roles and existing receipt signatures/manifest in terminal and frontier;
+frontier retains its fully scoped terminal join. Fixed role ordinals1..4 expose
+duplicate roles even when another is missing. TOP5 and exactly24 six-field
+GUID frames remain, as do complete original graphs and both cleanup scopes.
+
+Fresh233=[157,9,10,15,5,6,8,9,9,5] Python/10 suites pass. The cold SQL oracle
+consumes actual scope/role/ownership/manifest predicates. It covers unrelated
+history AI4/exhaustion, fifth original, duplicate plus missing, wrong signature,
+scope, ownership or shape, missing/foreign terminal, malformed enrollment and
+failure before configuration or Core recreation. Removing the role predicate
+reproduces a cold frame refusal. Initial stale inert dependency failures were
+retained in session output; no full private log was captured for that attempt.
+These are cold controls, not actual SQL or model qualification.
+
+Review and push the repair once on SAME288, then close successor native127,
+full4483.NET/all8/Governance/fullquality/six individual ORIGINAL images. Gateway
+metadata integration remains withheld on this failed parent. Use the existing
+provider loader; model NOT_RUN_UNEVALUATED. Full278/279/233 and production
+acceptance remain incomplete.

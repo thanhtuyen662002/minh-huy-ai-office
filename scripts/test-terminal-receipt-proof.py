@@ -14,6 +14,7 @@ import uuid
 spec = importlib.util.spec_from_file_location("terminal_proof", Path(__file__).with_name("smoke-group-terminal-receipts.py"))
 proof = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(proof)
+cold = proof._load('terminal_original_cohort_cold', 'test-original-group-fixtures.py')
 
 
 class TerminalReceiptProofTests(unittest.TestCase):
@@ -61,17 +62,14 @@ class TerminalReceiptProofTests(unittest.TestCase):
             if query.startswith('SELECT CONVERT(varchar(40)'):
                 self.assertIn('SELECT TOP(5)', query)
                 self.assertNotIn('FOR JSON', query)
-                rows = self.rows
-                if fault in ('extra-exhaustion', 'fifth-original'):
+                records = cold.candidates(self.rows)
+                if fault in ('extra-exhaustion', 'fifth-original', 'history-collision'):
                     extra = {**self.rows[0], **{name: str(uuid.uuid4()) for name in ('sourceId','eventId','batchId')}}
-                    candidates = [*zip(self.rows, ((1,4),(2,0),(3,1),(2,0))),
-                        (extra, (3,3) if fault == 'extra-exhaustion' else (1,4))]
-                    signatures = {(int(a),int(b)) for a,b in re.findall(r'w\.Outcome=(\d+) AND w\.NoteCount=(\d+)',query)}
-                    # This is a cold SQL oracle, not actual SQL execution. An
-                    # absent original-signature restriction reproduces the
-                    # old five matching receipts and strict30-frame refusal.
-                    rows = [row for row,signature in candidates if not signatures or signature in signatures]
-                text = self.frames(rows)
+                    item = {**records[0], 'row': extra}
+                    if fault != 'fifth-original': item['label'] = 'Owned clean SQL effect fixture'
+                    if fault == 'extra-exhaustion': item.update(outcome=3,count=3)
+                    records.append(item)
+                text = cold.cold_frames(query,records)
                 return text[:-1] if fault == 'truncated-fixture' else text
             if query.startswith('SET NOCOUNT ON;'):
                 count = query.count('SELECT CONCAT')
@@ -132,10 +130,26 @@ class TerminalReceiptProofTests(unittest.TestCase):
             proof.verify(directory=self.directory,api='http://127.0.0.1:8080',manifest=self.manifest,sql=sql)
         self.assertEqual([],calls); self.assertEqual('',output.getvalue())
 
-    def test_widening_to_exhaustion_signature_reproduces_original_frame_failure(self):
-        sql, process, calls, _ = self.oracle('extra-exhaustion')
+    def test_unrelated_history_same_signature_does_not_replace_original_four(self):
+        sql, process, calls, _ = self.oracle('history-collision')
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process), \
+                patch('sys.stdout',new_callable=io.StringIO) as output:
+            proof.verify(directory=self.directory,api='http://127.0.0.1:8080',manifest=self.manifest,sql=sql)
+        self.assertEqual(proof.SUMMARY+'\n',output.getvalue())
+        self.assertEqual(4,len([command for command,_ in calls if command[:2]==['docker','run']]))
+
+    def test_removing_closed_roles_reproduces_history_frame_refusal(self):
+        sql, process, calls, _ = self.oracle('history-collision')
+        original_load = proof._load
+        def widened_load(name,filename):
+            module = original_load(name,filename)
+            if filename != 'owned-original-group-fixtures.py': return module
+            factory = module.frames_query
+            module.frames_query = lambda *args,**kwargs: re.sub(
+                r"b.DisplayName COLLATE Latin1_General_100_BIN2=N'[^']+' AND ",'',factory(*args,**kwargs))
+            return module
         with patch.dict(os.environ,self.environment,clear=True), patch.object(proof.subprocess,'run',process), \
-                patch.object(proof,'ORIGINAL_RECEIPT_SIGNATURES',((1,4),(2,0),(3,1),(3,3))), \
+                patch.object(proof,'_load',widened_load), \
                 patch('sys.stdout',new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
             proof.verify(directory=self.directory,api='http://127.0.0.1:8080',manifest=self.manifest,sql=sql)
         self.assertEqual([],calls); self.assertEqual('',output.getvalue())

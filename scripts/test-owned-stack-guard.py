@@ -1667,8 +1667,19 @@ class OwnedStackGuardTests(unittest.TestCase):
             "INERT_ORIGINAL_CONTENT_KEY": "owned-inert-original-value"}
         environment = original.copy()
         tenant, company, source = (str(uuid.uuid4()) for _ in range(3))
+        original_enrollments = []
+        def enroll_original(**arguments):
+            # Inert callback dependency: the real SQL boundary has separate
+            # adversarial controls. Verify it precedes config and recreation.
+            self.assertFalse(any(name.startswith(f"AIOffice__GroupIntake__SourceKeys__{arguments['slot']}__") for name in environment))
+            original_enrollments.append(arguments)
+        original_module = SimpleNamespace(enroll=enroll_original)
+        original_spec = SimpleNamespace(loader=SimpleNamespace(exec_module=lambda module: None))
         namespace = dict(uuid=uuid, base64=base64, json=json, secrets=SimpleNamespace(token_bytes=lambda size: b"n"*size),
             tenant=tenant, company=company, private_environment=environment, override=Override(),
+            importlib=SimpleNamespace(util=SimpleNamespace(spec_from_file_location=lambda *args: original_spec,
+                module_from_spec=lambda spec: original_module)), Path=Path, __file__=group_smoke.__file__,
+            directory=self.owned, api="http://127.0.0.1:8080", sql=object(),
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
@@ -1781,6 +1792,11 @@ class OwnedStackGuardTests(unittest.TestCase):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source_id, slot)
             self.assertEqual(enrolled, environment)
         self.assertEqual(56, len(calls))
+        self.assertEqual([4, 5, 6, 8], [item['slot'] for item in original_enrollments])
+        self.assertEqual([fourth_source, fifth_source, sixth_source, eighth_source], [item['source'] for item in original_enrollments])
+        for item in original_enrollments:
+            self.assertEqual(dict(directory=self.owned, api="http://127.0.0.1:8080", tenant=tenant,
+                company=company, source=item['source'], slot=item['slot'], sql=namespace['sql']), item)
 
     def test_spool_proxy_partial_startup_closes_allocated_resources_and_preserves_first_error(self):
         # Execute only the actual cleanup block with inert resources: no CI

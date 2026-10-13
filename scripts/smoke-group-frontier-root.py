@@ -103,16 +103,8 @@ def verify(*, directory, api, manifest, sql):
     password = manifest["AIOFFICE_RUNTIME_PASSWORD"]
     assert isinstance(password, str) and re.fullmatch(r"[A-Za-z0-9_-]{32,128}", password) and callable(sql)
     base = f"TenantId='{tenant}' AND CompanyId='{company}'"
-    query = ("SELECT CONVERT(varchar(40),CONCAT(f.fixtureOrdinal,':',v.fieldOrdinal,':',LOWER(CONVERT(char(36),v.id)))) "
-        "FROM (SELECT TOP(5) ROW_NUMBER() OVER(ORDER BY w.BindingId) AS fixtureOrdinal,"
-        "w.TenantId AS tenantId,w.CompanyId AS companyId,a.ServiceId AS serviceId,w.BindingId AS sourceId,"
-        "a.OperationId AS eventId,a.Id AS batchId FROM aioffice.GroupWorkCommitReceipts w "
-        "JOIN aioffice.GroupBatchAllocations a ON a.TenantId=w.TenantId AND a.CompanyId=w.CompanyId AND a.BindingId=w.BindingId AND a.Id=w.BatchId "
-        "JOIN aioffice.GroupBatchTerminalReceipts t ON t.TenantId=w.TenantId AND t.CompanyId=w.CompanyId AND t.BindingId=w.BindingId AND t.BatchId=w.BatchId "
-        f"WHERE w.TenantId='{tenant}' AND w.CompanyId='{company}' AND w.DependencyManifestVersion=1 "
-        "AND DATALENGTH(w.DependencyManifest)=274 AND w.SelectedMessageCount=2 AND SUBSTRING(w.DependencyManifest,161,2)=0x0200 "
-        "ORDER BY w.BindingId) f CROSS APPLY (VALUES(1,f.tenantId),(2,f.companyId),(3,f.serviceId),(4,f.sourceId),(5,f.eventId),(6,f.batchId))"
-        " v(fieldOrdinal,id) ORDER BY f.fixtureOrdinal,v.fieldOrdinal;")
+    original_roles = _load("frontier_original_roles", "owned-original-group-fixtures.py")
+    query = original_roles.frames_query(tenant, company, require_terminal=True)
     fixtures = terminal.require_fixture_frames(sql(query), tenant, company)
     sources = ','.join("'" + x["sourceId"] + "'" for x in fixtures)
     tables = list(automatic.SOURCE_TABLES) + [("GroupWorkRawDispositions", "BatchId,CommittedSequence"), ("GroupBatchTerminalReceipts", "BindingId,BatchId")]

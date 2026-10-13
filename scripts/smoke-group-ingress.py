@@ -643,6 +643,12 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16)
             prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
             assert not any(name.startswith(prefix) for name in private_environment)
+            if slot in (4, 5, 6, 8):
+                original_spec = importlib.util.spec_from_file_location("owned_original_roles", Path(__file__).with_name("owned-original-group-fixtures.py"))
+                original_roles = importlib.util.module_from_spec(original_spec)
+                original_spec.loader.exec_module(original_roles)
+                original_roles.enroll(directory=directory, api=api, tenant=tenant, company=company,
+                    source=source_id, slot=slot, sql=sql)
             if slot == 16:
                 # Slot15 remains reserved for the sequenced history recovery slice.
                 assert not any(name.endswith("__SourceBindingId") and value == source_id

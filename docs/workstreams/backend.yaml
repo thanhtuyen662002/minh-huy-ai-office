@@ -4,11 +4,11 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: d84d6c48a700973e15b199630d0f09776520ed61
+head: 562c77cc7ce7578ba8b35d929afb6327f55c85fc
 state: in_progress
 lease_owner: root-backend-278
-lease_heartbeat_at: '2026-10-11'
-last_checkpoint_at: '2026-10-11'
+lease_heartbeat_at: '2026-10-14'
+last_checkpoint_at: '2026-10-14'
 last_completed_issue: 277
 last_merged_pr: 287
 last_merge_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Actual d84 history127 CLOSED_RED6154433584: native104once/23missing/0duplicate/4failure; all4483.NET, other5 prerequisites and Governance PASS; full quality LOCAL_RUNTIME failure; Chromium not reached. Scoped fixture queried ordinal0 against shipping1..40, raw SQL return not captured. Narrow ordinal1/exact-scope oracle repair passes171 focused Python; stronger oracle rejects actual parent with10 expected assertion/subtest failures. Review exact repair Git source, push once SAME288, own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS through terminal before metadata integration. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete."
+next_action: "Actual562 history127 CLOSED_RED6155592211: history-selection/original-plan/result process replacement PASS, then terminal strict24-frame refusal; native105once/22missing/0duplicate/4failure, full4483.NET/five other prerequisites/Gov PASS; quality LOCAL_RUNTIME failure and no Chromium. Raw frame count/identities unobserved. Source overlap: legitimate history AI4 matches old broad receipt shape. Four original fixture slots4/5/6/8 now stamped with closed roles before Core events/claims; shared terminal/frontier selector retains TOP5/strict24/fixed role ordinals/full scoped joins/signatures/manifest and all graphs/cleanup. Fresh233 Python/10 suites PASS; initial stale inert-test failures retained. Review exact repair source, push once SAME288 and own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS terminal. Existing Gateway metadata remains withheld until qualified parent. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -4626,4 +4626,39 @@ bounded_history_fixture_ordinal_repair_checkpoint:
     oracle rejects actual parent with10 expected assertion/subtest failures. Review exact repair Git source, push once SAME288,
     own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS through terminal before metadata integration. Model NOT_RUN_UNEVALUATED;
     profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge
+    incomplete.'
+bounded_history_original_cohort_repair_checkpoint:
+  failed_head: 562c77cc7ce7578ba8b35d929afb6327f55c85fc
+  build: 38464907000
+  governance: 38464907007
+  native_job: 115529027167
+  dotnet_job: 115529027103
+  quality_job: 115546999326
+  closure: 6155592211
+  actual: 'All8 terminal: native and quality RED; .NET4483=[6,520,25,3932], five other prerequisites/Governance SUCCESS. Native105/127
+    once,22missing,0duplicate,4failure; no images. History selection/plan/result recovery and separate process replacement
+    summary PASS.'
+  diagnosis: Raw terminal frames not captured, actual cardinality/identity/order unknown. Source-derived history AI4/two-source
+    manifest overlap is proven; do not claim observed30 or unique hosted cause.
+  repair: Owned disposable synthetic slots4/5/6/8 get four closed DisplayNames exactly once before source events/state/allocation/claim.
+    One full-scope role-specific selector serves terminal and frontier; fixed1..4 role ordinals reveal duplicate plus missing
+    role, TOP5 reveals fifth original. Strict24 GUID frames, original signatures/manifest and all cleanup/graphs retained.
+    No production/schema/Gateway/loader/authority/deadline change.
+  local: Fresh233=[157,9,10,15,5,6,8,9,9,5] Python/10 suites PASS, syntax/diff and exact source before/after hashes. First
+    terminal8/9 and guard156/157 failed on stale fake dependencies; session output retained, no complete private log captured.
+    Repaired tests consume actual closed predicates and cover unrelated AI4/exhaustion, fifth/duplicate/missing/wrong-scope/signature/ownership/manifest,
+    enrollment guard/malformed/0rowcount and no config/Core effects after failure. Cold only, not SQL/model qualification.
+  preserved: Deep prior YAML checkpoints/ERP/other workstreams and d118 qualified126/full4437/all8/Gov/quality/sixoriginals
+    retained. Successor SQL127 NOT_RUN_UNQUALIFIED; production .NET remains parent source4483.
+  provider: Reuse FromEnvironment/OrderedFailoverAiGateway. Scoped availabilityv9:36 named local slots/three referenced files
+    absent; deployed server store unavailable for inspection. Protected backend EnvironmentFile or approved Worker injection
+    accepts AIOFFICE_AI_PRIMARY_BASE_URL/MODEL/AUTHORIZATION. Model NOT_RUN_UNEVALUATED.
+  next: 'Actual562 history127 CLOSED_RED6155592211: history-selection/original-plan/result process replacement PASS, then
+    terminal strict24-frame refusal; native105once/22missing/0duplicate/4failure, full4483.NET/five other prerequisites/Gov
+    PASS; quality LOCAL_RUNTIME failure and no Chromium. Raw frame count/identities unobserved. Source overlap: legitimate
+    history AI4 matches old broad receipt shape. Four original fixture slots4/5/6/8 now stamped with closed roles before Core
+    events/claims; shared terminal/frontier selector retains TOP5/strict24/fixed role ordinals/full scoped joins/signatures/manifest
+    and all graphs/cleanup. Fresh233 Python/10 suites PASS; initial stale inert-test failures retained. Review exact repair
+    source, push once SAME288 and own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS terminal. Existing Gateway
+    metadata remains withheld until qualified parent. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge
     incomplete.'

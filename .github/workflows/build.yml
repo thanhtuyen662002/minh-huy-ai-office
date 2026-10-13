@@ -131,6 +131,7 @@ jobs:
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
+          python scripts/test-original-group-fixtures.py
           python scripts/test-terminal-receipt-proof.py
           python scripts/test-frontier-root-proof.py
           python scripts/test-cursor-shadow-network-proof.py
