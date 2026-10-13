@@ -10,11 +10,14 @@ public sealed class GroupWorkNotePermissionVerifier(PlatformDbContext database)
         ["GroupNotesCommittedOutbox"] = ["AvailableAtUtc", "PublishAttempts", "PublishedAtUtc"]
     };
     internal static string VerificationSql { get; } = BuildProof();
+    internal static string EffectiveVerificationSql { get; } = GroupEffectivePermissionProof.All(
+        BindingStorePermissionVerifier.VerificationSql,
+        GroupIngressPermissionVerifier.VerificationSql,
+        VerificationSql);
 
     public async Task RequireSafeRuntimeAsync(CancellationToken cancellationToken = default)
     {
-        await new GroupIngressPermissionVerifier(database).RequireSafeRuntimeAsync(cancellationToken);
-        await new BindingStorePermissionVerifier(database).RequireProofAsync(VerificationSql, cancellationToken);
+        await new BindingStorePermissionVerifier(database).RequireProofAsync(EffectiveVerificationSql, cancellationToken);
     }
 
     // Fixed identifiers only; extra columns default immutable. Registry rights

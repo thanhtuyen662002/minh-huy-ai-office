@@ -3,10 +3,16 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 internal sealed class GroupModelAttemptResultPermissionVerifier(PlatformDbContext database)
 {
     internal static string VerificationSql { get; } = BuildProof();
+    internal static string EffectiveVerificationSql { get; } = GroupEffectivePermissionProof.All(
+        BindingStorePermissionVerifier.VerificationSql,
+        GroupIngressPermissionVerifier.VerificationSql,
+        GroupWorkNotePermissionVerifier.VerificationSql,
+        GroupModelAttemptPermissionVerifier.VerificationSql,
+        GroupAutomaticInputPlanPermissionVerifier.VerificationSql,
+        VerificationSql);
     internal async Task RequireSafeRuntimeAsync(CancellationToken token)
     {
-        await new GroupAutomaticInputPlanPermissionVerifier(database).RequireSafeRuntimeAsync(token);
-        await new BindingStorePermissionVerifier(database).RequireProofAsync(VerificationSql, token);
+        await new BindingStorePermissionVerifier(database).RequireProofAsync(EffectiveVerificationSql, token);
     }
     private static string BuildProof()
     {

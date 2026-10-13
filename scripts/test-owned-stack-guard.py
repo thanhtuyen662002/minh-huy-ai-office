@@ -2944,7 +2944,7 @@ RESULT_MODES = ('attempt-result-prepare','attempt-result-commit','attempt-result
 RESULT_PHASES = ('setup','claim','preparation','resume-read','resume-output','resume-start','concurrent-reads',
     'concurrent-claim','concurrent-preparation','concurrent-read','concurrent-checks','retry-suppression',
     'failure-suppression','attempt-start','commit','deadline','final','unknown')
-RESULT_KINDS = ('source-lock','result','plan','journal','denied','cancelled','sql-timeout','sql-deadlock','other')
+RESULT_KINDS = ('source-lock',"source-lock-missing-transaction", "source-lock-wait-timeout", "source-lock-cancelled", "source-lock-deadlock", "source-lock-rejected", 'result','plan','journal','denied','cancelled','sql-timeout','sql-deadlock','other')
 
 
 class AttemptResultDiagnosticTests(unittest.TestCase):

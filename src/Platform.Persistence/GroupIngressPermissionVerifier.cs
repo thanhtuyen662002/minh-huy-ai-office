@@ -16,12 +16,13 @@ public sealed class GroupIngressPermissionVerifier(PlatformDbContext database)
     };
 
     internal static string VerificationSql { get; } = BuildProof();
+    internal static string EffectiveVerificationSql { get; } = GroupEffectivePermissionProof.All(
+        BindingStorePermissionVerifier.VerificationSql,
+        VerificationSql);
 
     public async Task RequireSafeRuntimeAsync(CancellationToken cancellationToken = default)
     {
-        var global = new BindingStorePermissionVerifier(database);
-        await global.RequireReadOnlyAsync(cancellationToken);
-        await global.RequireProofAsync(VerificationSql, cancellationToken);
+        await new BindingStorePermissionVerifier(database).RequireProofAsync(EffectiveVerificationSql, cancellationToken);
     }
 
     private static string BuildProof()

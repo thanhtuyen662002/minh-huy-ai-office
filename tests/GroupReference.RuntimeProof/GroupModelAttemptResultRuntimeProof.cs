@@ -339,7 +339,7 @@ internal static class GroupModelAttemptResultRuntimeProof
         ConcurrentPreparation, ConcurrentRead, ConcurrentChecks, RetrySuppression, FailureSuppression,
         AttemptStart, Commit, Deadline, Final
     }
-    internal enum FailureKind { Other, SourceLock, Result, Plan, Journal, Denied, Cancelled, SqlTimeout, SqlDeadlock }
+    internal enum FailureKind { Other, SourceLock, SourceLockMissingTransaction, SourceLockWaitTimeout, SourceLockCancelled, SourceLockDeadlock, SourceLockRejected, Result, Plan, Journal, Denied, Cancelled, SqlTimeout, SqlDeadlock }
     internal sealed class PhaseFailure(ResultPhase phase, FailureKind kind) : InvalidOperationException("Owned result proof failed.")
     {
         internal ResultPhase Phase { get; } = phase;
@@ -440,6 +440,15 @@ internal static class GroupModelAttemptResultRuntimeProof
     }
     private static FailureKind Kind(Exception error) => error switch
     {
+        _ when GroupSourceTransactionLock.FailureOf(error) is { } actual => actual switch
+        {
+            GroupSourceLockFailure.MissingTransaction => FailureKind.SourceLockMissingTransaction,
+            GroupSourceLockFailure.WaitTimeout => FailureKind.SourceLockWaitTimeout,
+            GroupSourceLockFailure.Cancelled => FailureKind.SourceLockCancelled,
+            GroupSourceLockFailure.Deadlock => FailureKind.SourceLockDeadlock,
+            GroupSourceLockFailure.Rejected => FailureKind.SourceLockRejected,
+            _ => FailureKind.SourceLock
+        },
         OperationCanceledException => FailureKind.Cancelled,
         UnauthorizedAccessException => FailureKind.Denied,
         SqlException { Number: -2 } => FailureKind.SqlTimeout,
@@ -480,6 +489,11 @@ internal static class GroupModelAttemptResultRuntimeProof
         var kind = error is PhaseFailure k ? k.Kind switch
         {
             FailureKind.SourceLock => "source-lock",
+            FailureKind.SourceLockMissingTransaction => "source-lock-missing-transaction",
+            FailureKind.SourceLockWaitTimeout => "source-lock-wait-timeout",
+            FailureKind.SourceLockCancelled => "source-lock-cancelled",
+            FailureKind.SourceLockDeadlock => "source-lock-deadlock",
+            FailureKind.SourceLockRejected => "source-lock-rejected",
             FailureKind.Result => "result",
             FailureKind.Plan => "plan",
             FailureKind.Journal => "journal",

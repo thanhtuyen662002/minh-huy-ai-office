@@ -180,7 +180,7 @@ def require_reference_result(result, mode, expected_lines):
     result_phases = {"setup", "claim", "preparation", "resume-read", "resume-output", "resume-start", "concurrent-reads",
         "concurrent-claim", "concurrent-preparation", "concurrent-read", "concurrent-checks", "retry-suppression",
         "failure-suppression", "attempt-start", "commit", "deadline", "final", "unknown"}
-    result_kinds = {"source-lock", "result", "plan", "journal", "denied", "cancelled", "sql-timeout", "sql-deadlock", "other"}
+    result_kinds = {"source-lock", "source-lock-missing-transaction", "source-lock-wait-timeout", "source-lock-cancelled", "source-lock-deadlock", "source-lock-rejected", "result", "plan", "journal", "denied", "cancelled", "sql-timeout", "sql-deadlock", "other"}
     if (mode in result_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
             and lines[1] == "FAIL owned reference runtime " + mode):
         match = re.fullmatch(r"FAIL owned attempt result runtime phase-([a-z-]+) kind-([a-z-]+)", lines[0])
