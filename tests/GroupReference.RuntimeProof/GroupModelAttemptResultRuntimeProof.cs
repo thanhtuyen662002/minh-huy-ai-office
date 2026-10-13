@@ -87,7 +87,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                 var probes = new Dictionary<PlatformDbContext, OriginalResultReadProbe>();
                 await RunPreparedConcurrentReadsAsync(_ =>
                 {
-                    var probe = new OriginalResultReadProbe(readers);
+                    var probe = new OriginalResultReadProbe(readers, scope);
                     var contender = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options).AddInterceptors(probe).Options);
                     probes.Add(contender, probe);
                     return contender;
@@ -106,7 +106,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                 }, async (_, contender, currentToken) =>
                 {
                     var fresh = prepared[contender];
-                    probes[contender].Armed = true;
+                    probes[contender].Arm(contender);
                     var accepted = await ObserveAsync(ResultPhase.ConcurrentRead, async () =>
                         await fresh.Results.ReadOriginalAsync(fresh.Plan, fresh.Chunk, currentToken) ?? throw new InvalidOperationException(), diagnostic);
                     await ObserveAsync(ResultPhase.ConcurrentChecks, () =>
@@ -116,7 +116,10 @@ internal static class GroupModelAttemptResultRuntimeProof
                         RequireClean(contender); return Task.FromResult(true);
                     }, diagnostic);
                 }, contender => contender.DisposeAsync(), diagnostic, token);
-                readers.RequireComplete();
+                await ObserveAsync(ResultPhase.ConcurrentChecks, () =>
+                {
+                    readers.RequireComplete(); return Task.FromResult(true);
+                }, diagnostic);
             }
             finally { CryptographicOperations.ZeroMemory(bytes); }
             diagnostic.Phase = ResultPhase.RetrySuppression;
@@ -346,9 +349,9 @@ internal static class GroupModelAttemptResultRuntimeProof
     // Every genuine original-result reader must hold its own actual Shared
     // SQL transaction before ANY reader proceeds. This fails if the shipped
     // path is still Exclusive, serializes the readers, or drops one reader.
-    private sealed class OriginalResultReadCohort
+    internal sealed class OriginalResultReadCohort
     {
-        private readonly HashSet<DbTransaction> transactions = [];
+        private readonly HashSet<DbTransaction> transactions = new(ReferenceEqualityComparer.Instance);
         private readonly TaskCompletionSource all = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal async Task ArriveAsync(DbTransaction transaction, CancellationToken token)
         {
@@ -363,22 +366,36 @@ internal static class GroupModelAttemptResultRuntimeProof
         { lock (transactions) { if (transactions.Count != 4 || !all.Task.IsCompletedSuccessfully) throw new InvalidOperationException(); } }
     }
 
-    private sealed class OriginalResultReadProbe(OriginalResultReadCohort cohort) : DbCommandInterceptor
+    internal sealed class OriginalResultReadProbe(OriginalResultReadCohort cohort, GroupScope scope) : DbCommandInterceptor
     {
-        internal bool Armed;
+        private PlatformDbContext? expected;
         private bool arrived;
-        public override async ValueTask<object?> ScalarExecutedAsync(DbCommand command, CommandExecutedEventData data,
-            object? result, CancellationToken token = default)
+        internal void Arm(PlatformDbContext database)
         {
-            if (!Armed || !command.CommandText.Contains("sys.sp_getapplock", StringComparison.Ordinal)) return result;
-            if (!command.CommandText.Contains("@LockMode='Shared'", StringComparison.Ordinal)
-                || command.Transaction is null || command.Transaction.IsolationLevel != IsolationLevel.Serializable
-                || Convert.ToInt32(result) < 0) throw new InvalidOperationException();
+            scope.Validate();
+            if (expected is not null) throw new InvalidOperationException();
+            expected = database;
+        }
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData data, InterceptionResult<DbDataReader> result, CancellationToken token = default)
+        {
+            // The lock command is manual ADO and does not emit EF scalar events.
+            // Metadata is an actual EF read after Shared acquisition and every
+            // pre-fence. Observe before opening its reader; key reads outside
+            // the two owned units cannot accidentally join this rendezvous.
+            if (expected is null || !command.CommandText.Contains("FROM [aioffice].[GroupModelAttemptResults]", StringComparison.Ordinal)) return result;
+            if (result.HasResult || data.Context is not PlatformDbContext database || !ReferenceEquals(database, expected)
+                || command.Transaction is null || command.Connection?.State != ConnectionState.Open
+                || command.Transaction.IsolationLevel != IsolationLevel.Serializable
+                || !ReferenceEquals(command.Connection, database.Database.GetDbConnection())
+                || !ReferenceEquals(command.Transaction, database.Database.CurrentTransaction?.GetDbTransaction())
+                || !ReferenceEquals(command.Transaction.Connection, command.Connection)) throw new InvalidOperationException();
             await using var mode = command.Connection!.CreateCommand();
             mode.Transaction = command.Transaction; mode.CommandTimeout = 10;
             mode.CommandText = "SELECT APPLOCK_MODE('public',@resource,'Transaction');";
             var resource = mode.CreateParameter(); resource.ParameterName = "@resource";
-            resource.Value = command.Parameters["@resource"].Value; mode.Parameters.Add(resource);
+            resource.Value = $"aioffice:group-ingest:{scope.TenantId:N}/{scope.CompanyId:N}/{scope.SourceBindingId:N}";
+            mode.Parameters.Add(resource);
             if (await mode.ExecuteScalarAsync(token) is not string held || held != "Shared") throw new InvalidOperationException();
             if (!arrived)
             {
@@ -390,7 +407,7 @@ internal static class GroupModelAttemptResultRuntimeProof
         public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<int> result, CancellationToken token = default)
         {
-            if (Armed && (command.CommandText.Contains("INSERT", StringComparison.OrdinalIgnoreCase)
+            if (expected is not null && (command.CommandText.Contains("INSERT", StringComparison.OrdinalIgnoreCase)
                 || command.CommandText.Contains("UPDATE", StringComparison.OrdinalIgnoreCase)
                 || command.CommandText.Contains("DELETE", StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException();
             return ValueTask.FromResult(result);
