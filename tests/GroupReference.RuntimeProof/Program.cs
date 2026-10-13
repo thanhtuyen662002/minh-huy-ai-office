@@ -411,6 +411,8 @@ try
 }
 catch (Exception error)
 {
+    if (args.Length == 1 && phase == args[0] && args[0] is ("attempt-result-prepare" or "attempt-result-commit" or "attempt-result-resume" or "attempt-result-deadline"))
+        Console.WriteLine(GroupModelAttemptResultRuntimeProof.FailureDiagnostic(error));
     if (args.Length == 1 && args[0] == "frontier-cursor-migration")
     {
         Console.WriteLine("FAIL owned signed cursor migration " + GroupSignedCursorMigrationRuntimeProof.Phase);

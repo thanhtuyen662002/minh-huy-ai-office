@@ -2940,5 +2940,41 @@ class ModelJournalDiagnosticTests(unittest.TestCase):
                     reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=0),mode,['PASS original'])
 
 
+RESULT_MODES = ('attempt-result-prepare','attempt-result-commit','attempt-result-resume','attempt-result-deadline')
+RESULT_PHASES = ('setup','claim','preparation','resume-read','resume-output','resume-start','concurrent-reads',
+    'concurrent-claim','concurrent-preparation','concurrent-read','concurrent-checks','retry-suppression',
+    'failure-suppression','attempt-start','commit','deadline','final','unknown')
+RESULT_KINDS = ('source-lock','result','plan','journal','denied','cancelled','sql-timeout','sql-deadlock','other')
+
+
+class AttemptResultDiagnosticTests(unittest.TestCase):
+    def test_only_closed_result_failure_detail_is_projected_and_always_fails(self):
+        for mode in RESULT_MODES:
+            for phase in RESULT_PHASES:
+                for kind in RESULT_KINDS:
+                    wire = f'FAIL owned attempt result runtime phase-{phase} kind-{kind}\nFAIL owned reference runtime {mode}\n'
+                    with self.subTest(mode=mode,phase=phase,kind=kind),self.assertRaises(AssertionError) as error:
+                        reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=1),mode,['PASS original'])
+                    self.assertEqual(str(error.exception),f'Owned reference executable failed at {mode}; exit=1; phase={phase}; kind={kind}')
+
+    def test_foreign_malformed_secret_or_extra_result_output_never_becomes_diagnostics(self):
+        private = 'PRIVATE_RESULT_DIAGNOSTIC_1281'; mode = 'attempt-result-resume'
+        valid = f'FAIL owned attempt result runtime phase-concurrent-read kind-source-lock\nFAIL owned reference runtime {mode}'
+        cases = [(valid.replace('concurrent-read',private),1,mode),(valid.replace('source-lock',private),1,mode),
+            (valid+'\n'+private,1,mode),(valid,2,mode),(valid,True,mode),(valid,1,'model-journal-cap'),
+            (valid.replace(mode,'attempt-result-commit'),1,mode),(valid+' '+private,1,mode)]
+        for wire,code,called in cases:
+            with self.subTest(code=code,called=called),self.assertRaises(AssertionError) as error:
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,stderr=private,returncode=code),called,['PASS original'])
+            self.assertNotIn(private,str(error.exception)); self.assertNotIn('; phase=',str(error.exception))
+
+    def test_original_success_stays_exact_and_failure_codes_never_become_success(self):
+        for mode in RESULT_MODES:
+            reference_smoke.require_reference_result(SimpleNamespace(stdout='PASS original\n',returncode=0),mode,['PASS original'])
+            for wire in ('PASS original\nextra',f'FAIL owned attempt result runtime phase-final kind-other\nFAIL owned reference runtime {mode}'):
+                with self.assertRaises(AssertionError):
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=0),mode,['PASS original'])
+
+
 if __name__ == "__main__":
     unittest.main()

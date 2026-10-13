@@ -2,6 +2,7 @@ using System.Data;
 using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -24,6 +25,16 @@ internal static class GroupModelAttemptResultRuntimeProof
 
     internal static async Task RunAsync(string mode, GroupScope scope, Guid operation,
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
+    {
+        var diagnostic = new ResultDiagnostic();
+        try { await RunCoreAsync(mode, scope, operation, worker, options, diagnostic, token); }
+        catch (Exception error)
+        { throw diagnostic.FirstFailure ?? error as PhaseFailure ?? new PhaseFailure(diagnostic.Phase, Kind(error)); }
+    }
+
+    private static async Task RunCoreAsync(string mode, GroupScope scope, Guid operation,
+        GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options,
+        ResultDiagnostic diagnostic, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
         if (mode is not ("attempt-result-prepare" or "attempt-result-commit" or "attempt-result-resume" or "attempt-result-deadline"))
@@ -48,42 +59,53 @@ internal static class GroupModelAttemptResultRuntimeProof
         var epoch = mode == "attempt-result-resume" ? 2 : 1;
         if ((previous?.Epoch ?? 0) != epoch - 1) throw new InvalidOperationException();
         clock.Current = previous is null ? allocation.AllocatedAtUtc : previous.ExpiresAtUtc.AddTicks(1);
+        diagnostic.Phase = ResultPhase.Claim;
         var claim = await new GroupBatchClaimStore(database, worker, clock).TryAcquireAsync(scope, allocation.Id,
             Guid.NewGuid(), Guid.NewGuid(), TimeSpan.FromMinutes(2), token) ?? throw new InvalidOperationException();
         var handle = claim.CurrentHandle ?? throw new InvalidOperationException();
         if (claim.WasAlreadyClaimed || claim.Receipt.Epoch != epoch) throw new InvalidOperationException();
-        var input = await PrepareAsync(database, handle);
+        diagnostic.Phase = ResultPhase.Preparation;
+        var input = await PrepareAsync(database, handle, token);
         var before = GroupAutomaticDependencyRuntimeProof.StateFingerprint(await StateAsync());
         await RequireEmptyEffectsAsync();
         if (mode == "attempt-result-resume")
         {
+            diagnostic.Phase = ResultPhase.ResumeRead;
             var loaded = await input.Results.ReadOriginalAsync(input.Plan, input.Chunk, token) ?? throw new InvalidOperationException();
+            diagnostic.Phase = ResultPhase.ResumeOutput;
             RequireOutput(loaded, input);
+            diagnostic.Phase = ResultPhase.ResumeStart;
             var original = await Starts(database).SingleAsync(token);
             if (original.ClaimEpoch != 1 || original.ClaimOperationId != previous!.OperationId
                 || loaded.Observed.ObservedAtUtc != original.StartedAtUtc) throw new InvalidOperationException();
             var bytes = loaded.Encode();
             try
             {
-                using var ready = new SemaphoreSlim(0, 4);
-                var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                var reads = Enumerable.Range(0, 4).Select(async _ =>
+                diagnostic.Phase = ResultPhase.ConcurrentReads;
+                await RunConcurrentReadsAsync(async (_, currentToken) =>
                 {
                     await using var contender = new PlatformDbContext(options);
-                    var replay = await new GroupBatchClaimStore(contender, worker, clock).TryAcquireAsync(scope, allocation.Id,
-                        claim.Receipt.OwnerId, claim.Receipt.OperationId, TimeSpan.FromMinutes(2), token) ?? throw new InvalidOperationException();
-                    if (!replay.WasAlreadyClaimed) throw new InvalidOperationException();
-                    var fresh = await PrepareAsync(contender, replay.CurrentHandle ?? throw new InvalidOperationException());
-                    ready.Release(); await release.Task.WaitAsync(token);
-                    var accepted = await fresh.Results.ReadOriginalAsync(fresh.Plan, fresh.Chunk, token) ?? throw new InvalidOperationException();
-                    RequireSame(bytes, accepted); RequireOutput(accepted, fresh);
-                    if (fresh.Keys.Reads != 2 || fresh.Keys.Writes != 0) throw new InvalidOperationException();
-                    RequireClean(contender);
-                }).ToArray();
-                for (var i = 0; i < 4; i++) await ready.WaitAsync(token);
-                release.SetResult(); await Task.WhenAll(reads);
+                    var replay = await ObserveAsync(ResultPhase.ConcurrentClaim, async () =>
+                    {
+                        var result = await new GroupBatchClaimStore(contender, worker, clock).TryAcquireAsync(scope, allocation.Id,
+                            claim.Receipt.OwnerId, claim.Receipt.OperationId, TimeSpan.FromMinutes(2), currentToken) ?? throw new InvalidOperationException();
+                        if (!result.WasAlreadyClaimed || result.CurrentHandle is null) throw new InvalidOperationException();
+                        return result;
+                    }, diagnostic);
+                    var fresh = await ObserveAsync(ResultPhase.ConcurrentPreparation,
+                        () => PrepareAsync(contender, replay.CurrentHandle!, currentToken), diagnostic);
+                    var accepted = await ObserveAsync(ResultPhase.ConcurrentRead, async () =>
+                        await fresh.Results.ReadOriginalAsync(fresh.Plan, fresh.Chunk, currentToken) ?? throw new InvalidOperationException(), diagnostic);
+                    await ObserveAsync(ResultPhase.ConcurrentChecks, () =>
+                    {
+                        RequireSame(bytes, accepted); RequireOutput(accepted, fresh);
+                        if (fresh.Keys.Reads != 2 || fresh.Keys.Writes != 0) throw new InvalidOperationException();
+                        RequireClean(contender); return Task.FromResult(true);
+                    }, diagnostic);
+                }, diagnostic, token);
             }
             finally { CryptographicOperations.ZeroMemory(bytes); }
+            diagnostic.Phase = ResultPhase.RetrySuppression;
             await RefusedAsync(() => input.Journal.TryStartOriginalAsync(input.Plan, input.Chunk, Guid.NewGuid(), token));
             var start = new GroupModelAttemptStarted(scope, original.BatchId, original.InputSha256, original.Ordinal,
                 original.RequestId, original.PredecessorRequestId, original.ClaimOperationId, original.ClaimEpoch,
@@ -92,12 +114,14 @@ internal static class GroupModelAttemptResultRuntimeProof
             // journal must refuse any failure append over an accepted result.
             var permit = new GroupModelAttemptPermit(input.Chunk.Current.ModelContext!, start,
                 GroupModelAttemptOriginalBinding.Create(input.Plan, input.Chunk, token));
+            diagnostic.Phase = ResultPhase.FailureSuppression;
             await RefusedAsync(() => input.Journal.RecordFailureAsync(permit.Context, permit, GroupModelAttemptFailure.InvalidOutput, token));
             if (await Results(database).CountAsync(token) != 1 || input.Keys.Reads != 2 || input.Keys.Writes != 0)
                 throw new InvalidOperationException();
         }
         else
         {
+            diagnostic.Phase = ResultPhase.AttemptStart;
             if (await Results(database).AnyAsync(token) || await Starts(database).AnyAsync(token)
                 || await input.Results.ReadOriginalAsync(input.Plan, input.Chunk, token) is not null) throw new InvalidOperationException();
             var started = await input.Journal.TryStartOriginalAsync(input.Plan, input.Chunk, Guid.NewGuid(), token);
@@ -111,6 +135,7 @@ internal static class GroupModelAttemptResultRuntimeProof
             evidence.Armed = true; evidence.Deadline = permit.Start.DeadlineUtc;
             if (mode == "attempt-result-commit")
             {
+                diagnostic.Phase = ResultPhase.Commit;
                 evidence.LoseReply = true;
                 var lost = false;
                 try { _ = await input.Results.PersistOriginalAsync(input.Plan, input.Chunk, response, token); }
@@ -122,7 +147,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                 var replay = await new GroupBatchClaimStore(restarted, worker, clock).TryAcquireAsync(scope, allocation.Id,
                     claim.Receipt.OwnerId, claim.Receipt.OperationId, TimeSpan.FromMinutes(2), token) ?? throw new InvalidOperationException();
                 if (!replay.WasAlreadyClaimed) throw new InvalidOperationException();
-                var fresh = await PrepareAsync(restarted, replay.CurrentHandle ?? throw new InvalidOperationException());
+                var fresh = await PrepareAsync(restarted, replay.CurrentHandle ?? throw new InvalidOperationException(), token);
                 var loaded = await fresh.Results.ReadOriginalAsync(fresh.Plan, fresh.Chunk, token) ?? throw new InvalidOperationException();
                 var expected = GroupModelAttemptResult.Create(response, input.Chunk, token).Encode();
                 try { RequireSame(expected, loaded); }
@@ -138,6 +163,7 @@ internal static class GroupModelAttemptResultRuntimeProof
             }
             else
             {
+                diagnostic.Phase = ResultPhase.Deadline;
                 evidence.ExpireAfterFlush = true;
                 try { await RefusedAsync(() => input.Results.PersistOriginalAsync(input.Plan, input.Chunk, response, token)); }
                 finally { evidence.Armed = false; }
@@ -158,6 +184,7 @@ internal static class GroupModelAttemptResultRuntimeProof
                 if (await Results(database).AnyAsync(token)) throw new InvalidOperationException();
             }
         }
+        diagnostic.Phase = ResultPhase.Final;
         if (await Starts(database).CountAsync(token) != 1 || await database.GroupModelAttemptFailures.AnyAsync(x =>
             x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token))
             throw new InvalidOperationException();
@@ -167,22 +194,22 @@ internal static class GroupModelAttemptResultRuntimeProof
         RequireClean(database); await RequireEmptyEffectsAsync();
         Console.WriteLine(mode switch { "attempt-result-commit" => CommitLine, "attempt-result-resume" => ResumeLine, _ => DeadlineLine });
 
-        async Task<Prepared> PrepareAsync(PlatformDbContext db, GroupBatchClaimHandle current)
+        async Task<Prepared> PrepareAsync(PlatformDbContext db, GroupBatchClaimHandle current, CancellationToken currentToken)
         {
             var keys = new GroupNoteRuntimeProof.CountedKeys(db, scope);
             var sources = new GroupBatchSourceReader(db, worker, clock, keys, new());
             var brain = new GroupBrainCurrentReader(db, worker, clock, keys, new());
-            var original = await new GroupBatchClaimStore(db, worker, clock).ReadCurrentAllocationAsync(current, token);
+            var original = await new GroupBatchClaimStore(db, worker, clock).ReadCurrentAllocationAsync(current, currentToken);
             var ids = original.Revisions.Select(x => x.Metadata.MessageId).ToArray();
-            var preparation = GroupBatchSourcePreparation.Create(await sources.ReadAsync(current, ids, token));
-            var history = await brain.ReadAsync(current, [], [], token);
+            var preparation = GroupBatchSourcePreparation.Create(await sources.ReadAsync(current, ids, currentToken));
+            var history = await brain.ReadAsync(current, [], [], currentToken);
             if (ids.Length != 2 || preparation.Candidates.Count != 1 || preparation.Receipts.Count != 2
                 || history.Items.Count != 0 || keys.Reads != 1 || keys.Writes != 0) throw new InvalidOperationException();
-            var plan = GroupAutomaticInputPlan.Create(preparation, history, Profile, Model, 64000, [], token);
+            var plan = GroupAutomaticInputPlan.Create(preparation, history, Profile, Model, 64000, [], currentToken);
             var store = new GroupAutomaticInputPlanStore(db, worker, clock, sources, brain);
-            var persisted = await store.PersistAsync(plan, preparation, history, token);
+            var persisted = await store.PersistAsync(plan, preparation, history, currentToken);
             if (!persisted.Encode().AsSpan().SequenceEqual(plan.Encode())) throw new InvalidOperationException();
-            var chunks = persisted.RestoreChunks(preparation, history, Profile, [], token);
+            var chunks = persisted.RestoreChunks(preparation, history, Profile, [], currentToken);
             if (chunks.Count != 1 || !chunks[0].Original.RequiresModel) throw new InvalidOperationException();
             return new(persisted, chunks[0], new(db, worker, clock, sources, brain),
                 new(db, worker, clock, sources, brain, keys, new()), keys, sources, ids);
@@ -300,5 +327,116 @@ internal static class GroupModelAttemptResultRuntimeProof
             { evidence.LoseReply = false; evidence.ReplyLost = true; throw new OwnedResultReplyLostException(); }
             return Task.CompletedTask;
         }
+    }
+
+    internal enum ResultPhase
+    {
+        Setup, Claim, Preparation, ResumeRead, ResumeOutput, ResumeStart, ConcurrentReads, ConcurrentClaim,
+        ConcurrentPreparation, ConcurrentRead, ConcurrentChecks, RetrySuppression, FailureSuppression,
+        AttemptStart, Commit, Deadline, Final
+    }
+    internal enum FailureKind { Other, SourceLock, Result, Plan, Journal, Denied, Cancelled, SqlTimeout, SqlDeadlock }
+    internal sealed class PhaseFailure(ResultPhase phase, FailureKind kind) : InvalidOperationException("Owned result proof failed.")
+    {
+        internal ResultPhase Phase { get; } = phase;
+        internal FailureKind Kind { get; } = kind;
+    }
+    internal sealed class ResultDiagnostic
+    {
+        internal ResultPhase Phase = ResultPhase.Setup;
+        internal PhaseFailure? FirstFailure;
+    }
+    internal static async Task<T> ObserveAsync<T>(ResultPhase phase, Func<Task<T>> call, ResultDiagnostic diagnostic)
+    {
+        try { return await call(); }
+        catch (Exception error)
+        {
+            var failure = error as PhaseFailure ?? new PhaseFailure(phase, Kind(error));
+            Interlocked.CompareExchange(ref diagnostic.FirstFailure, failure, null);
+            throw failure;
+        }
+    }
+
+    // Four one-shot operations start together. A failed preparation cannot
+    // strand a readiness barrier: cancel outstanding work, drain all tasks and
+    // retain the first closed operation failure. Every success is still required.
+    internal static async Task RunConcurrentReadsAsync(Func<int, CancellationToken, Task> read,
+        ResultDiagnostic diagnostic, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        using var stopped = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reads = Enumerable.Range(0, 4).Select(async index =>
+        {
+            try
+            {
+                await release.Task.WaitAsync(stopped.Token);
+                await read(index, stopped.Token);
+            }
+            catch (Exception error)
+            {
+                var failure = error as PhaseFailure ?? new PhaseFailure(ResultPhase.ConcurrentReads, Kind(error));
+                Interlocked.CompareExchange(ref diagnostic.FirstFailure, failure, null);
+                try { await stopped.CancelAsync(); }
+                catch { /* A cancellation callback cannot replace the original operation failure. */ }
+                throw failure;
+            }
+        }).ToArray();
+        release.SetResult();
+        try { await Task.WhenAll(reads); }
+        catch { throw diagnostic.FirstFailure ?? new PhaseFailure(ResultPhase.ConcurrentReads, FailureKind.Other); }
+    }
+    private static FailureKind Kind(Exception error) => error switch
+    {
+        OperationCanceledException => FailureKind.Cancelled,
+        UnauthorizedAccessException => FailureKind.Denied,
+        SqlException { Number: -2 } => FailureKind.SqlTimeout,
+        SqlException { Number: 1205 } => FailureKind.SqlDeadlock,
+        _ when error.GetType() == typeof(InvalidOperationException) => error.Message switch
+        {
+            "Group source transaction is not available." => FailureKind.SourceLock,
+            "Group model attempt stored result is unavailable." => FailureKind.Result,
+            "Group original input plan store is not available." => FailureKind.Plan,
+            "Group model attempt journal is not available." => FailureKind.Journal,
+            _ => FailureKind.Other
+        },
+        _ => FailureKind.Other
+    };
+    internal static string FailureDiagnostic(Exception error)
+    {
+        var phase = error is PhaseFailure f ? f.Phase switch
+        {
+            ResultPhase.Setup => "setup",
+            ResultPhase.Claim => "claim",
+            ResultPhase.Preparation => "preparation",
+            ResultPhase.ResumeRead => "resume-read",
+            ResultPhase.ResumeOutput => "resume-output",
+            ResultPhase.ResumeStart => "resume-start",
+            ResultPhase.ConcurrentReads => "concurrent-reads",
+            ResultPhase.ConcurrentClaim => "concurrent-claim",
+            ResultPhase.ConcurrentPreparation => "concurrent-preparation",
+            ResultPhase.ConcurrentRead => "concurrent-read",
+            ResultPhase.ConcurrentChecks => "concurrent-checks",
+            ResultPhase.RetrySuppression => "retry-suppression",
+            ResultPhase.FailureSuppression => "failure-suppression",
+            ResultPhase.AttemptStart => "attempt-start",
+            ResultPhase.Commit => "commit",
+            ResultPhase.Deadline => "deadline",
+            ResultPhase.Final => "final",
+            _ => "unknown"
+        } : "unknown";
+        var kind = error is PhaseFailure k ? k.Kind switch
+        {
+            FailureKind.SourceLock => "source-lock",
+            FailureKind.Result => "result",
+            FailureKind.Plan => "plan",
+            FailureKind.Journal => "journal",
+            FailureKind.Denied => "denied",
+            FailureKind.Cancelled => "cancelled",
+            FailureKind.SqlTimeout => "sql-timeout",
+            FailureKind.SqlDeadlock => "sql-deadlock",
+            _ => "other"
+        } : "other";
+        return "FAIL owned attempt result runtime phase-" + phase + " kind-" + kind;
     }
 }
