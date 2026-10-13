@@ -50,7 +50,14 @@ class HistoryContinuationTests(unittest.TestCase):
             return source, events[:2]
         def sql(query):
             queries.append(query)
-            if query.startswith('SELECT RequestCode'): return 'PRIVATE_SQL' if fault == 'code' else code
+            if query.startswith('SELECT RequestCode'):
+                # Shipping notes use one-based ordinals. A prefix-only oracle
+                # previously hid a nonexistent ordinal and missing scope.
+                self.assertEqual(
+                    f"SELECT RequestCode FROM aioffice.GroupCustomerRequests WHERE TenantId='{tenant}' "
+                    f"AND CompanyId='{company}' AND BindingId='{source}' AND OriginCandidateOrdinal=1;",
+                    query)
+                return 'PRIVATE_SQL' if fault == 'code' else code
             if query.startswith('SELECT LOWER(CONVERT(char(36),ConnectorAccountId))'): return account
             if query.startswith('SET NOCOUNT ON;'): return '0' if fault == 'lease' else '1'
             if query.startswith('SELECT LOWER(CONVERT(char(36),Id))'): return events[0] if fault == 'event' else events[2]

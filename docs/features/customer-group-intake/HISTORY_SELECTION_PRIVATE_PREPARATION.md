@@ -111,3 +111,33 @@ source review. Wait for exact parent125 terminal closure; rebase any repair.
 Only then update current durable states, consume exact Git SOURCE review and
 push the successor on SAME288. Actual successor SQL/native/all8/quality/original
 browser evidence must close before runtime qualification. No partial merge.
+
+## Actual history127 failure and scoped fixture repair
+
+Exact d84d6c48a700973e15b199630d0f09776520ed61 Build38455326912 and
+Governance38455326908 closed with native115496459659 and quality115516849783
+RED, .NET4483=[6,520,25,3932] and the other five prerequisites/Governance
+SUCCESS. Full quality log identifies LOCAL_RUNTIME_RESULT=failure. Strict127
+has104 markers once,23 missing,0 duplicates and4 failure markers. Chromium was
+not reached; closure6154433584 records the full failure without rerun/cancel.
+
+The owned continuation asserted that its request code was unavailable. Its
+lookup used OriginCandidateOrdinal=0, while the shipping writer uses index+1
+and the physical database constraint requires1..40. The raw SQL return was not
+captured. The source mismatch is established; complete history recovery is
+unqualified. The repair selects the first shipping ordinal1 with unchanged
+tenant/company/binding scope. The cold oracle now requires that entire query.
+Production code, schema, authority, lease timing and retry policy are unchanged.
+
+Fresh focused Python171=[5,9,157] pass. The stronger oracle rejects the actual
+parent fixture with10 expected assertion/subtest failures across5 tests and
+zero errors. Initial private verification incorrectly expected2 failures; that
+failed harness assertion and log are preserved, and corrected verifierV2 passes.
+No SQL/provider call occurred in these controls. All earlier evidence above is
+historical and does not substitute for this successor's exact-head CI.
+
+Review the repair source and push once on SAME288; close fresh native127,
+full4483.NET, all8 gates, Governance, full quality and six original browser
+images before qualifying history or integrating the private Gateway metadata
+prototype. Actual model remains **NOT_RUN_UNEVALUATED**; full278/279/233 and
+production acceptance remain incomplete.

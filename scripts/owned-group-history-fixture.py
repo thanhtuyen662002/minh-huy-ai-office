@@ -31,7 +31,7 @@ def prepare(*, directory, api, tenant, company, service, sql, identity_index, en
         fixture.require_owned(directory, api)
         assert type(source_id) is str and source_id == source and not used, 'Owned history continuation scope or replay refused'
         used = True  # Uncertain actual Core publication is never repeated.
-        code = sql(f'SELECT RequestCode FROM aioffice.GroupCustomerRequests WHERE {scope} AND OriginCandidateOrdinal=0;')
+        code = sql(f'SELECT RequestCode FROM aioffice.GroupCustomerRequests WHERE {scope} AND OriginCandidateOrdinal=1;')
         assert type(code) is str and re.fullmatch(r'REQ-[0-9A-F]{32}', code), 'Owned history request code unavailable'
         account = sql(f"SELECT LOWER(CONVERT(char(36),ConnectorAccountId)) FROM aioffice.GroupBindings WHERE TenantId='{tenant}' AND CompanyId='{company}' AND Id='{source}';")
         assert type(account) is str and str(uuid.UUID(account)) == account and uuid.UUID(account).int != 0

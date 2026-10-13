@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: d11888c779850a062e2cf2e8acea9a9c975a57a8
+current_target_head: d84d6c48a700973e15b199630d0f09776520ed61
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: d11888c779850a062e2cf2e8acea9a9c975a57a8
+    head: d84d6c48a700973e15b199630d0f09776520ed61
     state: in_progress
-    next: "Parentd11888c native126/full4437/all8/Gov/entire quality/six individual byte-bound ORIGINALS CLOSED_GREEN6151904308. Bounded same-group history14 rebased on qualified parent, three overlaps retain all current first Shared expiry/observer proofs. Fresh full4483=[6,520,25,3932]/46new/format6 and223Python plus three compiled unowned modes PASS. Consume full current private16 and actual Git SOURCE reviews before one SAME288 push; own final native127/full4483/all8/Gov/entirequality/sixORIGINALS through terminal. HistorySQL127 NOT_RUN_UNQUALIFIED; model NOT_RUN_UNEVALUATED. ExistingGateway profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/full233/ERP/installer/deploy/merge incomplete."
+    next: "Actual d84 history127 CLOSED_RED6154433584: native104once/23missing/0duplicate/4failure; all4483.NET, other5 prerequisites and Governance PASS; full quality LOCAL_RUNTIME failure; Chromium not reached. Scoped fixture queried ordinal0 against shipping1..40, raw SQL return not captured. Narrow ordinal1/exact-scope oracle repair passes171 focused Python; stronger oracle rejects actual parent with10 expected assertion/subtest failures. Review exact repair Git source, push once SAME288, own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS through terminal before metadata integration. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Parentd11888c native126/full4437/all8/Gov/entire quality/six individual byte-bound ORIGINALS CLOSED_GREEN6151904308. Bounded same-group history14 rebased on qualified parent, three overlaps retain all current first Shared expiry/observer proofs. Fresh full4483=[6,520,25,3932]/46new/format6 and223Python plus three compiled unowned modes PASS. Consume full current private16 and actual Git SOURCE reviews before one SAME288 push; own final native127/full4483/all8/Gov/entirequality/sixORIGINALS through terminal. HistorySQL127 NOT_RUN_UNQUALIFIED; model NOT_RUN_UNEVALUATED. ExistingGateway profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/full233/ERP/installer/deploy/merge incomplete."
+next_action: "Actual d84 history127 CLOSED_RED6154433584: native104once/23missing/0duplicate/4failure; all4483.NET, other5 prerequisites and Governance PASS; full quality LOCAL_RUNTIME failure; Chromium not reached. Scoped fixture queried ordinal0 against shipping1..40, raw SQL return not captured. Narrow ordinal1/exact-scope oracle repair passes171 focused Python; stronger oracle rejects actual parent with10 expected assertion/subtest failures. Review exact repair Git source, push once SAME288, own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS through terminal before metadata integration. Model NOT_RUN_UNEVALUATED; profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete."
 
 
 blocked_by:
@@ -3938,3 +3938,30 @@ bounded_history_selection_firstexpiry_checkpoint:
   limitation: "HistorySQL127 NOT_RUN_UNQUALIFIED; proposed physical fixture four request revisions/zero glossary. Nonempty glossary/overflow/revocation races and process-kill recovery not proven. HasAdditionalHistory needs durable/model disclosure; profile/tokenizer/window/fallback/production DI/no-click remain unqualified."
   provider: "Reuse current FromEnvironment/OrderedFailoverAiGateway. Required AIOFFICE_AI_PRIMARY_BASE_URL/MODEL/AUTHORIZATION in protected ignored backend EnvironmentFile or approved Worker secret injection; checked local configuration absent, server store unavailable for inspection. Model NOT_RUN_UNEVALUATED."
   next: "Parentd11888c native126/full4437/all8/Gov/entire quality/six individual byte-bound ORIGINALS CLOSED_GREEN6151904308. Bounded same-group history14 rebased on qualified parent, three overlaps retain all current first Shared expiry/observer proofs. Fresh full4483=[6,520,25,3932]/46new/format6 and223Python plus three compiled unowned modes PASS. Consume full current private16 and actual Git SOURCE reviews before one SAME288 push; own final native127/full4483/all8/Gov/entirequality/sixORIGINALS through terminal. HistorySQL127 NOT_RUN_UNQUALIFIED; model NOT_RUN_UNEVALUATED. ExistingGateway profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/IT279/full233/ERP/installer/deploy/merge incomplete."
+bounded_history_fixture_ordinal_repair_checkpoint:
+  failed_head: d84d6c48a700973e15b199630d0f09776520ed61
+  build: 38455326912
+  governance: 38455326908
+  native_job: 115496459659
+  quality_job: 115516849783
+  closure: 6154433584
+  actual: 'All8 terminal: native and quality RED; .NET4483=[6,520,25,3932], five other prerequisites and Governance SUCCESS.
+    Native104/127 once,23 missing,0 duplicate,4 failure markers; no browser artifact.'
+  diagnosis: Owned fixture SELECT uses ordinal0; shipping writer index+1 and SQL constraint1..40 prove source mismatch. Raw
+    result not captured; no full history recovery or uniquely captured SQL return claimed.
+  repair: Lookup only ordinal1 under exact tenant/company/binding. Cold oracle requires entire scoped query; no production
+    source, schema, authority, lease/timing, acceptance marker or retry change.
+  local: Fresh171=[5,9,157] focused Python PASS; actual parent fixture against current oracle rejects10 assertion/subtest
+    failures across5 tests, no errors. Two code files RAW unchanged during verification. Initial private verifier expected2
+    failures instead of observed10; retained as failed harness assertion, corrected verifierV2 passed.
+  preserved: d118 qualified126/full4437/all8/Gov/quality/six original images and all prior failure/state records preserved.
+    d84 current4483 all.NET success does not qualify native127.
+  provider: Reuse existing Gateway; local named36 slots and three referenced files absent in v8, server secret store unavailable
+    for inspection. Model NOT_RUN_UNEVALUATED.
+  next: 'Actual d84 history127 CLOSED_RED6154433584: native104once/23missing/0duplicate/4failure; all4483.NET, other5 prerequisites
+    and Governance PASS; full quality LOCAL_RUNTIME failure; Chromium not reached. Scoped fixture queried ordinal0 against
+    shipping1..40, raw SQL return not captured. Narrow ordinal1/exact-scope oracle repair passes171 focused Python; stronger
+    oracle rejects actual parent with10 expected assertion/subtest failures. Review exact repair Git source, push once SAME288,
+    own fresh native127/full4483/all8/Gov/fullquality/six ORIGINALS through terminal before metadata integration. Model NOT_RUN_UNEVALUATED;
+    profile/tokenizer/window/fallback/history-limit/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge
+    incomplete.'
