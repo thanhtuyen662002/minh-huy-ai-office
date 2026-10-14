@@ -103,12 +103,23 @@ internal sealed class GroupAutomaticInputPlan
             disclosure.EncodeOriginal(), selection, token);
     }
 
+    // Pure preflight only: require the original fenced selector capability
+    // before any SQL attempt. Current SQL origins and fences remain mandatory.
+    internal void RequireOriginalCarrier(GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain,
+        CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        if (WireFormatVersion != 3 || issuedSelection is null || originalDisclosure is null) throw Unavailable();
+        var disclosure = GroupAutomaticHistorySelector.RequireDisclosure(issuedSelection, preparation, brain, false, token);
+        if (!CryptographicOperations.FixedTimeEquals(originalDisclosure, disclosure.EncodeOriginal())) throw Unavailable();
+    }
+
     // A checksum-valid decoded wire is structural only, not a new-row admission capability.
     internal void RequireOriginalIssuance(GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain,
         IEnumerable<GroupBrainRequestOriginMetadata> currentOrigins, CancellationToken token = default)
     {
-        if (WireFormatVersion != 3 || issuedSelection is null) throw Unavailable();
-        var recreated = CreateV3(preparation, brain, issuedSelection, ProfileSha256, modelId, budget, currentOrigins, token);
+        RequireOriginalCarrier(preparation, brain, token);
+        var recreated = CreateV3(preparation, brain, issuedSelection!, ProfileSha256, modelId, budget, currentOrigins, token);
         if (!CryptographicOperations.FixedTimeEquals(Encode(), recreated.Encode())) throw Unavailable();
     }
 

@@ -140,6 +140,8 @@ jobs:
           python scripts/test-result-expiry-proof.py
           python scripts/test-history-selection-proof.py
           python scripts/test-history-continuation.py
+          python scripts/test-original-v3-proof.py
+          python scripts/test-original-v3-enrollment.py
           node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs scripts/test-owned-expiry-receipt.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh

@@ -46,9 +46,19 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
         if (!CryptographicOperations.FixedTimeEquals(original.Encode(), expected.Encode())) throw Unavailable();
     }
 
-    internal async Task<GroupAutomaticInputPlan> PersistAsync(GroupAutomaticInputPlan plan,
+    // Existing callers stay on the legacy Format2 admission path.
+    internal Task<GroupAutomaticInputPlan> PersistAsync(GroupAutomaticInputPlan plan,
         GroupBatchSourcePreparation preparation, GroupBrainPrivateContext currentBrain,
-        CancellationToken token = default)
+        CancellationToken token = default) => PersistCurrentAsync(plan, preparation, currentBrain, 2, token);
+
+    // Explicit new-original entry; decoded recovery carriers cannot insert.
+    internal Task<GroupAutomaticInputPlan> PersistV3Async(GroupAutomaticInputPlan plan,
+        GroupBatchSourcePreparation preparation, GroupBrainPrivateContext currentBrain,
+        CancellationToken token = default) => PersistCurrentAsync(plan, preparation, currentBrain, 3, token);
+
+    private async Task<GroupAutomaticInputPlan> PersistCurrentAsync(GroupAutomaticInputPlan plan,
+        GroupBatchSourcePreparation preparation, GroupBrainPrivateContext currentBrain,
+        int format, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(plan); ArgumentNullException.ThrowIfNull(preparation);
         ArgumentNullException.ThrowIfNull(currentBrain); token.ThrowIfCancellationRequested();
@@ -56,7 +66,13 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
         ValidateEntry(handle, token);
         if (!ReferenceEquals(handle, currentBrain.Handle)) throw Unavailable();
         var frozen = GroupAutomaticInputPlan.Read(plan.Encode());
-        RequireSupportedFormat(2, frozen.WireFormatVersion);
+        if (format == 2) RequireSupportedFormat(2, frozen.WireFormatVersion);
+        else
+        {
+            RequireDecodedFormat(format, frozen.WireFormatVersion);
+            try { plan.RequireOriginalCarrier(preparation, currentBrain, token); }
+            catch (InvalidOperationException) { throw Unavailable(); }
+        }
         var manifest = frozen.Dependencies;
         RequireScope(handle, manifest);
         var result = await InCurrentUnitAsync(handle, manifest, async (now, staged, cancellationToken) =>
@@ -72,6 +88,7 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
                 .Select(x => new GroupBrainRequestOriginMetadata(scope, x.Id, x.OriginBatchId, x.OriginOperationId,
                     x.OriginCandidateOrdinal, x.CreatedAtUtc)).ToArrayAsync(cancellationToken);
             frozen.RequireRestored(preparation, currentBrain, frozen.ProfileSha256, origins, cancellationToken);
+            if (format == 3) plan.RequireOriginalIssuance(preparation, currentBrain, origins, cancellationToken);
             var old = await ReadLockedAsync(handle, cancellationToken);
             if (old is not null)
             {
@@ -86,7 +103,7 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
                 CompanyId = scope.CompanyId,
                 BindingId = scope.SourceBindingId,
                 BatchId = receipt.BatchId,
-                FormatVersion = 2,
+                FormatVersion = format,
                 PlanSha256 = frozen.Sha256,
                 Plan = frozen.Encode(),
                 OriginalClaimOperationId = receipt.OperationId,
@@ -184,10 +201,10 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
     private async Task<GroupAutomaticInputPlan> DecodeAsync(GroupBatchClaimHandle handle, StoredPlan row,
         DateTimeOffset now, CancellationToken token)
     {
-        if (row.FormatVersion != 2 || row.OriginalClaimOperationId == Guid.Empty || row.OriginalClaimEpoch <= 0
+        if (row.FormatVersion is not (2 or 3) || row.OriginalClaimOperationId == Guid.Empty || row.OriginalClaimEpoch <= 0
             || row.CreatedAtUtc.Offset != TimeSpan.Zero || row.CreatedAtUtc > now || row.Plan is null) throw Unavailable();
         var plan = GroupAutomaticInputPlan.Read(row.Plan);
-        RequireSupportedFormat(row.FormatVersion, plan.WireFormatVersion);
+        RequireDecodedFormat(row.FormatVersion, plan.WireFormatVersion);
         RequireScope(handle, plan.Dependencies);
         if (row.TenantId != handle.Receipt.Scope.TenantId || row.CompanyId != handle.Receipt.Scope.CompanyId
             || row.BindingId != handle.Receipt.Scope.SourceBindingId || row.BatchId != handle.Receipt.BatchId
@@ -207,6 +224,11 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
     internal static void RequireSupportedFormat(int rowFormat, int codecFormat)
     {
         if (rowFormat != 2 || codecFormat != rowFormat) throw Unavailable();
+    }
+
+    internal static void RequireDecodedFormat(int rowFormat, int codecFormat)
+    {
+        if (rowFormat is not (2 or 3) || codecFormat != rowFormat) throw Unavailable();
     }
 
     private void ValidateEntry(GroupBatchClaimHandle handle, CancellationToken token)

@@ -10,7 +10,7 @@ internal static class GroupAutomaticInputPlanModelConfiguration
         {
             entity.ToTable("GroupAutomaticInputPlans", table =>
             {
-                table.HasCheckConstraint("CK_GroupAutomaticInputPlans_Format", "[FormatVersion]=2 AND DATALENGTH([Plan]) BETWEEN 256 AND 32000");
+                table.HasCheckConstraint("CK_GroupAutomaticInputPlans_Format", "[FormatVersion] IN (2,3) AND DATALENGTH([Plan]) BETWEEN 256 AND 32000");
                 table.HasCheckConstraint("CK_GroupAutomaticInputPlans_Identity",
                     "[OriginalClaimOperationId]<>'00000000-0000-0000-0000-000000000000' AND [OriginalClaimEpoch]>0 AND DATALENGTH([PlanSha256])=64 AND [PlanSha256] NOT LIKE '%[^0-9A-F]%' COLLATE Latin1_General_100_BIN2");
                 table.HasCheckConstraint("CK_GroupAutomaticInputPlans_Time", "DATEPART(tz,[CreatedAtUtc])=0");
