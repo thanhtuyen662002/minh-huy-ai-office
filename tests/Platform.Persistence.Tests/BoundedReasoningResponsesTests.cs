@@ -9,6 +9,9 @@ using Xunit;
 
 namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
+// These controls deliberately block four pool workers. Isolate their real
+// deadline and recovery assertions from unrelated parallel suite activity.
+[Collection(nameof(BoundedReasoningTimingCollection))]
 public sealed class BoundedReasoningResponsesTests
 {
     private static AiGatewayRequest Request(string input = "owned synthetic input") =>
@@ -448,4 +451,9 @@ public sealed class BoundedReasoningResponsesTests
         protected override bool TryComputeLength(out long length) { length = declared ?? 0; return declared.HasValue; }
         protected override void Dispose(bool disposing) { if (disposing) dispose?.Invoke(); base.Dispose(disposing); }
     }
+}
+
+[CollectionDefinition(nameof(BoundedReasoningTimingCollection), DisableParallelization = true)]
+public sealed class BoundedReasoningTimingCollection
+{
 }

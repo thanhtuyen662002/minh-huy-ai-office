@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: c64fddcaab8b7d2c9ab46e1b2115989bbe3538ba
-last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
+current_target_head: a4e05a09a6a3cd896ee04b175dd9cc4d3b942eb4
+last_verified_commit: 829cae245b33d554c4c36ee301ebcf64869efbce
 
 critical_paths:
   backend:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: c64fddcaab8b7d2c9ab46e1b2115989bbe3538ba
+    head: a4e05a09a6a3cd896ee04b175dd9cc4d3b942eb4
     state: in_progress
-    next: "Qualified c64 all8/Gov/full4670/127 once/fullquality/six original images CLOSED6162603804. Expanded internal V3 Store admission and forward check migration independently source reviewed; legacy PersistAsync stays2-only, V3 requires original selector carrier before SQL and current SQL origins/fences inside owned unit. Frozen current-parent full4694/5 observer controls/cold4/driver12/enrollment2/format passed. New owned mixed V2/V3 SQL proof runs after retained history using source slot17; require all132 markers including4 closed child markers+summary only after both cleanup gates. Push SAME288 and own exact all8/Gov/full4694/132/wholequality/six original images through terminal; fix any real failure on same PR. Then immediately repair retained Pkcs9.0.11 NU1902/NU1903 dependency, continue existingGateway provider profile/tokenizer/window/whole deadline/coordinator/scanner/WorkerDI/no-click278/internalIT279/readonlyMedcomNovo/installer/deployment/full233. Primary provider variables and exact scoped files absent locally; deployment server unavailable; actual model NOT_RUN_UNEVALUATED. No partial merge."
+    next: "A4 scoped V3 SQL132/full4694 exact all8 closed6163407230. Security PR290 mergedmain829 with exact all8/native80/full2027/quality/six original images CLOSED6163957204. Integrate accepted dependency and only reasoning test collection isolation on SAME288; full-v1 failed1 deadline recovery (cause unproven), full-v2 all4694/format passed. Own new exact all8/Gov/full4694/native132/wholequality/six original images to terminal. Then implement whole structured Gateway deadline on same client/loader; immutable qualified provider profile/tokenizer/window, coordinator/scanner/WorkerDI/no-click278/internalIT279 remain. Local provider config absent, remote server unavailable, actual model NOT_RUN_UNEVALUATED. No partial merge or full production claim."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Qualified c64 all8/Gov/full4670/127 once/fullquality/six original images CLOSED6162603804. Expanded internal V3 Store admission and forward check migration independently source reviewed; legacy PersistAsync stays2-only, V3 requires original selector carrier before SQL and current SQL origins/fences inside owned unit. Frozen current-parent full4694/5 observer controls/cold4/driver12/enrollment2/format passed. New owned mixed V2/V3 SQL proof runs after retained history using source slot17; require all132 markers including4 closed child markers+summary only after both cleanup gates. Push SAME288 and own exact all8/Gov/full4694/132/wholequality/six original images through terminal; fix any real failure on same PR. Then immediately repair retained Pkcs9.0.11 NU1902/NU1903 dependency, continue existingGateway provider profile/tokenizer/window/whole deadline/coordinator/scanner/WorkerDI/no-click278/internalIT279/readonlyMedcomNovo/installer/deployment/full233. Primary provider variables and exact scoped files absent locally; deployment server unavailable; actual model NOT_RUN_UNEVALUATED. No partial merge."
+next_action: "A4 scoped V3 SQL132/full4694 exact all8 closed6163407230. Security PR290 mergedmain829 with exact all8/native80/full2027/quality/six original images CLOSED6163957204. Integrate accepted dependency and only reasoning test collection isolation on SAME288; full-v1 failed1 deadline recovery (cause unproven), full-v2 all4694/format passed. Own new exact all8/Gov/full4694/native132/wholequality/six original images to terminal. Then implement whole structured Gateway deadline on same client/loader; immutable qualified provider profile/tokenizer/window, coordinator/scanner/WorkerDI/no-click278/internalIT279 remain. Local provider config absent, remote server unavailable, actual model NOT_RUN_UNEVALUATED. No partial merge or full production claim."
 
 
 blocked_by:
@@ -4175,6 +4175,26 @@ original_input_v3_store_checkpoint:
   successor_CI: NOT_RUN_UNQUALIFIED
   whole_gateway_deadline: false
   profile_tokenizer: false
+  WorkerDI_no_click: false
+  full278_279_233: false
+  merge: false
+
+accepted_pkcs_integration_checkpoint:
+  source_parent: "a4e05a09a6a3cd896ee04b175dd9cc4d3b942eb4"
+  accepted_main: "829cae245b33d554c4c36ee301ebcf64869efbce"
+  accepted_PR: 290
+  accepted_main_closure: 6163957204
+  V3_parent_closure: 6163407230
+  source_paths: 4
+  local_dotnet: 4694
+  projects: [6, 557, 25, 4106]
+  format: "PASS_EMPTY"
+  first_full_failure: "ONE_REAL_REASONING_DEADLINE_RECOVERY_FAILURE;CAUSE_UNPROVEN;CONTENTION_INFERRED"
+  test_repair: "NAMED_COLLECTION_SERIALIZATION_ONLY;ALL38_BODIES_250MS_3_4S_AND_PHYSICAL_SLOT_ASSERTIONS_RETAINED"
+  dependency: "PKCS9_0_21_FROM_REVIEWED_MAIN;SAME_SQLCLIENT6_1_6_EF10_0_12"
+  new_head: "RESOLVE_ACTUAL_PR288_HEAD_FROM_CURRENT_HANDOFF_AND_GITHUB"
+  successor_CI: "NOT_RUN_UNQUALIFIED"
+  actual_model: "NOT_RUN_UNEVALUATED"
   WorkerDI_no_click: false
   full278_279_233: false
   merge: false
