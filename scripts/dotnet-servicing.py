@@ -13,6 +13,7 @@ def require_sdk(text):
         raise ValueError(INVALID)
     if int(text.strip().split(".")[2]) < SDK_FLOOR:
         raise ValueError(INVALID)
+    return text.strip()
 
 
 def require_frameworks(text, aspnet=False, host=False):
@@ -24,7 +25,8 @@ def require_frameworks(text, aspnet=False, host=False):
     found = set()
     selected_patches = {}
     identities = set()
-    pattern = r"(Microsoft\.(?:NETCore|AspNetCore|WindowsDesktop)\.App) ([0-9]+)\.([0-9]+)\.([0-9]+) \[[^\r\n\[\]]+\]"
+    number = r"(0|[1-9][0-9]*)"
+    pattern = r"(Microsoft\.(?:NETCore|AspNetCore|WindowsDesktop)\.App) " + r"\.".join([number] * 3) + r" \[[^\r\n\[\]]+\]"
     for line in lines:
         match = re.fullmatch(pattern, line)
         if match is None:
@@ -45,6 +47,7 @@ def require_frameworks(text, aspnet=False, host=False):
         required.add("Microsoft.AspNetCore.App")
     if not required <= found:
         raise ValueError(INVALID)
+    return {name: f"10.0.{selected_patches[name]}" for name in sorted(required)}
 
 
 def main():
@@ -58,14 +61,17 @@ def main():
         if args.sdk:
             if args.aspnet or args.host:
                 raise ValueError(INVALID)
-            require_sdk(text)
+            verified = require_sdk(text)
         else:
-            require_frameworks(text, args.aspnet, args.host)
+            verified = require_frameworks(text, args.aspnet, args.host)
     except (ValueError, OverflowError):
         print(INVALID, file=sys.stderr)
         return 1
-    print("PASS required October .NET SDK servicing floor" if args.sdk else
-          "PASS required October .NET shared-framework servicing floor")
+    if args.sdk:
+        print(f"PASS required October .NET SDK servicing floor: {verified}")
+    else:
+        versions = ", ".join(f"{name} {version}" for name, version in verified.items())
+        print(f"PASS required October .NET shared-framework servicing floor: {versions}")
     return 0
 
 

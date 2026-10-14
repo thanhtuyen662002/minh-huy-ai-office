@@ -20,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
         with:
           dotnet-version: 10.0.402
       - name: Verify actual serviced SDK and host frameworks
@@ -130,6 +132,8 @@ jobs:
       - name: Install browser proof dependencies
         run: npm ci --no-audit --no-fund
       - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
         with:
           dotnet-version: 10.0.402
       - name: Verify actual serviced SDK and host frameworks
@@ -294,6 +298,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
         with:
           dotnet-version: 10.0.402
       - name: Verify actual serviced SDK and host frameworks

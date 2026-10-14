@@ -50,6 +50,22 @@ class ServicingTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     servicing.require_frameworks(text, True)
 
+    def test_noncanonical_numeric_segments_refuse_in_host_and_container_modes(self):
+        for version in ["010.0.13", "10.00.13", "10.0.013", "010.00.013", "10.0.+13", "10.0.-13"]:
+            for host in [False, True]:
+                with self.subTest(version=version, host=host):
+                    with self.assertRaisesRegex(ValueError, servicing.INVALID):
+                        servicing.require_frameworks(CORE.replace("10.0.13", version) + "\n" + ASP, True, host)
+
+    def test_cli_reports_only_verified_versions_without_inventory_paths(self):
+        result = subprocess.run([sys.executable, str(path), "--aspnet", "--host"],
+                                input=CORE + "\n" + ASP, text=True, capture_output=True)
+        self.assertEqual(0, result.returncode)
+        self.assertIn("Microsoft.NETCore.App 10.0.13", result.stdout)
+        self.assertIn("Microsoft.AspNetCore.App 10.0.13", result.stdout)
+        self.assertNotIn("/usr/share", result.stdout)
+        self.assertEqual("", result.stderr)
+
     def test_host_can_retain_inactive_old_installs_but_requires_serviced_compatible_selection(self):
         servicing.require_frameworks(CORE.replace("10.0.13", "10.0.12") + "\n" + CORE + "\n" + ASP, True, host=True)
         for text in [CORE.replace("10.0.13", "10.0.12"), CORE + "\n" + ASP.replace("10.0.13", "10.0.12"), CORE + "\n" + CORE + "\n" + ASP]:
