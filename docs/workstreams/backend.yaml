@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 51a5968d255d04430ab3e155d4d4d8c95081b18d
+head: 9430bf8573fcb046aa9ef6a66ce1b811aba429f4
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-14'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Qualified parent51a all8/Gov/full4575/127 once/full quality/six original images closure6160096372. Existing Gateway Reasoning now bounds entity524288/input128000/output64000UTF16 and owns four route permits through transfer/cleanup/cancellation; no new client/config. Issued same-batch history disclosure/context-v2 repeats required incomplete-history policy in every chunk; legacy v1 original golden preserved. Fresh combined full4634=[6,557,25,4046],59 scoped repeats andformat10 PASS. Review frozen13, commit/push SAME288 once and own successor127/all8/Gov/full4634/fullquality/six originals through terminal. Then implement versioned AIOGPLN3 original-input durability with expand migration/mixed legacy recovery before coordinator/scanner/WorkerDI/no-click278/IT279. Actual model NOT_RUN_UNEVALUATED; whole-Gateway deadline/profile/tokenizer/model/ERP/installer/deploy/full233/merge incomplete. No partial merge."
+next_action: "Actual943 all8 terminal RED6161101515: native119/127 once,8 missing,0 duplicate,3 failure markers; .NET4634 and other5 prerequisites/Gov PASS. Exact Chromium history selection cause remains unproven; owned navigation experiment did not reproduce early acceptance. Five distinct switch phases and passive one-second closed DOM classification preserve original selection failure and every127 oracle. Fresh local63 guard/lifecycle/receipt controls PASS; runtime successor remains unqualified. Review diagnostics5, push SAME288 once and own exact-head all8/Gov/4634/127/fullquality/six originals through terminal; use any terminal classification to fix SAME288 immediately. Private V3 six-path graph4670/root source-clear remains unpromoted; format3 not enabled. Existing Gateway/config reused; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deploy/merge incomplete. No partial merge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -4743,5 +4743,31 @@ bounded_reasoning_history_disclosure_checkpoint:
   actual_model: NOT_RUN_UNEVALUATED
   successor_CI: NOT_RUN
   WorkerDI_no_click: false
+  full278_279_233: false
+  merge: false
+
+browser_company_selection_diagnostics_checkpoint:
+  parent: 9430bf8573fcb046aa9ef6a66ce1b811aba429f4
+  qualified_ancestor: 51a5968d255d04430ab3e155d4d4d8c95081b18d
+  failed_build: 38507659752
+  failed_governance: 38507659729
+  failed_native: 115668752861
+  failed_quality: 115682292246
+  closure_comment: 6161101515
+  native:
+    required: 127
+    once: 119
+    missing: 8
+    duplicates: 0
+    failure_markers: 3
+  dotnet: 4634
+  cause: UNPROVEN_GENERIC_STAGE_REUSED;OWNED_CHROMIUM_EARLY_ACCEPTANCE_NOT_REPRODUCED
+  diagnostics: FIVE_FIXED_CALL_PHASES;ONE_SECOND_PASSIVE_CLOSED_DOM_PROJECTION;ORIGINAL_FAILURE_RETHROWN;NO_RETRY_FORCE_OR_TRANSPORT_MUTATION
+  focused_guard_controls: 63
+  required_oracles_changed: false
+  production_API_UI_AI_SQL_changed: false
+  private_V3: SOURCE_CLEAR_PRIVATE6_FULL4670_NOT_PROMOTED_FORMAT3_NOT_ENABLED
+  actual_model: NOT_RUN_UNEVALUATED
+  successor_CI: NOT_RUN_UNQUALIFIED
   full278_279_233: false
   merge: false

@@ -42,7 +42,37 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     // reaches the parent's fixed stage and owned restoration finally.
     callback.catch(() => {}); authorization.catch(() => {});
     stage(phase + "-select");
-    await page.getByRole("combobox", { name: "Chuyển công ty", exact: true }).selectOption(target);
+    try {
+      await page.getByRole("combobox", { name: "Chuyển công ty", exact: true }).selectOption(target);
+    } catch (error) {
+      // Inspect only the failed control. Never retry/force selection, change
+      // transport, read private content or replace the original refusal.
+      let timer, state = "unavailable";
+      try {
+        const observation = await Promise.race([page.evaluate(selected => {
+          const controls = document.querySelectorAll("#workspace-company");
+          if (controls.length > 1) return "ambiguous";
+          const picker = controls[0];
+          if (!picker) {
+            const buttons = [...document.querySelectorAll("button")];
+            if (buttons.some(button => button.textContent.trim() === "Làm mới công ty")) return "directory-refused";
+            if (buttons.some(button => button.textContent.trim() === "Đăng nhập doanh nghiệp")) return "signed-out";
+            if (buttons.some(button => button.textContent.trim() === "Đăng xuất")) return "ready-without-picker";
+            return "absent";
+          }
+          if (!(picker instanceof HTMLSelectElement)) return "unexpected-control";
+          if (picker.disabled) return "disabled";
+          if (!picker.getClientRects().length) return "hidden";
+          if (![...picker.options].some(option => option.value === selected)) return "target-missing";
+          return picker.value === selected ? "already-selected" : "available";
+        }, target), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("Observation unavailable.")), 1000); })]);
+        if (["ambiguous", "directory-refused", "signed-out", "ready-without-picker", "absent", "unexpected-control",
+          "disabled", "hidden", "target-missing", "already-selected", "available"].includes(observation)) state = observation;
+      } catch { /* A lost document has no observation; do not expose its error. */ }
+      finally { clearTimeout(timer); }
+      stage(phase + "-select-" + state);
+      throw error;
+    }
     stage(phase + "-auth-request");
     const request = new URL((await authorization).url()); requireProof(request.searchParams.get("response_type") === "code"
       && request.searchParams.get("code_challenge_method") === "S256" && request.searchParams.get("code_challenge"));
@@ -88,7 +118,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
   const secondaryContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   let held, release, fulfilled, routePattern;
   try {
-    stage("shipping-owner-list-detail"); await switchCompany(ownerPage, selected); await openHistory(ownerPage);
+    stage("shipping-owner-list-detail"); await switchCompany(ownerPage, selected, "owner-fixture-company-switch"); await openHistory(ownerPage);
     for (const name of ["Hoàn thành", "Chờ xử lý", "Thất bại"]) requireProof(await ownerPage.getByRole("cell", { name, exact: true }).count() === 1);
     await openCompleted(ownerPage);
     const ownerList = await get(ownerPage, "/api/local/tasks" + query); requireProof(ownerList.status === 200 && ownerList.cache === "no-store");
@@ -136,7 +166,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
       && JSON.parse(initial.text).companyId === originalCompany && !JSON.parse(initial.text).roles.includes("admin")
       && initialSid && initialSid !== await cookie(ownerContext));
     stage("second-provider-shipping-company-switch");
-    await switchCompany(secondary, selected);
+    await switchCompany(secondary, selected, "second-user-fixture-company-switch");
     stage("second-provider-code-s256-owner-isolation");
     const otherCurrent = await get(secondary, "/api/local/session" + query), otherSid = await cookie(secondaryContext);
     requireProof(otherCurrent.status === 200 && otherCurrent.cache === "no-store" && JSON.parse(otherCurrent.text).userId === fixture.otherUserId
@@ -171,7 +201,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     requireProof(attempted && !capturedFailure);
     requireProof(await ownerPage.getByText(answer, { exact: true }).count() === 0 && await ownerPage.getByRole("region", { name: "Công việc của tôi", exact: true }).count() === 0);
     requireProof((await get(ownerPage, `/api/local/tasks/${fixture.taskIds[0]}/history?companyId=${originalCompany}`)).status === 404);
-    await switchCompany(ownerPage, selected); await openHistory(ownerPage); await openCompleted(ownerPage);
+    await switchCompany(ownerPage, selected, "late-private-detail-return-switch"); await openHistory(ownerPage); await openCompleted(ownerPage);
     stage("external-membership-loss-private-clear-and-restore");
     sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=0 WHERE ${ownerMember};`);
     await ownerPage.getByRole("button", { name: "Tải lại công việc", exact: true }).click(); await ownerPage.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).waitFor();
@@ -184,7 +214,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     console.log("PASS shipping late body/company-switch fence, external membership loss/private clearing and restored archive with unchanged tasks/dispatches/identity/roles/audits/credit settlements");
     stage("sanitized-artifact"); const artifact = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof"); await mkdir(artifact, { recursive: true });
     await ownerPage.screenshot({ path: join(artifact, "task-history.png"), fullPage: true });
-    await switchCompany(ownerPage, originalCompany);
+    await switchCompany(ownerPage, originalCompany, "archive-final-original-switch");
   } finally {
     release?.();
     if (routePattern) await ownerPage.unroute(routePattern).catch(() => {});
