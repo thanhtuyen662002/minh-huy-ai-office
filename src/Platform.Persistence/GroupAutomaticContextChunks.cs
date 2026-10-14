@@ -6,18 +6,38 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // persisted disposition or current authority is created by this plan.
 public sealed class GroupAutomaticContextChunk
 {
-    internal GroupAutomaticContextChunk(int ordinal, GroupBatchSourcePreparation preparation, GroupAutomaticModelContext? context)
-    { Ordinal = ordinal; Preparation = preparation; ModelContext = context; }
+    internal GroupAutomaticContextChunk(int ordinal, GroupBatchSourcePreparation preparation, GroupAutomaticModelContext? context,
+        GroupHistorySelectionDisclosure? disclosure = null)
+    { Ordinal = ordinal; Preparation = preparation; ModelContext = context; HistoryDisclosure = disclosure; }
     public int Ordinal { get; }
     public GroupBatchSourcePreparation Preparation { get; }
     public GroupAutomaticModelContext? ModelContext { get; }
+    internal GroupHistorySelectionDisclosure? HistoryDisclosure { get; }
     public override string ToString() => "Group automatic context chunk (private content).";
 }
 
 public static class GroupAutomaticContextChunks
 {
     public static IReadOnlyList<GroupAutomaticContextChunk> Create(GroupBatchSourcePreparation preparation,
-        GroupBrainPrivateContext brain, string? modelId, int estimatedTokenBudget, CancellationToken token = default)
+        GroupBrainPrivateContext brain, string? modelId, int estimatedTokenBudget, CancellationToken token = default) =>
+        CreateCore(preparation, brain, null, null, modelId, estimatedTokenBudget, token);
+
+    internal static IReadOnlyList<GroupAutomaticContextChunk> CreateV2(GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, GroupAutomaticHistorySelection selection, string? modelId,
+        int estimatedTokenBudget, CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        try
+        {
+            var disclosure = GroupAutomaticHistorySelector.RequireDisclosure(selection, preparation, brain, false, token);
+            return CreateCore(preparation, brain, selection, disclosure, modelId, estimatedTokenBudget, token);
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException) { throw Unavailable(); }
+    }
+
+    private static IReadOnlyList<GroupAutomaticContextChunk> CreateCore(GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, GroupAutomaticHistorySelection? selection, GroupHistorySelectionDisclosure? disclosure,
+        string? modelId, int estimatedTokenBudget, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(preparation); ArgumentNullException.ThrowIfNull(brain); token.ThrowIfCancellationRequested();
         try
@@ -37,7 +57,7 @@ public static class GroupAutomaticContextChunks
             {
                 token.ThrowIfCancellationRequested();
                 var item = ordered.Single(x => x.MessageId == candidate.MessageId);
-                var single = GroupAutomaticModelContext.Create(Subset([item]), brain, modelId!, estimatedTokenBudget);
+                var single = CreateContext(Subset([item]));
                 var source = single.Manifest.Entries.Single(x => x.Kind == AiContextSourceKind.Conversation);
                 var fixedCost = checked(single.Manifest.UsedTokens - source.EstimatedTokens);
                 if (overhead is not null && overhead != fixedCost) throw Unavailable();
@@ -73,10 +93,14 @@ public static class GroupAutomaticContextChunks
             {
                 if (selected.Count == 0) throw Unavailable();
                 var part = Subset(selected.ToArray());
-                var context = modelCount == 0 ? null : GroupAutomaticModelContext.Create(part, brain, modelId!, estimatedTokenBudget);
+                var context = modelCount == 0 ? null : CreateContext(part);
                 if (context is not null && context.Manifest.UsedTokens != checked(overhead!.Value + sourceCost + modelCount - 1)) throw Unavailable();
-                chunks.Add(new(chunks.Count + 1, part, context)); selected.Clear(); modelCount = 0; sourceCost = 0;
+                chunks.Add(new(chunks.Count + 1, part, context, disclosure)); selected.Clear(); modelCount = 0; sourceCost = 0;
             }
+
+            GroupAutomaticModelContext CreateContext(GroupBatchSourcePreparation part) => selection is null
+                ? GroupAutomaticModelContext.Create(part, brain, modelId!, estimatedTokenBudget)
+                : GroupAutomaticModelContext.CreateV2(part, brain, selection, modelId!, estimatedTokenBudget, token);
         }
         catch (Exception error) when (error is ArgumentException or InvalidOperationException or OverflowException)
         { throw Unavailable(); }

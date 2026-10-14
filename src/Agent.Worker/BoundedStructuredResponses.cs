@@ -207,7 +207,7 @@ internal sealed class BoundedStructuredResponses(HttpClient client, OpenAiCompat
     private static bool NonNull(JsonElement root, string name) => root.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null;
     private sealed record Prepared(byte[] Body, byte[] Schema);
 
-    private sealed class OwnedCancellation
+    internal sealed class OwnedCancellation
     {
         private readonly object gate = new();
         private readonly CancellationTokenSource source = new();

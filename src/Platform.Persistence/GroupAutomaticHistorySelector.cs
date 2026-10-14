@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
+using System.Runtime.CompilerServices;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
@@ -11,7 +12,7 @@ internal sealed class GroupAutomaticHistorySelection
 {
     internal GroupAutomaticHistorySelection(GroupScope scope, Guid[] requests, Guid[] glossary, bool limited)
     {
-        Scope = scope; RequestIds = Array.AsReadOnly(requests); GlossaryIds = Array.AsReadOnly(glossary);
+        Scope = scope; RequestIds = Array.AsReadOnly(requests.ToArray()); GlossaryIds = Array.AsReadOnly(glossary.ToArray());
         HasAdditionalHistory = limited;
     }
     internal GroupScope Scope { get; }
@@ -24,6 +25,9 @@ internal sealed class GroupAutomaticHistorySelection
 internal sealed class GroupAutomaticHistorySelector(PlatformDbContext database, GroupExtractionWorkerBinding worker,
     TimeProvider clock, GroupBatchSourceReader sources)
 {
+    // Issuance identity only, never a cached permission/currentness verdict.
+    // Pure Rank results and copied Scope-only carriers are absent from here.
+    private static readonly ConditionalWeakTable<GroupAutomaticHistorySelection, GroupHistorySelectionDisclosure> Issued = new();
     private const int ProbeLimit = GroupBrainCurrentReader.MaximumSelectedRevisions + 1;
     private const int GlossaryLimit = 4;
 
@@ -79,9 +83,21 @@ internal sealed class GroupAutomaticHistorySelector(PlatformDbContext database, 
             // An edit/recall/expiry while metadata was selected must prevent
             // release. Selection never falls back to empty history on failure.
             await sources.RequireCurrentAsync(preparation.Context, token);
-            token.ThrowIfCancellationRequested(); return selection;
+            token.ThrowIfCancellationRequested();
+            Issued.Add(selection, GroupHistorySelectionDisclosure.Capture(preparation, selection));
+            return selection;
         }
         catch (Exception error) when (error is SqlException or DbUpdateException or ArgumentException) { throw Unavailable(); }
+    }
+
+    internal static GroupHistorySelectionDisclosure RequireDisclosure(GroupAutomaticHistorySelection selection,
+        GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain, bool allowSourceSubset,
+        CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(selection); token.ThrowIfCancellationRequested();
+        if (!Issued.TryGetValue(selection, out var disclosure)) throw Unavailable();
+        disclosure.RequireMatches(preparation, brain, allowSourceSubset, token);
+        return disclosure;
     }
 
     // These fixed internal query factories release no plaintext or authority.

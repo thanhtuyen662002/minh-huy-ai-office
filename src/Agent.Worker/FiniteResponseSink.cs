@@ -3,10 +3,19 @@ using System.Security.Cryptography;
 namespace MinhHuy.AIOffice.Agent.Worker;
 
 /// <summary>Fixed adapter-owned accepted entity bytes, including every Stream write overload.</summary>
-internal sealed class FiniteResponseSink(CancellationToken cancellation) : Stream
+internal sealed class FiniteResponseSink : Stream
 {
     private readonly object gate = new();
-    private readonly byte[] buffer = new byte[StructuredResponsesPolicy.EntityByteLimit];
+    private readonly CancellationToken cancellation;
+    private readonly byte[] buffer;
+    public FiniteResponseSink(CancellationToken cancellation) : this(cancellation, StructuredResponsesPolicy.EntityByteLimit) { }
+    internal FiniteResponseSink(CancellationToken cancellation, int entityLimit)
+    {
+        if (entityLimit != StructuredResponsesPolicy.EntityByteLimit && entityLimit != BoundedReasoningResponses.EntityByteLimit)
+            throw new ArgumentException("Response sink profile is invalid.");
+        this.cancellation = cancellation;
+        buffer = new byte[entityLimit];
+    }
     private int length;
     private bool failed;
     private bool sealedOrDisposed;

@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 8a71f1d55a41508a9ad73c5b8f9cd48d8c55dba4
+current_target_head: 51a5968d255d04430ab3e155d4d4d8c95081b18d
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 8a71f1d55a41508a9ad73c5b8f9cd48d8c55dba4
+    head: 51a5968d255d04430ab3e155d4d4d8c95081b18d
     state: in_progress
-    next: "Qualified parent8a all8/Gov/full4483/127 once/full quality/six original images closure6157664315. Existing Gateway metadata, pure supplied-label reducer and optional output loader explicitly merged; fresh full4575=[6,557,25,3987], 92 scoped repeats, format6 and8 deployment controls PASS. Production EnvironmentFile forwards all three output-limit prefixes only to Worker. Review immutable current16 source, then one SAME288 push and own successor127/all8/Gov/full4575/fullquality/six originals through terminal. Actual model NOT_RUN_UNEVALUATED; profile/tokenizer/history disclosure/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete. No partial merge."
+    next: "Qualified parent51a all8/Gov/full4575/127 once/full quality/six original images closure6160096372. Existing Gateway Reasoning now bounds entity524288/input128000/output64000UTF16 and owns four route permits through transfer/cleanup/cancellation; no new client/config. Issued same-batch history disclosure/context-v2 repeats required incomplete-history policy in every chunk; legacy v1 original golden preserved. Fresh combined full4634=[6,557,25,4046],59 scoped repeats andformat10 PASS. Review frozen13, commit/push SAME288 once and own successor127/all8/Gov/full4634/fullquality/six originals through terminal. Then implement versioned AIOGPLN3 original-input durability with expand migration/mixed legacy recovery before coordinator/scanner/WorkerDI/no-click278/IT279. Actual model NOT_RUN_UNEVALUATED; whole-Gateway deadline/profile/tokenizer/model/ERP/installer/deploy/full233/merge incomplete. No partial merge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Qualified parent8a all8/Gov/full4483/127 once/full quality/six original images closure6157664315. Existing Gateway metadata, pure supplied-label reducer and optional output loader explicitly merged; fresh full4575=[6,557,25,3987], 92 scoped repeats, format6 and8 deployment controls PASS. Production EnvironmentFile forwards all three output-limit prefixes only to Worker. Review immutable current16 source, then one SAME288 push and own successor127/all8/Gov/full4575/fullquality/six originals through terminal. Actual model NOT_RUN_UNEVALUATED; profile/tokenizer/history disclosure/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete. No partial merge."
+next_action: "Qualified parent51a all8/Gov/full4575/127 once/full quality/six original images closure6160096372. Existing Gateway Reasoning now bounds entity524288/input128000/output64000UTF16 and owns four route permits through transfer/cleanup/cancellation; no new client/config. Issued same-batch history disclosure/context-v2 repeats required incomplete-history policy in every chunk; legacy v1 original golden preserved. Fresh combined full4634=[6,557,25,4046],59 scoped repeats andformat10 PASS. Review frozen13, commit/push SAME288 once and own successor127/all8/Gov/full4634/fullquality/six originals through terminal. Then implement versioned AIOGPLN3 original-input durability with expand migration/mixed legacy recovery before coordinator/scanner/WorkerDI/no-click278/IT279. Actual model NOT_RUN_UNEVALUATED; whole-Gateway deadline/profile/tokenizer/model/ERP/installer/deploy/full233/merge incomplete. No partial merge."
 
 
 blocked_by:
@@ -4047,6 +4047,39 @@ existing_gateway_metadata_semantics_output_checkpoint:
   actual_model: NOT_RUN_UNEVALUATED
   profile_tokenizer: false
   whole_operation_deadline_qualified: false
+  WorkerDI_no_click: false
+  full278_279_233: false
+  merge: false
+
+bounded_reasoning_history_disclosure_checkpoint:
+  parent: 51a5968d255d04430ab3e155d4d4d8c95081b18d
+  parent_build: 38489595932
+  parent_governance: 38489596048
+  parent_closure: 6160096372
+  parent_native127: QUALIFIED_SCOPED_ONLY
+  source_files: 1109
+  selected_paths: 13
+  outside1096_actual_parent_RAW_equal: true
+  local_dotnet: 4634
+  projects:
+  - 6
+  - 557
+  - 25
+  - 4046
+  new_controls:
+    reasoning: 38
+    disclosure: 21
+  focused59: REPEATED_SUBSET
+  format10: PASS_EMPTY
+  reasoning: EXISTING_CLIENT_OPTIONS_SINK_CANCELLATION_REUSED_ENTITY524288_INPUT128000_OUTPUT64000UTF16_FOUR_ROUTE_PERMITS_OWNED_THROUGH_CLEANUP
+  structured: ENTITY262144_AND_ALL_PREEXISTING_STRUCTURED_METHOD_BODIES_RETAINED_EXCEPT_NESTED_CANCELLATION_VISIBILITY
+  disclosure: ACTUAL_FENCED_SELECTOR_CWT_ISSUANCE_ORIGINAL_HANDLE_AND_SOURCE_HISTORY_BINDING_CONTEXT_V2_COMPLETENESS_NEVER_ASSERTED_EVERY_CHUNK_EXACT_BYTES
+  legacy: PUBLIC_CONTEXT_V1_AND_ORIGINAL_19209_BYTE_GOLDEN_INPUT_HASH_MANIFEST_PLAN_OPERATION_WITNESS_RETAINED
+  original_input_v2_durability: false
+  whole_gateway_deadline_qualified: false
+  profile_tokenizer: false
+  actual_model: NOT_RUN_UNEVALUATED
+  successor_CI: NOT_RUN
   WorkerDI_no_click: false
   full278_279_233: false
   merge: false

@@ -13,6 +13,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed class GroupAutomaticModelContext
 {
     public const string FormatVersion = "group-automatic-context-v1";
+    internal const string DisclosureFormatVersion = "group-automatic-context-v2";
     public const string TokenAccountingVersion = "utf8-byte-estimate-v1";
     public const int MaximumInputUtf8Bytes = 64000;
     public const int MaximumEstimatedTokenBudget = 64000;
@@ -28,16 +29,23 @@ public sealed class GroupAutomaticModelContext
         Split or combine actionable work with current evidence. Social/echo text may be no_work. Ambiguity requires needs_clarification.
         Relation hints remain unverified. The host checks the closed output schema, references, literal grounding and quarantine.
         """;
+    private const string DisclosurePolicy = Policy + "\n" +
+        "History is a bounded host-selected subset; total history completeness is not asserted. " +
+        "Unlisted work may exist even when selection_may_be_incomplete is false or history is empty. " +
+        "A true limit flag is conservative and does not prove extra matching records exist. " +
+        "Do not infer no prior request, a merge target or verified relation from missing history. " +
+        "Current-source work remains grounded in current evidence; a limit alone is not no_work or a reason to invent ambiguity.";
 
     private readonly string input;
     private GroupAutomaticModelContext(GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain,
-        string input, AiContextManifest manifest)
-    { Preparation = preparation; Brain = brain; this.input = input; Manifest = manifest; }
+        string input, AiContextManifest manifest, string inputFormatVersion)
+    { Preparation = preparation; Brain = brain; this.input = input; Manifest = manifest; InputFormatVersion = inputFormatVersion; }
     internal GroupBatchSourcePreparation Preparation { get; }
     internal GroupBrainPrivateContext Brain { get; }
     public GroupScope Scope => Preparation.Scope;
     public Guid BatchId => Preparation.BatchId;
     public AiContextManifest Manifest { get; }
+    internal string InputFormatVersion { get; }
     // Existing Context Engine estimates are explicitly not a tokenizer or a
     // measured provider context window. A model-specific profile must qualify
     // this accounting before a production consumer is enabled.
@@ -45,11 +53,31 @@ public sealed class GroupAutomaticModelContext
     public override string ToString() => "Group automatic model context (private content).";
 
     public static GroupAutomaticModelContext Create(GroupBatchSourcePreparation preparation,
-        GroupBrainPrivateContext brain, string modelId, int estimatedTokenBudget)
+        GroupBrainPrivateContext brain, string modelId, int estimatedTokenBudget) =>
+        CreateCore(preparation, brain, modelId, estimatedTokenBudget, null);
+
+    internal static GroupAutomaticModelContext CreateV2(GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, GroupAutomaticHistorySelection selection, string modelId,
+        int estimatedTokenBudget, CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        try
+        {
+            var disclosure = GroupAutomaticHistorySelector.RequireDisclosure(selection, preparation, brain, true, token);
+            var result = CreateCore(preparation, brain, modelId, estimatedTokenBudget, disclosure);
+            token.ThrowIfCancellationRequested(); return result;
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException) { throw Unavailable(); }
+    }
+
+    private static GroupAutomaticModelContext CreateCore(GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, string modelId, int estimatedTokenBudget, GroupHistorySelectionDisclosure? disclosure)
     {
         ArgumentNullException.ThrowIfNull(preparation); ArgumentNullException.ThrowIfNull(brain);
         try
         {
+            var format = disclosure is null ? FormatVersion : DisclosureFormatVersion;
+            var policy = disclosure is null ? Policy : DisclosurePolicy;
             preparation.Scope.Validate();
             if (!ReferenceEquals(preparation.Context.Handle, brain.Handle) || preparation.Scope != brain.Scope
                 || preparation.Candidates.Count is < 1 or > 100 || brain.Items.Count > GroupBrainCurrentReader.MaximumSelectedRevisions
@@ -138,7 +166,7 @@ public sealed class GroupAutomaticModelContext
                     return revision.Origin == GroupRequestRevisionOrigin.ItEdited ? "it_confirmed_stored_revision" : "source_backed_ai_interpretation";
                 }
             }
-            var input = JsonSerializer.Serialize(new
+            var input = disclosure is null ? JsonSerializer.Serialize(new
             {
                 version = FormatVersion,
                 policy = Policy,
@@ -149,14 +177,26 @@ public sealed class GroupAutomaticModelContext
                 has_coverage_gap = preparation.Context.HasCoverageGap,
                 current_sources = sources,
                 same_group_history = historical
+            }, Json) : JsonSerializer.Serialize(new
+            {
+                version = format,
+                policy,
+                quarantine_policy_version = preparation.QuarantinePolicyVersion,
+                source_version = preparation.Context.Handle.Authority.Source.Version,
+                deletion_generation = preparation.Context.Handle.Authority.Source.DeletionGeneration,
+                allocated_through_sequence = preparation.Context.AllocatedThroughSequence,
+                has_coverage_gap = preparation.Context.HasCoverageGap,
+                history_selection = disclosure.PromptMetadata(),
+                current_sources = sources,
+                same_group_history = historical
             }, Json);
             var inputBytes = StrictUtf8.GetByteCount(input);
             if (inputBytes > MaximumInputUtf8Bytes) throw Unavailable();
-            var policyBytes = StrictUtf8.GetByteCount(Policy);
+            var policyBytes = StrictUtf8.GetByteCount(policy);
             var framingBytes = checked(inputBytes - fragmentBytes - policyBytes);
             if (framingBytes <= 0) throw Unavailable();
-            units.Add(new("policy:" + FormatVersion, AiContextSourceKind.Policy, Policy, policyBytes, 0, Required: true));
-            units.Add(new("framing:" + FormatVersion, AiContextSourceKind.Policy, FormatVersion, framingBytes, 0, Required: true));
+            units.Add(new("policy:" + format, AiContextSourceKind.Policy, policy, policyBytes, 0, Required: true));
+            units.Add(new("framing:" + format, AiContextSourceKind.Policy, format, framingBytes, 0, Required: true));
             units.Add(new("schema:" + GroupGroundedWorkProposal.FormatVersion, AiContextSourceKind.Policy,
                 GroupGroundedWorkProposal.ResponseSchema, StrictUtf8.GetByteCount(GroupGroundedWorkProposal.ResponseSchema), 0, Required: true));
             var request = new AiContextRequest(preparation.Scope.TenantId.ToString("D"), preparation.Scope.CompanyId.ToString("D"),
@@ -164,7 +204,7 @@ public sealed class GroupAutomaticModelContext
             var manifest = new DeterministicAiContextAssembler().Assemble(request);
             if (manifest.Entries.Count != units.Count || manifest.UsedTokens != checked(inputBytes + StrictUtf8.GetByteCount(GroupGroundedWorkProposal.ResponseSchema))) throw Unavailable();
             manifest = manifest with { Entries = Array.AsReadOnly(manifest.Entries.ToArray()) };
-            return new(preparation, brain, input, manifest);
+            return new(preparation, brain, input, manifest, format);
 
             void AddFragment(string fragment, string id, AiContextSourceKind kind, List<JsonElement> destination)
             {
