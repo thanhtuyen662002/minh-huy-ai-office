@@ -6,7 +6,7 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 606e1f821fd3e4326bf9211b69da75bf8901806d
+current_target_head: 8a71f1d55a41508a9ad73c5b8f9cd48d8c55dba4
 last_verified_commit: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
 
 critical_paths:
@@ -14,9 +14,9 @@ critical_paths:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 606e1f821fd3e4326bf9211b69da75bf8901806d
+    head: 8a71f1d55a41508a9ad73c5b8f9cd48d8c55dba4
     state: in_progress
-    next: "Actual606 cancelled by directly captured GitHub50m0s job-timeout annotation; closure6156909652. All SQL/source/history/terminal/frontier/cursor/migration summaries PASS, native112/127once/15missing/0duplicate/1failure; Chromium incomplete/no artifact. Full4483.NET, five other prerequisites and Governance PASS; quality LOCAL_RUNTIME cancelled. Only local-runtime outer budget50-to60 repaired: actual setup+SQL49m56s plus retained browser62s requires over50m; SQL slowdown cause unmeasured. Every127 gate and per-operation deadline retained. Review exact source and push once SAME288; own successor all8/Gov/fullquality/six originals through terminal. Private Gateway metadata/reducer withheld pending qualified parent/review. Reuse existing Gateway/loader; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deployment/merge incomplete."
+    next: "Qualified parent8a all8/Gov/full4483/127 once/full quality/six original images closure6157664315. Existing Gateway metadata, pure supplied-label reducer and optional output loader explicitly merged; fresh full4575=[6,557,25,3987], 92 scoped repeats, format6 and8 deployment controls PASS. Production EnvironmentFile forwards all three output-limit prefixes only to Worker. Review immutable current16 source, then one SAME288 push and own successor127/all8/Gov/full4575/fullquality/six originals through terminal. Actual model NOT_RUN_UNEVALUATED; profile/tokenizer/history disclosure/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete. No partial merge."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "Actual606 cancelled by directly captured GitHub50m0s job-timeout annotation; closure6156909652. All SQL/source/history/terminal/frontier/cursor/migration summaries PASS, native112/127once/15missing/0duplicate/1failure; Chromium incomplete/no artifact. Full4483.NET, five other prerequisites and Governance PASS; quality LOCAL_RUNTIME cancelled. Only local-runtime outer budget50-to60 repaired: actual setup+SQL49m56s plus retained browser62s requires over50m; SQL slowdown cause unmeasured. Every127 gate and per-operation deadline retained. Review exact source and push once SAME288; own successor all8/Gov/fullquality/six originals through terminal. Private Gateway metadata/reducer withheld pending qualified parent/review. Reuse existing Gateway/loader; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deployment/merge incomplete."
+next_action: "Qualified parent8a all8/Gov/full4483/127 once/full quality/six original images closure6157664315. Existing Gateway metadata, pure supplied-label reducer and optional output loader explicitly merged; fresh full4575=[6,557,25,3987], 92 scoped repeats, format6 and8 deployment controls PASS. Production EnvironmentFile forwards all three output-limit prefixes only to Worker. Review immutable current16 source, then one SAME288 push and own successor127/all8/Gov/full4575/fullquality/six originals through terminal. Actual model NOT_RUN_UNEVALUATED; profile/tokenizer/history disclosure/coordinator/scanner/WorkerDI/no-click278/279/full233/ERP/installer/deploy/merge incomplete. No partial merge."
 
 
 blocked_by:
@@ -4014,4 +4014,39 @@ bounded_history_runtime_job_budget_repair_checkpoint:
   verification: "Workflow semantic comparison permits only job timeout; source diff/unique-key durable state preservation. No new unit test needed for one orchestration scalar; complete successor hosted SQL/Chromium/all8 CI is required. Prior233 Python and actual4483.NET are historical exact606 evidence, not fresh successor results."
   next: "Actual606 cancelled by directly captured GitHub50m0s job-timeout annotation; closure6156909652. All SQL/source/history/terminal/frontier/cursor/migration summaries PASS, native112/127once/15missing/0duplicate/1failure; Chromium incomplete/no artifact. Full4483.NET, five other prerequisites and Governance PASS; quality LOCAL_RUNTIME cancelled. Only local-runtime outer budget50-to60 repaired: actual setup+SQL49m56s plus retained browser62s requires over50m; SQL slowdown cause unmeasured. Every127 gate and per-operation deadline retained. Review exact source and push once SAME288; own successor all8/Gov/fullquality/six originals through terminal. Private Gateway metadata/reducer withheld pending qualified parent/review. Reuse existing Gateway/loader; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deployment/merge incomplete."
   model: "NOT_RUN_UNEVALUATED"
+  merge: false
+
+existing_gateway_metadata_semantics_output_checkpoint:
+  parent: 8a71f1d55a41508a9ad73c5b8f9cd48d8c55dba4
+  parent_build: 38482003696
+  parent_governance: 38482003700
+  parent_closure: 6157664315
+  parent_native127: QUALIFIED_PARENT_ONLY
+  files: 1104
+  selected_paths: 16
+  outside1088_actual_parent_unchanged: true
+  local_dotnet: 4575
+  projects:
+  - 6
+  - 557
+  - 25
+  - 3987
+  new_controls:
+    metadata: 12
+    arithmetic: 37
+    output_loader: 43
+  scoped92: REPEATED_SUBSET
+  format6: PASS
+  deployment_controls8: PASS_PRIVATE
+  successor_CI: NOT_RUN
+  route_metadata: CAPTURED_EXISTING_ADAPTERS_ONLY_ACCOUNTING_UNKNOWN_NO_PROFILE_RELEASE
+  semantic_reducer: SUPPLIED_LABEL_ARITHMETIC_ONLY_RELEASE_ALWAYS_FALSE_NO_SEMANTIC_TRUTH_OR_PROVENANCE_AUTHENTICATION
+  loader: SAME_FromEnvironment_OPTIONAL_MAX_OUTPUT_TOKENS_CANONICAL_1_TO32768_DEFAULT1024
+  deployment: EXISTING_EnvironmentFile_PRIMARY_BACKUP_LEGACY_MAX_OUTPUT_FORWARD_TO_WORKER_ONLY_RENDER_NOT_RUN_LOCAL_DOCKER_UNAVAILABLE
+  config: SCOPED12_NAMES_36_SLOTS_ALL_ABSENT_FIVE_EXACT_FILE_REFERENCES_ABSENT_REMOTE_SERVER_UNAVAILABLE_NO_CONTENTS_OR_SECRETS_LOGGED
+  actual_model: NOT_RUN_UNEVALUATED
+  profile_tokenizer: false
+  whole_operation_deadline_qualified: false
+  WorkerDI_no_click: false
+  full278_279_233: false
   merge: false

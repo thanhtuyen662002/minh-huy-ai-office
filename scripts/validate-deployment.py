@@ -3,6 +3,7 @@ import json
 import sys
 from pathlib import Path
 from browser_deployment_contract import validate_browser_deployment
+from ai_gateway_deployment_contract import validate_ai_gateway_deployment
 
 
 def fail(message: str) -> None:
@@ -117,5 +118,9 @@ if "AIOFFICE_DB_CONNECTION" not in api_environment:
 worker_ports = services["agent-worker"].get("ports") or []
 if worker_ports:
     fail("agent-worker must not publish host ports")
+
+gateway_error = validate_ai_gateway_deployment(services)
+if gateway_error:
+    fail(gateway_error)
 
 print("deployment contract validation passed")

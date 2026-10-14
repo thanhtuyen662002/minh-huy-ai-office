@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using MinhHuyAiOffice.Shared.Contracts;
@@ -62,9 +64,21 @@ public sealed record OpenAiCompatibleResponsesOptions(
             throw new InvalidOperationException("AI runtime configuration contains invalid canonical values.");
         }
 
+        var maxOutputTokens = 1024;
+        var configuredMaxOutputTokens = Environment.GetEnvironmentVariable($"{prefix}_MAX_OUTPUT_TOKENS");
+        if (configuredMaxOutputTokens is not null
+            && (configuredMaxOutputTokens.Length is < 1 or > 5
+                || configuredMaxOutputTokens[0] is < '1' or > '9'
+                || configuredMaxOutputTokens.Any(character => character is < '0' or > '9')
+                || !int.TryParse(configuredMaxOutputTokens, NumberStyles.None, CultureInfo.InvariantCulture, out maxOutputTokens)
+                || maxOutputTokens is < 1 or > 32768))
+        {
+            throw new InvalidOperationException("AI runtime maximum output tokens must be a canonical integer from 1 to 32768.");
+        }
+
         var endpoint = new Uri($"{baseUrl.TrimEnd('/')}/responses", UriKind.Absolute);
         var allowLoopback = Environment.GetEnvironmentVariable($"{prefix}_ALLOW_INSECURE_LOOPBACK") == "true";
-        var result = new OpenAiCompatibleResponsesOptions(endpoint, model, authorization, providerId)
+        var result = new OpenAiCompatibleResponsesOptions(endpoint, model, authorization, providerId, maxOutputTokens)
         {
             AllowInsecureLoopback = allowLoopback
         };
@@ -88,8 +102,23 @@ public sealed class AiProviderExecutionException(
 /// </summary>
 public sealed class OrderedFailoverAiGateway(
     IAiProviderAdapter primary,
-    IAiProviderAdapter? backup = null) : IAiGateway
+    IAiProviderAdapter? backup = null) : IAiGateway, IAiStructuredGatewayMetadataSource
 {
+    public AiStructuredGatewayMetadata DescribeStructuredGateway()
+    {
+        return AiStructuredGatewayMetadata.Create(Describe(primary), backup is null ? null : Describe(backup));
+
+        static AiStructuredRouteMetadata Describe(IAiProviderAdapter adapter)
+        {
+            if (adapter is not IAiStructuredProviderMetadataSource source
+                || !adapter.Supports(AiCapability.StructuredGeneration)) throw Unavailable();
+            var metadata = source.DescribeStructuredRoute();
+            if (metadata is null || metadata.ProviderId != adapter.ProviderId) throw Unavailable();
+            return metadata;
+        }
+        static InvalidOperationException Unavailable() => new("AI structured Gateway metadata is unavailable.");
+    }
+
     public async Task<AiGatewayResponse> ExecuteAsync(
         AiGatewayRequest request,
         CancellationToken cancellationToken = default)
@@ -162,13 +191,25 @@ public sealed class OrderedFailoverAiGateway(
 /// </summary>
 public sealed class OpenAiCompatibleResponsesAdapter(
     HttpClient httpClient,
-    OpenAiCompatibleResponsesOptions options) : IAiProviderAdapter
+    OpenAiCompatibleResponsesOptions options) : IAiProviderAdapter, IAiStructuredProviderMetadataSource
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly BoundedStructuredResponses structured = new(httpClient, options);
 
     public string ProviderId => options.ProviderId;
+
+    public AiStructuredRouteMetadata DescribeStructuredRoute()
+    {
+        StructuredResponsesPolicy.ValidateOptions(options);
+        var endpointIdentity = Convert.ToHexString(SHA256.HashData(
+            StructuredResponsesPolicy.StrictUtf8.GetBytes("responses-endpoint-identity-v1\n" + options.Endpoint.AbsoluteUri)));
+        return new(options.ProviderId, options.Model, endpointIdentity, options.MaxOutputTokens, options.StructuredTimeout,
+            new("structured-responses-transport-v1", StructuredResponsesPolicy.InputByteLimit,
+                StructuredResponsesPolicy.SchemaByteLimit, StructuredResponsesPolicy.OutputByteLimit,
+                StructuredResponsesPolicy.EntityByteLimit, StructuredResponsesPolicy.JsonDepthLimit,
+                StructuredResponsesPolicy.SchemaDepthLimit, StructuredResponsesPolicy.OperationLimit));
+    }
 
     public bool Supports(AiCapability capability) =>
         capability is AiCapability.Reasoning or AiCapability.StructuredGeneration;

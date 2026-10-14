@@ -200,6 +200,7 @@ jobs:
             config --format json > "${rendered}"
           python3 scripts/validate-deployment.py "${rendered}"
           python3 -m unittest discover -s scripts -p test_browser_deployment.py
+          python3 -m unittest discover -s scripts -p test_ai_gateway_deployment.py
           python3 -m json.tool apps/web/vercel.json >/dev/null
       - name: Validate enabled production browser deployment contract
         env:
