@@ -70,6 +70,16 @@ public sealed class GroupAutomaticModelContext
         catch (Exception error) when (error is ArgumentException or InvalidOperationException) { throw Unavailable(); }
     }
 
+    // Authenticated original reconstruction only; never issues a selector capability.
+    internal static GroupAutomaticModelContext RestoreV2(GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, GroupHistorySelectionDisclosure original, string modelId,
+        int estimatedTokenBudget, CancellationToken token)
+    {
+        original.RequireMatches(preparation, brain, true, token);
+        var result = CreateCore(preparation, brain, modelId, estimatedTokenBudget, original);
+        token.ThrowIfCancellationRequested(); return result;
+    }
+
     private static GroupAutomaticModelContext CreateCore(GroupBatchSourcePreparation preparation,
         GroupBrainPrivateContext brain, string modelId, int estimatedTokenBudget, GroupHistorySelectionDisclosure? disclosure)
     {

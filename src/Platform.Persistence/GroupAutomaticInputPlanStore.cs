@@ -56,6 +56,7 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
         ValidateEntry(handle, token);
         if (!ReferenceEquals(handle, currentBrain.Handle)) throw Unavailable();
         var frozen = GroupAutomaticInputPlan.Read(plan.Encode());
+        RequireSupportedFormat(2, frozen.WireFormatVersion);
         var manifest = frozen.Dependencies;
         RequireScope(handle, manifest);
         var result = await InCurrentUnitAsync(handle, manifest, async (now, staged, cancellationToken) =>
@@ -186,6 +187,7 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
         if (row.FormatVersion != 2 || row.OriginalClaimOperationId == Guid.Empty || row.OriginalClaimEpoch <= 0
             || row.CreatedAtUtc.Offset != TimeSpan.Zero || row.CreatedAtUtc > now || row.Plan is null) throw Unavailable();
         var plan = GroupAutomaticInputPlan.Read(row.Plan);
+        RequireSupportedFormat(row.FormatVersion, plan.WireFormatVersion);
         RequireScope(handle, plan.Dependencies);
         if (row.TenantId != handle.Receipt.Scope.TenantId || row.CompanyId != handle.Receipt.Scope.CompanyId
             || row.BindingId != handle.Receipt.Scope.SourceBindingId || row.BatchId != handle.Receipt.BatchId
@@ -198,6 +200,13 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
             || row.CreatedAtUtc >= receipt.ExpiresAtUtc || receipt.AuthoritySha256 != plan.Dependencies.AuthoritySha256)
             throw Unavailable();
         return plan;
+    }
+
+    // Legacy store admission remains Format2 only. A decoded V3 carrier is
+    // structural, never first-insert issuance or an expanded schema contract.
+    internal static void RequireSupportedFormat(int rowFormat, int codecFormat)
+    {
+        if (rowFormat != 2 || codecFormat != rowFormat) throw Unavailable();
     }
 
     private void ValidateEntry(GroupBatchClaimHandle handle, CancellationToken token)

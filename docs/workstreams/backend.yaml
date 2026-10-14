@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: 9430bf8573fcb046aa9ef6a66ce1b811aba429f4
+head: 8dbfba20ecd227faf9590071427be2c9c3c17735
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-14'
@@ -195,7 +195,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: "Actual943 all8 terminal RED6161101515: native119/127 once,8 missing,0 duplicate,3 failure markers; .NET4634 and other5 prerequisites/Gov PASS. Exact Chromium history selection cause remains unproven; owned navigation experiment did not reproduce early acceptance. Five distinct switch phases and passive one-second closed DOM classification preserve original selection failure and every127 oracle. Fresh local63 guard/lifecycle/receipt controls PASS; runtime successor remains unqualified. Review diagnostics5, push SAME288 once and own exact-head all8/Gov/4634/127/fullquality/six originals through terminal; use any terminal classification to fix SAME288 immediately. Private V3 six-path graph4670/root source-clear remains unpromoted; format3 not enabled. Existing Gateway/config reused; model NOT_RUN_UNEVALUATED. Full278/279/233/ERP/installer/deploy/merge incomplete. No partial merge."
+next_action: "Qualified8db all8/Gov/full4634/127 once/fullquality/six originals CLOSED6161898185; earlier943 executed selection cause remains unproven. V3 dual codec/original disclosure restores exact original input/history/chunks/hash/operations without new selection; existing Store retains Format2-only admission and rejects any issued or decoded3 plus row2/wire3. Legacy original19209-byte golden unchanged. Previously independently reviewed pure6 full4670=[6,557,25,4082]/36 new controls, format6 PASS; rebase only onto current qualified8db, verify codec9 complete frozen graph and actual Git source, push SAME288 once then own all8/Gov/full4670/127/fullquality/six originals through terminal. Separate root-authored private16 SQL expansion/proof full4689/build/cold4/driver12/format has NOT_RUN actualSQL and pending independent review; do not promote it here. Reuse Gateway/config; actual model NOT_RUN_UNEVALUATED. V3 durable admission/mixed132/coordinator/scanner/WorkerDI/no-click278/IT279/profile/tokenizer/whole deadline/ERP/installer/deploy/full233/merge incomplete. No partial merge."
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
@@ -4769,5 +4769,34 @@ browser_company_selection_diagnostics_checkpoint:
   private_V3: SOURCE_CLEAR_PRIVATE6_FULL4670_NOT_PROMOTED_FORMAT3_NOT_ENABLED
   actual_model: NOT_RUN_UNEVALUATED
   successor_CI: NOT_RUN_UNQUALIFIED
+  full278_279_233: false
+  merge: false
+
+original_input_v3_codec_checkpoint:
+  parent: 8dbfba20ecd227faf9590071427be2c9c3c17735
+  qualified_build: 38514027709
+  qualified_governance: 38514027806
+  qualified_native: 115688666488
+  qualified_quality: 115703425176
+  closure_comment: 6161898185
+  independent_pure6_review_sha256: 6746051d191b1ead1cc5517eacd0677e88bb76dcf3ebfdb43c05965bab3aa522
+  code_paths: 6
+  local_dotnet_preceding_identical_code: 4670
+  projects:
+  - 6
+  - 557
+  - 25
+  - 4082
+  new_controls: 36
+  codec: CLOSED_AIOGPLN2_LEGACY_EXACT_AND_AIOGPLN3_ORIGINAL_DISCLOSURE_HISTORY_ORDER_CHUNKS_HASH_OPERATIONS
+  issued_V3: ACTUAL_FENCED_SELECTOR_CAPABILITY;DECODED_STRUCTURAL_WIRE_CANNOT_MINT_FIRST_INSERT
+  recovery: STORED_ORIGINAL_DISCLOSURE;FRESH_HANDLE_INPUT_MANIFEST_HISTORY_RECREATION;NO_TOPN_OR_SELECTOR_ISSUANCE
+  legacy_store: FORMAT2_ONLY_RETAINED;NEW_ISSUED_OR_DECODED3_REFUSED_BEFORE_SQL;ROW2_WIRE3_REFUSED
+  migration: false
+  V3_SQL_admission: false
+  private16: ROOT_AUTHORED_FULL4689_COLD4_DRIVER12_FORMAT;INDEPENDENT_REVIEW_AND_ACTUAL_SQL_PENDING;NOT_PROMOTED
+  actual_model: NOT_RUN_UNEVALUATED
+  successor_CI: NOT_RUN_UNQUALIFIED
+  WorkerDI: false
   full278_279_233: false
   merge: false

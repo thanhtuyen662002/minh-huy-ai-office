@@ -1,4 +1,6 @@
 using MinhHuy.AIOffice.Shared.Contracts.GroupIntake;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
@@ -75,17 +77,104 @@ internal sealed class GroupHistorySelectionDisclosure
     internal object PromptMetadata() => new
     {
         policy_version = PolicyVersion,
-        selection_scope = "same_authorized_group_current_generation_excluding_own_batch",
-        completeness = "not_asserted",
+        selection_scope = SelectionScope,
+        completeness = Completeness,
         selection_may_be_incomplete = SelectionMayBeIncomplete,
-        max_selected_revisions = GroupBrainCurrentReader.MaximumSelectedRevisions,
+        // These are the frozen facts of this disclosure policy version.
+        max_selected_revisions = 20,
         max_glossary_revisions = 4,
-        max_request_code_hints = GroupAutomaticHistoryHints.MaximumRequestCodes,
-        request_metadata_probe_limit = GroupBrainCurrentReader.MaximumSelectedRevisions + 1,
+        max_request_code_hints = 100,
+        request_metadata_probe_limit = 21,
         glossary_metadata_probe_limit = 5,
         selected_request_revisions = RequestCount,
         selected_glossary_revisions = GlossaryCount
     };
+    // Closed original data only. Decoding does not populate selector issuance.
+    internal const int MaximumOriginalBytes = 8 + 3 * (2 + 256) + 5 * 4 + 2 + 100 * 48;
+    private const string SelectionScope = "same_authorized_group_current_generation_excluding_own_batch";
+    private const string Completeness = "not_asserted";
+    private static readonly UTF8Encoding OriginalUtf8 = new(false, true);
+    private static readonly byte[] OriginalMagic = "AIOGHD01"u8.ToArray();
+
+    internal byte[] EncodeOriginal()
+    {
+        using var stream = new MemoryStream(MaximumOriginalBytes);
+        using var writer = new BinaryWriter(stream, OriginalUtf8, true);
+        writer.Write(OriginalMagic);
+        foreach (var text in new[] { PolicyVersion, SelectionScope, Completeness })
+        {
+            var bytes = OriginalUtf8.GetBytes(text);
+            if (bytes.Length > 256) throw Unavailable();
+            writer.Write((ushort)bytes.Length); writer.Write(bytes);
+        }
+        foreach (var value in new[] { 20, 4, 100, 21, 5 }) writer.Write(value);
+        writer.Write((byte)(SelectionMayBeIncomplete ? 1 : 0));
+        if (entryHashes.Count is < 1 or > 100) throw Unavailable();
+        writer.Write((byte)entryHashes.Count);
+        foreach (var entry in entryHashes.OrderBy(x => x.Key))
+        { writer.Write(entry.Key.ToByteArray()); writer.Write(Convert.FromHexString(entry.Value)); }
+        writer.Flush();
+        if (stream.Length > MaximumOriginalBytes) throw Unavailable();
+        return stream.ToArray();
+    }
+
+    internal static void ValidateOriginal(byte[]? bytes, GroupWorkDependencyManifest manifest,
+        IReadOnlyList<GroupAutomaticInputPlan.HistoryMember> history) => _ = ReadOriginal(bytes, manifest, history);
+
+    internal static GroupHistorySelectionDisclosure RestoreOriginal(byte[] bytes,
+        GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain, GroupWorkDependencyManifest manifest,
+        IReadOnlyList<GroupAutomaticInputPlan.HistoryMember> history, CancellationToken token)
+    {
+        var original = ReadOriginal(bytes, manifest, history);
+        var result = new GroupHistorySelectionDisclosure(preparation.Context.Handle, manifest, original.Hashes,
+            history.Select(x => new HistoryMember(x.Kind, x.RecordId)).ToArray(), original.Limited);
+        result.RequireMatches(preparation, brain, false, token);
+        if (!CryptographicOperations.FixedTimeEquals(bytes, result.EncodeOriginal())) throw Unavailable();
+        return result;
+    }
+
+    private static (bool Limited, Dictionary<Guid, string> Hashes) ReadOriginal(byte[]? bytes,
+        GroupWorkDependencyManifest manifest, IReadOnlyList<GroupAutomaticInputPlan.HistoryMember> history)
+    {
+        if (bytes is null || bytes.Length is < 64 or > MaximumOriginalBytes) throw Unavailable();
+        try
+        {
+            if (history.Count > 20 || history.Count != manifest.Dependencies.Count
+                || history.Count(x => x.Kind == GroupBrainContentKind.GlossaryRevision) > 4
+                || history.Any(x => x.Kind is not (GroupBrainContentKind.RequestRevision or GroupBrainContentKind.GlossaryRevision))
+                || !history.Select(x => (x.Kind, x.RecordId)).ToHashSet().SetEquals(manifest.Dependencies.Select(x => (x.Kind, x.RecordId)))) throw Unavailable();
+            using var stream = new MemoryStream(bytes.ToArray(), false);
+            using var reader = new BinaryReader(stream, OriginalUtf8, true);
+            if (!Read(8).AsSpan().SequenceEqual(OriginalMagic)) throw Unavailable();
+            foreach (var expected in new[] { PolicyVersion, SelectionScope, Completeness })
+            {
+                var length = reader.ReadUInt16();
+                if (length > 256 || OriginalUtf8.GetString(Read(length)) != expected) throw Unavailable();
+            }
+            foreach (var expected in new[] { 20, 4, 100, 21, 5 }) if (reader.ReadInt32() != expected) throw Unavailable();
+            var flag = reader.ReadByte(); if (flag > 1) throw Unavailable();
+            var count = reader.ReadByte(); if (count != manifest.Sources.Count || count is < 1 or > 100) throw Unavailable();
+            var hashes = new Dictionary<Guid, string>(); Guid? previous = null;
+            for (var i = 0; i < count; i++)
+            {
+                var id = new Guid(Read(16)); var hash = Convert.ToHexString(Read(32));
+                if (id == Guid.Empty || previous is not null && previous.Value.CompareTo(id) >= 0
+                    || !manifest.Sources.Any(x => x.MessageId == id) || !hashes.TryAdd(id, hash)) throw Unavailable();
+                previous = id;
+            }
+            if (stream.Position != stream.Length) throw Unavailable();
+            return (flag == 1, hashes);
+
+            byte[] Read(int count)
+            {
+                if (count > stream.Length - stream.Position) throw Unavailable();
+                var value = reader.ReadBytes(count); if (value.Length != count) throw Unavailable(); return value;
+            }
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or EndOfStreamException or OverflowException)
+        { throw Unavailable(); }
+    }
+
     private static GroupWorkDependencyManifest SourceManifest(GroupBatchSourcePreparation preparation) =>
         GroupWorkDependencyManifest.Read(GroupWorkDependencyManifest.Create(preparation.Context,
             new(preparation.Context.Handle, [], []), preparation.BatchId));

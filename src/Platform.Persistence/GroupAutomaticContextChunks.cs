@@ -35,6 +35,15 @@ public static class GroupAutomaticContextChunks
         catch (Exception error) when (error is ArgumentException or InvalidOperationException) { throw Unavailable(); }
     }
 
+    // This structural reconstruction does not register fresh selector issuance.
+    internal static IReadOnlyList<GroupAutomaticContextChunk> RestoreV2(GroupBatchSourcePreparation preparation,
+        GroupBrainPrivateContext brain, GroupHistorySelectionDisclosure original, string? modelId,
+        int estimatedTokenBudget, CancellationToken token)
+    {
+        original.RequireMatches(preparation, brain, false, token);
+        return CreateCore(preparation, brain, null, original, modelId, estimatedTokenBudget, token);
+    }
+
     private static IReadOnlyList<GroupAutomaticContextChunk> CreateCore(GroupBatchSourcePreparation preparation,
         GroupBrainPrivateContext brain, GroupAutomaticHistorySelection? selection, GroupHistorySelectionDisclosure? disclosure,
         string? modelId, int estimatedTokenBudget, CancellationToken token)
@@ -98,9 +107,11 @@ public static class GroupAutomaticContextChunks
                 chunks.Add(new(chunks.Count + 1, part, context, disclosure)); selected.Clear(); modelCount = 0; sourceCost = 0;
             }
 
-            GroupAutomaticModelContext CreateContext(GroupBatchSourcePreparation part) => selection is null
+            GroupAutomaticModelContext CreateContext(GroupBatchSourcePreparation part) => disclosure is null
                 ? GroupAutomaticModelContext.Create(part, brain, modelId!, estimatedTokenBudget)
-                : GroupAutomaticModelContext.CreateV2(part, brain, selection, modelId!, estimatedTokenBudget, token);
+                : selection is null
+                    ? GroupAutomaticModelContext.RestoreV2(part, brain, disclosure, modelId!, estimatedTokenBudget, token)
+                    : GroupAutomaticModelContext.CreateV2(part, brain, selection, modelId!, estimatedTokenBudget, token);
         }
         catch (Exception error) when (error is ArgumentException or InvalidOperationException or OverflowException)
         { throw Unavailable(); }
