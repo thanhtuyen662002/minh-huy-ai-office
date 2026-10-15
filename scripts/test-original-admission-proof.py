@@ -69,6 +69,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 if fault == 'companion-count' and phase == 'admission-original-commit': return '0'
                 return '0' if phase in ('admission-original-prepare','admission-original-expiry') else '1'
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates'): return '0' if fault == 'expiry-witness' else '1'
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts'): return '4'
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupOriginalAdmissionSidecars s INNER JOIN'): return '0' if fault == 'row-binding' else '1'
             self.fail('Unexpected SQL shape')
 
@@ -83,7 +84,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 phase = 'image-cleanup'; return SimpleNamespace(returncode=1 if fault == 'image-error' else 0,stdout='',stderr='')
             self.assertEqual(['docker','run'],command[:2]); phase = command[-1]
             if phase == 'admission-original-recover': self.assertTrue(denied)
-            line = proof.READ_RUNTIME_LINE if phase == 'admission-original-sql-read' else proof.RUNTIME_LINES[phase]
+            line = proof.JOURNAL_EXPIRY_RUNTIME_LINE if phase == 'admission-original-journal-expiry' else proof.READ_RUNTIME_LINE if phase == 'admission-original-sql-read' else proof.RUNTIME_LINES[phase]
             if phase == 'admission-original-commit': line += '\n'+proof.JOURNAL_RUNTIME_LINE
             if fault == 'journal-missing' and phase == 'admission-original-commit': line = proof.RUNTIME_LINES[phase]
             if fault == 'sql-read-child' and phase == 'admission-original-sql-read': return SimpleNamespace(returncode=1,stdout='',stderr='')
@@ -105,19 +106,19 @@ class OriginalAdmissionProofTests(unittest.TestCase):
         def permission_control(**kwargs):
             self.assertIn('batch',kwargs);self.assertTrue(callable(kwargs['run_child']));self.assertTrue(callable(kwargs['assert_unchanged']))
             if fault == 'permission-suite':raise AssertionError('permission suite failed')
-        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch.object(proof.permission_proof,'verify',side_effect=permission_control),patch('sys.stdout',new_callable=io.StringIO) as output:
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch.object(proof.permission_proof,'verify',side_effect=permission_control),patch.object(proof.guard_counterfactual,'verify',return_value=proof.guard_counterfactual.SUMMARY),patch('sys.stdout',new_callable=io.StringIO) as output:
             if fault:
                 with self.assertRaises(AssertionError): proof.verify(**args)
                 self.assertEqual('',output.getvalue())
             else:
                 proof.verify(**args)
-                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY,proof.JOURNAL_SUMMARY],output.getvalue().splitlines())
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY,proof.JOURNAL_SUMMARY,proof.JOURNAL_EXPIRY_RUNTIME_LINE,proof.guard_counterfactual.SUMMARY],output.getvalue().splitlines())
         return args,calls,mutations
 
     def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
         args,calls,mutations = self.run_control()
         self.assertEqual(['deny','restore'],mutations)
-        self.assertEqual([*proof.RUNTIME_LINES,'admission-original-sql-read','admission-original-resume'],[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
+        self.assertEqual([*proof.RUNTIME_LINES,'admission-original-sql-read','admission-original-resume','admission-original-journal-expiry'],[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
         self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))
         for cmd,kwargs in calls:
             if cmd[:2] != ['docker','run']: continue

@@ -15,6 +15,10 @@ _permission_spec = importlib.util.spec_from_file_location('owned_original_admiss
 permission_proof = importlib.util.module_from_spec(_permission_spec)
 _permission_spec.loader.exec_module(permission_proof)
 
+_guard_spec = importlib.util.spec_from_file_location('owned_accepted_guard_counterfactual',Path(__file__).with_name('smoke-group-accepted-guard-counterfactual.py'))
+guard_counterfactual = importlib.util.module_from_spec(_guard_spec)
+_guard_spec.loader.exec_module(guard_counterfactual)
+
 RUNTIME_LINES = {
     'admission-original-prepare': 'PASS owned original admission actual two revisions inbox allocation no original sidecar attempt result or effects',
     'admission-original-expiry': 'PASS owned original admission actual both rows flushed expiry observation retained across immediate rewind rollback witness committed old claim refused legitimate replacement retains zero effects or HTTP',
@@ -27,6 +31,7 @@ READ_RUNTIME_LINE = 'PASS owned original admission actual SQL exact original sid
 READ_SUMMARY = 'PASS actual original admission shipping sidecar SQL predicate positive and tenant company binding batch counterfactual empty reads same owned authority and transaction no foreign authorized API claim both cleanup gates unchanged graphs zero keys or provider'
 JOURNAL_RUNTIME_LINE = 'PASS owned original admission actual current gate prepared journal and companion both flushed rollback no rows committed exact scoped provenance current snapshot deadline capped replay no second permit actual current SQL before and after synthetic adapter outside SQL once protected accepted result FIRST zero HTTP no model qualification'
 JOURNAL_SUMMARY = 'PASS actual admitted original model journal authentic sidecar same transaction two row flush rollback committed exact companion replay no second permit actual Gateway execution current SQL before after wait one use outside SQL accepted result FIRST without sidecar or companion SELECT retained full graphs both cleanup gates synthetic adapter zero HTTP no model qualification'
+JOURNAL_EXPIRY_RUNTIME_LINE = 'PASS owned admitted journal authentic expiry observed UTC before claim issuance actual entry exact witness old interval refused replacement current no second attempt accepted graphs retained zero provider'
 
 
 def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, automatic):
@@ -193,6 +198,20 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         assert not result.stderr
         reference.require_reference_result(result,'admission-original-resume',[RUNTIME_LINES['admission-original-resume']])
         unchanged()
+        counterfactual_summary = guard_counterfactual.verify(directory=directory,api=api,installation=installation,tenant=tenant,company=company,
+            service=service,password=password,sql=sql,prepare_source=prepare_source,reference=reference,automatic=automatic,
+            runtime_lines=RUNTIME_LINES,assert_unchanged=unchanged)
+        assert counterfactual_summary == guard_counterfactual.SUMMARY
+        before_journal_expiry = tuple(digest(t,o,scope) for t,o in extra)
+        old_third_claim = digest('GroupBatchClaimReceipts','BatchId,Epoch',scope+' AND Epoch=3')
+        result = subprocess.run([*command,'admission-original-journal-expiry'],input=config,env=env,capture_output=True,text=True,timeout=170)
+        assert not result.stderr
+        reference.require_reference_result(result,'admission-original-journal-expiry',[JOURNAL_EXPIRY_RUNTIME_LINE])
+        assert tuple(digest(t,o,scope) for t,o in extra) == before_journal_expiry
+        assert digest('GroupBatchClaimReceipts','BatchId,Epoch',scope+' AND Epoch=3') == old_third_claim
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc IS NULL;") == '1'
+        assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope};") == '4'
+        require_fixed_source(); completed = graph(); unchanged()
     except BaseException as error: failure = error
     finally:
         try: automatic.close_owned_container(directory=directory,api=api,name=image,suffix=suffix,reference=reference)
@@ -216,3 +235,5 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     print(permission_proof.SUMMARY,flush=True)
     print(READ_SUMMARY,flush=True)
     print(JOURNAL_SUMMARY,flush=True)
+    print(JOURNAL_EXPIRY_RUNTIME_LINE,flush=True)
+    print(counterfactual_summary,flush=True)

@@ -34,13 +34,14 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse" or "admission-original-permission" or "admission-original-sql-read"))
+        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse" or "admission-original-permission" or "admission-original-sql-read" or "admission-original-journal-expiry"))
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var probe = new AtomicProbe(scope, clock);
         var executionProbe = new AdmittedExecutionSqlProbe();
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
-            .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe), new AdmittedFlushProbe(scope), executionProbe).Options);
+            .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe), new AdmittedFlushProbe(scope), executionProbe,
+                new AcceptedTransactionProbe(executionProbe.Accepted)).Options);
         if (mode == "admission-original-permission")
         {
             Phase = "fresh-unsafe-permission-refusal";
@@ -72,7 +73,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocation.Id)
             .OrderByDescending(x => x.Epoch).FirstOrDefaultAsync(token);
         var expectedEpoch = mode == "admission-original-expiry" ? 1 : mode == "admission-original-commit" ? 2 : 3;
-        var replayCurrent = mode is "admission-original-resume" or "admission-original-refuse" or "admission-original-sql-read";
+        var replayCurrent = mode is "admission-original-resume" or "admission-original-refuse" or "admission-original-sql-read" or "admission-original-journal-expiry";
         if ((old?.Epoch ?? 0) != (replayCurrent ? expectedEpoch : expectedEpoch - 1)) throw new InvalidOperationException();
         clock.Current = old is null ? allocation.AllocatedAtUtc : replayCurrent ? old.IssuedAtUtc : old.ExpiresAtUtc.AddTicks(1);
         var claims = new GroupBatchClaimStore(db, worker, clock);
@@ -220,6 +221,11 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         }
         RequireClean(db);
         if (await PlanCountAsync() != 1 || mode != "admission-original-recover" && await AdmissionCountAsync() != 1) throw new InvalidOperationException();
+        if (mode == "admission-original-journal-expiry")
+        {
+            await RequireJournalRetainedExpiryAsync(db, scope, handle, worker, clock, sources, brain, preparation, dependencies, plan, token);
+            Console.WriteLine(JournalExpiryLine); return;
+        }
         Console.WriteLine(mode switch { "admission-original-commit" => CommitLine, "admission-original-recover" => RecoverLine, "admission-original-refuse" => RefusalLine, _ => ResumeLine });
         if (mode == "admission-original-commit") Console.WriteLine(JournalLine);
 

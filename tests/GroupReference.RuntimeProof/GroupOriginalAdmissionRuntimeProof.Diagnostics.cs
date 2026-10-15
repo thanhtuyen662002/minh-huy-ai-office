@@ -16,9 +16,12 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             or "constraint-lowercase-plan-hash" or "constraint-nonhex-sidecar-hash" or "constraint-lowercase-sidecar-hash"
             or "constraint-non-UTC-time" or "sql-read-original" or "sql-read-predicates"
             or "admitted-journal-prepare" or "admitted-journal-rollback" or "admitted-journal-commit" or "admitted-journal-replay"
-            or "admitted-execution-current" or "admitted-execution-replay" or "admitted-execution-accepted-refusal" ? phase : "unknown";
+            or "admitted-execution-current" or "admitted-execution-replay" or "admitted-execution-accepted-refusal"
+            or "admitted-journal-retained-before-issuance" or "admitted-journal-retained-old-interval" or "admitted-journal-retained-replacement"
+            or "admitted-execution-accepted-transaction" ? phase : "unknown";
         var kind = error switch
         {
+            OwnedAcceptedPreflightCommitted => "accepted-preflight-committed",
             SqlException { Number: 547 } => "sql-constraint",
             SqlException { Number: 229 } => "sql-permission",
             SqlException { Number: -2 } => "sql-timeout",
