@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: f6d2b84f0d3f21a34b1ff40796ccbc3c4f0930cc
+head: b8539ead2acd490b304e911501e899467fbea7c9
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-16'
@@ -337,7 +337,7 @@ submission_full_runtime_276:
   review: Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182,
     frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract
     controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.
-next_action: "SAME288 exact remote67/f6d2b84 Build38799816929/Gov38799816624 attempt1 TERMINAL_FAILED closure6201419625; all8 terminal/hosted5365/Gov/six jobs PASS, native116645605889 old V3 slot19 negative-control assertion before config/SQL and quality116647082044 red/no images. Original frozen74 whole WITHHELD FHB74-B1 immutable; no additional blocking new first-host code finding. Separate source79 uses genuinely unknown22 in retained V3 test and explicitly verifies19/20/21 new enrollments preserve all prior keys, duplicates and rebound identities refuse; runtime guards/code unchanged74. Entire local adversarial boundary21 Python suites/301methods and actual Node24.19.0/85 tests PASS; old67 failure reproduced; original local Node22 missing-jsdom and bookkeeping TAP/spec mismatch preserved separately. CSharp/projects/production byteequal74, inherit full5373=[6,584,25,4758]/format/compiledguard8 (no fresh.NET79). Freeze/review exact79 source/durable/FHB74-B1 correction, then fresh source-bound147 helpers anchored to failed67 closure before ordinary explicit reviewed successor push. Own full5373/native147/all8/Gov/entirequality/sevenresults/six individually viewed ORIGINAL images through terminal; fix real red immediately SAME288. No actual147/model qualification, rerun/cancel/force/partial mainmerge/attachment read. Original53/62/74 WITHHELD and e8/97ab/67 failures immutable. Continue firstmodel originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Existing Gateway/options/client/config only/catalogEMPTY/model NOT_RUN_UNEVALUATED."
+next_action: "SAME288 remote b8539ead2acd490b304e911501e899467fbea7c9 owns Build38802805355/Gov38802805443 attempt1, ownership6201736881. Capture82 binds all1247 reviewed source bodies; hosted5373/Gov and six prerequisite jobs PASS, native147 SQL/browser and final quality remain pending. Keep this run alive through terminal, read complete logs/all8/Gov/whole quality/seven results and individually view six ORIGINAL images; repair real red immediately on SAME288. Separate local source89 adds first synthetic MODEL original proof: fresh slot24/two actual Core text sources, fixed claimed processor creates measured V3 original/sidecar, one existing Gateway synthetic execution under real admitted SQL, encrypted accepted result, one combined note/two literal evidence/raw-selected dispositions/outbox/terminal/signed frontier. Expired separate-process terminal-FIRST must keep Gateway/original/accepted/sidecar/companion cold and retain full graphs/permissions/both cleanup gates. Local5382=[6,584,25,4767]/312Python/format/8 compiled owned-guard refusals PASS; original enum compile failure retained. Actual next148 SQL and real model NOT_RUN_UNQUALIFIED/NOT_RUN_UNEVALUATED. Review exact89 source/durable and fresh148 helper before ordinary successor push, only after original147 terminal closure. Preserve53/62/74 WITHHELD and e8/97ab/67 failures. Continue multichunk/edit/recall/invalidated-original versioned durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233. Existing Gateway/options/client/config only; production catalogEMPTY. No partial main merge or attachment read before current work complete and merged. Readonly Medcom/Novo identities, clean Windows lifecycle and production deployment remain external/product gates."
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
   review: Combined transport/exact retained replay scoped APPROVED92 independent controls0skip,76 retained+16 own. Actual
@@ -6935,4 +6935,24 @@ group_v3_slot_expectation79_checkpoint:
   runtime_guards_unchanged: true
   source_review: pending_exact79
   actual147: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+
+group_first_synthetic_model89_checkpoint:
+  parent_reviewed_source79: b8539ead2acd490b304e911501e899467fbea7c9
+  parent_build: 38802805355
+  parent_governance: 38802805443
+  parent_ownership_comment: 6201736881
+  parent_state: ACTIVE_OWNED_PENDING_NATIVE147_QUALITY
+  source_review: pending_exact89
+  fixture_slot: 24
+  reserved_unknown_slots_retained: [15, 22, 23]
+  local_dotnet: 5382
+  dotnet_projects: [6, 584, 25, 4767]
+  local_python_suites: 23
+  local_python_methods: 312
+  new_read_observer_cases: 9
+  actual_compiled_guard_refusals: 8
+  full_format: PASS
+  initial_compile_failure: retained_wrong_enum_Text_corrected_to_NewText
+  actual_sql148: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
