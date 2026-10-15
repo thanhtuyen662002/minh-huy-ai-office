@@ -71,4 +71,36 @@ class Controls(unittest.TestCase):
             with self.subTest(fault=fault): self.run_control(fault)
 
 
+    def test_diagnostic_preserves_exact_negative_acceptance(self):
+        valid = SimpleNamespace(returncode=1, stdout=proof.FAILURE+'\nFAIL owned reference runtime admission-original-commit\n', stderr='')
+        self.assertIsNone(proof.require_committed_preflight_refusal(valid))
+        for code in (0, 2, True, None):
+            with self.subTest(code=code):
+                with self.assertRaisesRegex(AssertionError, 'did not discriminate'):
+                    proof.require_committed_preflight_refusal(SimpleNamespace(returncode=code, stdout=valid.stdout, stderr=''))
+
+    def test_known_child_phase_kind_is_bounded_public_diagnostic_only(self):
+        text = 'FAIL owned original admission runtime phase-admitted-execution-accepted-transaction kind-invariant\nFAIL owned reference runtime admission-original-commit'
+        with self.assertRaises(AssertionError) as caught:
+            proof.require_committed_preflight_refusal(SimpleNamespace(returncode=1, stdout=text, stderr=''))
+        self.assertIn('phase-admitted-execution-accepted-transaction-kind-invariant', str(caught.exception))
+        self.assertIn('exit=1;lines=2', str(caught.exception))
+
+    def test_private_or_unrecognized_child_output_is_never_echoed(self):
+        private = 'PRIVATE_CANARY_TOKEN_DO_NOT_ECHO'
+        for text, error in ((private, ''), (proof.FAILURE+'\n'+private, ''), (private*1000, ''), ('', private),
+                ('FAIL owned original admission runtime phase-'+private+' kind-invariant\nFAIL owned reference runtime admission-original-commit', '')):
+            with self.subTest(size=len(text), stderr=bool(error)):
+                with self.assertRaises(AssertionError) as caught:
+                    proof.require_committed_preflight_refusal(SimpleNamespace(returncode=1, stdout=text, stderr=error))
+                self.assertNotIn(private, str(caught.exception)); self.assertLess(len(str(caught.exception)), 300)
+
+    def test_duplicate_missing_or_wrong_failure_line_is_still_refused(self):
+        exact = proof.FAILURE+'\nFAIL owned reference runtime admission-original-commit'
+        for text in ('', exact+'\n'+proof.FAILURE, proof.FAILURE, exact.replace('runtime admission-original-commit', 'runtime unknown')):
+            with self.subTest(text_length=len(text)):
+                with self.assertRaises(AssertionError):
+                    proof.require_committed_preflight_refusal(SimpleNamespace(returncode=1, stdout=text, stderr=''))
+
+
 if __name__ == '__main__': unittest.main()
