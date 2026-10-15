@@ -1,9 +1,15 @@
 """Owned SQL original-admission persistence. Synthetic profile; no model eval."""
 import json
+import importlib.util
 import os
+from pathlib import Path
 import re
 import subprocess
 import uuid
+
+_corruption_spec = importlib.util.spec_from_file_location('owned_original_admission_corruption',Path(__file__).with_name('smoke-group-original-admission-corruption.py'))
+corruption = importlib.util.module_from_spec(_corruption_spec)
+_corruption_spec.loader.exec_module(corruption)
 
 RUNTIME_LINES = {
     'admission-original-prepare': 'PASS owned original admission actual two revisions inbox allocation no original sidecar attempt result or effects',
@@ -139,6 +145,15 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                     "AND s.OriginalClaimOperationId=p.OriginalClaimOperationId AND s.OriginalClaimEpoch=2 "
                     "AND s.SidecarSha256=CONVERT(varchar(64),HASHBYTES('SHA2_256',s.Sidecar),2);") == '1'
             completed = graph()
+        def run_corruption_child(mode):
+            assert mode in ('admission-original-refuse','admission-original-resume')
+            result = subprocess.run([*command,mode],input=config,env=env,capture_output=True,text=True,timeout=170)
+            assert not result.stderr
+            expected = corruption.REFUSAL_LINE if mode == 'admission-original-refuse' else RUNTIME_LINES[mode]
+            reference.require_reference_result(result,mode,[expected])
+        batch = automatic.canonical(sql(f"SELECT LOWER(CONVERT(char(36),BatchId)) FROM aioffice.GroupOriginalAdmissionSidecars WHERE {scope};"))
+        corruption.verify(directory=directory,api=api,tenant=tenant,company=company,source=source,batch=batch,
+            sql=sql,run_child=run_corruption_child,reference=reference,assert_unchanged=unchanged)
     except BaseException as error: failure = error
     finally:
         try: automatic.close_owned_container(directory=directory,api=api,name=image,suffix=suffix,reference=reference)
@@ -158,3 +173,4 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     if failure is not None: raise failure
     for line in RUNTIME_LINES.values(): print(line,flush=True)
     print(SUMMARY,flush=True)
+    print(corruption.SUMMARY,flush=True)

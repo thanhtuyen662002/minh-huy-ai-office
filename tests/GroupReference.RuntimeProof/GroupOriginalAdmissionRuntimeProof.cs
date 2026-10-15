@@ -24,6 +24,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
     internal const string CommitLine = "PASS owned original admission actual eighteen SQL constraint controls shipping gate tokenizer own carrier atomic two row rollback committed reply loss fresh context exact immutable replay every column deny encrypted accepted result zero HTTP";
     internal const string RecoverLine = "PASS owned original admission separate process epoch three accepted result FIRST recovered with sidecar SELECT unavailable empty released catalog zero admission calls or HTTP";
     internal const string ResumeLine = "PASS owned original admission current epoch three exact original epoch two plan sidecar snapshots legacy input identities chunks hashes restored zero provider";
+    internal const string RefusalLine = "PASS owned original admission accepted result FIRST remains readable corrupted sidecar refused current epoch three zero admission or provider";
     private const string Profile = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     private const string Model = "owned-synthetic-admission";
     internal static string Phase { get; private set; } = "setup";
@@ -32,7 +33,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume"))
+        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse"))
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var probe = new AtomicProbe(scope, clock);
@@ -63,15 +64,16 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocation.Id)
             .OrderByDescending(x => x.Epoch).FirstOrDefaultAsync(token);
         var expectedEpoch = mode == "admission-original-expiry" ? 1 : mode == "admission-original-commit" ? 2 : 3;
-        if ((old?.Epoch ?? 0) != (mode == "admission-original-resume" ? expectedEpoch : expectedEpoch - 1)) throw new InvalidOperationException();
-        clock.Current = old is null ? allocation.AllocatedAtUtc : mode == "admission-original-resume" ? old.IssuedAtUtc : old.ExpiresAtUtc.AddTicks(1);
+        var replayCurrent = mode is "admission-original-resume" or "admission-original-refuse";
+        if ((old?.Epoch ?? 0) != (replayCurrent ? expectedEpoch : expectedEpoch - 1)) throw new InvalidOperationException();
+        clock.Current = old is null ? allocation.AllocatedAtUtc : replayCurrent ? old.IssuedAtUtc : old.ExpiresAtUtc.AddTicks(1);
         var claims = new GroupBatchClaimStore(db, worker, clock);
         var claim = await claims.TryAcquireAsync(scope, allocation.Id,
-            mode == "admission-original-resume" ? old!.OwnerId : Guid.NewGuid(),
-            mode == "admission-original-resume" ? old!.OperationId : Guid.NewGuid(), TimeSpan.FromMinutes(2), token)
+            replayCurrent ? old!.OwnerId : Guid.NewGuid(),
+            replayCurrent ? old!.OperationId : Guid.NewGuid(), TimeSpan.FromMinutes(2), token)
             ?? throw new InvalidOperationException();
         var handle = claim.CurrentHandle ?? throw new InvalidOperationException();
-        if (claim.Receipt.Epoch != expectedEpoch || claim.WasAlreadyClaimed != (mode == "admission-original-resume")) throw new InvalidOperationException();
+        if (claim.Receipt.Epoch != expectedEpoch || claim.WasAlreadyClaimed != replayCurrent) throw new InvalidOperationException();
         var keys = new GroupNoteRuntimeProof.CountedKeys(db, scope);
         var sources = new GroupBatchSourceReader(db, worker, clock, keys, new());
         var brain = new GroupBrainCurrentReader(db, worker, clock, keys, new());
@@ -182,7 +184,12 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
                 .ReadOriginalAsync(plan, chunk, token) ?? throw new InvalidOperationException();
             Same(GroupGroundedWorkProposal.Parse(preparation, Output(preparation)).EncodeValidatedOutput(), recovered.Proposal.EncodeValidatedOutput());
             if (keys.Writes != 0 || keys.Reads != 2) throw new InvalidOperationException();
-            if (mode == "admission-original-resume")
+            if (mode == "admission-original-refuse")
+            {
+                Phase = "corrupted-sidecar-refusal";
+                await RefusedAsync(() => legacyStore.ReadOriginalAdmissionAsync(handle, plan, token));
+            }
+            else if (mode == "admission-original-resume")
             {
                 var admission = await legacyStore.ReadOriginalAdmissionAsync(handle, plan, token) ?? throw new InvalidOperationException();
                 admission.RequirePlan(plan);
@@ -198,7 +205,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         }
         RequireClean(db);
         if (await PlanCountAsync() != 1 || mode != "admission-original-recover" && await AdmissionCountAsync() != 1) throw new InvalidOperationException();
-        Console.WriteLine(mode switch { "admission-original-commit" => CommitLine, "admission-original-recover" => RecoverLine, _ => ResumeLine });
+        Console.WriteLine(mode switch { "admission-original-commit" => CommitLine, "admission-original-recover" => RecoverLine, "admission-original-refuse" => RefusalLine, _ => ResumeLine });
 
         Task<int> PlanCountAsync() => db.GroupAutomaticInputPlans.CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token);
         Task<int> AdmissionCountAsync() => db.GroupOriginalAdmissionSidecars.CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token);

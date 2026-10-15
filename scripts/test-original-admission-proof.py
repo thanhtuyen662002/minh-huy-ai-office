@@ -25,7 +25,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
 
     def oracle(self, fault=None):
         tenant,company,service,source,account,old_source,old_account,installation = (str(uuid.uuid4()) for _ in range(8))
-        events = [str(uuid.uuid4()),str(uuid.uuid4())]
+        events = [str(uuid.uuid4()),str(uuid.uuid4())]; batch = str(uuid.uuid4())
         phase = 'before'; denied = False; permissions_touched = []; calls = []
 
         def sql(query):
@@ -40,6 +40,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
             if query.startswith('SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupBindings'): return old_source
             if query.startswith('SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupConnectorAccounts'): return old_account
             if query.startswith('SELECT LOWER(CONVERT(char(36),ConnectorAccountId))'): return account
+            if query.startswith('SELECT LOWER(CONVERT(char(36),BatchId)) FROM aioffice.GroupOriginalAdmissionSidecars'): return batch
             if 'HASHBYTES' in query and not query.startswith('SELECT COUNT(*)'):
                 if query.startswith('SET NOCOUNT ON;'):
                     return '\n'.join(f'{i:02d}|'+('B' if fault == 'retained' and phase != 'before' else 'A')*64 for i in range(34))
@@ -82,13 +83,16 @@ class OriginalAdmissionProofTests(unittest.TestCase):
 
     def run_control(self, fault=None):
         args,process,calls,mutations = self.oracle(fault)
-        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch('sys.stdout',new_callable=io.StringIO) as output:
+        def corruption_control(**kwargs):
+            self.assertIn('batch',kwargs);self.assertTrue(callable(kwargs['run_child']));self.assertTrue(callable(kwargs['assert_unchanged']))
+            if fault == 'corruption':raise AssertionError('corruption suite failed')
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch('sys.stdout',new_callable=io.StringIO) as output:
             if fault:
                 with self.assertRaises(AssertionError): proof.verify(**args)
                 self.assertEqual('',output.getvalue())
             else:
                 proof.verify(**args)
-                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY],output.getvalue().splitlines())
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY],output.getvalue().splitlines())
         return args,calls,mutations
 
     def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
@@ -113,6 +117,10 @@ class OriginalAdmissionProofTests(unittest.TestCase):
     def test_bad_child_output_or_restore_and_cleanup_failures_never_qualify(self):
         for fault in ('duplicate','private-output','restore','image-error','cleanup:container-cleanup','cleanup:image-cleanup'):
             with self.subTest(fault=fault): self.run_control(fault)
+
+    def test_corruption_suite_failure_suppresses_all_markers_and_still_cleans_up(self):
+        _,calls,_=self.run_control('corruption')
+        self.assertEqual(['docker','image','rm'],calls[-1][0][:3])
 
 
 if __name__ == '__main__': unittest.main()
