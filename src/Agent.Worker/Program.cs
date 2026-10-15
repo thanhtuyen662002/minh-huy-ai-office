@@ -79,8 +79,9 @@ else
         : new OpenAiCompatibleResponsesAdapter(aiHttpClient, backupAiOptions);
 
     builder.Services.AddSingleton(aiHttpClient);
-    builder.Services.AddSingleton<IAiGateway>(
-        new OrderedFailoverAiGateway(primaryAdapter, backupAdapter));
+    var aiGateway = new OrderedFailoverAiGateway(primaryAdapter, backupAdapter);
+    builder.Services.AddSingleton<IAiGateway>(aiGateway);
+    builder.Services.AddSingleton<IAiStructuredRequestAdmission>(new StructuredModelAdmission(aiGateway));
     builder.Services.AddSingleton(
         new PilotAiRuntimeDescriptor(
             primaryAiOptions.ProviderId,

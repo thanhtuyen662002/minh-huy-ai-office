@@ -21,12 +21,15 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: Security291/PR292 independently reviewed6182564034 and merged; exact mainad747d0 all8/Gov/native80/full2027/three
-  serviced images/entire quality/six original views closed6182795280. QA291 lease retired. Lead owns SAME issue278/DraftPR288
-  serviced Gateway/scalar checkpoint, repaired-source review6182895892 and combined4861/format PASS. Complete integration/durable
-  review, then exact successor native132/full4861/all8/Gov/wholequality/six originals through terminal. Top QA head refers
-  accepted main; PR288 HANDOFF binds actual active feature HEAD/CI. Full278/279/233/model/ERP/Windows/deployment remain incomplete;
-  no partial merge.
+next_action: Qualified feature parentb3b closed6186010798/all8/native132/full4861/wholequality/six originals. Separate admission
+  repair source independently CLEAR6186574904 after original5 WITHHELD ADM-1/ADM-2 receipt6186407767; original failures/sources
+  retained. Same actual Gateway/options/client; production released catalog EMPTY. Local final4900=[6,557,25,4312]/39 admission
+  controls/format PASS. Complete reviewed SAME288 checkpoint and exact successor native132/full4900/all8/Gov/wholequality/six
+  originals through terminal; HANDOFF owns actual HEAD/CI. Then explicitly versioned immutable original-admission/provenance
+  and retained-profile storage preserving all V2/V3 bytes and accepted-result-first recovery, one-batch coordinator/durable
+  scanner/WorkerDI/no-click278 and SQL-driven internalIT279. Legacy64hex profile cannot authorize new calls. Actual model
+  NOT_RUN_UNEVALUATED; Oct15 local36accessible0configured/5referencedpaths absent; deployed store unavailable for inspection.
+  ReadonlyMedcom/Novo/Windows/deployment/full233 remain; no partial merge.
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -355,3 +358,59 @@ serviced_scalar10_integration_checkpoint:
   integration28_v2_disposition: WITHHELD_STALE_TOP_QA291_ACTIVE_LEASE;SOURCE_RUNTIME_COMPOSITION_UNCHANGED;BOTH_COMPLETE_ORIGINAL_HISTORIES_RETAINED
   durable_repair: Only top QA current lease/status/next fields retired after verified main closure; no source/test/workflow/package/schema/proof
     changes.
+structured_model_admission_repair_checkpoint:
+  parent: b3b77e3576d985fef0ad63b7ef3f4dd09c22e0ca
+  parent_closure: 6186010798
+  parent_build: 38670772452
+  parent_governance: 38670772396
+  parent_native: 116213121137
+  repair_source_sha256: e0e6e24caf4506ffe21f73d1c7308456d7c028ec0e8d3983d66d83d579b95d1d
+  repair_source_review: 6186574904
+  source_graph: REVIEWED_PRIVATE_SOURCE;SUCCESSOR_EXACT_CI_PENDING
+  original5_sha256: 99d8d39caa193d6c452918a245578bf324a562771cba867c890c78ad47d4fcbb
+  original5_disposition: WITHHELD_ADM1_ADM2_IMMUTABLE
+  original5_receipt: 6186407767
+  original_dependent8_9_preparations: UNPROMOTED_IMMUTABLE
+  local_dotnet: 4900
+  projects:
+  - 6
+  - 557
+  - 25
+  - 4312
+  admission_controls: 39
+  new_boundary_controls: 8
+  final_failed: 0
+  final_skipped: 0
+  format: EMPTY_EXIT0
+  first_full_failure: Retained original full:6+557+25 pass;4311/4312 Persistence, Strict_output_schema_unicode_and_enum_are_checked
+    duplicate-name vector returned transient true at2s, expected false. Timing cause UNPROVEN; unchanged isolated9 diagnosis
+    and repeated full are separately retained. No production timeout/test bound relaxed.
+  same_Gateway_options_client: true
+  production_catalog: EMPTY;NO_AUTHENTIC_PROVIDER_MODEL_WINDOW_FRAMING_ALIAS_OR_SEMANTIC_RELEASE
+  synthetic_catalog: INTERNAL_OFFLINE_CONTROLS_ONLY
+  candidate_hash: STRUCTURAL_NOT_AUTHENTIC_RELEASE_AUTHORITY
+  preparation: ORIGINAL30S_TIMER_PLUS_NONNEGATIVE_MONOTONIC_AND_ORIGINAL_CALLER_AFTER_FINAL_METADATA
+  response_release: ORIGINAL_CALLER_AND_2MIN_LIFETIME_AFTER_FINAL_METADATA_AND_RESPONSE_CHECKS
+  all_Persistence_V2_V3_original_journal_result_SQL_proofs_byte_equal: true
+  legacy_profile_hash_new_provider_release: false
+  original_admission_provenance_migration: false
+  trusted_production_profile: false
+  coordinator_scanner: false
+  no_click278: false
+  internal_IT279: false
+  actual_model: NOT_RUN_UNEVALUATED
+  successor_exact_CI: NOT_RUN_UNQUALIFIED
+  production_deployment: false
+  full233: false
+  head_convention: Top feature fields anchor qualified pushed parentb3b before checkpoint; actual successor HEAD/CI authoritative
+    in PR288 HANDOFF.
+  preserved_previous_current_fields:
+    next_action: Security291/PR292 independently reviewed6182564034 and merged; exact mainad747d0 all8/Gov/native80/full2027/three
+      serviced images/entire quality/six original views closed6182795280. QA291 lease retired. Lead owns SAME issue278/DraftPR288
+      serviced Gateway/scalar checkpoint, repaired-source review6182895892 and combined4861/format PASS. Complete integration/durable
+      review, then exact successor native132/full4861/all8/Gov/wholequality/six originals through terminal. Top QA head refers
+      accepted main; PR288 HANDOFF binds actual active feature HEAD/CI. Full278/279/233/model/ERP/Windows/deployment remain
+      incomplete; no partial merge.
+    head: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+    lease_heartbeat_at: null
+    last_checkpoint_at: '2026-10-15'
