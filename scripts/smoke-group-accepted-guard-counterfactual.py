@@ -11,6 +11,30 @@ FAILURE = 'FAIL owned original admission runtime phase-admitted-execution-accept
 SUMMARY = 'PASS owned accepted result guard deletion actual SQL preflight committed rejected by fresh exact transaction observer consumed permit cannot mask guard both cleanup gates unchanged retained scopes zero HTTP'
 
 
+
+def require_committed_preflight_refusal(result):
+    """Exact negative evidence; diagnostics use only a closed public vocabulary."""
+    kinds = ('accepted-preflight-committed', 'sql-constraint', 'sql-permission', 'sql-timeout',
+        'sql-deadlock', 'sql-other', 'cancelled', 'denied', 'invariant', 'other')
+    phases = ('setup', 'fresh-unsafe-permission-refusal', 'allocation', 'private-input', 'original', 'expiry-after-both-flushed', 'expiry-rewind-refusal', 'physical-constraint-boundaries', 'atomic-rollback', 'committed-reply-loss', 'fresh-read-replay', 'physical-column-boundaries', 'accepted-result', 'corrupted-sidecar-refusal', 'constraint-valid-pair', 'constraint-missing-plan', 'constraint-wrong-plan-hash', 'constraint-wrong-claim-operation', 'constraint-wrong-claim-epoch', 'constraint-foreign-tenant', 'constraint-foreign-company', 'constraint-foreign-binding', 'constraint-format-version', 'constraint-short-payload', 'constraint-oversized-payload', 'constraint-empty-operation', 'constraint-zero-epoch', 'constraint-negative-epoch', 'constraint-lowercase-plan-hash', 'constraint-nonhex-sidecar-hash', 'constraint-lowercase-sidecar-hash', 'constraint-non-UTC-time', 'sql-read-original', 'sql-read-predicates', 'admitted-journal-prepare', 'admitted-journal-rollback', 'admitted-journal-commit', 'admitted-journal-replay', 'admitted-execution-current', 'admitted-execution-replay', 'admitted-execution-accepted-refusal', 'admitted-journal-retained-before-issuance', 'admitted-journal-retained-old-interval', 'admitted-journal-retained-replacement', 'admitted-execution-accepted-transaction')
+    code = result.returncode if type(result.returncode) is int and -255 <= result.returncode <= 255 else 'other'
+    text = result.stdout
+    bounded = type(text) is str and len(text) <= 1024
+    lines = text.splitlines() if bounded else []
+    if (not result.stderr and type(result.returncode) is int and result.returncode == 1
+        and lines == [FAILURE, 'FAIL owned reference runtime admission-original-commit']): return
+    category = 'unknown-output' if bounded else 'stdout-over-limit-or-invalid'
+    if result.stderr: category = 'stderr-present'
+    elif bounded and len(lines) == 2 and lines[1] == 'FAIL owned reference runtime admission-original-commit':
+        for phase in phases:
+            for kind in kinds:
+                if lines[0] == 'FAIL owned original admission runtime phase-' + phase + ' kind-' + kind:
+                    category = 'phase-' + phase + '-kind-' + kind
+    count = min(len(lines), 9) if bounded else 'over-limit'
+    # Never format child stdout/stderr, error text, identifiers or credentials.
+    raise AssertionError(f'Owned guard deletion did not discriminate committed preflight (exit={code};lines={count};category={category})')
+
+
 def verify(*, directory, api, installation, tenant, company, service, password, sql, prepare_source, reference, automatic,
            runtime_lines, assert_unchanged):
     reference.require_owned(directory, api)
@@ -57,14 +81,14 @@ def verify(*, directory, api, installation, tenant, company, service, password, 
         for mode in ('admission-original-prepare', 'admission-original-expiry', 'admission-original-commit'):
             reference.require_owned(directory, api); assert_unchanged()
             result = subprocess.run([*command, mode], input=config, env=env, capture_output=True, text=True, timeout=170)
-            assert not result.stderr
-            if mode != 'admission-original-commit': reference.require_reference_result(result, mode, [runtime_lines[mode]])
+            if mode != 'admission-original-commit':
+                assert not result.stderr
+                reference.require_reference_result(result, mode, [runtime_lines[mode]])
             else:
                 # Only successful preflight commit at the exact accepted query
                 # qualifies this NEGATIVE control. Generic denial/missing query,
                 # missing fixture or successful mutant execution must fail.
-                assert type(result.returncode) is int and result.returncode == 1 and result.stdout.splitlines() == [FAILURE,
-                    'FAIL owned reference runtime admission-original-commit'], 'Owned guard deletion did not discriminate committed preflight'
+                require_committed_preflight_refusal(result)
         assert sql(f"SELECT COUNT(*) FROM aioffice.GroupModelAttemptResults WHERE {target};") == '1'
         assert sql(f"SELECT COUNT(*) FROM aioffice.GroupModelAttemptStarts WHERE {target};") == '1'
         assert sql(f"SELECT COUNT(*) FROM aioffice.GroupModelAttemptAdmissions WHERE {target};") == '1'

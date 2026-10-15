@@ -168,6 +168,8 @@ jobs:
           python scripts/test-first-host-source-enrollment.py
           python scripts/test-first-model-batch-proof.py
           python scripts/test-first-model-source-enrollment.py
+          python scripts/test-original-invalidation-proof.py
+          python scripts/test-original-invalidation-fixture.py
           python scripts/test-original-admission-permissions-proof.py
           node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs scripts/test-owned-expiry-receipt.mjs
       - name: Verify private configuration replay and browser key
