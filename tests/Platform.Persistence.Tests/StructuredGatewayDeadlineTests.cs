@@ -121,8 +121,10 @@ public sealed class StructuredGatewayDeadlineTests
     [InlineData("cancel")]
     public async Task Deadline_returns_but_four_original_route_slots_remain_owned_through_cleanup(string stage)
     {
-        var entered = new TaskCompletionSource[4]; for (var i = 0; i < 4; i++) entered[i] = Signal();
-        var release = Signal(); var callbackEntered = Signal(); var releaseCallback = Signal(); var calls = 0;
+        var entered = new TaskCompletionSource[4]; var bodyExited = new TaskCompletionSource[4];
+        var callbackEntered = new TaskCompletionSource[4];
+        for (var i = 0; i < 4; i++) { entered[i] = Signal(); bodyExited[i] = Signal(); callbackEntered[i] = Signal(); }
+        var release = Signal(); var releaseCallback = Signal(); var calls = 0;
         using var client = new HttpClient(new Handler(async (_, token) =>
         {
             var index = Interlocked.Increment(ref calls) - 1;
@@ -137,14 +139,19 @@ public sealed class StructuredGatewayDeadlineTests
                     // ResponseHeadersRead releases HttpClient's header token;
                     // the physical body/cleanup operation owns this copy token.
                     using var registration = stage == "cancel" ? copyToken.Register(() =>
-                    { callbackEntered.TrySetResult(); releaseCallback.Task.GetAwaiter().GetResult(); }) : default;
-                    if (stage != "dispose") { entered[index].TrySetResult(); await release.Task; }
-                    using var response = Success(); var bytes = await response.Content.ReadAsByteArrayAsync(); await stream.WriteAsync(bytes);
+                    { callbackEntered[index].TrySetResult(); releaseCallback.Task.GetAwaiter().GetResult(); }) : default;
+                    try
+                    {
+                        if (stage != "dispose") { entered[index].TrySetResult(); await release.Task; }
+                        using var response = Success(); var bytes = await response.Content.ReadAsByteArrayAsync(); await stream.WriteAsync(bytes);
+                    }
+                    finally { bodyExited[index].TrySetResult(); }
                 }, () =>
                 { if (stage == "dispose") { entered[index].TrySetResult(); release.Task.GetAwaiter().GetResult(); } })
             };
         }));
-        var gateway = Gateway(client, TimeSpan.FromMilliseconds(250), backup: false);
+        var adapter = new OpenAiCompatibleResponsesAdapter(client, Options());
+        var gateway = new OrderedFailoverAiGateway(adapter, wholeStructuredTimeout: TimeSpan.FromMilliseconds(250));
         var held = Enumerable.Range(0, 4).Select(_ => gateway.ExecuteAsync(Request())).ToArray();
         try
         {
@@ -154,13 +161,18 @@ public sealed class StructuredGatewayDeadlineTests
                 var error = await Assert.ThrowsAsync<AiProviderExecutionException>(() => call.WaitAsync(Guard));
                 Assert.Equal("AI structured Gateway deadline expired.", error.Message);
             }
-            if (stage == "cancel") await callbackEntered.Task.WaitAsync(Guard);
-            var occupied = await Assert.ThrowsAsync<AiProviderExecutionException>(() => gateway.ExecuteAsync(Request()).WaitAsync(Guard));
+            if (stage == "cancel") await Task.WhenAll(callbackEntered.Select(x => x.Task)).WaitAsync(Guard);
+            // Probe the same physical adapter directly: a newly scheduled
+            // Gateway's250ms caller deadline must not mask its capacity result.
+            var occupied = await Assert.ThrowsAsync<AiProviderExecutionException>(() => adapter.ExecuteAsync(Request()).WaitAsync(Guard));
             Assert.Equal("AI structured capacity is occupied.", occupied.Message); Assert.Equal(4, calls);
             if (stage == "cancel")
             {
-                release.SetResult(); await Task.Delay(75);
-                occupied = await Assert.ThrowsAsync<AiProviderExecutionException>(() => gateway.ExecuteAsync(Request()).WaitAsync(Guard));
+                release.SetResult();
+                // Actual copy-body exit precedes its registration/callback
+                // cleanup. Observe all four bodies, not a passive75ms delay.
+                await Task.WhenAll(bodyExited.Select(x => x.Task)).WaitAsync(Guard);
+                occupied = await Assert.ThrowsAsync<AiProviderExecutionException>(() => adapter.ExecuteAsync(Request()).WaitAsync(Guard));
                 Assert.Equal("AI structured capacity is occupied.", occupied.Message); Assert.Equal(4, calls);
             }
         }
@@ -169,7 +181,7 @@ public sealed class StructuredGatewayDeadlineTests
         using var guard = new CancellationTokenSource(Guard);
         while (true)
         {
-            try { Assert.Equal("primary", (await gateway.ExecuteAsync(Request(), guard.Token)).ProviderId); break; }
+            try { Assert.Equal("primary", (await adapter.ExecuteAsync(Request(), guard.Token)).ProviderId); break; }
             catch (AiProviderExecutionException error) when (error.Message == "AI structured capacity is occupied.")
             { await Task.Delay(10, guard.Token); }
         }
