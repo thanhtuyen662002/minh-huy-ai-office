@@ -2992,5 +2992,33 @@ class AttemptResultDiagnosticTests(unittest.TestCase):
                     reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=0),mode,['PASS original'])
 
 
+class OriginalAdmissionDiagnosticControls(unittest.TestCase):
+    def test_exact_admission_failure_projects_only_closed_phase_kind(self):
+        for mode in ('admission-original-commit','admission-original-refuse','admission-original-permission'):
+            for phase in ('constraint-empty-operation','constraint-lowercase-plan-hash','constraint-non-UTC-time','fresh-unsafe-permission-refusal','unknown'):
+                for kind in ('sql-constraint','sql-permission','sql-timeout','sql-deadlock','sql-other','cancelled','denied','invariant','other'):
+                    wire=f'FAIL owned original admission runtime phase-{phase} kind-{kind}\nFAIL owned reference runtime {mode}\n'
+                    with self.subTest(mode=mode,phase=phase,kind=kind),self.assertRaises(AssertionError) as error:
+                        reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,stderr='PRIVATE',returncode=1),mode,['PASS original'])
+                    self.assertEqual(str(error.exception),f'Owned reference executable failed at {mode}; exit=1; phase={phase}; kind={kind}')
+
+    def test_foreign_extra_private_or_malformed_admission_output_is_never_forwarded(self):
+        mode='admission-original-commit';private='PRIVATE_SQL_SOURCE_2941'
+        wire=f'FAIL owned original admission runtime phase-constraint-empty-operation kind-sql-constraint\nFAIL owned reference runtime {mode}'
+        for value,code,called in [(wire.replace('constraint-empty-operation',private),1,mode),(wire.replace('sql-constraint',private),1,mode),
+            (wire+'\n'+private,1,mode),(wire,True,mode),(wire,2,mode),(wire,1,'original-plan-commit'),
+            (wire.replace(mode,'admission-original-expiry'),1,mode)]:
+            with self.assertRaises(AssertionError) as error:
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=value,stderr=private,returncode=code),called,['PASS original'])
+            self.assertNotIn(private,str(error.exception));self.assertNotIn('; phase=',str(error.exception))
+
+    def test_admission_diagnostics_never_replace_exact_original_success(self):
+        mode='admission-original-commit'
+        reference_smoke.require_reference_result(SimpleNamespace(stdout='PASS original\n',returncode=0),mode,['PASS original'])
+        for wire in ['PASS original\nextra',f'FAIL owned original admission runtime phase-unknown kind-other\nFAIL owned reference runtime {mode}']:
+            with self.assertRaises(AssertionError):
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=0),mode,['PASS original'])
+
+
 if __name__ == "__main__":
     unittest.main()

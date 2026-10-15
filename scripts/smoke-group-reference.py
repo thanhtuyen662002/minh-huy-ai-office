@@ -186,6 +186,22 @@ def require_reference_result(result, mode, expected_lines):
         match = re.fullmatch(r"FAIL owned attempt result runtime phase-([a-z-]+) kind-([a-z-]+)", lines[0])
         if match and match[1] in result_phases and match[2] in result_kinds:
             detail = "; phase=" + match[1] + "; kind=" + match[2]
+    admission_modes = {"admission-original-prepare", "admission-original-expiry", "admission-original-commit",
+        "admission-original-recover", "admission-original-resume", "admission-original-refuse", "admission-original-permission"}
+    admission_phases = {"setup", "fresh-unsafe-permission-refusal", "allocation", "private-input", "original",
+        "expiry-after-both-flushed", "expiry-rewind-refusal", "physical-constraint-boundaries", "atomic-rollback",
+        "committed-reply-loss", "fresh-read-replay", "physical-column-boundaries", "accepted-result", "corrupted-sidecar-refusal", "unknown",
+        "constraint-valid-pair", "constraint-missing-plan", "constraint-wrong-plan-hash", "constraint-wrong-claim-operation",
+        "constraint-wrong-claim-epoch", "constraint-foreign-tenant", "constraint-foreign-company", "constraint-foreign-binding",
+        "constraint-format-version", "constraint-short-payload", "constraint-oversized-payload", "constraint-empty-operation",
+        "constraint-zero-epoch", "constraint-negative-epoch", "constraint-lowercase-plan-hash", "constraint-nonhex-sidecar-hash",
+        "constraint-lowercase-sidecar-hash", "constraint-non-UTC-time"}
+    admission_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other"}
+    if (mode in admission_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
+            and lines[1] == "FAIL owned reference runtime " + mode):
+        match = re.fullmatch(r"FAIL owned original admission runtime phase-([a-zA-Z-]+) kind-([a-z-]+)", lines[0])
+        if match and match[1] in admission_phases and match[2] in admission_kinds:
+            detail = "; phase=" + match[1] + "; kind=" + match[2]
     exit_code = str(result.returncode) if type(result.returncode) is int and -255 <= result.returncode <= 255 else "unknown"
     raise AssertionError("Owned reference executable failed at " + mode + "; exit=" + exit_code + detail)
 

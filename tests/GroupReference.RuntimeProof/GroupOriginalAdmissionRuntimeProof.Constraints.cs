@@ -74,8 +74,8 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
                 {
                     if (await admission.ExecuteNonQueryAsync(token) != 1 || test.Constraint is not null) throw new InvalidOperationException();
                 }
-                catch (SqlException error) when (test.Constraint is not null && error.Number == 547
-                    && error.Message.Contains(test.Constraint, StringComparison.Ordinal))
+                catch (SqlException error) when (test.Constraint is not null
+                    && IsExpectedConstraintFailure(test.Name, error.Number, error.Message))
                 { refused = true; }
                 if (refused != (test.Constraint is not null)) throw new InvalidOperationException();
                 // Counts run under this same SQL transaction, before rollback.
@@ -109,5 +109,30 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             command.Parameters.Add("@binding", SqlDbType.UniqueIdentifier).Value = scope.SourceBindingId;
             return (int)(await command.ExecuteScalarAsync(token) ?? throw new InvalidOperationException());
         }
+    }
+
+    // Some invalid fields violate both a CHECK and a restrictive FK. SQL may
+    // report either applicable constraint; no ordering is assumed. Distinct
+    // sidecar-hash cases still exercise the Identity CHECK without an FK overlap.
+    internal static bool IsExpectedConstraintFailure(string name, int number, string message)
+    {
+        if (number != 547) return false;
+        const string plan = "FK_GroupOriginalAdmissionSidecars_OriginalPlan";
+        const string claim = "FK_GroupOriginalAdmissionSidecars_OriginalClaim";
+        const string identity = "CK_GroupOriginalAdmissionSidecars_Identity";
+        string[] allowed = name switch
+        {
+            "missing-plan" or "wrong-plan-hash" => [plan],
+            "wrong-claim-operation" or "wrong-claim-epoch" => [claim],
+            "foreign-tenant" or "foreign-company" or "foreign-binding" => [plan, claim],
+            "format-version" or "short-payload" or "oversized-payload" => ["CK_GroupOriginalAdmissionSidecars_Format"],
+            "empty-operation" or "zero-epoch" or "negative-epoch" => [identity, claim],
+            "lowercase-plan-hash" => [identity, plan],
+            "nonhex-sidecar-hash" or "lowercase-sidecar-hash" => [identity],
+            "non-UTC-time" => ["CK_GroupOriginalAdmissionSidecars_Time"],
+            _ => []
+        };
+        return allowed.Any(constraint => message.Contains('"' + constraint + '"', StringComparison.Ordinal)
+            || message.Contains('\'' + constraint + '\'', StringComparison.Ordinal));
     }
 }

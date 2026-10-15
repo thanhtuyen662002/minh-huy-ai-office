@@ -427,7 +427,7 @@ try
 catch (Exception error)
 {
     if (args.Length == 1 && phase == args[0] && args[0].StartsWith("admission-original-", StringComparison.Ordinal))
-        Console.WriteLine("FAIL owned original admission " + GroupOriginalAdmissionRuntimeProof.Phase);
+        Console.WriteLine(GroupOriginalAdmissionRuntimeProof.FailureDiagnostic(GroupOriginalAdmissionRuntimeProof.Phase, error));
 
     if (args.Length == 1 && phase == args[0] && args[0] is ("attempt-result-prepare" or "attempt-result-commit" or "attempt-result-resume" or "attempt-result-deadline" or "attempt-result-shared-expiry"))
         Console.WriteLine(GroupModelAttemptResultRuntimeProof.FailureDiagnostic(error));
