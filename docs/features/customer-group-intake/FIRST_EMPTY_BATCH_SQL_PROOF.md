@@ -1,3 +1,7 @@
+Historical frozen53 is WITHHELD for FEB53-1: it reuses occupied source-key
+slot5. See [the separately versioned enrollment repair](FIRST_EMPTY_ENROLLMENT_REPAIR.md).
+Original53 source/evidence remains immutable; only successor55 repairs the route.
+
 # First empty batch original and completion proof
 
 ## Scope
