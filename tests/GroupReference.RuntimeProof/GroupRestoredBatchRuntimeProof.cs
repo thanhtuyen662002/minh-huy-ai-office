@@ -113,7 +113,7 @@ internal static class GroupRestoredBatchRuntimeProof
     private static void RequireCompletedCounts((int, int, int, int, int, int) counts)
     { if (counts != (1, 1, 1, 1, 1, 1)) throw new InvalidOperationException(); }
 
-    private sealed class ReadProbe : DbCommandInterceptor
+    internal sealed class ReadProbe : DbCommandInterceptor
     {
         private int originals, accepted, terminals;
         internal void Reset() { originals = accepted = terminals = 0; }
@@ -121,12 +121,19 @@ internal static class GroupRestoredBatchRuntimeProof
         {
             if (terminals == 0 || (recovered ? originals != 0 || accepted != 0 : originals == 0 || accepted == 0)) throw new InvalidOperationException();
         }
+        // The original store deliberately uses raw SqlQuery SQL. EF keeps
+        // its unbracketed inner FROM text while wrapping scoped predicates.
+        // These counters observe calls only; they grant no SQL authority.
+        internal void ObserveSql(string sql)
+        {
+            if (sql.Contains("FROM aioffice.GroupAutomaticInputPlans", StringComparison.Ordinal)) originals++;
+            if (sql.Contains("FROM [aioffice].[GroupModelAttemptResults]", StringComparison.Ordinal)) accepted++;
+            if (sql.Contains("FROM [aioffice].[GroupBatchTerminalReceipts]", StringComparison.Ordinal)) terminals++;
+        }
         public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<DbDataReader> result, CancellationToken token = default)
         {
-            if (command.CommandText.Contains("FROM [aioffice].[GroupAutomaticInputPlans]", StringComparison.Ordinal)) originals++;
-            if (command.CommandText.Contains("FROM [aioffice].[GroupModelAttemptResults]", StringComparison.Ordinal)) accepted++;
-            if (command.CommandText.Contains("FROM [aioffice].[GroupBatchTerminalReceipts]", StringComparison.Ordinal)) terminals++;
+            ObserveSql(command.CommandText);
             return ValueTask.FromResult(result);
         }
     }

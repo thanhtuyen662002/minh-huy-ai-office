@@ -1,5 +1,10 @@
 # Restored batch SQL proof checkpoint
 
+Historical frozen40 is WITHHELD for RBP40-1: its original-read observer misses
+the actual unbracketed raw SELECT. See
+[the separately versioned observer repair](RESTORED_BATCH_OBSERVER_REPAIR.md).
+The original40 archive/commit and local evidence remain unchanged.
+
 ## Scope
 
 Adds two owned runtime phases after every original-admission, corruption,
