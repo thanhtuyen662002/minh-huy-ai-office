@@ -171,6 +171,17 @@ internal sealed class GroupAutomaticInputPlan
         return Convert.ToHexString(SHA256.HashData(stream.ToArray()));
     }
 
+    // Structural whole-input identity only; the SQL owner must separately
+    // authenticate the stored original and current sources/history/claim.
+    internal void RequireCompleteCurrentDependencies(GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain,
+        CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        var current = GroupWorkDependencyManifest.Create(preparation.Context, brain, preparation.BatchId);
+        if (!CryptographicOperations.FixedTimeEquals(dependencies, current)) throw Unavailable();
+        token.ThrowIfCancellationRequested();
+    }
+
     // Reconstruct only the persisted selection and partition. No new TOP-N,
     // empty-history fallback, replacement input or recycled attempt is allowed.
     internal void RequireRestored(GroupBatchSourcePreparation preparation, GroupBrainPrivateContext brain,
