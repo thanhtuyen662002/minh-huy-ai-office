@@ -43,9 +43,21 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         assert type(value) is str and re.fullmatch(r'[0-9A-F]{64}', value)
         return value
 
+    def digest_many(items):
+        items = tuple(items); assert 1 <= len(items) <= 80
+        statements = []
+        for index,(table,order,predicate) in enumerate(items):
+            statements.append(f"SELECT CONCAT('{index:02d}|',CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+                f"(SELECT * FROM aioffice.{table} WHERE {predicate} ORDER BY {order} FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2));")
+        rows = sql('/* owned-original-admission-digest-batch */\n'+'\n'.join(statements)).splitlines()
+        assert len(rows) == len(items), 'Admission digest batch row count differs'
+        for index,row in enumerate(rows):
+            assert re.fullmatch(f'{index:02d}'+r'\|[0-9A-F]{64}',row), 'Admission digest batch index or hash differs'
+        return tuple(row[3:] for row in rows)
+
     def retained():
-        return automatic.retained_snapshot(tenant=tenant,company=company,sources=sources,accounts=accounts,sql=sql) + tuple(
-            digest(t,o,base+f' AND BindingId IN ({source_list})') for t,o in extra)
+        return automatic.retained_snapshot(tenant=tenant,company=company,sources=sources,accounts=accounts,sql=sql) + digest_many(
+            (t,o,base+f' AND BindingId IN ({source_list})') for t,o in extra)
 
     def permissions():
         value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),(SELECT * FROM sys.database_permissions "
@@ -63,17 +75,17 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         '-e','AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION','-e','AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY',image]
 
     def graph():
-        return tuple(digest(t,o,scope) for t,o in automatic.SOURCE_TABLES+extra) + (
-            digest('GroupBindings','Id',base+f" AND Id='{source}'"),
-            digest('GroupConnectorAccounts','Id',base+f" AND Id='{account}'"),
-            digest('GroupListenerLeases','ConnectorAccountId',base+f" AND ConnectorAccountId='{account}'"))
+        return digest_many(tuple((t,o,scope) for t,o in automatic.SOURCE_TABLES+extra) + (
+            ('GroupBindings','Id',base+f" AND Id='{source}'"),
+            ('GroupConnectorAccounts','Id',base+f" AND Id='{account}'"),
+            ('GroupListenerLeases','ConnectorAccountId',base+f" AND ConnectorAccountId='{account}'")))
 
     def unchanged():
         assert retained() == original and permissions() == original_permissions, 'Admission proof changed retained scopes or permissions'
         if completed is not None: assert graph() == completed, 'Admission cleanup changed complete owned graph'
 
     def require_fixed_source():
-        current = tuple(digest(t,o,scope) for index,(t,o) in enumerate(automatic.SOURCE_TABLES) if index not in (9,10))
+        current = digest_many((t,o,scope) for index,(t,o) in enumerate(automatic.SOURCE_TABLES) if index not in (9,10))
         if stable is not None: assert current == stable, 'Admission child changed original source authority notes or outbox'
         if original_claim is not None:
             assert digest('GroupBatchClaimReceipts','BatchId,Epoch',scope+' AND Epoch=2') == original_claim, 'Admission restart changed original claim'

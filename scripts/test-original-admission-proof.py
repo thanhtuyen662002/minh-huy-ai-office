@@ -30,6 +30,14 @@ class OriginalAdmissionProofTests(unittest.TestCase):
 
         def sql(query):
             nonlocal denied
+            if query.startswith('/* owned-original-admission-digest-batch */'):
+                statements=query.splitlines()[1:]
+                rows=[f'{i:02d}|'+sql(statement) for i,statement in enumerate(statements)]
+                if phase != 'before':
+                    if fault == 'digest-count':rows.pop()
+                    if fault == 'digest-index':rows[0]='99'+rows[0][2:]
+                    if fault == 'digest-hash':rows[0]=rows[0].lower()
+                return '\n'.join(rows)
             if query.startswith('DENY SELECT ON OBJECT::'):
                 denied = True; permissions_touched.append('deny'); return ''
             if query.startswith('REVOKE SELECT ON OBJECT::'):
@@ -121,6 +129,10 @@ class OriginalAdmissionProofTests(unittest.TestCase):
     def test_corruption_suite_failure_suppresses_all_markers_and_still_cleans_up(self):
         _,calls,_=self.run_control('corruption')
         self.assertEqual(['docker','image','rm'],calls[-1][0][:3])
+
+    def test_digest_batch_refuses_missing_reordered_or_noncanonical_rows(self):
+        for fault in ('digest-count','digest-index','digest-hash'):
+            with self.subTest(fault=fault):self.run_control(fault)
 
 
 if __name__ == '__main__': unittest.main()
