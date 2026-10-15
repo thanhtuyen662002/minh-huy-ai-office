@@ -1,3 +1,5 @@
+Historical frozen74 is whole WITHHELD for FHB74-B1 (inherited V3 test expects valid19 refused). See [the separately versioned repair](V3_SLOT_EXPECTATION_REPAIR.md). Original74 evidence remains immutable; actual147 is unqualified.
+
 # First media-only host batch original and completion
 
 ## Scope

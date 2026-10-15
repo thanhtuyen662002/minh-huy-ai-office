@@ -44,7 +44,7 @@ class OriginalV3EnrollmentTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 15, 19, True, "1"):
+        for slot in (0, 15, 22, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -172,6 +172,21 @@ class OriginalV3EnrollmentTests(unittest.TestCase):
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](admission_source, 18)
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](v3_source, 18)
         self.assertEqual(admission_enrolled,environment); self.assertEqual(64,len(calls))
+        # These slots are now explicitly allocated to separate first-empty,
+        # accepted-guard and first-host fixtures. Unknown22 remains refused.
+        for slot, secret_name in ((19, "OWNED_FIRST_EMPTY_GROUP_CONTENT_KEY"),
+                (20, "OWNED_ACCEPTED_GUARD_GROUP_CONTENT_KEY"), (21, "OWNED_FIRST_HOST_GROUP_CONTENT_KEY")):
+            retained = environment.copy(); source_id = str(uuid.uuid4()); count = len(calls)
+            namespace["enroll_owned_source"](source_id, slot)
+            self.assertTrue(all(environment[name] == value for name, value in retained.items()))
+            prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
+            self.assertEqual(source_id, environment[prefix + "SourceBindingId"])
+            self.assertEqual("secretref://env/" + secret_name, environment[prefix + "SecretRef"])
+            enrolled = environment.copy()
+            with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source_id, slot)
+            self.assertEqual(enrolled, environment); self.assertEqual(count + 4, len(calls))
+            with self.assertRaises(AssertionError): namespace["enroll_owned_source"](v3_source, slot)
+            self.assertEqual(enrolled, environment); self.assertEqual(count + 4, len(calls))
         self.assertEqual([4, 5, 6, 8], [item['slot'] for item in original_enrollments])
         self.assertEqual([fourth_source, fifth_source, sixth_source, eighth_source], [item['source'] for item in original_enrollments])
         for item in original_enrollments:
