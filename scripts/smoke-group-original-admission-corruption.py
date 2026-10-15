@@ -6,7 +6,9 @@ import uuid
 
 
 REFUSAL_LINE = 'PASS owned original admission accepted result FIRST remains readable corrupted sidecar refused current epoch three zero admission or provider'
-SUMMARY = 'PASS actual original admission six persisted corruption cases runtime refusal exact restoration healthy reread retained full graphs no model qualification'
+SUMMARY = 'PASS actual original admission four exact companion FK corruption refusals five persisted payload time claim runtime refusals exact restoration healthy reread retained full graphs no model qualification'
+PHYSICAL_PREFIX = 'PASS owned exact companion FK prevents sidecar mutation '
+COMPANION_FOREIGN_KEY = 'FK_GroupModelAttemptAdmissions_ExactOriginalAdmission'
 
 
 def verify(*, directory, api, tenant, company, source, batch, sql, run_child, reference, assert_unchanged):
@@ -42,27 +44,64 @@ def verify(*, directory, api, tenant, company, source, batch, sql, run_child, re
         chunk = bytes.fromhex(fields[2]); assert len(chunk) == min(64,length-index*64); chunks.append(chunk)
     original = b''.join(chunks); assert len(original) == length and hashlib.sha256(original).hexdigest().upper() == original_hash
     different_hash = ('B' if original_hash[0] != 'B' else 'C')*64
-    cases = [('row-sha', f"SidecarSha256='{different_hash}'")]
-    for name,raw in [('bad-magic', b'Z'+original[1:]),('bad-checksum',original[:-1]+bytes([original[-1]^1])),('malformed-payload',bytes(211))]:
-        cases.append((name,f"Sidecar=0x{raw.hex().upper()},SidecarSha256='{hashlib.sha256(raw).hexdigest().upper()}'"))
+    payloads = [('altered-magic-bytes', b'Z'+original[1:]),
+        ('altered-checksum-bytes',original[:-1]+bytes([original[-1]^1])),('zero-payload',bytes(211))]
+    physical = [('row-sha', f"SidecarSha256='{different_hash}'")]
+    physical += [(name,f"Sidecar=0x{raw.hex().upper()},SidecarSha256='{hashlib.sha256(raw).hexdigest().upper()}'") for name,raw in payloads]
+    # Keep the referenced outer row SHA unchanged in persisted byte cases.
+    # They prove altered-byte refusal, not three distinct codec branches.
+    cases = [(name,f"Sidecar=0x{raw.hex().upper()}") for name,raw in payloads]
     cases += [('future-created', 'CreatedAtUtc=DATEADD(day,1,CreatedAtUtc)'),
         ('newer-original-claim', f"OriginalClaimOperationId=(SELECT OperationId FROM aioffice.GroupBatchClaimReceipts WHERE {scope} AND Epoch=3),OriginalClaimEpoch=3")]
-    assert len(cases) == 6
+    assert len(physical) == 4 and len(cases) == 5
     restore = (f"Sidecar=0x{original.hex().upper()},SidecarSha256='{original_hash}',"
         f"OriginalClaimOperationId='{claim_operation}',OriginalClaimEpoch=2,CreatedAtUtc=CONVERT(datetimeoffset,'{created}',127)")
     run_child('admission-original-resume')
     assert_unchanged()
+    for name,mutation in physical:
+        expected = PHYSICAL_PREFIX + name
+        failure = None
+        try:
+            reference.require_owned(directory, api)
+            observed = sql(f"""/* owned-admission-corruption:physical-{name} */
+                SET NOCOUNT ON;
+                BEGIN TRY
+                    BEGIN TRANSACTION;
+                    UPDATE {table} SET {mutation} WHERE {scope};
+                    IF @@ROWCOUNT<>1 THROW 51000,'Owned corruption row missing',1;
+                    ROLLBACK TRANSACTION;
+                    THROW 51000,'Owned referenced sidecar mutation was permitted',1;
+                END TRY
+                BEGIN CATCH
+                    IF XACT_STATE()<>0 ROLLBACK TRANSACTION;
+                    IF ERROR_NUMBER()<>547 OR CHARINDEX(N'"{COMPANION_FOREIGN_KEY}"',ERROR_MESSAGE() COLLATE Latin1_General_100_BIN2)=0 THROW;
+                    IF XACT_STATE()<>0 OR @@TRANCOUNT<>0 THROW 51000,'Owned FK rollback incomplete',1;
+                    SELECT N'{expected}';
+                END CATCH;
+                """)
+            assert observed.splitlines() == [expected], 'Owned exact companion FK control did not qualify'
+        except BaseException as error: failure = error
+        finally:
+            try:
+                assert_unchanged()
+                run_child('admission-original-resume')
+                assert_unchanged()
+            except BaseException as error:
+                if failure is None: failure = error
+        if failure is not None: raise failure
     for name,mutation in cases:
         failure = None
         try:
             reference.require_owned(directory, api)
-            sql(f"/* owned-admission-corruption:{name} */ UPDATE {table} SET {mutation} WHERE {scope}; IF @@ROWCOUNT<>1 THROW 51000,'Owned corruption row missing',1;")
+            observed = sql(f"/* owned-admission-corruption:{name} */ UPDATE {table} SET {mutation} WHERE {scope}; IF @@ROWCOUNT<>1 THROW 51000,'Owned corruption row missing',1;")
+            assert observed == '', 'Owned persisted corruption returned unexpected output'
             run_child('admission-original-refuse')
         except BaseException as error: failure = error
         finally:
             try:
                 reference.require_owned(directory, api)
-                sql(f"/* owned-admission-corruption:restore */ UPDATE {table} SET {restore} WHERE {scope}; IF @@ROWCOUNT<>1 THROW 51000,'Owned restoration row missing',1;")
+                observed = sql(f"/* owned-admission-corruption:restore */ UPDATE {table} SET {restore} WHERE {scope}; IF @@ROWCOUNT<>1 THROW 51000,'Owned restoration row missing',1;")
+                assert observed == '', 'Owned corruption restoration returned unexpected output'
                 assert_unchanged()
                 run_child('admission-original-resume')
                 assert_unchanged()
