@@ -5,6 +5,27 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 
 internal sealed partial class GroupAutomaticInputPlanStore
 {
+    // Used only by the new admitted journal inside its existing owned unit.
+    // Reuse the locked entry/permission/receipt validation; never open a
+    // nested transaction or turn a structurally valid sidecar into authority.
+    internal async Task RequireOriginalAdmissionUnchangedLockedAsync(GroupBatchClaimHandle handle,
+        GroupAutomaticInputPlan expected, GroupOriginalAdmissionSidecar expectedAdmission, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(handle); ArgumentNullException.ThrowIfNull(expected);
+        ArgumentNullException.ThrowIfNull(expectedAdmission); token.ThrowIfCancellationRequested();
+        expectedAdmission.RequirePlan(expected);
+        await RequireOriginalUnchangedLockedAsync(handle, expected, token);
+        await new GroupOriginalAdmissionPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+        var row = await ReadLockedAsync(handle, token) ?? throw Unavailable();
+        var now = UtcNow();
+        var original = await DecodeAsync(handle, row, now, token);
+        if (!CryptographicOperations.FixedTimeEquals(original.Encode(), expected.Encode())) throw Unavailable();
+        var metadata = await ReadAdmissionLockedAsync(handle, token) ?? throw Unavailable();
+        var actual = DecodeAdmission(handle, original, row, metadata, now);
+        if (!CryptographicOperations.FixedTimeEquals(actual.Encode(), expectedAdmission.Encode())) throw Unavailable();
+        await new GroupOriginalAdmissionPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+    }
+
     // One original+sidecar commit, never PersistV3 followed by a second unit.
     // The fixed preparer instance must authenticate its non-serialized carrier.
     internal async Task<GroupAutomaticInputPlan> PersistV3WithAdmissionAsync(GroupOriginalAdmissionPreparer.PreparedOriginal issued,

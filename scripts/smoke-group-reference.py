@@ -195,7 +195,8 @@ def require_reference_result(result, mode, expected_lines):
         "constraint-wrong-claim-epoch", "constraint-foreign-tenant", "constraint-foreign-company", "constraint-foreign-binding",
         "constraint-format-version", "constraint-short-payload", "constraint-oversized-payload", "constraint-empty-operation",
         "constraint-zero-epoch", "constraint-negative-epoch", "constraint-lowercase-plan-hash", "constraint-nonhex-sidecar-hash",
-        "constraint-lowercase-sidecar-hash", "constraint-non-UTC-time", "sql-read-original", "sql-read-predicates"}
+        "constraint-lowercase-sidecar-hash", "constraint-non-UTC-time", "sql-read-original", "sql-read-predicates",
+        "admitted-journal-prepare", "admitted-journal-rollback", "admitted-journal-commit", "admitted-journal-replay"}
     admission_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other"}
     if (mode in admission_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
             and lines[1] == "FAIL owned reference runtime " + mode):

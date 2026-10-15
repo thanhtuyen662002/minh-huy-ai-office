@@ -55,8 +55,8 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 table = query.split('FROM aioffice.',1)[1].split()[0]
                 own = source in query and 'BindingId IN' not in query
                 if own and fault == 'sql-read-graph' and phase == 'admission-original-sql-read' and table == 'GroupOriginalAdmissionSidecars': return 'B'*64
-                if own and fault in ('plan','sidecar','start','result') and phase == 'admission-original-resume':
-                    target = {'plan':'GroupAutomaticInputPlans','sidecar':'GroupOriginalAdmissionSidecars','start':'GroupModelAttemptStarts','result':'GroupModelAttemptResults'}[fault]
+                if own and fault in ('plan','sidecar','start','result','companion') and phase == 'admission-original-resume':
+                    target = {'plan':'GroupAutomaticInputPlans','sidecar':'GroupOriginalAdmissionSidecars','start':'GroupModelAttemptStarts','result':'GroupModelAttemptResults','companion':'GroupModelAttemptAdmissions'}[fault]
                     if table == target: return 'B'*64
                 if own and fault == 'source' and phase == 'admission-original-commit' and table == 'GroupMessages': return 'B'*64
                 if own and fault == 'claim' and phase == 'admission-original-recover' and 'AND Epoch=1' in query: return 'B'*64
@@ -65,6 +65,9 @@ class OriginalAdmissionProofTests(unittest.TestCase):
             if 'SELECT CONCAT' in query:
                 return {'admission-original-prepare':'0|0|0|0|0','admission-original-expiry':'0|0|0|0|1','admission-original-commit':'1|1|1|1|2','admission-original-recover':'1|1|1|1|3','admission-original-resume':'1|1|1|1|3'}[phase]
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupCustomerRequests') or query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptFailures'): return '0'
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptAdmissions'):
+                if fault == 'companion-count' and phase == 'admission-original-commit': return '0'
+                return '0' if phase in ('admission-original-prepare','admission-original-expiry') else '1'
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates'): return '0' if fault == 'expiry-witness' else '1'
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupOriginalAdmissionSidecars s INNER JOIN'): return '0' if fault == 'row-binding' else '1'
             self.fail('Unexpected SQL shape')
@@ -81,6 +84,8 @@ class OriginalAdmissionProofTests(unittest.TestCase):
             self.assertEqual(['docker','run'],command[:2]); phase = command[-1]
             if phase == 'admission-original-recover': self.assertTrue(denied)
             line = proof.READ_RUNTIME_LINE if phase == 'admission-original-sql-read' else proof.RUNTIME_LINES[phase]
+            if phase == 'admission-original-commit': line += '\n'+proof.JOURNAL_RUNTIME_LINE
+            if fault == 'journal-missing' and phase == 'admission-original-commit': line = proof.RUNTIME_LINES[phase]
             if fault == 'sql-read-child' and phase == 'admission-original-sql-read': return SimpleNamespace(returncode=1,stdout='',stderr='')
             if fault == 'sql-read-output' and phase == 'admission-original-sql-read': line += '\nPRIVATE_READ_BODY'
             if fault == 'child-error' and phase == 'admission-original-recover': return SimpleNamespace(returncode=1,stdout='',stderr='')
@@ -106,7 +111,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 self.assertEqual('',output.getvalue())
             else:
                 proof.verify(**args)
-                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY],output.getvalue().splitlines())
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY,proof.JOURNAL_SUMMARY],output.getvalue().splitlines())
         return args,calls,mutations
 
     def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
@@ -125,11 +130,11 @@ class OriginalAdmissionProofTests(unittest.TestCase):
         self.assertFalse(any(cmd[-1] == 'admission-original-resume' for cmd,_ in calls))
 
     def test_changed_originals_and_scope_or_claim_never_qualify(self):
-        for fault in ('plan','sidecar','start','result','source','claim','retained','row-binding','expiry-witness'):
+        for fault in ('plan','sidecar','start','result','companion','companion-count','source','claim','retained','row-binding','expiry-witness'):
             with self.subTest(fault=fault): self.run_control(fault)
 
     def test_bad_child_output_or_restore_and_cleanup_failures_never_qualify(self):
-        for fault in ('duplicate','private-output','restore','image-error','cleanup:container-cleanup','cleanup:image-cleanup'):
+        for fault in ('duplicate','private-output','journal-missing','restore','image-error','cleanup:container-cleanup','cleanup:image-cleanup'):
             with self.subTest(fault=fault): self.run_control(fault)
 
     def test_corruption_suite_failure_suppresses_all_markers_and_still_cleans_up(self):

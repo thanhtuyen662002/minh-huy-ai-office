@@ -14,7 +14,8 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             or "constraint-foreign-company" or "constraint-foreign-binding" or "constraint-format-version" or "constraint-short-payload"
             or "constraint-oversized-payload" or "constraint-empty-operation" or "constraint-zero-epoch" or "constraint-negative-epoch"
             or "constraint-lowercase-plan-hash" or "constraint-nonhex-sidecar-hash" or "constraint-lowercase-sidecar-hash"
-            or "constraint-non-UTC-time" or "sql-read-original" or "sql-read-predicates" ? phase : "unknown";
+            or "constraint-non-UTC-time" or "sql-read-original" or "sql-read-predicates"
+            or "admitted-journal-prepare" or "admitted-journal-rollback" or "admitted-journal-commit" or "admitted-journal-replay" ? phase : "unknown";
         var kind = error switch
         {
             SqlException { Number: 547 } => "sql-constraint",

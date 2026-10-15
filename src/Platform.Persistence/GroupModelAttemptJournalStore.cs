@@ -9,11 +9,12 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // work-note capability; callers must fence again after a provider wait and the
 // effect store must validate all dependencies inside its own final transaction.
 internal sealed class GroupModelAttemptPermit(GroupAutomaticModelContext context, GroupModelAttemptStarted start,
-    GroupModelAttemptOriginalBinding? original = null)
+    GroupModelAttemptOriginalBinding? original = null, GroupModelAttemptAdmissionPreparer.PreparedAttempt? admission = null)
 {
     internal GroupAutomaticModelContext Context { get; } = context;
     internal GroupModelAttemptStarted Start { get; } = start;
     internal GroupModelAttemptOriginalBinding? Original { get; } = original;
+    internal GroupModelAttemptAdmissionPreparer.PreparedAttempt? Admission { get; } = admission;
     public override string ToString() => "Committed group model attempt (private metadata).";
 }
 internal sealed record GroupModelAttemptStartResult(GroupModelAttemptBudgetDecision Budget,
@@ -23,8 +24,9 @@ internal sealed record GroupModelAttemptStartResult(GroupModelAttemptBudgetDecis
 // source/brain manifests and current authority, and never invokes a provider.
 // Structural exhaustion is returned only as metadata; no attention capability
 // or worker registration is provided by this preparation.
-internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
-    TimeProvider clock, GroupBatchSourceReader sources, GroupBrainCurrentReader brain)
+internal sealed partial class GroupModelAttemptJournalStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
+    TimeProvider clock, GroupBatchSourceReader sources, GroupBrainCurrentReader brain,
+    GroupModelAttemptAdmissionPreparer? admissions = null)
 {
     private const string Savepoint = "GroupModelAttemptJournalWrites";
 
@@ -51,16 +53,29 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
     // Its additional fence runs before and after both manifest inspections.
     internal Task<T> InOriginalCurrentUnitAsync<T>(GroupModelAttemptOriginalBinding original,
         Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation,
-        Func<CancellationToken, Task> additionalFence, CancellationToken token)
+        Func<CancellationToken, Task> additionalFence, CancellationToken token, GroupModelAttemptPermit? admittedPermit = null)
     {
         ArgumentNullException.ThrowIfNull(original); ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(additionalFence); token.ThrowIfCancellationRequested();
         ValidateEntry(original.Context);
+        if (admittedPermit?.Admission is { } admitted)
+        {
+            if (!ReferenceEquals(admittedPermit.Context, original.Context) || admittedPermit.Original is not { } plan
+                || plan.Plan.Sha256 != original.Plan.Sha256) throw Unavailable();
+            var issuedFence = CreateIssuedFence(admitted, original.Context, token);
+            return InCurrentUnitAsync(original.Context, original, operation, token, async ct =>
+            {
+                await additionalFence(ct);
+                await RequireAdmittedPermitLockedAsync(admittedPermit, ct);
+            }, issuedFence);
+        }
         return InCurrentUnitAsync(original.Context, original, operation, token, additionalFence);
     }
 
     private Task<GroupModelAttemptStartResult> TryStartCoreAsync(GroupAutomaticModelContext context, Guid requestId,
-        GroupModelAttemptOriginalBinding? originalPlan, CancellationToken token)
+        GroupModelAttemptOriginalBinding? originalPlan, CancellationToken token,
+        GroupModelAttemptAdmissionPreparer.PreparedAttempt? admitted = null,
+        Func<GroupBatchClaimExpiryObservation?, CancellationToken, GroupBatchClaimExpiryObservation?>? issuedFence = null)
     {
         ArgumentNullException.ThrowIfNull(context); token.ThrowIfCancellationRequested();
         if (requestId == Guid.Empty) throw Unavailable();
@@ -77,6 +92,8 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             {
                 if (original.BatchId != context.BatchId || original.InputSha256 != identity
                     || !starts.Any(x => x.RequestId == requestId)) throw Unavailable();
+                if (admitted is not null)
+                    await RequireAdmissionRowLockedAsync(admitted, Start(scope, original), cancellationToken);
                 // A lost reply/replayed nonce cannot grant a second provider
                 // invocation, including after replacement by another claim.
                 return new(decision, null, true);
@@ -85,6 +102,11 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             var receipt = context.Preparation.Context.Handle.Receipt;
             var deadline = now.Add(GroupModelAttemptBudget.MaximumAttemptLifetime);
             if (deadline > receipt.ExpiresAtUtc) deadline = receipt.ExpiresAtUtc;
+            if (admitted is not null)
+            {
+                if (now < admitted.StartedAtUtc || now >= admitted.ExpiresAtUtc) throw Unavailable();
+                if (deadline > admitted.ExpiresAtUtc) deadline = admitted.ExpiresAtUtc;
+            }
             if (deadline <= now) throw Unavailable();
             var ordinal = decision.ConsumedAttempts + 1;
             var previous = starts.LastOrDefault();
@@ -108,9 +130,15 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             var after = GroupModelAttemptBudget.Read(scope, context.BatchId, identity, starts.Append(start), failures, now, cancellationToken);
             if (after.Disposition != GroupModelAttemptDisposition.Wait) throw Unavailable();
             database.Add(record); staged.Add(record);
-            await database.SaveChangesAsync(cancellationToken);
-            return new(after, new(context, start, originalPlan), false);
-        }, token);
+            if (admitted is not null)
+            {
+                var companion = AdmissionRecord(admitted);
+                database.Add(companion); staged.Add(companion);
+            }
+            var saved = await database.SaveChangesAsync(cancellationToken);
+            if (admitted is not null && saved != 2) throw Unavailable();
+            return new(after, new(context, start, originalPlan, admitted), false);
+        }, token, admitted is null ? null : ct => RequireAdmittedOriginalLockedAsync(admitted, ct), issuedFence);
     }
 
     internal Task<GroupModelAttemptBudgetDecision> RecordFailureAsync(GroupAutomaticModelContext context,
@@ -122,6 +150,7 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
         var identity = GroupModelAttemptBudget.InputIdentity(context);
         if (permit.Start.Scope != context.Scope || permit.Start.BatchId != context.BatchId || permit.Start.InputSha256 != identity) throw Unavailable();
         if (permit.Original is { } original && !ReferenceEquals(original.Context, context)) throw Unavailable();
+        var issuedFence = permit.Admission is { } admitted ? CreateIssuedFence(admitted, context, token) : null;
         return InCurrentUnitAsync(context, permit.Original, async (now, staged, cancellationToken) =>
         {
             var scope = context.Scope;
@@ -154,12 +183,13 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             database.Add(record); staged.Add(record);
             await database.SaveChangesAsync(cancellationToken);
             return after;
-        }, token);
+        }, token, issuedFence is null ? null : ct => RequireAdmittedPermitLockedAsync(permit, ct), issuedFence);
     }
 
     private async Task<T> InCurrentUnitAsync<T>(GroupAutomaticModelContext context, GroupModelAttemptOriginalBinding? original,
         Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation, CancellationToken token,
-        Func<CancellationToken, Task>? additionalFence = null)
+        Func<CancellationToken, Task>? additionalFence = null,
+        Func<GroupBatchClaimExpiryObservation?, CancellationToken, GroupBatchClaimExpiryObservation?>? issuedFence = null)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); token = deadline.Token;
@@ -179,10 +209,15 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             await RequireCurrentOrRetireAsync(verdict, transaction, sql, false);
             await sql.CreateSavepointAsync(Savepoint, token);
             var now = UtcNow(); if (now < began) throw Unavailable();
+            if (issuedFence is not null && now >= handle.Receipt.ExpiresAtUtc)
+                await RequireCurrentOrRetireAsync(ApplyIssuedFence(new GroupBatchClaimFenceVerdict.Expired(new(handle, now))), transaction, sql, false);
             var result = await operation(now, staged, token);
             verdict = await InspectAsync();
             await RequireCurrentOrRetireAsync(verdict, transaction, sql, true);
-            if (UtcNow() < now || database.ChangeTracker.HasChanges()) throw Unavailable();
+            var finalAt = UtcNow();
+            if (issuedFence is not null && finalAt >= handle.Receipt.ExpiresAtUtc)
+                await RequireCurrentOrRetireAsync(ApplyIssuedFence(new GroupBatchClaimFenceVerdict.Expired(new(handle, finalAt))), transaction, sql, true);
+            if (finalAt < now || database.ChangeTracker.HasChanges()) throw Unavailable();
             await transaction.CommitAsync(token);
             token.ThrowIfCancellationRequested();
             var completed = UtcNow();
@@ -193,10 +228,18 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
             async Task<GroupBatchClaimFenceVerdict> InspectAsync()
             {
                 await permissions.RequireSafeRuntimeAsync(token);
+                // Only the new path adds this fresh claim-first inspection.
+                // A foreign/replaced/denied claim cannot be retired merely
+                // because a private carrier observed its old expiry.
+                if (issuedFence is not null)
+                {
+                    var first = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
+                    if (first is not GroupBatchClaimFenceVerdict.Current) return first;
+                }
                 if (additionalFence is not null) await additionalFence(token);
-                var current = await sources.RequireManifestUnchangedLockedAsync(handle, expected, token);
+                var current = ApplyIssuedFence(await sources.RequireManifestUnchangedLockedAsync(handle, expected, token));
                 if (current is GroupBatchClaimFenceVerdict.Current)
-                    current = await brain.RequireManifestUnchangedLockedAsync(handle, expected, token);
+                    current = ApplyIssuedFence(await brain.RequireManifestUnchangedLockedAsync(handle, expected, token));
                 if (current is GroupBatchClaimFenceVerdict.Current)
                 {
                     if (original is not null)
@@ -204,9 +247,19 @@ internal sealed class GroupModelAttemptJournalStore(PlatformDbContext database, 
                             .RequireOriginalUnchangedLockedAsync(handle, original.Plan, token);
                     await permissions.RequireSafeRuntimeAsync(token);
                     if (additionalFence is not null) await additionalFence(token);
-                    current = await claims.InspectCurrentLockedAsync(handle, token);
+                    current = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
                 }
                 return current;
+            }
+
+            GroupBatchClaimFenceVerdict ApplyIssuedFence(GroupBatchClaimFenceVerdict current)
+            {
+                if (issuedFence is null || current is not (GroupBatchClaimFenceVerdict.Current or GroupBatchClaimFenceVerdict.Expired)) return current;
+                var observed = issuedFence((current as GroupBatchClaimFenceVerdict.Expired)?.Observation, token);
+                if (observed is null) return current;
+                if (!ReferenceEquals(observed.Handle, handle) || observed.ObservedAtUtc.Offset != TimeSpan.Zero
+                    || observed.ObservedAtUtc < handle.Receipt.ExpiresAtUtc) throw Unavailable();
+                return new GroupBatchClaimFenceVerdict.Expired(observed);
             }
 
             async Task RequireCurrentOrRetireAsync(GroupBatchClaimFenceVerdict current,

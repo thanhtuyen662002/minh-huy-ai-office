@@ -57,6 +57,10 @@ public sealed class OwnedOriginalAdmissionDiagnosticTests
     [InlineData("constraint-non-UTC-time", "denied")]
     [InlineData("committed-reply-loss", "cancelled")]
     [InlineData("allocation", "other")]
+    [InlineData("admitted-journal-prepare", "invariant")]
+    [InlineData("admitted-journal-rollback", "other")]
+    [InlineData("admitted-journal-commit", "cancelled")]
+    [InlineData("admitted-journal-replay", "denied")]
     public void DiagnosticContainsOnlyClosedPhaseAndTypeWithoutReadingPrivateError(string phase, string kind)
     {
         const string secret = "PRIVATE_CONNECTION_AND_SOURCE_BODY";

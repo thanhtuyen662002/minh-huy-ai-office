@@ -25,6 +25,8 @@ RUNTIME_LINES = {
 SUMMARY = 'PASS actual original admission atomic SQL rollback lost reply immutable replay every column deny expiry rollback durable witness rewind refusal epoch replacement accepted result FIRST sidecar SELECT deny restored both cleanup gates no provider or authentic profile qualification'
 READ_RUNTIME_LINE = 'PASS owned original admission actual SQL exact original sidecar select own row and four single selector counterfactual empty reads same locked transaction unchanged original decoder zero keys or provider'
 READ_SUMMARY = 'PASS actual original admission shipping sidecar SQL predicate positive and tenant company binding batch counterfactual empty reads same owned authority and transaction no foreign authorized API claim both cleanup gates unchanged graphs zero keys or provider'
+JOURNAL_RUNTIME_LINE = 'PASS owned original admission actual current gate prepared journal and companion both flushed rollback no rows committed exact scoped provenance current snapshot deadline capped replay no second permit accepted result FIRST zero provider'
+JOURNAL_SUMMARY = 'PASS actual admitted original model journal authentic sidecar same transaction two row flush rollback committed exact companion replay no second permit accepted result FIRST without sidecar or companion SELECT retained full graphs both cleanup gates no provider or model qualification'
 
 
 def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, automatic):
@@ -41,7 +43,8 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     source_list = ','.join("'"+x+"'" for x in sources)
     extra = (('GroupAutomaticInputPlans','BatchId'), ('GroupOriginalAdmissionSidecars','BatchId'),
         ('GroupModelAttemptStarts','RequestId'), ('GroupModelAttemptResults','RequestId'),
-        ('GroupModelAttemptFailures','RequestId'), ('GroupWorkRawDispositions','BatchId,CommittedSequence'))
+        ('GroupModelAttemptFailures','RequestId'), ('GroupWorkRawDispositions','BatchId,CommittedSequence'),
+        ('GroupModelAttemptAdmissions','RequestId'))
 
     def digest(table, order, predicate):
         value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
@@ -67,7 +70,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
 
     def permissions():
         value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),(SELECT * FROM sys.database_permissions "
-            "WHERE major_id=OBJECT_ID(N'aioffice.GroupOriginalAdmissionSidecars') ORDER BY grantee_principal_id,minor_id,type FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+            "WHERE major_id IN (OBJECT_ID(N'aioffice.GroupOriginalAdmissionSidecars'),OBJECT_ID(N'aioffice.GroupModelAttemptAdmissions')) ORDER BY major_id,grantee_principal_id,minor_id,type FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
         assert re.fullmatch(r'[0-9A-F]{64}', value)
         return value
 
@@ -119,7 +122,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 first = None
                 try:
                     reference.require_owned(directory,api)
-                    sql('DENY SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars TO aioffice_binding_runtime;')
+                    sql('DENY SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars TO aioffice_binding_runtime; DENY SELECT ON OBJECT::aioffice.GroupModelAttemptAdmissions TO aioffice_binding_runtime;')
                     result = subprocess.run([*command,mode],input=config,env=env,capture_output=True,text=True,timeout=170)
                     assert not result.stderr
                     reference.require_reference_result(result,mode,[expected])
@@ -127,7 +130,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 finally:
                     try:
                         reference.require_owned(directory,api)
-                        sql('REVOKE SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars FROM aioffice_binding_runtime; GRANT SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars TO aioffice_binding_runtime;')
+                        sql('REVOKE SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars FROM aioffice_binding_runtime; GRANT SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars TO aioffice_binding_runtime; REVOKE SELECT ON OBJECT::aioffice.GroupModelAttemptAdmissions FROM aioffice_binding_runtime; GRANT SELECT ON OBJECT::aioffice.GroupModelAttemptAdmissions TO aioffice_binding_runtime;')
                         assert permissions() == original_permissions, 'Admission SELECT restoration differs'
                     except BaseException as error:
                         if first is None: first = error
@@ -135,7 +138,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             else:
                 result = subprocess.run([*command,mode],input=config,env=env,capture_output=True,text=True,timeout=170)
                 assert not result.stderr
-                reference.require_reference_result(result,mode,[expected])
+                reference.require_reference_result(result,mode,[expected,JOURNAL_RUNTIME_LINE] if mode == 'admission-original-commit' else [expected])
             assert retained() == original and permissions() == original_permissions
             counts = sql(f"SELECT CONCAT((SELECT COUNT(*) FROM aioffice.GroupAutomaticInputPlans WHERE {scope}),N'|',"
                 f"(SELECT COUNT(*) FROM aioffice.GroupOriginalAdmissionSidecars WHERE {scope}),N'|',"
@@ -143,6 +146,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 f"(SELECT COUNT(*) FROM aioffice.GroupModelAttemptResults WHERE {scope}),N'|',"
                 f"(SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope}));")
             assert counts == ('0|0|0|0|0','0|0|0|0|1','1|1|1|1|2','1|1|1|1|3','1|1|1|1|3')[index]
+            assert sql(f"SELECT COUNT(*) FROM aioffice.GroupModelAttemptAdmissions WHERE {scope};") == ('0' if index < 2 else '1')
             assert sql(f"SELECT COUNT(*) FROM aioffice.GroupCustomerRequests WHERE {scope};") == '0'
             assert sql(f"SELECT COUNT(*) FROM aioffice.GroupModelAttemptFailures WHERE {scope};") == '0'
             observed = require_fixed_source()
@@ -151,7 +155,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
                 retired_claim = digest('GroupBatchClaimReceipts','BatchId,Epoch',scope+' AND Epoch=1')
                 assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=1 AND ExpiryObservedAtUtc=ExpiresAtUtc;") == '1'
             if index >= 2:
-                durable = tuple(digest(t,o,scope) for t,o in extra[:4])
+                durable = tuple(digest(t,o,scope) for t,o in extra[:4]+(extra[-1],))
                 if index == 2:
                     immutable = durable
                     original_claim = digest('GroupBatchClaimReceipts','BatchId,Epoch',scope+' AND Epoch=2')
@@ -211,3 +215,4 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     print(corruption.SUMMARY,flush=True)
     print(permission_proof.SUMMARY,flush=True)
     print(READ_SUMMARY,flush=True)
+    print(JOURNAL_SUMMARY,flush=True)

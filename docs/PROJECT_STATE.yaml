@@ -15,7 +15,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: b3b77e3576d985fef0ad63b7ef3f4dd09c22e0ca
     state: in_progress
-    next: "Exact854 terminal FAILED closure6192747488 retained: first valid constraint pair/sql-other, .NET5012/Gov pass, native/quality red/no browser. Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 /lead review6192901265/ownership6192944435 now owns Build38740772150/Gov38740772151 attempt1 native116441579120/all8/full5037/wholequality/six originals with helper18 through terminal; repair real red SAME288. Parked local16 5d28/checkpoint6192384033 SOURCE_REVIEW_PENDING; private17 schema20 now local24/full5073/15frontier/EFpending0/format3 PASS but not SQL qualified. Newtable immutable15cols/two exact principal FKs/two expand AKs/oldindexes and rows preserved, current60EF/78source/40group and frozen54/72 unchanged. Source17 must obtain independent review, then ordinary merge of current proof-only remote5bf into the parked production lineage, preserve both histories/next values, and verify composed expected5076 BEFORE any production-source push. No force/reset/rebase/default-push or push over active native. Continue authentic same-transaction sidecar+atomic admitted start/companion/deadline caps/exact expiry witness, currentrelease/accepted-result-FIRST coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; production catalog EMPTY/modelNOT_RUN_UNEVALUATED, readonlyERP/Windows/deployment remain. HANDOFF owns actualheads/run; no partialmerge."
+    next: "Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 Build38740772150/Gov38740772151 attempt1 native116441579120/native141/all8/full5037/wholequality/six originals remains owned until terminal; .NET5037 passed. Original854 failedclosure6192747488 retained. Local successor19 ordinary composition must preserve parents0f6c66d and5bf1d08 and all parsed16/17/18/style history. Atomic new journal authenticates exact stored original+sidecar in SAME existing Serializable unit, stages start+immutablecompanion together, caps deadline by issued preparation/claim, authenticates replay without secondpermit/legacy retrofit and carries first exact expiry witness. New failure/result persistence paths reauthenticate admitted companion; accepted-result-FIRST reads remain independent of sidecar/companion/model. Baseline5076 before behavior; new16entry+4diagnostic/full5096=[6,584,25,4481],8driver/160guard pass; final format verification log binds frozen source. Owned runtime source adds bothrowsflushed rollback/commit/exactreadback/replay and acceptedresult FIRST under BOTH SELECTdenials, complete companion graphs/permission restoration/two cleanup gates, future native142. Actual newSQL142 NOT_RUN_UNQUALIFIED, future parser/capture142 NOT_PREPARED. Source16/17/19 independent securityreview PENDING; no push over active native or unreviewed production promotion. Continue current-release existingGateway execution from committedpermit then coordinator/scanner/WorkerDI/no-click278/internalIT279/full233. Production catalogEMPTY/modelNOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain; no partialmerge. HANDOFF owns actualheads/runs."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "Exact854 terminal FAILED closure6192747488 retained: first valid constraint pair/sql-other, .NET5012/Gov pass, native/quality red/no browser. Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 /lead review6192901265/ownership6192944435 now owns Build38740772150/Gov38740772151 attempt1 native116441579120/all8/full5037/wholequality/six originals with helper18 through terminal; repair real red SAME288. Parked local16 5d28/checkpoint6192384033 SOURCE_REVIEW_PENDING; private17 schema20 now local24/full5073/15frontier/EFpending0/format3 PASS but not SQL qualified. Newtable immutable15cols/two exact principal FKs/two expand AKs/oldindexes and rows preserved, current60EF/78source/40group and frozen54/72 unchanged. Source17 must obtain independent review, then ordinary merge of current proof-only remote5bf into the parked production lineage, preserve both histories/next values, and verify composed expected5076 BEFORE any production-source push. No force/reset/rebase/default-push or push over active native. Continue authentic same-transaction sidecar+atomic admitted start/companion/deadline caps/exact expiry witness, currentrelease/accepted-result-FIRST coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; production catalog EMPTY/modelNOT_RUN_UNEVALUATED, readonlyERP/Windows/deployment remain. HANDOFF owns actualheads/run; no partialmerge."
+next_action: "Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 Build38740772150/Gov38740772151 attempt1 native116441579120/native141/all8/full5037/wholequality/six originals remains owned until terminal; .NET5037 passed. Original854 failedclosure6192747488 retained. Local successor19 ordinary composition must preserve parents0f6c66d and5bf1d08 and all parsed16/17/18/style history. Atomic new journal authenticates exact stored original+sidecar in SAME existing Serializable unit, stages start+immutablecompanion together, caps deadline by issued preparation/claim, authenticates replay without secondpermit/legacy retrofit and carries first exact expiry witness. New failure/result persistence paths reauthenticate admitted companion; accepted-result-FIRST reads remain independent of sidecar/companion/model. Baseline5076 before behavior; new16entry+4diagnostic/full5096=[6,584,25,4481],8driver/160guard pass; final format verification log binds frozen source. Owned runtime source adds bothrowsflushed rollback/commit/exactreadback/replay and acceptedresult FIRST under BOTH SELECTdenials, complete companion graphs/permission restoration/two cleanup gates, future native142. Actual newSQL142 NOT_RUN_UNQUALIFIED, future parser/capture142 NOT_PREPARED. Source16/17/19 independent securityreview PENDING; no push over active native or unreviewed production promotion. Continue current-release existingGateway execution from committedpermit then coordinator/scanner/WorkerDI/no-click278/internalIT279/full233. Production catalogEMPTY/modelNOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain; no partialmerge. HANDOFF owns actualheads/runs."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -5290,3 +5290,80 @@ model_attempt_admission_snapshot_style_checkpoint:
   snapshot_sha256: 5f62a49e543e18828441e40c39d1e433c3f62797991bb81f0f5ad0db601f5a4d
   source_review: PENDING; no activation or push
   tests: No rerun because decoded C# text exactly unchanged; prior5073/EFpending0 remain scoped; no new SQL qualification
+
+original_admission_plan_sql_syntax_checkpoint:
+  parent: 0b1179222c14bcdb0cf88b50d3804bae939ef6ee
+  failed_head: 854cdc7deb5763e1bf80b06e6dac2891c19d082b
+  failed_closure: 6192747488
+  change: Proof-only actual INSERT delimits reserved Plan; extract the same original+sidecar SQL into executed constants;3
+    tests parse actual constants/mapped columns and detect original regression
+  production_delta: ZERO vs reviewed0b117; production16/17 explicitly excluded
+  review_scope: Lead/root reviews low-risk proof syntax and helper delta; independent source15 review6192005875 remains. No
+    independent approval of16/17 inferred.
+  expected_native: 141
+  expected_dotnet: 5037
+  actual_sql: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  parked_local_production16: 5d28a6f8959f751de1ed0d2b2b4046d4c5bc3008 /6192384033 SOURCE_REVIEW_PENDING
+  previous_next_action: Actual854 Build38732218027/Gov38732218046 attempt1 owns native116412506603/wholequality/six originals
+    to terminal; .NET116412506356 actualPASS5012. Prior a293SQLcommit failedclosure6191388901/198browserfailedclosure6189613450
+    retained; exactnative outcome unqualified while active. Separate private proof15 adds real shipping sidecarSELECT positive1/four
+    singleGUIDcounterfactual0 counts using unchanged actual SQL/typed clones on SAME owned serializabletransaction, then unchanged
+    real decoder, zero key reads/writes. Standalone diagnostic is NOT foreignauthorizedAPI/RLS/coordinatorordering. Readerentry6+actualEFtranslation1+parser15=22
+    local controls/full5034/format/driver8/guard160 PASS; actual newSQL NOT_RUN_UNQUALIFIED. Review exact source14/durable/parser141/helper
+    tuple; no push over active854. Only after original854 terminal capture normal SAME288 reviewed checkpoint; own fresh native141/all8/Gov/full5034/wholequality/six
+    originals. Foreignservice/races/admittedjournal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233/realmodel/readonlyERP/Windows/deployment
+    remain; catalogEMPTY/modelNOT_RUN_UNEVALUATED, no partialmerge. HANDOFF owns actualhead/run/status; qualified anchors
+    historical.
+  previous_backend_next: Actual854 Build38732218027/Gov38732218046 attempt1 owns native116412506603/wholequality/six originals
+    to terminal; .NET116412506356 actualPASS5012. Prior a293SQLcommit failedclosure6191388901/198browserfailedclosure6189613450
+    retained; exactnative outcome unqualified while active. Separate private proof15 adds real shipping sidecarSELECT positive1/four
+    singleGUIDcounterfactual0 counts using unchanged actual SQL/typed clones on SAME owned serializabletransaction, then unchanged
+    real decoder, zero key reads/writes. Standalone diagnostic is NOT foreignauthorizedAPI/RLS/coordinatorordering. Readerentry6+actualEFtranslation1+parser15=22
+    local controls/full5034/format/driver8/guard160 PASS; actual newSQL NOT_RUN_UNQUALIFIED. Review exact source14/durable/parser141/helper
+    tuple; no push over active854. Only after original854 terminal capture normal SAME288 reviewed checkpoint; own fresh native141/all8/Gov/full5034/wholequality/six
+    originals. Foreignservice/races/admittedjournal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233/realmodel/readonlyERP/Windows/deployment
+    remain; catalogEMPTY/modelNOT_RUN_UNEVALUATED, no partialmerge. HANDOFF owns actualhead/run/status; qualified anchors
+    historical.
+
+atomic_admitted_journal_checkpoint:
+  local_parent: 0f6c66d1e8f5e0e38a997266bc4f546744e255b8
+  remote_proof_parent: 5bf1d083a92060c5eeaf333285b57a53ec6fe943
+  state: SOURCE_SECURITY_REVIEW_PENDING_NO_RUNTIME_QUALIFICATION_OR_PUSH
+  baseline_before_behavior: 5076=[6,584,25,4461] PASS
+  production_change: Explicit admitted start atomically appends exact companion under same original/source/brain/claim/perms;
+    authentic expiry observations; no legacy retrofit or accepted-result read dependency; admitted failure/result writes reauthenticate
+  local_verification: 16 new entry/derivation/closure controls+4 diagnostics; full5096=[6,584,25,4481];8driver/160guard; final
+    format log see frozen manifest
+  owned_runtime_source: New sameactualGate syntheticprofile/NoHTTP rollback-after-bothflushed then commit/readback/replay;
+    actual companion remains immutable across restarts; acceptedresult FIRST with BOTH SELECTdenials; driver emits newaggregate
+    only afterbothcleanup
+  actual_new_sql: NOT_RUN_UNQUALIFIED; native142 successorhelpers NOT_PREPARED
+  actual_model: NOT_RUN_UNEVALUATED
+  remote_build: 38740772150
+  remote_governance: 38740772151
+  remote_native: 116441579120
+  remote_dotnet: 116441579188
+  original854_failed_closure: 6192747488
+  previous_next_action: 'Exact854 terminal FAILED closure6192747488 retained: first valid constraint pair/sql-other, .NET5012/Gov
+    pass, native/quality red/no browser. Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 /lead review6192901265/ownership6192944435
+    now owns Build38740772150/Gov38740772151 attempt1 native116441579120/all8/full5037/wholequality/six originals with helper18
+    through terminal; repair real red SAME288. Parked local16 5d28/checkpoint6192384033 SOURCE_REVIEW_PENDING; private17 schema20
+    now local24/full5073/15frontier/EFpending0/format3 PASS but not SQL qualified. Newtable immutable15cols/two exact principal
+    FKs/two expand AKs/oldindexes and rows preserved, current60EF/78source/40group and frozen54/72 unchanged. Source17 must
+    obtain independent review, then ordinary merge of current proof-only remote5bf into the parked production lineage, preserve
+    both histories/next values, and verify composed expected5076 BEFORE any production-source push. No force/reset/rebase/default-push
+    or push over active native. Continue authentic same-transaction sidecar+atomic admitted start/companion/deadline caps/exact
+    expiry witness, currentrelease/accepted-result-FIRST coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; production
+    catalog EMPTY/modelNOT_RUN_UNEVALUATED, readonlyERP/Windows/deployment remain. HANDOFF owns actualheads/run; no partialmerge.'
+  previous_backend_next: 'Exact854 terminal FAILED closure6192747488 retained: first valid constraint pair/sql-other, .NET5012/Gov
+    pass, native/quality red/no browser. Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 /lead review6192901265/ownership6192944435
+    now owns Build38740772150/Gov38740772151 attempt1 native116441579120/all8/full5037/wholequality/six originals with helper18
+    through terminal; repair real red SAME288. Parked local16 5d28/checkpoint6192384033 SOURCE_REVIEW_PENDING; private17 schema20
+    now local24/full5073/15frontier/EFpending0/format3 PASS but not SQL qualified. Newtable immutable15cols/two exact principal
+    FKs/two expand AKs/oldindexes and rows preserved, current60EF/78source/40group and frozen54/72 unchanged. Source17 must
+    obtain independent review, then ordinary merge of current proof-only remote5bf into the parked production lineage, preserve
+    both histories/next values, and verify composed expected5076 BEFORE any production-source push. No force/reset/rebase/default-push
+    or push over active native. Continue authentic same-transaction sidecar+atomic admitted start/companion/deadline caps/exact
+    expiry witness, currentrelease/accepted-result-FIRST coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; production
+    catalog EMPTY/modelNOT_RUN_UNEVALUATED, readonlyERP/Windows/deployment remain. HANDOFF owns actualheads/run; no partialmerge.'

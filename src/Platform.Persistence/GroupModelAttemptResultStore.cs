@@ -9,7 +9,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // key provider, outside SQL, between two current original-plan transactions.
 internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
     TimeProvider clock, GroupBatchSourceReader sources, GroupBrainCurrentReader brain,
-    IGroupSourceKeyProvider keys, GroupModelAttemptResultProtector protector)
+    IGroupSourceKeyProvider keys, GroupModelAttemptResultProtector protector, GroupModelAttemptAdmissionPreparer? admissions = null)
 {
     internal async Task<GroupModelAttemptResult?> ReadOriginalAsync(GroupAutomaticInputPlan plan,
         GroupAutomaticInputPlan.RestoredChunk restored, CancellationToken token = default)
@@ -57,7 +57,7 @@ internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, G
             }
             else await RequireWritableStartAsync(original, response.Permit, now, ct);
             return row;
-        }, null, token);
+        }, null, token, response.Permit.Admission is null ? null : response.Permit);
         using var key = await ResolveKeyAsync(original, metadata?.EncryptionKeyId, token);
         var encoded = accepted.Encode();
         try
@@ -105,7 +105,7 @@ internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, G
                 database.Add(row); staged.Add(row); await database.SaveChangesAsync(ct);
                 if (UtcNow() >= row.DeadlineUtc) throw Unavailable();
                 return accepted;
-            }, metadata is null ? response.Permit.Start.DeadlineUtc : null, token);
+            }, metadata is null ? response.Permit.Start.DeadlineUtc : null, token, response.Permit.Admission is null ? null : response.Permit);
         }
         finally { CryptographicOperations.ZeroMemory(encoded); }
     }
@@ -171,14 +171,15 @@ internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, G
 
     private async Task<T> UnitAsync<T>(GroupModelAttemptOriginalBinding original,
         Func<DateTimeOffset, List<object>, CancellationToken, Task<T>> operation,
-        DateTimeOffset? writeDeadline, CancellationToken token)
+        DateTimeOffset? writeDeadline, CancellationToken token, GroupModelAttemptPermit? admittedPermit = null)
     {
-        var result = await new GroupModelAttemptJournalStore(database, worker, clock, sources, brain)
+        var result = await new GroupModelAttemptJournalStore(database, worker, clock, sources, brain,
+                admittedPermit is null ? null : admissions)
             .InOriginalCurrentUnitAsync(original, operation, async ct =>
             {
                 await new GroupModelAttemptResultPermissionVerifier(database).RequireSafeRuntimeAsync(ct);
                 if (writeDeadline is { } deadline && UtcNow() >= deadline) throw Unavailable();
-            }, token);
+            }, token, admittedPermit);
         // A commit may finish after the final in-transaction clock check. A
         // late reply cannot return a successful new write; if it committed,
         // recovery authenticates that original row with a fresh current claim.

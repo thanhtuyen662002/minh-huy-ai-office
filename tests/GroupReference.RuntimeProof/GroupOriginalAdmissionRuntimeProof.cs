@@ -39,7 +39,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var probe = new AtomicProbe(scope, clock);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
-            .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe)).Options);
+            .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe), new AdmittedFlushProbe(scope)).Options);
         if (mode == "admission-original-permission")
         {
             Phase = "fresh-unsafe-permission-refusal";
@@ -173,10 +173,11 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             await RequireMutationRefusedAsync(db, scope, token);
             Phase = "accepted-result";
             var chunk = plan.RestoreChunks(preparation, dependencies, Profile, [], token).Single();
-            var start = await new GroupModelAttemptJournalStore(db, worker, clock, sources, brain).TryStartOriginalAsync(plan, chunk, Guid.NewGuid(), token);
-            var permit = start.Permit ?? throw new InvalidOperationException();
-            if (start.WasAlreadyStarted) throw new InvalidOperationException();
-            var results = new GroupModelAttemptResultStore(db, worker, clock, sources, brain, keys, new());
+            var attemptIssuer = new GroupModelAttemptAdmissionPreparer(db, gate, clock);
+            var permit = await RequireAdmittedJournalAsync(db, worker, clock, sources, brain, attemptIssuer,
+                plan, chunk, issued.Sidecar, token);
+            Phase = "accepted-result";
+            var results = new GroupModelAttemptResultStore(db, worker, clock, sources, brain, keys, new(), attemptIssuer);
             var acceptedRequest = permit.Context.CreateGatewayRequest(permit.Start.RequestId);
             var response = GroupModelAttemptResponse.Parse(permit, new AiGatewayResponse(acceptedRequest.RequestId, acceptedRequest.Capability,
                 Output(preparation), Model, 123, 7)
@@ -218,6 +219,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         RequireClean(db);
         if (await PlanCountAsync() != 1 || mode != "admission-original-recover" && await AdmissionCountAsync() != 1) throw new InvalidOperationException();
         Console.WriteLine(mode switch { "admission-original-commit" => CommitLine, "admission-original-recover" => RecoverLine, "admission-original-refuse" => RefusalLine, _ => ResumeLine });
+        if (mode == "admission-original-commit") Console.WriteLine(JournalLine);
 
         Task<int> PlanCountAsync() => db.GroupAutomaticInputPlans.CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token);
         Task<int> AdmissionCountAsync() => db.GroupOriginalAdmissionSidecars.CountAsync(x => x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token);
@@ -302,7 +304,8 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         internal bool RollbackAfterFlush, SawBothFlushed, LoseReply, ReplyLost, ForbidAdmissionReads;
         public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData data, InterceptionResult<DbDataReader> result, CancellationToken token = default)
         {
-            if (ForbidAdmissionReads && command.CommandText.Contains("GroupOriginalAdmissionSidecars", StringComparison.Ordinal)) throw new InvalidOperationException();
+            if (ForbidAdmissionReads && (command.CommandText.Contains("GroupOriginalAdmissionSidecars", StringComparison.Ordinal)
+                || command.CommandText.Contains("GroupModelAttemptAdmissions", StringComparison.Ordinal))) throw new InvalidOperationException();
             return ValueTask.FromResult(result);
         }
     }
