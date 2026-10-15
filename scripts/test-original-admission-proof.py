@@ -54,6 +54,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                     return '\n'.join(f'{i:02d}|'+('B' if fault == 'retained' and phase != 'before' else 'A')*64 for i in range(34))
                 table = query.split('FROM aioffice.',1)[1].split()[0]
                 own = source in query and 'BindingId IN' not in query
+                if own and fault == 'sql-read-graph' and phase == 'admission-original-sql-read' and table == 'GroupOriginalAdmissionSidecars': return 'B'*64
                 if own and fault in ('plan','sidecar','start','result') and phase == 'admission-original-resume':
                     target = {'plan':'GroupAutomaticInputPlans','sidecar':'GroupOriginalAdmissionSidecars','start':'GroupModelAttemptStarts','result':'GroupModelAttemptResults'}[fault]
                     if table == target: return 'B'*64
@@ -79,7 +80,9 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 phase = 'image-cleanup'; return SimpleNamespace(returncode=1 if fault == 'image-error' else 0,stdout='',stderr='')
             self.assertEqual(['docker','run'],command[:2]); phase = command[-1]
             if phase == 'admission-original-recover': self.assertTrue(denied)
-            line = proof.RUNTIME_LINES[phase]
+            line = proof.READ_RUNTIME_LINE if phase == 'admission-original-sql-read' else proof.RUNTIME_LINES[phase]
+            if fault == 'sql-read-child' and phase == 'admission-original-sql-read': return SimpleNamespace(returncode=1,stdout='',stderr='')
+            if fault == 'sql-read-output' and phase == 'admission-original-sql-read': line += '\nPRIVATE_READ_BODY'
             if fault == 'child-error' and phase == 'admission-original-recover': return SimpleNamespace(returncode=1,stdout='',stderr='')
             if fault == 'duplicate' and phase == 'admission-original-resume': line += '\n'+line
             if fault == 'private-output' and phase == 'admission-original-commit': line += '\nPRIVATE_DIAGNOSTIC'
@@ -103,13 +106,13 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 self.assertEqual('',output.getvalue())
             else:
                 proof.verify(**args)
-                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY],output.getvalue().splitlines())
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY],output.getvalue().splitlines())
         return args,calls,mutations
 
     def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
         args,calls,mutations = self.run_control()
         self.assertEqual(['deny','restore'],mutations)
-        self.assertEqual(list(proof.RUNTIME_LINES),[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
+        self.assertEqual([*proof.RUNTIME_LINES,'admission-original-sql-read','admission-original-resume'],[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
         self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))
         for cmd,kwargs in calls:
             if cmd[:2] != ['docker','run']: continue
@@ -140,6 +143,12 @@ class OriginalAdmissionProofTests(unittest.TestCase):
     def test_permission_suite_failure_suppresses_all_markers_and_still_cleans_up(self):
         _,calls,_=self.run_control('permission-suite')
         self.assertEqual(['docker','image','rm'],calls[-1][0][:3])
+
+    def test_sql_read_child_and_extra_output_never_publish_any_partial_marker(self):
+        for fault in ('sql-read-child','sql-read-output','sql-read-graph'):
+            with self.subTest(fault=fault):
+                _,calls,_=self.run_control(fault)
+                self.assertEqual(['docker','image','rm'],calls[-1][0][:3])
 
 
 if __name__ == '__main__': unittest.main()

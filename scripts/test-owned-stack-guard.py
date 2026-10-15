@@ -2994,8 +2994,8 @@ class AttemptResultDiagnosticTests(unittest.TestCase):
 
 class OriginalAdmissionDiagnosticControls(unittest.TestCase):
     def test_exact_admission_failure_projects_only_closed_phase_kind(self):
-        for mode in ('admission-original-commit','admission-original-refuse','admission-original-permission'):
-            for phase in ('constraint-empty-operation','constraint-lowercase-plan-hash','constraint-non-UTC-time','fresh-unsafe-permission-refusal','unknown'):
+        for mode in ('admission-original-commit','admission-original-refuse','admission-original-permission','admission-original-sql-read'):
+            for phase in ('constraint-empty-operation','constraint-lowercase-plan-hash','constraint-non-UTC-time','fresh-unsafe-permission-refusal','sql-read-original','sql-read-predicates','unknown'):
                 for kind in ('sql-constraint','sql-permission','sql-timeout','sql-deadlock','sql-other','cancelled','denied','invariant','other'):
                     wire=f'FAIL owned original admission runtime phase-{phase} kind-{kind}\nFAIL owned reference runtime {mode}\n'
                     with self.subTest(mode=mode,phase=phase,kind=kind),self.assertRaises(AssertionError) as error:

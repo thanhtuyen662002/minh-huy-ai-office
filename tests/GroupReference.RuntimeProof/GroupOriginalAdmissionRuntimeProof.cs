@@ -34,7 +34,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse" or "admission-original-permission"))
+        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse" or "admission-original-permission" or "admission-original-sql-read"))
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var probe = new AtomicProbe(scope, clock);
@@ -71,7 +71,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocation.Id)
             .OrderByDescending(x => x.Epoch).FirstOrDefaultAsync(token);
         var expectedEpoch = mode == "admission-original-expiry" ? 1 : mode == "admission-original-commit" ? 2 : 3;
-        var replayCurrent = mode is "admission-original-resume" or "admission-original-refuse";
+        var replayCurrent = mode is "admission-original-resume" or "admission-original-refuse" or "admission-original-sql-read";
         if ((old?.Epoch ?? 0) != (replayCurrent ? expectedEpoch : expectedEpoch - 1)) throw new InvalidOperationException();
         clock.Current = old is null ? allocation.AllocatedAtUtc : replayCurrent ? old.IssuedAtUtc : old.ExpiresAtUtc.AddTicks(1);
         var claims = new GroupBatchClaimStore(db, worker, clock);
@@ -81,6 +81,11 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             ?? throw new InvalidOperationException();
         var handle = claim.CurrentHandle ?? throw new InvalidOperationException();
         if (claim.Receipt.Epoch != expectedEpoch || claim.WasAlreadyClaimed != replayCurrent) throw new InvalidOperationException();
+        if (mode == "admission-original-sql-read")
+        {
+            await RequireSqlReadBoundariesAsync(scope, handle, worker, options, clock, token);
+            RequireClean(db); Console.WriteLine(SqlReadLine); return;
+        }
         var keys = new GroupNoteRuntimeProof.CountedKeys(db, scope);
         var sources = new GroupBatchSourceReader(db, worker, clock, keys, new());
         var brain = new GroupBrainCurrentReader(db, worker, clock, keys, new());

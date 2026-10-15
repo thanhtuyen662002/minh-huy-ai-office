@@ -187,7 +187,7 @@ def require_reference_result(result, mode, expected_lines):
         if match and match[1] in result_phases and match[2] in result_kinds:
             detail = "; phase=" + match[1] + "; kind=" + match[2]
     admission_modes = {"admission-original-prepare", "admission-original-expiry", "admission-original-commit",
-        "admission-original-recover", "admission-original-resume", "admission-original-refuse", "admission-original-permission"}
+        "admission-original-recover", "admission-original-resume", "admission-original-refuse", "admission-original-permission", "admission-original-sql-read"}
     admission_phases = {"setup", "fresh-unsafe-permission-refusal", "allocation", "private-input", "original",
         "expiry-after-both-flushed", "expiry-rewind-refusal", "physical-constraint-boundaries", "atomic-rollback",
         "committed-reply-loss", "fresh-read-replay", "physical-column-boundaries", "accepted-result", "corrupted-sidecar-refusal", "unknown",
@@ -195,7 +195,7 @@ def require_reference_result(result, mode, expected_lines):
         "constraint-wrong-claim-epoch", "constraint-foreign-tenant", "constraint-foreign-company", "constraint-foreign-binding",
         "constraint-format-version", "constraint-short-payload", "constraint-oversized-payload", "constraint-empty-operation",
         "constraint-zero-epoch", "constraint-negative-epoch", "constraint-lowercase-plan-hash", "constraint-nonhex-sidecar-hash",
-        "constraint-lowercase-sidecar-hash", "constraint-non-UTC-time"}
+        "constraint-lowercase-sidecar-hash", "constraint-non-UTC-time", "sql-read-original", "sql-read-predicates"}
     admission_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other"}
     if (mode in admission_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
             and lines[1] == "FAIL owned reference runtime " + mode):

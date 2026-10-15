@@ -23,6 +23,8 @@ RUNTIME_LINES = {
     'admission-original-resume': 'PASS owned original admission current epoch three exact original epoch two plan sidecar snapshots legacy input identities chunks hashes restored zero provider'
 }
 SUMMARY = 'PASS actual original admission atomic SQL rollback lost reply immutable replay every column deny expiry rollback durable witness rewind refusal epoch replacement accepted result FIRST sidecar SELECT deny restored both cleanup gates no provider or authentic profile qualification'
+READ_RUNTIME_LINE = 'PASS owned original admission actual SQL exact original sidecar select own row and four single selector counterfactual empty reads same locked transaction unchanged original decoder zero keys or provider'
+READ_SUMMARY = 'PASS actual original admission shipping sidecar SQL predicate positive and tenant company binding batch counterfactual empty reads same owned authority and transaction no foreign authorized API claim both cleanup gates unchanged graphs zero keys or provider'
 
 
 def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, automatic):
@@ -178,6 +180,15 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             reference.require_reference_result(result,mode,[expected])
         permission_proof.verify(directory=directory,api=api,tenant=tenant,company=company,source=source,batch=batch,
             sql=sql,run_child=run_permission_child,reference=reference,assert_unchanged=unchanged)
+        unchanged()
+        result = subprocess.run([*command,'admission-original-sql-read'],input=config,env=env,capture_output=True,text=True,timeout=170)
+        assert not result.stderr
+        reference.require_reference_result(result,'admission-original-sql-read',[READ_RUNTIME_LINE])
+        unchanged()
+        result = subprocess.run([*command,'admission-original-resume'],input=config,env=env,capture_output=True,text=True,timeout=170)
+        assert not result.stderr
+        reference.require_reference_result(result,'admission-original-resume',[RUNTIME_LINES['admission-original-resume']])
+        unchanged()
     except BaseException as error: failure = error
     finally:
         try: automatic.close_owned_container(directory=directory,api=api,name=image,suffix=suffix,reference=reference)
@@ -199,3 +210,4 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     print(SUMMARY,flush=True)
     print(corruption.SUMMARY,flush=True)
     print(permission_proof.SUMMARY,flush=True)
+    print(READ_SUMMARY,flush=True)
