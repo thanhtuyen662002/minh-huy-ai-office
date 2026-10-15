@@ -21,16 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: 'Remote198 original Build38710426036/Gov38710426003 attempt1 owns native116340150048/wholequality/six originals
-  through terminal; actual.NET4978 PASS. Local reviewed constraints4196173/corruption3cd8b0a/batching a3370c8 review6189181823
-  remain unpushed. Private successor adds three effective-permission cases: column override, table CONTROL, physical SQL-user
-  impersonation owner chain plus fresh actual runtime verifier refusal, exact full permission/procedure restoration and healthy
-  reads. Build/format/inert controls are source evidence only; actual SQL NOT_RUN_UNQUALIFIED. Review exact source/durable
-  tuple before normal SAME288 checkpoint after original198 closure. Own expanded all8/Gov/native140/full4978/wholequality/six
-  originals. Preserve all18constraints/sixcorruptions/exact batching/old132 and both cleanup gates. ForeignREAD and between-fence
-  permission races remain; then admitted journal/current-release/coordinator/scanner/WorkerDI/no-click278/IT279/full233. Legacy
-  V2/V3 bytes/accepted-result-FIRST retained; catalog EMPTY/model NOT_RUN_UNEVALUATED; readonlyMedcomNovo/Windows/deployment
-  incomplete; no partial merge. HANDOFF owns actual local/remote HEAD/CI; top qualified anchors remain historical.'
+next_action: "Original198 Build38710426036/Gov38710426003 attempt1 terminal FAILED closure6189613450: native116340150048 browser original-company-private-chat-positive cause UNPROVEN; .NET4978/Gov PASS, wholequality116363427085 FAILED solely local runtime, no images. Five original SQL phases are bounded partial evidence. Local7902 reviewed18/6/3 proofs still unpushed. Separate browser successor adds fixed granular stages, original202/no-store/completed bounded receipt/GUID and durable scoped task read before private UI; no retry, timeout widening or product auth change. Review exact source/durable/helper tuple, normal SAME288 checkpoint/push and own fresh all8/Gov/native140/full4978/wholequality/six originals through terminal. New18constraint/sixcorruption/threepermission actual SQL NOT_RUN_UNQUALIFIED. ForeignREAD/between-fence races/admitted journal/current-release/coordinator/scanner/WorkerDI/no-click278/IT279/full233 remain; catalog EMPTY/model NOT_RUN_UNEVALUATED; readonlyMedcomNovo/Windows/deployment incomplete. No partial merge. HANDOFF holds actual local/remote head/CI; qualified historical anchors retained."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -600,4 +591,18 @@ original_admission_permission_checkpoint:
     originals. Actual new constraint/corruption SQL NOT_RUN_UNQUALIFIED, foreignREAD/indirect-permission races/admitted journal/current-release/coordinator/scanner/WorkerDI/no-click278/IT279/full233
     incomplete. Legacy V2/V3 bytes/accepted-result-FIRST retained; production catalog EMPTY/model NOT_RUN_UNEVALUATED; readonlyMedcomNovo/Windows/deployment
     incomplete; no partial merge. Actual local/remote HEAD/CI belong to HANDOFF; top fields retain qualified parent anchor.
+  previous_critical_backend_next: null
+
+browser_company_receipt_checkpoint:
+  source_parent: "7902c62692294bd29ab91f6241e2c6d4efdf3794"
+  remote_failed_head: "198e81324ff350466b843858e62fa4cb1064a28b"
+  failed_closure: 6189613450
+  original_failure_cause: "UNPROVEN"
+  receipt_controls: 43
+  controls_scope: "INERT_ACTUAL_CALLER_NOT_BROWSER_RUNTIME"
+  no_retry_or_deadline_widening: true
+  required_native: 140
+  actual_new_SQL: "NOT_RUN_UNQUALIFIED"
+  actual_model: "NOT_RUN_UNEVALUATED"
+  previous_next_action: "Remote198 original Build38710426036/Gov38710426003 attempt1 owns native116340150048/wholequality/six originals through terminal; actual.NET4978 PASS. Local reviewed constraints4196173/corruption3cd8b0a/batching a3370c8 review6189181823 remain unpushed. Private successor adds three effective-permission cases: column override, table CONTROL, physical SQL-user impersonation owner chain plus fresh actual runtime verifier refusal, exact full permission/procedure restoration and healthy reads. Build/format/inert controls are source evidence only; actual SQL NOT_RUN_UNQUALIFIED. Review exact source/durable tuple before normal SAME288 checkpoint after original198 closure. Own expanded all8/Gov/native140/full4978/wholequality/six originals. Preserve all18constraints/sixcorruptions/exact batching/old132 and both cleanup gates. ForeignREAD and between-fence permission races remain; then admitted journal/current-release/coordinator/scanner/WorkerDI/no-click278/IT279/full233. Legacy V2/V3 bytes/accepted-result-FIRST retained; catalog EMPTY/model NOT_RUN_UNEVALUATED; readonlyMedcomNovo/Windows/deployment incomplete; no partial merge. HANDOFF owns actual local/remote HEAD/CI; top qualified anchors remain historical."
   previous_critical_backend_next: null

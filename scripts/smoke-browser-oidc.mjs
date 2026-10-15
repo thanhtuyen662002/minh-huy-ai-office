@@ -497,15 +497,33 @@ try {
     stage = "original-company-private-chat-positive";
     await waitForSource();
     const switchMessage = "Disposable company-switch private chat " + randomUUID();
+    stage = "original-company-private-chat-source-selection";
     await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
+    stage = "original-company-private-chat-draft";
     await page.locator('textarea[name="question"]').fill(switchMessage);
     const switchSubmitted = page.waitForResponse(response => response.request().method() === "POST"
       && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
       && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
+    // Preserve the original waiter, including rejection while click is pending.
+    switchSubmitted.catch(() => {});
+    stage = "original-company-private-chat-submit-response";
     await page.getByRole("button", { name: "Gửi", exact: true }).click();
-    const switchAccepted = await switchSubmitted; requireProof(switchAccepted.status() === 202);
-    const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));
+    const switchAccepted = await switchSubmitted;
+    const switchStatus = switchAccepted.status();
+    stage = "original-company-private-chat-" + (new Map([
+      [202, "submit-accepted"], [401, "submit-unauthorized"], [403, "submit-forbidden"],
+      [409, "submit-conflict"], [503, "submit-unavailable"],
+    ]).get(switchStatus) ?? "submit-other-status");
+    requireProof(switchStatus === 202 && switchAccepted.headers()["cache-control"] === "no-store");
+    const switchReceipt = await readOwnedExpiryReceipt(switchAccepted, name => { stage = "original-company-private-chat-" + name; });
+    stage = "original-company-private-chat-receipt-task-id";
+    const switchTask = switchReceipt?.taskId; requireProof(guid(switchTask));
+    stage = "original-company-private-chat-durable-read";
+    const switchRead = await get(`/api/local/tasks/${switchTask}` + query);
+    requireProof(switchRead.status === 200 && switchRead.cache === "no-store" && JSON.parse(switchRead.text).taskId === switchTask);
+    stage = "original-company-private-chat-private-message";
     await page.getByText(switchMessage, { exact: true }).waitFor();
+    stage = "original-company-private-chat-draft-ready";
     await page.locator('textarea[name="question"]:enabled').waitFor();
     await page.locator('textarea[name="question"]').fill(privateDraft);
     const oldAuthority = await context.cookies(app);
