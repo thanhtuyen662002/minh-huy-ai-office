@@ -21,18 +21,15 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: Reviewed local tokenizer callback repair57ef489/review6187788836 retains actual158 failed.NET6187622467; original
-  native116316712154/Build38703379598/Gov38703379553 remains owned until terminal capture without rerun/cancel. Composed original-admission
-  SQL candidate adds versioned nonauthorizing snapshot codec/sidecar, host-derived issued carrier and atomic original+sidecar
-  persistence; production catalog EMPTY and actual model NOT_RUN_UNEVALUATED. Qualify composed full4978=[6,584,25,4363]/format/model
-  migration consistency, independent source review and exact successor all8/Gov/native138(old132+new6)/wholequality/six originals.
-  Five new SQL modes cover rollback/lost reply/replay/every-column deny/epoch3 accepted-result-FIRST with sidecar SELECT denied,
-  pending actual execution; they do NOT qualify missing FK/constraint/corruption/foreign-scope/indirect escalation races.
-  Complete those before production activation, then admitted journal/current-release binding, coordinator/scanner/WorkerDI/no-click278
-  and internalIT279. Preserve all legacy V2/V3 bytes/recovery and fixed historical54/72/current59/77 inventory. Authentic
-  model/readonlyMedcomNovo/Windows/deployment/full233 remain incomplete; no partial merge. HANDOFF owns actual successor HEAD
-  and CI. Separate v5 must carry the original authenticated expiry timestamp across immediate rewind; originalSQL37 v3/v4
-  WITHHELD6188091334/6188270493 remain immutable. New local observation control is metadata-only; actualSQL138 remains required.
+next_action: Parent198e813 source reviewed6188500656; exact Build38710426036/Gov38710426003 attempt1 owns native116340150048
+  through terminal, wholequality and six originals. Actual .NET116340150387 PASS4978=[6,584,25,4363]/zero failures or skips;
+  old158 FAILED closure6188499942 retains native132 success and original.NET red. Use reviewed attempt-pinned helper7 receipt6188671981;
+  original helper6 WITHHELD immutable/no actual mixing. Private successor adds eighteen physical sidecar SQL INSERT constraint
+  controls, source/driver/build evidence only and actual SQL NOT_RUN_UNQUALIFIED. Review exact proof/durable delta before
+  normal SAME288 checkpoint; no push over active native. Own successor all8/Gov/native138/full4978/wholequality/six originals.
+  Then persisted-corruption/foreign-read/indirect-permission races and admitted journal/current-release binding, coordinator/scanner/WorkerDI/no-click278/IT279/full233.
+  Preserve legacy V2/V3 bytes and accepted-result-FIRST recovery. Catalog EMPTY; actual model NOT_RUN_UNEVALUATED; readonlyMedcomNovo/Windows/deployment
+  incomplete; no partial merge. HANDOFF owns actual successor HEAD/CI; top fields retain qualified parent anchor.
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -501,3 +498,33 @@ original_admission_sql_checkpoint:
   original_SQL37_v4: IMMUTABLE_WITHHELD_OAD1_4ee23a2c9f1eedacec7d535cace27d4afc5f57692308f90fe44ce29eb6e7b746
   original_SQL37_v4_review: 6188270493
   new_retained_observation_unit: 1
+original_admission_constraints_checkpoint:
+  source_parent: 198e81324ff350466b843858e62fa4cb1064a28b
+  source_review: 6188500656
+  original158_terminal_failed: 6188499942
+  helper7_review: 6188671981
+  parent_dotnet_actual: 4978
+  parent_native_actual: OWNED_NOT_YET_TERMINAL_QUALIFIED
+  physical_SQL_controls: 18
+  actual_SQL: NOT_RUN_UNQUALIFIED
+  required_native: 138
+  new_provider_or_schema: false
+  new_admitted_journal: false
+  coordinator: false
+  scanner_WorkerDI_no_click: false
+  actual_model: NOT_RUN_UNEVALUATED
+  production_catalog: EMPTY
+  previous_next_action: Reviewed local tokenizer callback repair57ef489/review6187788836 retains actual158 failed.NET6187622467;
+    original native116316712154/Build38703379598/Gov38703379553 remains owned until terminal capture without rerun/cancel.
+    Composed original-admission SQL candidate adds versioned nonauthorizing snapshot codec/sidecar, host-derived issued carrier
+    and atomic original+sidecar persistence; production catalog EMPTY and actual model NOT_RUN_UNEVALUATED. Qualify composed
+    full4978=[6,584,25,4363]/format/model migration consistency, independent source review and exact successor all8/Gov/native138(old132+new6)/wholequality/six
+    originals. Five new SQL modes cover rollback/lost reply/replay/every-column deny/epoch3 accepted-result-FIRST with sidecar
+    SELECT denied, pending actual execution; they do NOT qualify missing FK/constraint/corruption/foreign-scope/indirect escalation
+    races. Complete those before production activation, then admitted journal/current-release binding, coordinator/scanner/WorkerDI/no-click278
+    and internalIT279. Preserve all legacy V2/V3 bytes/recovery and fixed historical54/72/current59/77 inventory. Authentic
+    model/readonlyMedcomNovo/Windows/deployment/full233 remain incomplete; no partial merge. HANDOFF owns actual successor
+    HEAD and CI. Separate v5 must carry the original authenticated expiry timestamp across immediate rewind; originalSQL37
+    v3/v4 WITHHELD6188091334/6188270493 remain immutable. New local observation control is metadata-only; actualSQL138 remains
+    required.
+  previous_critical_backend_next: null

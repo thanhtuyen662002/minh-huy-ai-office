@@ -17,11 +17,11 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 // Owned disposable SQL only. Uses the shipping Gateway admission/tokenizer
 // with an explicitly synthetic catalog and an HTTP trap. No model evaluation.
-internal static class GroupOriginalAdmissionRuntimeProof
+internal static partial class GroupOriginalAdmissionRuntimeProof
 {
     internal const string PrepareLine = "PASS owned original admission actual two revisions inbox allocation no original sidecar attempt result or effects";
     internal const string ExpiryLine = "PASS owned original admission actual both rows flushed expiry observation retained across immediate rewind rollback witness committed old claim refused legitimate replacement retains zero effects or HTTP";
-    internal const string CommitLine = "PASS owned original admission actual shipping gate tokenizer own carrier atomic two row rollback committed reply loss fresh context exact immutable replay every column deny encrypted accepted result zero HTTP";
+    internal const string CommitLine = "PASS owned original admission actual eighteen SQL constraint controls shipping gate tokenizer own carrier atomic two row rollback committed reply loss fresh context exact immutable replay every column deny encrypted accepted result zero HTTP";
     internal const string RecoverLine = "PASS owned original admission separate process epoch three accepted result FIRST recovered with sidecar SELECT unavailable empty released catalog zero admission calls or HTTP";
     internal const string ResumeLine = "PASS owned original admission current epoch three exact original epoch two plan sidecar snapshots legacy input identities chunks hashes restored zero provider";
     private const string Profile = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -125,6 +125,9 @@ internal static class GroupOriginalAdmissionRuntimeProof
                         .Select(x => x.ExpiryObservedAtUtc).SingleAsync(token) != claim.Receipt.ExpiresAtUtc) throw new InvalidOperationException();
                 RequireClean(db); await EmptyEffectsAsync(); Console.WriteLine(ExpiryLine); return;
             }
+            Phase = "physical-constraint-boundaries";
+            await RequireConstraintBoundariesAsync(db, scope, handle, plan, issued.Sidecar, clock.Current, token);
+            RequireClean(db); await EmptyEffectsAsync();
             Phase = "atomic-rollback"; probe.RollbackAfterFlush = true;
             var rolledBack = false;
             try { await store.PersistV3WithAdmissionAsync(issued, preparation, dependencies, token); }

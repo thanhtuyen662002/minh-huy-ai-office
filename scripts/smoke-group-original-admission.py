@@ -8,7 +8,7 @@ import uuid
 RUNTIME_LINES = {
     'admission-original-prepare': 'PASS owned original admission actual two revisions inbox allocation no original sidecar attempt result or effects',
     'admission-original-expiry': 'PASS owned original admission actual both rows flushed expiry observation retained across immediate rewind rollback witness committed old claim refused legitimate replacement retains zero effects or HTTP',
-    'admission-original-commit': 'PASS owned original admission actual shipping gate tokenizer own carrier atomic two row rollback committed reply loss fresh context exact immutable replay every column deny encrypted accepted result zero HTTP',
+    'admission-original-commit': 'PASS owned original admission actual eighteen SQL constraint controls shipping gate tokenizer own carrier atomic two row rollback committed reply loss fresh context exact immutable replay every column deny encrypted accepted result zero HTTP',
     'admission-original-recover': 'PASS owned original admission separate process epoch three accepted result FIRST recovered with sidecar SELECT unavailable empty released catalog zero admission calls or HTTP',
     'admission-original-resume': 'PASS owned original admission current epoch three exact original epoch two plan sidecar snapshots legacy input identities chunks hashes restored zero provider'
 }
