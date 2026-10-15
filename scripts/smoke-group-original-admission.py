@@ -33,6 +33,12 @@ JOURNAL_RUNTIME_LINE = 'PASS owned original admission actual current gate prepar
 JOURNAL_SUMMARY = 'PASS actual admitted original model journal authentic sidecar same transaction two row flush rollback committed exact companion replay no second permit actual Gateway execution current SQL before after wait one use outside SQL accepted result FIRST without sidecar or companion SELECT retained full graphs both cleanup gates synthetic adapter zero HTTP no model qualification'
 JOURNAL_EXPIRY_RUNTIME_LINE = 'PASS owned admitted journal authentic expiry observed UTC before claim issuance actual entry exact witness old interval refused replacement current no second attempt accepted graphs retained zero provider'
 
+BATCH_COMMIT_LINE = 'PASS owned restored batch actual original SQL restored accepted result FIRST real claimed processor one automatic note evidence outbox terminal and signed frontier current epoch four cold model factory'
+BATCH_RECOVER_LINE = 'PASS owned restored batch separate process expired claim terminal FIRST original SELECT denied original effects and signed frontier unchanged cold model factory'
+BATCH_SUMMARY = 'PASS actual restored batch original recovery accepted result automatic note evidence outbox terminal signed frontier expired claim terminal FIRST original SELECT denied fresh process unchanged complete scopes permissions both cleanup gates cold model factory no model qualification'
+COMPLETION_TABLES = (("GroupBatchTerminalReceipts","BatchId"),("GroupTerminalAdvances","Version"),
+    ("GroupTerminalAdvanceKeys","KeyId"),("GroupTerminalFrontierStates","BindingId"))
+
 
 def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, automatic):
     reference.require_owned(directory, api)
@@ -71,11 +77,11 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
 
     def retained():
         return automatic.retained_snapshot(tenant=tenant,company=company,sources=sources,accounts=accounts,sql=sql) + digest_many(
-            (t,o,base+f' AND BindingId IN ({source_list})') for t,o in extra)
+            (t,o,base+f' AND BindingId IN ({source_list})') for t,o in extra+COMPLETION_TABLES)
 
     def permissions():
         value = sql("SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),(SELECT * FROM sys.database_permissions "
-            "WHERE major_id IN (OBJECT_ID(N'aioffice.GroupOriginalAdmissionSidecars'),OBJECT_ID(N'aioffice.GroupModelAttemptAdmissions')) ORDER BY major_id,grantee_principal_id,minor_id,type FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
+            "WHERE major_id IN (OBJECT_ID(N'aioffice.GroupOriginalAdmissionSidecars'),OBJECT_ID(N'aioffice.GroupModelAttemptAdmissions'),OBJECT_ID(N'aioffice.GroupAutomaticInputPlans')) ORDER BY major_id,grantee_principal_id,minor_id,type FOR JSON PATH,INCLUDE_NULL_VALUES))),2);")
         assert re.fullmatch(r'[0-9A-F]{64}', value)
         return value
 
@@ -89,7 +95,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         '-e','AIOFFICE_GROUP_REFERENCE_PROOF_CONNECTION','-e','AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY',image]
 
     def graph():
-        return digest_many(tuple((t,o,scope) for t,o in automatic.SOURCE_TABLES+extra) + (
+        return digest_many(tuple((t,o,scope) for t,o in automatic.SOURCE_TABLES+extra+COMPLETION_TABLES) + (
             ('GroupBindings','Id',base+f" AND Id='{source}'"),
             ('GroupConnectorAccounts','Id',base+f" AND Id='{account}'"),
             ('GroupListenerLeases','ConnectorAccountId',base+f" AND ConnectorAccountId='{account}'")))
@@ -212,6 +218,38 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates WHERE {scope} AND Epoch=4 AND ExpiryObservedAtUtc IS NULL;") == '1'
         assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchClaimReceipts WHERE {scope};") == '4'
         require_fixed_source(); completed = graph(); unchanged()
+
+        # The old immutable/permission/expiry oracles are complete before any
+        # note is added. These phases now use the fixed real batch composition.
+        before_completion = tuple(digest(t,o,scope) for index,(t,o) in enumerate(extra) if index != 5)
+        result = subprocess.run([*command,'restored-batch-commit'],input=config,env=env,capture_output=True,text=True,timeout=170)
+        assert not result.stderr
+        reference.require_reference_result(result,'restored-batch-commit',[BATCH_COMMIT_LINE])
+        assert tuple(digest(t,o,scope) for index,(t,o) in enumerate(extra) if index != 5) == before_completion
+        counts = sql("SELECT CONCAT("+",N'|',".join(f"(SELECT COUNT(*) FROM aioffice.{table} WHERE {scope})" for table in (
+            'GroupCustomerRequests','GroupRequestRevisions','GroupRequestEvidence','GroupWorkCommitReceipts','GroupWorkSourceDispositions',
+            'GroupWorkRawDispositions','GroupNotesCommittedOutbox','GroupNotesCommittedItems','GroupBatchTerminalReceipts',
+            'GroupTerminalAdvances','GroupTerminalAdvanceKeys','GroupTerminalFrontierStates'))+");")
+        assert counts == '1|1|1|1|2|2|1|1|1|1|1|1', 'Restored completion graph differs'
+        completed = graph(); unchanged()
+        first = None
+        try:
+            reference.require_owned(directory,api)
+            sql('DENY SELECT ON OBJECT::aioffice.GroupAutomaticInputPlans TO aioffice_binding_runtime; DENY SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars TO aioffice_binding_runtime; DENY SELECT ON OBJECT::aioffice.GroupModelAttemptAdmissions TO aioffice_binding_runtime;')
+            result = subprocess.run([*command,'restored-batch-recover'],input=config,env=env,capture_output=True,text=True,timeout=170)
+            assert not result.stderr
+            reference.require_reference_result(result,'restored-batch-recover',[BATCH_RECOVER_LINE])
+            assert graph() == completed, 'Terminal recovery changed original completion graph'
+        except BaseException as error: first = error
+        finally:
+            try:
+                reference.require_owned(directory,api)
+                sql('REVOKE SELECT ON OBJECT::aioffice.GroupAutomaticInputPlans FROM aioffice_binding_runtime; GRANT SELECT ON OBJECT::aioffice.GroupAutomaticInputPlans TO aioffice_binding_runtime; REVOKE SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars FROM aioffice_binding_runtime; GRANT SELECT ON OBJECT::aioffice.GroupOriginalAdmissionSidecars TO aioffice_binding_runtime; REVOKE SELECT ON OBJECT::aioffice.GroupModelAttemptAdmissions FROM aioffice_binding_runtime; GRANT SELECT ON OBJECT::aioffice.GroupModelAttemptAdmissions TO aioffice_binding_runtime;')
+                assert permissions() == original_permissions, 'Completion SELECT restoration differs'
+            except BaseException as error:
+                if first is None: first = error
+        if first is not None: raise first
+        unchanged()
     except BaseException as error: failure = error
     finally:
         try: automatic.close_owned_container(directory=directory,api=api,name=image,suffix=suffix,reference=reference)
@@ -237,3 +275,4 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     print(JOURNAL_SUMMARY,flush=True)
     print(JOURNAL_EXPIRY_RUNTIME_LINE,flush=True)
     print(counterfactual_summary,flush=True)
+    print(BATCH_SUMMARY,flush=True)

@@ -15,7 +15,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: e8f5e5e4ae625e5cda75727661e880199573a654
     state: in_progress
-    next: "ACTIVE OWNED CI lease exact remotee8f5e5e; actual Build38778313333/Gov38778312633 attempt1. Source review6198144066/receipt00e33200 and helper35 review6198286347/receipt1ecf9449 genuine/complete; explicit e8-only push verified, full local3f44daf/later24-30 excluded/preserved. Use ONLY capture-retained-expiry144-ci-v35.py/static66a63f94/parser35c899cd/captureb290cb91 + actual retained-expiry144-dispatch-runs-v35.json. Required144/full5191=[6,584,25,4576]/all8/Gov/completequality/six ORIGINAL images. Gov initially green, Build live; inspect actual current status, do not stop merely pending. Any terminal red inspect full job log immediately, fix SAME PR and preserve exact failed closure; zero-step infrastructure retryonce. Local integrationfull5350/format/1226 exact4b74a611 only establishes local composition, NOT approval/CI of later24-30; do not push full local head as candidate. Old7b/32 WITHHELD + failed854/a293/198 immutable; source31 and helper35 separately repaired/reviewed; prior5bf scoped closure6194064928 remains distinct. No actual newSQL/expiry/guard-mutant/permission/race qualification until native observed; modelNOT_RUN_UNEVALUATED. After exact CI closure continue later24-30 review/positiveSQL/scanner/shippedWorker/no-click and durable original invalidation, internalIT279/full233/readonlyERP/Windows/deployment. No partial mainmerge/force/reset. HANDOFF owns current full local HEAD."
+    next: "ACTIVE OWNED CI exact remotee8f5e5e Build38778313333/Gov38778312633 attempt1 remains unchanged. Hosted .NET5191 PASS; capture-retained-expiry144-ci-v35.py/static66a63f94/parser35c899cd/captureb290cb91 + genuine dispatch own native144/all8/Gov/wholequality/six originals to terminal; inspect/fix real red immediately SAME288, no cancel or premature push. Later24-30 exact3f44daf/all1226/frozen4b74a611 bounded source/durable CLEAR6198638748/receipt68ada769, root read full report/envelope and rehashed149; positive SQL/no-click/invalidation still unqualified, e394 docs not implicitly approved. Separate local proof40 adds two owned phases AFTER old original/permission/corruption/guard/expiry oracles: fixed actual claimed processor restores existing original/accepted output then automatic note/evidence/outbox/terminal/signed frontier; separate expired-claim terminal-FIRST recovery with original/sidecar/companion SELECT denied and exact graphs/permissions restored. Local full5350=[6,584,25,4735]/format/build/10 inert Python/8 actual owned guard refusals PASS, actual newSQL NOT_RUN_UNQUALIFIED; review exact new frozen tuple before ordinary same-PR push after old e8 terminal closure. Future required145 cannot be qualified by old144 or synthetic controls. Preserve original7b/32 WITHHELD and failed854/a293/198; no partial mainmerge/force/reset. Continue positive first host/model originals/multichunk/source-edit and own-history invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Reuse SAME Gateway/client/options/config only; production catalog EMPTY, actual model NOT_RUN_UNEVALUATED. HANDOFF owns actual local/remote HEAD/CI."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "ACTIVE OWNED CI lease exact remotee8f5e5e; actual Build38778313333/Gov38778312633 attempt1. Source review6198144066/receipt00e33200 and helper35 review6198286347/receipt1ecf9449 genuine/complete; explicit e8-only push verified, full local3f44daf/later24-30 excluded/preserved. Use ONLY capture-retained-expiry144-ci-v35.py/static66a63f94/parser35c899cd/captureb290cb91 + actual retained-expiry144-dispatch-runs-v35.json. Required144/full5191=[6,584,25,4576]/all8/Gov/completequality/six ORIGINAL images. Gov initially green, Build live; inspect actual current status, do not stop merely pending. Any terminal red inspect full job log immediately, fix SAME PR and preserve exact failed closure; zero-step infrastructure retryonce. Local integrationfull5350/format/1226 exact4b74a611 only establishes local composition, NOT approval/CI of later24-30; do not push full local head as candidate. Old7b/32 WITHHELD + failed854/a293/198 immutable; source31 and helper35 separately repaired/reviewed; prior5bf scoped closure6194064928 remains distinct. No actual newSQL/expiry/guard-mutant/permission/race qualification until native observed; modelNOT_RUN_UNEVALUATED. After exact CI closure continue later24-30 review/positiveSQL/scanner/shippedWorker/no-click and durable original invalidation, internalIT279/full233/readonlyERP/Windows/deployment. No partial mainmerge/force/reset. HANDOFF owns current full local HEAD."
+next_action: "ACTIVE OWNED CI exact remotee8f5e5e Build38778313333/Gov38778312633 attempt1 remains unchanged. Hosted .NET5191 PASS; capture-retained-expiry144-ci-v35.py/static66a63f94/parser35c899cd/captureb290cb91 + genuine dispatch own native144/all8/Gov/wholequality/six originals to terminal; inspect/fix real red immediately SAME288, no cancel or premature push. Later24-30 exact3f44daf/all1226/frozen4b74a611 bounded source/durable CLEAR6198638748/receipt68ada769, root read full report/envelope and rehashed149; positive SQL/no-click/invalidation still unqualified, e394 docs not implicitly approved. Separate local proof40 adds two owned phases AFTER old original/permission/corruption/guard/expiry oracles: fixed actual claimed processor restores existing original/accepted output then automatic note/evidence/outbox/terminal/signed frontier; separate expired-claim terminal-FIRST recovery with original/sidecar/companion SELECT denied and exact graphs/permissions restored. Local full5350=[6,584,25,4735]/format/build/10 inert Python/8 actual owned guard refusals PASS, actual newSQL NOT_RUN_UNQUALIFIED; review exact new frozen tuple before ordinary same-PR push after old e8 terminal closure. Future required145 cannot be qualified by old144 or synthetic controls. Preserve original7b/32 WITHHELD and failed854/a293/198; no partial mainmerge/force/reset. Continue positive first host/model originals/multichunk/source-edit and own-history invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Reuse SAME Gateway/client/options/config only; production catalog EMPTY, actual model NOT_RUN_UNEVALUATED. HANDOFF owns actual local/remote HEAD/CI."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -5643,3 +5643,30 @@ group_owned_repair31_ci_38_checkpoint:
   actual_newSQL: "NOT_YET_QUALIFIED"
   actual_model: "NOT_RUN_UNEVALUATED"
   next: "Own exact CI to terminal; inspect/fix real red immediately samePR; complete all8/Gov/fullquality/six originals and durable closure"
+
+
+group_restored_batch_sql_proof40_checkpoint:
+  parent: "e39461143bcd05568897a139a60b0c2998002b4b"
+  reviewed_later_head: "3f44daf41838f18675358661c9499f3043371f44"
+  later_source_review: 6198638748
+  later_receipt: "68ada769"
+  later_artifacts_root_rehashed: 149
+  state: "LOCAL_PROOF40_VERIFIED_SOURCE_REVIEW_PENDING_NO_PUSH"
+  full_tests: 5350
+  per_project: [6, 584, 25, 4735]
+  format: "PASS actual exit0"
+  build: "PASS zero warnings/errors"
+  Python_driver_controls: 10
+  actual_guard_refusals: 8
+  actual_positive_batch_SQL: "NOT_RUN_UNQUALIFIED"
+  future_native_required: 145
+  remote_head: "e8f5e5e4ae625e5cda75727661e880199573a654"
+  active_build: 38778313333
+  active_governance: 38778312633
+  attempt: 1
+  remote_dotnet: "PASS5191"
+  old_native144: "ACTIVE OWNED LEASE pending terminal; not new proof40 evidence"
+  invalidated_original: "UNRESOLVED retain all current denials"
+  scanner_WorkerDI_no_click: false
+  actual_model: "NOT_RUN_UNEVALUATED"
+  pushed: false

@@ -54,6 +54,8 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                     return '\n'.join(f'{i:02d}|'+('B' if fault == 'retained' and phase != 'before' else 'A')*64 for i in range(34))
                 table = query.split('FROM aioffice.',1)[1].split()[0]
                 own = source in query and 'BindingId IN' not in query
+                if own and fault == 'batch-original-changed' and phase == 'restored-batch-commit' and table == 'GroupAutomaticInputPlans': return 'B'*64
+                if own and fault == 'batch-replay-changed' and phase == 'restored-batch-recover' and table == 'GroupTerminalAdvances': return 'B'*64
                 if own and fault == 'sql-read-graph' and phase == 'admission-original-sql-read' and table == 'GroupOriginalAdmissionSidecars': return 'B'*64
                 if own and fault in ('plan','sidecar','start','result','companion') and phase == 'admission-original-resume':
                     target = {'plan':'GroupAutomaticInputPlans','sidecar':'GroupOriginalAdmissionSidecars','start':'GroupModelAttemptStarts','result':'GroupModelAttemptResults','companion':'GroupModelAttemptAdmissions'}[fault]
@@ -63,6 +65,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 if own and fault and fault.startswith('cleanup:') and phase == fault.split(':')[1] and table == 'GroupOriginalAdmissionSidecars': return 'B'*64
                 return 'A'*64
             if 'SELECT CONCAT' in query:
+                if phase == 'restored-batch-commit': return '0|1|1|1|2|2|1|1|1|1|1|1' if fault == 'batch-counts' else '1|1|1|1|2|2|1|1|1|1|1|1'
                 return {'admission-original-prepare':'0|0|0|0|0','admission-original-expiry':'0|0|0|0|1','admission-original-commit':'1|1|1|1|2','admission-original-recover':'1|1|1|1|3','admission-original-resume':'1|1|1|1|3'}[phase]
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupCustomerRequests') or query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptFailures'): return '0'
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptAdmissions'):
@@ -83,8 +86,10 @@ class OriginalAdmissionProofTests(unittest.TestCase):
             if command[:3] == ['docker','image','rm']:
                 phase = 'image-cleanup'; return SimpleNamespace(returncode=1 if fault == 'image-error' else 0,stdout='',stderr='')
             self.assertEqual(['docker','run'],command[:2]); phase = command[-1]
-            if phase == 'admission-original-recover': self.assertTrue(denied)
-            line = proof.JOURNAL_EXPIRY_RUNTIME_LINE if phase == 'admission-original-journal-expiry' else proof.READ_RUNTIME_LINE if phase == 'admission-original-sql-read' else proof.RUNTIME_LINES[phase]
+            if phase in ('admission-original-recover','restored-batch-recover'): self.assertTrue(denied)
+            line = proof.BATCH_COMMIT_LINE if phase == 'restored-batch-commit' else proof.BATCH_RECOVER_LINE if phase == 'restored-batch-recover' else proof.JOURNAL_EXPIRY_RUNTIME_LINE if phase == 'admission-original-journal-expiry' else proof.READ_RUNTIME_LINE if phase == 'admission-original-sql-read' else proof.RUNTIME_LINES[phase]
+            if fault in ('batch-commit-child','batch-recover-child') and phase == ('restored-batch-commit' if fault == 'batch-commit-child' else 'restored-batch-recover'): return SimpleNamespace(returncode=1,stdout='',stderr='')
+            if fault == 'batch-private-output' and phase == 'restored-batch-commit': line += '\nPRIVATE_BATCH_CONTEXT'
             if phase == 'admission-original-commit': line += '\n'+proof.JOURNAL_RUNTIME_LINE
             if fault == 'journal-missing' and phase == 'admission-original-commit': line = proof.RUNTIME_LINES[phase]
             if fault == 'sql-read-child' and phase == 'admission-original-sql-read': return SimpleNamespace(returncode=1,stdout='',stderr='')
@@ -112,19 +117,32 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 self.assertEqual('',output.getvalue())
             else:
                 proof.verify(**args)
-                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY,proof.JOURNAL_SUMMARY,proof.JOURNAL_EXPIRY_RUNTIME_LINE,proof.guard_counterfactual.SUMMARY],output.getvalue().splitlines())
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY,proof.READ_SUMMARY,proof.JOURNAL_SUMMARY,proof.JOURNAL_EXPIRY_RUNTIME_LINE,proof.guard_counterfactual.SUMMARY,proof.BATCH_SUMMARY],output.getvalue().splitlines())
         return args,calls,mutations
 
     def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
         args,calls,mutations = self.run_control()
-        self.assertEqual(['deny','restore'],mutations)
-        self.assertEqual([*proof.RUNTIME_LINES,'admission-original-sql-read','admission-original-resume','admission-original-journal-expiry'],[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
+        self.assertEqual(['deny','restore','deny','restore'],mutations)
+        self.assertEqual([*proof.RUNTIME_LINES,'admission-original-sql-read','admission-original-resume','admission-original-journal-expiry','restored-batch-commit','restored-batch-recover'],[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
         self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))
         for cmd,kwargs in calls:
             if cmd[:2] != ['docker','run']: continue
             self.assertEqual(170,kwargs['timeout']); self.assertIn('--read-only',cmd)
             self.assertNotIn(args['manifest']['AIOFFICE_RUNTIME_PASSWORD'],' '.join(cmd)+kwargs['input'])
             self.assertNotIn(kwargs['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'],' '.join(cmd)+kwargs['input'])
+
+    def test_restored_completion_refuses_missing_effects_changed_originals_private_output_and_failed_child(self):
+        for fault in ('batch-counts','batch-original-changed','batch-private-output','batch-commit-child'):
+            with self.subTest(fault=fault):
+                _,calls,_ = self.run_control(fault)
+                self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))
+
+    def test_terminal_recovery_restores_permission_on_child_failure_and_changed_signed_history(self):
+        for fault in ('batch-recover-child','batch-replay-changed'):
+            with self.subTest(fault=fault):
+                _,calls,mutations = self.run_control(fault)
+                self.assertEqual(['deny','restore','deny','restore'],mutations)
+                self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))
 
     def test_child_failure_always_restores_select_and_never_publishes_partial_markers(self):
         _,calls,mutations = self.run_control('child-error');self.assertEqual(['deny','restore'],mutations)
