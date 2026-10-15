@@ -6,16 +6,16 @@ priority_rule: security-critical > production-blocker > active-issue > verified-
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: e8f5e5e4ae625e5cda75727661e880199573a654
+current_target_head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
 last_verified_commit: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 critical_paths:
   backend:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: e8f5e5e4ae625e5cda75727661e880199573a654
+    head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
     state: in_progress
-    next: "SAME288 active repair after exact e8 Build38778313333/Gov38778312633 attempt1 TERMINAL_FAILED closure6199096035. Full native97,294B b826a955 SQL547 at corruption UPDATE; .NET5191/Gov PASS, qualityd2878cda red solely localruntime/no images. Exact hosted case/constraint unprinted; new companion FK conflict is source-inferred, not observed exact FK. No rerun/cancel/force. Separate local48 fixture repair retains companion/schema/constraints/permissions:4 exact quoted companion FK547 physical update refusals with rollback/no open transaction/healthy unchanged graphs;5 persisted payload-only/time/claim runtime refusals with original SHA retained and exact finally restoration.19 inert Python6+10+3 PASS. All C#/production bytes exact reviewed44/full5357=[6,584,25,4742]/focus7/format inherited, no fresh .NET rerun claimed. Source44 repair CLEAR receipt60325c3b/report079271b0/envelope04bcc0dc/root63 closes RBP40-1 ONLY; original40 WITHHELD immutable. Later24-30 exact3f scopedclear6198638748/root149 distinct. Freeze/review exact48 source/durable tuple before ordinary samePR publication. Prepare NEW145 helpers bound to corrected nine-case summary (replace obsolete six-case marker; all other retained markers + restored aggregate), full5357/all8/Gov/fullquality/six originals; helper46 is inert UNREVIEWED/no controls/no dispatch and obsolete source3b, do not qualify via old35/46 or old6 marker. After genuine source/helper clearance ordinary SAME288 push and own actual new CI through terminal/immediate samePR red repair. Actual repaired9cases/restoredbatchSQL145 NOT_RUN_UNQUALIFIED; realmodel NOT_RUN_UNEVALUATED/catalogEMPTY. Continue first host/model originals/multichunk/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment; preserve current source/brain/claim/permission denials, no partial mainmerge/force/reset or newAIclient/config. HANDOFF owns actualHEADs."
+    next: "SAME288 exact97ab/f9b456d6 actual Build38787704388/Gov38787704385 attempt1 active-owned CI51 receipt6199613178. Source44/48 CLEAR6199464284/root63+57, helper49 CLEAR6199589161/root268; original40/7b/32 WITHHELD and e8 FAILED6199096035 immutable. Capture49 exact source/head/run/attempt requires native145 (4 exact FK +5 persisted corruption, restored-batch aggregate), full5357=[6,584,25,4742], all8/Gov/fullquality/seven results/six ORIGINAL images. Keep active through terminal; immediately inspect/fix real red SAMEPR, no force/cancel/rerun meaningful failures or push that cancels live original. Green CI does not complete acceptance. Continue first host/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment under current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns actual remote/local HEADs."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "SAME288 active repair after exact e8 Build38778313333/Gov38778312633 attempt1 TERMINAL_FAILED closure6199096035. Full native97,294B b826a955 SQL547 at corruption UPDATE; .NET5191/Gov PASS, qualityd2878cda red solely localruntime/no images. Exact hosted case/constraint unprinted; new companion FK conflict is source-inferred, not observed exact FK. No rerun/cancel/force. Separate local48 fixture repair retains companion/schema/constraints/permissions:4 exact quoted companion FK547 physical update refusals with rollback/no open transaction/healthy unchanged graphs;5 persisted payload-only/time/claim runtime refusals with original SHA retained and exact finally restoration.19 inert Python6+10+3 PASS. All C#/production bytes exact reviewed44/full5357=[6,584,25,4742]/focus7/format inherited, no fresh .NET rerun claimed. Source44 repair CLEAR receipt60325c3b/report079271b0/envelope04bcc0dc/root63 closes RBP40-1 ONLY; original40 WITHHELD immutable. Later24-30 exact3f scopedclear6198638748/root149 distinct. Freeze/review exact48 source/durable tuple before ordinary samePR publication. Prepare NEW145 helpers bound to corrected nine-case summary (replace obsolete six-case marker; all other retained markers + restored aggregate), full5357/all8/Gov/fullquality/six originals; helper46 is inert UNREVIEWED/no controls/no dispatch and obsolete source3b, do not qualify via old35/46 or old6 marker. After genuine source/helper clearance ordinary SAME288 push and own actual new CI through terminal/immediate samePR red repair. Actual repaired9cases/restoredbatchSQL145 NOT_RUN_UNQUALIFIED; realmodel NOT_RUN_UNEVALUATED/catalogEMPTY. Continue first host/model originals/multichunk/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment; preserve current source/brain/claim/permission denials, no partial mainmerge/force/reset or newAIclient/config. HANDOFF owns actualHEADs."
+next_action: "SAME288 exact97ab/f9b456d6 actual Build38787704388/Gov38787704385 attempt1 active-owned CI51 receipt6199613178. Source44/48 CLEAR6199464284/root63+57, helper49 CLEAR6199589161/root268; original40/7b/32 WITHHELD and e8 FAILED6199096035 immutable. Capture49 exact source/head/run/attempt requires native145 (4 exact FK +5 persisted corruption, restored-batch aggregate), full5357=[6,584,25,4742], all8/Gov/fullquality/seven results/six ORIGINAL images. Keep active through terminal; immediately inspect/fix real red SAMEPR, no force/cancel/rerun meaningful failures or push that cancels live original. Green CI does not complete acceptance. Continue first host/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment under current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns actual remote/local HEADs."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -5728,3 +5728,41 @@ group_companion_corruption_repair48_checkpoint:
   scanner_WorkerDI_no_click: false
   invalidated_original: "UNRESOLVED retain current denial"
   pushed: false
+group_companion_restored145_ci51_checkpoint:
+  source_head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
+  archive_sha256: f9b456d62b4a845b07a6c1d19fed050ac33e6ee9a6793e462ce4ed502d528804
+  source_review_comment: 6199464284
+  source_receipt_sha256: e2a63223d54e6d5f6d0fdef1a63d661dbef87a9d6a75f6407261ec01a2d6f237
+  helper_review_comment: 6199589161
+  helper_receipt_sha256: 6273bbc6c33583669c65de9266583f4876aab09901cc78436f76a9e1c811e380
+  build: 38787704388
+  governance: 38787704385
+  attempt: 1
+  ownership_comment: 6199613178
+  state: ACTIVE_OWNED_CI_NOT_COMPLETED
+  native_required: 145
+  expected_dotnet: 5357
+  projects:
+  - 6
+  - 584
+  - 25
+  - 4742
+  source_Python_inert: 19
+  helper_parser_inert: 32
+  helper_metadata_inert: 27
+  actual_new_SQL: NOT_RUN_UNQUALIFIED_PENDING_ACTUAL_CI
+  actual_model: NOT_RUN_UNEVALUATED
+  original_e8_failed_closure: 6199096035
+  no_partial_mainmerge: true
+  next_action: SAME288 exact97ab/f9b456d6 actual Build38787704388/Gov38787704385 attempt1
+    active-owned CI51 receipt6199613178. Source44/48 CLEAR6199464284/root63+57, helper49
+    CLEAR6199589161/root268; original40/7b/32 WITHHELD and e8 FAILED6199096035 immutable.
+    Capture49 exact source/head/run/attempt requires native145 (4 exact FK +5 persisted
+    corruption, restored-batch aggregate), full5357=[6,584,25,4742], all8/Gov/fullquality/seven
+    results/six ORIGINAL images. Keep active through terminal; immediately inspect/fix
+    real red SAMEPR, no force/cancel/rerun meaningful failures or push that cancels
+    live original. Green CI does not complete acceptance. Continue first host/model
+    originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment
+    under current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing
+    Gateway/client/config. No partial mainmerge; attachment unread until current work
+    complete/merged. HANDOFF owns actual remote/local HEADs.
