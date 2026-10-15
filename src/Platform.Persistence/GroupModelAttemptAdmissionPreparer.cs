@@ -8,7 +8,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // historical sidecar is data, never current model release or SQL authority.
 // This step executes no provider and commits no journal. The journal must
 // authenticate the original/sidecar in its own transaction before any permit.
-internal sealed class GroupModelAttemptAdmissionPreparer(PlatformDbContext database,
+internal sealed partial class GroupModelAttemptAdmissionPreparer(PlatformDbContext database,
     IAiStructuredRequestAdmission admission, TimeProvider clock)
 {
     private readonly object issuer = new();
@@ -112,6 +112,7 @@ internal sealed class GroupModelAttemptAdmissionPreparer(PlatformDbContext datab
         GroupOriginalAdmissionSidecar sidecar, int ordinal, Guid requestId, AiStructuredAdmissionSnapshot snapshot,
         IAiPreparedStructuredRequest handle, long started, DateTimeOffset startedAtUtc, DateTimeOffset expiresAtUtc)
     {
+        private int executionConsumed;
         internal GroupModelAttemptOriginalBinding Original { get; } = original;
         internal GroupOriginalAdmissionSidecar Sidecar { get; } = sidecar;
         internal int Ordinal { get; } = ordinal;
@@ -125,9 +126,15 @@ internal sealed class GroupModelAttemptAdmissionPreparer(PlatformDbContext datab
             if (!ReferenceEquals(owner, expected) || !ReferenceEquals(Original.Context, current)
                 || handle is null || RequestId == Guid.Empty) throw Unavailable();
         }
-        // Intentionally no provider-execution API before the durable companion
-        // and exact committed permit are implemented. Retain the opaque handle
-        // without exposing it as a substitute for that future SQL authority.
+        // Only the owning journal's current SQL-fenced execution path may
+        // request release. This issuer-bound handle itself grants no SQL
+        // authority; failure and result fences can inspect it after use.
+        internal IAiPreparedStructuredRequest ConsumeForExecution(object expected, GroupAutomaticModelContext current)
+        {
+            RequireOwner(expected, current);
+            if (Interlocked.Exchange(ref executionConsumed, 1) != 0) throw Unavailable();
+            return handle;
+        }
         public override string ToString() => "Prepared group model attempt (journal commit still required).";
     }
     public override string ToString() => "Group model attempt admission preparer (host-owned).";

@@ -265,29 +265,43 @@ public sealed partial class GroupBatchSourceReaderTests
         public override DateTimeOffset GetUtcNow() => shared.GetUtcNow();
     }
 
-    private sealed class AttemptAdmissionHandle : IAiPreparedStructuredRequest;
+    private sealed class AttemptAdmissionHandle(AiGatewayRequest? request = null) : IAiPreparedStructuredRequest
+    { internal AiGatewayRequest? Request { get; } = request; }
     private sealed class AttemptAdmissionAdapter : IAiProviderAdapter, IAiStructuredProviderMetadataSource
     {
         internal int Executions;
+        internal bool MetadataChanged;
+        internal Func<AiGatewayRequest, AiGatewayResponse>? Response;
         public string ProviderId => "current-provider";
         public bool Supports(AiCapability capability) => capability == AiCapability.StructuredGeneration;
-        public AiStructuredRouteMetadata DescribeStructuredRoute() => new(ProviderId, "current-model", new('B', 64), 8,
+        public AiStructuredRouteMetadata DescribeStructuredRoute() => new(ProviderId, MetadataChanged ? "changed-model" : "current-model", new('B', 64), 8,
             TimeSpan.FromSeconds(60), new("synthetic-attempt-v1", 128000, 32000, 64000, 262144, 32, 10, 4));
         public Task<AiGatewayResponse> ExecuteAsync(AiGatewayRequest request, CancellationToken cancellationToken = default)
-        { Executions++; throw new InvalidOperationException("Preparation cannot execute a provider."); }
+        {
+            Executions++; if (Response is not null) return Task.FromResult(Response(request));
+            throw new InvalidOperationException("Preparation cannot execute a provider.");
+        }
     }
     private sealed class AttemptAdmissionGate : IAiStructuredRequestAdmission
     {
         internal readonly List<AiGatewayRequest> Requests = [];
         internal Func<AiGatewayRequest, Task>? Prepare;
         internal Func<AiGatewayRequest, AiStructuredAdmissionSnapshot>? Describe;
+        internal Func<AiGatewayRequest, CancellationToken, Task<AiGatewayResponse>>? Execute;
         internal int Descriptions;
         internal int Executions;
         public async Task<IAiPreparedStructuredRequest> PrepareAsync(AiGatewayRequest request, CancellationToken cancellationToken = default)
-        { Requests.Add(request); if (Prepare is not null) await Prepare(request); return new AttemptAdmissionHandle(); }
+        { Requests.Add(request); if (Prepare is not null) await Prepare(request); return new AttemptAdmissionHandle(request); }
         public AiStructuredAdmissionSnapshot DescribePrepared(IAiPreparedStructuredRequest handle, CancellationToken cancellationToken = default)
-        { Descriptions++; return Describe is null ? SidecarSnapshot(Requests[^1]) : Describe(Requests[^1]); }
+        {
+            Descriptions++; var request = ((AttemptAdmissionHandle)handle).Request ?? throw new InvalidOperationException();
+            return Describe is null ? SidecarSnapshot(request) : Describe(request);
+        }
         public Task<AiGatewayResponse> ExecutePreparedAsync(IAiPreparedStructuredRequest handle, CancellationToken cancellationToken = default)
-        { Executions++; throw new InvalidOperationException("Preparation cannot execute a provider."); }
+        {
+            Executions++;
+            if (Execute is not null) return Execute(((AttemptAdmissionHandle)handle).Request!, cancellationToken);
+            throw new InvalidOperationException("Preparation cannot execute a provider.");
+        }
     }
 }

@@ -21,7 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: "Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 Build38740772150/Gov38740772151 attempt1 native116441579120/native141/all8/full5037/wholequality/six originals remains owned until terminal; .NET5037 passed. Original854 failedclosure6192747488 retained. Local successor19 ordinary composition must preserve parents0f6c66d and5bf1d08 and all parsed16/17/18/style history. Atomic new journal authenticates exact stored original+sidecar in SAME existing Serializable unit, stages start+immutablecompanion together, caps deadline by issued preparation/claim, authenticates replay without secondpermit/legacy retrofit and carries first exact expiry witness. New failure/result persistence paths reauthenticate admitted companion; accepted-result-FIRST reads remain independent of sidecar/companion/model. Baseline5076 before behavior; new16entry+4diagnostic/full5096=[6,584,25,4481],8driver/160guard pass; final format verification log binds frozen source. Owned runtime source adds bothrowsflushed rollback/commit/exactreadback/replay and acceptedresult FIRST under BOTH SELECTdenials, complete companion graphs/permission restoration/two cleanup gates, future native142. Actual newSQL142 NOT_RUN_UNQUALIFIED, future parser/capture142 NOT_PREPARED. Source16/17/19 independent securityreview PENDING; no push over active native or unreviewed production promotion. Continue current-release existingGateway execution from committedpermit then coordinator/scanner/WorkerDI/no-click278/internalIT279/full233. Production catalogEMPTY/modelNOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain; no partialmerge. HANDOFF owns actualheads/runs."
+next_action: "Exact remote5bf1d083a92060c5eeaf333285b57a53ec6fe943 scoped CI closure6194064928 COMPLETE: Build38740772150/Gov38740772151 attempt1/all8/native141/199PASS/full5037/sevenquality/six ORIGINAL images individually inspected; owned18constraints/sixcorruptions/threepermission/SELECTcounterfactual proofs qualified only for their scope. Original854/a293/198 failedclosures retained. Locala7df atomic journal16/17/19 SOURCE_SECURITY_REVIEW_PENDING/full5096/newSQL142 NOT_RUN_UNQUALIFIED. Successor20 reuses same existing actualGateway/admission and typed IAiGatewayProviderFailure contract: owned SQL/source/brain/claim/original/companion/result fences before AND after provider wait, no SQL across wait, accepted-original output check, issuer-bound oneuse, exactcurrent Describe+Execute, deadline/UTC/monotonic/caller/fixedfailure checks. New24 synthetic controls pass incl actual existingGate currentmetadata drift and concurrentoneuse; full5120=[6,584,25,4505] zero fail/skip passed; finalformat must bind frozen20. Source16/17/19/20 requires security review BEFORE push; future142 parser/capture updated.NET + actual newSQL/expiry/races pending. Continue original-result-FIRST one-batch coordinator/durable scanner/WorkerDI/no-click278 then internalIT279/full233. Production catalogEMPTY/modelNOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain. No partialmerge or realmodel/customer claim; main remainsad747d0. HANDOFF owns actualheads/next."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -766,3 +766,34 @@ atomic_admitted_journal_checkpoint:
     or push over active native. Continue authentic same-transaction sidecar+atomic admitted start/companion/deadline caps/exact
     expiry witness, currentrelease/accepted-result-FIRST coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; production
     catalog EMPTY/modelNOT_RUN_UNEVALUATED, readonlyERP/Windows/deployment remain. HANDOFF owns actualheads/run; no partialmerge.'
+
+admitted_model_execution_checkpoint:
+  parent: a7dfcccb45b848bcd456873bc8e46e56c9791309
+  state: SOURCE_SECURITY_REVIEW_PENDING_NO_ACTUAL_SQL_OR_MODEL_EXECUTION
+  actual_remote_qualified_head: 5bf1d083a92060c5eeaf333285b57a53ec6fe943
+  actual_remote_closure: 6194064928
+  actual_remote_scope: Build38740772150/Gov38740772151 attempt1/all8/native141/199PASS/full5037/wholequality116467256789/six
+    original images PASS; no newjournal or actualmodel qualification
+  production_change: Existing actualGateway/admission execution through fresh journal SQL fences before/after wait; no transaction
+    across provider; issuedoneuse/currentprofile/lifetime/caller; existing typed failure metadata only
+  local_verification: 24 new synthetic wrapper/hostSQLentry/expiry-carriage controls PASS; full5120=[6,584,25,4505], zero
+    fail/skip; inherited52 PASS; finalformat log binds frozen20 after whitespace-only catch layout adjustment
+  newSQL: NOT_RUN_UNQUALIFIED; future142 parser/capture NOT_PREPARED, newjournal/execute/expiry/races pending
+  actual_model: NOT_RUN_UNEVALUATED
+  previous_next_action: Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 Build38740772150/Gov38740772151 attempt1
+    native116441579120/native141/all8/full5037/wholequality/six originals remains owned until terminal; .NET5037 passed. Original854
+    failedclosure6192747488 retained. Local successor19 ordinary composition must preserve parents0f6c66d and5bf1d08 and all
+    parsed16/17/18/style history. Atomic new journal authenticates exact stored original+sidecar in SAME existing Serializable
+    unit, stages start+immutablecompanion together, caps deadline by issued preparation/claim, authenticates replay without
+    secondpermit/legacy retrofit and carries first exact expiry witness. New failure/result persistence paths reauthenticate
+    admitted companion; accepted-result-FIRST reads remain independent of sidecar/companion/model. Baseline5076 before behavior;
+    new16entry+4diagnostic/full5096=[6,584,25,4481],8driver/160guard pass; final format verification log binds frozen source.
+    Owned runtime source adds bothrowsflushed rollback/commit/exactreadback/replay and acceptedresult FIRST under BOTH SELECTdenials,
+    complete companion graphs/permission restoration/two cleanup gates, future native142. Actual newSQL142 NOT_RUN_UNQUALIFIED,
+    future parser/capture142 NOT_PREPARED. Source16/17/19 independent securityreview PENDING; no push over active native or
+    unreviewed production promotion. Continue current-release existingGateway execution from committedpermit then coordinator/scanner/WorkerDI/no-click278/internalIT279/full233.
+    Production catalogEMPTY/modelNOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain; no partialmerge. HANDOFF owns
+    actualheads/runs.
+  prior_remote_waiting_state_preserved: true
+  known_expiry_carriage: Exact issuer-bound handle/timestamp observed during provider wait survives immediate UTC rewind and
+    reaches existing fresh SQL retirement owner; actual SQL expiry/replacement proof not run
