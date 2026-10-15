@@ -73,6 +73,12 @@ public sealed class GroupBatchTerminalStore(PlatformDbContext database, GroupExt
             async Task<GroupWholeBatchDependencyVerdict.Current> FenceAsync(byte[]? expected)
             {
                 await permissions.RequireSafeRuntimeAsync(cancellationToken);
+                var initial = await claims.InspectCurrentLockedAsync(handle, cancellationToken);
+                if (initial is GroupBatchClaimFenceVerdict.Expired initiallyExpired) await ObserveExpiryAsync(initiallyExpired.Observation);
+                var legacyActive = await new GroupOriginalActivityStore(database, worker).IsLegacyActiveLockedAsync(handle, cancellationToken);
+                var afterActivity = await claims.InspectCurrentLockedAsync(handle, cancellationToken);
+                if (afterActivity is GroupBatchClaimFenceVerdict.Expired activityExpired) await ObserveExpiryAsync(activityExpired.Observation);
+                if (!legacyActive) throw Unavailable();
                 var verdict = await reader.ReadLockedAsync(handle, cancellationToken);
                 if (verdict is GroupWholeBatchDependencyVerdict.Expired expired) await ObserveExpiryAsync(expired.Observation);
                 if (verdict is not GroupWholeBatchDependencyVerdict.Current fresh) throw Unavailable();

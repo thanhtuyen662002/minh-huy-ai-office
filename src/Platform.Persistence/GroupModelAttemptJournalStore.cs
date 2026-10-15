@@ -236,9 +236,20 @@ internal sealed partial class GroupModelAttemptJournalStore(PlatformDbContext da
                 {
                     var retained = InspectIssuedExpiry(null);
                     if (retained is not null) return retained;
-                    var first = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
-                    if (first is not GroupBatchClaimFenceVerdict.Current) return first;
                 }
+                // Activity never replaces claim authority or known expiry.
+                // Keep null/legacy journal calls behind the identical fence.
+                var first = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
+                if (first is not GroupBatchClaimFenceVerdict.Current) return first;
+                var legacyActive = await new GroupOriginalActivityStore(database, worker).IsLegacyActiveLockedAsync(handle, token);
+                if (issuedFence is not null)
+                {
+                    var retained = InspectIssuedExpiry(null);
+                    if (retained is not null) return retained;
+                }
+                var afterActivity = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
+                if (afterActivity is not GroupBatchClaimFenceVerdict.Current) return afterActivity;
+                if (!legacyActive) throw Unavailable();
                 if (additionalFence is not null) await additionalFence(token);
                 var current = ApplyIssuedFence(await sources.RequireManifestUnchangedLockedAsync(handle, expected, token));
                 if (current is GroupBatchClaimFenceVerdict.Current)
@@ -250,6 +261,11 @@ internal sealed partial class GroupModelAttemptJournalStore(PlatformDbContext da
                             .RequireOriginalUnchangedLockedAsync(handle, original.Plan, token);
                     await permissions.RequireSafeRuntimeAsync(token);
                     if (additionalFence is not null) await additionalFence(token);
+                    if (issuedFence is not null)
+                    {
+                        var retained = InspectIssuedExpiry(null);
+                        if (retained is not null) return retained;
+                    }
                     current = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
                 }
                 return current;

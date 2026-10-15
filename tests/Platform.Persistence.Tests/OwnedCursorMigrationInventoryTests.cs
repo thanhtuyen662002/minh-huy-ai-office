@@ -26,7 +26,7 @@ public sealed class OwnedCursorMigrationInventoryTests
         var snapshots = shadow ? Sql.ShadowSnapshots(database, Sql.NewShadow()) : Sql.SourceSnapshots(database);
         try
         {
-            Assert.Equal(shadow ? 58 : 64, created.Count); // Frozen54/current60 EF +three unmapped migration tables +history.
+            Assert.Equal(shadow ? 58 : 65, created.Count); // Frozen54/current61 EF +three unmapped migration tables +history.
             Assert.All(created, x => Assert.Equal("aioffice", x.SchemaObjectName.SchemaIdentifier.Value));
             var expected = created.Select(x => x.SchemaObjectName.BaseIdentifier.Value).Order(StringComparer.Ordinal).ToArray();
             Assert.Equal(expected, snapshots.Where(x => x.Tag.StartsWith("rows:", StringComparison.Ordinal))

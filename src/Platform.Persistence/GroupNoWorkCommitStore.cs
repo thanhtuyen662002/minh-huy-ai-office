@@ -123,6 +123,9 @@ public sealed class GroupNoWorkCommitStore(PlatformDbContext database, GroupExtr
             {
                 await permissions.RequireSafeRuntimeAsync(cancellationToken);
                 await ObserveAsync(await claims.InspectCurrentLockedAsync(handle, cancellationToken));
+                var legacyActive = await new GroupOriginalActivityStore(database, worker).IsLegacyActiveLockedAsync(handle, cancellationToken);
+                await ObserveAsync(await claims.InspectCurrentLockedAsync(handle, cancellationToken));
+                if (!legacyActive) throw Unavailable();
                 await ObserveAsync(await sources.RequireUnchangedLockedAsync(context, cancellationToken));
                 await ObserveAsync(await brain.RequireUnchangedLockedAsync(dependencies, cancellationToken));
                 await permissions.RequireSafeRuntimeAsync(cancellationToken);

@@ -180,6 +180,29 @@ public sealed class GroupBrainCurrentReader(PlatformDbContext database, GroupExt
         return await claims.InspectCurrentLockedAsync(handle, token, readLock);
     }
 
+    // Reuse the complete validated brain/evidence read. Unreadable, denied or
+    // corrupt dependencies remain failures; they are never an empty mismatch.
+    internal async Task<GroupDependencyMetadataInspection> InspectManifestLockedAsync(GroupBatchClaimHandle handle,
+        GroupWorkDependencyManifest manifest, CancellationToken token, GroupSourceReadLock? readLock = null)
+    {
+        ValidateLockedEntry(handle, token);
+        ArgumentNullException.ThrowIfNull(manifest);
+        if (manifest.Scope != handle.Receipt.Scope || manifest.BatchId != handle.Receipt.BatchId
+            || manifest.AuthoritySha256 != GroupBatchClaimStore.AuthorityFingerprint(handle.Authority)) throw Unavailable();
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var permissions = new GroupWorkNotePermissionVerifier(database);
+        await permissions.RequireSafeRuntimeAsync(token);
+        var verdict = await claims.InspectCurrentLockedAsync(handle, token, readLock);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return new(verdict, null, null);
+        var current = await ReadLockedAsync(handle, manifest.Dependencies.Select(x => (x.Kind, x.RecordId)).ToArray(), null, token);
+        var observation = GroupDependencyMetadataInspection.CompareBrain(manifest, current);
+        await permissions.RequireSafeRuntimeAsync(token);
+        verdict = await claims.InspectCurrentLockedAsync(handle, token, readLock);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return new(verdict, null, null);
+        token.ThrowIfCancellationRequested();
+        return new(verdict, observation.Matches, observation.SnapshotSha256);
+    }
+
     private async Task<GroupBrainSnapshot[]> ReadLockedAsync(GroupBatchClaimHandle handle,
         (GroupBrainContentKind Kind, Guid Id)[] selected, IReadOnlyList<GroupBrainSnapshot>? expected, CancellationToken token)
     {

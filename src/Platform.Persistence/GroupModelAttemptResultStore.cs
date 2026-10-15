@@ -141,6 +141,13 @@ internal sealed class GroupModelAttemptResultStore(PlatformDbContext database, G
             {
                 await new GroupModelAttemptPermissionVerifier(database).RequireSafeRuntimeAsync(token);
                 await new GroupModelAttemptResultPermissionVerifier(database).RequireSafeRuntimeAsync(token);
+                var handle = context.Preparation.Context.Handle;
+                var initial = await claims.InspectCurrentLockedAsync(handle, token, readLock);
+                if (initial is GroupBatchClaimFenceVerdict.Expired initiallyExpired) throw new ReadExpired(initiallyExpired.Observation);
+                var legacyActive = await new GroupOriginalActivityStore(database, worker).IsLegacyActiveLockedAsync(handle, token);
+                var afterActivity = await claims.InspectCurrentLockedAsync(handle, token, readLock);
+                if (afterActivity is GroupBatchClaimFenceVerdict.Expired activityExpired) throw new ReadExpired(activityExpired.Observation);
+                if (!legacyActive) throw Unavailable();
                 var current = await sources.RequireManifestUnchangedLockedAsync(context.Preparation.Context.Handle, expected, token, readLock);
                 if (current is GroupBatchClaimFenceVerdict.Current)
                     current = await brain.RequireManifestUnchangedLockedAsync(context.Preparation.Context.Handle, expected, token, readLock);

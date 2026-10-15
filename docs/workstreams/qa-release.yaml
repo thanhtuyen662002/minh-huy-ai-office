@@ -21,7 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: "SAME288 remote b8539ead2acd490b304e911501e899467fbea7c9 owns Build38802805355/Gov38802805443 attempt1, ownership6201736881. Capture82 binds all1247 reviewed source bodies; hosted5373/Gov and six prerequisite jobs PASS, native147 SQL/browser and final quality remain pending. Keep this run alive through terminal, read complete logs/all8/Gov/whole quality/seven results and individually view six ORIGINAL images; repair real red immediately on SAME288. Separate local source89 adds first synthetic MODEL original proof: fresh slot24/two actual Core text sources, fixed claimed processor creates measured V3 original/sidecar, one existing Gateway synthetic execution under real admitted SQL, encrypted accepted result, one combined note/two literal evidence/raw-selected dispositions/outbox/terminal/signed frontier. Expired separate-process terminal-FIRST must keep Gateway/original/accepted/sidecar/companion cold and retain full graphs/permissions/both cleanup gates. Local5382=[6,584,25,4767]/312Python/format/8 compiled owned-guard refusals PASS; original enum compile failure retained. Actual next148 SQL and real model NOT_RUN_UNQUALIFIED/NOT_RUN_UNEVALUATED. Review exact89 source/durable and fresh148 helper before ordinary successor push, only after original147 terminal closure. Preserve53/62/74 WITHHELD and e8/97ab/67 failures. Continue multichunk/edit/recall/invalidated-original versioned durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233. Existing Gateway/options/client/config only; production catalogEMPTY. No partial main merge or attachment read before current work complete and merged. Readonly Medcom/Novo identities, clean Windows lifecycle and production deployment remain external/product gates."
+next_action: "SAME288 remote b8539ead2acd490b304e911501e899467fbea7c9 owns Build38802805355/Gov38802805443 attempt1, ownership6201736881. Keep native147 alive through terminal; source-bound capture82 must close all8/Gov, full147 markers/5373, wholequality/all7 and six individually viewed ORIGINAL images. Immediately inspect and repair real red SAME288. Local source89 68b1895de36074d3ceffbae6009b892e46cfd28c is source CLEAR6202036331 but UNPUSHED; helper148 parser91/capture95 controls are preparation only, not reviewed or dispatched. Bind genuine147 closure, finish helper review, then ordinary explicit89 successor push; never cancel the live parent. Private invalidation101 adds an additive immutable zero-contributor mismatch checkpoint, metadata inspectors, exact trusted graph-FK proof, activity fences in all existing owners and original common units, retained-expiry precedence, and unchanged completed terminal-FIRST. Local5528=[6,584,25,4913]/312Python/fullformat/no pending model PASS;146 added cases. Checkpoint writer is NOT activated; source review and native SQL remain pending. Partial effects refuse, attempts/results are retained, no replacement/provider/note/terminal/frontier authority. Review frozen new source/durable state; qualify native insertion/replay/partial/orphan/owner-permit/race/expiry/rewind/replacement/terminal-FIRST before activation. Then versioned continuation/global-residual budgets/raw coverage/scanner/shippedWorker/no-click278/internalIT279/full233. Existing Gateway/options/client/config only; actual real model NOT_RUN_UNEVALUATED and production catalogEMPTY. Preserve53/62/74 WITHHELD and e8/97ab/67 failures. No partial main merge or V2 attachment read before current work is complete and merged. Readonly Medcom/Novo identities, clean Windows lifecycle and production deployment remain external/product gates."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -1361,3 +1361,33 @@ group_first_synthetic_model89_checkpoint:
   initial_compile_failure: retained_wrong_enum_Text_corrected_to_NewText
   actual_sql148: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
+
+group_original_invalidation101_checkpoint:
+  parent_reviewed_source89: 68b1895de36074d3ceffbae6009b892e46cfd28c
+  parent_source_review_comment: 6202036331
+  parent_remote_source79: b8539ead2acd490b304e911501e899467fbea7c9
+  parent_build: 38802805355
+  parent_governance: 38802805443
+  parent_ci_state: ACTIVE_OWNED_PENDING_NATIVE147_QUALITY
+  architecture_advice_comment: 6202262251
+  state: LOCAL_VERIFIED_NARROW_CHECKPOINT_SOURCE_REVIEW_AND_NATIVE_PENDING
+  schema: AddGroupOriginalInvalidations
+  checkpoint_fields: 13
+  scoped_restrictive_parents: 3
+  original_replacement: NOT_SUPPORTED
+  partial_batches: REFUSED
+  model_spending_and_accepted_rows: PRESERVED_NOT_CONTRIBUTORS
+  completed_terminal_first_owner: BYTE_UNCHANGED
+  activation: NOT_ENABLED
+  local_dotnet: 5528
+  dotnet_projects: [6, 584, 25, 4913]
+  new_cases: 146
+  local_python_suites: 23
+  local_python_methods: 312
+  full_format: PASS
+  pending_model: NONE
+  retained_failures: initial_test_property_compile_then_permission_exception_and_inventory_counts_then_generated_encoding
+  independent_source_review: PENDING
+  actual_sql: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  adr: docs/architecture/ADR_GROUP_ORIGINAL_INVALIDATION_CHECKPOINT.md

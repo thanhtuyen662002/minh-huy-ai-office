@@ -167,6 +167,31 @@ public sealed class GroupBatchSourceReader(PlatformDbContext database, GroupExtr
         return await claims.InspectCurrentLockedAsync(handle, token, readLock);
     }
 
+    // Observation only. An unequal validated snapshot is not a benign-edit
+    // classification and grants no replacement, effect or continuation authority.
+    internal async Task<GroupDependencyMetadataInspection> InspectManifestLockedAsync(GroupBatchClaimHandle handle,
+        GroupWorkDependencyManifest manifest, CancellationToken token, GroupSourceReadLock? readLock = null)
+    {
+        ValidateLockedEntry(handle, token);
+        ArgumentNullException.ThrowIfNull(manifest);
+        if (manifest.Scope != handle.Receipt.Scope || manifest.BatchId != handle.Receipt.BatchId
+            || manifest.AuthoritySha256 != GroupBatchClaimStore.AuthorityFingerprint(handle.Authority)) throw Unavailable();
+        var claims = new GroupBatchClaimStore(database, worker, clock);
+        var permissions = new GroupWorkNotePermissionVerifier(database);
+        await permissions.RequireSafeRuntimeAsync(token);
+        var verdict = await claims.InspectCurrentLockedAsync(handle, token, readLock);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return new(verdict, null, null);
+        var allocation = ((GroupBatchClaimFenceVerdict.Current)verdict).Allocation;
+        if (allocation.AllocatedThroughSequence != manifest.AllocatedThroughSequence) throw Unavailable();
+        var current = await ReadLockedAsync(handle, manifest.Sources.Select(x => x.MessageId).ToArray(), allocation, null, token);
+        var observation = GroupDependencyMetadataInspection.CompareSource(manifest, current.Coverage, current.Snapshots);
+        await permissions.RequireSafeRuntimeAsync(token);
+        verdict = await claims.InspectCurrentLockedAsync(handle, token, readLock);
+        if (verdict is GroupBatchClaimFenceVerdict.Expired) return new(verdict, null, null);
+        token.ThrowIfCancellationRequested();
+        return new(verdict, observation.Matches, observation.SnapshotSha256);
+    }
+
     private async Task<(GroupBatchCoverageSnapshot Coverage, GroupBatchSourceSnapshot[] Snapshots)> ReadLockedAsync(GroupBatchClaimHandle handle,
         Guid[] selected, GroupBatchAllocationReceipt allocation, IReadOnlyList<GroupBatchSourceSnapshot>? expected, CancellationToken token)
     {

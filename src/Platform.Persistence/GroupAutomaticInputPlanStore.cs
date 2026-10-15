@@ -148,9 +148,25 @@ internal sealed partial class GroupAutomaticInputPlanStore(PlatformDbContext dat
             async Task<GroupBatchClaimFenceVerdict> InspectAsync(GroupWorkDependencyManifest? expected)
             {
                 await permissions.RequireSafeRuntimeAsync(token);
+                // Inspect an already retained issuance expiry before a fresh
+                // SQL claim read, which may reject UTC before IssuedAtUtc.
+                if (additionalFence is not null)
+                {
+                    var retained = AdditionalExpiry(await additionalFence(token));
+                    if (retained is not null) return retained;
+                }
                 var verdict = await claims.InspectCurrentLockedAsync(handle, token);
                 if (verdict is GroupBatchClaimFenceVerdict.Current && additionalFence is not null)
                     verdict = await InspectAdditionalFenceAsync(verdict);
+                if (verdict is GroupBatchClaimFenceVerdict.Current)
+                {
+                    var legacyActive = await new GroupOriginalActivityStore(database, worker).IsLegacyActiveLockedAsync(handle, token);
+                    if (additionalFence is not null) verdict = await InspectAdditionalFenceAsync(verdict);
+                    if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
+                    verdict = await claims.InspectCurrentLockedAsync(handle, token);
+                    if (verdict is GroupBatchClaimFenceVerdict.Expired) return verdict;
+                    if (!legacyActive) throw Unavailable();
+                }
                 if (verdict is GroupBatchClaimFenceVerdict.Current && expected is not null)
                 {
                     verdict = await sources.RequireManifestUnchangedLockedAsync(handle, expected, token);
@@ -172,8 +188,11 @@ internal sealed partial class GroupAutomaticInputPlanStore(PlatformDbContext dat
             }
             async Task<GroupBatchClaimFenceVerdict> InspectAdditionalFenceAsync(GroupBatchClaimFenceVerdict current)
             {
-                var observed = await additionalFence!(token);
-                if (observed is null) return current;
+                return AdditionalExpiry(await additionalFence!(token)) ?? current;
+            }
+            GroupBatchClaimFenceVerdict.Expired? AdditionalExpiry(GroupBatchClaimExpiryObservation? observed)
+            {
+                if (observed is null) return null;
                 if (!ReferenceEquals(observed.Handle, handle) || observed.ObservedAtUtc.Offset != TimeSpan.Zero
                     || observed.ObservedAtUtc < handle.Receipt.ExpiresAtUtc) throw Unavailable();
                 // Never replace known expiry with a later clock observation.
