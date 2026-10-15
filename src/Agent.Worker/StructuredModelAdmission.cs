@@ -43,9 +43,11 @@ internal sealed class StructuredModelAdmission : IAiStructuredRequestAdmission
             request.Validate();
             if (request.Capability != AiCapability.StructuredGeneration) throw Unavailable();
             var input = StructuredResponsesPolicy.BoundedText(request.Input, StructuredResponsesPolicy.InputByteLimit);
-            CryptographicOperations.ZeroMemory(input);
+            string inputHash; var inputBytes = input.Length;
+            try { inputHash = Convert.ToHexString(SHA256.HashData(input)); }
+            finally { CryptographicOperations.ZeroMemory(input); }
             var schema = StructuredResponsesPolicy.BoundedText(request.ResponseSchema!, StructuredResponsesPolicy.SchemaByteLimit);
-            string schemaHash;
+            string schemaHash; var schemaBytes = schema.Length;
             try
             {
                 using var parsed = StructuredResponsesPolicy.Parse(schema);
@@ -69,7 +71,13 @@ internal sealed class StructuredModelAdmission : IAiStructuredRequestAdmission
             }).ToArray();
             catalog.RequireCurrent(metadata, profiles);
             if (gateway.DescribeStructuredGateway().MetadataSha256 != metadata.MetadataSha256) throw Unavailable();
-            var prepared = new Prepared(issuer, request, metadata.MetadataSha256, Array.AsReadOnly(budgets), began);
+            var snapshot = new AiStructuredAdmissionSnapshot(metadata.MetadataSha256, metadata.WholeOperationTimeoutTicks!.Value,
+                inputHash, inputBytes, schemaHash, schemaBytes, StructuredTextTokenCounter.Version, inputTokens, schemaTokens,
+                budgets.Select(budget => new AiStructuredAdmissionRoute(budget.Profile.RouteOrdinal, budget.Profile.ProviderId,
+                    budget.Profile.ConfiguredModel, budget.Profile.EndpointSha256, budget.Profile.CandidateSha256,
+                    budget.Profile.EvidenceSha256, budget.Profile.ContextWindowTokens, budget.Profile.FramingReserveTokens,
+                    budget.Profile.MaxOutputTokens, budget.MaximumInputTokens, budget.Profile.EchoedModels)).ToArray());
+            var prepared = new Prepared(issuer, request, metadata.MetadataSha256, Array.AsReadOnly(budgets), snapshot, began);
             RequirePreparationRemaining();
             return prepared;
 
@@ -81,6 +89,25 @@ internal sealed class StructuredModelAdmission : IAiStructuredRequestAdmission
                 caller.ThrowIfCancellationRequested();
                 if (timeout.IsCancellationRequested || elapsed < TimeSpan.Zero || elapsed >= PreparationBudget) throw Unavailable();
             }
+        }
+        catch (OperationCanceledException) when (caller.IsCancellationRequested) { throw new OperationCanceledException(caller); }
+        catch (Exception error) when (error is not OutOfMemoryException) { throw Unavailable(); }
+    }
+
+    public AiStructuredAdmissionSnapshot DescribePrepared(IAiPreparedStructuredRequest handle, CancellationToken caller = default)
+    {
+        caller.ThrowIfCancellationRequested();
+        try
+        {
+            if (handle is not Prepared prepared) throw Unavailable();
+            prepared.RequireUnconsumed(issuer);
+            var metadata = gateway.DescribeStructuredGateway();
+            if (metadata.MetadataSha256 != prepared.MetadataSha256) throw Unavailable();
+            catalog.RequireCurrent(metadata, prepared.Budgets.Select(x => x.Profile).ToArray());
+            _ = Remaining(prepared.Started);
+            prepared.RequireUnconsumed(issuer);
+            caller.ThrowIfCancellationRequested();
+            return prepared.Snapshot;
         }
         catch (OperationCanceledException) when (caller.IsCancellationRequested) { throw new OperationCanceledException(caller); }
         catch (Exception error) when (error is not OutOfMemoryException) { throw Unavailable(); }
@@ -137,13 +164,19 @@ internal sealed class StructuredModelAdmission : IAiStructuredRequestAdmission
 
     internal sealed record RouteBudget(StructuredModelProfileCandidate Profile, long MaximumInputTokens);
 
-    internal sealed class Prepared(object owner, AiGatewayRequest request, string metadataSha256, IReadOnlyList<RouteBudget> budgets, long began) : IAiPreparedStructuredRequest
+    internal sealed class Prepared(object owner, AiGatewayRequest request, string metadataSha256, IReadOnlyList<RouteBudget> budgets,
+        AiStructuredAdmissionSnapshot snapshot, long began) : IAiPreparedStructuredRequest
     {
         private int consumed;
         internal AiGatewayRequest Request { get; } = request;
         internal string MetadataSha256 { get; } = metadataSha256;
         internal IReadOnlyList<RouteBudget> Budgets { get; } = budgets;
+        internal AiStructuredAdmissionSnapshot Snapshot { get; } = snapshot;
         internal long Started { get; } = began;
+        internal void RequireUnconsumed(object currentIssuer)
+        {
+            if (!ReferenceEquals(owner, currentIssuer) || Volatile.Read(ref consumed) != 0) throw Unavailable();
+        }
         internal void Consume(object currentIssuer)
         {
             if (!ReferenceEquals(owner, currentIssuer) || Interlocked.Exchange(ref consumed, 1) != 0) throw Unavailable();

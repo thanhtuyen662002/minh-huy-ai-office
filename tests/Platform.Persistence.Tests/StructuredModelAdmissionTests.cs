@@ -391,6 +391,68 @@ public sealed class StructuredModelAdmissionTests
         }
     }
 
+    [Fact]
+    public async Task Actual_issuer_snapshot_binds_complete_text_schema_and_every_route_without_consuming()
+    {
+        using var fixture = new Fixture(true);
+        var gate = fixture.Gate(fixture.Catalog(), ConstantCounter()); var request = Request();
+        var handle = await gate.PrepareAsync(request); var snapshot = gate.DescribePrepared(handle);
+        Assert.Equal(Hash(request.Input), snapshot.InputSha256); Assert.Equal(Hash(Schema), snapshot.SchemaSha256);
+        Assert.Equal(Encoding.UTF8.GetByteCount(request.Input), snapshot.InputBytes);
+        Assert.Equal(Encoding.UTF8.GetByteCount(Schema), snapshot.SchemaBytes);
+        Assert.Equal(5, snapshot.InputTokens); Assert.Equal(3, snapshot.SchemaTokens);
+        Assert.Equal(StructuredTextTokenCounter.Version, snapshot.TokenizerVersion);
+        Assert.Equal(fixture.Gateway.DescribeStructuredGateway().MetadataSha256, snapshot.GatewaySha256);
+        Assert.Equal(new[] { "primary", "backup" }, snapshot.Routes.Select(x => x.ProviderId));
+        foreach (var route in snapshot.Routes)
+        {
+            Assert.Equal(fixture.Profile(route.Ordinal).CandidateSha256, route.CandidateSha256);
+            Assert.Equal(13, route.MaximumInputTokens);
+        }
+        Assert.Same(snapshot, gate.DescribePrepared(handle)); Assert.Equal(0, fixture.Calls);
+        await gate.ExecutePreparedAsync(handle); Assert.Equal(1, fixture.Calls);
+        Assert.Throws<InvalidOperationException>(() => gate.DescribePrepared(handle));
+    }
+
+    [Theory]
+    [InlineData("forged")]
+    [InlineData("foreign")]
+    [InlineData("expired")]
+    [InlineData("revoked")]
+    public async Task Snapshot_inspection_rejects_noncurrent_or_foreign_handle_without_dispatch(string mode)
+    {
+        using var fixture = new Fixture(); var clock = new ManualTimestamp(); var catalog = fixture.Catalog();
+        var gate = fixture.Gate(catalog, ConstantCounter(), clock); var handle = await gate.PrepareAsync(Request());
+        if (mode == "expired") clock.Advance(StructuredModelAdmission.MaximumPreparationLifetime);
+        if (mode == "revoked") catalog.RevokeForSyntheticControls(fixture.Profile(0).CandidateSha256);
+        var owner = mode == "foreign" ? fixture.Gate(catalog, ConstantCounter(), clock) : gate;
+        var error = Assert.Throws<InvalidOperationException>(() => owner.DescribePrepared(mode == "forged" ? new Forged() : handle));
+        Assert.Equal(StructuredModelAdmission.UnavailableMessage, error.Message); Assert.Null(error.InnerException);
+        Assert.Equal(0, fixture.Calls);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Snapshot_final_metadata_cancellation_or_expiry_cannot_release_metadata(bool cancelCaller)
+    {
+        using var caller = new CancellationTokenSource(); var clock = new ManualTimestamp();
+        var adapter = new MetadataBoundaryAdapter(); var gateway = new OrderedFailoverAiGateway(adapter);
+        var gate = BoundaryGate(gateway, adapter, clock); var handle = await gate.PrepareAsync(Request());
+        adapter.OnDescribe = () =>
+        {
+            if (adapter.Descriptions != 3) return;
+            if (cancelCaller) caller.Cancel(); else clock.Advance(StructuredModelAdmission.MaximumPreparationLifetime);
+        };
+        if (cancelCaller)
+        {
+            var error = Assert.ThrowsAny<OperationCanceledException>(() => gate.DescribePrepared(handle, caller.Token));
+            Assert.Equal(caller.Token, error.CancellationToken);
+        }
+        else Assert.Throws<InvalidOperationException>(() => gate.DescribePrepared(handle, caller.Token));
+        Assert.Equal(0, adapter.Executions);
+    }
+
     private static BoundedStructuredTextTokenCounter ConstantCounter() => new((text, _) => text == Schema ? 3 : 5, TimeSpan.FromSeconds(1));
     private static async Task Denied(Func<Task> action)
     {

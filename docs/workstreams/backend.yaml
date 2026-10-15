@@ -337,15 +337,16 @@ submission_full_runtime_276:
   review: Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182,
     frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract
     controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.
-next_action: Qualified feature parentb3b closed6186010798/all8/native132/full4861/wholequality/six originals. Separate admission
-  repair source independently CLEAR6186574904 after original5 WITHHELD ADM-1/ADM-2 receipt6186407767; original failures/sources
-  retained. Same actual Gateway/options/client; production released catalog EMPTY. Local final4900=[6,557,25,4312]/39 admission
-  controls/format PASS. Complete reviewed SAME288 checkpoint and exact successor native132/full4900/all8/Gov/wholequality/six
-  originals through terminal; HANDOFF owns actual HEAD/CI. Then explicitly versioned immutable original-admission/provenance
-  and retained-profile storage preserving all V2/V3 bytes and accepted-result-first recovery, one-batch coordinator/durable
-  scanner/WorkerDI/no-click278 and SQL-driven internalIT279. Legacy64hex profile cannot authorize new calls. Actual model
-  NOT_RUN_UNEVALUATED; Oct15 local36accessible0configured/5referencedpaths absent; deployed store unavailable for inspection.
-  ReadonlyMedcom/Novo/Windows/deployment/full233 remain; no partial merge.
+next_action: Local parentaef4869 is independently reviewed capacity proof repair6186876981 on failed remote79ff116; runtime
+  unchanged, final4900/22 controls. Snapshot6 source delta reviewed6187026341/local4934=[6,584,25,4319]/34 new controls; old8508
+  whole graph NOT_PROMOTABLE until capacity repair composition. This private combined successor retains exact repaired capacity
+  test and exact six reviewed snapshot bodies. Complete combined4934/format/durable review, preserve original79ff Build38697368973
+  native116297020019 through terminal before any new push (workflow auto-cancels live runs), then normal SAME288 commit/push
+  of reviewed capacity+snapshot graph and own exact all8/native132/full4934/wholequality/six originals. Current actual HEAD/CI
+  belong to PR288 HANDOFF; top feature fields retain qualifiedb3b anchor. Continue private atomic original-admission sidecar/preparer/store/migration:59
+  focused controls pass including16 retained V3 controls, but no actualSQL/source review/shipping acceptance. Preserve legacy
+  V2/V3 bytes/accepted-result-FIRST; no legacy64hex release. Then admitted journal binding/coordinator/scanner/no-click278/IT279/full233.
+  Production catalog EMPTY; actual model NOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment incomplete; no partial merge.
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
   review: Combined transport/exact retained replay scoped APPROVED92 independent controls0skip,76 retained+16 own. Actual
@@ -6008,3 +6009,45 @@ structured_model_admission_repair_checkpoint:
     head: cc4fd6b84a3364e6a0eb7fb349f8e2cceb0c0070
     lease_heartbeat_at: '2026-10-14'
     last_checkpoint_at: '2026-10-14'
+structured_admission_snapshot_checkpoint:
+  local_parent: aef4869ef104b9fa4f08aa62a5265fbcc5caca91
+  capacity_repair_review: 6186876981
+  capacity_parent79_failure: 6186771941
+  source6_sha256: 8508e2c2e5bfbc3babf9578235d9371e03f65319bba83cc5b0a16e2569221244
+  source6_review: 6187026341
+  source6_whole_graph: NOT_PROMOTABLE;OLD_CAPACITY_TEST_RETAINED;COMPOSITION_REQUIRED
+  combined_capacity_source: EXACT_REVIEWED_AEF_BODY_PRESENT
+  same_Gateway_options_client: true
+  public_snapshot: NON_AUTHORIZING_METADATA;ACTUAL_HANDLE_INSPECTION_REQUIRED
+  local_snapshot4934:
+  - 6
+  - 584
+  - 25
+  - 4319
+  new_snapshot_controls: 34
+  combined_full: PASS4934_[6,584,25,4319];FORMAT_EMPTY_EXIT0;ACTUAL_SOURCE_GRAPH
+  successor_exact_CI: NOT_RUN_UNQUALIFIED
+  remote79_build: 38697368973
+  remote79_native: 116297020019
+  old_failure: REAL_DOTNET_FAILURE_RETAINED;CAUSE_UNPROVEN
+  private_Persistence_unit: IN_DEVELOPMENT;59FOCUSED_PASS_INCLUDING16RETAINED;NO_ACTUAL_SQL_SOURCE_APPROVAL_OR_SHIPPING
+  production_catalog: EMPTY
+  actual_model: NOT_RUN_UNEVALUATED
+  atomic_original_admission_SQL: false
+  admitted_journal_release: false
+  coordinator_scanner: false
+  no_click278: false
+  internal_IT279: false
+  production_deployment: false
+  full233: false
+  head_convention: Existing top feature heads remain qualifiedb3b; exact remote/local successor HEAD and CI are authoritative
+    in PR288 HANDOFF.
+  preserved_previous_next_action: Qualified feature parentb3b closed6186010798/all8/native132/full4861/wholequality/six originals.
+    Separate admission repair source independently CLEAR6186574904 after original5 WITHHELD ADM-1/ADM-2 receipt6186407767;
+    original failures/sources retained. Same actual Gateway/options/client; production released catalog EMPTY. Local final4900=[6,557,25,4312]/39
+    admission controls/format PASS. Complete reviewed SAME288 checkpoint and exact successor native132/full4900/all8/Gov/wholequality/six
+    originals through terminal; HANDOFF owns actual HEAD/CI. Then explicitly versioned immutable original-admission/provenance
+    and retained-profile storage preserving all V2/V3 bytes and accepted-result-first recovery, one-batch coordinator/durable
+    scanner/WorkerDI/no-click278 and SQL-driven internalIT279. Legacy64hex profile cannot authorize new calls. Actual model
+    NOT_RUN_UNEVALUATED; Oct15 local36accessible0configured/5referencedpaths absent; deployed store unavailable for inspection.
+    ReadonlyMedcom/Novo/Windows/deployment/full233 remain; no partial merge.

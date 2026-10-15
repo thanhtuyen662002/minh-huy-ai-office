@@ -7,5 +7,6 @@ public interface IAiPreparedStructuredRequest { }
 public interface IAiStructuredRequestAdmission
 {
     Task<IAiPreparedStructuredRequest> PrepareAsync(AiGatewayRequest request, CancellationToken cancellationToken = default);
+    AiStructuredAdmissionSnapshot DescribePrepared(IAiPreparedStructuredRequest prepared, CancellationToken cancellationToken = default);
     Task<AiGatewayResponse> ExecutePreparedAsync(IAiPreparedStructuredRequest prepared, CancellationToken cancellationToken = default);
 }
