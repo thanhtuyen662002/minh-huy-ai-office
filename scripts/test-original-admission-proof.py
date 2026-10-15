@@ -100,7 +100,8 @@ class OriginalAdmissionProofTests(unittest.TestCase):
             return SimpleNamespace(returncode=0,stdout=line+'\n',stderr='')
 
         args = dict(directory=Path('/owned/aioffice-local'),api='http://127.0.0.1:8080',manifest=dict(AIOFFICE_INSTALLATION_ID=installation,AIOFFICE_RUNTIME_PASSWORD='r'*40),
-            tenant=tenant,company=company,service=service,sql=sql,prepare_source=lambda:(source,events,base64.b64encode(b'k'*32).decode('ascii')),reference=reference,automatic=automatic)
+            tenant=tenant,company=company,service=service,sql=sql,prepare_source=lambda:(source,events,base64.b64encode(b'k'*32).decode('ascii')),prepare_counterfactual_source=lambda:(str(uuid.uuid4()),[str(uuid.uuid4()),str(uuid.uuid4())],base64.b64encode(b'm'*32).decode('ascii')),
+            reference=reference,automatic=automatic)
         return args,process,calls,permissions_touched
 
     def run_control(self, fault=None):
@@ -111,7 +112,11 @@ class OriginalAdmissionProofTests(unittest.TestCase):
         def permission_control(**kwargs):
             self.assertIn('batch',kwargs);self.assertTrue(callable(kwargs['run_child']));self.assertTrue(callable(kwargs['assert_unchanged']))
             if fault == 'permission-suite':raise AssertionError('permission suite failed')
-        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch.object(proof.permission_proof,'verify',side_effect=permission_control),patch.object(proof.guard_counterfactual,'verify',return_value=proof.guard_counterfactual.SUMMARY),patch('sys.stdout',new_callable=io.StringIO) as output:
+        def guard_control(**kwargs):
+            self.assertIs(kwargs['prepare_source'],args['prepare_counterfactual_source'])
+            self.assertIsNot(kwargs['prepare_source'],args['prepare_source'])
+            return proof.guard_counterfactual.SUMMARY
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch.object(proof.permission_proof,'verify',side_effect=permission_control),patch.object(proof.guard_counterfactual,'verify',side_effect=guard_control),patch('sys.stdout',new_callable=io.StringIO) as output:
             if fault:
                 with self.assertRaises(AssertionError): proof.verify(**args)
                 self.assertEqual('',output.getvalue())

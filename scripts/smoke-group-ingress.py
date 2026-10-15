@@ -640,7 +640,7 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             # Separate owned synthetic source; preserve the original key row.
             # No production registry/configuration or credentials are touched.
             source_id = str(uuid.UUID(source_id))
-            assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19)
+            assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20)
             prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
             assert not any(name.startswith(prefix) for name in private_environment)
             if slot in (4, 5, 6, 8):
@@ -649,11 +649,11 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
                 original_spec.loader.exec_module(original_roles)
                 original_roles.enroll(directory=directory, api=api, tenant=tenant, company=company,
                     source=source_id, slot=slot, sql=sql)
-            if slot in (16, 17, 18, 19):
+            if slot in (16, 17, 18, 19, 20):
                 # Slot15 remains reserved for the sequenced history recovery slice.
                 assert not any(name.endswith("__SourceBindingId") and value == source_id
                     for name, value in private_environment.items())
-            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY", 6: "OWNED_HOST_GROUP_CONTENT_KEY", 7: "OWNED_COVERAGE_GROUP_CONTENT_KEY", 8: "OWNED_RAW_HISTORY_GROUP_CONTENT_KEY", 9: "OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY", 10: "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY", 11: "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY", 12: "OWNED_ATTEMPT_RESULT_GROUP_CONTENT_KEY", 13: "OWNED_ATTEMPT_RESULT_DEADLINE_GROUP_CONTENT_KEY", 14: "OWNED_HISTORY_SELECTION_GROUP_CONTENT_KEY", 16: "OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY", 17: "OWNED_ORIGINAL_V3_GROUP_CONTENT_KEY", 18: "OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY", 19: "OWNED_FIRST_EMPTY_GROUP_CONTENT_KEY"}[slot]
+            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY", 6: "OWNED_HOST_GROUP_CONTENT_KEY", 7: "OWNED_COVERAGE_GROUP_CONTENT_KEY", 8: "OWNED_RAW_HISTORY_GROUP_CONTENT_KEY", 9: "OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY", 10: "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY", 11: "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY", 12: "OWNED_ATTEMPT_RESULT_GROUP_CONTENT_KEY", 13: "OWNED_ATTEMPT_RESULT_DEADLINE_GROUP_CONTENT_KEY", 14: "OWNED_HISTORY_SELECTION_GROUP_CONTENT_KEY", 16: "OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY", 17: "OWNED_ORIGINAL_V3_GROUP_CONTENT_KEY", 18: "OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY", 19: "OWNED_FIRST_EMPTY_GROUP_CONTENT_KEY", 20: "OWNED_ACCEPTED_GUARD_GROUP_CONTENT_KEY"}[slot]
             private_environment[secret_name] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
             for name, value in {"TenantId": tenant, "CompanyId": company, "SourceBindingId": source_id,
                     "KeyId": "owned-managed-source-v1" if slot == 2 else "owned-native-source-v1", "SecretRef": "secretref://env/" + secret_name, "IsWriteKey": "true"}.items():
@@ -917,8 +917,17 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
                 tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
                 enroll_source=lambda source_id: enroll_owned_source(source_id, 18), post_event=call)
             return new_source, new_events, private_environment["OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY"]
+        def prepare_accepted_guard_source():
+            spec = importlib.util.spec_from_file_location("owned_accepted_guard_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 20), post_event=call)
+            return new_source, new_events, private_environment["OWNED_ACCEPTED_GUARD_GROUP_CONTENT_KEY"]
         admission_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
-            service=service, sql=sql, prepare_source=prepare_admission_source, reference=reference_proof, automatic=automatic_proof)
+            service=service, sql=sql, prepare_source=prepare_admission_source, prepare_counterfactual_source=prepare_accepted_guard_source,
+            reference=reference_proof, automatic=automatic_proof)
         first_empty_spec = importlib.util.spec_from_file_location("owned_first_empty_batch", Path(__file__).with_name("smoke-group-first-empty-batch.py"))
         first_empty_proof = importlib.util.module_from_spec(first_empty_spec)
         first_empty_spec.loader.exec_module(first_empty_proof)

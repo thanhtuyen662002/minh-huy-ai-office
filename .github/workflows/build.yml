@@ -120,7 +120,7 @@ jobs:
   local-runtime:
     name: Complete local stack integration
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/configure-docker-cache
@@ -160,6 +160,7 @@ jobs:
           python scripts/test-original-v3-enrollment.py
           python scripts/test-original-admission-proof.py
           python scripts/test-accepted-guard-counterfactual.py
+          python scripts/test-accepted-guard-source-enrollment.py
           python scripts/test-original-admission-corruption-proof.py
           python scripts/test-first-empty-batch-proof.py
           python scripts/test-first-empty-source-enrollment.py

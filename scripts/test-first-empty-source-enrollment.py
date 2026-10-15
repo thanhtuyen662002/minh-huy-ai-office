@@ -90,7 +90,7 @@ class FirstEmptySourceEnrollmentTests(unittest.TestCase):
         self.assertEqual(before,h.state);self.assertEqual(1,len(h.generated))
 
     def test_reserved_unknown_or_boolean_slots_do_not_mutate_registry(self):
-        for slot in [15,20,True]:
+        for slot in [15,21,True]:
             with self.subTest(slot=slot):
                 h=self.harness()
                 with self.assertRaises(AssertionError):h.scope['enroll_owned_source'](str(uuid.uuid4()),slot)

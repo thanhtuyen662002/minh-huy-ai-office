@@ -15,7 +15,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
     state: in_progress
-    next: "SAME288 active-owned original97ab Build38787704388/Gov38787704385 attempt1 CI51/6199613178: hosted5357/Gov/six prerequisites PASS, native145/fullquality/six ORIGINAL images still pending terminal closure. Use source-bound capture49; stay active through terminal, inspect/fix real red immediately SAMEPR. Do not cancel/rerun meaningful failures or push while original live. Separately reviewed source55 literal97a97181707ecb0c0571c26ad6912b13ec199776/all1238/ce855551 CLEAR6200297690 (receiptf81261b0/root51); original53 WITHHELD FEB53-1 immutable. Helper56 native146/full5365/all30 sources CLEAR6200391687 (receipt3ef674de/root329),42parser/27metadata/cold preAPI controls PASS; source55 unpushed/146 dispatch ABSENT and actual146 NOT_RUN_UNQUALIFIED. After original complete terminal logs/all8/Gov/wholequality/seven results/six originals and genuine clearance, ordinary literal55 successor only; if original real red, fix it first rather than hide behind unrelated successor. Continue acceptance first-empty SQL/hostmedia/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Current denials preserved; realmodel NOT_RUN_UNEVALUATED/catalogEMPTY, existing Gateway/client/config only. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns exact actual remote/local HEADs."
+    next: "SAME288 original97ab terminal FAILED closure6200811199, all8 terminal/Gov+hosted5357 PASS/native116603884173 second slot18 prefix refusal/quality116631357110 red/no images. Separate62 repair allocates mutant20 and explicit independent factory, preserves18main/19empty/all occupied-prefix and fresh-binding/role guards;30 offline Python methods PASS, all CSharp/project/production bytes equal55/53 and inherit local5365+format+compiledguard8 (no fresh.NET62). Native bounded90minute budget retains every SQL/Chromium gate. Freeze/review exact62 source then source-bound146/helper successor before ordinary explicit SAME288 push; own full5365/native146/all8/Gov/wholequality/seven results/six ORIGINAL images through terminal. No cancel/rerun/force/partial mainmerge. Original53 WITHHELD and e8/97ab failures preserved. Source55/helper56 CLEAR do not qualify62 or actual146. Continue firsthost/model originals/multichunk/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Realmodel NOT_RUN_UNEVALUATED/catalogEMPTY, only existing Gateway/options/client/config. Attachment unread until current work complete/merged."
   erp_data:
     issue: 264
     pr: 265
@@ -5891,3 +5891,23 @@ group_source55_helper56_clear59_checkpoint:
     Current denials preserved; realmodel NOT_RUN_UNEVALUATED/catalogEMPTY, existing
     Gateway/client/config only. No partial mainmerge; attachment unread until current
     work complete/merged. HANDOFF owns exact actual remote/local HEADs.'
+
+group_accepted_guard_enrollment62_checkpoint:
+  original_failed_head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
+  original_build: 38787704388
+  original_governance: 38787704385
+  original_attempt: 1
+  terminal_failed_closure: 6200811199
+  main_source_slot: 18
+  mutant_source_slot: 20
+  first_empty_slot: 19
+  fresh_offline_python_methods: 30
+  inherited_dotnet: 5365
+  fresh_dotnet_rerun: false
+  all_csharp_and_production_unchanged: true
+  required_future_native: 146
+  native_job_budget_minutes: 90
+  source_review: pending_exact62
+  actual_new_sql: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  next: Review exact62 frozen source and revised146 capture/parser before ordinary successor push; own complete CI closure.

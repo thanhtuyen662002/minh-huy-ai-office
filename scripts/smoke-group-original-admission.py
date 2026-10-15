@@ -40,9 +40,10 @@ COMPLETION_TABLES = (("GroupBatchTerminalReceipts","BatchId"),("GroupTerminalAdv
     ("GroupTerminalAdvanceKeys","KeyId"),("GroupTerminalFrontierStates","BindingId"))
 
 
-def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, reference, automatic):
+def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_source, prepare_counterfactual_source, reference, automatic):
     reference.require_owned(directory, api)
-    assert callable(sql) and callable(prepare_source)
+    assert callable(sql) and callable(prepare_source) and callable(prepare_counterfactual_source)
+    assert prepare_counterfactual_source is not prepare_source
     tenant, company, service = (automatic.canonical(x) for x in (tenant, company, service))
     installation = automatic.canonical(manifest['AIOFFICE_INSTALLATION_ID'])
     password = manifest['AIOFFICE_RUNTIME_PASSWORD']
@@ -205,7 +206,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         reference.require_reference_result(result,'admission-original-resume',[RUNTIME_LINES['admission-original-resume']])
         unchanged()
         counterfactual_summary = guard_counterfactual.verify(directory=directory,api=api,installation=installation,tenant=tenant,company=company,
-            service=service,password=password,sql=sql,prepare_source=prepare_source,reference=reference,automatic=automatic,
+            service=service,password=password,sql=sql,prepare_source=prepare_counterfactual_source,reference=reference,automatic=automatic,
             runtime_lines=RUNTIME_LINES,assert_unchanged=unchanged)
         assert counterfactual_summary == guard_counterfactual.SUMMARY
         before_journal_expiry = tuple(digest(t,o,scope) for t,o in extra)
