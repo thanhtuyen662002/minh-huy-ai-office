@@ -7,7 +7,7 @@ namespace MinhHuy.AIOffice.Agent.Worker;
 // Runtime preparation seam, not a new provider or configuration loader.
 // The production constructor uses the released catalog, currently EMPTY.
 // Synthetic catalog construction is internal and never registered in host DI.
-internal sealed class StructuredModelAdmission : IAiStructuredRequestAdmission
+internal sealed partial class StructuredModelAdmission : IAiStructuredRequestAdmission, IAiStructuredRequestPlanner
 {
     internal const string UnavailableMessage = "Structured model admission is not qualified.";
     private readonly OrderedFailoverAiGateway gateway;
