@@ -15,7 +15,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
     state: in_progress
-    next: "SAME288 exact97ab/f9b456d6 actual Build38787704388/Gov38787704385 attempt1 active-owned CI51 receipt6199613178. Source44/48 CLEAR6199464284/root63+57, helper49 CLEAR6199589161/root268; original40/7b/32 WITHHELD and e8 FAILED6199096035 immutable. Capture49 exact source/head/run/attempt requires native145 (4 exact FK +5 persisted corruption, restored-batch aggregate), full5357=[6,584,25,4742], all8/Gov/fullquality/seven results/six ORIGINAL images. Keep active through terminal; immediately inspect/fix real red SAMEPR, no force/cancel/rerun meaningful failures or push that cancels live original. Green CI does not complete acceptance. Continue first host/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment under current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns actual remote/local HEADs."
+    next: "SAME288 remote97ab/f9b456d6 Build38787704388/Gov38787704385 attempt1 remains active-owned CI51/6199613178. Hosted5357=[6,584,25,4742]/Gov/six prerequisites PASS, native145/fullquality/six originals still pending; capture49 exact-source binding mandatory. Local53 adds fresh first-empty original+sidecar actual claimed processor/no-work/terminal/frontier and separate expired-claim terminal-FIRST recovery proof; no preseeded original/result/effects, no model factory. Local5365=[6,584,25,4750]/format,5 inert Python,8 actual compiled owned-guard refusals PASS; actual first-emptySQL NOT_RUN_UNQUALIFIED. Freeze/review source53 before successor helpers146/full5365; do not push while original97ab CI remains live. Immediately inspect/fix real red SAMEPR, retain original terminal logs and failed e8 closure6199096035/40 WITHHELD. Green CI does not complete acceptance. Continue host media/model originals/multichunk/edit/recall/invalidated-original continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment with current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns exact remote/local HEADs."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "SAME288 exact97ab/f9b456d6 actual Build38787704388/Gov38787704385 attempt1 active-owned CI51 receipt6199613178. Source44/48 CLEAR6199464284/root63+57, helper49 CLEAR6199589161/root268; original40/7b/32 WITHHELD and e8 FAILED6199096035 immutable. Capture49 exact source/head/run/attempt requires native145 (4 exact FK +5 persisted corruption, restored-batch aggregate), full5357=[6,584,25,4742], all8/Gov/fullquality/seven results/six ORIGINAL images. Keep active through terminal; immediately inspect/fix real red SAMEPR, no force/cancel/rerun meaningful failures or push that cancels live original. Green CI does not complete acceptance. Continue first host/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment under current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns actual remote/local HEADs."
+next_action: "SAME288 remote97ab/f9b456d6 Build38787704388/Gov38787704385 attempt1 remains active-owned CI51/6199613178. Hosted5357=[6,584,25,4742]/Gov/six prerequisites PASS, native145/fullquality/six originals still pending; capture49 exact-source binding mandatory. Local53 adds fresh first-empty original+sidecar actual claimed processor/no-work/terminal/frontier and separate expired-claim terminal-FIRST recovery proof; no preseeded original/result/effects, no model factory. Local5365=[6,584,25,4750]/format,5 inert Python,8 actual compiled owned-guard refusals PASS; actual first-emptySQL NOT_RUN_UNQUALIFIED. Freeze/review source53 before successor helpers146/full5365; do not push while original97ab CI remains live. Immediately inspect/fix real red SAMEPR, retain original terminal logs and failed e8 closure6199096035/40 WITHHELD. Green CI does not complete acceptance. Continue host media/model originals/multichunk/edit/recall/invalidated-original continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment with current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config. No partial mainmerge; attachment unread until current work complete/merged. HANDOFF owns exact remote/local HEADs."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -5766,3 +5766,39 @@ group_companion_restored145_ci51_checkpoint:
     under current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing
     Gateway/client/config. No partial mainmerge; attachment unread until current work
     complete/merged. HANDOFF owns actual remote/local HEADs.
+group_first_empty_batch53_checkpoint:
+  parent: bd8594e0a6a55140a9d5a6d79905abd1ea6dbaa2
+  remote_CI_head: 97ab2137a1aa4dc2f0bbd5cb9f4e83b3ed047468
+  build: 38787704388
+  governance: 38787704385
+  attempt: 1
+  source_review: PENDING_EXACT53
+  local_dotnet: 5365
+  projects:
+  - 6
+  - 584
+  - 25
+  - 4750
+  new_offline_observer_cases: 8
+  Python_inert: 5
+  actual_compiled_guard_refusals: 8
+  format: PASS
+  production_src_unchanged: true
+  required_next_native: 146
+  actual_first_empty_SQL: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  next_action: SAME288 remote97ab/f9b456d6 Build38787704388/Gov38787704385 attempt1
+    remains active-owned CI51/6199613178. Hosted5357=[6,584,25,4742]/Gov/six prerequisites
+    PASS, native145/fullquality/six originals still pending; capture49 exact-source
+    binding mandatory. Local53 adds fresh first-empty original+sidecar actual claimed
+    processor/no-work/terminal/frontier and separate expired-claim terminal-FIRST
+    recovery proof; no preseeded original/result/effects, no model factory. Local5365=[6,584,25,4750]/format,5
+    inert Python,8 actual compiled owned-guard refusals PASS; actual first-emptySQL
+    NOT_RUN_UNQUALIFIED. Freeze/review source53 before successor helpers146/full5365;
+    do not push while original97ab CI remains live. Immediately inspect/fix real red
+    SAMEPR, retain original terminal logs and failed e8 closure6199096035/40 WITHHELD.
+    Green CI does not complete acceptance. Continue host media/model originals/multichunk/edit/recall/invalidated-original
+    continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment
+    with current denials. Model NOT_RUN_UNEVALUATED/catalogEMPTY; reuse existing Gateway/client/config.
+    No partial mainmerge; attachment unread until current work complete/merged. HANDOFF
+    owns exact remote/local HEADs.

@@ -919,6 +919,11 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             return new_source, new_events, private_environment["OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY"]
         admission_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
             service=service, sql=sql, prepare_source=prepare_admission_source, reference=reference_proof, automatic=automatic_proof)
+        first_empty_spec = importlib.util.spec_from_file_location("owned_first_empty_batch", Path(__file__).with_name("smoke-group-first-empty-batch.py"))
+        first_empty_proof = importlib.util.module_from_spec(first_empty_spec)
+        first_empty_spec.loader.exec_module(first_empty_proof)
+        first_empty_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_no_work_source, reference=reference_proof, automatic=automatic_proof)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")
