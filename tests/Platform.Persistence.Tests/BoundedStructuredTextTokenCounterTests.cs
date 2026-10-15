@@ -90,40 +90,55 @@ public sealed class BoundedStructuredTextTokenCounterTests
     [Fact]
     public async Task Cancellation_callbacks_keep_capacity_after_cpu_returns()
     {
-        var callbackEntered = Signal(); var releaseCallback = Signal(); var cpuReturned = Signal();
-        var callbackCount = 0; var returnedCount = 0;
+        var releaseCallback = Signal(); var calls = 0;
+        var registered = Enumerable.Range(0, 4).Select(_ => Signal()).ToArray();
+        var callbackEntered = Enumerable.Range(0, 4).Select(_ => Signal()).ToArray();
+        var cpuReturned = Enumerable.Range(0, 4).Select(_ => Signal()).ToArray();
+        var callers = Enumerable.Range(0, 4).Select(_ => new CancellationTokenSource()).ToArray();
+        var registrations = new CancellationTokenRegistration[4];
         var operations = new List<BoundedStructuredTextTokenCounter.Operation>();
-        var registrations = new List<CancellationTokenRegistration>();
-        var counter = new BoundedStructuredTextTokenCounter((_, token) =>
-        {
-            lock (registrations) registrations.Add(token.Register(() =>
-            {
-                if (Interlocked.Increment(ref callbackCount) == 4) callbackEntered.TrySetResult();
-                releaseCallback.Task.GetAwaiter().GetResult();
-            }));
-            token.WaitHandle.WaitOne();
-            if (Interlocked.Increment(ref returnedCount) == 4) cpuReturned.TrySetResult();
-            return 7;
-        }, TimeSpan.FromMilliseconds(300));
         try
         {
-            for (var i = 0; i < 4; i++) operations.Add(counter.BeginCount("synthetic"));
-            await callbackEntered.Task.WaitAsync(Guard); await cpuReturned.Task.WaitAsync(Guard);
-            foreach (var operation in operations)
+            for (var index = 0; index < 4; index++)
             {
-                var failure = await Assert.ThrowsAsync<InvalidOperationException>(() => operation.Caller.WaitAsync(Guard));
-                Assert.Equal(BoundedStructuredTextTokenCounter.DeadlineMessage, failure.Message);
-                Assert.False(operation.Completion.IsCompleted);
+                var ordinal = index;
+                var counter = new BoundedStructuredTextTokenCounter((_, token) =>
+                {
+                    Interlocked.Increment(ref calls);
+                    registrations[ordinal] = token.Register(() =>
+                    {
+                        callbackEntered[ordinal].TrySetResult();
+                        releaseCallback.Task.GetAwaiter().GetResult();
+                    });
+                    registered[ordinal].TrySetResult();
+                    token.WaitHandle.WaitOne();
+                    cpuReturned[ordinal].TrySetResult();
+                    return 7;
+                }, Guard);
+                operations.Add(counter.BeginCount("synthetic", callers[index].Token));
+                // Cancel only after this CPU operation installed its callback.
+                // No callback runs synchronously inside a shared list lock.
+                await registered[index].Task.WaitAsync(Guard);
+                callers[index].Cancel();
+                var failure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => operations[index].Caller.WaitAsync(Guard));
+                Assert.Equal(callers[index].Token, failure.CancellationToken);
+                await callbackEntered[index].Task.WaitAsync(Guard);
+                await cpuReturned[index].Task.WaitAsync(Guard);
+                Assert.False(operations[index].Completion.IsCompleted);
             }
+            Assert.All(operations, operation => Assert.False(operation.Completion.IsCompleted));
             Assert.Equal(BoundedStructuredTextTokenCounter.CapacityMessage,
                 Assert.Throws<InvalidOperationException>(() => new BoundedStructuredTextTokenCounter().BeginCount("fifth")).Message);
+            Assert.Equal(4, Volatile.Read(ref calls));
         }
         finally
         {
             releaseCallback.TrySetResult();
             await Task.WhenAll(operations.Select(x => x.Completion)).WaitAsync(Guard);
             foreach (var registration in registrations) registration.Dispose();
+            foreach (var caller in callers) caller.Dispose();
         }
+        Assert.Equal(7, await new BoundedStructuredTextTokenCounter().CountTextAsync("Tra cứu tồn kho, nhập xuất").WaitAsync(Guard));
     }
 
     [Fact]
