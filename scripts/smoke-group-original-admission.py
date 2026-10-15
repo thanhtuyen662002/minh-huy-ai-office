@@ -11,6 +11,10 @@ _corruption_spec = importlib.util.spec_from_file_location('owned_original_admiss
 corruption = importlib.util.module_from_spec(_corruption_spec)
 _corruption_spec.loader.exec_module(corruption)
 
+_permission_spec = importlib.util.spec_from_file_location('owned_original_admission_permissions',Path(__file__).with_name('smoke-group-original-admission-permissions.py'))
+permission_proof = importlib.util.module_from_spec(_permission_spec)
+_permission_spec.loader.exec_module(permission_proof)
+
 RUNTIME_LINES = {
     'admission-original-prepare': 'PASS owned original admission actual two revisions inbox allocation no original sidecar attempt result or effects',
     'admission-original-expiry': 'PASS owned original admission actual both rows flushed expiry observation retained across immediate rewind rollback witness committed old claim refused legitimate replacement retains zero effects or HTTP',
@@ -166,6 +170,14 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         batch = automatic.canonical(sql(f"SELECT LOWER(CONVERT(char(36),BatchId)) FROM aioffice.GroupOriginalAdmissionSidecars WHERE {scope};"))
         corruption.verify(directory=directory,api=api,tenant=tenant,company=company,source=source,batch=batch,
             sql=sql,run_child=run_corruption_child,reference=reference,assert_unchanged=unchanged)
+        def run_permission_child(mode):
+            assert mode in ('admission-original-permission','admission-original-resume')
+            result = subprocess.run([*command,mode],input=config,env=env,capture_output=True,text=True,timeout=170)
+            assert not result.stderr
+            expected = permission_proof.REFUSAL_LINE if mode == 'admission-original-permission' else RUNTIME_LINES[mode]
+            reference.require_reference_result(result,mode,[expected])
+        permission_proof.verify(directory=directory,api=api,tenant=tenant,company=company,source=source,batch=batch,
+            sql=sql,run_child=run_permission_child,reference=reference,assert_unchanged=unchanged)
     except BaseException as error: failure = error
     finally:
         try: automatic.close_owned_container(directory=directory,api=api,name=image,suffix=suffix,reference=reference)
@@ -186,3 +198,4 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
     for line in RUNTIME_LINES.values(): print(line,flush=True)
     print(SUMMARY,flush=True)
     print(corruption.SUMMARY,flush=True)
+    print(permission_proof.SUMMARY,flush=True)

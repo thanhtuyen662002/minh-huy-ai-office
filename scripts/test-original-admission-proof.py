@@ -94,13 +94,16 @@ class OriginalAdmissionProofTests(unittest.TestCase):
         def corruption_control(**kwargs):
             self.assertIn('batch',kwargs);self.assertTrue(callable(kwargs['run_child']));self.assertTrue(callable(kwargs['assert_unchanged']))
             if fault == 'corruption':raise AssertionError('corruption suite failed')
-        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch('sys.stdout',new_callable=io.StringIO) as output:
+        def permission_control(**kwargs):
+            self.assertIn('batch',kwargs);self.assertTrue(callable(kwargs['run_child']));self.assertTrue(callable(kwargs['assert_unchanged']))
+            if fault == 'permission-suite':raise AssertionError('permission suite failed')
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch.object(proof.corruption,'verify',side_effect=corruption_control),patch.object(proof.permission_proof,'verify',side_effect=permission_control),patch('sys.stdout',new_callable=io.StringIO) as output:
             if fault:
                 with self.assertRaises(AssertionError): proof.verify(**args)
                 self.assertEqual('',output.getvalue())
             else:
                 proof.verify(**args)
-                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY],output.getvalue().splitlines())
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY,proof.corruption.SUMMARY,proof.permission_proof.SUMMARY],output.getvalue().splitlines())
         return args,calls,mutations
 
     def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
@@ -133,6 +136,10 @@ class OriginalAdmissionProofTests(unittest.TestCase):
     def test_digest_batch_refuses_missing_reordered_or_noncanonical_rows(self):
         for fault in ('digest-count','digest-index','digest-hash'):
             with self.subTest(fault=fault):self.run_control(fault)
+
+    def test_permission_suite_failure_suppresses_all_markers_and_still_cleans_up(self):
+        _,calls,_=self.run_control('permission-suite')
+        self.assertEqual(['docker','image','rm'],calls[-1][0][:3])
 
 
 if __name__ == '__main__': unittest.main()

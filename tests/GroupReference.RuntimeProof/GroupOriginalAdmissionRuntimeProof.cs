@@ -25,6 +25,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
     internal const string RecoverLine = "PASS owned original admission separate process epoch three accepted result FIRST recovered with sidecar SELECT unavailable empty released catalog zero admission calls or HTTP";
     internal const string ResumeLine = "PASS owned original admission current epoch three exact original epoch two plan sidecar snapshots legacy input identities chunks hashes restored zero provider";
     internal const string RefusalLine = "PASS owned original admission accepted result FIRST remains readable corrupted sidecar refused current epoch three zero admission or provider";
+    internal const string PermissionLine = "PASS owned original admission fresh effective permission verifier refuses unsafe sidecar privileges or accessible owner procedure no source plaintext or provider";
     private const string Profile = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     private const string Model = "owned-synthetic-admission";
     internal static string Phase { get; private set; } = "setup";
@@ -33,12 +34,18 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
     {
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
-        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse"))
+        if (mode is not ("admission-original-prepare" or "admission-original-expiry" or "admission-original-commit" or "admission-original-recover" or "admission-original-resume" or "admission-original-refuse" or "admission-original-permission"))
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var probe = new AtomicProbe(scope, clock);
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
             .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe)).Options);
+        if (mode == "admission-original-permission")
+        {
+            Phase = "fresh-unsafe-permission-refusal";
+            await RefusedAsync(() => new GroupOriginalAdmissionPermissionVerifier(db).RequireSafeRuntimeAsync(token));
+            RequireClean(db); Console.WriteLine(PermissionLine); return;
+        }
         Phase = "allocation";
         if (mode == "admission-original-prepare")
         {
