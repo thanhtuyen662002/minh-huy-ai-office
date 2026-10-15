@@ -21,7 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: "Preserve remote5bf1d083a92060c5eeaf333285b57a53ec6fe943 complete scoped closure6194064928/all8/Gov/native141/full5037/wholequality/six ORIGINAL images and failed854/a293/198. Reviewed source15 + later16/17/19/20/21/22 compose local7b93862483138a34938209d03761982e46ec9420/frozenf8ca5149/full5176; later source SECURITY_REVIEW_PENDING. Source7b142 helpers checkpoint6195314697/parser84792734/capturef48638b7/staticd9027a9e PREPARED_INERT_UNREVIEWED/9parser/27metadata/1200rawGit preflight; NO ACTUAL DISPATCH. After genuine source/helper approval, explicit normal fast-forward publish reviewed7b only, bind actual head/run/attempt/reviews and close142/full5176/all8/Gov/wholequality/six originals. Successor24 original whole-batch restorer + current scoped origin reader authenticates original FIRST then exact full source/history IDs, complete dependency bytes, current original/source/brain/claim SQL and scoped <=20 origins, restores original order/partition/input/stable operations without reselection/sidecar/companion/model/options. New19/full5195=[6,584,25,4580]/zero fail-skip/format PASS; traps/EF translation not positive SQL recovery. Source24 SECURITY_REVIEW_PENDING/unpushed; EXCLUDE24 from any7b-only push and qualification. Continue initial originalV3 creation/host-only execution/wholebatch terminal+frontier/durable scanner/shippedWorkerDI/no-click278 then internalIT279/full233. NewSQL142/execution/expiry/replacement/permission + positive24 restoration NOT_RUN_UNQUALIFIED; modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge; main remainsad747d0. HANDOFF owns actualheads."
+next_action: "Preserve remote5bf complete scoped closure6194064928/native141/full5037/all8/Gov/wholequality/six originals and failed854/a293/198. Source7b/frozenf8ca5149/full5176 and helpers6195314697/parser84792734/capturef48638b7/staticd9027a9e remain separately SECURITY_REVIEW_PENDING/INERT_UNREVIEWED/no dispatch; explicit ordinary7b-only push/actual142 closure only after genuine review, exclude later24/25. Local24 whole-batch restorer0f3854b checkpoint6195605524/full5195/source review and positive SQL recovery pending. Successor25 committed-terminal probe uses current Extract/permission/source-lock owned SQL, bounded exact tenant/company/group/batch metadata only, no keys on missing; presence delegates existing full authenticated historical/frontier advance outside SQL with first clock observation carried across key waits. Absence grants no authority; malformed/revoked/gap/key errors never become missing/success. New12/full5207=[6,584,25,4592]/zero fail-skip/format PASS; traps/EF syntax are offline, NOT SQL presence/absence/advance. Source25 security review/actual SQL pending, no Worker/model/schema activation. Continue first V3 creation/host-only/one-batch terminal+frontier/scanner/shippedWorkerDI/no-click278 then internalIT279/full233. NewSQL142/execution/expiry/races + positive24/25 SQL NOT_RUN_UNQUALIFIED; modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge; mainad747d0. HANDOFF owns actualheads."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -854,3 +854,20 @@ group_original_batch_restorer_24_checkpoint:
   new_SQL142_execution_expiry_races: "NOT_RUN_UNQUALIFIED"
   model: "NOT_RUN_UNEVALUATED"
   next: "Review/qualify exact7b source/helper separately; complete current24 actual restoration + original creation/host-only/terminal/frontier/scanner/Worker/no-click278/internalIT279/full233"
+
+
+group_committed_terminal_probe_25_checkpoint:
+  parent: "0f3854b493d61f5a016cd703518576f3b50f0451"
+  state: "LOCAL_COMMITTED_TERMINAL_PROBE_SOURCE_SECURITY_REVIEW_PENDING_NO_PUSH"
+  remote_head: "5bf1d083a92060c5eeaf333285b57a53ec6fe943"
+  remote_scoped_closure: 6194064928
+  new_controls: 12
+  full_tests: 5207
+  per_project: [6, 584, 25, 4592]
+  format: "PASS"
+  source_review: "PENDING25; prior source +24 + helper23 still pending"
+  preserved_7b_helpers: "checkpoint6195314697/parser84792734/capturef48638b7/staticd9027a9e; source7b/full5176 ONLY; inert/unreviewed/no dispatch; cannot qualify24/25"
+  actual_positive_SQL_terminal_probe_and_advance: "NOT_RUN_UNQUALIFIED"
+  new_SQL142_execution_expiry_races_and_positive24: "NOT_RUN_UNQUALIFIED"
+  model: "NOT_RUN_UNEVALUATED"
+  next: "Review/qualify exact7b source/helpers separately, then positive24/25; finish V3 creation/host-only/one-batch/terminal/frontier/scanner/Worker/no-click278/internalIT279/full233"

@@ -12,7 +12,7 @@ public sealed record GroupTerminalFrontierAdvanceResult(GroupScope Scope, Guid B
 
 // Historical bookkeeping under fresh Extract authority. The batch identity is
 // the idempotency key: retrying a lost reply never advances another interval.
-public sealed class GroupTerminalFrontierStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
+public sealed partial class GroupTerminalFrontierStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
     TimeProvider clock, IGroupSourceKeyProvider keys)
 {
     internal const int MaximumRetainedKeys = 4096;
