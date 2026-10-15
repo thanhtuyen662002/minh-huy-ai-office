@@ -20,7 +20,8 @@ class Controls(unittest.TestCase):
             calls.append(command)
             if command[:2] == ['docker', 'build']:
                 text = Path(command[3]).read_text(encoding='utf-8')
-                self.assertEqual(1, text.count("RUN sed -i 's/if (accepted) throw Unavailable();/if (accepted) { }/'"))
+                self.assertEqual(1, text.count("sed -i 's/if (accepted) throw Unavailable();/if (accepted) { }/'"))
+                self.assertIn(proof.guard_mutation_step(production), text)
                 return SimpleNamespace(returncode=1 if fault == 'build' else 0, stdout='', stderr='')
             if command[:3] == ['docker', 'image', 'rm']:
                 return SimpleNamespace(returncode=1 if fault == 'image-cleanup' else 0, stdout='', stderr='')
@@ -101,6 +102,28 @@ class Controls(unittest.TestCase):
             with self.subTest(text_length=len(text)):
                 with self.assertRaises(AssertionError):
                     proof.require_committed_preflight_refusal(SimpleNamespace(returncode=1, stdout=text, stderr=''))
+
+    def test_build_mutation_requires_exact_pre_post_counts_and_expected_raw_sha(self):
+        import hashlib
+        raw = b'before\r\nif (accepted) throw Unavailable();\r\nafter\r\n'
+        step = proof.guard_mutation_step(raw)
+        expected = hashlib.sha256(raw.replace(b'if (accepted) throw Unavailable();', b'if (accepted) { }')).hexdigest()
+        self.assertIn(expected, step)
+        self.assertEqual(4, step.count('grep -F -c'))
+        self.assertIn('sha256sum -c -', step)
+        self.assertLess(step.index('sed -i'), step.index('sha256sum'))
+        for bad in (b'', raw+raw, raw.replace(b'throw Unavailable();', b'{ }'), raw.decode()):
+            with self.subTest(kind=type(bad).__name__):
+                with self.assertRaises(AssertionError): proof.guard_mutation_step(bad)
+
+    def test_closed_observer_diagnostics_never_relax_negative_acceptance(self):
+        for stage in ('binding', 'provider', 'before-query', 'dispatch', 'execute', 'read', 'dispose', 'post-query', 'transaction', 'complete'):
+            text = ('FAIL owned original admission runtime phase-admitted-execution-accepted-transaction kind-accepted-query-'
+                + stage + '-reader\nFAIL owned reference runtime admission-original-commit')
+            with self.subTest(stage=stage):
+                with self.assertRaises(AssertionError) as caught:
+                    proof.require_committed_preflight_refusal(SimpleNamespace(returncode=1, stdout=text, stderr=''))
+                self.assertIn('accepted-query-'+stage+'-reader', str(caught.exception))
 
 
 if __name__ == '__main__': unittest.main()

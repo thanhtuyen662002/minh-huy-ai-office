@@ -1,4 +1,5 @@
 """Owned SQL mutation control. Build-only guard deletion; shipped source untouched."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,10 @@ def require_committed_preflight_refusal(result):
     """Exact negative evidence; diagnostics use only a closed public vocabulary."""
     kinds = ('accepted-preflight-committed', 'sql-constraint', 'sql-permission', 'sql-timeout',
         'sql-deadlock', 'sql-other', 'cancelled', 'denied', 'invariant', 'other')
+    kinds += tuple('accepted-query-' + stage + '-' + kind
+        for stage in ('binding', 'provider', 'before-query', 'dispatch', 'execute', 'read', 'dispose', 'post-query', 'transaction', 'complete')
+        for kind in ('identity', 'shape', 'incomplete', 'value', 'reader', 'cancelled',
+            'sql-constraint', 'sql-permission', 'sql-timeout', 'sql-deadlock', 'sql-other', 'other'))
     phases = ('setup', 'fresh-unsafe-permission-refusal', 'allocation', 'private-input', 'original', 'expiry-after-both-flushed', 'expiry-rewind-refusal', 'physical-constraint-boundaries', 'atomic-rollback', 'committed-reply-loss', 'fresh-read-replay', 'physical-column-boundaries', 'accepted-result', 'corrupted-sidecar-refusal', 'constraint-valid-pair', 'constraint-missing-plan', 'constraint-wrong-plan-hash', 'constraint-wrong-claim-operation', 'constraint-wrong-claim-epoch', 'constraint-foreign-tenant', 'constraint-foreign-company', 'constraint-foreign-binding', 'constraint-format-version', 'constraint-short-payload', 'constraint-oversized-payload', 'constraint-empty-operation', 'constraint-zero-epoch', 'constraint-negative-epoch', 'constraint-lowercase-plan-hash', 'constraint-nonhex-sidecar-hash', 'constraint-lowercase-sidecar-hash', 'constraint-non-UTC-time', 'sql-read-original', 'sql-read-predicates', 'admitted-journal-prepare', 'admitted-journal-rollback', 'admitted-journal-commit', 'admitted-journal-replay', 'admitted-execution-current', 'admitted-execution-replay', 'admitted-execution-accepted-refusal', 'admitted-journal-retained-before-issuance', 'admitted-journal-retained-old-interval', 'admitted-journal-retained-replacement', 'admitted-execution-accepted-transaction')
     code = result.returncode if type(result.returncode) is int and -255 <= result.returncode <= 255 else 'other'
     text = result.stdout
@@ -35,6 +40,23 @@ def require_committed_preflight_refusal(result):
     raise AssertionError(f'Owned guard deletion did not discriminate committed preflight (exit={code};lines={count};category={category})')
 
 
+
+def guard_mutation_step(source):
+    # Exact source bytes are checked again INSIDE the build before publish.
+    guard = b'if (accepted) throw Unavailable();'
+    replacement = b'if (accepted) { }'
+    assert type(source) is bytes and source.count(guard) == 1 and source.count(replacement) == 0
+    mutated = source.replace(guard, replacement)
+    assert mutated.count(guard) == 0 and mutated.count(replacement) == 1
+    digest = hashlib.sha256(mutated).hexdigest()
+    target = 'src/Platform.Persistence/GroupModelAttemptJournalStore.Execution.cs'
+    return ("RUN test \"$(grep -F -c 'if (accepted) throw Unavailable();' " + target + ")\" = 1"
+        + " && test \"$(grep -F -c 'if (accepted) { }' " + target + ")\" = 0"
+        + " && sed -i 's/if (accepted) throw Unavailable();/if (accepted) { }/' " + target
+        + " && test \"$(grep -F -c 'if (accepted) throw Unavailable();' " + target + ")\" = 0"
+        + " && test \"$(grep -F -c 'if (accepted) { }' " + target + ")\" = 1"
+        + " && echo '" + digest + "  " + target + "' | sha256sum -c -\n")
+
 def verify(*, directory, api, installation, tenant, company, service, password, sql, prepare_source, reference, automatic,
            runtime_lines, assert_unchanged):
     reference.require_owned(directory, api)
@@ -48,7 +70,7 @@ def verify(*, directory, api, installation, tenant, company, service, password, 
     assert dockerfile.count(anchor) == 1
     # Mutation happens inside this isolated test image only. No bypass flag,
     # alternate provider/config or source write is added to the application.
-    mutation = "RUN sed -i 's/if (accepted) throw Unavailable();/if (accepted) { }/' src/Platform.Persistence/GroupModelAttemptJournalStore.Execution.cs\n"
+    mutation = guard_mutation_step(source_file.read_bytes())
     suffix = uuid.uuid4().hex; image = 'aioffice-automatic-note-proof-' + suffix
     command = ['docker', 'run', '--init', '--rm', '--name', image, '--label', 'aioffice.owned-proof=' + suffix,
         '--network', 'aioffice-' + uuid.UUID(installation).hex + '_default', '--read-only', '--cap-drop', 'ALL',
