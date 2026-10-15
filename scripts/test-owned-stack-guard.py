@@ -3022,5 +3022,71 @@ class OriginalAdmissionDiagnosticControls(unittest.TestCase):
                 reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,returncode=0),mode,['PASS original'])
 
 
+class OriginalInvalidationDiagnosticControls(unittest.TestCase):
+    def test_all_closed_invalidation_phases_project_only_fixed_mode_phase_and_exit(self):
+        for mode, expected in reference_smoke._INVALIDATION_SUCCESS.items():
+            for phase in reference_smoke._INVALIDATION_PHASES:
+                lines = [f'FAIL owned original invalidation runtime phase-{phase}', f'FAIL owned reference runtime {mode}']
+                for wire in ('\n'.join(lines), '\n'.join(lines) + '\n', '\r\n'.join(lines) + '\r\n'):
+                    with self.subTest(mode=mode, phase=phase), self.assertRaises(AssertionError) as error:
+                        reference_smoke.require_reference_result(SimpleNamespace(stdout=wire, stderr='', returncode=1), mode, [expected])
+                    self.assertEqual(f'Owned reference executable failed at {mode}; exit=1; phase={phase}', str(error.exception))
+
+    def test_malformed_private_oversized_or_foreign_invalidation_output_never_echoes_or_qualifies(self):
+        private = 'PRIVATE_INVALIDATION_DIAGNOSTIC_166'
+        class HostileText(str):
+            def splitlines(self, *args, **kwargs): raise RuntimeError('must not inspect subclass')
+        class HostileExit:
+            def __str__(self): raise RuntimeError('must not format arbitrary exit')
+        for mode, expected in reference_smoke._INVALIDATION_SUCCESS.items():
+            wire = f'FAIL owned original invalidation runtime phase-claim\nFAIL owned reference runtime {mode}'
+            other = next(value for value in reference_smoke._INVALIDATION_SUCCESS if value != mode)
+            cases = [(None, '', 1), (wire.encode(), '', 1), (HostileText(wire), '', 1), (private * 40, '', 1),
+                (wire.replace('phase-claim', 'phase-' + private), '', 1),
+                (wire.replace(mode, other), '', 1), (wire.replace('original invalidation', 'original admission'), '', 1),
+                (wire + '\n' + private, '', 1), (wire + '\n' + wire, '', 1), (wire.replace('\n', '\v'), '', 1),
+                (wire.replace('phase-claim', 'phase-claim\x00'), '', 1), (wire.replace('phase-claim', 'phase-unknown'), '', 1),
+                (wire, private, 1), (wire, None, 1), (wire, b'', 1), (wire, HostileText(''), 1),
+                (wire, '', True), (wire, '', False), (wire, '', 1.0), (wire, '', None), (wire, '', HostileExit()),
+                (wire, '', 0), (wire, '', 2), (wire, '', 256), (expected + '\v', '', 0), (expected.replace('PASS', 'ＰASS'), '', 0)]
+            for index, (stdout, stderr, code) in enumerate(cases):
+                with self.subTest(mode=mode, case=index), self.assertRaises(AssertionError) as error:
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=stdout, stderr=stderr, returncode=code), mode, [expected])
+                self.assertNotIn(private, str(error.exception)); self.assertNotIn('; phase=', str(error.exception))
+
+    def test_invalidation_exact_success_is_the_only_success_and_failure_never_becomes_success(self):
+        for mode, expected in reference_smoke._INVALIDATION_SUCCESS.items():
+            for stdout in (expected, expected + '\n', expected + '\r\n'):
+                self.assertIsNone(reference_smoke.require_reference_result(SimpleNamespace(stdout=stdout, stderr='', returncode=0), mode, [expected]))
+            for code in (True, False, 1, -255, 255, -256, 256):
+                with self.subTest(mode=mode, code=code), self.assertRaises(AssertionError) as error:
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=expected, stderr='', returncode=code), mode, [expected])
+                safe = str(code) if type(code) is int and -255 <= code <= 255 else 'unknown'
+                self.assertEqual(f'Owned reference executable failed at {mode}; exit={safe}', str(error.exception))
+            for stdout, supplied in [(expected, (expected,)), (expected, []), ('', []),
+                    ('PRIVATE_EXPECTED_166', ['PRIVATE_EXPECTED_166']), (expected, [expected, expected])]:
+                with self.assertRaises(AssertionError) as error:
+                    reference_smoke.require_reference_result(SimpleNamespace(stdout=stdout, stderr='', returncode=0), mode, supplied)
+                self.assertNotIn('PRIVATE_EXPECTED_166', str(error.exception))
+            with self.assertRaisesRegex(AssertionError, '^Owned invalidation executable result unavailable$'):
+                reference_smoke._require_invalidation_reference_result(SimpleNamespace(stdout=expected, stderr='', returncode=0), 'PRIVATE_MODE_166', [expected])
+
+    def test_invalidation_modes_phases_and_pass_lines_match_the_actual_closed_csharp_source(self):
+        root = Path(__file__).resolve().parents[1]
+        source = (root / 'tests/GroupReference.RuntimeProof/GroupOriginalInvalidationRuntimeProof.cs').read_text(encoding='utf-8-sig')
+        phases = set(re.findall(r'\bPhase\s*=\s*"([a-z-]+)"', source))
+        phases.update(re.findall(r'\bPhase\s*\{[^}]+\}\s*=\s*"([a-z-]+)"', source))
+        self.assertEqual(phases, set(reference_smoke._INVALIDATION_PHASES))
+        modes = re.search(r'if \(mode is not \((.*?)\)\)', source, re.S)
+        self.assertIsNotNone(modes)
+        self.assertEqual(set(re.findall(r'"(invalidation-zero-[a-z]+)"', modes[1])), set(reference_smoke._INVALIDATION_SUCCESS))
+        for mode, name in [('invalidation-zero-prepare', 'PrepareLine'), ('invalidation-zero-commit', 'CommitLine'), ('invalidation-zero-replay', 'ReplayLine')]:
+            actual = re.search(r'const string ' + name + r' = "([^"]+)";', source)
+            self.assertIsNotNone(actual); self.assertEqual(actual[1], reference_smoke._INVALIDATION_SUCCESS[mode])
+        program = (root / 'tests/GroupReference.RuntimeProof/Program.cs').read_text(encoding='utf-8-sig')
+        self.assertIn('Console.WriteLine("FAIL owned original invalidation runtime phase-" + GroupOriginalInvalidationRuntimeProof.Phase);', program)
+        self.assertIn('args.Length == 1 && phase == args[0] && args[0] is ("invalidation-zero-prepare" or "invalidation-zero-commit" or "invalidation-zero-replay")', program)
+
+
 if __name__ == "__main__":
     unittest.main()

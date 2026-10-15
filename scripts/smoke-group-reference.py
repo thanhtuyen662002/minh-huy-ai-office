@@ -141,7 +141,38 @@ def validated_host_brain_fixture(raw):
     return value
 
 
+_INVALIDATION_SUCCESS = {
+    "invalidation-zero-prepare": "PASS owned original invalidation zero prepare actual missing original current metadata legacy V2 epoch one two candidates empty history zero checkpoint keys effects or provider",
+    "invalidation-zero-commit": "PASS owned original invalidation zero commit actual Core edit beyond original cutoff one immutable checkpoint committed reply loss exact original graph legacy reads and starts refused zero checkpoint keys effects or provider",
+    "invalidation-zero-replay": "PASS owned original invalidation zero separate process exact epoch one checkpoint replay original bytes digest claims allocation unchanged zero keys effects or provider"}
+_INVALIDATION_PHASES = frozenset({"setup", "allocation", "claim", "missing-original", "private-input", "legacy-original",
+    "current-metadata", "checkpoint-commit", "legacy-read-refusal", "checkpoint-replay", "verify"})
+
+
+def _require_invalidation_reference_result(result, mode, expected_lines):
+    # Separate new-mode protocol: no old-mode diagnostic/success semantics change.
+    if type(mode) is not str or mode not in _INVALIDATION_SUCCESS:
+        raise AssertionError("Owned invalidation executable result unavailable")
+    stdout, stderr, code = (getattr(result, name, None) for name in ("stdout", "stderr", "returncode"))
+    safe_exit = str(code) if type(code) is int and -255 <= code <= 255 else "unknown"
+    detail = ""
+    expected = _INVALIDATION_SUCCESS[mode]
+    expected_valid = type(expected_lines) is list and len(expected_lines) == 1 and type(expected_lines[0]) is str and expected_lines[0] == expected
+    if type(stdout) is str and len(stdout) <= 1024 and type(stderr) is str and stderr == "" and type(code) is int and expected_valid:
+        if code == 0 and stdout in (expected, expected + "\n", expected + "\r\n"):
+            return
+        lines = stdout.splitlines()
+        if code == 1 and len(lines) == 2 and lines[1] == "FAIL owned reference runtime " + mode:
+            canonical = ("\n".join(lines), "\n".join(lines) + "\n", "\r\n".join(lines), "\r\n".join(lines) + "\r\n")
+            match = re.fullmatch(r"FAIL owned original invalidation runtime phase-([a-z-]+)", lines[0])
+            if stdout in canonical and match and match[1] in _INVALIDATION_PHASES:
+                detail = "; phase=" + match[1]
+    raise AssertionError("Owned reference executable failed at " + mode + "; exit=" + safe_exit + detail)
+
+
 def require_reference_result(result, mode, expected_lines):
+    if isinstance(mode, str) and mode in _INVALIDATION_SUCCESS:
+        return _require_invalidation_reference_result(result, mode, expected_lines)
     # Preserve exact successful output. Failure diagnostics are closed tokens,
     # never arbitrary child stdout/stderr or exception/connection information.
     lines = result.stdout.splitlines()
