@@ -337,7 +337,7 @@ submission_full_runtime_276:
   review: Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182,
     frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract
     controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.
-next_action: "Retain exact854 Build38732218027/Gov38732218046 attempt1 native116412506603/all8/wholequality/six originals through terminal; actual.NET5012 passed. Reviewed local0b117 SQL-read15/review6192005875 remains unpushed; only after854 terminal capture push reviewed exact15 and own native141/all8/Gov/full5034/wholequality/six originals. New current-attempt preparer16 derives host nonce and exact restored input/schema via SAME actual Gateway/admission; SQL-free issuer/lifetime fence retains exact expiry observation. Source16 independent review PENDING, no journal/provider execution/DI activation; local31 and restored full/format results must be bound to its frozen tuple. Continue atomic admitted start+companion with versioned migration/authentic same-transaction sidecar, current release, accepted-result-FIRST, then coordinator/scanner/WorkerDI/no-click278/internalIT279/full233. Production catalog EMPTY, actualmodel NOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain. Preserve original failed a293/198 closures and all qualified historical anchors; no partialmerge or push over active native. HANDOFF owns actual heads/runs."
+next_action: "Exact854 terminal FAILED closure6192747488 retained: first valid constraint pair/sql-other, .NET5012/Gov pass, native/quality red/no browser. Remote proof-only5bf1d083a92060c5eeaf333285b57a53ec6fe943 /lead review6192901265/ownership6192944435 now owns Build38740772150/Gov38740772151 attempt1 native116441579120/all8/full5037/wholequality/six originals with helper18 through terminal; repair real red SAME288. Parked local16 5d28/checkpoint6192384033 SOURCE_REVIEW_PENDING; private17 schema20 now local24/full5073/15frontier/EFpending0/format3 PASS but not SQL qualified. Newtable immutable15cols/two exact principal FKs/two expand AKs/oldindexes and rows preserved, current60EF/78source/40group and frozen54/72 unchanged. Source17 must obtain independent review, then ordinary merge of current proof-only remote5bf into the parked production lineage, preserve both histories/next values, and verify composed expected5076 BEFORE any production-source push. No force/reset/rebase/default-push or push over active native. Continue authentic same-transaction sidecar+atomic admitted start/companion/deadline caps/exact expiry witness, currentrelease/accepted-result-FIRST coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; production catalog EMPTY/modelNOT_RUN_UNEVALUATED, readonlyERP/Windows/deployment remain. HANDOFF owns actualheads/run; no partialmerge."
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
   review: Combined transport/exact retained replay scoped APPROVED92 independent controls0skip,76 retained+16 own. Actual
@@ -6253,3 +6253,46 @@ model_attempt_admission_preparation_checkpoint:
     originals. Foreignservice/races/admittedjournal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233/realmodel/readonlyERP/Windows/deployment
     remain; catalogEMPTY/modelNOT_RUN_UNEVALUATED, no partialmerge. HANDOFF owns actualhead/run/status; qualified anchors
     historical.
+
+model_attempt_admission_schema_checkpoint:
+  parent: 5d28a6f8959f751de1ed0d2b2b4046d4c5bc3008
+  state: source_review_pending_schema_not_SQL_qualified
+  migration: 20261015124957_AddGroupModelAttemptAdmissions
+  change: Immutable15-column companion/exact scoped start+sidecar FKs/two additive keys/preserve old indexes and all rows/no
+    journal or DI activation
+  current_inventory: 60 EF /78 source snapshots /40 group entities; frozen shadow54/72 unchanged
+  local_verification: 24 schema/inventory including8 new; full5073=[6,584,25,4458];15 frontier; EFpending0; finalformat/log
+    binding see frozen17
+  review: PENDING; no independent design or source report obtained after existing reviewer usage-limit failure
+  actual_sql: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  original_native_job: 116412506603
+  previous_next_action: Retain exact854 Build38732218027/Gov38732218046 attempt1 native116412506603/all8/wholequality/six
+    originals through terminal; actual.NET5012 passed. Reviewed local0b117 SQL-read15/review6192005875 remains unpushed; only
+    after854 terminal capture push reviewed exact15 and own native141/all8/Gov/full5034/wholequality/six originals. New current-attempt
+    preparer16 derives host nonce and exact restored input/schema via SAME actual Gateway/admission; SQL-free issuer/lifetime
+    fence retains exact expiry observation. Source16 independent review PENDING, no journal/provider execution/DI activation;
+    local31 and restored full/format results must be bound to its frozen tuple. Continue atomic admitted start+companion with
+    versioned migration/authentic same-transaction sidecar, current release, accepted-result-FIRST, then coordinator/scanner/WorkerDI/no-click278/internalIT279/full233.
+    Production catalog EMPTY, actualmodel NOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain. Preserve original failed
+    a293/198 closures and all qualified historical anchors; no partialmerge or push over active native. HANDOFF owns actual
+    heads/runs.
+  next_before854_terminal: Retain exact854 Build38732218027/Gov38732218046 attempt1 native116412506603/all8/wholequality/six
+    originals through terminal; actual.NET5012 passed. Reviewed0b117 SQL-read15/review6192005875 is unpushed; only after854
+    terminal capture push exact reviewed15 and own native141/full5034/all8/Gov/quality/six originals. Local16 5d28a6f/checkpoint6192384033
+    SOURCE_REVIEW_PENDING/new31/full5065/format. Successor17 adds immutable15-column admitted companion with exact scoped
+    start+originalsidecar FKs, two expand AKs, preserved oldindexes/rows, runtime SELECTINSERT/deny mutation and separate
+    new-attempt permission proof. Model60/source78/group40, frozen shadow54/72 unchanged; local24/full5073/15frontier/EFpending0
+    pass, finalformat must be bound to frozen17. Source16/17 independent review PENDING; actual companionSQL/atomicappend/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233
+    incomplete. Implement SAME journal transaction authentication and atomic start+companion, cap start deadlines by authentic
+    issued preparation/claim, preserve exact expiry witness and accepted-result-FIRST; no retrofitting legacy starts or provider/key/tokenizer
+    waits underSQL. Production catalog EMPTY/modelNOT_RUN_UNEVALUATED; readonlyERP/Windows/deployment remain. No push over
+    active native, no partialmerge; HANDOFF owns actual heads/runs; retain a293/198 failedclosures and qualified history.
+  remote_proof_head: 5bf1d083a92060c5eeaf333285b57a53ec6fe943
+  remote_build: 38740772150
+  remote_governance: 38740772151
+  remote_native: 116441579120
+  original854_failed_closure: 6192747488
+  format: Final whole-solution verify format-v3 exit0; full5073 before whitespace-only test spaces
+  required_integration: Ordinary merge of proof-only5bf into parked production lineage before source push; expected composed5076
+    before further journal changes; source16/17 review pending

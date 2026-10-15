@@ -80,7 +80,7 @@ def require_shadow_migration_result(result, reference):
         phase = lines[-3][len(prefix):]
         diagnostic = lines[-2][len(diagnostic_prefix):]
         match = re.fullmatch(r'(sql--[12]|sql-(?:0|[1-9][0-9]{0,4})|sql-other|cancelled|argument|invalid-operation|not-supported|other) snapshot=(-1|0|[1-9][0-9]?)', diagnostic)
-        if (phase in phases and match and -1 <= int(match[2]) < 77
+        if (phase in phases and match and -1 <= int(match[2]) < 78
                 and (not match[1].startswith('sql-') or match[1] in ('sql--1', 'sql--2', 'sql-other')
                      or int(match[1][4:]) <= 65535)):
             raise AssertionError('Owned signed cursor migration failed; phase=' + phase + '; diagnostic=' + diagnostic)
