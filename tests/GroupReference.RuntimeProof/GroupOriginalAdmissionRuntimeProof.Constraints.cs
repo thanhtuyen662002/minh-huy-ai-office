@@ -8,6 +8,18 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 internal static partial class GroupOriginalAdmissionRuntimeProof
 {
+    // These exact strings are used below and parsed by the offline SQL
+    // regression. PLAN is reserved in T-SQL; delimit its existing column.
+    internal const string ConstraintOriginalInsertSql = """
+        INSERT INTO aioffice.GroupAutomaticInputPlans
+          (TenantId,CompanyId,BindingId,BatchId,FormatVersion,PlanSha256,[Plan],OriginalClaimOperationId,OriginalClaimEpoch,CreatedAtUtc)
+        VALUES (@tenant,@company,@binding,@batch,3,@planHash,@plan,@claimOperation,@claimEpoch,@created);
+        """;
+    internal const string ConstraintAdmissionInsertSql = """
+        INSERT INTO aioffice.GroupOriginalAdmissionSidecars
+          (TenantId,CompanyId,BindingId,BatchId,FormatVersion,PlanSha256,SidecarSha256,Sidecar,OriginalClaimOperationId,OriginalClaimEpoch,CreatedAtUtc)
+        VALUES (@tenant,@company,@binding,@batch,@version,@planHash,@sidecarHash,@sidecar,@claimOperation,@claimEpoch,@created);
+        """;
     // Runtime INSERT privileges, original owned allocation/claim, exact valid
     // bytes. Every case rolls back; no operator permission change or durable
     // legacy-plan-only intermediate is needed to exercise the physical FKs.
@@ -50,20 +62,12 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             {
                 if (test.WithPlan)
                 {
-                    await using var original = new SqlCommand("""
-                        INSERT INTO aioffice.GroupAutomaticInputPlans
-                          (TenantId,CompanyId,BindingId,BatchId,FormatVersion,PlanSha256,Plan,OriginalClaimOperationId,OriginalClaimEpoch,CreatedAtUtc)
-                        VALUES (@tenant,@company,@binding,@batch,3,@planHash,@plan,@claimOperation,@claimEpoch,@created);
-                        """, connection, transaction) { CommandTimeout = 10 };
+                    await using var original = new SqlCommand(ConstraintOriginalInsertSql, connection, transaction) { CommandTimeout = 10 };
                     IdentityParameters(original.Parameters);
                     original.Parameters.Add("@plan", SqlDbType.VarBinary, -1).Value = originalBytes;
                     if (await original.ExecuteNonQueryAsync(token) != 1) throw new InvalidOperationException();
                 }
-                await using var admission = new SqlCommand("""
-                    INSERT INTO aioffice.GroupOriginalAdmissionSidecars
-                      (TenantId,CompanyId,BindingId,BatchId,FormatVersion,PlanSha256,SidecarSha256,Sidecar,OriginalClaimOperationId,OriginalClaimEpoch,CreatedAtUtc)
-                    VALUES (@tenant,@company,@binding,@batch,@version,@planHash,@sidecarHash,@sidecar,@claimOperation,@claimEpoch,@created);
-                    """, connection, transaction) { CommandTimeout = 10 };
+                await using var admission = new SqlCommand(ConstraintAdmissionInsertSql, connection, transaction) { CommandTimeout = 10 };
                 IdentityParameters(admission.Parameters);
                 admission.Parameters.Add("@version", SqlDbType.Int).Value = 1;
                 admission.Parameters.Add("@sidecarHash", SqlDbType.Char, 64).Value = sidecar.Sha256;

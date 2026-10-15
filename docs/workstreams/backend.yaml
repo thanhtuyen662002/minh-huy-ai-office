@@ -337,7 +337,7 @@ submission_full_runtime_276:
   review: Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182,
     frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract
     controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.
-next_action: "Actual854 Build38732218027/Gov38732218046 attempt1 owns native116412506603/wholequality/six originals to terminal; .NET116412506356 actualPASS5012. Prior a293SQLcommit failedclosure6191388901/198browserfailedclosure6189613450 retained; exactnative outcome unqualified while active. Separate private proof15 adds real shipping sidecarSELECT positive1/four singleGUIDcounterfactual0 counts using unchanged actual SQL/typed clones on SAME owned serializabletransaction, then unchanged real decoder, zero key reads/writes. Standalone diagnostic is NOT foreignauthorizedAPI/RLS/coordinatorordering. Readerentry6+actualEFtranslation1+parser15=22 local controls/full5034/format/driver8/guard160 PASS; actual newSQL NOT_RUN_UNQUALIFIED. Review exact source14/durable/parser141/helper tuple; no push over active854. Only after original854 terminal capture normal SAME288 reviewed checkpoint; own fresh native141/all8/Gov/full5034/wholequality/six originals. Foreignservice/races/admittedjournal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233/realmodel/readonlyERP/Windows/deployment remain; catalogEMPTY/modelNOT_RUN_UNEVALUATED, no partialmerge. HANDOFF owns actualhead/run/status; qualified anchors historical."
+next_action: "Original854 CLOSED FAILED6192747488: Build38732218027/Gov38732218046 attempt1 native116412506603 failed admission-original-commit/constraint-valid-pair/sql-other; .NET5012/Gov passed, quality116434891312 failed solely runtime, browser NOT_REACHED/no images. Actual SQL number/substatement unobserved. Local actual INSERT ScriptDom46010 confirms unquoted reserved Plan; proof-only syntax repair uses [Plan] and actual shared command constants plus3 parser/model-column/original-negative controls, with reviewed0b117 SQL-read15 preserved. Verify/freeze/root-review this non-production repair against reviewed0b117, keeping unreviewed production16 5d28/checkpoint6192384033 and private17 schema separate; do not promote their source. Advance SAME288 by normal descendant only after original854 closure; own fresh exact-head native141/full5037=[6,584,25,4422]/all8/Gov/wholequality/six original images to terminal; helper18 must bind actual repaired head and attempt1. Actual newSQL/model remain unqualified until their real gates run. Then integrate reviewed production journal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; readonlyERP/Windows/deployment remain. Preserve earlier a293/198 failures and qualified anchors. No blind rerun, wider deadlines, active-run cancellation, partialmerge or actualmodel claim; catalogEMPTY/modelNOT_RUN_UNEVALUATED; HANDOFF owns actualhead/run/local parking."
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
   review: Combined transport/exact retained replay scoped APPROVED92 independent controls0skip,76 retained+16 own. Actual
@@ -6230,3 +6230,28 @@ original_admission_sql_read_checkpoint:
   actual_model: "NOT_RUN_UNEVALUATED"
   previous_next_action: "Exacta293 Build38720220616/Gov38720220717 attempt1 terminal FAILED closure6191388901; native116372654834 admission-original-commit exit1, child case/kind suppressed and hosted causeUNPROVEN; .NET4978/Gov PASS, quality116391473635 failed solely localruntime, browsernotreached/noimages. Private separate proofrepair retains18 rolledback physicalcases, allows only exact relevant CHECK/FK overlap, tightens foreignFK names and adds closed phase/kind projection through actual C#/Python boundary. Full5012/focused34/format/160 inert controls PASS; initial private Unicode edit failures retained and rawUTF8 restored. Review exact source10/durable/helper tuple; normal SAME288 descendant push and own fresh all8/Gov/native140/full5012/wholequality/six originals to terminal. New18/6/3 SQL remains unqualified; original198browserfailure6189613450 unresolved until actualbrowser runs. Then foreignREAD/betweenfence races/admittedjournal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233; modelNOT_RUN_UNEVALUATED/catalogEMPTY/readonlyERP/Windows/deployment incomplete, no partial merge. HANDOFF owns actualheads/CI; qualified anchors historical."
   previous_critical_backend_next: null
+
+original_admission_plan_sql_syntax_checkpoint:
+  parent: 0b1179222c14bcdb0cf88b50d3804bae939ef6ee
+  failed_head: 854cdc7deb5763e1bf80b06e6dac2891c19d082b
+  failed_closure: 6192747488
+  change: Proof-only actual INSERT delimits reserved Plan; extract the same original+sidecar SQL into executed constants;3
+    tests parse actual constants/mapped columns and detect original regression
+  production_delta: ZERO vs reviewed0b117; production16/17 explicitly excluded
+  review_scope: Lead/root reviews low-risk proof syntax and helper delta; independent source15 review6192005875 remains. No
+    independent approval of16/17 inferred.
+  expected_native: 141
+  expected_dotnet: 5037
+  actual_sql: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  parked_local_production16: 5d28a6f8959f751de1ed0d2b2b4046d4c5bc3008 /6192384033 SOURCE_REVIEW_PENDING
+  previous_next_action: Actual854 Build38732218027/Gov38732218046 attempt1 owns native116412506603/wholequality/six originals
+    to terminal; .NET116412506356 actualPASS5012. Prior a293SQLcommit failedclosure6191388901/198browserfailedclosure6189613450
+    retained; exactnative outcome unqualified while active. Separate private proof15 adds real shipping sidecarSELECT positive1/four
+    singleGUIDcounterfactual0 counts using unchanged actual SQL/typed clones on SAME owned serializabletransaction, then unchanged
+    real decoder, zero key reads/writes. Standalone diagnostic is NOT foreignauthorizedAPI/RLS/coordinatorordering. Readerentry6+actualEFtranslation1+parser15=22
+    local controls/full5034/format/driver8/guard160 PASS; actual newSQL NOT_RUN_UNQUALIFIED. Review exact source14/durable/parser141/helper
+    tuple; no push over active854. Only after original854 terminal capture normal SAME288 reviewed checkpoint; own fresh native141/all8/Gov/full5034/wholequality/six
+    originals. Foreignservice/races/admittedjournal/currentrelease/coordinator/scanner/WorkerDI/no-click278/internalIT279/full233/realmodel/readonlyERP/Windows/deployment
+    remain; catalogEMPTY/modelNOT_RUN_UNEVALUATED, no partialmerge. HANDOFF owns actualhead/run/status; qualified anchors
+    historical.
