@@ -702,3 +702,11 @@ model_attempt_admission_schema_checkpoint:
   format: Final whole-solution verify format-v3 exit0; full5073 before whitespace-only test spaces
   required_integration: Ordinary merge of proof-only5bf into parked production lineage before source push; expected composed5076
     before further journal changes; source16/17 review pending
+
+model_attempt_admission_snapshot_style_checkpoint:
+  parent: d58ac95775b987e7adb2fefc675f5d83545ea6dd
+  change: Only generated snapshot BOM/CRLF restored to inherited5d28 style; decoded source text identical; all4110 old lines
+    preserved and112 actual model insertions
+  snapshot_sha256: 5f62a49e543e18828441e40c39d1e433c3f62797991bb81f0f5ad0db601f5a4d
+  source_review: PENDING; no activation or push
+  tests: No rerun because decoded C# text exactly unchanged; prior5073/EFpending0 remain scoped; no new SQL qualification
