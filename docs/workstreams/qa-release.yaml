@@ -21,7 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: "Preserve5bf scoped closure6194064928/native141/full5037/all8/Gov/wholequality/six originals and failed854/a293/198. Minimal repair candidatee8f5e5e/2cd3de11/all1206/full5191 independently source CLEAR receipt00e33200/report0367fe9c/envelope330bc813/public6198144066; original7b remains WITHHELD S7B-1/S7B-2. Original helper32 WITHHELD H32-1 reproduced stale inherited report (receipt78c2a77d); preserve it unchanged. Corrected helper35 uses unique fresh inherited142 report and exact exit/counter consistency; parser35c899cd/static66a63f94/captureb290cb91/18parser+27metadata/full1206 preflight PASS, independently review PENDING/no dispatch. Old141/142/32 helpers cannot qualify candidate144. This ordinary local integration combines parent241162f/later24-30 with exact candidatee8 code; all1226 bodies frozen/full5350=[6,584,25,4735]/format PASS. Later24-30 source/positive SQL/wholeflow still unreviewed/unpushed and excluded from minimal candidate CI qualification. Historical checkpoints stay parsed deep-equal; new31 and33 checkpoints appended. Finish genuine helper35 review, publish exact new review evidence; ordinary explicit e8-only fast-forward push to existing PR288 after preflight, capture actualhead/run/attempt with144/full5191, close all8/Gov/fullquality/six ORIGINAL images. Preserve full local integration; do not push it as candidate or infer qualification from5350. Actual newSQL/expiry/guard-deletion/permission/races NOT_RUN_UNQUALIFIED, modelNOT_RUN_UNEVALUATED. Continue later24-30 review/positive SQL/scanner/shippedWorker/no-click/invalidation/internalIT279/full233/readonlyERP/Windows/deployment after exact-candidate CI. No partial mainmerge/force/reset."
+next_action: "ACTIVE OWNED CI lease exact remotee8f5e5e; actual Build38778313333/Gov38778312633 attempt1. Source review6198144066/receipt00e33200 and helper35 review6198286347/receipt1ecf9449 genuine/complete; explicit e8-only push verified, full local3f44daf/later24-30 excluded/preserved. Use ONLY capture-retained-expiry144-ci-v35.py/static66a63f94/parser35c899cd/captureb290cb91 + actual retained-expiry144-dispatch-runs-v35.json. Required144/full5191=[6,584,25,4576]/all8/Gov/completequality/six ORIGINAL images. Gov initially green, Build live; inspect actual current status, do not stop merely pending. Any terminal red inspect full job log immediately, fix SAME PR and preserve exact failed closure; zero-step infrastructure retryonce. Local integrationfull5350/format/1226 exact4b74a611 only establishes local composition, NOT approval/CI of later24-30; do not push full local head as candidate. Old7b/32 WITHHELD + failed854/a293/198 immutable; source31 and helper35 separately repaired/reviewed; prior5bf scoped closure6194064928 remains distinct. No actual newSQL/expiry/guard-mutant/permission/race qualification until native observed; modelNOT_RUN_UNEVALUATED. After exact CI closure continue later24-30 review/positiveSQL/scanner/shippedWorker/no-click and durable original invalidation, internalIT279/full233/readonlyERP/Windows/deployment. No partial mainmerge/force/reset. HANDOFF owns current full local HEAD."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -998,3 +998,31 @@ group_retained_expiry_integration_33_checkpoint:
   actual_SQL: "NOT_RUN_UNQUALIFIED"
   actual_model: "NOT_RUN_UNEVALUATED"
   next: "Helper35 review + explicit minimalcandidate-only push and exact CI closure; preserve full integration"
+
+
+group_owned_repair31_ci_38_checkpoint:
+  remote_head: "e8f5e5e4ae625e5cda75727661e880199573a654"
+  build: 38778313333
+  governance: 38778312633
+  attempt: 1
+  observed_build_status: "in_progress"
+  observed_build_conclusion: null
+  observed_governance_status: "completed"
+  observed_governance_conclusion: "success"
+  state: "ACTIVE_OWNED_EXACT_HEAD_CI_LEASE_NOT_COMPLETION"
+  source_review_comment: 6198144066
+  helper_review_comment: 6198286347
+  source_receipt: "00e33200"
+  helper_receipt: "1ecf9449"
+  static: "66a63f94"
+  parser: "35c899cd"
+  capture: "b290cb91"
+  required_native: 144
+  expected_dotnet: 5191
+  per_project: [6, 584, 25, 4576]
+  preserved_full_integration: "3f44daf41838f18675358661c9499f3043371f44"
+  local_full: 5350
+  later24_30: "UNREVIEWED/POSITIVE_SQL_PENDING/EXCLUDED_FROM_REMOTE_CANDIDATE"
+  actual_newSQL: "NOT_YET_QUALIFIED"
+  actual_model: "NOT_RUN_UNEVALUATED"
+  next: "Own exact CI to terminal; inspect/fix real red immediately samePR; complete all8/Gov/fullquality/six originals and durable closure"
