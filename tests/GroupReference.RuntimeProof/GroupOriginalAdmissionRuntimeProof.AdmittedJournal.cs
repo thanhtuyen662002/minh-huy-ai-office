@@ -10,7 +10,7 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 
 internal static partial class GroupOriginalAdmissionRuntimeProof
 {
-    internal const string JournalLine = "PASS owned original admission actual current gate prepared journal and companion both flushed rollback no rows committed exact scoped provenance current snapshot deadline capped replay no second permit accepted result FIRST zero provider";
+    internal const string JournalLine = "PASS owned original admission actual current gate prepared journal and companion both flushed rollback no rows committed exact scoped provenance current snapshot deadline capped replay no second permit actual current SQL before and after synthetic adapter outside SQL once protected accepted result FIRST zero HTTP no model qualification";
     private static bool RollbackAdmitted;
     private static bool SawAdmittedFlush;
 

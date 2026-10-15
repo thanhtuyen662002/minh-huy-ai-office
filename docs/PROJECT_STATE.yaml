@@ -15,7 +15,7 @@ critical_paths:
     branch: codex/278-group-automatic-notes
     head: 5bf1d083a92060c5eeaf333285b57a53ec6fe943
     state: in_progress
-    next: "Preserve completed remote5bf1d083a92060c5eeaf333285b57a53ec6fe943 scoped CI closure6194064928/all8/Gov/native141/full5037/wholequality/six ORIGINAL images and failed854/a293/198. Local successor21 follows d39e138: restored MODEL chunk accepted-result-FIRST coordinator + fixed lazy existingGateway composition, durable budget wait/exhaustion, exact new admitted permit, persist accepted output BEFORE final note/no-work effect; original stable operation, no timer/loop/provider/config/Worker activation. New44 controls/full5164=[6,584,25,4549]/zero fail-skip/format PASS; actual-composition SQL traps and structural fakes are NOT SQL/model acceptance. Production16/17/19/20/21 SOURCE_SECURITY_REVIEW_PENDING before push. Future source-bound142 helpers/new admitted journal/execution/expiry/replacement/permission SQL qualification NOT_PREPARED/NOT_RUN_UNQUALIFIED. Continue original-plan recovery/new V3 creation/host-only chunks/one-batch terminal+frontier/durable scanner/shippedWorkerDI/no-click278 then internalIT279/full233. CatalogEMPTY/modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge or realmodel/customer claim; main remainsad747d0. HANDOFF owns actual local/remote heads."
+    next: "Preserve completed remote5bf1d083a92060c5eeaf333285b57a53ec6fe943 scoped closure6194064928/all8/Gov/native141/full5037/wholequality/six ORIGINAL images and failed854/a293/198. Local21 restored-model-chunk coordinator378b021 checkpoint6194776668/new44/full5164 remains unpushed/source review pending. Successor22 extends owned SQL proof SOURCE: actual committed admitted permit executes through SAME existing Gateway/admission with explicit synthetic in-process adapter/current profile, SQL companion before/after async outside closed clean connection/no transaction, oneuse/replay/accepted refusal then protected accepted result/restart recovery; zero HTTP and NOT realmodel. New12 cold+diagnostic/full5176=[6,584,25,4561]/50focused/8driver/160guard/finalformat PASS; C#/Python42 closed phases + exact journal marker equal. Initial missing-assets NETSDK1004 retained, complete restore/finalfull corrected. Production16/17/19/20/21 + proof22 SOURCE_SECURITY_REVIEW_PENDING before push; source-bound142 parser/capture helpers NOT_PREPARED; actual newSQL142/execution/expiry/replacement/permission races NOT_RUN_UNQUALIFIED. Continue original recovery/newV3 creation/host-only/wholebatch terminal+frontier/durable scanner/shippedWorkerDI/no-click278 then internalIT279/full233. CatalogEMPTY/modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge or acceptance inference; main remainsad747d0. HANDOFF owns actualheads."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "Preserve completed remote5bf1d083a92060c5eeaf333285b57a53ec6fe943 scoped CI closure6194064928/all8/Gov/native141/full5037/wholequality/six ORIGINAL images and failed854/a293/198. Local successor21 follows d39e138: restored MODEL chunk accepted-result-FIRST coordinator + fixed lazy existingGateway composition, durable budget wait/exhaustion, exact new admitted permit, persist accepted output BEFORE final note/no-work effect; original stable operation, no timer/loop/provider/config/Worker activation. New44 controls/full5164=[6,584,25,4549]/zero fail-skip/format PASS; actual-composition SQL traps and structural fakes are NOT SQL/model acceptance. Production16/17/19/20/21 SOURCE_SECURITY_REVIEW_PENDING before push. Future source-bound142 helpers/new admitted journal/execution/expiry/replacement/permission SQL qualification NOT_PREPARED/NOT_RUN_UNQUALIFIED. Continue original-plan recovery/new V3 creation/host-only chunks/one-batch terminal+frontier/durable scanner/shippedWorkerDI/no-click278 then internalIT279/full233. CatalogEMPTY/modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge or realmodel/customer claim; main remainsad747d0. HANDOFF owns actual local/remote heads."
+next_action: "Preserve completed remote5bf1d083a92060c5eeaf333285b57a53ec6fe943 scoped closure6194064928/all8/Gov/native141/full5037/wholequality/six ORIGINAL images and failed854/a293/198. Local21 restored-model-chunk coordinator378b021 checkpoint6194776668/new44/full5164 remains unpushed/source review pending. Successor22 extends owned SQL proof SOURCE: actual committed admitted permit executes through SAME existing Gateway/admission with explicit synthetic in-process adapter/current profile, SQL companion before/after async outside closed clean connection/no transaction, oneuse/replay/accepted refusal then protected accepted result/restart recovery; zero HTTP and NOT realmodel. New12 cold+diagnostic/full5176=[6,584,25,4561]/50focused/8driver/160guard/finalformat PASS; C#/Python42 closed phases + exact journal marker equal. Initial missing-assets NETSDK1004 retained, complete restore/finalfull corrected. Production16/17/19/20/21 + proof22 SOURCE_SECURITY_REVIEW_PENDING before push; source-bound142 parser/capture helpers NOT_PREPARED; actual newSQL142/execution/expiry/replacement/permission races NOT_RUN_UNQUALIFIED. Continue original recovery/newV3 creation/host-only/wholebatch terminal+frontier/durable scanner/shippedWorkerDI/no-click278 then internalIT279/full233. CatalogEMPTY/modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge or acceptance inference; main remainsad747d0. HANDOFF owns actualheads."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -5431,3 +5431,26 @@ group_original_model_chunk_coordinator_21_checkpoint:
   scope: "one restored MODEL chunk; neither batch completion, Worker activation nor business resolution"
   source_review: "PENDING16/17/19/20/21; existing reviewer usage-limit error is not approval"
   next: "Complete original recovery/new creation/host-only chunks/terminal+frontier/scanner/shippedWorkerDI/no-click278, then internalIT279/full233"
+
+
+group_owned_admitted_execution_22_checkpoint:
+  parent: "378b021f1446d53ccd1b1fc53460ff18212eb900"
+  state: "LOCAL_OWNED_EXECUTION_PROOF_SOURCE_SECURITY_REVIEW_PENDING_NO_PUSH"
+  remote_head: "5bf1d083a92060c5eeaf333285b57a53ec6fe943"
+  remote_scoped_closure: 6194064928
+  new_controls: 12
+  focused: 50
+  full_tests: 5176
+  per_project: [6, 584, 25, 4561]
+  driver_controls: 8
+  guard_controls: 160
+  format: "PASS"
+  closed_phases: 42
+  native_required: 142
+  native_aggregate: "updated exact source-bound journal aggregate; synthetic Gateway execution; zero HTTP"
+  source_review: "PENDING16/17/19/20/21/22; no independent approval inferred"
+  new_SQL142: "NOT_RUN_UNQUALIFIED"
+  future_142_helpers: "NOT_PREPARED"
+  model: "NOT_RUN_UNEVALUATED"
+  retained_failure: "Initial full --no-restore NETSDK1004 for three missing private-tree project.assets; Persistence4561 passed; full solution restore then final5176 passed"
+  next: "Source-bound142 helper/review/actual SQL closure + original recovery/new creation/host-only/terminal+frontier/scanner/Worker/no-click278/internalIT279/full233"

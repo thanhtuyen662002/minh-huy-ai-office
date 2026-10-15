@@ -38,8 +38,9 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             throw new InvalidOperationException();
         var clock = new GroupNoteRuntimeProof.OwnedClock(TimeProvider.System.GetUtcNow());
         var probe = new AtomicProbe(scope, clock);
+        var executionProbe = new AdmittedExecutionSqlProbe();
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options)
-            .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe), new AdmittedFlushProbe(scope)).Options);
+            .AddInterceptors(probe, new FlushProbe(probe), new CommitProbe(probe), new AdmittedFlushProbe(scope), executionProbe).Options);
         if (mode == "admission-original-permission")
         {
             Phase = "fresh-unsafe-permission-refusal";
@@ -173,18 +174,19 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
             await RequireMutationRefusedAsync(db, scope, token);
             Phase = "accepted-result";
             var chunk = plan.RestoreChunks(preparation, dependencies, Profile, [], token).Single();
-            var attemptIssuer = new GroupModelAttemptAdmissionPreparer(db, gate, clock);
+            var (attemptIssuer, executionAdapter) = ExecutionIssuer(db, clock, executionProbe, chunk);
             var permit = await RequireAdmittedJournalAsync(db, worker, clock, sources, brain, attemptIssuer,
                 plan, chunk, issued.Sidecar, token);
             Phase = "accepted-result";
             var results = new GroupModelAttemptResultStore(db, worker, clock, sources, brain, keys, new(), attemptIssuer);
-            var acceptedRequest = permit.Context.CreateGatewayRequest(permit.Start.RequestId);
-            var response = GroupModelAttemptResponse.Parse(permit, new AiGatewayResponse(acceptedRequest.RequestId, acceptedRequest.Capability,
-                Output(preparation), Model, 123, 7)
-            { ProviderId = "owned-synthetic" }, clock, token);
+            var response = await RequireAdmittedExecutionAsync(db, worker, clock, sources, brain, attemptIssuer,
+                executionAdapter, executionProbe, plan, chunk, permit, token);
+            Phase = "accepted-result";
             var accepted = await results.PersistOriginalAsync(plan, chunk, response, token);
             Same(GroupGroundedWorkProposal.Parse(preparation, Output(preparation)).EncodeValidatedOutput(), accepted.Proposal.EncodeValidatedOutput());
             if (keys.Writes != 1) throw new InvalidOperationException();
+            await RequireAcceptedExecutionRefusedAsync(db, worker, clock, sources, brain, attemptIssuer,
+                executionAdapter, executionProbe, permit, token);
         }
         else
         {

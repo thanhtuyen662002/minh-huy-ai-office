@@ -61,6 +61,9 @@ public sealed class OwnedOriginalAdmissionDiagnosticTests
     [InlineData("admitted-journal-rollback", "other")]
     [InlineData("admitted-journal-commit", "cancelled")]
     [InlineData("admitted-journal-replay", "denied")]
+    [InlineData("admitted-execution-current", "invariant")]
+    [InlineData("admitted-execution-replay", "other")]
+    [InlineData("admitted-execution-accepted-refusal", "denied")]
     public void DiagnosticContainsOnlyClosedPhaseAndTypeWithoutReadingPrivateError(string phase, string kind)
     {
         const string secret = "PRIVATE_CONNECTION_AND_SOURCE_BODY";
