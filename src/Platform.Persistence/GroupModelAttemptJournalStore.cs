@@ -228,11 +228,14 @@ internal sealed partial class GroupModelAttemptJournalStore(PlatformDbContext da
             async Task<GroupBatchClaimFenceVerdict> InspectAsync()
             {
                 await permissions.RequireSafeRuntimeAsync(token);
-                // Only the new path adds this fresh claim-first inspection.
-                // A foreign/replaced/denied claim cannot be retired merely
-                // because a private carrier observed its old expiry.
+                // A retained authentic expiry must reach retirement even if
+                // UTC has rewound before the original claim was issued.
+                // Retirement independently reauthenticates actual current SQL
+                // state/authority and refuses a foreign/replacement claim.
                 if (issuedFence is not null)
                 {
+                    var retained = InspectIssuedExpiry(null);
+                    if (retained is not null) return retained;
                     var first = ApplyIssuedFence(await claims.InspectCurrentLockedAsync(handle, token));
                     if (first is not GroupBatchClaimFenceVerdict.Current) return first;
                 }
@@ -255,8 +258,13 @@ internal sealed partial class GroupModelAttemptJournalStore(PlatformDbContext da
             GroupBatchClaimFenceVerdict ApplyIssuedFence(GroupBatchClaimFenceVerdict current)
             {
                 if (issuedFence is null || current is not (GroupBatchClaimFenceVerdict.Current or GroupBatchClaimFenceVerdict.Expired)) return current;
-                var observed = issuedFence((current as GroupBatchClaimFenceVerdict.Expired)?.Observation, token);
-                if (observed is null) return current;
+                return InspectIssuedExpiry((current as GroupBatchClaimFenceVerdict.Expired)?.Observation) ?? current;
+            }
+
+            GroupBatchClaimFenceVerdict.Expired? InspectIssuedExpiry(GroupBatchClaimExpiryObservation? sqlObserved)
+            {
+                var observed = issuedFence?.Invoke(sqlObserved, token);
+                if (observed is null) return null;
                 if (!ReferenceEquals(observed.Handle, handle) || observed.ObservedAtUtc.Offset != TimeSpan.Zero
                     || observed.ObservedAtUtc < handle.Receipt.ExpiresAtUtc) throw Unavailable();
                 return new GroupBatchClaimFenceVerdict.Expired(observed);

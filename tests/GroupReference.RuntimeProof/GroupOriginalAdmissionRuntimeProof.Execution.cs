@@ -17,7 +17,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
     // Actual committed owned-SQL permits + the actual existing Gateway, but
     // an explicitly synthetic in-process adapter. No HTTP/model evaluation.
     private static (GroupModelAttemptAdmissionPreparer Issuer, AdmittedExecutionAdapter Adapter) ExecutionIssuer(
-        PlatformDbContext db, GroupNoteRuntimeProof.OwnedClock clock, AdmittedExecutionSqlProbe probe,
+        PlatformDbContext db, TimeProvider clock, AdmittedExecutionSqlProbe probe,
         GroupAutomaticInputPlan.RestoredChunk chunk)
     {
         var adapter = new AdmittedExecutionAdapter(db, probe, Output(chunk.Current.Preparation));
@@ -64,14 +64,16 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         GroupModelAttemptPermit permit, CancellationToken token)
     {
         Phase = "admitted-execution-accepted-refusal"; var reads = probe.AfterCompanionReads; probe.Armed = true;
+        probe.Accepted.Begin();
         try
         {
             await RefusedAsync(() => new GroupModelAttemptJournalStore(db, worker, clock, sources, brain, issuer)
                 .ExecuteAdmittedOriginalAsync(permit, token));
             if (adapter.Executions != 1 || probe.AfterCompanionReads <= reads) throw new InvalidOperationException();
-            probe.RequireCompleted(); RequireClean(db);
+            Phase = "admitted-execution-accepted-transaction";
+            probe.Accepted.RequireRefused(db); RequireClean(db);
         }
-        finally { probe.Armed = false; }
+        finally { probe.Accepted.End(); probe.Armed = false; }
     }
 
     private sealed class AdmittedExecutionAdapter(PlatformDbContext db, AdmittedExecutionSqlProbe probe, string output)
@@ -101,6 +103,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
     // authorization decision. Strings are inspected in memory and not logged.
     internal sealed class AdmittedExecutionSqlProbe : DbCommandInterceptor
     {
+        internal readonly AcceptedTransactionObservation Accepted = new();
         internal bool Armed;
         internal int BeforeCompanionReads { get; private set; }
         internal int AfterCompanionReads { get; private set; }
@@ -126,7 +129,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         { if (!released || !returned || BeforeCompanionReads == 0 || AfterCompanionReads == 0) throw Unavailable(); }
         public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
-        { ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
+        { Accepted.Query(command.Transaction, command.CommandText); ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
         public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<int> result, CancellationToken cancellationToken = default)
         { ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }

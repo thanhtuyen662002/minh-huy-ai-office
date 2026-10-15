@@ -187,7 +187,7 @@ def require_reference_result(result, mode, expected_lines):
         if match and match[1] in result_phases and match[2] in result_kinds:
             detail = "; phase=" + match[1] + "; kind=" + match[2]
     admission_modes = {"admission-original-prepare", "admission-original-expiry", "admission-original-commit",
-        "admission-original-recover", "admission-original-resume", "admission-original-refuse", "admission-original-permission", "admission-original-sql-read"}
+        "admission-original-recover", "admission-original-resume", "admission-original-refuse", "admission-original-permission", "admission-original-sql-read", "admission-original-journal-expiry"}
     admission_phases = {"setup", "fresh-unsafe-permission-refusal", "allocation", "private-input", "original",
         "expiry-after-both-flushed", "expiry-rewind-refusal", "physical-constraint-boundaries", "atomic-rollback",
         "committed-reply-loss", "fresh-read-replay", "physical-column-boundaries", "accepted-result", "corrupted-sidecar-refusal", "unknown",
@@ -197,8 +197,9 @@ def require_reference_result(result, mode, expected_lines):
         "constraint-zero-epoch", "constraint-negative-epoch", "constraint-lowercase-plan-hash", "constraint-nonhex-sidecar-hash",
         "constraint-lowercase-sidecar-hash", "constraint-non-UTC-time", "sql-read-original", "sql-read-predicates",
         "admitted-journal-prepare", "admitted-journal-rollback", "admitted-journal-commit", "admitted-journal-replay",
-        "admitted-execution-current", "admitted-execution-replay", "admitted-execution-accepted-refusal"}
-    admission_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other"}
+        "admitted-execution-current", "admitted-execution-replay", "admitted-execution-accepted-refusal",
+        "admitted-execution-accepted-transaction", "admitted-journal-retained-before-issuance", "admitted-journal-retained-old-interval", "admitted-journal-retained-replacement"}
+    admission_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other", "accepted-preflight-committed"}
     if (mode in admission_modes and type(result.returncode) is int and result.returncode == 1 and len(lines) == 2
             and lines[1] == "FAIL owned reference runtime " + mode):
         match = re.fullmatch(r"FAIL owned original admission runtime phase-([a-zA-Z-]+) kind-([a-z-]+)", lines[0])
