@@ -6,17 +6,17 @@ priority_rule: "security-critical > production-blocker > active-issue > verified
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: a4e05a09a6a3cd896ee04b175dd9cc4d3b942eb4
-last_verified_commit: 829cae245b33d554c4c36ee301ebcf64869efbce
+current_target_head: cc4fd6b84a3364e6a0eb7fb349f8e2cceb0c0070
+last_verified_commit: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 
 critical_paths:
   backend:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: a4e05a09a6a3cd896ee04b175dd9cc4d3b942eb4
+    head: cc4fd6b84a3364e6a0eb7fb349f8e2cceb0c0070
     state: in_progress
-    next: "A4 scoped V3 SQL132/full4694 exact all8 closed6163407230. Security PR290 mergedmain829 with exact all8/native80/full2027/quality/six original images CLOSED6163957204. Integrate accepted dependency and only reasoning test collection isolation on SAME288; full-v1 failed1 deadline recovery (cause unproven), full-v2 all4694/format passed. Own new exact all8/Gov/full4694/native132/wholequality/six original images to terminal. Then implement whole structured Gateway deadline on same client/loader; immutable qualified provider profile/tokenizer/window, coordinator/scanner/WorkerDI/no-click278/internalIT279 remain. Local provider config absent, remote server unavailable, actual model NOT_RUN_UNEVALUATED. No partial merge or full production claim."
+    next: "Qualified serviced main ad747d0 closed6182795280/all8/native80/full2027; current qualified feature parentcc4 closed6165072048/native132/full4694. Gateway5/source and docs8v2 independently clear; separately frozen scalar10 source clear6182895892 with original bounded8 Unicode failure6182806789 retained WITHHELD. Combined serviced graph4861=[6,557,25,4273]/format PASS. Complete independent combined28-path/source/durable review, then one normal two-parent SAME288 checkpoint; HANDOFF binds exact successor HEAD and owns native132/full4861/all8/Gov/wholequality/six original images through terminal. Then bind qualified trusted model profiles/window/schema framing/echoed aliases/fallback budgets to existing Gateway/model registry, implement coordinator/scanner/WorkerDI/no-click278/IT279. Actual model NOT_RUN_UNEVALUATED; Oct15 scoped36settings0configured/5referencedfiles absent, deployedstore unavailable. No partial merge/full233/customerERP/Windows/deployment claim."
 
   erp_data:
     issue: 264
@@ -81,7 +81,7 @@ dependency_chain:
   - "The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly selected ERP/data source plus one semantic capability adapter tied to that schema/version."
   - "Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework."
 
-next_action: "A4 scoped V3 SQL132/full4694 exact all8 closed6163407230. Security PR290 mergedmain829 with exact all8/native80/full2027/quality/six original images CLOSED6163957204. Integrate accepted dependency and only reasoning test collection isolation on SAME288; full-v1 failed1 deadline recovery (cause unproven), full-v2 all4694/format passed. Own new exact all8/Gov/full4694/native132/wholequality/six original images to terminal. Then implement whole structured Gateway deadline on same client/loader; immutable qualified provider profile/tokenizer/window, coordinator/scanner/WorkerDI/no-click278/internalIT279 remain. Local provider config absent, remote server unavailable, actual model NOT_RUN_UNEVALUATED. No partial merge or full production claim."
+next_action: "Qualified serviced main ad747d0 closed6182795280/all8/native80/full2027; current qualified feature parentcc4 closed6165072048/native132/full4694. Gateway5/source and docs8v2 independently clear; separately frozen scalar10 source clear6182895892 with original bounded8 Unicode failure6182806789 retained WITHHELD. Combined serviced graph4861=[6,557,25,4273]/format PASS. Complete independent combined28-path/source/durable review, then one normal two-parent SAME288 checkpoint; HANDOFF binds exact successor HEAD and owns native132/full4861/all8/Gov/wholequality/six original images through terminal. Then bind qualified trusted model profiles/window/schema framing/echoed aliases/fallback budgets to existing Gateway/model registry, implement coordinator/scanner/WorkerDI/no-click278/IT279. Actual model NOT_RUN_UNEVALUATED; Oct15 scoped36settings0configured/5referencedfiles absent, deployedstore unavailable. No partial merge/full233/customerERP/Windows/deployment claim."
 
 
 blocked_by:
@@ -4198,3 +4198,91 @@ accepted_pkcs_integration_checkpoint:
   WorkerDI_no_click: false
   full278_279_233: false
   merge: false
+
+whole_structured_gateway_deadline_checkpoint:
+  parent: "cc4fd6b84a3364e6a0eb7fb349f8e2cceb0c0070"
+  parent_build: 38535298845
+  parent_governance: 38535298806
+  parent_native: 115756617658
+  parent_CI_at_preparation: "ACTIVE_OWNED_NATIVE_SQL_IN_PROGRESS;SIX_PREREQUISITES_GOV_AND_FULL4694_PASS;NO_TERMINAL_ACCEPTANCE_ASSERTED"
+  source5_sha256: "c63d2594d01fc43e366583d4846753e2e72a2b393d4bd5091f3b46a5cc0266e6"
+  source_paths: 5
+  local_dotnet: 4716
+  projects: [6, 557, 25, 4128]
+  new_deadline_cases: 22
+  focused43: true
+  format: "PASS_EMPTY_EXIT0"
+  original_P2_review: "76260ed131fbf227b9d9c7c4116e276cf670ecb8f6d2672b7e20c14987a62684"
+  revised_observer: "INTERNAL_SAME_RUNNER_CALLER_AND_ACTUAL_CHAIN_TASK;DIRECT_PRIMARY4_BACKUP1_SYNCHRONOUS2;FOUR_SECOND_GUARD"
+  whole_deadline: "ONE_MONOTONIC_TOTAL_DEFAULT60S_PLUS_CALLER_TOKEN_NO_BUDGET_RESET_FOR_BACKUP"
+  physical: "PER_ADAPTER4_SLOTS_OWNED_THROUGH_PRIVATE_CLEANUP;CHAIN_COMPLETION_NOT_PHYSICAL_COMPLETION;UP_TO_TWO_ROUTES_NO_AGGREGATE4_CLAIM"
+  metadata: "V2_DEADLINE_TICKS_BOUND;LEGACY_CREATE_V1_HASH_RETAINED;ACCOUNTING_UNAVAILABLE"
+  gateway_reuse: "SAME_OPTIONS_FROMENVIRONMENT_CLIENT_ADAPTERS_AND_DI;NO_NEW_PROVIDER_CONFIG_OR_HTTP_PATH"
+  new_head: "RESOLVE_ACTUAL_PR288_HEAD_FROM_GITHUB_AND_CURRENT_HANDOFF"
+  successor_CI: "NOT_RUN_UNQUALIFIED"
+  actual_model: "NOT_RUN_UNEVALUATED"
+  profile_tokenizer: false
+  WorkerDI_no_click: false
+  full278_279_233: false
+  merge: false
+
+serviced_scalar10_integration_checkpoint:
+  feature_parent: cc4fd6b84a3364e6a0eb7fb349f8e2cceb0c0070
+  parent_CI_closure: 6165072048
+  serviced_main: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+  main_review: 6182564034
+  main_CI_closure: 6182795280
+  main_build: 38667971873
+  main_governance: 38667971831
+  main_all8: TERMINAL_SUCCESS
+  gateway5_sha256: c63d2594d01fc43e366583d4846753e2e72a2b393d4bd5091f3b46a5cc0266e6
+  gateway_source_review: 8b4543bab37be27bbf234eec78c1933393116c8339aaff65469f908064c17841
+  gateway_docs8v2_review: 7fc17a6e766f5cd82477be2bc4c27f4c0a7f1820fd269626936af02eb66b2706
+  original_bounded8: WITHHELD_P2;DO_NOT_RELABEL;REVIEW6182806789
+  old_integration_private_v1: WITHHELD;DO_NOT_PROMOTE
+  scalar10_sha256: c8ae2286d4825b28675172386c41a6ac21612f5a3a659b65826de72cecb38d94
+  scalar10_review: 95b7b6e72b163bd1243f440d47c5cc7500eb46f2f1c84fda71061d5dbd249da9
+  scalar10_local_full: 4861
+  projects:
+  - 6
+  - 557
+  - 25
+  - 4273
+  original104_expected_sha256: 60717507b191027a1424705f72d9dfbfcd7a697bbab089feff258de576c59ef7
+  new25_expected_sha256: ff75094a01ab804f3a801e3bbdde00a66d78db3e3d9b6c004680659d97d1aee0
+  integration_local_full: 4861
+  integration_review: PENDING;THIS_FROZEN_GRAPH_IS_REVIEW_INPUT
+  successor_exact_head_CI: NOT_RUN_UNQUALIFIED
+  source_graph: PRIVATE_ONLY_NOT_PUSHED
+  actual_model: NOT_RUN_UNEVALUATED
+  provider_availability: Oct15 scoped36slots accessible0configured;5namedfiles absent;deployedstore UNAVAILABLE_FOR_INSPECTION
+  model_profile_framing_window_alias_fallback: false
+  coordinator_scanner_WorkerDI_no_click: false
+  internal_IT279: false
+  customer_business_rows: false
+  Windows_installer_acceptance: false
+  production_deployment: false
+  full233: false
+  scalar10_review_receipt: 6182895892
+  scalar10_disposition: SOURCE_CLEAR_ORIGINAL_P2_CLOSED;ORIGINAL_BOUNDED8_REMAINS_WITHHELD
+  independent_scalar_probe: 8129 synthetic offline count/piece cases;129 frozen default async;3 invalid refusal
+  integration_projects:
+  - 6
+  - 557
+  - 25
+  - 4273
+  integration_format: EXIT0_EMPTY
+  metadata_head_convention: Top head/current_target_head fields anchor verified pushed parentcc4 at preparation; actual successor
+    HEAD and current exact CI are authoritative in PR288 HANDOFF.
+  provider_availability_observation: ai-gateway-scoped-availability-cc4-root-v3.json;Oct15;36accessible0configured;5absent;no
+    contents/values logged
+  preserved_prior_backend_next_before_final_integration: Current cc4 accepted main829 integration owns exact Build38535298845/Gov38535298806/native115756617658;
+    consult current HANDOFF for terminal closure. New whole StructuredGeneration Gateway deadline uses SAME client/loader/adapters,
+    monotonic total60s plus caller cancellation and explicit per-route physical ownership. Original independent P2 HTTP75ms
+    observer gap preserved; revised direct primary4/backup1/synchronous supplier2 controls await actual internal ChainCompletion,
+    not physical cleanup. Private5 full4716=[6,557,25,4128],22 deadline/43 focused controls and empty format pass; consume
+    independent5/8 review before one SAME288 checkpoint and own new exact all8/Gov/full4716/native132/wholequality/six originals
+    through terminal. Then existingGateway immutable qualified provider profile/tokenizer/window, coordinator/scanner/WorkerDI/no-click278/internalIT279.
+    Actual model NOT_RUN_UNEVALUATED; local36 env/five referencedfiles absent, deployedstore unavailable. No partial merge
+    or full233/customerERP/installer/deployment claim.
+  preserved_prior_last_verified_commit: 829cae245b33d554c4c36ee301ebcf64869efbce

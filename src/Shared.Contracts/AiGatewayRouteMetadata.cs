@@ -6,7 +6,7 @@ namespace MinhHuyAiOffice.Shared.Contracts;
 
 // Optional configuration metadata from the actual host-owned adapters. These
 // descriptors grant no permissions and do not qualify a tokenizer, model,
-// context window, alias, whole-call deadline or production group consumer.
+// context window, alias or production group consumer.
 public interface IAiStructuredProviderMetadataSource
 {
     AiStructuredRouteMetadata DescribeStructuredRoute();
@@ -69,13 +69,17 @@ public sealed class AiStructuredRouteMetadata
 public sealed class AiStructuredGatewayMetadata
 {
     public const string FormatVersion = "ai-structured-gateway-metadata-v1";
+    public const string DeadlineFormatVersion = "ai-structured-gateway-metadata-v2";
     public const string FallbackPolicy = "transient-primary-failure-only";
-    private AiStructuredGatewayMetadata(AiStructuredRouteMetadata primary, AiStructuredRouteMetadata? backup)
+    private AiStructuredGatewayMetadata(AiStructuredRouteMetadata primary, AiStructuredRouteMetadata? backup, TimeSpan? deadline = null)
     {
         ArgumentNullException.ThrowIfNull(primary);
         if (backup is not null && primary.ProviderId == backup.ProviderId)
             throw new ArgumentException("AI structured route identities must differ.");
         Routes = Array.AsReadOnly(backup is null ? new[] { primary } : new[] { primary, backup });
+        if (deadline is not null && (deadline <= TimeSpan.Zero || deadline > TimeSpan.FromSeconds(60)))
+            throw new ArgumentException("AI structured Gateway deadline metadata is invalid.");
+        WholeOperationTimeoutTicks = deadline?.Ticks;
         // Closed metadata only: no options object, credentials, endpoint URI,
         // prompt, tenant/company or observed response is serialized here.
         var encoded = JsonSerializer.SerializeToUtf8Bytes(new
@@ -88,13 +92,31 @@ public sealed class AiStructuredGatewayMetadata
             maximum_physical_invocations = Routes.Count
         });
         MetadataSha256 = Convert.ToHexString(SHA256.HashData(encoded));
+        if (deadline is not null)
+        {
+            var bounded = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                version = DeadlineFormatVersion,
+                fallback = FallbackPolicy,
+                routes = Routes,
+                accounting = "unavailable",
+                whole_operation_deadline = true,
+                whole_operation_timeout_ticks = deadline.Value.Ticks,
+                ownership = "per-adapter-physical-slots-through-cleanup",
+                maximum_physical_invocations = Routes.Count
+            });
+            MetadataSha256 = Convert.ToHexString(SHA256.HashData(bounded));
+        }
     }
     public static AiStructuredGatewayMetadata Create(AiStructuredRouteMetadata primary, AiStructuredRouteMetadata? backup = null) => new(primary, backup);
+    public static AiStructuredGatewayMetadata CreateWithDeadline(AiStructuredRouteMetadata primary,
+        AiStructuredRouteMetadata? backup, TimeSpan deadline) => new(primary, backup, deadline);
     // Immutable ordered snapshot: primary first, optional backup second.
     public IReadOnlyList<AiStructuredRouteMetadata> Routes { get; }
     public string MetadataSha256 { get; }
     public bool ModelAccountingUnavailable => true;
-    public bool ProvidesWholeOperationDeadline => false;
+    public bool ProvidesWholeOperationDeadline => WholeOperationTimeoutTicks is not null;
+    public long? WholeOperationTimeoutTicks { get; }
     public int MaximumPhysicalInvocations => Routes.Count;
     public override string ToString() => "AI structured Gateway (private configuration metadata, unqualified).";
 }

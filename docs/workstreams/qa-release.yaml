@@ -1,14 +1,14 @@
 workstream: qa-release
 role: QA / Security / Release
-status: security-289-closed
-current_issue: 289
-current_pr: 290
-current_branch: codex/289-pkcs-security
-head: 5f8bc1849c03539d64d12f79d02fd22e82906f53
+status: retired-security291-after-main-closure;supporting278-integration-review
+current_issue: null
+current_pr: null
+current_branch: main
+head: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 state: done
-lease_owner: root-qa-security-289
-lease_heartbeat_at: '2026-10-14'
-last_checkpoint_at: '2026-10-14'
+lease_owner: null
+lease_heartbeat_at: null
+last_checkpoint_at: '2026-10-15'
 scope: &id001
 - ci
 - tests
@@ -20,19 +20,22 @@ scope: &id001
 - dependency-security-upgrade-review
 - release-gates
 - cross-workstream-pr-quality-review
-blocked_by: []
-next_action: "Security289/PR290 accepted main829 and exact all8/native80/full2027/quality/six original images closed6163957204. No active QA implementation lease remains; retain original evidence and retired state. SAME288 owner brings dependency into V3 and continues full278/279/233; actual model/customer ERP/installer/deployment remain unqualified."
+blocked_by: &id003 []
+next_action: Security291/PR292 independently reviewed6182564034 and merged; exact mainad747d0 all8/Gov/native80/full2027/three
+  serviced images/entire quality/six original views closed6182795280. QA291 lease retired. Lead owns SAME issue278/DraftPR288
+  serviced Gateway/scalar checkpoint, repaired-source review6182895892 and combined4861/format PASS. Complete integration/durable
+  review, then exact successor native132/full4861/all8/Gov/wholequality/six originals through terminal. Top QA head refers
+  accepted main; PR288 HANDOFF binds actual active feature HEAD/CI. Full278/279/233/model/ERP/Windows/deployment remain incomplete;
+  no partial merge.
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
-  result: GREEN. The final main head passed .NET format/build/tests, web tests/typecheck/build,
-    Compose validation, deployment/container/non-root checks, EF migration integrity
-    and required quality gates.
-  pilot_evidence: PilotTaskSubmissionServiceTests, PilotTaskPipelineIntegrationTests,
-    PersistentWorkDeliveryHandlerTests and API authentication/cache tests cover authorization,
-    idempotency, outbox dispatch, read-only execution, retry/dead-letter, settlement-before-ack,
-    owner scoping and no-store responses.
-retired_complete_state_before_289:
+  result: GREEN. The final main head passed .NET format/build/tests, web tests/typecheck/build, Compose validation, deployment/container/non-root
+    checks, EF migration integrity and required quality gates.
+  pilot_evidence: PilotTaskSubmissionServiceTests, PilotTaskPipelineIntegrationTests, PersistentWorkDeliveryHandlerTests and
+    API authentication/cache tests cover authorization, idempotency, outbox dispatch, read-only execution, retry/dead-letter,
+    settlement-before-ack, owner scoping and no-store responses.
+retired_complete_state_before_289: &id004
   workstream: qa-release
   role: QA / Security / Release
   status: retired_after_green_gates
@@ -47,12 +50,11 @@ retired_complete_state_before_289:
   scope: *id001
   verification: *id002
   blocked_by:
-  - Live deployment requires operator-provided OIDC, SQL Server, RabbitMQ/private
-    host, first-company bootstrap and read-only ERP secret.
-  next_action: Keep QA/release automation retired after green code-side gates. The
-    operator must execute docs/DEPLOYMENT.md against the approved private pilot environment
-    and record the authenticated smoke evidence.
-pkcs_security_checkpoint:
+  - Live deployment requires operator-provided OIDC, SQL Server, RabbitMQ/private host, first-company bootstrap and read-only
+    ERP secret.
+  next_action: Keep QA/release automation retired after green code-side gates. The operator must execute docs/DEPLOYMENT.md
+    against the approved private pilot environment and record the authenticated smoke evidence.
+pkcs_security_checkpoint: &id005
   issue: 289
   pr: 290
   source_commit: 81c3b69593e09f978864a674c4e373cd2f80e8cf
@@ -80,23 +82,276 @@ pkcs_security_checkpoint:
   actual_model: NOT_RUN_UNEVALUATED
   successor_CI: NOT_RUN_UNQUALIFIED
   production_deployment: false
-
-pkcs_security_terminal_closure:
+complete_preceding_289_state_before_291: &id008
+  workstream: qa-release
+  role: QA / Security / Release
+  status: active-security-repair
+  current_issue: 289
+  current_pr: 290
+  current_branch: codex/289-pkcs-security
+  head: 81c3b69593e09f978864a674c4e373cd2f80e8cf
+  state: in_progress
+  lease_owner: root-qa-security-289
+  lease_heartbeat_at: '2026-10-14'
+  last_checkpoint_at: '2026-10-14'
+  scope: *id001
+  blocked_by: *id003
+  next_action: Own exact final PR290 head all8 Build/Governance/native80/full2027/wholequality/six original images to terminal;
+    fix any real failure on SAME290. Consume independent minimal dependency review. Merge when isolated security acceptance
+    and exact gates are met, then own exact main CI. Active PR288 V3 SQL/coordinator/full233/model/ERP/installer remain separate
+    leases/gates.
+  previous_pilot_verification: *id002
+  retired_complete_state_before_289: *id004
+  pkcs_security_checkpoint: *id005
+pkcs_security_terminal_closure: &id009
+  issue: 289
+  pr: 290
   final_PR_head: 5f8bc1849c03539d64d12f79d02fd22e82906f53
-  final_PR_build: 38527580036
-  final_PR_governance: 38527579986
   final_PR_closure: 6163612962
   main: 829cae245b33d554c4c36ee301ebcf64869efbce
   main_build: 38531239205
   main_governance: 38531239173
-  main_native: 115743371833
-  main_quality: 115749978502
   main_closure: 6163957204
-  main_all694_bytes_equal_reviewed: true
-  main_dotnet: 2027
+  all8: true
   native_required_once: 80
-  failure_markers: 0
-  root_whole_quality_and_six_original_images: true
-  issue289: CLOSED
+  dotnet: 2027
+  whole_quality_six_originals: true
+  issue_state: CLOSED
+  actual_model: NOT_RUN_UNEVALUATED
+dotnet_servicing_checkpoint: &id010
+  issue: 291
+  pr: 292
+  source_commit: 834d322a57a30be4da63bd110905a0525f613ba2
+  parent: 829cae245b33d554c4c36ee301ebcf64869efbce
+  source8_archive_sha256: 29908e47819800dfdd8a49f7e96a1686824e02dc64b78c4f379ddb8ea240d5c8
+  source_paths: 8
+  SDK: 10.0.402
+  runtime: 10.0.13
+  global_patch_rollforward: RETAINED_LATESTPATCH_NOPREVIEW
+  application_and_test_CSharp_csproj_equal_main: true
+  provider_config_client_schema_grants_equal_main: true
+  local_dotnet: 2027
+  projects:
+  - 6
+  - 507
+  - 25
+  - 1489
+  failed: 0
+  skipped: 0
+  python_controls: 11
+  format: PASS_EMPTY_EXIT0
+  restore: PASS_EXIT0_1069B_FIRST_SDK_WELCOME_AND_DEV_HTTPS_CERT_REPORTED;NO_TRUST_COMMAND_NO_INSTALLER_PATH_CHANGE_NO_ZERO_HOST_STATE_CLAIM
+  portableSDK_SHA512_verified: true
+  audit_projects: 14
+  NuGet_vulnerabilities: 0
+  public_MCR_manifests: AVAILABLE_ONLY_NOT_DOCKER_EXECUTION
+  host_inventory: INACTIVE_OLD_ALLOWED_LATEST_COMPATIBLE_CORE_ASP_PATCHED;SELECTED_SDK_FLOOR
+  container_inventory: ACTUAL3IMAGE_FLOOR_REQUIRED_OLD_MIXED_REFUSED
+  initial_freeze_guard: EMPTY_RESTORE_ASSUMPTION_FAILED_REPAIRED_METADATA_HELPER_LOG_RETAINED
+  successor_CI: NOT_RUN_UNQUALIFIED_REPAIRED_FINAL_HEAD_PENDING
+  actual_Docker_SQL: INITIAL_A32_THREE_IMAGES_PASS_NATIVE_SQL_NOT_RUN_HOST_GUARD_FAILED;SUCCESSOR_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
   production_deployment: false
+  original_source_commit: a32c81bab7e85d7e319d387dc78fec88948d7d12
+  host_installation: DOCUMENTED_SETUP_DOTNET_JOB_TEMP_DIRECTORY;SAME_HOST_FLOORS_AND_LIMITS
+  canonical_versions: LEADING_ZERO_SEGMENTS_REFUSED;VERIFIED_VERSIONS_ONLY_ON_SUCCESS
+  independent_review: INCOMPLETE_REVIEWER_USAGE_LIMIT;ORIGINAL_P3_NUMERIC_ACCEPTANCE_REPAIRED_NEEDS_FULL_REVIEW
+head_is_source_checkpoint_before_final_QA_commit: true
+dotnet_servicing_initial_RED: &id011
+  head: a32c81bab7e85d7e319d387dc78fec88948d7d12
+  build: 38542712032
+  governance: 38542711892
+  closure_comment: 6165589630
+  all8: false
+  zero_step_failure: false
+  rerun: false
+  native80: NOT_RUN_HOST_GUARD_FAILED
+  full2027: NOT_RUN_HOST_GUARD_FAILED
+  actual_three_image_floor: PASS_INITIAL_HEAD_ONLY
+  exact_rejected_host_condition: UNPROVEN_INVENTORY_NOT_LOGGED
+  failures:
+  - 115781152510
+  - 115781152570
+  - 115781152694
+  - 115781780582
+complete_feature_cc4_QA_state_before_serviced_integration:
+  workstream: qa-release
+  role: QA / Security / Release
+  status: security-289-closed
+  current_issue: 289
+  current_pr: 290
+  current_branch: codex/289-pkcs-security
+  head: 5f8bc1849c03539d64d12f79d02fd22e82906f53
+  state: done
+  lease_owner: root-qa-security-289
+  lease_heartbeat_at: '2026-10-14'
+  last_checkpoint_at: '2026-10-14'
+  scope: &id006
+  - ci
+  - tests
+  - security
+  - observability
+  - migrations-verification
+  - deployment-release
+  - recovery-drills
+  - dependency-security-upgrade-review
+  - release-gates
+  - cross-workstream-pr-quality-review
+  blocked_by: []
+  next_action: Security289/PR290 accepted main829 and exact all8/native80/full2027/quality/six original images closed6163957204.
+    No active QA implementation lease remains; retain original evidence and retired state. SAME288 owner brings dependency
+    into V3 and continues full278/279/233; actual model/customer ERP/installer/deployment remain unqualified.
+  previous_pilot_verification: &id007
+    exact_head_build: 36298741274
+    exact_head_governance: 36298741295
+    result: GREEN. The final main head passed .NET format/build/tests, web tests/typecheck/build, Compose validation, deployment/container/non-root
+      checks, EF migration integrity and required quality gates.
+    pilot_evidence: PilotTaskSubmissionServiceTests, PilotTaskPipelineIntegrationTests, PersistentWorkDeliveryHandlerTests
+      and API authentication/cache tests cover authorization, idempotency, outbox dispatch, read-only execution, retry/dead-letter,
+      settlement-before-ack, owner scoping and no-store responses.
+  retired_complete_state_before_289:
+    workstream: qa-release
+    role: QA / Security / Release
+    status: retired_after_green_gates
+    current_issue: null
+    current_pr: null
+    current_branch: main
+    head: 0e67a0ffe03454cd0b2fffc12163a608bf0bd804
+    state: release/pilot-closure
+    lease_owner: null
+    lease_heartbeat_at: null
+    last_checkpoint_at: '2026-09-27T06:20:00Z'
+    scope: *id006
+    verification: *id007
+    blocked_by:
+    - Live deployment requires operator-provided OIDC, SQL Server, RabbitMQ/private host, first-company bootstrap and read-only
+      ERP secret.
+    next_action: Keep QA/release automation retired after green code-side gates. The operator must execute docs/DEPLOYMENT.md
+      against the approved private pilot environment and record the authenticated smoke evidence.
+  pkcs_security_checkpoint:
+    issue: 289
+    pr: 290
+    source_commit: 81c3b69593e09f978864a674c4e373cd2f80e8cf
+    parent: 2e620a4856ab65f80706ba6f5b2c3da6b2ea74fd
+    code_delta: ONE_PERSISTENCE_PACKAGE_REFERENCE_PKCS9_0_21;SQLCLIENT6_1_6_EF10_0_12_RETAINED;ALL_APPLICATION_AND_PROOF_BODIES_UNCHANGED
+    advisories:
+    - CVE-2026-84008
+    - CVE-2026-70162
+    advisories_published: '2026-10-13'
+    local_dotnet: 2027
+    projects:
+    - 6
+    - 507
+    - 25
+    - 1489
+    failed: 0
+    skipped: 0
+    audited_projects: 14
+    vulnerabilities: 0
+    patched_consumer_assets: 8
+    restore: PASS_EMPTY
+    format: PASS_EMPTY_AFTER_CRLF_CHECKOUT_NORMALIZATION_TO_IDENTICAL_GIT_BYTES
+    interrupted_publish: POSTCOMMIT_CLEAN_GUARD_FOUND289_STATUS_ONLY_ROWS;ARCHIVE_EQUAL;REFRESH_IDENTICAL_BLOBS_NO_EXTRA_COMMIT;NO_PUSH_OR_PR_BEFORE_RECOVERY
+    actual_SQL: NOT_RUN_UNQUALIFIED
+    actual_model: NOT_RUN_UNEVALUATED
+    successor_CI: NOT_RUN_UNQUALIFIED
+    production_deployment: false
+  pkcs_security_terminal_closure:
+    final_PR_head: 5f8bc1849c03539d64d12f79d02fd22e82906f53
+    final_PR_build: 38527580036
+    final_PR_governance: 38527579986
+    final_PR_closure: 6163612962
+    main: 829cae245b33d554c4c36ee301ebcf64869efbce
+    main_build: 38531239205
+    main_governance: 38531239173
+    main_native: 115743371833
+    main_quality: 115749978502
+    main_closure: 6163957204
+    main_all694_bytes_equal_reviewed: true
+    main_dotnet: 2027
+    native_required_once: 80
+    failure_markers: 0
+    root_whole_quality_and_six_original_images: true
+    issue289: CLOSED
+    actual_model: NOT_RUN_UNEVALUATED
+    production_deployment: false
+complete_serviced_main_QA_source_state_before_integration:
+  workstream: qa-release
+  role: QA / Security / Release
+  status: active-security-servicing291
+  current_issue: 291
+  current_pr: 292
+  current_branch: codex/291-dotnet-october-servicing
+  head: 834d322a57a30be4da63bd110905a0525f613ba2
+  state: in_progress
+  lease_owner: root-qa-security-291
+  lease_heartbeat_at: '2026-10-14'
+  last_checkpoint_at: '2026-10-14'
+  scope: *id001
+  blocked_by: *id003
+  next_action: Own repaired PR292 final exact head all8/Gov/native80/full2027/wholequality/six originals and actual3image
+    canonical-version checks to terminal; fix real failures on SAME292. Independent source/final-state review remains incomplete
+    after reviewer usage-limit interruption; do not merge before review and security acceptance. Original a32 terminal RED
+    closure is published; no retry. Normal qualified merge/main closure then accepted serviced integration into288 precedes
+    private Gateway5/8v2 promotion and full4716 reverification. Actual model/customerERP/Windows/deployment/full233 incomplete.
+  previous_pilot_verification: *id002
+  retired_complete_state_before_289: *id004
+  pkcs_security_checkpoint: *id005
+  complete_preceding_289_state_before_291: *id008
+  pkcs_security_terminal_closure: *id009
+  dotnet_servicing_checkpoint: *id010
+  head_is_source_checkpoint_before_final_QA_commit: true
+  dotnet_servicing_initial_RED: *id011
+serviced_scalar10_integration_checkpoint:
+  feature_parent: cc4fd6b84a3364e6a0eb7fb349f8e2cceb0c0070
+  parent_CI_closure: 6165072048
+  serviced_main: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+  main_review: 6182564034
+  main_CI_closure: 6182795280
+  main_build: 38667971873
+  main_governance: 38667971831
+  main_all8: TERMINAL_SUCCESS
+  gateway5_sha256: c63d2594d01fc43e366583d4846753e2e72a2b393d4bd5091f3b46a5cc0266e6
+  gateway_source_review: 8b4543bab37be27bbf234eec78c1933393116c8339aaff65469f908064c17841
+  gateway_docs8v2_review: 7fc17a6e766f5cd82477be2bc4c27f4c0a7f1820fd269626936af02eb66b2706
+  original_bounded8: WITHHELD_P2;DO_NOT_RELABEL;REVIEW6182806789
+  old_integration_private_v1: WITHHELD;DO_NOT_PROMOTE
+  scalar10_sha256: c8ae2286d4825b28675172386c41a6ac21612f5a3a659b65826de72cecb38d94
+  scalar10_review: 95b7b6e72b163bd1243f440d47c5cc7500eb46f2f1c84fda71061d5dbd249da9
+  scalar10_local_full: 4861
+  projects:
+  - 6
+  - 557
+  - 25
+  - 4273
+  original104_expected_sha256: 60717507b191027a1424705f72d9dfbfcd7a697bbab089feff258de576c59ef7
+  new25_expected_sha256: ff75094a01ab804f3a801e3bbdde00a66d78db3e3d9b6c004680659d97d1aee0
+  integration_local_full: 4861
+  integration_review: PENDING;THIS_FROZEN_GRAPH_IS_REVIEW_INPUT
+  successor_exact_head_CI: NOT_RUN_UNQUALIFIED
+  source_graph: PRIVATE_ONLY_NOT_PUSHED
+  actual_model: NOT_RUN_UNEVALUATED
+  provider_availability: Oct15 scoped36slots accessible0configured;5namedfiles absent;deployedstore UNAVAILABLE_FOR_INSPECTION
+  model_profile_framing_window_alias_fallback: false
+  coordinator_scanner_WorkerDI_no_click: false
+  internal_IT279: false
+  customer_business_rows: false
+  Windows_installer_acceptance: false
+  production_deployment: false
+  full233: false
+  scalar10_review_receipt: 6182895892
+  scalar10_disposition: SOURCE_CLEAR_ORIGINAL_P2_CLOSED;ORIGINAL_BOUNDED8_REMAINS_WITHHELD
+  independent_scalar_probe: 8129 synthetic offline count/piece cases;129 frozen default async;3 invalid refusal
+  integration_projects:
+  - 6
+  - 557
+  - 25
+  - 4273
+  integration_format: EXIT0_EMPTY
+  metadata_head_convention: Top QA head is qualified mainad747d0 and QA291 is retired; top PROJECT/backend heads anchor last
+    qualified pushed feature parentcc4 at preparation. PR288 HANDOFF owns exact active successor HEAD/CI.
+  provider_availability_observation: ai-gateway-scoped-availability-cc4-root-v3.json;Oct15;36accessible0configured;5absent;no
+    contents/values logged
+  integration28_v2_disposition: WITHHELD_STALE_TOP_QA291_ACTIVE_LEASE;SOURCE_RUNTIME_COMPOSITION_UNCHANGED;BOTH_COMPLETE_ORIGINAL_HISTORIES_RETAINED
+  durable_repair: Only top QA current lease/status/next fields retired after verified main closure; no source/test/workflow/package/schema/proof
+    changes.

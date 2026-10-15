@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using MinhHuyAiOffice.Shared.Contracts;
@@ -98,11 +99,14 @@ public sealed class AiProviderExecutionException(
 /// </summary>
 public sealed class OrderedFailoverAiGateway(
     IAiProviderAdapter primary,
-    IAiProviderAdapter? backup = null) : IAiGateway, IAiStructuredGatewayMetadataSource
+    IAiProviderAdapter? backup = null,
+    TimeSpan? wholeStructuredTimeout = null) : IAiGateway, IAiStructuredGatewayMetadataSource
 {
+    private readonly TimeSpan structuredDeadline = ValidateDeadline(wholeStructuredTimeout ?? TimeSpan.FromSeconds(60));
+
     public AiStructuredGatewayMetadata DescribeStructuredGateway()
     {
-        return AiStructuredGatewayMetadata.Create(Describe(primary), backup is null ? null : Describe(backup));
+        return AiStructuredGatewayMetadata.CreateWithDeadline(Describe(primary), backup is null ? null : Describe(backup), structuredDeadline);
 
         static AiStructuredRouteMetadata Describe(IAiProviderAdapter adapter)
         {
@@ -121,6 +125,9 @@ public sealed class OrderedFailoverAiGateway(
     {
         ArgumentNullException.ThrowIfNull(request);
         request.Validate();
+
+        if (request.Capability == AiCapability.StructuredGeneration)
+            return await ExecuteStructuredAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!primary.Supports(request.Capability))
         {
@@ -160,6 +167,106 @@ public sealed class OrderedFailoverAiGateway(
                     new AggregateException(primaryFailure, backupFailure));
             }
         }
+    }
+
+    private static TimeSpan ValidateDeadline(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(60))
+            throw new ArgumentException("AI structured Gateway deadline must be positive and at most 60 seconds.");
+        return timeout;
+    }
+
+    private Task<AiGatewayResponse> ExecuteStructuredAsync(AiGatewayRequest request, CancellationToken caller) =>
+        BeginStructuredOperation(request, caller).Caller;
+
+    // Narrow owned lifecycle, also observed by assembly-local verification.
+    // Chain completion is NOT physical adapter cleanup: adapters retain their
+    // own private permits after they stop exposing a result to this Gateway.
+    internal sealed record StructuredOperation(Task<AiGatewayResponse> Caller, Task<AiGatewayResponse> ChainCompletion);
+
+    internal StructuredOperation BeginStructuredOperation(AiGatewayRequest request, CancellationToken caller)
+    {
+        caller.ThrowIfCancellationRequested();
+        var started = Stopwatch.GetTimestamp();
+        var operation = new BoundedStructuredResponses.OwnedCancellation();
+        var operationToken = operation.Token;
+        // Bound synchronous adapter invocation/validation too. Each existing adapter
+        // retains its own physical slots after this caller has stopped waiting.
+        var pending = Task.Run(async () =>
+        {
+            try
+            {
+                if (!primary.Supports(request.Capability) || (backup is not null
+                    && (primary.ProviderId == backup.ProviderId || !backup.Supports(request.Capability))))
+                    throw new AiProviderExecutionException("AI structured Gateway routes are invalid.", false);
+                RequireRemaining();
+                try
+                {
+                    return await ExecuteAndValidateAsync(primary, request, operationToken).ConfigureAwait(false);
+                }
+                catch (AiProviderExecutionException primaryFailure) when (primaryFailure.IsTransient && backup is not null)
+                {
+                    // The backup shares the original clock; expiry never grants another route.
+                    RequireRemaining();
+                    try
+                    {
+                        return await ExecuteAndValidateAsync(backup, request, operationToken).ConfigureAwait(false);
+                    }
+                    catch (AiProviderExecutionException backupFailure)
+                    {
+                        throw new AiProviderExecutionException("Primary and backup AI providers both failed.",
+                            backupFailure.IsTransient, new AggregateException(primaryFailure, backupFailure));
+                    }
+                }
+            }
+            catch (AiProviderExecutionException) { throw; }
+            catch (OperationCanceledException) when (operationToken.IsCancellationRequested || caller.IsCancellationRequested) { throw; }
+            catch (Exception error) when (error is not OutOfMemoryException)
+            { throw new AiProviderExecutionException("AI structured Gateway operation is invalid.", false); }
+            finally { await operation.FinishAsync().ConfigureAwait(false); }
+        }, CancellationToken.None);
+        _ = pending.ContinueWith(task => { _ = task.Exception; }, CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        return new(WaitForCallerAsync(), pending);
+
+        async Task<AiGatewayResponse> WaitForCallerAsync()
+        {
+            try
+            {
+                var remaining = structuredDeadline - Stopwatch.GetElapsedTime(started);
+                if (remaining <= TimeSpan.Zero) throw new TimeoutException();
+                var response = await pending.WaitAsync(remaining, caller).ConfigureAwait(false);
+                RequireRemaining();
+                return response;
+            }
+            catch (OperationCanceledException) when (caller.IsCancellationRequested)
+            {
+                operation.RequestCancellation();
+                throw new OperationCanceledException(caller);
+            }
+            catch (TimeoutException)
+            {
+                operation.RequestCancellation();
+                throw DeadlineExpired();
+            }
+            catch (OperationCanceledException) when (operationToken.IsCancellationRequested
+                && Stopwatch.GetElapsedTime(started) >= structuredDeadline)
+            {
+                throw DeadlineExpired();
+            }
+        }
+
+        void RequireRemaining()
+        {
+            caller.ThrowIfCancellationRequested();
+            if (Stopwatch.GetElapsedTime(started) >= structuredDeadline)
+            {
+                operation.RequestCancellation();
+                throw DeadlineExpired();
+            }
+            operationToken.ThrowIfCancellationRequested();
+        }
+        static AiProviderExecutionException DeadlineExpired() => new("AI structured Gateway deadline expired.", true);
     }
 
     private static async Task<AiGatewayResponse> ExecuteAndValidateAsync(

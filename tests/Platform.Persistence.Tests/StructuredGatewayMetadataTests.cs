@@ -29,7 +29,8 @@ public sealed class StructuredGatewayMetadataTests
         Assert.Equal(original.StructuredTimeout.Ticks, route.PerRouteTimeoutTicks);
         Assert.Equal(StructuredResponsesPolicy.InputByteLimit, route.Limits.InputBytes);
         Assert.Equal(StructuredResponsesPolicy.OperationLimit, route.Limits.OperationsPerAdapter);
-        Assert.True(metadata.ModelAccountingUnavailable); Assert.False(metadata.ProvidesWholeOperationDeadline);
+        Assert.True(metadata.ModelAccountingUnavailable); Assert.True(metadata.ProvidesWholeOperationDeadline);
+        Assert.Equal(TimeSpan.FromSeconds(60).Ticks, metadata.WholeOperationTimeoutTicks);
         Assert.Equal(1, metadata.MaximumPhysicalInvocations);
         var rotated = new OrderedFailoverAiGateway(new OpenAiCompatibleResponsesAdapter(client,
             original with { AuthorizationHeader = "Bearer rotated-synthetic-secret" })).DescribeStructuredGateway();
@@ -100,7 +101,7 @@ public sealed class StructuredGatewayMetadataTests
         var gateway = new OrderedFailoverAiGateway(new OpenAiCompatibleResponsesAdapter(client, Options() with { MaxOutputTokens = 123 }),
             new OpenAiCompatibleResponsesAdapter(client, Options("backup", "backup-configured-model") with { MaxOutputTokens = 456 }));
         var metadata = gateway.DescribeStructuredGateway();
-        Assert.Equal(2, metadata.MaximumPhysicalInvocations); Assert.False(metadata.ProvidesWholeOperationDeadline);
+        Assert.Equal(2, metadata.MaximumPhysicalInvocations); Assert.True(metadata.ProvidesWholeOperationDeadline);
         Assert.Empty(sent);
         var request = new AiGatewayRequest("synthetic-tenant", "synthetic-company", "synthetic-task", "synthetic-request",
             AiCapability.StructuredGeneration, "synthetic input", """{"type":"object","properties":{"note":{"type":"string"}},"required":["note"],"additionalProperties":false}""");
