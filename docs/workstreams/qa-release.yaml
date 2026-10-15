@@ -1,12 +1,12 @@
 workstream: qa-release
 role: QA / Security / Release
-status: active-security-repair
-current_issue: 289
-current_pr: 290
-current_branch: codex/289-pkcs-security
-head: 81c3b69593e09f978864a674c4e373cd2f80e8cf
+status: active-security-servicing291
+current_issue: 291
+current_pr: 292
+current_branch: codex/291-dotnet-october-servicing
+head: 834d322a57a30be4da63bd110905a0525f613ba2
 state: in_progress
-lease_owner: root-qa-security-289
+lease_owner: root-qa-security-291
 lease_heartbeat_at: '2026-10-14'
 last_checkpoint_at: '2026-10-14'
 scope: &id001
@@ -20,23 +20,22 @@ scope: &id001
 - dependency-security-upgrade-review
 - release-gates
 - cross-workstream-pr-quality-review
-blocked_by: []
-next_action: Own exact final PR290 head all8 Build/Governance/native80/full2027/wholequality/six
-  original images to terminal; fix any real failure on SAME290. Consume independent
-  minimal dependency review. Merge when isolated security acceptance and exact gates
-  are met, then own exact main CI. Active PR288 V3 SQL/coordinator/full233/model/ERP/installer
-  remain separate leases/gates.
+blocked_by: &id003 []
+next_action: Own repaired PR292 final exact head all8/Gov/native80/full2027/wholequality/six originals
+  and actual3image canonical-version checks to terminal; fix real failures on SAME292. Independent source/final-state
+  review remains incomplete after reviewer usage-limit interruption; do not merge before review and security
+  acceptance. Original a32 terminal RED closure is published; no retry. Normal qualified merge/main closure
+  then accepted serviced integration into288 precedes private Gateway5/8v2 promotion and full4716 reverification.
+  Actual model/customerERP/Windows/deployment/full233 incomplete.
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
-  result: GREEN. The final main head passed .NET format/build/tests, web tests/typecheck/build,
-    Compose validation, deployment/container/non-root checks, EF migration integrity
-    and required quality gates.
-  pilot_evidence: PilotTaskSubmissionServiceTests, PilotTaskPipelineIntegrationTests,
-    PersistentWorkDeliveryHandlerTests and API authentication/cache tests cover authorization,
-    idempotency, outbox dispatch, read-only execution, retry/dead-letter, settlement-before-ack,
-    owner scoping and no-store responses.
-retired_complete_state_before_289:
+  result: GREEN. The final main head passed .NET format/build/tests, web tests/typecheck/build, Compose
+    validation, deployment/container/non-root checks, EF migration integrity and required quality gates.
+  pilot_evidence: PilotTaskSubmissionServiceTests, PilotTaskPipelineIntegrationTests, PersistentWorkDeliveryHandlerTests
+    and API authentication/cache tests cover authorization, idempotency, outbox dispatch, read-only execution,
+    retry/dead-letter, settlement-before-ack, owner scoping and no-store responses.
+retired_complete_state_before_289: &id004
   workstream: qa-release
   role: QA / Security / Release
   status: retired_after_green_gates
@@ -51,12 +50,12 @@ retired_complete_state_before_289:
   scope: *id001
   verification: *id002
   blocked_by:
-  - Live deployment requires operator-provided OIDC, SQL Server, RabbitMQ/private
-    host, first-company bootstrap and read-only ERP secret.
-  next_action: Keep QA/release automation retired after green code-side gates. The
-    operator must execute docs/DEPLOYMENT.md against the approved private pilot environment
-    and record the authenticated smoke evidence.
-pkcs_security_checkpoint:
+  - Live deployment requires operator-provided OIDC, SQL Server, RabbitMQ/private host, first-company
+    bootstrap and read-only ERP secret.
+  next_action: Keep QA/release automation retired after green code-side gates. The operator must execute
+    docs/DEPLOYMENT.md against the approved private pilot environment and record the authenticated smoke
+    evidence.
+pkcs_security_checkpoint: &id005
   issue: 289
   pr: 290
   source_commit: 81c3b69593e09f978864a674c4e373cd2f80e8cf
@@ -84,3 +83,95 @@ pkcs_security_checkpoint:
   actual_model: NOT_RUN_UNEVALUATED
   successor_CI: NOT_RUN_UNQUALIFIED
   production_deployment: false
+complete_preceding_289_state_before_291:
+  workstream: qa-release
+  role: QA / Security / Release
+  status: active-security-repair
+  current_issue: 289
+  current_pr: 290
+  current_branch: codex/289-pkcs-security
+  head: 81c3b69593e09f978864a674c4e373cd2f80e8cf
+  state: in_progress
+  lease_owner: root-qa-security-289
+  lease_heartbeat_at: '2026-10-14'
+  last_checkpoint_at: '2026-10-14'
+  scope: *id001
+  blocked_by: *id003
+  next_action: Own exact final PR290 head all8 Build/Governance/native80/full2027/wholequality/six original
+    images to terminal; fix any real failure on SAME290. Consume independent minimal dependency review.
+    Merge when isolated security acceptance and exact gates are met, then own exact main CI. Active PR288
+    V3 SQL/coordinator/full233/model/ERP/installer remain separate leases/gates.
+  previous_pilot_verification: *id002
+  retired_complete_state_before_289: *id004
+  pkcs_security_checkpoint: *id005
+pkcs_security_terminal_closure:
+  issue: 289
+  pr: 290
+  final_PR_head: 5f8bc1849c03539d64d12f79d02fd22e82906f53
+  final_PR_closure: 6163612962
+  main: 829cae245b33d554c4c36ee301ebcf64869efbce
+  main_build: 38531239205
+  main_governance: 38531239173
+  main_closure: 6163957204
+  all8: true
+  native_required_once: 80
+  dotnet: 2027
+  whole_quality_six_originals: true
+  issue_state: CLOSED
+  actual_model: NOT_RUN_UNEVALUATED
+dotnet_servicing_checkpoint:
+  issue: 291
+  pr: 292
+  source_commit: 834d322a57a30be4da63bd110905a0525f613ba2
+  parent: 829cae245b33d554c4c36ee301ebcf64869efbce
+  source8_archive_sha256: 29908e47819800dfdd8a49f7e96a1686824e02dc64b78c4f379ddb8ea240d5c8
+  source_paths: 8
+  SDK: 10.0.402
+  runtime: 10.0.13
+  global_patch_rollforward: RETAINED_LATESTPATCH_NOPREVIEW
+  application_and_test_CSharp_csproj_equal_main: true
+  provider_config_client_schema_grants_equal_main: true
+  local_dotnet: 2027
+  projects:
+  - 6
+  - 507
+  - 25
+  - 1489
+  failed: 0
+  skipped: 0
+  python_controls: 11
+  format: PASS_EMPTY_EXIT0
+  restore: PASS_EXIT0_1069B_FIRST_SDK_WELCOME_AND_DEV_HTTPS_CERT_REPORTED;NO_TRUST_COMMAND_NO_INSTALLER_PATH_CHANGE_NO_ZERO_HOST_STATE_CLAIM
+  portableSDK_SHA512_verified: true
+  audit_projects: 14
+  NuGet_vulnerabilities: 0
+  public_MCR_manifests: AVAILABLE_ONLY_NOT_DOCKER_EXECUTION
+  host_inventory: INACTIVE_OLD_ALLOWED_LATEST_COMPATIBLE_CORE_ASP_PATCHED;SELECTED_SDK_FLOOR
+  container_inventory: ACTUAL3IMAGE_FLOOR_REQUIRED_OLD_MIXED_REFUSED
+  initial_freeze_guard: EMPTY_RESTORE_ASSUMPTION_FAILED_REPAIRED_METADATA_HELPER_LOG_RETAINED
+  successor_CI: NOT_RUN_UNQUALIFIED_REPAIRED_FINAL_HEAD_PENDING
+  actual_Docker_SQL: INITIAL_A32_THREE_IMAGES_PASS_NATIVE_SQL_NOT_RUN_HOST_GUARD_FAILED;SUCCESSOR_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  production_deployment: false
+  original_source_commit: a32c81bab7e85d7e319d387dc78fec88948d7d12
+  host_installation: DOCUMENTED_SETUP_DOTNET_JOB_TEMP_DIRECTORY;SAME_HOST_FLOORS_AND_LIMITS
+  canonical_versions: LEADING_ZERO_SEGMENTS_REFUSED;VERIFIED_VERSIONS_ONLY_ON_SUCCESS
+  independent_review: INCOMPLETE_REVIEWER_USAGE_LIMIT;ORIGINAL_P3_NUMERIC_ACCEPTANCE_REPAIRED_NEEDS_FULL_REVIEW
+head_is_source_checkpoint_before_final_QA_commit: true
+dotnet_servicing_initial_RED:
+  head: a32c81bab7e85d7e319d387dc78fec88948d7d12
+  build: 38542712032
+  governance: 38542711892
+  closure_comment: 6165589630
+  all8: false
+  zero_step_failure: false
+  rerun: false
+  native80: NOT_RUN_HOST_GUARD_FAILED
+  full2027: NOT_RUN_HOST_GUARD_FAILED
+  actual_three_image_floor: PASS_INITIAL_HEAD_ONLY
+  exact_rejected_host_condition: UNPROVEN_INVENTORY_NOT_LOGGED
+  failures:
+  - 115781152510
+  - 115781152570
+  - 115781152694
+  - 115781780582
