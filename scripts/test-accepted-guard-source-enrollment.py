@@ -116,7 +116,7 @@ class AcceptedGuardSourceEnrollmentTests(unittest.TestCase):
                 self.assertEqual(count, len(h.writes)); self.assertEqual(count, len(h.compose))
 
     def test_reserved_unknown_and_boolean_slots_refused_before_mutation(self):
-        for slot in (15, 21, True):
+        for slot in (15, 22, True):
             with self.subTest(slot=slot):
                 h = self.harness()
                 with self.assertRaises(AssertionError): h.scope['enroll_owned_source'](str(uuid.uuid4()), slot)

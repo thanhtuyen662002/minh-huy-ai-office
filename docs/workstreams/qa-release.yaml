@@ -21,7 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: "SAME288 original97ab Build38787704388/Gov38787704385 attempt1 terminal FAILED closure6200811199; all8 terminal, hosted5357/Gov/six prerequisites PASS, native116603884173 second slot18 enrollment refusal/quality116631357110 red/no images. Implementation62 main18/mutant20/firstempty19 correction has30 fresh offline Python methods PASS, CSharp/project/production bytes unchanged55/53/inherited local5365+format+compiledguard8; no fresh.NET62/67 or actualSQL146. Original62 review identifies stale current root next_action; preserve frozen62 immutable and qualify separately reviewed docs-only successor67 with all implementation/test/workflow bodies identical62. Finish independent exact67 source/durable review; rebind separately reviewed helper68/native146/full5365/30sources to genuine67 receipt (prepared64 remains inert/no dispatch). Only then ordinary explicit reviewed67 SAME288 push; own all8/Gov/native146/wholequality/seven results/six ORIGINAL images through terminal and fix real red immediately. Preserve original53 WITHHELD/e8/97ab failures; no rerun/cancel/force/partial mainmerge. Remaining firsthostmedia/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Realmodel NOT_RUN_UNEVALUATED/catalogEMPTY; existing Gateway/options/client/config only. Attachment unread until current work complete/merged."
+next_action: "SAME288 exactf6d2b84f0d3f21a34b1ff40796ccbc3c4f0930cc Build38799816929/Gov38799816624 attempt1 native146 CI owned after original97ab failedclosure6200811199; source67 CLEAR6201149037/helper70 genuinely reviewed before ordinary push. Use exact source-bound capture70 for full5365/native146/all8/Gov/wholequality/seven results/six ORIGINAL images; keep original live through terminal and inspect/fix real red immediately samePR. No successor push while current CI live. Separately first-host74 fixture21 invokes real fixed GroupClaimedBatchProcessor for missing V3 original/sidecar then protected UnsupportedMedia Attention note/two metadata evidence/raw dispositions/outbox/terminal/signed frontier, with model factory cold. Expired separate process terminal-FIRST with original SELECT denied retains entire graph/permissions/both cleanup gates. Local5373=[6,584,25,4758]/zero fail-skip-warning-error/fullformat/23 inert Python/8 compiled guard refusals PASS. New source74 frozen review pending; actual147/model NOT_RUN_UNQUALIFIED/NOT_RUN_UNEVALUATED. Preserve originals53/62 WITHHELD and failed e8/97ab; source67/helper70 do not qualify74. After current146 complete terminal closure and genuine74 source/helper clearance, ordinary explicit successor147 only. Continue first model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Existing Gateway/options/client/config only/catalogEMPTY; no partial mainmerge/attachment read until current work complete/merged."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -1306,3 +1306,20 @@ group_current_state_correction67_checkpoint:
   independent_review: pending_exact67
   actual_sql146: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
+
+group_first_host_batch74_checkpoint:
+  parent_reviewed_source67: f6d2b84f0d3f21a34b1ff40796ccbc3c4f0930cc
+  current_build: 38799816929
+  current_governance: 38799816624
+  prior_current_next_action_immutable: "SAME288 original97ab Build38787704388/Gov38787704385 attempt1 terminal FAILED closure6200811199; all8 terminal, hosted5357/Gov/six prerequisites PASS, native116603884173 second slot18 enrollment refusal/quality116631357110 red/no images. Implementation62 main18/mutant20/firstempty19 correction has30 fresh offline Python methods PASS, CSharp/project/production bytes unchanged55/53/inherited local5365+format+compiledguard8; no fresh.NET62/67 or actualSQL146. Original62 review identifies stale current root next_action; preserve frozen62 immutable and qualify separately reviewed docs-only successor67 with all implementation/test/workflow bodies identical62. Finish independent exact67 source/durable review; rebind separately reviewed helper68/native146/full5365/30sources to genuine67 receipt (prepared64 remains inert/no dispatch). Only then ordinary explicit reviewed67 SAME288 push; own all8/Gov/native146/wholequality/seven results/six ORIGINAL images through terminal and fix real red immediately. Preserve original53 WITHHELD/e8/97ab failures; no rerun/cancel/force/partial mainmerge. Remaining firsthostmedia/model originals/multichunk/edit/recall/invalidated-original durable continuation/scanner/shippedWorker/no-click278/internalIT279/full233/readonlyERP/Windows/deployment. Realmodel NOT_RUN_UNEVALUATED/catalogEMPTY; existing Gateway/options/client/config only. Attachment unread until current work complete/merged."
+  fixture_slot: 21
+  source_review: pending_exact74
+  local_dotnet: 5373
+  dotnet_projects: [6, 584, 25, 4758]
+  new_read_observer_cases: 8
+  fresh_offline_python_methods: 23
+  actual_compiled_guard_refusals: 8
+  full_format: PASS
+  actual_sql147: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  next: Review exact74 while current67 native146 CI stays owned through terminal; no successor push until its closure and fresh source/helper clearance.
