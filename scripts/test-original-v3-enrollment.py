@@ -44,7 +44,7 @@ class OriginalV3EnrollmentTests(unittest.TestCase):
             compose_run=lambda *args, **kwargs: calls.append(("compose", args, kwargs)), ready=lambda: calls.append(("ready",)))
         exec(block, namespace)
         with self.assertRaises(ValueError): namespace["enroll_owned_source"]("invalid-source", 1)
-        for slot in (0, 15, 18, True, "1"):
+        for slot in (0, 15, 19, True, "1"):
             with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, slot)
         self.assertEqual(original, environment); self.assertEqual([], calls)
         namespace["enroll_owned_source"](source, 1)
@@ -163,6 +163,15 @@ class OriginalV3EnrollmentTests(unittest.TestCase):
         self.assertEqual(enrolled,environment); self.assertEqual(60,len(calls))
         with self.assertRaises(AssertionError): namespace["enroll_owned_source"](source, 16)
         self.assertEqual(enrolled,environment); self.assertEqual(60,len(calls))
+        admission_source = str(uuid.uuid4())
+        namespace["enroll_owned_source"](admission_source, 18)
+        self.assertTrue(all(environment[name] == value for name,value in enrolled.items()))
+        self.assertEqual(admission_source, environment["AIOffice__GroupIntake__SourceKeys__18__SourceBindingId"])
+        self.assertEqual("secretref://env/OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY", environment["AIOffice__GroupIntake__SourceKeys__18__SecretRef"])
+        admission_enrolled = environment.copy()
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](admission_source, 18)
+        with self.assertRaises(AssertionError): namespace["enroll_owned_source"](v3_source, 18)
+        self.assertEqual(admission_enrolled,environment); self.assertEqual(64,len(calls))
         self.assertEqual([4, 5, 6, 8], [item['slot'] for item in original_enrollments])
         self.assertEqual([fourth_source, fifth_source, sixth_source, eighth_source], [item['source'] for item in original_enrollments])
         for item in original_enrollments:

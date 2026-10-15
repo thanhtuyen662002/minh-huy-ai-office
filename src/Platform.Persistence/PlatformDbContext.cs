@@ -52,6 +52,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<GroupModelAttemptFailureRecord> GroupModelAttemptFailures => Set<GroupModelAttemptFailureRecord>();
     public DbSet<GroupModelAttemptResultRecord> GroupModelAttemptResults => Set<GroupModelAttemptResultRecord>();
     public DbSet<GroupAutomaticInputPlanRecord> GroupAutomaticInputPlans => Set<GroupAutomaticInputPlanRecord>();
+    public DbSet<GroupOriginalAdmissionSidecarRecord> GroupOriginalAdmissionSidecars => Set<GroupOriginalAdmissionSidecarRecord>();
 
     public DbSet<GroupCustomerRequestRecord> GroupCustomerRequests => Set<GroupCustomerRequestRecord>();
     public DbSet<GroupRequestRevisionRecord> GroupRequestRevisions => Set<GroupRequestRevisionRecord>();
@@ -82,6 +83,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureGroupModelAttempts();
         modelBuilder.ConfigureGroupModelAttemptResults();
         modelBuilder.ConfigureGroupAutomaticInputPlans();
+        modelBuilder.ConfigureGroupOriginalAdmissionSidecars();
         modelBuilder.ConfigureGroupWorkNotes();
         modelBuilder.ConfigureGroupWorkRawAccounting();
         modelBuilder.ConfigureGroupBatchTerminal();

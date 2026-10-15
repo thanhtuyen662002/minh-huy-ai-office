@@ -7,8 +7,8 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 
 // SQL-only original selection acquisition. No key resolution, model call,
 // terminal effect or provider release occurs in these locked units.
-internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
-    TimeProvider clock, GroupBatchSourceReader sources, GroupBrainCurrentReader brain)
+internal sealed partial class GroupAutomaticInputPlanStore(PlatformDbContext database, GroupExtractionWorkerBinding worker,
+    TimeProvider clock, GroupBatchSourceReader sources, GroupBrainCurrentReader brain, GroupOriginalAdmissionPreparer? admissions = null)
 {
     private const string Savepoint = "GroupOriginalInputPlanWrites";
 
@@ -119,7 +119,7 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
 
     private async Task<GroupAutomaticInputPlan?> InCurrentUnitAsync(GroupBatchClaimHandle handle,
         GroupWorkDependencyManifest? original, Func<DateTimeOffset, List<object>, CancellationToken, Task<GroupAutomaticInputPlan?>> operation,
-        CancellationToken token)
+        CancellationToken token, Func<CancellationToken, Task<GroupBatchClaimExpiryObservation?>>? additionalFence = null)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromMinutes(2)); token = deadline.Token;
@@ -149,6 +149,8 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
             {
                 await permissions.RequireSafeRuntimeAsync(token);
                 var verdict = await claims.InspectCurrentLockedAsync(handle, token);
+                if (verdict is GroupBatchClaimFenceVerdict.Current && additionalFence is not null)
+                    verdict = await InspectAdditionalFenceAsync(verdict);
                 if (verdict is GroupBatchClaimFenceVerdict.Current && expected is not null)
                 {
                     verdict = await sources.RequireManifestUnchangedLockedAsync(handle, expected, token);
@@ -160,7 +162,24 @@ internal sealed class GroupAutomaticInputPlanStore(PlatformDbContext database, G
                     await permissions.RequireSafeRuntimeAsync(token);
                     verdict = await claims.InspectCurrentLockedAsync(handle, token);
                 }
+                if (verdict is GroupBatchClaimFenceVerdict.Current && additionalFence is not null)
+                {
+                    verdict = await InspectAdditionalFenceAsync(verdict);
+                    if (verdict is GroupBatchClaimFenceVerdict.Current)
+                        verdict = await claims.InspectCurrentLockedAsync(handle, token);
+                }
                 return verdict;
+            }
+            async Task<GroupBatchClaimFenceVerdict> InspectAdditionalFenceAsync(GroupBatchClaimFenceVerdict current)
+            {
+                var observed = await additionalFence!(token);
+                if (observed is null) return current;
+                if (!ReferenceEquals(observed.Handle, handle) || observed.ObservedAtUtc.Offset != TimeSpan.Zero
+                    || observed.ObservedAtUtc < handle.Receipt.ExpiresAtUtc) throw Unavailable();
+                // Never replace known expiry with a later clock observation.
+                // The existing retirement path authenticates its SQL receipt
+                // and preserves this timestamp even after UTC rolls backward.
+                return new GroupBatchClaimFenceVerdict.Expired(observed);
             }
             async Task RequireCurrentOrRetireAsync(GroupBatchClaimFenceVerdict verdict, bool rollbackWrites)
             {

@@ -17,7 +17,7 @@ public sealed class GroupIngressModelTests
     {
         using var db = Database(); var model = db.GetService<IDesignTimeModel>().Model;
         var entities = model.GetEntityTypes().Where(x => x.ClrType.Name.StartsWith("Group", StringComparison.Ordinal)).ToArray();
-        Assert.Equal(38, entities.Length);
+        Assert.Equal(39, entities.Length);
         foreach (var entity in entities)
         {
             Assert.Equal(new[] { "TenantId", "CompanyId" }, entity.FindPrimaryKey()!.Properties.Take(2).Select(x => x.Name));
@@ -78,7 +78,8 @@ public sealed class GroupIngressModelTests
         var attempts = new AddGroupModelAttemptJournal();
         var inputPlans = new AddGroupAutomaticInputPlanStore();
         var results = new AddGroupModelAttemptResults();
-        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).Concat(inbox.UpOperations).Concat(allocation.UpOperations).Concat(claims.UpOperations).Concat(expiry.UpOperations).Concat(notes.UpOperations).Concat(raw.UpOperations).Concat(terminal.UpOperations).Concat(advances.UpOperations).Concat(advanceKeys.UpOperations).Concat(attempts.UpOperations).Concat(inputPlans.UpOperations).Concat(results.UpOperations).ToArray(), model).Select(x => x.CommandText));
+        var admissions = new AddGroupOriginalAdmissionSidecars();
+        var sql = string.Join("\n", db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations.Concat(coverage.UpOperations).Concat(inbox.UpOperations).Concat(allocation.UpOperations).Concat(claims.UpOperations).Concat(expiry.UpOperations).Concat(notes.UpOperations).Concat(raw.UpOperations).Concat(terminal.UpOperations).Concat(advances.UpOperations).Concat(advanceKeys.UpOperations).Concat(attempts.UpOperations).Concat(inputPlans.UpOperations).Concat(results.UpOperations).Concat(admissions.UpOperations).ToArray(), model).Select(x => x.CommandText));
         foreach (var table in new[] { "GroupConnectorAccounts", "GroupServices", "GroupBindings", "GroupServiceGrants", "GroupReaderGrants" })
         {
             Assert.Contains($"GRANT SELECT ON OBJECT::[aioffice].[{table}]", sql);
@@ -110,6 +111,7 @@ public sealed class GroupIngressModelTests
         Assert.Throws<NotSupportedException>(() => attempts.DownOperations);
         Assert.Throws<NotSupportedException>(() => inputPlans.DownOperations);
         Assert.Throws<NotSupportedException>(() => results.DownOperations);
+        Assert.Throws<NotSupportedException>(() => admissions.DownOperations);
         Assert.Contains("GRANT UPDATE ON OBJECT::[aioffice].[GroupBatchClaimStates] ([ExpiryObservedAtUtc])", sql);
         Assert.Contains("CHECK ([ExpiryObservedAtUtc] IS NULL OR ([ExpiryObservedAtUtc] >= [ExpiresAtUtc]", sql);
         Assert.Contains("HAS_PERMS_BY_NAME(N'aioffice.GroupBatchClaimStates',N'OBJECT',N'UPDATE',N'ExpiryObservedAtUtc',N'COLUMN')=1", GroupIngressPermissionVerifier.VerificationSql);

@@ -1,0 +1,118 @@
+"""Inert orchestrator fault injection; never SQL/provider qualification."""
+import base64
+import importlib.util
+import io
+import os
+from pathlib import Path
+from types import SimpleNamespace
+import unittest
+from unittest.mock import patch
+import uuid
+
+
+def load(name, filename):
+    spec = importlib.util.spec_from_file_location(name,Path(__file__).with_name(filename))
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); return module
+
+
+proof = load('admission_proof_controls','smoke-group-original-admission.py')
+reference = load('admission_reference_controls','smoke-group-reference.py')
+automatic = load('admission_automatic_controls','smoke-group-automatic-notes.py')
+
+
+class OriginalAdmissionProofTests(unittest.TestCase):
+    environment = {'CI':'true','GITHUB_ACTIONS':'true','RUNNER_TEMP':'/owned'}
+
+    def oracle(self, fault=None):
+        tenant,company,service,source,account,old_source,old_account,installation = (str(uuid.uuid4()) for _ in range(8))
+        events = [str(uuid.uuid4()),str(uuid.uuid4())]
+        phase = 'before'; denied = False; permissions_touched = []; calls = []
+
+        def sql(query):
+            nonlocal denied
+            if query.startswith('DENY SELECT ON OBJECT::'):
+                denied = True; permissions_touched.append('deny'); return ''
+            if query.startswith('REVOKE SELECT ON OBJECT::'):
+                permissions_touched.append('restore')
+                if fault == 'restore': raise AssertionError('owned SELECT restoration failed')
+                denied = False; return ''
+            if 'FROM sys.database_permissions' in query: return ('B' if denied else 'A')*64
+            if query.startswith('SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupBindings'): return old_source
+            if query.startswith('SELECT LOWER(CONVERT(char(36),Id)) FROM aioffice.GroupConnectorAccounts'): return old_account
+            if query.startswith('SELECT LOWER(CONVERT(char(36),ConnectorAccountId))'): return account
+            if 'HASHBYTES' in query and not query.startswith('SELECT COUNT(*)'):
+                if query.startswith('SET NOCOUNT ON;'):
+                    return '\n'.join(f'{i:02d}|'+('B' if fault == 'retained' and phase != 'before' else 'A')*64 for i in range(34))
+                table = query.split('FROM aioffice.',1)[1].split()[0]
+                own = source in query and 'BindingId IN' not in query
+                if own and fault in ('plan','sidecar','start','result') and phase == 'admission-original-resume':
+                    target = {'plan':'GroupAutomaticInputPlans','sidecar':'GroupOriginalAdmissionSidecars','start':'GroupModelAttemptStarts','result':'GroupModelAttemptResults'}[fault]
+                    if table == target: return 'B'*64
+                if own and fault == 'source' and phase == 'admission-original-commit' and table == 'GroupMessages': return 'B'*64
+                if own and fault == 'claim' and phase == 'admission-original-recover' and 'AND Epoch=1' in query: return 'B'*64
+                if own and fault and fault.startswith('cleanup:') and phase == fault.split(':')[1] and table == 'GroupOriginalAdmissionSidecars': return 'B'*64
+                return 'A'*64
+            if 'SELECT CONCAT' in query:
+                return {'admission-original-prepare':'0|0|0|0|0','admission-original-expiry':'0|0|0|0|1','admission-original-commit':'1|1|1|1|2','admission-original-recover':'1|1|1|1|3','admission-original-resume':'1|1|1|1|3'}[phase]
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupCustomerRequests') or query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptFailures'): return '0'
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupBatchClaimStates'): return '0' if fault == 'expiry-witness' else '1'
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupOriginalAdmissionSidecars s INNER JOIN'): return '0' if fault == 'row-binding' else '1'
+            self.fail('Unexpected SQL shape')
+
+        def process(command, **kwargs):
+            nonlocal phase
+            calls.append((command,kwargs))
+            if command[:2] == ['docker','build']: return SimpleNamespace(returncode=0,stdout='',stderr='')
+            if command[:2] == ['docker','inspect']:
+                phase = 'container-cleanup'
+                return SimpleNamespace(returncode=1,stdout='',stderr='Error: No such object: '+command[-1])
+            if command[:3] == ['docker','image','rm']:
+                phase = 'image-cleanup'; return SimpleNamespace(returncode=1 if fault == 'image-error' else 0,stdout='',stderr='')
+            self.assertEqual(['docker','run'],command[:2]); phase = command[-1]
+            if phase == 'admission-original-recover': self.assertTrue(denied)
+            line = proof.RUNTIME_LINES[phase]
+            if fault == 'child-error' and phase == 'admission-original-recover': return SimpleNamespace(returncode=1,stdout='',stderr='')
+            if fault == 'duplicate' and phase == 'admission-original-resume': line += '\n'+line
+            if fault == 'private-output' and phase == 'admission-original-commit': line += '\nPRIVATE_DIAGNOSTIC'
+            return SimpleNamespace(returncode=0,stdout=line+'\n',stderr='')
+
+        args = dict(directory=Path('/owned/aioffice-local'),api='http://127.0.0.1:8080',manifest=dict(AIOFFICE_INSTALLATION_ID=installation,AIOFFICE_RUNTIME_PASSWORD='r'*40),
+            tenant=tenant,company=company,service=service,sql=sql,prepare_source=lambda:(source,events,base64.b64encode(b'k'*32).decode('ascii')),reference=reference,automatic=automatic)
+        return args,process,calls,permissions_touched
+
+    def run_control(self, fault=None):
+        args,process,calls,mutations = self.oracle(fault)
+        with patch.dict(os.environ,self.environment,clear=True),patch.object(proof.subprocess,'run',process),patch('sys.stdout',new_callable=io.StringIO) as output:
+            if fault:
+                with self.assertRaises(AssertionError): proof.verify(**args)
+                self.assertEqual('',output.getvalue())
+            else:
+                proof.verify(**args)
+                self.assertEqual([*proof.RUNTIME_LINES.values(),proof.SUMMARY],output.getvalue().splitlines())
+        return args,calls,mutations
+
+    def test_success_restores_select_and_qualifies_only_after_two_cleanup_checks(self):
+        args,calls,mutations = self.run_control()
+        self.assertEqual(['deny','restore'],mutations)
+        self.assertEqual(list(proof.RUNTIME_LINES),[cmd[-1] for cmd,_ in calls if cmd[:2] == ['docker','run']])
+        self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))
+        for cmd,kwargs in calls:
+            if cmd[:2] != ['docker','run']: continue
+            self.assertEqual(170,kwargs['timeout']); self.assertIn('--read-only',cmd)
+            self.assertNotIn(args['manifest']['AIOFFICE_RUNTIME_PASSWORD'],' '.join(cmd)+kwargs['input'])
+            self.assertNotIn(kwargs['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'],' '.join(cmd)+kwargs['input'])
+
+    def test_child_failure_always_restores_select_and_never_publishes_partial_markers(self):
+        _,calls,mutations = self.run_control('child-error');self.assertEqual(['deny','restore'],mutations)
+        self.assertFalse(any(cmd[-1] == 'admission-original-resume' for cmd,_ in calls))
+
+    def test_changed_originals_and_scope_or_claim_never_qualify(self):
+        for fault in ('plan','sidecar','start','result','source','claim','retained','row-binding','expiry-witness'):
+            with self.subTest(fault=fault): self.run_control(fault)
+
+    def test_bad_child_output_or_restore_and_cleanup_failures_never_qualify(self):
+        for fault in ('duplicate','private-output','restore','image-error','cleanup:container-cleanup','cleanup:image-cleanup'):
+            with self.subTest(fault=fault): self.run_control(fault)
+
+
+if __name__ == '__main__': unittest.main()
