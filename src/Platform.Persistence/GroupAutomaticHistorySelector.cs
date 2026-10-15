@@ -31,10 +31,19 @@ internal sealed class GroupAutomaticHistorySelector(PlatformDbContext database, 
     private const int ProbeLimit = GroupBrainCurrentReader.MaximumSelectedRevisions + 1;
     private const int GlossaryLimit = 4;
 
-    internal async Task<GroupAutomaticHistorySelection> SelectAsync(GroupBatchSourcePreparation preparation,
-        CancellationToken token = default)
+    internal Task<GroupAutomaticHistorySelection> SelectAsync(GroupBatchSourcePreparation preparation, CancellationToken token = default) =>
+        SelectCoreAsync(preparation, false, token);
+
+    // No text candidate means no model/history interpretation. Still issue
+    // only after the same current SQL/source/claim/permission fences.
+    internal Task<GroupAutomaticHistorySelection> SelectWithoutModelAsync(GroupBatchSourcePreparation preparation, CancellationToken token = default) =>
+        SelectCoreAsync(preparation, true, token);
+
+    private async Task<GroupAutomaticHistorySelection> SelectCoreAsync(GroupBatchSourcePreparation preparation,
+        bool withoutModel, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(preparation); token.ThrowIfCancellationRequested();
+        if (withoutModel && preparation.Candidates.Count != 0) throw Unavailable();
         var handle = preparation.Context.Handle; var scope = preparation.Scope;
         worker.Validate(); scope.Validate();
         if (scope.TenantId != worker.TenantId || scope.CompanyId != worker.CompanyId
@@ -61,11 +70,15 @@ internal sealed class GroupAutomaticHistorySelector(PlatformDbContext database, 
                 var claims = new GroupBatchClaimStore(database, worker, clock);
                 var permissions = new GroupWorkNotePermissionVerifier(database);
                 await FenceAsync();
-                var codeRows = hints.RequestCodes.Count == 0 ? [] : await QueryRequests(preparation, hints, 0).ToArrayAsync(token);
-                var replyRows = hints.ReplyMessageIndexes.Count == 0 ? [] : await QueryRequests(preparation, hints, 1).ToArrayAsync(token);
-                var recentRows = await QueryRequests(preparation, hints, 2).ToArrayAsync(token);
-                var glossaryRows = await QueryGlossary(preparation).ToArrayAsync(token);
-                selection = Rank(scope, codeRows, replyRows, recentRows, glossaryRows, hints.HasAdditionalRequestCodes, token);
+                if (withoutModel) selection = new(scope, [], [], false);
+                else
+                {
+                    var codeRows = hints.RequestCodes.Count == 0 ? [] : await QueryRequests(preparation, hints, 0).ToArrayAsync(token);
+                    var replyRows = hints.ReplyMessageIndexes.Count == 0 ? [] : await QueryRequests(preparation, hints, 1).ToArrayAsync(token);
+                    var recentRows = await QueryRequests(preparation, hints, 2).ToArrayAsync(token);
+                    var glossaryRows = await QueryGlossary(preparation).ToArrayAsync(token);
+                    selection = Rank(scope, codeRows, replyRows, recentRows, glossaryRows, hints.HasAdditionalRequestCodes, token);
+                }
                 await FenceAsync();
                 if (database.ChangeTracker.HasChanges()) throw Unavailable();
                 await transaction.CommitAsync(token);

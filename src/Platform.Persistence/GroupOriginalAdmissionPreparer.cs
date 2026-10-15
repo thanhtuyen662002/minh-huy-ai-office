@@ -7,7 +7,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 // Fixed trusted composition dependency, never supplied by a request/DTO. This
 // prepares historical original provenance; it appends no journal and calls no
 // provider. SQL original/source/brain/claim/permission fences remain mandatory.
-internal sealed class GroupOriginalAdmissionPreparer(IAiStructuredRequestAdmission admission, TimeProvider clock)
+internal sealed class GroupOriginalAdmissionPreparer(IAiStructuredRequestAdmission? admission, TimeProvider clock)
 {
     private readonly object issuer = new();
     private static readonly UTF8Encoding Utf8 = new(false, true);
@@ -23,7 +23,7 @@ internal sealed class GroupOriginalAdmissionPreparer(IAiStructuredRequestAdmissi
         var began = clock.GetTimestamp(); var beganUtc = UtcNow();
         var expires = beganUtc.Add(MaximumPreparation);
         if (expires > preparation.Context.Handle.Receipt.ExpiresAtUtc) expires = preparation.Context.Handle.Receipt.ExpiresAtUtc;
-        if (expires <= beganUtc || admission is null) throw Unavailable();
+        if (expires <= beganUtc) throw Unavailable();
         using var timeout = new CancellationTokenSource(expires - beganUtc, clock);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token);
         try
@@ -38,12 +38,13 @@ internal sealed class GroupOriginalAdmissionPreparer(IAiStructuredRequestAdmissi
             {
                 RequireTime();
                 if (chunk.Current.ModelContext is not { } context) continue;
+                var currentAdmission = admission ?? throw Unavailable();
                 // The stable original operation supplies this measurement-only
                 // request identity. A future actual attempt uses its journal ID.
                 var request = context.CreateGatewayRequest(chunk.Original.OperationId);
-                var handle = await admission.PrepareAsync(request, linked.Token).ConfigureAwait(false);
+                var handle = await currentAdmission.PrepareAsync(request, linked.Token).ConfigureAwait(false);
                 RequireTime();
-                var snapshot = admission.DescribePrepared(handle, linked.Token);
+                var snapshot = currentAdmission.DescribePrepared(handle, linked.Token);
                 RequireTime(); RequireRequest(snapshot, request, context.Manifest.ModelId);
                 var identity = ProfileIdentity(snapshot);
                 if (profileIdentity is not null && profileIdentity != identity) throw Unavailable();
