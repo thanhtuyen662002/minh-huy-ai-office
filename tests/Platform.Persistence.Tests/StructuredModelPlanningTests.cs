@@ -11,7 +11,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 // Actual existing gate/catalog/counter classes with synthetic metadata only.
 // No prepared request, HTTP, source/SQL authority or model quality is proved.
 [Collection(nameof(BoundedTokenizationCollection))]
-public sealed class StructuredModelPlanningTests
+public sealed partial class StructuredModelPlanningTests
 {
     private const string Schema = "{\"type\":\"object\",\"properties\":{},\"required\":[],\"additionalProperties\":false}";
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));

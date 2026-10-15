@@ -21,7 +21,7 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: "Preserve remote5bf scoped closure6194064928/native141/full5037/all8/Gov/wholequality/six originals and failed854/a293/198. Source7b/frozenf8ca5149/full5176 + source7b142 helpers6195314697/parser84792734/capturef48638b7/staticd9027a9e remain separately review PENDING/INERT_UNREVIEWED/no dispatch. Genuine review + explicit ordinary7b-only publication/actual142 closure excludes later24/25/26/27/28. Local27 without-model creatorb9bba0c/6196810546/full5252 + earlier24/25/26 remain review/positive SQL pending. Successor28 adds optional planning metadata to SAME StructuredModelAdmission/Gateway/catalog/counter/clock; no new client/config/release entry. Complete schema counted within original monotone30s budget, minimum input capacity after EACH released route framing/output/schema, current primary model hint and deterministic profile-set fingerprint; final current/revocation/metadata/caller checks. Descriptor not prepared/source/SQL/release/semantic authority; complete actual input MUST still pass real Prepare. Production catalogEMPTY still refuses. New19/full5271=[6,584,25,4656]/zero fail-skip/format PASS; real classes + synthetic profiles/adapters not actual HTTP/model/SQL. Source28 security review pending/unpushed; no Program/DI activation. Continue model-original producer + current selection-origin SQL metadata through existing owner; claim-scanner/shippedWorker/no-click278, positive24-28 + invalidated-original durable continuation, then internalIT279/full233. NewSQL142/expiry/races/modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain; no partialmerge; mainad747d0. HANDOFF owns actualheads."
+next_action: "Preserve remote5bf scoped closure6194064928/native141/full5037/all8/Gov/wholequality/six originals and failed854/a293/198. Exact source7b/frozenf8ca5149/full5176 + static142 helpers6195314697/parser84792734/capturef48638b7/staticd9027a9e remain review PENDING/INERT_UNREVIEWED/no dispatch; genuine review + ordinary explicit7b-only publication/actual142 closure excludes all later24-29. Local28 same-Gateway planning227e7c9/6197034753/full5271 and prior24-27 remain source review/positive SQL pending. Successor29 model-original creator reads actual stored original FIRST/cold factory, exact current allocation + privately issued selection/current brain/scoped SQL origins, SAME admission planner/preparer, common unchanged-format profile fingerprint, every actual measured model sidecar must match planning, existing atomic V3 original+sidecar writer. No client/config/release entry/schema/attempt/provider/effect/Program/DI activation. Empty production catalog refuses. New32/focus51/full5303=[6,584,25,4688]/zero fail-skip/format PASS; first full EOF deadline timeout retained, unchanged focused10 and full rerun PASS. Synthetic actual-class metadata/traps do not qualify SQL/model. Review29/positive24-29 SQL pending/unpushed. Continue claimed-batch composition/scanner/shippedWorker/no-click278 and durable invalidated-original continuation without weakening current dependencies/reusing accepted output. Then internalIT279/full233. NewSQL142/expiry/replacement/permissions/queue/restart/modelNOT_RUN_UNEVALUATED/readonlyERP/Windows/deployment remain. No partialmerge; mainad747d0; HANDOFF owns actual heads."
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295
@@ -922,3 +922,22 @@ group_existing_gateway_planning_28_checkpoint:
   actual_newSQL_and_positive24_25_26_27: "NOT_RUN_UNQUALIFIED"
   model: "NOT_RUN_UNEVALUATED"
   next: "Review/qualify7b separately; same-Gateway model-original producer + selection origins/claim-scanner/Worker/no-click/invalidated-original continuation and positive24-28; internalIT279/full233"
+
+
+group_model_original_producer_29_checkpoint:
+  parent: "227e7c93f015845343cbb46ff9ddd9e56e226d0e"
+  state: "LOCAL_MODEL_ORIGINAL_PRODUCER_SOURCE_SECURITY_REVIEW_PENDING_NO_PUSH"
+  remote_head: "5bf1d083a92060c5eeaf333285b57a53ec6fe943"
+  remote_scoped_closure: 6194064928
+  new_controls: 32
+  focused: 51
+  full_tests: 5303
+  per_project: [6, 584, 25, 4688]
+  format: "PASS"
+  source_review: "PENDING29; prior source16/17/19/20/21/22/24-28 and helper23 pending"
+  retained_initial_full_failure: "Existing unchanged Responses adapter EOF allEntered timeout; 1 fail/4687 pass Persistence; subsequent unchanged focused10 + full5303 PASS; no flaky test or production adapter change"
+  preserved_7b_helpers: "checkpoint6195314697/parser84792734/capturef48638b7/staticd9027a9e; source7b/full5176 ONLY; inert/unreviewed/no dispatch; cannot qualify24-29"
+  actual_positive_model_original_SQL_wholeflow: "NOT_RUN_UNQUALIFIED"
+  actual_newSQL_and_positive24_29: "NOT_RUN_UNQUALIFIED"
+  model: "NOT_RUN_UNEVALUATED"
+  next: "Review/qualify7b separately; claimed-batch composition/scanner/shippedWorker/no-click/invalidated-original continuation and positive24-29; internalIT279/full233"

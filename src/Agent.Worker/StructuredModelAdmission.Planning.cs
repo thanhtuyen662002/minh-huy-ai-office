@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using MinhHuyAiOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Agent.Worker;
@@ -30,21 +29,11 @@ internal sealed partial class StructuredModelAdmission
             var maximum = profiles.Min(profile => checked(profile.ContextWindowTokens - profile.MaxOutputTokens - profile.FramingReserveTokens - schemaTokens));
             if (maximum <= 0) throw Unavailable();
             var budget = (int)Math.Min(maximum, int.MaxValue);
-            using var stream = new MemoryStream();
-            try
-            {
-                using var writer = new BinaryWriter(stream, new UTF8Encoding(false, true), true);
-                writer.Write("ai-structured-planning-v1"); writer.Write(metadata.MetadataSha256); writer.Write(schemaHash);
-                writer.Write(StructuredTextTokenCounter.Version); writer.Write(budget); writer.Write(schemaTokens); writer.Write(profiles.Count);
-                foreach (var profile in profiles) writer.Write(profile.CandidateSha256);
-                writer.Flush(); var profileHash = Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length))));
-                var result = new AiStructuredPlanningMetadata(metadata.MetadataSha256, schemaHash, profileHash,
-                    StructuredTextTokenCounter.Version, profiles[0].ConfiguredModel, budget);
-                catalog.RequireCurrent(metadata, profiles);
-                if (gateway.DescribeStructuredGateway().MetadataSha256 != metadata.MetadataSha256) throw Unavailable();
-                RequireTime(); return result;
-            }
-            finally { CryptographicOperations.ZeroMemory(stream.GetBuffer()); }
+            var result = AiStructuredPlanningMetadata.Create(metadata.MetadataSha256, schemaHash, StructuredTextTokenCounter.Version,
+                profiles[0].ConfiguredModel, budget, schemaTokens, profiles.Select(x => x.CandidateSha256).ToArray());
+            catalog.RequireCurrent(metadata, profiles);
+            if (gateway.DescribeStructuredGateway().MetadataSha256 != metadata.MetadataSha256) throw Unavailable();
+            RequireTime(); return result;
 
             void RequireTime()
             {
