@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>Setup</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BundleDirectory Condition="'$(BundleDirectory)' == ''">../../artifacts/setup-bundle</BundleDirectory>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Setup.Core/Setup.Core.csproj" />
+    <EmbeddedResource Include="$(BundleDirectory)/application.zip" LogicalName="ApplicationBundle" />
+    <EmbeddedResource Include="$(BundleDirectory)/manifest.json" LogicalName="ApplicationBundleManifest" />
+  </ItemGroup>
+  <Target Name="RequireBundle" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(BundleDirectory)/application.zip') Or !Exists('$(BundleDirectory)/manifest.json')"
+           Text="Build a pinned bundle with scripts/build-windows-installer.ps1 before publishing Setup." />
+  </Target>
+</Project>

@@ -149,3 +149,8 @@ Implementation #234 supplies the FE container dependency and runtime configurati
 ## Genuine external evidence boundaries
 
 The repository contains placeholders rather than approved live customer ERP credentials, provider credentials, production OIDC accounts and tax/billing provider approval. Live external integrations require those inputs or permissions. Continue all unblocked code and sandbox/integration work while recording these boundaries; do not substitute fake provider responses for required live proof. Windows installation must be validated on a clean supported Windows host with the required OS privileges and virtualization. Linux container CI alone cannot prove Windows install/reboot behavior.
+
+
+## Installer accepted-main preparation — 2026-10-16
+
+Installer239 local preparation now merges accepted mainad747d into accepted installer22f in a separate checkout. No unmerged288 code or future classification316 is included. Prior22f all9 evidence remains historical; renewed complete tests, source review, exact9/native artifact/runtime evidence and actual clean Windows/signing acceptance remain required. Current user V2 attachment remains unread pending completion and main merge.

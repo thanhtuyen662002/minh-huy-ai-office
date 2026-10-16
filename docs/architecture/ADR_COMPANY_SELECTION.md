@@ -1,6 +1,6 @@
 # Authoritative company discovery and browser selection
 
-Issue #266 / PR #267, under full product #233. Actual two-company SQL/OIDC/Chromium and independent frozen shipping f03/proof764 review passed; final documentation delta and exact PR/main gates remain. Scoped evidence is recorded in `docs/validation/COMPANY_SELECTION.md`.
+Issue #266 / PR #267, under full product #233. Actual two-company SQL/OIDC/Chromium and independent frozen shipping f03/proof764 review passed; final documentation delta and exact PR/main gates passed at accepted maina75. Scoped evidence is recorded in `docs/validation/COMPANY_SELECTION.md`.
 
 ## Discovery
 
@@ -22,6 +22,6 @@ The private workspace body is keyed by scope/generation. This also clears uncont
 
 No schema, identity, membership or role mutation is introduced by selection. Existing durable tasks remain in their original company. Customer ERP enrollment and business capabilities keep their separate authorization and credential requirements.
 
-## Delivery still required
+## Verified scope and remaining product acceptance
 
-Actual disposable SQL identity/padding/ambiguity/Unicode controls and provider/Chromium switches in both directions, target membership revoke/restore, fresh private chat/draft clearing and source/task/member separation passed at f03 and764. Independent frozen shipping/security/runtime review approved both checkpoints with additional real BFF helper and Unicode controls. Final documentation delta and exact final PR/main delivery remain mandatory. This checkpoint does not complete production identity or full #233. Installer #239 remains Draft pending its separate clean Windows/signing evidence.
+Actual disposable SQL identity/padding/ambiguity/Unicode controls and provider/Chromium switches in both directions, target membership revoke/restore, fresh private chat/draft clearing and source/task/member separation passed at f03 and764. Independent frozen shipping/security/runtime review approved both checkpoints with additional real BFF helper and Unicode controls. Final938 docs independently approved; exact final PR/main all8 gates passed at accepted maina75. This checkpoint does not complete production identity or full #233. Installer #239 remains Draft pending its separate clean Windows/signing evidence.

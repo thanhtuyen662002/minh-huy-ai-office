@@ -16,7 +16,7 @@ def require_sdk(text):
     return text.strip()
 
 
-def require_frameworks(text, aspnet=False, host=False):
+def require_frameworks(text, aspnet=False, host=False, windows_desktop=False):
     if len(text) > 8192:
         raise ValueError(INVALID)
     lines = text.splitlines()
@@ -45,6 +45,8 @@ def require_frameworks(text, aspnet=False, host=False):
     required = {"Microsoft.NETCore.App"}
     if aspnet:
         required.add("Microsoft.AspNetCore.App")
+    if windows_desktop:
+        required.add("Microsoft.WindowsDesktop.App")
     if not required <= found:
         raise ValueError(INVALID)
     return {name: f"10.0.{selected_patches[name]}" for name in sorted(required)}
@@ -55,15 +57,16 @@ def main():
     parser.add_argument("--sdk", action="store_true")
     parser.add_argument("--aspnet", action="store_true")
     parser.add_argument("--host", action="store_true")
+    parser.add_argument("--windows-desktop", action="store_true")
     args = parser.parse_args()
     try:
         text = sys.stdin.read(8193)
         if args.sdk:
-            if args.aspnet or args.host:
+            if args.aspnet or args.host or args.windows_desktop:
                 raise ValueError(INVALID)
             verified = require_sdk(text)
         else:
-            verified = require_frameworks(text, args.aspnet, args.host)
+            verified = require_frameworks(text, args.aspnet, args.host, args.windows_desktop)
     except (ValueError, OverflowError):
         print(INVALID, file=sys.stderr)
         return 1

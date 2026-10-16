@@ -64,3 +64,8 @@ owns executable routing/service contracts and qualification, preceding277–279.
 Full frozen ee30 review6088762933 approved475 tests including13 own probes.
 Final integration/documentation review and exact final PR/main gates remain.
 No historical branch was deleted, force updated or merged.
+
+
+## Installer accepted-main preparation — 2026-10-16
+
+Bounded open-PR audit367 at2026-10-16 found only Draft239/22f and Draft288/5437, no eligible merge.239 has six actual conflicts against acceptedmainad747d; ordinary local preparation on codex/239-main-integration resolves these while preserving the owner ea34 checkout. This is neither an updated remote head nor accepted integration.288 Build38861583635/Gov38861583640 remains separately owned. No historical backup/superseded branch is newly eligible, and no branch was deleted or forced.

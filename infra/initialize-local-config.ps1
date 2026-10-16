@@ -1,5 +1,9 @@
 [CmdletBinding()]
-param([Parameter(Mandatory = $true)][string]$DataDirectory)
+param(
+    [Parameter(Mandatory = $true)][string]$DataDirectory,
+    [switch]$RequireExistingInstallation,
+    [string]$ExpectedInstallationId
+)
 
 $ErrorActionPreference = 'Stop'
 $repository = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -75,9 +79,16 @@ function Write-AtomicFile([string]$Path, [string]$Content, [bool]$Replace) {
 }
 
 $manifestPath = Join-Path $directory 'installation.json'
+$envPath = Join-Path $directory 'local.env'
+if (($RequireExistingInstallation -or $ExpectedInstallationId) -and -not [System.IO.File]::Exists($manifestPath)) {
+    throw 'Retained installation manifest is missing. Restore the original manifest; credentials and identity were not changed.'
+}
 $idKeys = @('INSTALLATION', 'TENANT', 'COMPANY', 'USER', 'DATA_SOURCE')
 $secretKeys = @('SQL', 'RUNTIME', 'READER', 'IDENTITY_ADMIN', 'IDENTITY_DB', 'OWNER', 'RABBITMQ')
 if (-not [System.IO.File]::Exists($manifestPath)) {
+    if ([System.IO.File]::Exists($envPath)) {
+        throw 'Installation manifest is missing but retained configuration exists. Restore the original manifest; credentials and identity were not changed.'
+    }
     $newManifest = [ordered]@{ schemaVersion = 1 }
     foreach ($key in $idKeys) { $newManifest["AIOFFICE_${key}_ID"] = [Guid]::NewGuid().ToString() }
     foreach ($key in $secretKeys) { $newManifest["AIOFFICE_${key}_PASSWORD"] = New-LocalSecret }
@@ -86,6 +97,14 @@ if (-not [System.IO.File]::Exists($manifestPath)) {
 Protect-LocalFile $manifestPath
 $manifest = [System.IO.File]::ReadAllText($manifestPath) | ConvertFrom-Json
 if ($manifest.schemaVersion -ne 1) { throw 'Unsupported local installation manifest. Preserve it for recovery.' }
+if ($ExpectedInstallationId) {
+    $expected = [Guid]::Empty
+    $actual = [Guid]::Empty
+    if (-not [Guid]::TryParse($ExpectedInstallationId, [ref]$expected) -or $expected -eq [Guid]::Empty -or
+        -not [Guid]::TryParse($manifest.AIOFFICE_INSTALLATION_ID, [ref]$actual) -or $expected -ne $actual) {
+        throw 'Installation identity does not match retained progress. Restore the original manifest; configuration was not changed.'
+    }
+}
 $lines = New-Object 'System.Collections.Generic.List[string]'
 foreach ($key in $idKeys) {
     $name = "AIOFFICE_${key}_ID"
@@ -118,7 +137,6 @@ try {
     if ($browserKeyBytes) { [Array]::Clear($browserKeyBytes, 0, $browserKeyBytes.Length) }
 }
 $lines.Add('COMPOSE_PROJECT_NAME=aioffice-' + ([Guid]$manifest.AIOFFICE_INSTALLATION_ID).ToString('N'))
-$envPath = Join-Path $directory 'local.env'
 if ([System.IO.File]::Exists($envPath)) { Protect-LocalFile $envPath }
 Write-AtomicFile $envPath (($lines -join "`n") + "`n") $true
 Protect-LocalFile $envPath

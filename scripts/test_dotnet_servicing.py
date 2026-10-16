@@ -14,6 +14,61 @@ ASP = "Microsoft.AspNetCore.App 10.0.13 [/usr/share/dotnet/shared/Microsoft.AspN
 
 
 class ServicingTests(unittest.TestCase):
+    def test_bundled_windows_requires_both_serviced_frameworks(self):
+        desktop = "Microsoft.WindowsDesktop.App 10.0.13 [bundled]"
+        self.assertEqual({"Microsoft.NETCore.App": "10.0.13", "Microsoft.WindowsDesktop.App": "10.0.13"},
+                         servicing.require_frameworks(CORE + "\n" + desktop, windows_desktop=True))
+
+    def test_bundled_windows_missing_old_wrong_major_or_preview_framework_refuses(self):
+        desktop = "Microsoft.WindowsDesktop.App 10.0.13 [bundled]"
+        for text in [CORE, desktop, CORE + "\n" + desktop.replace("10.0.13", "10.0.12"),
+                     CORE.replace("10.0.13", "10.0.12") + "\n" + desktop,
+                     CORE + "\n" + desktop.replace("10.0.13", "9.0.13"),
+                     CORE + "\n" + desktop.replace("10.0.13", "10.0.13-preview.1")]:
+            with self.subTest(length=len(text)):
+                with self.assertRaisesRegex(ValueError, servicing.INVALID):
+                    servicing.require_frameworks(text, windows_desktop=True)
+
+    def test_bundled_windows_rejects_duplicate_noncanonical_and_extra_private_metadata(self):
+        desktop = "Microsoft.WindowsDesktop.App 10.0.13 [bundled]"
+        for suffix in [desktop + "\n" + desktop, desktop.replace("10.0.13", "10.0.013"),
+                       desktop + "\nPRIVATE_NATIVE_CANARY"]:
+            with self.subTest(length=len(suffix)):
+                with self.assertRaisesRegex(ValueError, servicing.INVALID):
+                    servicing.require_frameworks(CORE + "\n" + suffix, windows_desktop=True)
+
+    def test_old_embedded_framework_is_not_credited_by_an_additional_serviced_version(self):
+        desktop = "Microsoft.WindowsDesktop.App 10.0.13 [bundled]"
+        text = CORE + "\n" + desktop.replace("10.0.13", "10.0.12") + "\n" + desktop
+        with self.assertRaises(ValueError):
+            servicing.require_frameworks(text, windows_desktop=True)
+        servicing.require_frameworks(text, host=True, windows_desktop=True)
+
+    def test_bundled_windows_cli_returns_only_actual_versions(self):
+        result = subprocess.run([sys.executable, str(path), "--windows-desktop"],
+                                input=CORE + "\nMicrosoft.WindowsDesktop.App 10.0.13 [bundled]",
+                                text=True, capture_output=True)
+        self.assertEqual(0, result.returncode)
+        self.assertIn("Microsoft.WindowsDesktop.App 10.0.13", result.stdout)
+        self.assertIn("Microsoft.NETCore.App 10.0.13", result.stdout)
+        self.assertNotIn("bundled", result.stdout)
+        self.assertNotIn("/usr/share", result.stdout)
+        self.assertEqual("", result.stderr)
+
+    def test_bundled_windows_cli_does_not_release_rejected_metadata(self):
+        result = subprocess.run([sys.executable, str(path), "--windows-desktop"],
+                                input=CORE + "\nPRIVATE_NATIVE_CANARY", text=True, capture_output=True)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual("", result.stdout)
+        self.assertEqual(servicing.INVALID + "\n", result.stderr)
+
+    def test_desktop_mode_cannot_be_mistaken_for_sdk_verification(self):
+        result = subprocess.run([sys.executable, str(path), "--sdk", "--windows-desktop"],
+                                input="10.0.402", text=True, capture_output=True)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual("", result.stdout)
+        self.assertEqual(servicing.INVALID + "\n", result.stderr)
+
     def test_current_and_newer_patch_in_same_sdk_feature_band(self):
         for version in ["10.0.402\n", "10.0.403\r\n", "10.0.499"]:
             with self.subTest(version=version):
