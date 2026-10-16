@@ -1174,6 +1174,26 @@ def main():
     erp_spec.loader.exec_module(erp_proof)
     erp_proof.verify(directory=directory, manifest=manifest, http=http, sql=sql, run=run,
         wait_for=wait_for, api=api, web=web, auth=member_auth, diagnostic_sql=erp_permission_diagnostic_query)
+    history_spec = importlib.util.spec_from_file_location("task_history_proof", Path("scripts/smoke-task-history.py"))
+    history_proof = importlib.util.module_from_spec(history_spec)
+    history_spec.loader.exec_module(history_proof)
+    history_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
+        http=http, sql=sql, identity_admin=identity_admin, identity=identity, api=api, auth=member_auth, retained_task=task)
+    submission_spec = importlib.util.spec_from_file_location("task_submission_proof", Path("scripts/smoke-task-submission.py"))
+    submission_proof = importlib.util.module_from_spec(submission_spec)
+    submission_spec.loader.exec_module(submission_proof)
+    submission_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
+        http=http, sql=sql, runtime_statement=runtime_statement, identity=identity, api=api, auth=member_auth)
+    group_spec = importlib.util.spec_from_file_location("group_ingress_proof", Path("scripts/smoke-group-ingress.py"))
+    group_proof = importlib.util.module_from_spec(group_spec)
+    group_spec.loader.exec_module(group_proof)
+    # All preceding adversarial SQL suites may outlive the original short-lived
+    # portal token. Obtain a current issued owner token for this independent read
+    # gate; expired tokens must not be treated as a source-read product defect.
+    login()
+    group_auth = {"Authorization": "Bearer " + next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token"),
+        "X-AIOffice-Company-Id": company}
+    group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api, auth=group_auth)
     print("PASS complete local stack integration")
 
 

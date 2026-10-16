@@ -4,11 +4,11 @@ status: active-development
 current_issue: 238
 current_pr: 239
 current_branch: lead/238-windows-installer
-head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
-state: in_progress
+head: "22f2866e5e4f95589d81484636ad665c5b4b4a6a"
+state: "in_progress"
 lease_owner: lead
-lease_heartbeat_at: '2026-10-09'
-last_checkpoint_at: '2026-10-09'
+lease_heartbeat_at: "2026-10-16"
+last_checkpoint_at: "2026-10-16"
 scope:
   - integration
   - roadmap-priority
@@ -55,233 +55,410 @@ integration:
       - 0e67a0f
     exact_head_build: 36298741274
     exact_head_governance: 36298741295
-next_action: 'Integrate accepted269/main3fc only after full frozen approvals6073002478/6073139900 and exact main Build37875625822/Gov37875625829/all8/actual113643444397/quality113645840920 PASS. Preserve approved723 Setup bytes and required native ninth gate; close renewed exact9 integration gates/artifacts/review. Keep239 Draft for clean Windows/signing. External backend270/271 remains separately owned, unaccepted and absent from this installer shipping. Full233/customer/production remain.'
+next_action: "Own LOCAL codex/239-main-integration ordinary22f+acceptedmainad preparation on same239. Verify code equality/full local/native/renewed exact9 review and artifact evidence before qualification; keep Draft for actual clean Windows lifecycle/signing. Current288 exact CI remains separately owned and excluded."
+
 blocked_by:
   - "Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner bootstrap is automated and verified in Compose CI."
   - "Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance dependencies; unblocked product engineering continues."
 product_completion_issue: 233
 requirement_matrix: docs/PRODUCT_COMPLETION.md
 
-installer_verification:
-  code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
-  local_core_tests: 76
-  local_result: "76 PASS on exact89ce9cb after reviewed255/257/259 integration. Retained-ID recovery, lost-both-files refusal, real PS5 Authenticode and PS7 diagnostics remain green. No installer transition logic changed. Hosted full gates, actual stack and Windows artifact PASS."
-  verified_published_head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
-  build: 37653169431
-  governance: 37653169432
-  actual_stack: 112901482261
-  native_artifact_job: 112901482578
-  unsigned_artifact: 11497921154
-  artifact_bytes: 48069731
-  previous_integrated_head: 89ce9cbd725a593de12d3fb5ec336a6f48eef8ad
-  previous_integrated_build: 37564958347
-  previous_integrated_governance: 37564958342
-  previous_integrated_actual_stack_job: 112610445116
-  previous_integrated_native_artifact_job: 112610445188
-  previous_published_head: 41ce2a6705bd23346a8af15c0f5883926d84d149
-  previous_build: 37552582888
-  previous_governance: 37552582871
-  previous_unsigned_artifact: 11453420856
-  previous_result: success
-  head_semantics: "head records the verified implementation commit; exact published HEAD and current workflow IDs belong in PR #239 HANDOFF."
-
-verified_security_249:
-  merge: db2ef9a141b69b10618b7c74548828753dfd2dd0
-  pr_build: 37505720443
-  pr_governance: 37505720572
-  main_build: 37506783690
-  main_governance: 37506783677
-  result: "PASS actual SQL/stack guards, impersonation/module/trigger, metadata races, broker revocation and replay retention;248 closed. Full product remains incomplete."
-
-onboarding_integration:
-  issue: 250
-  pr: 251
-  state: done
-  merge: e2165d8a67644cbfc9672ed373e2062761b3c31c
-  main_build: 37534355053
-  main_governance: 37534355102
-  result: success
-
-source_registration_integration:
-  issue: 252
-  pr: 253
-  state: done
-  merge: a3a929b58717b4f8e3ffe160699c179512441b07
-  main_build: 37551390004
-  main_governance: 37551390052
-  result: success
-
-member_directory_integration:
-  issue: 254
-  pr: 255
-  state: done
-  merge: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
-  main_build: 37553826140
-  main_governance: 37553826122
-  result: success
-
-exact_identity_integration:
-  issue: 256
-  pr: 257
-  state: done
-  merge: 6652940c5a9bfcc424422578d87c2f2851097211
-  main_build: 37556114743
-  main_governance: 37556114601
-  result: success
-
-session_security_integration:
-  issue: 258
-  pr: 259
-  state: done
-  merge: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
-  pr_build: 37564442806
-  pr_governance: 37564442800
-  main_build: 37564876619
-  main_governance: 37564876597
-  result: 'Exact PR/main CI and independent66f2f80 review PASS;258 closed.'
-
-selected_customer_business_read:
-  capability: inventory-and-stock-movements
-  state: metadata-captured-pending-read-only-credential-and-profile
-  selected_by_user: '2026-10-07'
-  credentials_policy: 'Private operator configuration and metadata/module hashes stay outside public Git. Both metadata connections succeeded; current credentials are elevated and unqualified for product read execution. No customer business rows or writes occurred.'
-
-browser_oidc_frontier:
-  issue: 260
-  pr: 261
-  state: done
-  merge: 39e668ebebe1f8bd19803199b8db393f12a4edb6
-  approved_pr_head: 94749957035a1dcb51cda9762c6fa045c84b982b
-  pr_build: 37650230590
-  pr_governance: 37650230960
-  main_build: 37651174359
-  main_governance: 37651174354
-  actual_stack: 112894592064
-  result: 'Full frozen947 acceptance approved, exact PR/main gates832 web/20 actual Redis and full retained SQL/Chromium lifecycle PASS. Browser PKCE is shipping local default;260 closed. Product administration and approved production qualification remain.'
-
-installer_browser_integration:
-  code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
-  state: in_progress
-  local: '76 Setup.Core tests, actual PS5/PS7 private stable key/replay/ACL and3 production-contract tests PASS. Installer owner copy directs sign-in through the provider page. Current exact-head native artifact/full runtime gates are required. Static copy changes no installer lifecycle or authority; compile/visual preview verifies its presentation.'
-
-branch_audit:
-  inspected_at: '2026-10-07'
-  remote_non_ancestor_refs: 115
-  merged_pr_exact_heads: 109
-  closed_pr_exact_heads: 1
-  backup_snapshot_refs_without_pr: 3
-  active_draft_leases: [239]
-  update: '261 now merged;239 is the only open Draft after merge. Historical115-ref classification remains recorded; no backup is authorized for merge.'
-  additional_eligible_prs: 0
-
-installer_layout_checkpoint:
-  state: done
-  head: 21d67981dbfd6b070e3030d03305429f76292671
-  build: 37716749021
-  governance: 37716749012
-  actual_stack: 113114854321
-  native_job: 113114854671
-  required_quality: 113116040384
-  unsigned_artifact: 11523499541
-  artifact_bytes: 48531144
-  review: 'Independent frozen21d20-case native192DPI review approved the responsive/integration/documentation delta; original P2 closed. Full hosted gates and clean pinned local verification PASS.'
-  prior_head: 6e1734113175269ca6451664879727954deb9c0f
-  prior_build: 37715495368
-  prior_governance: 37715495383
-  prior_actual_stack: 113110901977
-  prior_native_artifact: 11523339266
-  defect: 'Independent192DPI review found license height/clipping and hscroll at720x570 despite green default-only gates.'
-  local: 'Single table column inside scroll panel, measured multiline checkbox height and synchronized scroll extent.20 compiled offscreen cases across four states/default/minimum/expanded/minimum-again/14pt-minimum PASS; masked password and reveal reachable, minimum images visually inspected.76 core tests/formatting/real isolated ACL-shortcut-cache-diagnostic-failure-form PASS. No OS preparation/real Startup-folder changes.'
-  next: 'Keep239 Draft for clean Windows lifecycle/signing. Continue262/263 member-access implementation; exact published documentation HEAD/gates belong in239 HANDOFF.'
-
-active_product_slice:
-  issue: 264
-  pr: 265
-  branch: codex/264-erp-readonly-qualification
-  base: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
-  state: in_progress
-  next: 'Root implements effective read-only ERP connection qualification before/after each independent read.262/263 full review/exact PR/main gates closed. Customer credentials/qualified inventory adapters/business proof and full233 remain.'
-
-member_access_delivery:
-  issue: 262
-  pr: 263
-  final_pr_head: 552d5dd707b5bb69911ab9b6d6b61f5188caa9bf
-  merge: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
-  main_build: 37746848054
-  main_governance: 37746848190
-  main_actual_stack: 113210254492
-  main_quality: 113212217055
-  state: done
-  result: 'Full frozen implementation/security/runtime and final docs review APPROVED. Exact PR/main gates PASS with actual SQL+Chromium acceptance;262 closed. Main integrated into239; current integrated installer HEAD/gates belong in HANDOFF. Draft clean Windows/signing remains.'
-
-accepted_erp_installer_integration:
-  approved_installer_head: 989f771b04e9f710103a242d0b6122913f3a127b
-  accepted_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-  main_build: 37801975078
-  main_governance: 37801976469
-  main_actual: 113396238709
-  main_quality: 113399168935
-  delta: 'Merge accepted264/265 qualifier/bootstrap/worker/browser bounded guidance and native SQL owned proofs into installer payload. Only solution conflict is additive Setup.Core/Setup.Core.Tests plus ErpReadOnly.RuntimeProof; preserve all three projects/configurations. Installer source/test/build/verify scripts unchanged from independently approved989/21d.'
-  next: 'Local solution restore/test plus exact9 hosted gates and independent frozen integration review. Reviewer quota is currently unavailable; preserve Draft. Actual clean Windows/UAC/reboot/resume/startup/repair/retained recovery/backup and signing remain external requirements. No customer or OS preparation changes.'
-installer_verified_erp_integration:
-  head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
-  build: 37809993008
-  governance: 37809992983
-  actual_stack: 113424054565
-  native_installer: 113424054961
-  required_quality: 113426861674
-  artifact: 11564961765
-  artifact_bytes: 48601200
-  local_dotnet_tests: 1127
-  result: 'All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive solution conflict preserved all projects/configurations. Independent frozenfa/3ff integration APPROVED; reviewed3ff current all9 gates PASS.'
-  next: 'Close final documentation delta review/current HEAD gates and preserve Draft. Integrate266 only after it is independently accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup and signing remain mandatory; full233/customer workflows remain.'
-installer_verified_45a:
-  head: 45a2ba58abf00cdb278951d8bed7c9444f007982
-  build: 37813475810
-  governance: 37813475639
-  native: 113435995421
-  actual: 113435995742
-  quality: 113439235869
-  artifact: 11565887828
-  artifact_bytes: 48598421
-  review: 'Final docs45a independently APPROVED, receipt6065013782. All9 exact gates PASS; accepted ERP/retained SQL+Chromium and unchanged pinned native installer proof retained. Company selection is integrated only from accepted maina75 with exact main gates closed; renew integration gates/review. Clean Windows/signing remains external.'
-
-installer_company_selection_integration:
-  accepted_main: a75f31a2761ffe0afcbf067425eb8324789b3554
-  main_build: 37815044494
-  main_governance: 37815044554
-  main_actual: 113441393702
-  main_quality: 113444186237
-  prior_installer_head: 45a2ba58abf00cdb278951d8bed7c9444f007982
-  local_dotnet_tests: 1162
-  local_guard_tests: 3
-  local: 'Full solution restore/build/tests PASS:685 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core; owned guard3tests/8paths, YAML/AST/node syntax/diff PASS. Non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify scripts unchanged approved21d/989/45a. Workflow retains required owned guard and native9 quality results. Only three durable-state conflicts resolved, preserving accepted component and installer receipts.'
-  next: 'Capture exact integration HEAD and renewed9 CI gates; obtain independent frozen integration/docs/runtime review. Keep239 Draft for clean Windows/signing; full233/customer/production remain.'
-
-installer_verified_company_integration_4b:
-  head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
-  build: 37816394932
-  governance: 37816394855
-  native: 113446015962
-  actual: 113446015945
-  quality: 113448938090
-  artifact: 11566689313
-  artifact_bytes: 48623949
-  browser_artifact: 11567462838
-  browser_artifact_bytes: 72696
-  state: in_progress
-  review: 'Independent static frozen integration/source review found no blocker: non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify unchangedapproved21d/989/45a; workflow retains acceptedmain guard/native9 gate and solution retains all configurations. Exact4b all9 native/SQL/Chromium SUCCESS. Reviewer account quota interrupted remaining runtime/final documentation review; no full4b approval inferred.'
-  next: 'Close final documentation current9 gates; resume independent frozen runtime/final integration review when available. Keep239 Draft for external clean Windows/signing; full233/customer/production remain.'
-
-installer_accepted_administrator_integration:
-  approved_installer_head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
-  approved_review: 6072831478
+installer_verified_accepted_administrators_22f:
+  head: 22f2866e5e4f95589d81484636ad665c5b4b4a6a
   accepted_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
-  main_build: 37875625822
-  main_governance: 37875625829
-  main_actual: 113643444397
-  main_quality: 113645840920
-  state: in_progress
-  integration: 'Merge only accepted administrator269/main3fc, full frozen approvals6073002478/6073139900 and exact PR/main all8 PASS. Non-installer src/apps/tests equal acceptedmain3fc; Setup source/tests/build/verify remain byte-identical approved723. Additive solution projects/configurations and mandatory native ninth gate retained. Resolve four documentation conflicts with current accepted delivery plus prior installer receipts;270 shipping is not integrated.'
-  local: 'Full solution1206.NET PASS (729 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core); native4 guard and2 browser guard controls, JS/Python syntax/YAML/diff PASS. Non-installer src/apps/tests byte-equal acceptedmain3fc and Setup source/tests/build/verify byte-equal approved723. Native ninth gate/solution configurations retained. Renew exact9 integration gates/artifacts/frozen review; no clean Windows/signing acceptance.'
-  next: 'Verify and push accepted-main integration on same239; own exact9 CI through terminal and fix actual failures. Keep Draft for external Windows/signing; continue270 on its separate271 lease/full233 active.'
+  build: 37897294589
+  governance: 37897294556
+  native: 113711446847
+  actual: 113711446868
+  quality: 113713554273
+  artifact: 11601020775
+  artifact_bytes: 48687170
+  sha256: 52e340c09dd654eeaf167e74c335e6fd368e676429015494103faa6a7dca8588
+  browser_artifact: 11600614843
+  browser_artifact_bytes: 162285
+  review_receipt: 6076386907
+  result: 'Frozen22f integration/runtime/docs/artifacts independently APPROVED. Exact9 gates PASS, pinned self-contained bundle/76 core/20 simulated responsive layout cases/34 isolated Windows checks and all retained SQL/OIDC/Chromium including accepted administrator/Core committed reply loss PASS. NonSetup source/apps/tests equal acceptedmain3fc, Setup bytes equal approved723; additive solution/native ninth gate preserved. Root and independent inspected current previews and both sanitized browser images; readable/no secrets. Actual NotSigned, no privileged/clean installation claim.'
+  next: 'Preserve internally accepted22f on separate239 Draft; no current CI/code repair remains. Clean Windows/UAC/reboot/resume/startup/repair/backup/signing remain external before238 delivery. Integrate271 only after full accepted delivery/exact main. Full233 active.'
+
+installer_main_preparation374:
+  status: LOCAL_ACCEPTED_MAIN_INTEGRATION_NOT_REVIEWED_OR_QUALIFIED
+  observed_utc: '2026-10-16T07:09:35.779134+00:00'
+  installer_parent: 22f2866e5e4f95589d81484636ad665c5b4b4a6a
+  accepted_main: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+  remote_branch: lead/238-windows-installer
+  local_preparation_branch: codex/239-main-integration
+  reason: Separate managed worktree preserves owner installer checkout ea34 and current group288 checkout.
+  prior_accepted_installer_review: 6076386907
+  prior_build: 37897294589
+  prior_governance: 37897294556
+  prior_unsigned_artifact: 11601020775
+  prior_checks_do_not_qualify_this_integration: true
+  conflict_paths:
+  - MinhHuy.AIOffice.sln
+  - docs/PRODUCT_COMPLETION.md
+  - docs/PROJECT_STATE.yaml
+  - docs/validation/BRANCH_INTEGRATION_AUDIT.md
+  - docs/workstreams/backend.yaml
+  - docs/workstreams/lead.yaml
+  current_group_lease:
+    pr: 288
+    head: 5437fad97574199359a533bc31deee48d41f9df6
+    build: 38861583635
+    governance: 38861583640
+    attempt: 1
+    included_in_installer: false
+    current_native_qualified: false
+  next: Verify solution and accepted-main/nonSetup plus approved-installer source equality, full local tests, reviewed integration and
+    fresh exact9 CI/artifacts. Preserve Draft for actual clean Windows/UAC/reboot/startup/repair/backup/signing.
+  actual_model: NOT_RUN_UNEVALUATED
+  future316_included: false
+  V2_attachment_read: false
+  production_or_merge_approved: false
+  prior_main_top_fields:
+    head: 22f2866e5e4f95589d81484636ad665c5b4b4a6a
+    state: in_progress
+    lease_heartbeat_at: '2026-10-09'
+    last_checkpoint_at: '2026-10-09'
+    next_action: 'Preserve accepted installer22f: full frozen review6076386907/all9 gates/artifacts PASS, acceptedmain3fc administrator
+      integration complete. Keep239 Draft for external clean Windows/signing; no current CI repair remains. Independent270/271 owns current
+      history runtime/fingerprint/image closure; integrate only after approved delivery/exact main. Full233/customer/production remain.'
+  prior_installer_state:
+    workstream: lead
+    role: Lead / Integrator + QA / Security / Release
+    status: active-development
+    current_issue: 238
+    current_pr: 239
+    current_branch: lead/238-windows-installer
+    head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
+    state: in_progress
+    lease_owner: lead
+    lease_heartbeat_at: '2026-10-09'
+    last_checkpoint_at: '2026-10-09'
+    scope:
+    - integration
+    - roadmap-priority
+    - merge-sequencing
+    - project-state
+    - ci-health
+    - integration-regression-tests
+    - security-verification
+    - migration-verification
+    - deployment-release-readiness
+    - observability-validation
+    - rollback-recovery-evidence
+    - dependency-security-upgrades
+    - release-gates
+    - cross-workstream-pr-quality-review
+    integration:
+      runtime:
+        issue: 205
+        pr: 211
+        merge_commit: df39d5bfd188f0f53ba87e5ac0790aed664f1fab
+        state: merged_and_retired
+      backend:
+        issue: 203
+        pr: 210
+        merge_commit: a462ebd6a0b54a57af257dcc3d3f66472c635d73
+        state: merged_and_retired
+      frontend:
+        issue: 204
+        pr: 209
+        merge_commit: 45680c7badbc38e45f9f071267abf7d4bac40770
+        state: merged_and_retired
+      erp_data:
+        issue: 206
+        pr: 208
+        merge_commit: f61cddee2a4e45b1efe5100161056d8f77e73b80
+        state: merged_and_retired
+      pilot:
+        issue: 212
+        state: completed_on_main
+        implementation_commits:
+        - 3d5a05b
+        - f33e8eb
+        - efc4117
+        - 0e67a0f
+        exact_head_build: 36298741274
+        exact_head_governance: 36298741295
+    next_action: Integrate accepted269/main3fc only after full frozen approvals6073002478/6073139900 and exact main Build37875625822/Gov37875625829/all8/actual113643444397/quality113645840920
+      PASS. Preserve approved723 Setup bytes and required native ninth gate; close renewed exact9 integration gates/artifacts/review.
+      Keep239 Draft for clean Windows/signing. External backend270/271 remains separately owned, unaccepted and absent from this installer
+      shipping. Full233/customer/production remain.
+    blocked_by:
+    - 'Fresh Windows installation, UAC/reboot/sign-in and automatic startup acceptance remains pending for #238. Local SQL/OIDC/owner
+      bootstrap is automated and verified in Compose CI.'
+    - Real customer ERP mapping/least-privilege credentials and production deployment/provider configuration remain external acceptance
+      dependencies; unblocked product engineering continues.
+    product_completion_issue: 233
+    requirement_matrix: docs/PRODUCT_COMPLETION.md
+    installer_verification:
+      code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
+      local_core_tests: 76
+      local_result: 76 PASS on exact89ce9cb after reviewed255/257/259 integration. Retained-ID recovery, lost-both-files refusal, real
+        PS5 Authenticode and PS7 diagnostics remain green. No installer transition logic changed. Hosted full gates, actual stack and
+        Windows artifact PASS.
+      verified_published_head: a5f9521ea3f211c8fbb0913ca6d274a4af62f75e
+      build: 37653169431
+      governance: 37653169432
+      actual_stack: 112901482261
+      native_artifact_job: 112901482578
+      unsigned_artifact: 11497921154
+      artifact_bytes: 48069731
+      previous_integrated_head: 89ce9cbd725a593de12d3fb5ec336a6f48eef8ad
+      previous_integrated_build: 37564958347
+      previous_integrated_governance: 37564958342
+      previous_integrated_actual_stack_job: 112610445116
+      previous_integrated_native_artifact_job: 112610445188
+      previous_published_head: 41ce2a6705bd23346a8af15c0f5883926d84d149
+      previous_build: 37552582888
+      previous_governance: 37552582871
+      previous_unsigned_artifact: 11453420856
+      previous_result: success
+      head_semantics: 'head records the verified implementation commit; exact published HEAD and current workflow IDs belong in PR #239
+        HANDOFF.'
+    verified_security_249:
+      merge: db2ef9a141b69b10618b7c74548828753dfd2dd0
+      pr_build: 37505720443
+      pr_governance: 37505720572
+      main_build: 37506783690
+      main_governance: 37506783677
+      result: PASS actual SQL/stack guards, impersonation/module/trigger, metadata races, broker revocation and replay retention;248 closed.
+        Full product remains incomplete.
+    onboarding_integration:
+      issue: 250
+      pr: 251
+      state: done
+      merge: e2165d8a67644cbfc9672ed373e2062761b3c31c
+      main_build: 37534355053
+      main_governance: 37534355102
+      result: success
+    source_registration_integration:
+      issue: 252
+      pr: 253
+      state: done
+      merge: a3a929b58717b4f8e3ffe160699c179512441b07
+      main_build: 37551390004
+      main_governance: 37551390052
+      result: success
+    member_directory_integration:
+      issue: 254
+      pr: 255
+      state: done
+      merge: b9b5aab8c2e4bc9ea2aa8109b834bf3e327485b9
+      main_build: 37553826140
+      main_governance: 37553826122
+      result: success
+    exact_identity_integration:
+      issue: 256
+      pr: 257
+      state: done
+      merge: 6652940c5a9bfcc424422578d87c2f2851097211
+      main_build: 37556114743
+      main_governance: 37556114601
+      result: success
+    session_security_integration:
+      issue: 258
+      pr: 259
+      state: done
+      merge: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
+      pr_build: 37564442806
+      pr_governance: 37564442800
+      main_build: 37564876619
+      main_governance: 37564876597
+      result: Exact PR/main CI and independent66f2f80 review PASS;258 closed.
+    selected_customer_business_read:
+      capability: inventory-and-stock-movements
+      state: metadata-captured-pending-read-only-credential-and-profile
+      selected_by_user: '2026-10-07'
+      credentials_policy: Private operator configuration and metadata/module hashes stay outside public Git. Both metadata connections
+        succeeded; current credentials are elevated and unqualified for product read execution. No customer business rows or writes occurred.
+    browser_oidc_frontier:
+      issue: 260
+      pr: 261
+      state: done
+      merge: 39e668ebebe1f8bd19803199b8db393f12a4edb6
+      approved_pr_head: 94749957035a1dcb51cda9762c6fa045c84b982b
+      pr_build: 37650230590
+      pr_governance: 37650230960
+      main_build: 37651174359
+      main_governance: 37651174354
+      actual_stack: 112894592064
+      result: Full frozen947 acceptance approved, exact PR/main gates832 web/20 actual Redis and full retained SQL/Chromium lifecycle
+        PASS. Browser PKCE is shipping local default;260 closed. Product administration and approved production qualification remain.
+    installer_browser_integration:
+      code_head: adb5816e2526e8c1468237d9f3924afa032d10e6
+      state: in_progress
+      local: 76 Setup.Core tests, actual PS5/PS7 private stable key/replay/ACL and3 production-contract tests PASS. Installer owner copy
+        directs sign-in through the provider page. Current exact-head native artifact/full runtime gates are required. Static copy changes
+        no installer lifecycle or authority; compile/visual preview verifies its presentation.
+    branch_audit:
+      inspected_at: '2026-10-07'
+      remote_non_ancestor_refs: 115
+      merged_pr_exact_heads: 109
+      closed_pr_exact_heads: 1
+      backup_snapshot_refs_without_pr: 3
+      active_draft_leases:
+      - 239
+      update: 261 now merged;239 is the only open Draft after merge. Historical115-ref classification remains recorded; no backup is authorized
+        for merge.
+      additional_eligible_prs: 0
+    installer_layout_checkpoint:
+      state: done
+      head: 21d67981dbfd6b070e3030d03305429f76292671
+      build: 37716749021
+      governance: 37716749012
+      actual_stack: 113114854321
+      native_job: 113114854671
+      required_quality: 113116040384
+      unsigned_artifact: 11523499541
+      artifact_bytes: 48531144
+      review: Independent frozen21d20-case native192DPI review approved the responsive/integration/documentation delta; original P2 closed.
+        Full hosted gates and clean pinned local verification PASS.
+      prior_head: 6e1734113175269ca6451664879727954deb9c0f
+      prior_build: 37715495368
+      prior_governance: 37715495383
+      prior_actual_stack: 113110901977
+      prior_native_artifact: 11523339266
+      defect: Independent192DPI review found license height/clipping and hscroll at720x570 despite green default-only gates.
+      local: Single table column inside scroll panel, measured multiline checkbox height and synchronized scroll extent.20 compiled offscreen
+        cases across four states/default/minimum/expanded/minimum-again/14pt-minimum PASS; masked password and reveal reachable, minimum
+        images visually inspected.76 core tests/formatting/real isolated ACL-shortcut-cache-diagnostic-failure-form PASS. No OS preparation/real
+        Startup-folder changes.
+      next: Keep239 Draft for clean Windows lifecycle/signing. Continue262/263 member-access implementation; exact published documentation
+        HEAD/gates belong in239 HANDOFF.
+    active_product_slice:
+      issue: 264
+      pr: 265
+      branch: codex/264-erp-readonly-qualification
+      base: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+      state: in_progress
+      next: Root implements effective read-only ERP connection qualification before/after each independent read.262/263 full review/exact
+        PR/main gates closed. Customer credentials/qualified inventory adapters/business proof and full233 remain.
+    member_access_delivery:
+      issue: 262
+      pr: 263
+      final_pr_head: 552d5dd707b5bb69911ab9b6d6b61f5188caa9bf
+      merge: 0d03c529689d3607b99dcbf0cf4bcf00e62bd951
+      main_build: 37746848054
+      main_governance: 37746848190
+      main_actual_stack: 113210254492
+      main_quality: 113212217055
+      state: done
+      result: Full frozen implementation/security/runtime and final docs review APPROVED. Exact PR/main gates PASS with actual SQL+Chromium
+        acceptance;262 closed. Main integrated into239; current integrated installer HEAD/gates belong in HANDOFF. Draft clean Windows/signing
+        remains.
+    accepted_erp_installer_integration:
+      approved_installer_head: 989f771b04e9f710103a242d0b6122913f3a127b
+      accepted_main: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
+      main_build: 37801975078
+      main_governance: 37801976469
+      main_actual: 113396238709
+      main_quality: 113399168935
+      delta: Merge accepted264/265 qualifier/bootstrap/worker/browser bounded guidance and native SQL owned proofs into installer payload.
+        Only solution conflict is additive Setup.Core/Setup.Core.Tests plus ErpReadOnly.RuntimeProof; preserve all three projects/configurations.
+        Installer source/test/build/verify scripts unchanged from independently approved989/21d.
+      next: Local solution restore/test plus exact9 hosted gates and independent frozen integration review. Reviewer quota is currently
+        unavailable; preserve Draft. Actual clean Windows/UAC/reboot/resume/startup/repair/retained recovery/backup and signing remain
+        external requirements. No customer or OS preparation changes.
+    installer_verified_erp_integration:
+      head: fa120f1bf9c03e20e81fa3d0dd2dc563d9bf71ff
+      build: 37809993008
+      governance: 37809992983
+      actual_stack: 113424054565
+      native_installer: 113424054961
+      required_quality: 113426861674
+      artifact: 11564961765
+      artifact_bytes: 48601200
+      local_dotnet_tests: 1127
+      result: All9 exact hosted gates PASS, including approved unchanged installer source76 core controls/self-contained pinned executable/isolated
+        Windows proof and actual accepted ERP qualification/retained SQL+Chromium. Non-installer src/apps equal acceptedmain002. Additive
+        solution conflict preserved all projects/configurations. Independent frozenfa/3ff integration APPROVED; reviewed3ff current all9
+        gates PASS.
+      next: Close final documentation delta review/current HEAD gates and preserve Draft. Integrate266 only after it is independently
+        accepted and merged; its separate API/BFF/UI is not included infa. Actual clean Windows/UAC/reboot/resume/startup/repair/recovery/backup
+        and signing remain mandatory; full233/customer workflows remain.
+    installer_verified_45a:
+      head: 45a2ba58abf00cdb278951d8bed7c9444f007982
+      build: 37813475810
+      governance: 37813475639
+      native: 113435995421
+      actual: 113435995742
+      quality: 113439235869
+      artifact: 11565887828
+      artifact_bytes: 48598421
+      review: Final docs45a independently APPROVED, receipt6065013782. All9 exact gates PASS; accepted ERP/retained SQL+Chromium and unchanged
+        pinned native installer proof retained. Company selection is integrated only from accepted maina75 with exact main gates closed;
+        renew integration gates/review. Clean Windows/signing remains external.
+    installer_company_selection_integration:
+      accepted_main: a75f31a2761ffe0afcbf067425eb8324789b3554
+      main_build: 37815044494
+      main_governance: 37815044554
+      main_actual: 113441393702
+      main_quality: 113444186237
+      prior_installer_head: 45a2ba58abf00cdb278951d8bed7c9444f007982
+      local_dotnet_tests: 1162
+      local_guard_tests: 3
+      local: Full solution restore/build/tests PASS:685 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core; owned
+        guard3tests/8paths, YAML/AST/node syntax/diff PASS. Non-installer src/apps/tests equal acceptedmaina75; Setup source/tests/build/verify
+        scripts unchanged approved21d/989/45a. Workflow retains required owned guard and native9 quality results. Only three durable-state
+        conflicts resolved, preserving accepted component and installer receipts.
+      next: Capture exact integration HEAD and renewed9 CI gates; obtain independent frozen integration/docs/runtime review. Keep239 Draft
+        for clean Windows/signing; full233/customer/production remain.
+    installer_verified_company_integration_4b:
+      head: 4b1dd317e9a0079aac3b788accb8f5c33e44e89e
+      build: 37816394932
+      governance: 37816394855
+      native: 113446015962
+      actual: 113446015945
+      quality: 113448938090
+      artifact: 11566689313
+      artifact_bytes: 48623949
+      browser_artifact: 11567462838
+      browser_artifact_bytes: 72696
+      state: in_progress
+      review: 'Independent static frozen integration/source review found no blocker: non-installer src/apps/tests equal acceptedmaina75;
+        Setup source/tests/build/verify unchangedapproved21d/989/45a; workflow retains acceptedmain guard/native9 gate and solution retains
+        all configurations. Exact4b all9 native/SQL/Chromium SUCCESS. Reviewer account quota interrupted remaining runtime/final documentation
+        review; no full4b approval inferred.'
+      next: Close final documentation current9 gates; resume independent frozen runtime/final integration review when available. Keep239
+        Draft for external clean Windows/signing; full233/customer/production remain.
+    installer_accepted_administrator_integration:
+      approved_installer_head: 723d8449b41bc11aa48a273495a07d8b3db0fa85
+      approved_review: 6072831478
+      accepted_main: 3fcfa9a8541491c6a4d349bc31fd02d87d12284e
+      main_build: 37875625822
+      main_governance: 37875625829
+      main_actual: 113643444397
+      main_quality: 113645840920
+      state: in_progress
+      integration: Merge only accepted administrator269/main3fc, full frozen approvals6073002478/6073139900 and exact PR/main all8 PASS.
+        Non-installer src/apps/tests equal acceptedmain3fc; Setup source/tests/build/verify remain byte-identical approved723. Additive
+        solution projects/configurations and mandatory native ninth gate retained. Resolve four documentation conflicts with current accepted
+        delivery plus prior installer receipts;270 shipping is not integrated.
+      local: Full solution1206.NET PASS (729 Persistence,370 Contracts,25 configuration,6 observability,76 Setup.Core); native4 guard
+        and2 browser guard controls, JS/Python syntax/YAML/diff PASS. Non-installer src/apps/tests byte-equal acceptedmain3fc and Setup
+        source/tests/build/verify byte-equal approved723. Native ninth gate/solution configurations retained. Renew exact9 integration
+        gates/artifacts/frozen review; no clean Windows/signing acceptance.
+      next: Verify and push accepted-main integration on same239; own exact9 CI through terminal and fix actual failures. Keep Draft for
+        external Windows/signing; continue270 on its separate271 lease/full233 active.
+  local_verification378:
+    solution: 2103
+    projects:
+    - 6
+    - 507
+    - 25
+    - 76
+    - 1489
+    failed: 0
+    skipped: 0
+    formatting: true
+    native_compile: PASS_ZERO_WARNINGS_ERRORS_NOT_PINNED_CURRENT_BUNDLE
+    servicing_python: 18
+    owned_guard_python: 44
+    private_build_bundle: OLD22F_RESOURCES_FOR_COMPILATION_ONLY_NOT_CURRENT_SOURCE_DELIVERY
+    independent_review: PENDING
+    current_native_artifact: NOT_YET_BUILT
+    pushed: false
+  next378: Commit ordinary22f+ad merge and build exact clean committed native bundle; execute runtime/isolated Windows/20 simulated layouts,
+    view original previews, independently review exact delta then normal same239 push/exact9 closure. No privileged installation/signing/customer/model
+    acceptance.

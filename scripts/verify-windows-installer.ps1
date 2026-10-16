@@ -22,6 +22,21 @@ $verified = Get-Content -LiteralPath $proof -Raw | ConvertFrom-Json
 if (!$verified.verified -or $verified.revision -ne $manifest.revision -or $verified.sha256 -ne $manifest.bundleSha256) { throw 'Bundle proof does not match the pinned source.' }
 $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($hash -ne $manifest.installerSha256) { throw 'Installer artifact hash mismatch.' }
+foreach ($runtime in @($verified.coreRuntime, $verified.desktopRuntime)) {
+    if ($runtime -isnot [string] -or $runtime -cnotmatch '\A10\.0\.(?:0|[1-9][0-9]*)\z') {
+        throw 'Bundled runtime version evidence is missing or invalid.'
+    }
+}
+# These values come from the self-contained process with host runtimes hidden.
+# Use the existing release servicing policy for both actual bundled frameworks.
+@("Microsoft.NETCore.App $($verified.coreRuntime) [bundled]",
+  "Microsoft.WindowsDesktop.App $($verified.desktopRuntime) [bundled]") |
+    python (Join-Path $PSScriptRoot 'dotnet-servicing.py') --windows-desktop
+if ($LASTEXITCODE -ne 0) { throw 'Bundled Windows runtimes are below the servicing floor.' }
+[IO.File]::WriteAllText((Join-Path $Directory 'runtime-servicing-proof.json'),
+    (@{ schemaVersion = 1; verified = $true; selfContained = $true; revision = $verified.revision;
+        installerSha256 = $hash; coreRuntime = $verified.coreRuntime; desktopRuntime = $verified.desktopRuntime } |
+        ConvertTo-Json), [Text.UTF8Encoding]::new($false))
 Copy-Item -LiteralPath $proof -Destination (Join-Path $Directory 'bundle-proof.json')
 Write-Output ('PASS self-contained Windows executable and pinned bundle: ' + $verified.revision)
 

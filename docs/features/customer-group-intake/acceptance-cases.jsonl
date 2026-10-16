@@ -1,0 +1,24 @@
+{"id":"G01","area":"no_human_gate","setup":"Không có click sau setup","expected":"Tự tạo notes và gửi IT","status":"to_implement"}
+{"id":"G02","area":"technical_destination","setup":"Nguồn customer-a và customer-b","expected":"Chỉ gửi technical-it, không nhóm nguồn","status":"to_implement"}
+{"id":"G03","area":"route_missing","setup":"Một nguồn chưa có route","expected":"Notes vẫn lưu, sender blocked; không fallback","status":"to_implement"}
+{"id":"G04","area":"route_revoked","setup":"Thu hồi grant khi queued","expected":"Không gửi; không yêu cầu approval để lách","status":"to_implement"}
+{"id":"G05","area":"same_name","setup":"Hai nhóm nguồn cùng tên","expected":"Giữ ID và nguồn từng phiếu","status":"to_implement"}
+{"id":"G06","area":"source_grants","setup":"Đích IT thiếu quyền một nguồn","expected":"Không ghép nội dung nguồn đó","status":"to_implement"}
+{"id":"G07","area":"multi_message","setup":"Nhiều tin cùng vấn đề","expected":"Gom với evidence, không nhân note","status":"to_implement"}
+{"id":"G08","area":"multi_request","setup":"Một tin hai việc","expected":"Tách hai công việc","status":"to_implement"}
+{"id":"G09","area":"ambiguity","setup":"Deadline/ngữ nghĩa mơ hồ","expected":"Attention note tự báo IT, không chờ duyệt","status":"to_implement"}
+{"id":"G10","area":"media_only","setup":"Ảnh chưa phân tích","expected":"Note thiếu nội dung, không bịa đã đọc","status":"to_implement"}
+{"id":"G11","area":"model_failure","setup":"AI timeout/invalid output sau retry hữu hạn","expected":"Lưu extraction_failed và tự báo IT có refs","status":"to_implement"}
+{"id":"G12","area":"db_rollback","setup":"Transaction notes rollback","expected":"Không NotesCommitted/report đã ghi nhận","status":"to_implement"}
+{"id":"G13","area":"replay","setup":"100 event/job duplicates","expected":"Một logical note/update/report","status":"to_implement"}
+{"id":"G14","area":"late_commit","setup":"Tin commit sau snapshot","expected":"Delta sau không bỏ sót","status":"to_implement"}
+{"id":"G15","area":"continuous_chat","setup":"Có tin liên tục","expected":"Max wait đóng batch, không starvation","status":"to_implement"}
+{"id":"G16","area":"context_limit","setup":"Quá budget","expected":"Chunk đủ disposition/coverage","status":"to_implement"}
+{"id":"G17","area":"technical_echo","setup":"Báo việc được echo trong nhóm IT","expected":"Không intake lại, không loop","status":"to_implement"}
+{"id":"G18","area":"source_recall","setup":"Nguồn sửa/xóa khi queued","expected":"Tự invalidation/rebuild hoặc safe block","status":"to_implement"}
+{"id":"G19","area":"delete_restore","setup":"Job/spool/backup cũ","expected":"Không resurrect","status":"to_implement"}
+{"id":"G20","area":"unknown_send","setup":"Timeout sau có thể accepted","expected":"Unknown/reconcile, không blind retry","status":"to_implement"}
+{"id":"G21","area":"injection","setup":"Khách bảo đổi đích hoặc chạy SQL","expected":"Không cấp quyền hoặc execute","status":"to_implement"}
+{"id":"G22","area":"no_false_resolution","setup":"Worker completed","expected":"Phiếu vẫn new, không auto resolved","status":"to_implement"}
+{"id":"G23","area":"bounded_report","setup":"Báo cáo quá dài","expected":"Compact có số lượng/refs; không bỏ việc im lặng","status":"to_implement"}
+{"id":"G24","area":"internal_privacy","setup":"Report có thông tin nhạy cảm","expected":"Projection theo audience, mask secrets","status":"to_implement"}

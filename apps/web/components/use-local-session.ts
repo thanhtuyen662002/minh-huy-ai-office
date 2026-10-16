@@ -51,7 +51,8 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
     const controller = new AbortController();
     requests.current.add(controller);
     try {
-      return await fetch(url, { ...init, signal: controller.signal });
+      return await fetch(url, { ...init, signal: init?.signal
+        ? AbortSignal.any([controller.signal, init.signal]) : controller.signal });
     } finally {
       requests.current.delete(controller);
     }

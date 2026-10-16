@@ -1,5 +1,21 @@
 # Native Windows installer and automatic startup
 
+## Accepted-main servicing integration (2026-10-16 preparation)
+
+The integration of accepted mainad747d into installer22f retains the native ninth
+gate and all existing clean Windows acceptance requirements. Its Windows build
+SDK is pinned to the accepted10.0.402 servicing baseline and checked with the
+existing release servicing policy. The self-contained executable's bundle check
+now reports the actual running Core runtime and embedded Windows Forms assembly
+version. With host runtime paths hidden, the artifact verifier requires both
+Core and WindowsDesktop to meet the existing10.0.13 floor, using that same policy
+without host-inventory leniency. A separate runtime proof binds those public
+versions to the installer SHA and source revision. A serviced build host alone
+cannot qualify an old embedded runtime. No additional provider configuration or
+OS preparation is introduced. Current local, native, exact-head CI, independent
+review and signed clean Windows lifecycle acceptance remain unqualified until
+recorded for the new integration; prior22f evidence stays historical.
+
 Status: implementation in #238 / draft PR #239. Full product goal #233 remains active.
 
 Setup is a self-contained Windows 11 x64 executable with a pinned Git source archive and SHA-256 manifest. Customer machines do not need Node, npm, Git, Python or a .NET SDK. Docker builds FE, API, bootstrap and worker. Downloads need internet access. The development executable is unsigned and is not a production release.

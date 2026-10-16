@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 
 namespace Setup.Windows;
@@ -14,7 +15,17 @@ internal static class Program
                 var bundle = new EmbeddedBundle();
                 var root = Path.Combine(Path.GetTempPath(), "aioffice-bundle-verify-" + Guid.NewGuid().ToString("N"));
                 bundle.Verify(root);
-                File.WriteAllText(arguments[1], JsonSerializer.Serialize(new { verified = true, revision = bundle.Revision, sha256 = bundle.Sha256 }));
+                var desktopVersion = typeof(Form).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+                if (!Version.TryParse(desktopVersion?.Split('+', 2)[0], out var desktop)
+                    || desktop.Build < 0 || desktop.Revision >= 0) return 20;
+                File.WriteAllText(arguments[1], JsonSerializer.Serialize(new
+                {
+                    verified = true,
+                    revision = bundle.Revision,
+                    sha256 = bundle.Sha256,
+                    coreRuntime = Environment.Version.ToString(3),
+                    desktopRuntime = desktop.ToString(3)
+                }));
                 return 0;
             }
             catch { return 20; }

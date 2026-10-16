@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LocalAiWorkspace } from "./local-ai-workspace";
+import { webcrypto } from "node:crypto";
+import { ownedSubmissionFixture } from "./task-submission-test-fixture";
 
 const companyId = "22222222-2222-2222-2222-222222222222";
 const sourceId = "33333333-3333-3333-3333-333333333333";
@@ -9,7 +11,7 @@ const source = { id: sourceId, logicalName: "fixture.erp", kind: "SqlServer", en
 const context = (userId: string) => ({ tenantId: "fixture-tenant", companyId, userId, roles: ["member"] });
 const checkpoint = { answer: "PRIVATE-USER-A-ANSWER", provider: "fixture", model: "fixture", evidence: "fixture evidence", usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 }, erpEvidence: { databaseName: "PRIVATE-USER-A-DATABASE", tableCount: 1, sampledTableCount: 1, topTables: [] } };
 
-beforeEach(() => vi.stubGlobal("BroadcastChannel", undefined));
+beforeEach(() => { vi.stubGlobal("BroadcastChannel", undefined); vi.stubGlobal("crypto", webcrypto); });
 afterEach(() => vi.unstubAllGlobals());
 
 it.each(["logout", "source-expiry", "submit-expiry", "poll-expiry"] as const)("clears user A's question, answer and ERP evidence after %s before user B signs in", async (boundary) => {
@@ -17,13 +19,17 @@ it.each(["logout", "source-expiry", "submit-expiry", "poll-expiry"] as const)("c
   let taskSubmissionExpired = false;
   let taskPollingExpired = false;
   let activeUser: string | null = "user-a";
-  vi.stubGlobal("fetch", vi.fn(async (input: string) => {
+  const submissions = ownedSubmissionFixture(companyId, taskId);
+  vi.stubGlobal("fetch", vi.fn(async (input: string, init?: RequestInit) => {
     if (input.startsWith("/api/local/session?")) return activeUser ? Response.json(context(activeUser)) : Response.json({}, { status: 401 });
     if (input.startsWith("/api/local/data-sources?")) return sourcesExpired ? Response.json({}, { status: 401 }) : Response.json([source]);
     if (input === "/api/local/session/logout") { activeUser = null; return Response.json({ ok: true }); }
     if (input === "/api/local/session/login") { activeUser = "user-b"; return Response.json({ ok: true, context: context(activeUser) }); }
     if (input.startsWith(`/api/local/tasks/${taskId}?`)) return taskPollingExpired ? Response.json({}, { status: 401 }) : Response.json({ taskId, taskStatus: 2, stepStatus: 2, dispatchState: 2, attempt: 1, resultPayloadJson: JSON.stringify(checkpoint), failureReason: null });
-    if (input.startsWith("/api/local/tasks?")) return taskSubmissionExpired ? Response.json({}, { status: 401 }) : Response.json({ taskId }, { status: 202 });
+    if (input.startsWith("/api/local/tasks/intents")) {
+      if (taskSubmissionExpired && input.includes("/submit?")) return Response.json({}, { status: 401 });
+      return submissions(input, init);
+    }
     throw new Error(`Unexpected fixture request: ${input}`);
   }));
 

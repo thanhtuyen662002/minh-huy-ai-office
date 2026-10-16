@@ -96,9 +96,14 @@ else
             configureRabbitMq);
 }
 
+var groupPipelineEnabled = builder.Services.AddGroupIngressReferenceConsumer(builder.Configuration, !string.IsNullOrWhiteSpace(platformConnectionString));
+var groupRecoveryEnabled = builder.Services.AddGroupConnectorRecovery(builder.Configuration, builder.Environment.EnvironmentName,
+    !string.IsNullOrWhiteSpace(platformConnectionString));
 var host = builder.Build();
 await using (var scope = host.Services.CreateAsyncScope())
 {
     await scope.ServiceProvider.GetRequiredService<BindingStorePermissionVerifier>().RequireReadOnlyAsync();
+    if (groupPipelineEnabled || groupRecoveryEnabled)
+        await scope.ServiceProvider.GetRequiredService<GroupIngressPermissionVerifier>().RequireSafeRuntimeAsync();
 }
 host.Run();

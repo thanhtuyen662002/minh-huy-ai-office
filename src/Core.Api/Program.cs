@@ -32,11 +32,13 @@ builder.Services.AddHealthChecks();
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
+var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString), secretResolver);
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
         .GetSection(RabbitMqWorkOptions.SectionName)
         .Bind(options));
 builder.Services.AddSingleton<IWorkEnvelopePublisher, RabbitMqWorkPublisher>();
+_ = builder.Services.AddGroupIngressReferenceProducer(builder.Configuration, !string.IsNullOrWhiteSpace(platformConnectionString));
 if (!string.IsNullOrWhiteSpace(platformConnectionString))
 {
     builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(
@@ -98,6 +100,7 @@ app.Use(async (httpContext, next) =>
     try { await next(); }
     finally { AiOfficeTelemetry.RecordHttpRequest(httpContext.Response.StatusCode, System.Diagnostics.Stopwatch.GetElapsedTime(started)); }
 });
+app.UseMiddleware<GroupSourceRequestBoundaryMiddleware>();
 if (authenticationConfigured)
 {
     app.UseAuthentication();
@@ -110,6 +113,10 @@ static IResult AuthenticationUnavailable() => Results.Problem(statusCode: Status
 
 app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, component = "Core.Api", environment = deploymentEnvironment.ToString(), status = "ok" }));
 app.MapHealthChecks("/health");
+app.MapGroupIngress(groupIngressEnabled);
+app.MapGroupListener(groupIngressEnabled);
+app.MapGroupEnrollment(groupIngressEnabled);
+app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);
 
 if (authenticationConfigured)
 {
@@ -168,6 +175,7 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
 {
     app.MapCompanyMembershipAccess();
     app.MapCompanyAdministrator();
+    app.MapTaskSubmissionIntents();
     app.MapGet("/api/company/members", async (IRequestAuthorizationContextAccessor accessor,
         [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, [FromQuery] bool? includeAccessVersion, CancellationToken cancellationToken) =>
     {
@@ -222,10 +230,46 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
         }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
+        catch (TaskSubmissionIntentConflictException error)
+        { return Results.Conflict(new { error = "Task submission conflicts with current state.", code = error.Code }); }
         catch (InvalidOperationException exception) when (exception.Message.Contains("idempotency key", StringComparison.OrdinalIgnoreCase))
         {
             return Results.Conflict(new { error = exception.Message });
         }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException or Microsoft.EntityFrameworkCore.DbUpdateException)
+        { return Results.Json(new { error = "Task submission is unavailable. Reconcile the same operation." }, statusCode: 503); }
+    }).RequireAuthorization();
+
+    app.MapGet("/api/tasks", async (HttpRequest request, IRequestAuthorizationContextAccessor accessor,
+        [FromServices] TaskHistoryService history, [FromQuery] int? offset, [FromQuery] int? limit, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+        if (request.Query.Any(pair => pair.Key is not ("offset" or "limit") || pair.Value.Count != 1)
+            || request.Query.Any(pair => !System.Text.RegularExpressions.Regex.IsMatch(pair.Value.ToString(), "^(0|[1-9][0-9]*)$")))
+            return Results.BadRequest(new { error = "Invalid task history page." });
+        try { return Results.Ok(await history.ListAsync(context, offset ?? 0, limit ?? 25, cancellationToken)); }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid task history page." }); }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
+        { return Results.Json(new { error = "Task history is unavailable." }, statusCode: 503); }
+    }).RequireAuthorization();
+
+    app.MapGet("/api/tasks/{taskId:guid}/history", async (Guid taskId, HttpRequest request,
+        IRequestAuthorizationContextAccessor accessor, [FromServices] TaskHistoryService history, CancellationToken cancellationToken) =>
+    {
+        var context = AuthorizedContext(accessor);
+        if (context is null) return (IResult)Results.Forbid();
+        if (request.Query.Count != 0) return Results.BadRequest(new { error = "Invalid task history selector." });
+        try
+        {
+            var detail = await history.GetAsync(context, taskId, cancellationToken);
+            return detail is null ? Results.NotFound() : Results.Ok(detail);
+        }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid task identity." }); }
+        catch (Exception error) when (error is System.Data.Common.DbException or InvalidOperationException)
+        { return Results.Json(new { error = "Task history is unavailable." }, statusCode: 503); }
     }).RequireAuthorization();
 
     app.MapGet("/api/tasks/{taskId:guid}", async (
@@ -251,7 +295,10 @@ else
         statusCode: StatusCodes.Status503ServiceUnavailable,
         title: "Pilot task execution is not configured.");
     app.MapPost("/api/tasks", PilotTaskUnavailable);
+    app.MapUnavailableTaskSubmissionIntents();
+    app.MapGet("/api/tasks", PilotTaskUnavailable);
     app.MapGet("/api/tasks/{taskId:guid}", PilotTaskUnavailable);
+    app.MapGet("/api/tasks/{taskId:guid}/history", PilotTaskUnavailable);
     app.MapGet("/api/company/members", () => Results.Json(new { error = "Company directory is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/access", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/administrator", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));

@@ -8,8 +8,27 @@ import {
   unauthenticatedResponse,
 } from "../../../../lib/local-ai-bff";
 import { readBoundedRequestJson } from "../../../../lib/bounded-request-json";
+import { taskHistoryResponse } from "../../../../lib/task-history-response";
 
 type TaskBody = { dataSourceId?: unknown; question?: unknown };
+
+export async function GET(request: Request) {
+  if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
+  const query = new URL(request.url).searchParams;
+  const company = query.get("companyId"), offset = query.get("offset") ?? "0", limit = query.get("limit") ?? "25";
+  if ([...query.keys()].some(key => !["companyId", "offset", "limit"].includes(key) || query.getAll(key).length !== 1)
+    || !isCanonicalCompanyId(company) || !/^(0|[1-9][0-9]*)$/.test(offset) || Number(offset) > 10000
+    || !/^[1-9][0-9]*$/.test(limit) || Number(limit) > 100) {
+    return Response.json({ error: "Invalid task history page." }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  }
+  try {
+    const companyId = company.toLowerCase();
+    const response = await fetchCoreApi(`/api/tasks?offset=${offset}&limit=${limit}`, companyId);
+    return response ? taskHistoryResponse(response, companyId, { offset: Number(offset), limit: Number(limit) }) : unauthenticatedResponse();
+  } catch {
+    return Response.json({ error: "Task history is unavailable." }, { status: 502, headers: { "Cache-Control": "no-store" } });
+  }
+}
 
 export async function POST(request: Request) {
   if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();

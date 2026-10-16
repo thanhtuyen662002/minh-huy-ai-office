@@ -1,5 +1,13 @@
 # Roadmap
 
+## Immediate owner-prioritized delivery — autonomous customer-group intake
+
+Corrected by owner 2026-10-10: [customer source groups → connector → agent → SQL work notes → agent → INTERNAL TECHNICAL GROUP](features/customer-group-intake/OWNER_CORRECTION_AUTO_IT.md). Epic #275; #276–#279 keep IDs with revised acceptance. **No runtime human approval, no manual Generate/Accept/Send prerequisite and no report back to customer source groups.** Earlier PR #280 wording is superseded.
+
+Build durable intake, automatically recorded evidence-backed notes, and a DB-driven IT notifier. Missing information produces an attention note automatically sent to IT, not an approval queue. Backend maps source bindings to explicitly authorized internal destinations; every item retains source identity. IT handles the work afterward. Conversational customer replies remain later scope.
+
+Retain security-critical work and existing recovery/installer leases (#274/#239 if still active). Sequence shared contracts/migrations through Lead; do not steal ownership or cancel #233. Full wiki/vector/RAG, ERP business adapters, billing and Windows completion are not prerequisites. Initial source/target access configuration and code review/CI still apply; no live account or deployment is activated by this documentation correction.
+
 ## P0 — Engineering foundation
 Goal: make development resumable, testable and deployable.
 - Repository governance and ADRs.

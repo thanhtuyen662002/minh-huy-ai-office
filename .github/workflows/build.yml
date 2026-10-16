@@ -20,8 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.402
+      - name: Verify actual serviced SDK and host frameworks
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet --version | python3 scripts/dotnet-servicing.py --sdk
+          dotnet --list-runtimes | python3 scripts/dotnet-servicing.py --aspnet --host
       - name: Restore
         run: dotnet restore MinhHuy.AIOffice.sln
       - name: Verify all test projects are in the solution
@@ -46,17 +54,27 @@ jobs:
     name: Web tests, type-check and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      session-redis:
-        image: redis:8-alpine
-        ports: [6379:6379]
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 2s
-          --health-timeout 2s
-          --health-retries 20
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: web
+      - name: Start owned disposable session Redis
+        id: session_redis
+        shell: bash
+        run: |
+          set -euo pipefail
+          container_id="$(docker run --detach --name aioffice-ci-session-redis \
+            --publish 127.0.0.1:6379:6379 redis:8-alpine)"
+          [[ "$container_id" =~ ^[a-f0-9]{64}$ ]]
+          echo "container_id=${container_id}" >> "$GITHUB_OUTPUT"
+          for attempt in $(seq 1 30); do
+            if docker exec "$container_id" redis-cli ping | grep -qx PONG; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -65,13 +83,22 @@ jobs:
       - name: Test
         env:
           AIOFFICE_TEST_SESSION_REDIS_URL: redis://127.0.0.1:6379
-          AIOFFICE_TEST_SESSION_REDIS_CONTAINER: ${{ job.services.session-redis.id }}
+          AIOFFICE_TEST_SESSION_REDIS_CONTAINER: ${{ steps.session_redis.outputs.container_id }}
           AIOFFICE_TEST_SESSION_REDIS_DISPOSABLE: 'true'
         run: npm run web:test
       - name: Type-check
         run: npm run web:typecheck
       - name: Build
         run: npm run web:build
+      - name: Remove only owned disposable session Redis
+        if: always()
+        shell: bash
+        env:
+          AIOFFICE_CI_REDIS_ID: ${{ steps.session_redis.outputs.container_id }}
+        run: |
+          if [[ "$AIOFFICE_CI_REDIS_ID" =~ ^[a-f0-9]{64}$ ]]; then
+            docker container rm --force "$AIOFFICE_CI_REDIS_ID"
+          fi
 
   web-runtime:
     name: FE container runtime smoke
@@ -79,6 +106,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: web-runtime
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -93,17 +123,31 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: local-runtime
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - name: Install browser proof dependencies
         run: npm ci --no-audit --no-fund
+      - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
+        with:
+          dotnet-version: 10.0.402
+      - name: Verify actual serviced SDK and host frameworks
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet --version | python3 scripts/dotnet-servicing.py --sdk
+          dotnet --list-runtimes | python3 scripts/dotnet-servicing.py --aspnet --host
       - name: Install required Chromium runtime
         run: npx playwright install --with-deps chromium
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
-          node --test scripts/test-browser-administrators-guard.mjs
+          node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh
         run: ./scripts/test-local-config.ps1
@@ -123,6 +167,10 @@ jobs:
           path: |
             ${{ runner.temp }}/aioffice-browser-proof/workspace.png
             ${{ runner.temp }}/aioffice-browser-proof/administrators.png
+            ${{ runner.temp }}/aioffice-browser-proof/task-history.png
+            ${{ runner.temp }}/aioffice-browser-proof/task-submission.png
+            ${{ runner.temp }}/aioffice-browser-proof/group-inbox.png
+            ${{ runner.temp }}/aioffice-browser-proof/group-inbox-mobile.png
           if-no-files-found: error
           retention-days: 7
       - name: Remove only this ephemeral CI stack
@@ -138,8 +186,21 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.402
+      - name: Verify actual serviced Windows build SDK and host frameworks
+        shell: pwsh
+        run: |
+          $sdk = & dotnet --version
+          if ($LASTEXITCODE -ne 0) { throw "Cannot inspect Windows build SDK." }
+          $sdk | python scripts/dotnet-servicing.py --sdk
+          if ($LASTEXITCODE -ne 0) { throw "Windows build SDK is below the servicing floor." }
+          $frameworks = & dotnet --list-runtimes
+          if ($LASTEXITCODE -ne 0) { throw "Cannot inspect Windows build frameworks." }
+          $frameworks | python scripts/dotnet-servicing.py --aspnet --host
+          if ($LASTEXITCODE -ne 0) { throw "Windows build frameworks are below the servicing floor." }
       - name: Verify installer core
         run: dotnet test tests/Setup.Core.Tests/Setup.Core.Tests.csproj --configuration Release
       - name: Build pinned self-contained installer
@@ -162,6 +223,7 @@ jobs:
             ${{ runner.temp }}/windows-setup/Setup.exe.sha256
             ${{ runner.temp }}/windows-setup/release-manifest.json
             ${{ runner.temp }}/windows-setup/bundle-proof.json
+            ${{ runner.temp }}/windows-setup/runtime-servicing-proof.json
             ${{ runner.temp }}/windows-setup/windows-integration-proof.json
             ${{ runner.temp }}/windows-setup/ui-preview/*.png
             ${{ runner.temp }}/windows-setup/ui-preview/preview-proof.json
@@ -182,6 +244,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/configure-docker-cache
+        with:
+          profile: deployment
       - name: Validate production deployment contract
         shell: bash
         run: |
@@ -211,10 +276,22 @@ jobs:
           rendered="${RUNNER_TEMP}/browser-deployment-compose.json"
           docker compose --env-file .env.production.example -f compose.yaml -f compose.production.yaml config --format json > "${rendered}"
           python3 scripts/validate-deployment.py "${rendered}"
+      - name: Verify .NET servicing boundary controls
+        run: python3 -m unittest discover -s scripts -p test_dotnet_servicing.py
       - name: Build Core.Api container
         run: docker build --file src/Core.Api/Dockerfile --tag aioffice/core-api:ci .
       - name: Build Agent.Worker container
         run: docker build --file src/Agent.Worker/Dockerfile --tag aioffice/agent-worker:ci .
+      - name: Build serviced bootstrap container
+        run: docker build --file src/Platform.Bootstrap/Dockerfile --tag aioffice/bootstrap:ci .
+      - name: Verify actual serviced shared frameworks in built images
+        shell: bash
+        run: |
+          set -euo pipefail
+          for image in aioffice/core-api:ci aioffice/agent-worker:ci; do
+            docker run --rm --entrypoint dotnet "${image}" --list-runtimes | python3 scripts/dotnet-servicing.py --aspnet
+          done
+          docker run --rm --entrypoint dotnet aioffice/bootstrap:ci --list-runtimes | python3 scripts/dotnet-servicing.py
       - name: Verify application containers run as non-root
         shell: bash
         run: |
@@ -273,8 +350,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet-serviced
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.402
+      - name: Verify actual serviced SDK and host frameworks
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet --version | python3 scripts/dotnet-servicing.py --sdk
+          dotnet --list-runtimes | python3 scripts/dotnet-servicing.py --aspnet --host
       - name: Restore
         run: dotnet restore MinhHuy.AIOffice.sln
       - name: Restore local .NET tools
