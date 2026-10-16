@@ -4,7 +4,7 @@ status: active-development
 current_issue: 278
 current_pr: 288
 current_branch: codex/278-group-automatic-notes
-head: b37eea9003647c5262b6422d3175f8622e484082
+head: f1058adb7fb4276017983112349bcf8b38b3a73b
 state: in_progress
 lease_owner: root-backend-278
 lease_heartbeat_at: '2026-10-16'
@@ -337,7 +337,7 @@ submission_full_runtime_276:
   review: Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182,
     frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract
     controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.
-next_action: "SAME288 actualb37 Build38838128289/Gov38838128166 attempt1 ALL8 TERMINAL_FAILED closure6206875258: positive admission-original-commit closed phase admitted-execution-accepted-transaction kind accepted-query-dispatch-identity; unique context/connection/transaction/predicate subcondition UNKNOWN. Hosted5437/Gov/six prerequisites PASS, native147/wholequality red only LOCAL_RUNTIME_RESULT, no browser artifacts, cleanup SUCCESS. No failure rerun. Private259 combines preserved native217 with additive254 (never withheld249) and narrows only observer failure categories; all9 original identity conditions and exact6predicate owner retained, new fixed160 diagnostic vocabulary. Focused168guard+9negative+79observer PASS/source1274 unchanged; full5653 inherited217, future full5657 EXPECTED_NOT_EXECUTED. Actual small owned SQL257Windows and258Linux NET10.0.13 each passed two synthetic closure/trueEOFdispose paths; not full failing-path reproduction, not native147/149 acceptance or causal fix. All3 owned containers removed after identity/label/image checks. Freeze263 current durable union of both actual e50/b37 parents and source259, obtain source review/ordinary local merge preserving e50/a718/fbfa and actualb37 ancestry, then fresh source-bound149/helper/parent tuple and owned all8 CI. Source/helper reviews PENDING; no push/main merge authorized by this private freeze. Current Gateway247 existing loader needs PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protected ignored .env.production via deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection; compose.local does not forward provider vars, Released profile catalog EMPTY and actual model NOT_RUN_UNEVALUATED. Corpus227/rubric244 pre-output only/no scores or gold approval. Complete generation/partial spending/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicated ERP readonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged; V2 attachment unread until current completion/main merge. Preserve all original WITHHELD/failure evidence."
+next_action: "SAME288 actualparentf105 Build38844234118/Gov38844234104 attempt1 ALL8 TERMINAL_FAILED closure6207868603: positive admission-original-commit admitted-execution-accepted-transaction / accepted-query-dispatch-predicates. Hosted5657/Gov/sixprerequisites PASS; native149/wholequality FAIL only LOCAL_RUNTIME_RESULT; browser skipped/no artifacts/cleanupSUCCESS. Source identifies earlier ordinary journal5selector Any before intended explicit6guard; Linux275 exact original observer counterexample reproduces dispatchidentity with allobjectTXflags true,5params/exactpredicatesfalse. Full hosted query itself notlogged; no secret/publicSQL. Private280/frozen287 uses existing ReadIncludingAccepted metadata only, retains exact6guard and explicit broader5inputrefusal when exactresult absent. Ordinary retry/budget reader body unchanged. Never use superseded276 lackingbroadercheck or WITHHELD249. Full5657=[6,584,25,5042]/format+177Python PASS/source1274unchanged; six real LinuxSQL extractedguardblock cases PASS (wrongoperation/sameinput and wronginput/sameoperation bothrefuse; foreigntenantrow noeffect; exactguarddeletionpasses extractedblock). These are bounded SQL examples, not full authenticated corrected149 acceptance. All own probecontainersremoved/no customerDB/model. Review exact290 source/durable and actual ordinarydescendant, fresh149capture binding parentf105 and all1274, then own exactsame288 CI throughterminal; immediatelyfix realred, nofailure rerun/cancel/partialmainmerge. Independent implementation/source/helper reviews PENDING; diagnosticDraftCI raw results confer no release authority. Gateway247 existing primary3 config in protectedignored.env.production via deploy-backend -EnvironmentFile or approvedWorkersecretinjection; compose.local no AI forwarding, ReleasedcatalogEMPTY, actualmodelNOT_RUN_UNEVALUATED. Rubric244 boundedroot286 review proposalonly retains8differences/5OPEN/no newgold/modeloutputs/scores; independent245 incomplete, no inventedapproval. Direct human policy292 now prioritizes change_request for mixed messages with explicit desired feature/presentation; preserve reported symptoms and old227/244 labels. Bind a separately versioned rubric/prompt before actual model eval; do not claim every ambiguous taxonomy case resolved or rewrite original replay input versions. Continue generation/partialspending/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicatedERPreadonly inventory/import-export, Windows and actualdeployment. Mainad747dunchanged; V2attachmentunread until currentcompletion/mainmerge; all oldWITHHELD/failures immutable."
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
   review: Combined transport/exact retained replay scoped APPROVED92 independent controls0skip,76 retained+16 own. Actual
@@ -7379,6 +7379,110 @@ group_native_identity263_integration_checkpoint:
   release_catalog_entries: 0
   activation: NOT_ENABLED
   QA_retired_lease_preserved: true
+  push: false
+  main_merge: false
+  V2_attachment_read: false
+
+group_admitted_two_guard290_source_checkpoint:
+  scope: TWO_GUARD_280_MATERIAL_REPAIR_PLUS_CURRENT290_DURABLE_REVIEW_PENDING
+  actual_parent: f1058adb7fb4276017983112349bcf8b38b3a73b
+  closure:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\native149-f1058ad-terminal-failed-closure-v289.json
+    bytes: 17488
+    sha256: bfe19c39815d93e81034281a267b86ba62486a089a829692b0b461e4142da18a
+  closure_comment: 6207868603
+  build: 38844234118
+  governance: 38844234104
+  observed_phase: admitted-execution-accepted-transaction
+  observed_kind: accepted-query-dispatch-predicates
+  hosted_SQL_values_or_query: NOT_CAPTURED_NEVER_LOGGED
+  source_counterexample: EARLIER_FIVE_SELECTOR_JOURNAL_READ_BEFORE_EXPLICIT_SIX_SELECTOR_GUARD
+  implementation:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\admitted-two-guard-private-frozen-v287.json
+    bytes: 234236
+    sha256: 5c4b3d1128aad60a192aa7ef2640e1ca155aaf5b0a7c68a7990a991b1058b26d
+  verification:
+    path: D:\CodexReviewScratch\aioffice-admitted-journal-fence-repair-v280\verification-v281.json
+    bytes: 2522
+    sha256: 88b133621d16f7daf71567fb8c369cdc9e0a52dc3fb5b477981f824710f45a72
+  full_dotnet: 5657
+  projects:
+  - 6
+  - 584
+  - 25
+  - 5042
+  python: 177
+  format: true
+  exact6guard_and_observer_RAW_unchanged: true
+  broader5input_refusal_preserved: true
+  ordinary_retry_reader_body_unchanged: true
+  Linux_original_counterexample275:
+    path: D:\CodexReviewScratch\aioffice-accepted-journal-selector-repro-v275\owned-linux-sql-observation.json
+    bytes: 2010
+    sha256: c98251112638dbc9b923ddd4a8cd31ce953e17d98472c88813c9832d4ff74fc6
+  Linux_guard_block283:
+    path: D:\CodexReviewScratch\aioffice-admitted-input-guard-sql-v283\owned-linux-sql-observation.json
+    bytes: 1988
+    sha256: 7815f48da2b7c5340815c57484afde1d5eb2ba6370a15b7620ad0563003e2613
+  SQL_limits: Original five-selector counterexample plus six synthetic row-shape cases of exact extracted two-guard block; not the complete authenticated production transaction or native149 proof.
+  superseded276: SUPERSEDED_PRIVATE_NO_DELIVERY_BROADER_INPUT_REFUSAL_RETAINED_ONLY_IN280
+  withheld249: COMPOSE249_1_IMMUTABLE_NO_DELIVERY
+  prior_current_heads:
+    project: b37eea9003647c5262b6422d3175f8622e484082
+    backend: b37eea9003647c5262b6422d3175f8622e484082
+    workstream: b37eea9003647c5262b6422d3175f8622e484082
+  prior_current_next: 'SAME288 actualb37 Build38838128289/Gov38838128166 attempt1 ALL8 TERMINAL_FAILED closure6206875258: positive admission-original-commit closed phase admitted-execution-accepted-transaction kind accepted-query-dispatch-identity; unique context/connection/transaction/predicate subcondition UNKNOWN. Hosted5437/Gov/six prerequisites PASS, native147/wholequality red only LOCAL_RUNTIME_RESULT, no browser artifacts, cleanup SUCCESS. No failure rerun. Private259 combines preserved native217 with additive254 (never withheld249) and narrows only observer failure categories; all9 original identity conditions and exact6predicate owner retained, new fixed160 diagnostic vocabulary. Focused168guard+9negative+79observer PASS/source1274 unchanged; full5653 inherited217, future full5657 EXPECTED_NOT_EXECUTED. Actual small owned SQL257Windows and258Linux NET10.0.13 each passed two synthetic closure/trueEOFdispose paths; not full failing-path reproduction, not native147/149 acceptance or causal fix. All3 owned containers removed after identity/label/image checks. Freeze263 current durable union of both actual e50/b37 parents and source259, obtain source review/ordinary local merge preserving e50/a718/fbfa and actualb37 ancestry, then fresh source-bound149/helper/parent tuple and owned all8 CI. Source/helper reviews PENDING; no push/main merge authorized by this private freeze. Current Gateway247 existing loader needs PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protected ignored .env.production via deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection; compose.local does not forward provider vars, Released profile catalog EMPTY and actual model NOT_RUN_UNEVALUATED. Corpus227/rubric244 pre-output only/no scores or gold approval. Complete generation/partial spending/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicated ERP readonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged; V2 attachment unread until current completion/main merge. Preserve all original WITHHELD/failure evidence.'
+  preserved_graph: e50+a718+fbfa and actualb37/adba, mergedf105 ordinarytwo parents
+  gateway:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\gateway-existing-loader-readiness-v247.json
+    bytes: 4875
+    sha256: 18b598e0379d115547c1481d77b61c855e63bf89e2225f5c9cf4be7ebbda1992
+  rubric_root_bounded_review:
+    path: D:\CodexReviewScratch\aioffice-root-review-rubric-v285\evidence-v286.json
+    bytes: 2046
+    sha256: d6bbe47e7c0f1364c7ea6b168ef49bcc40cf63078fbb7d4d38c3fd34705dce18
+  human_mixed_message_policy292:
+    policy_version: group-mixed-message-priority-v1
+    recorded_utc: '2026-10-16T04:09:46.937419+00:00'
+    authority: DIRECT_HUMAN_REPLY_TO_CLASSIFICATION_QUESTION_IN_CURRENT_TASK
+    exact_human_rule: "\u01AFu ti\xEAn y\xEAu c\u1EA7u thay \u0111\u1ED5i n\u1EBFu kh\xE1ch n\xEAu r\xF5 t\xEDnh n\u0103ng ho\u1EB7c c\xE1ch hi\u1EC3n th\u1ECB mong mu\u1ED1n."
+    rule: For a message that both reports a current problem and explicitly requests a desired feature or presentation, prioritize change_request. Preserve the reported symptom as attributed evidence in the note.
+    limits:
+    - This decides mixed-message priority only; it does not decide every incident/question/reconciliation ambiguity.
+    - No inferred desired feature, IT commitment, assignee, resolution or deadline.
+    - No old corpus, blind annotation, adjudication, prompt or input version may be overwritten.
+    - Before actual model evaluation, use a separately versioned policy/rubric and pre-output labels; existing outputs cannot be relabeled to improve scores.
+    - Runtime prompt integration requires a versioned successor preserving original reconstruction and replay.
+    original_bindings:
+    - path: D:\CodexReviewScratch\aioffice-synthetic-semantic-corpus-v227\corpus.json
+      bytes: 298763
+      sha256: d27d877582c89d6c07f43698a9e1e639f6ae44642890fc2bbfe20e08c5ad5a2d
+    - path: D:\CodexReviewScratch\aioffice-preoutput-rubric-v244\rubric.md
+      bytes: 7257
+      sha256: aaf58fe22b88a47a8d0de3a7f664dcc7d4b3ff1097ef40783886d432e19eb9a2
+    - path: D:\CodexReviewScratch\aioffice-preoutput-rubric-v244\adjudication.json
+      bytes: 39617
+      sha256: 5cae1976cc97fbefe1c33ddf558826e22744e8675b09d04ba62783b29d006460
+    original_files_unchanged: true
+    case6: Explicit desired presentation supports change_request under the human rule; original labels retained.
+    remaining_taxonomy: Reassess individual ambiguous cases against the explicit condition, without claiming that all five OPEN cases are resolved.
+    runtime_source_changed: false
+    new_corpus: false
+    labels_overwritten: false
+    model_outputs: 0
+    actual_model: NOT_RUN_UNEVALUATED
+    model_scores: null
+    independent_rubric245: INCOMPLETE_NOT_APPROVAL
+  human_policy292_artifact:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\group-mixed-message-policy-v292.json
+    bytes: 2353
+    sha256: 14e072b769f22bfcb7eb2ca2c4b04725ce9c32142f055c49725d7e131cdb277c
+  actual_model: NOT_RUN_UNEVALUATED
+  released_model_profiles: 0
+  corrected_native149: NOT_RUN_UNQUALIFIED
+  independent_source_review: PENDING_NEW290
+  helper_review: PENDING_SOURCE290_BINDING
+  activation: NOT_ENABLED
   push: false
   main_merge: false
   V2_attachment_read: false

@@ -10,8 +10,9 @@ internal static class GroupModelAttemptJournalReader
         PlatformDbContext database, GroupAutomaticModelContext context, string identity, CancellationToken token) =>
         ReadCoreAsync(database, context, identity, false, token);
 
-    // Only the result store authenticates an accepted outcome; ordinary retry
-    // and exhaustion callers must refuse whenever success already exists.
+    // Only the result store authenticates an accepted outcome. Its metadata
+    // read and admitted execution's own six-key refusal fence may inspect the
+    // journal here; ordinary retry/exhaustion callers keep ReadAsync above.
     internal static Task<(GroupModelAttemptStarted[] Starts, GroupModelAttemptFailed[] Failures)> ReadIncludingAcceptedAsync(
         PlatformDbContext database, GroupAutomaticModelContext context, string identity, CancellationToken token) =>
         ReadCoreAsync(database, context, identity, true, token);

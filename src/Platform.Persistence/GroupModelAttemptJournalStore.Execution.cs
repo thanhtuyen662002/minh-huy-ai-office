@@ -37,7 +37,11 @@ internal sealed partial class GroupModelAttemptJournalStore
             ValidateEntry(permit.Context);
             await InCurrentUnitAsync(permit.Context, permit.Original, async (now, _, ct) =>
             {
-                var (starts, failures) = await ReadJournalAsync(permit.Context, permit.Start.InputSha256, ct);
+                // This unit owns the exact original six-key accepted-result
+                // refusal below. Read journal metadata without the ordinary
+                // retry reader's separate earlier accepted-input check.
+                var (starts, failures) = await GroupModelAttemptJournalReader.ReadIncludingAcceptedAsync(
+                    database, permit.Context, permit.Start.InputSha256, ct);
                 if (starts.Length == 0 || starts[^1] != permit.Start || failures.Any(x => x.RequestId == permit.Start.RequestId)
                     || now < permit.Start.StartedAtUtc || now >= permit.Start.DeadlineUtc) throw Unavailable();
                 var scope = permit.Context.Scope;
@@ -45,6 +49,12 @@ internal sealed partial class GroupModelAttemptJournalStore
                     && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == permit.Context.BatchId
                     && x.PlanSha256 == issued.Original.Plan.Sha256 && x.OperationId == issued.Original.OperationId, ct);
                 if (accepted) throw Unavailable();
+                // Preserve the ordinary reader's broader input refusal too.
+                // A mismatched stored operation must not permit another model
+                // call merely because the exact original selector was absent.
+                if (!accepted && await database.Set<GroupModelAttemptResultRecord>().AsNoTracking().AnyAsync(x =>
+                    x.TenantId == scope.TenantId && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId
+                    && x.BatchId == permit.Context.BatchId && x.InputSha256 == permit.Start.InputSha256, ct)) throw Unavailable();
                 return true;
             }, token, async ct =>
             {
