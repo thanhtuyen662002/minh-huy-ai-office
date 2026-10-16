@@ -640,13 +640,23 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             # Separate owned synthetic source; preserve the original key row.
             # No production registry/configuration or credentials are touched.
             source_id = str(uuid.UUID(source_id))
-            assert type(slot) is int and slot in (1, 2)
+            assert type(slot) is int and slot in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 24, 25)
             prefix = f"AIOffice__GroupIntake__SourceKeys__{slot}__"
             assert not any(name.startswith(prefix) for name in private_environment)
-            secret_name = "OWNED_NATIVE_GROUP_CONTENT_KEY" if slot == 1 else "OWNED_MANAGED_GROUP_CONTENT_KEY"
+            if slot in (4, 5, 6, 8):
+                original_spec = importlib.util.spec_from_file_location("owned_original_roles", Path(__file__).with_name("owned-original-group-fixtures.py"))
+                original_roles = importlib.util.module_from_spec(original_spec)
+                original_spec.loader.exec_module(original_roles)
+                original_roles.enroll(directory=directory, api=api, tenant=tenant, company=company,
+                    source=source_id, slot=slot, sql=sql)
+            if slot in (16, 17, 18, 19, 20, 21, 24, 25):
+                # Slot15 remains reserved for the sequenced history recovery slice.
+                assert not any(name.endswith("__SourceBindingId") and value == source_id
+                    for name, value in private_environment.items())
+            secret_name = {1: "OWNED_NATIVE_GROUP_CONTENT_KEY", 2: "OWNED_MANAGED_GROUP_CONTENT_KEY", 3: "OWNED_EFFECT_GROUP_CONTENT_KEY", 4: "OWNED_AUTOMATIC_GROUP_CONTENT_KEY", 5: "OWNED_NO_WORK_GROUP_CONTENT_KEY", 6: "OWNED_HOST_GROUP_CONTENT_KEY", 7: "OWNED_COVERAGE_GROUP_CONTENT_KEY", 8: "OWNED_RAW_HISTORY_GROUP_CONTENT_KEY", 9: "OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY", 10: "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY", 11: "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY", 12: "OWNED_ATTEMPT_RESULT_GROUP_CONTENT_KEY", 13: "OWNED_ATTEMPT_RESULT_DEADLINE_GROUP_CONTENT_KEY", 14: "OWNED_HISTORY_SELECTION_GROUP_CONTENT_KEY", 16: "OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY", 17: "OWNED_ORIGINAL_V3_GROUP_CONTENT_KEY", 18: "OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY", 19: "OWNED_FIRST_EMPTY_GROUP_CONTENT_KEY", 20: "OWNED_ACCEPTED_GUARD_GROUP_CONTENT_KEY", 21: "OWNED_FIRST_HOST_GROUP_CONTENT_KEY", 24: "OWNED_FIRST_MODEL_GROUP_CONTENT_KEY", 25: "OWNED_ORIGINAL_INVALIDATION_GROUP_CONTENT_KEY"}[slot]
             private_environment[secret_name] = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
             for name, value in {"TenantId": tenant, "CompanyId": company, "SourceBindingId": source_id,
-                    "KeyId": "owned-native-source-v1" if slot == 1 else "owned-managed-source-v1", "SecretRef": "secretref://env/" + secret_name, "IsWriteKey": "true"}.items():
+                    "KeyId": "owned-managed-source-v1" if slot == 2 else "owned-native-source-v1", "SecretRef": "secretref://env/" + secret_name, "IsWriteKey": "true"}.items():
                 private_environment[prefix + name] = value
             override.write_text(json.dumps({"services": {"core-api": {"environment": private_environment}}}), encoding="utf-8")
             override.chmod(0o600)
@@ -707,8 +717,278 @@ def verify(*, directory, manifest, compose, environment, api, auth=None):
             else:
                 raise RuntimeError("Owned reference pipeline operation refused.")
 
+        def prepare_effect_source():
+            spec = importlib.util.spec_from_file_location("owned_group_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            effect_fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(effect_fixture)
+            effect_source, effect_events = effect_fixture.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 3), post_event=call)
+            return effect_source, effect_events, private_environment["OWNED_EFFECT_GROUP_CONTENT_KEY"]
+
         reference_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
-            service=service, source=spool_source, sql=sql, compose=compose, environment=environment, pipeline=reference_pipeline)
+            service=service, source=spool_source, sql=sql, compose=compose, environment=environment, pipeline=reference_pipeline,
+            source_key=private_environment["OWNED_NATIVE_GROUP_CONTENT_KEY"], prepare_effect_source=prepare_effect_source)
+        automatic_spec = importlib.util.spec_from_file_location("owned_automatic_notes", Path(__file__).with_name("smoke-group-automatic-notes.py"))
+        automatic_proof = importlib.util.module_from_spec(automatic_spec)
+        automatic_spec.loader.exec_module(automatic_proof)
+        def prepare_automatic_source():
+            spec = importlib.util.spec_from_file_location("owned_automatic_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 4), post_event=call)
+            return new_source, new_events, private_environment["OWNED_AUTOMATIC_GROUP_CONTENT_KEY"]
+        automatic_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_automatic_source, reference=reference_proof)
+        def prepare_no_work_source():
+            spec = importlib.util.spec_from_file_location("owned_no_work_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_no_work(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 5), post_event=call)
+            return new_source, new_events, private_environment["OWNED_NO_WORK_GROUP_CONTENT_KEY"]
+        automatic_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_no_work_source, reference=reference_proof, proof="no_work")
+        def prepare_host_only_source():
+            spec = importlib.util.spec_from_file_location("owned_host_only_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_host_only(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 6), post_event=call)
+            return new_source, new_events, private_environment["OWNED_HOST_GROUP_CONTENT_KEY"]
+        automatic_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_host_only_source, reference=reference_proof, proof="host_only")
+        def prepare_coverage_source():
+            spec = importlib.util.spec_from_file_location("owned_coverage_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 7), post_event=call)
+            return new_source, new_events, private_environment["OWNED_COVERAGE_GROUP_CONTENT_KEY"]
+        automatic_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_coverage_source, reference=reference_proof, proof="coverage")
+        raw_history_spec = importlib.util.spec_from_file_location("owned_raw_history", Path(__file__).with_name("smoke-group-raw-history.py"))
+        raw_history_proof = importlib.util.module_from_spec(raw_history_spec)
+        raw_history_spec.loader.exec_module(raw_history_proof)
+        def prepare_raw_history_source():
+            spec = importlib.util.spec_from_file_location("owned_raw_history_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_raw_history(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 8), post_event=call)
+            return new_source, new_events, private_environment["OWNED_RAW_HISTORY_GROUP_CONTENT_KEY"]
+        raw_history_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_raw_history_source, reference=reference_proof, automatic=automatic_proof)
+        assert sql(f"SELECT CONCAT(COUNT(*),N'|',COUNT(DISTINCT BatchId),N'|',COUNT(DISTINCT OperationId)) "
+            f"FROM aioffice.GroupWorkCommitReceipts WHERE TenantId='{tenant}' AND CompanyId='{company}' "
+            "AND DependencyManifestVersion=1 AND DATALENGTH(DependencyManifest)=274 AND SelectedMessageCount=2 "
+            "AND SUBSTRING(DependencyManifest,1,8)=0x41494F4744455031 "
+            "AND SUBSTRING(DependencyManifest,161,2)=0x0200;") == "4|4|4"
+        print("PASS actual automatic manifest SQL four original version1 receipts exact scoped source identities cutoff metadata same savepoint rollback original replay immutable both columns no terminal or model claim", flush=True)
+        print("PASS actual automatic whole dependency SQL four original scopes each three current manifest reconstructions serializable source lock unchanged graphs claim key counts pending501 no completion or model", flush=True)
+        assert sql(f"SELECT CONCAT(COUNT(*),N'|',COUNT(DISTINCT BatchId),N'|',COUNT(DISTINCT OperationId)) "
+            f"FROM aioffice.GroupWorkCommitReceipts WHERE TenantId='{tenant}' AND CompanyId='{company}' "
+            "AND DependencyManifestVersion=1 AND DATALENGTH(DependencyManifest)=274 AND SelectedMessageCount=2 "
+            "AND EffectLedgerVersion=1 AND DATALENGTH(ExpectedEffectSha256)=32 AND ExpectedEffectSha256<>CONVERT(varbinary(32),REPLICATE(CHAR(0),32));") == "4|4|4"
+        print("PASS actual automatic original effect expectations four original scopes version1 digest32 atomic rollback replay two immutable columns denied complete original graphs unchanged no completion or model", flush=True)
+        print("PASS actual automatic original effect graph SQL four original scopes each three current digest comparisons original acquisition six effect tables ciphertext preflight original graphs claim keys pending501 unchanged no completion or model", flush=True)
+        journal_spec = importlib.util.spec_from_file_location("owned_model_journal", Path(__file__).with_name("smoke-group-model-attempts.py"))
+        journal_proof = importlib.util.module_from_spec(journal_spec)
+        journal_spec.loader.exec_module(journal_proof)
+        def prepare_journal_source():
+            spec = importlib.util.spec_from_file_location("owned_model_journal_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 9), post_event=call)
+            return new_source, new_events, private_environment["OWNED_MODEL_JOURNAL_GROUP_CONTENT_KEY"]
+        journal_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_journal_source, reference=reference_proof, automatic=automatic_proof)
+        plan_spec = importlib.util.spec_from_file_location("owned_original_plan", Path(__file__).with_name("smoke-group-original-plan.py"))
+        plan_proof = importlib.util.module_from_spec(plan_spec)
+        plan_spec.loader.exec_module(plan_proof)
+        plan_slot = 9
+        def prepare_plan_source():
+            nonlocal plan_slot
+            plan_slot += 1
+            assert plan_slot in (10, 11)
+            spec = importlib.util.spec_from_file_location("owned_original_plan_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, plan_slot), post_event=call)
+            name = "OWNED_ORIGINAL_PLAN_GROUP_CONTENT_KEY" if plan_slot == 10 else "OWNED_ORIGINAL_PLAN_EXPIRY_GROUP_CONTENT_KEY"
+            return new_source, new_events, private_environment[name]
+        plan_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_plan_source, reference=reference_proof, automatic=automatic_proof)
+        result_spec = importlib.util.spec_from_file_location("owned_attempt_result", Path(__file__).with_name("smoke-group-attempt-result.py"))
+        result_proof = importlib.util.module_from_spec(result_spec)
+        result_spec.loader.exec_module(result_proof)
+        result_slot = 11
+        def prepare_result_source():
+            nonlocal result_slot
+            result_slot += 1
+            assert result_slot in (12, 13)
+            spec = importlib.util.spec_from_file_location("owned_attempt_result_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, result_slot), post_event=call)
+            name = "OWNED_ATTEMPT_RESULT_GROUP_CONTENT_KEY" if result_slot == 12 else "OWNED_ATTEMPT_RESULT_DEADLINE_GROUP_CONTENT_KEY"
+            return new_source, new_events, private_environment[name]
+        result_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_result_source, reference=reference_proof, automatic=automatic_proof)
+        expiry_spec = importlib.util.spec_from_file_location("owned_first_shared_expiry", Path(__file__).with_name("smoke-group-result-expiry.py"))
+        expiry_proof = importlib.util.module_from_spec(expiry_spec)
+        expiry_spec.loader.exec_module(expiry_proof)
+        def prepare_expiry_source():
+            spec = importlib.util.spec_from_file_location("owned_first_shared_expiry_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 16), post_event=call)
+            return new_source, new_events, private_environment["OWNED_FIRST_SHARED_EXPIRY_GROUP_CONTENT_KEY"]
+        expiry_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_expiry_source, reference=reference_proof, automatic=automatic_proof)
+        history_spec = importlib.util.spec_from_file_location("owned_history_selection", Path(__file__).with_name("smoke-group-history-selection.py"))
+        history_proof = importlib.util.module_from_spec(history_spec)
+        history_spec.loader.exec_module(history_proof)
+        history_continuation = {}
+        def prepare_history_source():
+            spec = importlib.util.spec_from_file_location("owned_history_base_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            spec = importlib.util.spec_from_file_location("owned_history_followup_fixture", Path(__file__).with_name("owned-group-history-fixture.py"))
+            continuation = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(continuation)
+            new_source, new_events, append = continuation.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 14), post_event=call, fixture=fixture)
+            assert not history_continuation
+            history_continuation.update(source=new_source, append=append)
+            return new_source, new_events, private_environment["OWNED_HISTORY_SELECTION_GROUP_CONTENT_KEY"]
+        def append_history_followup(source_id):
+            assert source_id == history_continuation["source"]
+            return history_continuation["append"](source_id)
+        history_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_history_source, append_followup=append_history_followup,
+            reference=reference_proof, automatic=automatic_proof)
+        v3_spec = importlib.util.spec_from_file_location("owned_original_v3", Path(__file__).with_name("smoke-group-original-v3.py"))
+        v3_proof = importlib.util.module_from_spec(v3_spec)
+        v3_spec.loader.exec_module(v3_proof)
+        v3_continuation = {}
+        def prepare_v3_source():
+            spec = importlib.util.spec_from_file_location("owned_v3_base_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            spec = importlib.util.spec_from_file_location("owned_v3_followup_fixture", Path(__file__).with_name("owned-group-history-fixture.py"))
+            continuation = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(continuation)
+            new_source, new_events, append = continuation.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 17), post_event=call, fixture=fixture)
+            assert not v3_continuation
+            v3_continuation.update(source=new_source, append=append)
+            return new_source, new_events, private_environment["OWNED_ORIGINAL_V3_GROUP_CONTENT_KEY"]
+        def append_v3_followup(source_id):
+            assert source_id == v3_continuation["source"]
+            return v3_continuation["append"](source_id)
+        v3_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_v3_source, append_followup=append_v3_followup,
+            reference=reference_proof, automatic=automatic_proof)
+        admission_spec = importlib.util.spec_from_file_location("owned_original_admission", Path(__file__).with_name("smoke-group-original-admission.py"))
+        admission_proof = importlib.util.module_from_spec(admission_spec)
+        admission_spec.loader.exec_module(admission_proof)
+        def prepare_admission_source():
+            spec = importlib.util.spec_from_file_location("owned_admission_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 18), post_event=call)
+            return new_source, new_events, private_environment["OWNED_ORIGINAL_ADMISSION_GROUP_CONTENT_KEY"]
+        def prepare_accepted_guard_source():
+            spec = importlib.util.spec_from_file_location("owned_accepted_guard_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_automatic(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 20), post_event=call)
+            return new_source, new_events, private_environment["OWNED_ACCEPTED_GUARD_GROUP_CONTENT_KEY"]
+        admission_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_admission_source, prepare_counterfactual_source=prepare_accepted_guard_source,
+            reference=reference_proof, automatic=automatic_proof)
+        first_empty_spec = importlib.util.spec_from_file_location("owned_first_empty_batch", Path(__file__).with_name("smoke-group-first-empty-batch.py"))
+        first_empty_proof = importlib.util.module_from_spec(first_empty_spec)
+        first_empty_spec.loader.exec_module(first_empty_proof)
+        def prepare_first_empty_source():
+            spec = importlib.util.spec_from_file_location("owned_first_empty_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_no_work(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 19), post_event=call)
+            return new_source, new_events, private_environment["OWNED_FIRST_EMPTY_GROUP_CONTENT_KEY"]
+        first_empty_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_first_empty_source, reference=reference_proof, automatic=automatic_proof)
+        first_host_spec = importlib.util.spec_from_file_location("owned_first_host_batch", Path(__file__).with_name("smoke-group-first-host-batch.py"))
+        first_host_proof = importlib.util.module_from_spec(first_host_spec)
+        first_host_spec.loader.exec_module(first_host_proof)
+        def prepare_first_host_source():
+            spec = importlib.util.spec_from_file_location("owned_first_host_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare_host_only(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 21), post_event=call)
+            return new_source, new_events, private_environment["OWNED_FIRST_HOST_GROUP_CONTENT_KEY"]
+        first_host_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_first_host_source, reference=reference_proof, automatic=automatic_proof)
+        first_model_spec = importlib.util.spec_from_file_location("owned_first_model_batch", Path(__file__).with_name("smoke-group-first-model-batch.py"))
+        first_model_proof = importlib.util.module_from_spec(first_model_spec)
+        first_model_spec.loader.exec_module(first_model_proof)
+        def prepare_first_model_source():
+            spec = importlib.util.spec_from_file_location("owned_first_model_effect_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            new_source, new_events = fixture.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 24), post_event=call)
+            return new_source, new_events, private_environment["OWNED_FIRST_MODEL_GROUP_CONTENT_KEY"]
+        first_model_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_first_model_source, reference=reference_proof, automatic=automatic_proof)
+        invalidation_spec = importlib.util.spec_from_file_location("owned_original_invalidation", Path(__file__).with_name("smoke-group-original-invalidation.py"))
+        invalidation_proof = importlib.util.module_from_spec(invalidation_spec)
+        invalidation_spec.loader.exec_module(invalidation_proof)
+        invalidation_followup = {}
+        def prepare_invalidation_source():
+            spec = importlib.util.spec_from_file_location("owned_invalidation_base_fixture", Path(__file__).with_name("owned-group-effect-fixture.py"))
+            fixture = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(fixture)
+            spec = importlib.util.spec_from_file_location("owned_invalidation_edit_fixture", Path(__file__).with_name("owned-group-invalidation-fixture.py"))
+            continuation = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(continuation)
+            new_source, new_events, append = continuation.prepare(directory=directory, api=api,
+                tenant=tenant, company=company, service=service, sql=sql, identity_index=identity_index,
+                enroll_source=lambda source_id: enroll_owned_source(source_id, 25), post_event=call, base_fixture=fixture)
+            invalidation_followup.update(source=new_source, append=append)
+            return new_source, new_events, private_environment["OWNED_ORIGINAL_INVALIDATION_GROUP_CONTENT_KEY"]
+        def edit_invalidation_source(source_id):
+            assert source_id == invalidation_followup["source"]
+            return invalidation_followup["append"](source_id)
+        invalidation_proof.verify(directory=directory, api=api, manifest=manifest, tenant=tenant, company=company,
+            service=service, sql=sql, prepare_source=prepare_invalidation_source, edit_source=edit_invalidation_source,
+            reference=reference_proof, automatic=automatic_proof)
         assert snapshot() == listener_before, "Separate reference proof changed retained original full6 source bytes"
         assert owner_graph == sql("SELECT CONCAT((SELECT COUNT(*) FROM aioffice.Users),N'|',(SELECT COUNT(*) FROM aioffice.Tasks),N'|',"
             "(SELECT COUNT(*) FROM aioffice.TaskDispatches),N'|',(SELECT COUNT(*) FROM aioffice.TaskCheckpoints));")

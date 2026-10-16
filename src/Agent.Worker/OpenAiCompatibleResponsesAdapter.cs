@@ -1,7 +1,6 @@
-using System.Net;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
+using System.Diagnostics;
+using System.Globalization;
+using System.Security.Cryptography;
 using MinhHuyAiOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Agent.Worker;
@@ -13,6 +12,11 @@ public sealed record OpenAiCompatibleResponsesOptions(
     string ProviderId,
     int MaxOutputTokens = 1024)
 {
+    public TimeSpan StructuredTimeout { get; init; } = TimeSpan.FromSeconds(60);
+
+    // Explicitly owned development/test loopback only; never an arbitrary HTTP provider.
+    public bool AllowInsecureLoopback { get; init; }
+
     public static OpenAiCompatibleResponsesOptions? FromEnvironment(
         string prefix = "AIOFFICE_AI",
         string defaultProviderId = "openai-compatible")
@@ -57,15 +61,33 @@ public sealed record OpenAiCompatibleResponsesOptions(
             throw new InvalidOperationException("AI runtime configuration contains invalid canonical values.");
         }
 
+        var maxOutputTokens = 1024;
+        var configuredMaxOutputTokens = Environment.GetEnvironmentVariable($"{prefix}_MAX_OUTPUT_TOKENS");
+        if (configuredMaxOutputTokens is not null
+            && (configuredMaxOutputTokens.Length is < 1 or > 5
+                || configuredMaxOutputTokens[0] is < '1' or > '9'
+                || configuredMaxOutputTokens.Any(character => character is < '0' or > '9')
+                || !int.TryParse(configuredMaxOutputTokens, NumberStyles.None, CultureInfo.InvariantCulture, out maxOutputTokens)
+                || maxOutputTokens is < 1 or > 32768))
+        {
+            throw new InvalidOperationException("AI runtime maximum output tokens must be a canonical integer from 1 to 32768.");
+        }
+
         var endpoint = new Uri($"{baseUrl.TrimEnd('/')}/responses", UriKind.Absolute);
-        return new OpenAiCompatibleResponsesOptions(endpoint, model, authorization, providerId);
+        var allowLoopback = Environment.GetEnvironmentVariable($"{prefix}_ALLOW_INSECURE_LOOPBACK") == "true";
+        var result = new OpenAiCompatibleResponsesOptions(endpoint, model, authorization, providerId, maxOutputTokens)
+        {
+            AllowInsecureLoopback = allowLoopback
+        };
+        StructuredResponsesPolicy.ValidateOptions(result);
+        return result;
     }
 }
 
 public sealed class AiProviderExecutionException(
     string message,
     bool isTransient,
-    Exception? innerException = null) : Exception(message, innerException)
+    Exception? innerException = null) : Exception(message, innerException), IAiGatewayProviderFailure
 {
     public bool IsTransient { get; } = isTransient;
 }
@@ -77,14 +99,35 @@ public sealed class AiProviderExecutionException(
 /// </summary>
 public sealed class OrderedFailoverAiGateway(
     IAiProviderAdapter primary,
-    IAiProviderAdapter? backup = null) : IAiGateway
+    IAiProviderAdapter? backup = null,
+    TimeSpan? wholeStructuredTimeout = null) : IAiGateway, IAiStructuredGatewayMetadataSource
 {
+    private readonly TimeSpan structuredDeadline = ValidateDeadline(wholeStructuredTimeout ?? TimeSpan.FromSeconds(60));
+
+    public AiStructuredGatewayMetadata DescribeStructuredGateway()
+    {
+        return AiStructuredGatewayMetadata.CreateWithDeadline(Describe(primary), backup is null ? null : Describe(backup), structuredDeadline);
+
+        static AiStructuredRouteMetadata Describe(IAiProviderAdapter adapter)
+        {
+            if (adapter is not IAiStructuredProviderMetadataSource source
+                || !adapter.Supports(AiCapability.StructuredGeneration)) throw Unavailable();
+            var metadata = source.DescribeStructuredRoute();
+            if (metadata is null || metadata.ProviderId != adapter.ProviderId) throw Unavailable();
+            return metadata;
+        }
+        static InvalidOperationException Unavailable() => new("AI structured Gateway metadata is unavailable.");
+    }
+
     public async Task<AiGatewayResponse> ExecuteAsync(
         AiGatewayRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         request.Validate();
+
+        if (request.Capability == AiCapability.StructuredGeneration)
+            return await ExecuteStructuredAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!primary.Supports(request.Capability))
         {
@@ -126,6 +169,106 @@ public sealed class OrderedFailoverAiGateway(
         }
     }
 
+    private static TimeSpan ValidateDeadline(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(60))
+            throw new ArgumentException("AI structured Gateway deadline must be positive and at most 60 seconds.");
+        return timeout;
+    }
+
+    private Task<AiGatewayResponse> ExecuteStructuredAsync(AiGatewayRequest request, CancellationToken caller) =>
+        BeginStructuredOperation(request, caller).Caller;
+
+    // Narrow owned lifecycle, also observed by assembly-local verification.
+    // Chain completion is NOT physical adapter cleanup: adapters retain their
+    // own private permits after they stop exposing a result to this Gateway.
+    internal sealed record StructuredOperation(Task<AiGatewayResponse> Caller, Task<AiGatewayResponse> ChainCompletion);
+
+    internal StructuredOperation BeginStructuredOperation(AiGatewayRequest request, CancellationToken caller)
+    {
+        caller.ThrowIfCancellationRequested();
+        var started = Stopwatch.GetTimestamp();
+        var operation = new BoundedStructuredResponses.OwnedCancellation();
+        var operationToken = operation.Token;
+        // Bound synchronous adapter invocation/validation too. Each existing adapter
+        // retains its own physical slots after this caller has stopped waiting.
+        var pending = Task.Run(async () =>
+        {
+            try
+            {
+                if (!primary.Supports(request.Capability) || (backup is not null
+                    && (primary.ProviderId == backup.ProviderId || !backup.Supports(request.Capability))))
+                    throw new AiProviderExecutionException("AI structured Gateway routes are invalid.", false);
+                RequireRemaining();
+                try
+                {
+                    return await ExecuteAndValidateAsync(primary, request, operationToken).ConfigureAwait(false);
+                }
+                catch (AiProviderExecutionException primaryFailure) when (primaryFailure.IsTransient && backup is not null)
+                {
+                    // The backup shares the original clock; expiry never grants another route.
+                    RequireRemaining();
+                    try
+                    {
+                        return await ExecuteAndValidateAsync(backup, request, operationToken).ConfigureAwait(false);
+                    }
+                    catch (AiProviderExecutionException backupFailure)
+                    {
+                        throw new AiProviderExecutionException("Primary and backup AI providers both failed.",
+                            backupFailure.IsTransient, new AggregateException(primaryFailure, backupFailure));
+                    }
+                }
+            }
+            catch (AiProviderExecutionException) { throw; }
+            catch (OperationCanceledException) when (operationToken.IsCancellationRequested || caller.IsCancellationRequested) { throw; }
+            catch (Exception error) when (error is not OutOfMemoryException)
+            { throw new AiProviderExecutionException("AI structured Gateway operation is invalid.", false); }
+            finally { await operation.FinishAsync().ConfigureAwait(false); }
+        }, CancellationToken.None);
+        _ = pending.ContinueWith(task => { _ = task.Exception; }, CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        return new(WaitForCallerAsync(), pending);
+
+        async Task<AiGatewayResponse> WaitForCallerAsync()
+        {
+            try
+            {
+                var remaining = structuredDeadline - Stopwatch.GetElapsedTime(started);
+                if (remaining <= TimeSpan.Zero) throw new TimeoutException();
+                var response = await pending.WaitAsync(remaining, caller).ConfigureAwait(false);
+                RequireRemaining();
+                return response;
+            }
+            catch (OperationCanceledException) when (caller.IsCancellationRequested)
+            {
+                operation.RequestCancellation();
+                throw new OperationCanceledException(caller);
+            }
+            catch (TimeoutException)
+            {
+                operation.RequestCancellation();
+                throw DeadlineExpired();
+            }
+            catch (OperationCanceledException) when (operationToken.IsCancellationRequested
+                && Stopwatch.GetElapsedTime(started) >= structuredDeadline)
+            {
+                throw DeadlineExpired();
+            }
+        }
+
+        void RequireRemaining()
+        {
+            caller.ThrowIfCancellationRequested();
+            if (Stopwatch.GetElapsedTime(started) >= structuredDeadline)
+            {
+                operation.RequestCancellation();
+                throw DeadlineExpired();
+            }
+            operationToken.ThrowIfCancellationRequested();
+        }
+        static AiProviderExecutionException DeadlineExpired() => new("AI structured Gateway deadline expired.", true);
+    }
+
     private static async Task<AiGatewayResponse> ExecuteAndValidateAsync(
         IAiProviderAdapter adapter,
         AiGatewayRequest request,
@@ -151,13 +294,27 @@ public sealed class OrderedFailoverAiGateway(
 /// </summary>
 public sealed class OpenAiCompatibleResponsesAdapter(
     HttpClient httpClient,
-    OpenAiCompatibleResponsesOptions options) : IAiProviderAdapter
+    OpenAiCompatibleResponsesOptions options) : IAiProviderAdapter, IAiStructuredProviderMetadataSource
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly BoundedStructuredResponses structured = new(httpClient, options);
+    private readonly BoundedReasoningResponses reasoning = new(httpClient, options);
 
     public string ProviderId => options.ProviderId;
 
-    public bool Supports(AiCapability capability) => capability == AiCapability.Reasoning;
+    public AiStructuredRouteMetadata DescribeStructuredRoute()
+    {
+        StructuredResponsesPolicy.ValidateOptions(options);
+        var endpointIdentity = Convert.ToHexString(SHA256.HashData(
+            StructuredResponsesPolicy.StrictUtf8.GetBytes("responses-endpoint-identity-v1\n" + options.Endpoint.AbsoluteUri)));
+        return new(options.ProviderId, options.Model, endpointIdentity, options.MaxOutputTokens, options.StructuredTimeout,
+            new("structured-responses-transport-v1", StructuredResponsesPolicy.InputByteLimit,
+                StructuredResponsesPolicy.SchemaByteLimit, StructuredResponsesPolicy.OutputByteLimit,
+                StructuredResponsesPolicy.EntityByteLimit, StructuredResponsesPolicy.JsonDepthLimit,
+                StructuredResponsesPolicy.SchemaDepthLimit, StructuredResponsesPolicy.OperationLimit));
+    }
+
+    public bool Supports(AiCapability capability) =>
+        capability is AiCapability.Reasoning or AiCapability.StructuredGeneration;
 
     public async Task<AiGatewayResponse> ExecuteAsync(
         AiGatewayRequest request,
@@ -165,157 +322,16 @@ public sealed class OpenAiCompatibleResponsesAdapter(
     {
         ArgumentNullException.ThrowIfNull(request);
         request.Validate();
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, options.Endpoint)
+        if (!Supports(request.Capability))
         {
-            Content = JsonContent.Create(new
-            {
-                model = options.Model,
-                input = request.Input,
-                store = false,
-                max_output_tokens = options.MaxOutputTokens
-            }, options: JsonOptions)
-        };
-        if (!message.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationHeader))
-        {
-            throw new AiProviderExecutionException("AI provider authorization header is invalid.", false);
+            throw new AiProviderExecutionException("AI capability is unsupported.", false);
         }
 
-        HttpResponseMessage response;
-        try
+        if (request.Capability == AiCapability.StructuredGeneration)
         {
-            response = await httpClient.SendAsync(
-                message,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (OperationCanceledException exception)
-        {
-            throw new AiProviderExecutionException("AI provider request timed out.", true, exception);
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new AiProviderExecutionException("AI provider request failed before receiving a response.", true, exception);
+            return await structured.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        using (response)
-        {
-            if (!response.IsSuccessStatusCode)
-            {
-                var transient = response.StatusCode is HttpStatusCode.RequestTimeout
-                    or HttpStatusCode.TooManyRequests
-                    || (int)response.StatusCode >= 500;
-                throw new AiProviderExecutionException(
-                    $"AI provider returned HTTP {(int)response.StatusCode}.",
-                    transient);
-            }
-
-            try
-            {
-                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-                var root = document.RootElement;
-                var output = ReadOutputText(root);
-                var model = ReadOptionalString(root, "model") ?? options.Model;
-                var (inputTokens, outputTokens) = ReadUsage(root);
-
-                if (string.IsNullOrWhiteSpace(output) || output.Length > 64_000)
-                {
-                    throw new InvalidOperationException("AI provider returned an empty or oversized text result.");
-                }
-
-                return new AiGatewayResponse(
-                    request.RequestId,
-                    request.Capability,
-                    output,
-                    model,
-                    inputTokens,
-                    outputTokens)
-                {
-                    ProviderId = options.ProviderId
-                };
-            }
-            catch (JsonException exception)
-            {
-                throw new AiProviderExecutionException("AI provider returned malformed JSON.", false, exception);
-            }
-            catch (InvalidOperationException exception)
-            {
-                throw new AiProviderExecutionException("AI provider returned an incompatible response payload.", false, exception);
-            }
-        }
+        return await reasoning.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
     }
-
-    private static string ReadOutputText(JsonElement root)
-    {
-        var topLevel = ReadOptionalString(root, "output_text");
-        if (!string.IsNullOrWhiteSpace(topLevel))
-        {
-            return topLevel;
-        }
-
-        if (!root.TryGetProperty("output", out var output) || output.ValueKind != JsonValueKind.Array)
-        {
-            throw new InvalidOperationException("AI response output collection is missing.");
-        }
-
-        var text = new StringBuilder();
-        foreach (var item in output.EnumerateArray())
-        {
-            if (!item.TryGetProperty("content", out var content) || content.ValueKind != JsonValueKind.Array)
-            {
-                continue;
-            }
-
-            foreach (var part in content.EnumerateArray())
-            {
-                if (ReadOptionalString(part, "type") != "output_text")
-                {
-                    continue;
-                }
-
-                var value = ReadOptionalString(part, "text");
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    continue;
-                }
-
-                if (text.Length > 0)
-                {
-                    text.AppendLine();
-                }
-
-                text.Append(value);
-            }
-        }
-
-        return text.ToString();
-    }
-
-    private static (long InputTokens, long OutputTokens) ReadUsage(JsonElement root)
-    {
-        if (!root.TryGetProperty("usage", out var usage)
-            || usage.ValueKind != JsonValueKind.Object
-            || !usage.TryGetProperty("input_tokens", out var input)
-            || !input.TryGetInt64(out var inputTokens)
-            || !usage.TryGetProperty("output_tokens", out var output)
-            || !output.TryGetInt64(out var outputTokens)
-            || inputTokens < 0
-            || outputTokens < 0)
-        {
-            throw new InvalidOperationException("AI response usage metadata is missing or invalid.");
-        }
-
-        return (inputTokens, outputTokens);
-    }
-
-    private static string? ReadOptionalString(JsonElement element, string propertyName) =>
-        element.TryGetProperty(propertyName, out var property)
-        && property.ValueKind == JsonValueKind.String
-            ? property.GetString()
-            : null;
 }

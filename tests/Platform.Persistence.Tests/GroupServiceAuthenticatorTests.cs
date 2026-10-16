@@ -169,6 +169,44 @@ public sealed class GroupServiceAuthenticatorTests
         await fixture.Authenticator.AuthenticateAsync(fixture.Sign(), fixture.Body());
     }
 
+    [Theory]
+    [InlineData("supported")]
+    [InlineData("missing")]
+    [InlineData("unsupported")]
+    [InlineData("future")]
+    [InlineData("expired")]
+    [InlineData("empty-evidence")]
+    [InlineData("recall-only")]
+    public async Task SyntheticEditStillRequiresItsExactCurrentSupportedObservation(string fault)
+    {
+        using var fixture = new Fixture();
+        var observation = new GroupConnectorObservation(fault == "recall-only" ? GroupConnectorCapability.RecallEvents : GroupConnectorCapability.EditEvents,
+            fault == "unsupported" ? GroupConnectorSupport.Unsupported : GroupConnectorSupport.Supported,
+            fault == "empty-evidence" ? Guid.Empty : Guid.NewGuid(),
+            fault == "future" ? Fixture.Now.AddTicks(1) : fault == "expired" ? Fixture.Now - GroupConnectorQualification.MaximumObservationAge - TimeSpan.FromTicks(1) : Fixture.Now);
+        fixture.Account.QualificationJson = JsonSerializer.Serialize(new
+        {
+            Environment = GroupQualificationEnvironment.Synthetic,
+            Observations = fault == "missing" ? Array.Empty<GroupConnectorObservation>() : new[] { observation }
+        }, GroupServiceAuthenticator.JsonOptions);
+        await fixture.Db.SaveChangesAsync();
+        var payload = fixture.Payload(); payload = payload with { Event = payload.Event with { Kind = GroupSourceEventKind.Edit } };
+        var body = JsonSerializer.SerializeToUtf8Bytes(payload, GroupServiceAuthenticator.JsonOptions);
+        if (fault == "supported")
+        {
+            var verified = await fixture.Authenticator.AuthenticateAsync(fixture.Sign(body: body), body);
+            Assert.Equal(GroupSourceEventKind.Edit, verified.Payload.Event.Kind);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.CreateAuthenticator(GroupIngressRuntimePolicy.Live)
+                .AuthenticateAsync(fixture.Sign(body: body), body));
+        }
+        else
+        {
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Authenticator.AuthenticateAsync(fixture.Sign(body: body), body));
+            Assert.Equal(0, fixture.Secrets.Calls);
+        }
+        Assert.Empty(await fixture.Db.GroupIngressReceipts.ToArrayAsync());
+    }
+
     [Fact]
     public void StrictBodyRejectsUnknownNestedAuthorityDuplicateDecodedFieldsMissingFlagsAndInvalidBytes()
     {

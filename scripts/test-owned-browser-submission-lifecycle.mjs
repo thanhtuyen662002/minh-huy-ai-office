@@ -82,6 +82,47 @@ test("only fixed scalar categories may reach the refusal stage", () => {
     assert.equal(submissionAbortStage(value), "replay-request-aborted");
 });
 
+test("new issued-session document loses observation; reinstall classifies original abort but still refuses receipt", async () => {
+  let now = 0;
+  const document = () => ({ location: { origin }, fetch: async () => ({}) });
+  const sandbox = { window: document(), URL, AbortSignal, DOMException, performance: { now: () => now } };
+  const install = () => runInNewContext(`(${observeSubmissionLifecycle.toString()})({origin,company})`,
+    { ...sandbox, origin, company });
+  const source = verifyTaskSubmission.toString();
+  const start = source.indexOf("async function requiredReceipt("), end = source.indexOf("\n  const sent = [];", start);
+  assert.ok(start >= 0 && end > start);
+  const refusalStage = async () => {
+    const phases = [];
+    const page = { evaluate: async (fn, arg) => runInNewContext(`(${fn.toString()})(url)`, { ...sandbox, url: arg }) };
+    const proof = condition => { if (!condition) throw new Error("Task submission browser proof failed."); };
+    const required = runInNewContext("(" + source.slice(start, end) + ")", {
+      page, proof, submissionAbortStage, wireObservation: null,
+      bounded: async () => { throw new Error("PRIVATE"); },
+    });
+    await assert.rejects(required({ finished: () => new Promise(() => {}), url: () => origin + path,
+      request: () => ({ failure: () => ({ errorText: "net::ERR_ABORTED" }) }) }, name => phases.push(name)),
+    error => error.message === "Task submission browser proof failed.");
+    return phases.at(-1);
+  };
+  const abort = async kind => {
+    now = 0; const controller = new AbortController();
+    await sandbox.window.fetch(path, { method: "POST", signal: controller.signal });
+    now = 10000; controller.abort(new DOMException("PRIVATE", kind));
+  };
+  install(); await abort("TimeoutError"); assert.equal(await refusalStage(), "replay-timeout-after-headers");
+  sandbox.window = document(); await abort("TimeoutError");
+  assert.equal(sandbox.window.__aiofficeOwnedSubmissionLifecycle, undefined);
+  assert.equal(await refusalStage(), "replay-request-aborted");
+  install(); await abort("TimeoutError"); assert.equal(await refusalStage(), "replay-timeout-after-headers");
+  await abort("AbortError"); assert.equal(await refusalStage(), "replay-owner-abort-after-headers");
+  // Pin placement in the actual browser flow, after the new issued SID fence
+  // and before historical source disable/send. No weaker receipt path is used.
+  const sidFence = source.indexOf("await sid(ownerContext) !== oldSid");
+  const restored = source.indexOf("await page.evaluate(observeSubmissionLifecycle", sidFence);
+  assert.ok(sidFence > 0 && restored > sidFence && restored < source.indexOf('stage("historical-owner-read-current-source-denial")'));
+  sandbox.window.__aiofficeOwnedSubmissionLifecycle.dispose();
+});
+
 async function wireFixture(action) {
   const saved = { CI: process.env.CI, GITHUB_ACTIONS: process.env.GITHUB_ACTIONS, RUNNER_TEMP: process.env.RUNNER_TEMP };
   const directory = join(resolve("owned-inert-wire"), "aioffice-local");

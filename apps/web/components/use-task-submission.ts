@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { readBoundedRequestJson } from "../lib/bounded-request-json";
+import { MUTATION_BODY_TIMEOUT_MS, readBoundedRequestJson } from "../lib/bounded-request-json";
 import { parseSubmissionInput, parseSubmissionIntent, parseSubmissionJson, parseSubmissionReceipt, receiptMatches, submissionFingerprint,
   verifiedSubmissionIntent, type SubmissionInput, type SubmissionIntent, type SubmissionReceipt } from "../lib/task-submission-intent";
 
@@ -68,11 +68,26 @@ export function useTaskSubmission({ companyId, generation, isCurrent, ready, val
   }
   async function confirm(attempt: Attempt) { return current(attempt) && await validate(attempt.generation) && current(attempt); }
   async function receive(attempt: Attempt, path: string, init?: RequestInit): Promise<{ response: Response; payload: unknown } | null> {
-    const signal = AbortSignal.any([attempt.controller.signal, AbortSignal.timeout(10000)]);
-    const response = await request(attempt.generation, path, { ...init, cache: "no-store", signal });
-    if (!current(attempt)) return null;
-    if (response.status === 401) { onUnauthorized(); return null; }
-    const payload = response.status === 404 ? null : await readSubmissionPayload(response, signal);
+    const deadline = new AbortController();
+    const timer = setTimeout(() => deadline.abort(new DOMException("Submission response deadline", "TimeoutError")), MUTATION_BODY_TIMEOUT_MS);
+    const signal = AbortSignal.any([attempt.controller.signal, deadline.signal]);
+    let response: Response | undefined, payload: unknown, completed = false;
+    try {
+      response = await request(attempt.generation, path, { ...init, cache: "no-store", signal });
+      if (!current(attempt)) return null;
+      if (response.status === 401) { onUnauthorized(); return null; }
+      payload = response.status === 404 ? null : await readSubmissionPayload(response, signal);
+      completed = response.status !== 404 || response.body === null;
+    } finally {
+      // Stop the network deadline at complete EOF, before a separate authority
+      // check. A successful response must not be aborted ten seconds later.
+      clearTimeout(timer);
+      if (!completed) {
+        deadline.abort();
+        // Early session/404 exits must also release an unread original body.
+        void response?.body?.cancel().catch(() => {});
+      }
+    }
     if (!await confirm(attempt)) return null;
     return { response, payload };
   }

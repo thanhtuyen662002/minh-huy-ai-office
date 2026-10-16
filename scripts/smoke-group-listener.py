@@ -106,6 +106,55 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
                 if failure is None: failure = error
         if failure is not None: raise failure
 
+    renewal_count = 0
+
+    def immutable_history(excluded_nonce):
+        history_query = f"""SELECT CONCAT(
+          CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE(
+            (SELECT * FROM aioffice.GroupAccountCoverageGaps WHERE {account_scope} ORDER BY ListenerEpoch,Reason FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2),N'|',
+          CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE(
+            (SELECT * FROM aioffice.GroupListenerCommandReceipts WHERE {account_scope} AND Nonce<>'{excluded_nonce}' ORDER BY CredentialEpoch,Nonce FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2),N'|',
+          (SELECT COUNT(*) FROM aioffice.GroupListenerCommandReceipts WHERE {account_scope}));"""
+        value = sql(history_query)
+        assert re.fullmatch(r"[0-9A-F]{64}\|[0-9A-F]{64}\|[0-9]+", value), "Invalid owned renewal history metadata"
+        return value.split('|')
+
+    def renew_owned(process=owner, epoch=1):
+        # Deliberate foreground command, outside every unchanged-graph window.
+        # Excluding ONLY this new nonce proves all prior receipt/gap bytes stay
+        # identical; the total receipt count must increase by exactly one.
+        nonlocal renewal_count
+        renewal_body, renewal_nonce, renewal_signed_at = command(2, epoch, process), str(uuid.uuid4()), int(time.time())
+        before = immutable_history(renewal_nonce)
+        response = call(renewal_body, nonce=renewal_nonce, signed_at=renewal_signed_at)
+        value = receipt(*response, process=process, epoch=epoch, coverage=False)
+        assert (timestamp(value['lease']['expiresAtUtc']) - timestamp(value['lease']['heartbeatAtUtc'])).total_seconds() == 30
+        after = immutable_history(renewal_nonce)
+        assert after[:2] == before[:2] and int(after[2]) == int(before[2]) + 1, "Renew changed historical receipt/gap bytes or appended other effects"
+        renewal_count += 1
+        return renewal_body, renewal_nonce, renewal_signed_at, value
+
+    def renew_and_replay():
+        fresh_body, fresh_nonce, fresh_signed_at, fresh = renew_owned()
+        before = snapshot()
+        assert receipt(*call(fresh_body, nonce=fresh_nonce, signed_at=fresh_signed_at), coverage=False, already=True) == {**fresh, 'wasAlreadyCommitted': True}
+        assert snapshot() == before, "Restored live renewal replay changed SQL bytes"
+
+    def timing(captured_nonce, captured_signed_at):
+        # One server-clock snapshot, fixed boolean metadata only. Never log
+        # fixture identities, timestamps, request bodies or credentials.
+        flags = sql(f"""DECLARE @now datetimeoffset=TODATETIMEOFFSET(SYSUTCDATETIME(),'+00:00');
+          SELECT CONCAT(CASE WHEN r.ExpiresAtUtc<=@now THEN 1 ELSE 0 END,N'|',
+            CASE WHEN l.ExpiresAtUtc>@now AND l.OwnerId=r.OwnerId AND l.Epoch=r.ListenerEpoch THEN 1 ELSE 0 END,N'|',
+            CASE WHEN ABS(DATEDIFF_BIG(millisecond,DATEADD(second,{captured_signed_at},CONVERT(datetime2,'19700101')),@now))<90000 THEN 1 ELSE 0 END)
+          FROM aioffice.GroupListenerCommandReceipts r JOIN aioffice.GroupListenerLeases l
+            ON l.TenantId=r.TenantId AND l.CompanyId=r.CompanyId AND l.ConnectorAccountId=r.ConnectorAccountId
+          WHERE r.TenantId='{tenant}' AND r.CompanyId='{company}' AND r.ConnectorAccountId='{account}'
+            AND r.ServiceId='{service}' AND r.CredentialEpoch=1 AND r.Nonce='{captured_nonce}';""")
+        assert re.fullmatch(r"[01]\|[01]\|[01]", flags), "Invalid owned listener timing metadata"
+        print("INFO owned listener timing expired-receipt/live-lease/fresh-signature=" + flags)
+        return flags
+
     qualification = {"environment": 1, "observations": [{"capability": capability, "support": 1,
         "evidenceId": str(uuid.uuid4()), "observedAtUtc": datetime.now(timezone.utc).isoformat()} for capability in (8, 9)]}
     # Enroll a separate disposable account. Retained ingress's manual fixture
@@ -140,11 +189,17 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
     assert snapshot() == first and counts() == [1, 1, 1], "Concurrent listener replay extended or duplicated SQL effects"
     print("PASS actual listener separate-domain scoped commit-only ACK and concurrent100 exact nonce replay preserve original lease/gap/receipt bytes")
 
+    renew_owned()
     no_effect(command(2, 1), 409, nonce=nonce)
+    renew_owned()
     no_effect(command(process=str(uuid.uuid4())))
+    renew_owned()
     no_effect(command(2, 2))
+    renew_owned()
     no_effect(command(), domain=b"aioffice-group-ingest-v1")
+    renew_owned()
     no_effect(command(), epoch=2)
+    renew_owned()  # Before the slow permission phase; never during escalation.
     column_permission = "SELECT state FROM sys.database_permissions WHERE class=1 AND major_id=OBJECT_ID(N'aioffice.GroupListenerCommandReceipts')"
     column_permission += " AND minor_id=COLUMNPROPERTY(OBJECT_ID(N'aioffice.GroupListenerCommandReceipts'),N'CommandSha256',N'ColumnId')"
     column_permission += " AND grantee_principal_id=DATABASE_PRINCIPAL_ID(N'aioffice_binding_runtime') AND permission_name=N'UPDATE';"
@@ -165,17 +220,20 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
         "DENY UPDATE ON OBJECT::aioffice.GroupListenerCommandReceipts(CommandSha256) TO aioffice_binding_runtime;", refuse_unsafe_column)
     assert sql(table_permission) == "D" and sql(column_permission) == original_column_permission and sql(direct_permission) == "0"
     assert sql(effective_column_permission) == "0"
-    assert receipt(*call(body, nonce=nonce), already=True) == {**original, "wasAlreadyCommitted": True}
+    timing(nonce, signed_at)
+    renew_and_replay()  # Fresh original Renew receipt after rights restoration.
 
     # The second Save is forced to fail after a real Stop lease mutation and
     # coverage staging. Only SQL transaction rollback can preserve all3 tables.
+    renew_owned()  # Keep the real Stop mutation live throughout rollback proof.
+    assert renewal_count == 8
     stop_body, stop_nonce = command(3, 1), str(uuid.uuid4())
     constraint = "CK_CiListenerRollback_" + uuid.uuid4().hex
     temporary_sql(f"ALTER TABLE aioffice.GroupListenerCommandReceipts ADD CONSTRAINT {constraint} CHECK(Nonce<>'{stop_nonce}');",
         f"IF EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'{constraint}' AND parent_object_id=OBJECT_ID(N'aioffice.GroupListenerCommandReceipts'))"
         f" ALTER TABLE aioffice.GroupListenerCommandReceipts DROP CONSTRAINT {constraint};", lambda: no_effect(stop_body, 503, nonce=stop_nonce))
     stopped = receipt(*call(stop_body, nonce=stop_nonce))
-    assert counts() == [1, 2, 2]
+    assert counts() == [1, 2, 2 + renewal_count]
     no_effect(body, nonce=nonce)
     stopped_snapshot = snapshot()
     restart(); ready()
@@ -184,7 +242,7 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
     second_owner, second_nonce, second_signed_at = str(uuid.uuid4()), str(uuid.uuid4()), int(time.time())
     second_body = command(process=second_owner)
     second = receipt(*call(second_body, nonce=second_nonce, signed_at=second_signed_at), process=second_owner, epoch=2)
-    assert counts() == [1, 3, 3]
+    assert counts() == [1, 3, 3 + renewal_count]
     no_effect(command(2, 1))
     print("PASS actual listener SQL second-save failure atomically rolls back lease/gap/receipt; stable restored stop/restart ACK and monotonic owner epoch")
 
@@ -259,6 +317,7 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
             ("credential", "GroupServices", registry + f" AND Id='{service}'", "CredentialEpoch=2", "CredentialEpoch=1"),
             ("account", "GroupConnectorAccounts", registry + f" AND Id='{account}'", "IsEnabled=0", "IsEnabled=1"),
             ("deletion", "GroupBindings", registry + f" AND Id='{source}'", "DeletionGeneration=1", "DeletionGeneration=0")):
+        renew_owned(second_owner, 2)  # Outside the queued refusal graph window.
         fingerprint_query = f"SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),(SELECT * FROM aioffice.{table} WHERE {where} FOR JSON PATH,INCLUDE_NULL_VALUES))),2);"
         current_registry = sql(fingerprint_query)
         assert re.fullmatch(r"[0-9A-F]{64}", current_registry)
@@ -266,13 +325,26 @@ def verify(*, directory, api, tenant, company, user, service, key, sql, compose,
         assert sql(fingerprint_query) == current_registry, "Listener fence did not restore exact registry bytes"
         print("PASS actual listener observed Serializable account-lock " + name + " revoke denies unchanged graph/restored renewal")
 
-    # Current renewal cannot revive the old original Acquire ACK deadline.
-    # Wait past that captured receipt's real server deadline, within HMAC skew.
-    remaining = (timestamp(second["lease"]["expiresAtUtc"]) - datetime.now(timezone.utc)).total_seconds()
-    if remaining > 2: time.sleep(remaining - 2)
-    receipt(*call(command(2, 2, second_owner)), process=second_owner, epoch=2, coverage=False)
-    remaining = (timestamp(second["lease"]["expiresAtUtc"]) - datetime.now(timezone.utc)).total_seconds()
+    # A separately captured same-owner Acquire keeps the current lease, with
+    # an original receipt deadline and freshly signed nonce. The earlier
+    # Acquire may now be beyond signing skew after all queued-revocation phases.
+    renew_owned(second_owner, 2)
+    deadline_body, deadline_nonce, deadline_signed_at = command(process=second_owner), str(uuid.uuid4()), int(time.time())
+    before_deadline_acquire = snapshot()
+    before_deadline_history = immutable_history(deadline_nonce)
+    deadline_acquire = receipt(*call(deadline_body, nonce=deadline_nonce, signed_at=deadline_signed_at), process=second_owner, epoch=2, changed=False, coverage=False)
+    assert snapshot()[:2] == before_deadline_acquire[:2], "Same-owner Acquire changed lease/gap bytes"
+    after_deadline_history = immutable_history(deadline_nonce)
+    assert after_deadline_history[:2] == before_deadline_history[:2] and int(after_deadline_history[2]) == int(before_deadline_history[2]) + 1
+    # Renew well before its immutable original deadline, then wait past that
+    # deadline while the renewed lease is still live. No expiry SQL mutation.
+    remaining = (timestamp(deadline_acquire["lease"]["expiresAtUtc"]) - datetime.now(timezone.utc)).total_seconds()
+    if remaining > 10: time.sleep(remaining - 10)
+    renew_owned(second_owner, 2)
+    remaining = (timestamp(deadline_acquire["lease"]["expiresAtUtc"]) - datetime.now(timezone.utc)).total_seconds()
     if remaining > 0: time.sleep(remaining + .2)
+    assert timing(deadline_nonce, deadline_signed_at) == '1|1|1', "Receipt expiry denial lacks expired/live/signed timing preconditions"
+    no_effect(deadline_body, nonce=deadline_nonce, signed_at=deadline_signed_at)
     no_effect(second_body, nonce=second_nonce, signed_at=second_signed_at)
     renewed_stop = receipt(*call(command(3, 2, second_owner)), process=second_owner, epoch=2)
     assert renewed_stop["lease"]["expiresAtUtc"] == renewed_stop["lease"]["heartbeatAtUtc"]

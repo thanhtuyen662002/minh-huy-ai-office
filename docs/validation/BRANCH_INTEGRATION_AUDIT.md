@@ -64,3 +64,18 @@ owns executable routing/service contracts and qualification, preceding277–279.
 Full frozen ee30 review6088762933 approved475 tests including13 own probes.
 Final integration/documentation review and exact final PR/main gates remain.
 No historical branch was deleted, force updated or merged.
+
+
+## Remote branch reconciliation — 2026-10-15
+
+Fresh GitHub paginated branch state and all145 merged PRs were compared with actual accepted mainad747d0daf71be73e1e2af17e8bb3c4c0b4b234b ancestry. Of143 remote branches:114 exact heads match already merged PR heads with their merge commits in main history,22 are already main ancestors,4 are the same historical/superseded refs identified in the earlier audit,2 have active Draft leases, and1 is main. A branch head outside main ancestry after squash is not an undelivered feature. Preserve historical refs; do not merge them merely to clear a branch list. Fresh audit publication is issue233 comment6186293426; local immutable observation records contain exact branch/head/PR classification.
+
+The4 historical refs retain the exact hashes above. PR53 is CLOSED without merge; replacementPR54 is merged and its merge commit is an ancestor of current main. The two backup refs and runtime19 identity snapshot remain historical reconciliation/foundation evidence, with no current implementation lease.
+
+| Current PR | Exact HEAD | Eligibility |
+| --- | --- | --- |
+| 292 / security291 | 24a1814f12f0998ace7024474141372742e8a62b | MERGED into mainad; independent complete repair review6182564034 and exact PR/main closure6182795280 qualify isolated servicing. All8/native80/full2027/actual3images/quality/six originals passed. |
+| 288 / issue278 | b3b77e3576d985fef0ad63b7ef3f4dd09c22e0ca | Draft, mergeable as Git, incomplete as product. Exact all8/Gov/native132/full4861/quality/six originals closed6186010798. Original private admission5/4892 was independently WITHHELD ADM-1/ADM-2, root receipt6186407767. Separate repaired source4900/39 controls reviewed6186574904; current checkpoint CI follows PR288 HANDOFF. Profiles/provenance/coordinator/scanner/no-click278/internalIT279 acceptance remains; no partial merge. |
+| 239 / installer238 | 22f2866e5e4f95589d81484636ad665c5b4b4a6a | Draft and conflicting with main. Clean supported Windows/UAC/reboot/resume/startup/repair/signing/deployment acceptance still required. No installer checkout changes in this audit. |
+
+No additional eligible unmerged implementation branch was found. This dated observation does not qualify a later HEAD or replace current PR HANDOFF, review and exact-head CI. Actual model remains NOT_RUN_UNEVALUATED; no customer ERP/Windows/production/full233 completion is inferred from branch reconciliation.

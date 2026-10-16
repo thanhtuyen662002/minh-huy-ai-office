@@ -120,7 +120,7 @@ jobs:
   local-runtime:
     name: Complete local stack integration
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/configure-docker-cache
@@ -147,7 +147,31 @@ jobs:
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
-          node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs
+          python scripts/test-original-group-fixtures.py
+          python scripts/test-terminal-receipt-proof.py
+          python scripts/test-frontier-root-proof.py
+          python scripts/test-cursor-shadow-network-proof.py
+          python scripts/test-original-plan-proof.py
+          python scripts/test-attempt-result-proof.py
+          python scripts/test-result-expiry-proof.py
+          python scripts/test-history-selection-proof.py
+          python scripts/test-history-continuation.py
+          python scripts/test-original-v3-proof.py
+          python scripts/test-original-v3-enrollment.py
+          python scripts/test-original-admission-proof.py
+          python scripts/test-accepted-guard-counterfactual.py
+          python scripts/test-accepted-guard-source-enrollment.py
+          python scripts/test-original-admission-corruption-proof.py
+          python scripts/test-first-empty-batch-proof.py
+          python scripts/test-first-empty-source-enrollment.py
+          python scripts/test-first-host-batch-proof.py
+          python scripts/test-first-host-source-enrollment.py
+          python scripts/test-first-model-batch-proof.py
+          python scripts/test-first-model-source-enrollment.py
+          python scripts/test-original-invalidation-proof.py
+          python scripts/test-original-invalidation-fixture.py
+          python scripts/test-original-admission-permissions-proof.py
+          node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs scripts/test-owned-expiry-receipt.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh
         run: ./scripts/test-local-config.ps1
@@ -207,6 +231,7 @@ jobs:
             config --format json > "${rendered}"
           python3 scripts/validate-deployment.py "${rendered}"
           python3 -m unittest discover -s scripts -p test_browser_deployment.py
+          python3 -m unittest discover -s scripts -p test_ai_gateway_deployment.py
           python3 -m json.tool apps/web/vercel.json >/dev/null
       - name: Validate enabled production browser deployment contract
         env:

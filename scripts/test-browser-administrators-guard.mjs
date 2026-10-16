@@ -9,6 +9,7 @@ import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
 import { requireOwnedGroupInbox, verifyOwnedGroupInbox } from "./smoke-browser-group-inbox.mjs";
 import { submissionAbortStage, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
+import { JSDOM } from "jsdom";
 
 test("submission202 receipt requires completed bounded UTF8 JSON and reports only fixed refusal stages", async () => {
   const source = await readFile(new URL("./smoke-browser-task-submission.mjs", import.meta.url), "utf8");
@@ -127,6 +128,133 @@ test("submission company-switch still requires provider CodeS256 callback303 and
         actions.push("current"); return { status: 200, text: JSON.stringify({ companyId: fault === "company" ? "other" : selected }) }; }, phase => phases.push(phase));
     if (fault) await assert.rejects(action(target, selected), /^Error: owned switch refused$/);
     else { await action(target, selected); assert.deepEqual(actions, ["select", "workspace", "current"]); }
+    assert.ok(phases.every(phase => /^provider-company-switch-(select|auth-request|callback|workspace|current-session)$/.test(phase)));
+  }
+});
+
+test("archive company-switch observes early waiter failures while preserving original refusal and cleanup control", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function openHistory(", start);
+  assert.ok(start > 0 && end > start);
+  const makeSwitch = new Function("app", "identity", "requireProof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const app = "http://127.0.0.1:3000", identity = "http://127.0.0.1:8081", selected = "owned-inert-company";
+  for (const fault of ["callback", "request", "selection"]) {
+    const failure = new Error("owned-inert-" + fault), phases = [];
+    const callback = fault === "callback" || fault === "selection" ? Promise.reject(failure) : Promise.resolve({ status: () => 303 });
+    const authorization = fault === "request" || fault === "selection" ? Promise.reject(failure)
+      : Promise.resolve({ url: () => identity + "/realms/aioffice-local/protocol/openid-connect/auth?response_type=code&code_challenge_method=S256&code_challenge=owned" });
+    const page = {
+      waitForResponse: () => callback, waitForRequest: () => authorization,
+      getByRole: () => ({ selectOption: async value => {
+        assert.equal(selected, value); await new Promise(resolve => setImmediate(resolve)); if (fault === "selection") throw failure;
+      } }),
+    };
+    const action = makeSwitch(app, identity, assert.ok, () => assert.fail("refusal reached current session"), phase => phases.push(phase));
+    let restored = false;
+    try { await assert.rejects(action(page, selected, "late-private-detail-company-switch"), error => error === failure); }
+    finally { restored = true; }
+    assert.equal(restored, true); assert.equal(phases[0], "late-private-detail-company-switch-select");
+    assert.equal(phases.at(-1), "late-private-detail-company-switch-" + (fault === "callback" ? "callback" : fault === "request" ? "auth-request" : "select-unavailable"));
+  }
+});
+
+test("archive selection diagnostics are passive, bounded, closed and preserve the original refusal", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function openHistory(", start);
+  const make = new Function("app", "identity", "requireProof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  for (const observation of ["ambiguous", "directory-refused", "signed-out", "ready-without-picker", "absent", "unexpected-control",
+    "disabled", "hidden", "target-missing", "already-selected", "available", "PRIVATE-UPSTREAM", null, { state: "PRIVATE" },
+    "reject", "pending"]) {
+    const refusal = new Error("PRIVATE original selection failure"), stages = [];
+    let selections = 0, evaluations = 0;
+    const page = {
+      waitForResponse: () => Promise.reject(new Error("PRIVATE callback failure")),
+      waitForRequest: () => Promise.reject(new Error("PRIVATE authorization failure")),
+      getByRole: () => ({ selectOption: async () => { selections++; throw refusal; } }),
+      evaluate: async (_fn, target) => {
+        evaluations++; assert.equal(target, "PRIVATE target");
+        if (observation === "reject") throw new Error("PRIVATE lost document");
+        if (observation === "pending") return new Promise(() => {});
+        return observation;
+      },
+    };
+    const action = make("http://127.0.0.1:3000", "http://127.0.0.1:8081", assert.ok,
+      () => assert.fail("Selection refusal must never reach session validation"), phase => stages.push(phase));
+    await assert.rejects(action(page, "PRIVATE target", "owned-switch"), error => error === refusal);
+    const expected = typeof observation === "string" && !["PRIVATE-UPSTREAM", "reject", "pending"].includes(observation)
+      ? observation : "unavailable";
+    assert.deepEqual(stages, ["owned-switch-select", "owned-switch-select-" + expected]);
+    assert.equal(selections, 1); assert.equal(evaluations, 1);
+    assert.ok(stages.every(stage => !stage.includes("PRIVATE")));
+  }
+});
+
+test("archive company-switch call sites have distinct fixed phases without changing the required proofs", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const phases = [...source.matchAll(/await switchCompany\((?:ownerPage|secondary), (?:selected|originalCompany), "([a-z-]+)"\)/g)].map(match => match[1]);
+  assert.deepEqual(phases, ["owner-fixture-company-switch", "second-user-fixture-company-switch", "late-private-detail-company-switch",
+    "late-private-detail-return-switch", "archive-final-original-switch"]);
+  assert.equal(new Set(phases).size, 5);
+});
+
+test("archive diagnostics inspect the actual control without releasing private DOM values", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function openHistory(", start);
+  const make = new Function("app", "identity", "requireProof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const picker = '<select id="workspace-company"><option value="original">PRIVATE NAME</option><option value="PRIVATE target">PRIVATE TARGET NAME</option></select>';
+  const cases = [
+    [picker, "available"], [picker.replace('<select ', '<select disabled '), "disabled"],
+    [picker.replace('value="PRIVATE target"', 'value="other"'), "target-missing"],
+    [picker.replace('value="PRIVATE target"', 'selected value="PRIVATE target"'), "already-selected"],
+    [picker + picker, "ambiguous"], ['<input id="workspace-company" value="PRIVATE">', "unexpected-control"],
+    ['<button>Làm mới công ty</button><p>PRIVATE</p>', "directory-refused"],
+    ['<button>Đăng nhập doanh nghiệp</button><p>PRIVATE</p>', "signed-out"],
+    ['<button>Đăng xuất</button><p>PRIVATE</p>', "ready-without-picker"], ['<p>PRIVATE</p>', "absent"],
+    [picker, "hidden"],
+  ];
+  for (const [html, expected] of cases) {
+    const dom = new JSDOM(html, { runScripts: "outside-only" });
+    const stages = [], refusal = new Error("PRIVATE selection failure");
+    try {
+      for (const control of dom.window.document.querySelectorAll("select")) {
+        control.getClientRects = () => expected === "hidden" ? [] : [{ width: 50 }];
+      }
+      const page = {
+        waitForResponse: () => Promise.reject(refusal), waitForRequest: () => Promise.reject(refusal),
+        getByRole: () => ({ selectOption: async () => { throw refusal; } }),
+        evaluate: async (fn, target) => dom.window.eval("(" + fn.toString() + ")")(target),
+      };
+      const action = make("http://127.0.0.1:3000", "http://127.0.0.1:8081", assert.ok, () => assert.fail("No session read after refusal"), phase => stages.push(phase));
+      await assert.rejects(action(page, "PRIVATE target", "owned-switch"), error => error === refusal);
+      assert.deepEqual(stages, ["owned-switch-select", "owned-switch-select-" + expected]);
+      assert.ok(stages.every(stage => !stage.includes("PRIVATE")));
+    } finally { dom.window.close(); }
+  }
+});
+
+test("archive company-switch still requires exact provider code challenge callback303 and current company", async () => {
+  const source = await readFile(new URL("./smoke-browser-task-history.mjs", import.meta.url), "utf8");
+  const start = source.indexOf("  async function switchCompany("), end = source.indexOf("  async function openHistory(", start);
+  const makeSwitch = new Function("app", "identity", "requireProof", "get", "stage", source.slice(start, end) + ";return switchCompany;");
+  const app = "http://127.0.0.1:3000", identity = "http://127.0.0.1:8081", selected = "owned-inert-company";
+  for (const fault of [null, "response-type", "pkce", "challenge", "callback", "status", "company"]) {
+    const phases = [], actions = [];
+    const page = {
+      waitForResponse: match => { assert.ok(match({ url: () => app + "/api/local/session/oidc/callback?code=owned-inert" })); return Promise.resolve({ status: () => fault === "callback" ? 403 : 303 }); },
+      waitForRequest: match => {
+        const url = identity + "/realms/aioffice-local/protocol/openid-connect/auth?response_type=" + (fault === "response-type" ? "token" : "code")
+          + "&code_challenge_method=" + (fault === "pkce" ? "plain" : "S256") + (fault === "challenge" ? "" : "&code_challenge=owned");
+        assert.ok(match({ url: () => url })); return Promise.resolve({ url: () => url });
+      },
+      getByRole: (role, options) => ({ selectOption: async value => { assert.equal(role, "combobox"); assert.equal(options.name, "Chuyển công ty"); assert.equal(selected, value); actions.push("select"); },
+        waitFor: async () => { assert.equal(role, "button"); assert.equal(options.name, "Đăng xuất"); actions.push("workspace"); } }),
+    };
+    const action = makeSwitch(app, identity, condition => { if (!condition) throw new Error("owned fixed archive refusal"); }, async (receivedPage, path) => {
+      assert.equal(page, receivedPage); assert.equal(`/api/local/session?companyId=${selected}`, path); actions.push("current");
+      return { status: fault === "status" ? 401 : 200, text: JSON.stringify({ companyId: fault === "company" ? "other" : selected }) };
+    }, phase => phases.push(phase));
+    if (fault) await assert.rejects(action(page, selected), /^Error: owned fixed archive refusal$/);
+    else { await action(page, selected); assert.deepEqual(actions, ["select", "workspace", "current"]); }
     assert.ok(phases.every(phase => /^provider-company-switch-(select|auth-request|callback|workspace|current-session)$/.test(phase)));
   }
 });

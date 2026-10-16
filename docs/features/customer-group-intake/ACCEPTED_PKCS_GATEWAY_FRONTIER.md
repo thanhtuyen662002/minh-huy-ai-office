@@ -1,0 +1,13 @@
+# Accepted dependency and Gateway frontier
+
+The original-plan V3 store checkpoint A4 is qualified only for the owned mixed SQL132 regression. Its exact Build38524926436/Governance38524926353 and all8 gates, full4694 .NET tests and six original browser images closed in PR288 comment6163407230. Coordinator, scanner, Worker DI and no-click extraction remain incomplete.
+
+Security289/PR290 supplies only the patched Pkcs9.0.21 package reference, with SqlClient6.1.6 and EF10.0.12 unchanged. Reviewed final5f and mergedmain829 have identical694-file Git content. Final PR closure6163612962 and exact main closure6163957204 bind all8/Governance/native80/full2027/full quality and six original images. Issue289 is closed. This does not assert every SDK/runtime component is updated.
+
+Private integration's first full run really failed one post-cleanup reasoning recovery probe with a deadline error. The cause is unproven; thread-pool contention is an inference. The repair serializes the existing38 reasoning timing controls against unrelated tests through a named xUnit collection. It preserves every test body,250ms timeout,3/4s outer guard and four-slot/recovery assertion. The subsequent full run passed4694=[6,557,25,4106],0 failed/skipped; format was empty and successful. The failed log remains retained in the PR evidence.
+
+Next implement one whole deadline for StructuredGeneration primary/backup in the existing OrderedFailoverAiGateway. Reuse the registered HttpClient, options loader and adapters. Preserve each route's physical permit through EOF/disposal/cancellation cleanup; caller timeout does not release capacity. Then bind immutable provider/profile/tokenizer/context-window evidence before coordinator, durable scanner and Worker DI. Retain V3 original byte accounting/chunks on recovery.
+
+Actual model evaluation is **NOT_RUN_UNEVALUATED**. Locally the36 checked primary/backup/legacy environment slots and five specifically referenced environment files are absent; the deployed secret store is unavailable for inspection. Provider configuration belongs in the protected ignored production EnvironmentFile supplied to infra/deploy-backend.ps1 or the existing Worker secret injector: AIOFFICE_AI_PRIMARY_BASE_URL, AIOFFICE_AI_PRIMARY_MODEL and AIOFFICE_AI_PRIMARY_AUTHORIZATION together. ERP appsettings.Private.json is not read by this loader. Do not add a second client or provider configuration.
+
+The successor exact-head CI must close all8/Governance/full4694/native132/fullquality/six original images. No partial PR288 merge, customer ERP business-row, installer, deployment or full233 completion is claimed.

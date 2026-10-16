@@ -15,6 +15,46 @@ const requireProof = condition => { if (!condition) throw new Error("Browser pro
 const digest = value => createHash("sha256").update(value).digest("hex");
 const guid = value => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
   && value !== "00000000-0000-0000-0000-000000000000";
+async function readOwnedExpiryReceipt(response, setPhase) {
+  const proof = condition => { if (!condition) throw new Error("Browser receipt proof failed."); };
+  const streamCategory = fallback => {
+    let failure;
+    try { failure = response.request().failure()?.errorText; } catch { /* Unknown browser boundary. */ }
+    return new Map([
+      ["net::ERR_ABORTED", "receipt-request-aborted"], ["net::ERR_CONNECTION_RESET", "receipt-request-reset"],
+      ["net::ERR_INCOMPLETE_CHUNKED_ENCODING", "receipt-request-truncated"],
+      ["net::ERR_CONTENT_LENGTH_MISMATCH", "receipt-request-length"], ["net::ERR_FAILED", "receipt-request-failed"],
+    ]).get(failure) ?? fallback;
+  };
+  async function bounded(promise) {
+    let timer;
+    try {
+      return await Promise.race([promise, new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Browser receipt proof failed.")), 20_000);
+      })]);
+    } finally { clearTimeout(timer); }
+  }
+  setPhase("receipt-stream-finished");
+  let finished;
+  try { finished = await bounded(response.finished()); }
+  catch { setPhase(streamCategory("receipt-stream-wait-failed")); proof(false); }
+  if (finished !== null) { setPhase(streamCategory("receipt-stream-failed")); proof(false); }
+  setPhase("receipt-body-read");
+  let bytes;
+  try { bytes = await bounded(response.body()); }
+  catch (error) {
+    setPhase(streamCategory(typeof error?.message === "string" && /No (?:resource|data).*identifier/i.test(error.message)
+      ? "receipt-browser-body-unavailable" : "receipt-body-read-failed")); proof(false);
+  }
+  setPhase(bytes.byteLength === 0 ? "receipt-empty-body" : bytes.byteLength > 4096 ? "receipt-body-too-large" : "receipt-body-utf8");
+  proof(bytes.byteLength > 0 && bytes.byteLength <= 4096);
+  let text;
+  try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+  catch { setPhase("receipt-body-invalid-utf8"); proof(false); }
+  setPhase("receipt-body-json");
+  try { return JSON.parse(text); }
+  catch { setPhase("receipt-body-invalid-json"); proof(false); }
+}
 try {
   const directory = resolve(process.argv[2] ?? "");
   requireProof(process.env.CI === "true" && process.env.GITHUB_ACTIONS === "true" && process.env.RUNNER_TEMP
@@ -356,15 +396,14 @@ try {
   const submitted = page.waitForResponse(response => response.request().method() === "POST"
     && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
     && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
+  // Retain the original waiter; observe an early failure while click is pending.
+  submitted.catch(() => {});
   stage = "owned-expiry-submit-response";
   await page.getByRole("button", { name: "Gửi", exact: true }).click();
   const acceptedResponse = await submitted;
   stage = "owned-expiry-submit-accepted";
   requireProof(acceptedResponse.status() === 202 && acceptedResponse.headers()["cache-control"] === "no-store");
-  stage = "owned-expiry-submit-receipt-body";
-  const acceptedBytes = await acceptedResponse.body();
-  stage = "owned-expiry-submit-receipt-json";
-  const accepted = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(acceptedBytes));
+  const accepted = await readOwnedExpiryReceipt(acceptedResponse, name => { stage = "owned-expiry-" + name; });
   stage = "owned-expiry-submit-receipt-task-id";
   requireProof(guid(accepted?.taskId));
   stage = "owned-expiry-task-read";
@@ -458,15 +497,33 @@ try {
     stage = "original-company-private-chat-positive";
     await waitForSource();
     const switchMessage = "Disposable company-switch private chat " + randomUUID();
+    stage = "original-company-private-chat-source-selection";
     await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
+    stage = "original-company-private-chat-draft";
     await page.locator('textarea[name="question"]').fill(switchMessage);
     const switchSubmitted = page.waitForResponse(response => response.request().method() === "POST"
       && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
       && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
+    // Preserve the original waiter, including rejection while click is pending.
+    switchSubmitted.catch(() => {});
+    stage = "original-company-private-chat-submit-response";
     await page.getByRole("button", { name: "Gửi", exact: true }).click();
-    const switchAccepted = await switchSubmitted; requireProof(switchAccepted.status() === 202);
-    const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));
+    const switchAccepted = await switchSubmitted;
+    const switchStatus = switchAccepted.status();
+    stage = "original-company-private-chat-" + (new Map([
+      [202, "submit-accepted"], [401, "submit-unauthorized"], [403, "submit-forbidden"],
+      [409, "submit-conflict"], [503, "submit-unavailable"],
+    ]).get(switchStatus) ?? "submit-other-status");
+    requireProof(switchStatus === 202 && switchAccepted.headers()["cache-control"] === "no-store");
+    const switchReceipt = await readOwnedExpiryReceipt(switchAccepted, name => { stage = "original-company-private-chat-" + name; });
+    stage = "original-company-private-chat-receipt-task-id";
+    const switchTask = switchReceipt?.taskId; requireProof(guid(switchTask));
+    stage = "original-company-private-chat-durable-read";
+    const switchRead = await get(`/api/local/tasks/${switchTask}` + query);
+    requireProof(switchRead.status === 200 && switchRead.cache === "no-store" && JSON.parse(switchRead.text).taskId === switchTask);
+    stage = "original-company-private-chat-private-message";
     await page.getByText(switchMessage, { exact: true }).waitFor();
+    stage = "original-company-private-chat-draft-ready";
     await page.locator('textarea[name="question"]:enabled').waitFor();
     await page.locator('textarea[name="question"]').fill(privateDraft);
     const oldAuthority = await context.cookies(app);

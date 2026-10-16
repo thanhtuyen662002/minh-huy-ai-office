@@ -40,7 +40,7 @@ function begin(view: View) {
 }
 async function send(view: View, attempt = begin(view)) { await act(async () => { await view.result.current.send(attempt); }); }
 beforeEach(() => vi.stubGlobal("crypto", webcrypto));
-afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 it("captures immutable input and acquires synchronously before any await or rerender", async () => {
   const view = fixture(); const attempt = begin(view);
@@ -192,4 +192,92 @@ it.each([
 });
 it("reads a valid streamed private payload with the actual runtime Request and AbortSignal", async () => {
   expect(await readSubmissionPayload(Response.json(intent()), new AbortController().signal)).toEqual(intent());
+});
+
+function deadlineClock() {
+  vi.useFakeTimers();
+  // Give the previous native, non-disposable timeout the same controlled clock
+  // as an owned timer. The signal remains a real AbortSignal in either version.
+  vi.spyOn(AbortSignal, "timeout").mockImplementation(milliseconds => {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(new DOMException("Response deadline", "TimeoutError")), milliseconds);
+    return controller.signal;
+  });
+}
+it.each(["accepted", "refused", "missing"])("releases response deadlines after complete %s responses", async outcome => {
+  deadlineClock();
+  const view = fixture(outcome === "refused" ? () => Response.json({}, { status: 503 }) : undefined);
+  if (outcome === "missing") {
+    act(() => view.result.current.resume(intent()));
+    view.request.mockResolvedValueOnce(new Response(null, { status: 404 }));
+    await act(async () => view.result.current.reconcile());
+  } else await send(view);
+  const signals = view.request.mock.calls.map(([, , init]) => init!.signal!);
+  expect(signals.length).toBe(outcome === "accepted" ? 2 : 1);
+  expect(signals.every(signal => !signal.aborted)).toBe(true);
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+  expect(signals.every(signal => !signal.aborted)).toBe(true);
+  expect(vi.getTimerCount()).toBe(0);
+  expect(view.result.current.pending?.phase).toBe(outcome === "accepted" ? "accepted" : "unknown");
+});
+it("stops the response deadline at EOF while retaining final fresh-authority validation", async () => {
+  deadlineClock();
+  const reached = deferred<void>(), authority = deferred<boolean>(), view = fixture();
+  view.validate.mockImplementation(async () => {
+    if (view.request.mock.calls.length === 2) { reached.resolve(); return authority.promise; }
+    return true;
+  });
+  const attempt = begin(view); let sending!: Promise<unknown>;
+  act(() => { sending = view.result.current.send(attempt); });
+  await act(async () => reached.promise);
+  const signal = view.request.mock.calls[1][2]!.signal!;
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+  expect(signal.aborted).toBe(false);
+  expect(view.result.current.pending?.phase).toBe("prepared");
+  await act(async () => { authority.resolve(false); await sending; });
+  expect(view.result.current.pending?.phase).not.toBe("accepted");
+  expect(view.result.current.pending?.receipt).toBeNull();
+  expect(vi.getTimerCount()).toBe(0);
+});
+it.each(["headers", "body"])("retains the exact ten-second %s deadline and honest uncertainty", async boundary => {
+  deadlineClock();
+  const reached = deferred<void>(); let signal!: AbortSignal, canceled = false;
+  const view = fixture((_url, init) => {
+    signal = init!.signal!; reached.resolve();
+    if (boundary === "headers") return new Promise<Response>((_resolve, reject) => {
+      signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+    });
+    return new Response(new ReadableStream({ cancel() { canceled = true; } }), { headers: { "Content-Type": "application/json" } });
+  });
+  const attempt = begin(view); let sending!: Promise<unknown>;
+  act(() => { sending = view.result.current.send(attempt); });
+  await act(async () => reached.promise);
+  await act(async () => { await vi.advanceTimersByTimeAsync(9_999); });
+  expect(signal.aborted).toBe(false);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); await sending; });
+  expect(signal.aborted).toBe(true); expect(signal.reason.name).toBe("TimeoutError");
+  expect(canceled).toBe(boundary === "body");
+  expect(view.request).toHaveBeenCalledOnce();
+  expect(view.result.current.pending).toMatchObject({ input: attempt.input, phase: "unknown", receipt: null });
+  expect(vi.getTimerCount()).toBe(0);
+});
+it.each(["session", "unauthorized", "missing"])("cancels an unread original body on %s exits without leaving a timer", async boundary => {
+  deadlineClock();
+  let signal!: AbortSignal, canceled = false;
+  const view = fixture((_url, init) => {
+    signal = init!.signal!;
+    if (boundary === "session") view.generation.current++;
+    return new Response(new ReadableStream({ cancel() { canceled = true; } }), {
+      status: boundary === "unauthorized" ? 401 : boundary === "missing" ? 404 : 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  });
+  if (boundary === "missing") {
+    act(() => view.result.current.resume(intent()));
+    await act(async () => view.result.current.reconcile());
+  } else await send(view);
+  expect(signal.aborted).toBe(true); expect(canceled).toBe(true);
+  expect(view.request).toHaveBeenCalledOnce(); expect(vi.getTimerCount()).toBe(0);
+  expect(view.result.current.pending?.phase).not.toBe("accepted");
+  if (boundary === "unauthorized") expect(view.unauthorized).toHaveBeenCalledOnce();
 });

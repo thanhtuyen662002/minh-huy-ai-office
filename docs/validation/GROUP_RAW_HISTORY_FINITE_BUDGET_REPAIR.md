@@ -1,0 +1,15 @@
+# Owned raw history fixture budget repair — issue 278 / Draft 288
+
+## Exact failure and scope
+
+Remote5fc5b87782f6ab06245a8d757c4e81e0cb670216 is closed RED: Build38096849478/native114344400101/quality114350227578. The actual Core501 fixture reached its finite120-second serial-generation deadline at00:32:41 on2026-10-11. The last successful ACK sequence was not retained, so no501 ingress/SQL500/pending501/native113 success is inferred. Root inspected the full frozen113 log:20 missing markers,144 PASS lines/four failure patterns; no browser artifact. Gov38096849367 and the six other prerequisites passed; root full .NET114344400163 shows2844=[6,520,25,2293], zero failures/skips and four successful runs.
+
+This repair affects the owned disposable test fixture only. The serial499 edits plus20 scoped SQL renewals receive a finite300-second overall budget. Every edit still checks exact status/shape/scope/message/revision/sequence/non-replay/UTC ACK. The generation checks its budget before an edit and immediately after the validated ACK. A budget failure reports only the last accepted integer sequence and elapsed seconds clamped to0..300; no account/message identity, payload, response body, configured key or exception is printed. The owned CI gate still runs before configuration, callbacks and the clock. Existing operator renewal runs every25 edits, retains30-second leases and refuses expired/foreign owners; it does not fabricate listener continuity or change epochs.
+
+No shipping authentication, Edit qualification policy, provider/configuration, API timeout, process timeout, job timeout, migration, native markers or SQL observer changes. No event is inserted directly to replace Core ingestion. The actual501 ingress/SQL500 proof must still pass on the next exact remote head, with all113 predicates, all8/Gov/full logs and original browser images.
+
+## Local verification and limits
+
+138 Python tests pass. Retained fixture checks preserve all501 ACK positions/UTC, every malformed ACK/expired lease refusal, two original messages followed by499 edits,20 guarded renewals and final exact SQL counts. New simulated121/299.999-second windows exercise all501 ACK checks within the finite budget;300/301 seconds refuse both before and after an edit ACK, with exact lastSequence2/3 diagnostics and no final counts. These are callback/clock controls, **not actual Core/SQL performance or native qualification**. Other four default fixture profiles and the initial history-only synthetic Edit observation remain unchanged.
+
+The public whole-dependency store, structural kernel and locked all-contributor reader remain separately reviewed source work; their successful SQL path, all-contributor mutations/nonempty brain/races and complete effect ledger/original claim/own-write chains/frontier are unqualified. Actual model evaluation remains **NOT_RUN_UNEVALUATED**. Full278/279/233, production and merge acceptance are incomplete. Continue the same PR through exact-head CI closure, then native reconstruction and no-click delivery.

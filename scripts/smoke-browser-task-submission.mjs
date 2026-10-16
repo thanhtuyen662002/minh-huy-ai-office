@@ -209,6 +209,10 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click();
     proof(new URL((await authorization).url()).searchParams.get("code_challenge_method") === "S256" && (await callback).status() === 303);
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); proof(await sid(ownerContext) && await sid(ownerContext) !== oldSid);
+    // Code/S256 navigation creates a new document; the original passive fetch
+    // observer belonged to the old one. Restore observation before any replay.
+    // A failed stream still fails the original bounded receipt gate.
+    await page.evaluate(observeSubmissionLifecycle, { origin: app, company });
     await page.getByRole("button", { name: "Công việc", exact: true }).click();
     const panel = page.getByRole("region", { name: "Yêu cầu đã lưu", exact: true });
     await panel.getByRole("button", { name: "Lấy yêu cầu đã lưu " + question, exact: true }).waitFor();

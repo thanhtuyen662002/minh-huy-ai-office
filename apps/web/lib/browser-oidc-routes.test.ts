@@ -185,6 +185,9 @@ describe("browser callback authority and publication", () => {
     expect(mocks.exchange).not.toHaveBeenCalled();
   });
   it("refuses missing binding and expired/future transactions before claim", async () => {
+    // Keep the future +11s case outside the real +10s allowance even when
+    // a busy runner crosses a wall-clock second before decoding the cookie.
+    vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     pending(); jar.delete(browserBindingCookieName(settings)); await refusal(await callback(incoming()), 401);
     for (const offset of [-300, 11]) {
       transaction = createOidcTransaction(companyId, Math.floor(Date.now() / 1000) + offset); pending();

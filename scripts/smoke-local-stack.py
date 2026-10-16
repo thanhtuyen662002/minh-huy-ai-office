@@ -1194,6 +1194,16 @@ def main():
     group_auth = {"Authorization": "Bearer " + next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token"),
         "X-AIOffice-Company-Id": company}
     group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api, auth=group_auth)
+    terminal_spec = importlib.util.spec_from_file_location("terminal_receipt_proof", Path("scripts/smoke-group-terminal-receipts.py"))
+    terminal_proof = importlib.util.module_from_spec(terminal_spec)
+    terminal_spec.loader.exec_module(terminal_proof)
+    terminal_proof.verify(directory=directory, api=api, manifest=manifest,
+        sql=lambda query: group_proof.owned_sql(compose, legacy_environment, query))
+    frontier_spec = importlib.util.spec_from_file_location("frontier_root_proof", Path("scripts/smoke-group-frontier-root.py"))
+    frontier_proof = importlib.util.module_from_spec(frontier_spec)
+    frontier_spec.loader.exec_module(frontier_proof)
+    frontier_proof.verify(directory=directory, api=api, manifest=manifest,
+        sql=lambda query: group_proof.owned_sql(compose, legacy_environment, query))
     print("PASS complete local stack integration")
 
 
