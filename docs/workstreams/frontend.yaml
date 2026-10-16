@@ -4,12 +4,12 @@ status: active-development
 current_issue: 273
 current_pr: 293
 current_branch: codex/273-provider-company-selection
-head: b5afcc7b7cd8d7804eb9f123a45d75a80e894ebe
+head: 8078f1b8c32e18baa2027f8dce2b86ba1bdc2ef7
 head_semantics: previous_committed_checkpoint_before_this_update
 state: in_progress
 lease_owner: integration-review-273
-lease_heartbeat_at: '2026-10-16T09:26:00+00:00'
-last_checkpoint_at: '2026-10-16T09:26:00+00:00'
+lease_heartbeat_at: '2026-10-16T09:43:51.778919+00:00'
+last_checkpoint_at: '2026-10-16T09:43:51.778919+00:00'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -18,7 +18,7 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
-  provider_company_273: 'ADR committed before behavior. Ordinary login uses v2 identity-only discovery; Redis encrypted one-shot preselection and dedicated no-workspace chooser; existing v1 explicit switches and issued SID delivery ack retained. Local209 existing OIDC/authority/store +34 new protocol +6 chooser +19 login UI PASS, TypeScript/production Next build PASS. First full web1347PASS/1 old default-company assertionFAIL/25 actualRedis SKIP; assertion updated for intentional discovery request, final full web1354PASS/25 actualRedis SKIP, TypeScript PASS. Five new Redis controls are mandatory hosted. Node39 focused/browser controls and two Python fixture controls PASS; no actual SQL/Chromium yet. Actual SQL/Chromium and 25 Redis cases require exact new-head CI; no acceptance/merge approval.'
+  provider_company_273: 'ADR precedes behavior. Ordinary v2 identity discovery, AES-GCM Redis one-shot preselection and dedicated no-workspace chooser; fresh retained-list/directory/context before SID. v1 company switch/delivery ack unchanged. Local full1354PASS/25 actualRedis SKIP before lifecycle successor; current62 hook/shipping cases,7 chooser cases,16 purpose-binding,39 Node and2 Python controls PASS; TypeScript/Next production build PASS (subsets not additive). Actual SQL/Chromium and25 Redis controls require exact implementation-head CI. No273 acceptance or merge approval.'
   shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. Exactbac shipping-default and compatibility profile controls, full Chromium/retained stack gates and independent full frozen acceptance review PASS; no customer/config/credential/OS changes.'
   chromium_verified_head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
   chromium_verified_build: 37648878161
@@ -110,7 +110,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: 'Own PR293 exact implementation-head CI through terminal; inspect actual Redis plus two nondefault-only provider identities/chooser/reload/source/history/revoke/restore in Chromium, repair real failures on SAME293, then request independent source/acceptance review. Prior260 records remain historical; no273 runtime acceptance yet.'
+next_action: 'Push verified PR293 implementation plus independently scoped-reviewed lifecycle repair; own all8/Governance exact-head closure, inspect real failures immediately and fix SAME293. Require two ordinary nondefault-only CodeS256 identities, chooser/no-choice/reload/source/history/revoke-restore plus retained proofs and independent broader source/security/acceptance review. No merge by specialist.'
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -135,4 +135,11 @@ provider_company_preselection_273:
   architecture: docs/architecture/ADR_PROVIDER_COMPANY_PRESELECTION.md
   status: implementation-checkpoint-awaiting-owned-CI
   actual_SQL_Chromium: NOT_RUN
+  baseline_docs_head: b5afcc7b7cd8d7804eb9f123a45d75a80e894ebe
+  baseline_build: 38878685114
+  baseline_governance: 38878685033
+  baseline_native: 116899851197
+  baseline_quality: 116906774390
+  baseline_result: 'CLOSED RED; whole quality read, only native failed at inherited submission-real-core202-headers-replay-timeout-after-accepted-ui. All6 prerequisites/Gov pass. No unique cause, browser artifact, rerun or cancel. Full log retained outside repo.'
+  lifecycle_repair: 'Two ended-attempt late-abort controls failed on unchanged710; unconsumed cleanup refinement counterexamples retained. Final50 hook+12 shipping=62PASS; no timeout widening/receipt/retry/current-authority changes. ROOT455 independently SCOPED_CLEAR frozen2 paths; not whole273/native approval. Receipt SHA7b4b8b7d66116e8459e9186e776709acbd965100f5d26e19aca8159d0f24df5b.'
   constraints: no-default-membership-workaround; no-browser-company-authority; no-private-workspace-before-issued-session

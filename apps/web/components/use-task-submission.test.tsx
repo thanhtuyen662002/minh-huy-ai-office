@@ -40,7 +40,7 @@ function begin(view: View) {
 }
 async function send(view: View, attempt = begin(view)) { await act(async () => { await view.result.current.send(attempt); }); }
 beforeEach(() => vi.stubGlobal("crypto", webcrypto));
-afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 it("captures immutable input and acquires synchronously before any await or rerender", async () => {
   const view = fixture(); const attempt = begin(view);
@@ -192,4 +192,62 @@ it.each([
 });
 it("reads a valid streamed private payload with the actual runtime Request and AbortSignal", async () => {
   expect(await readSubmissionPayload(Response.json(intent()), new AbortController().signal)).toEqual(intent());
+});
+
+it("releases request deadlines after completed accepted payload and fresh authority without a later transport abort", async () => {
+  vi.useFakeTimers(); const signals: AbortSignal[] = [];
+  const view = fixture((_url, init) => { signals.push(init!.signal as AbortSignal); return undefined; });
+  await send(view); expect(view.result.current.pending?.phase).toBe("accepted"); expect(signals).toHaveLength(2);
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_001); });
+  expect(signals.every((signal) => !signal.aborted)).toBe(true);
+});
+it("releases a failed response deadline rather than aborting an already ended attempt later", async () => {
+  vi.useFakeTimers(); let signal!: AbortSignal;
+  const view = fixture((_url, init) => { signal = init!.signal as AbortSignal; return Response.json({ invalid: true }); });
+  await send(view); expect(view.result.current.pending?.phase).toBe("unknown");
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_001); }); expect(signal.aborted).toBe(false);
+});
+it("still aborts and cancels a genuinely pending body at the original ten-second deadline", async () => {
+  vi.useFakeTimers(); let signal!: AbortSignal; const entered = deferred<void>(), cancel = vi.fn();
+  const view = fixture((_url, init) => { signal = init!.signal as AbortSignal; entered.resolve();
+    return new Response(new ReadableStream({ cancel }), { headers: { "Content-Type": "application/json" } }); });
+  const attempt = begin(view); let sending!: Promise<unknown>;
+  act(() => { sending = view.result.current.send(attempt); }); await act(async () => entered.promise);
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_001); await sending; });
+  expect(signal.aborted).toBe(true); expect(signal.reason.name).toBe("TimeoutError"); expect(cancel).toHaveBeenCalled();
+  expect(view.result.current.pending?.phase).toBe("unknown"); expect(view.request).toHaveBeenCalledOnce();
+});
+it.each([401, 404, 200])("cancels an unconsumed refusal body at status%i when releasing its deadline", async (status) => {
+  const cancel = vi.fn();
+  const view = fixture(() => new Response(new ReadableStream({ cancel }), { status, headers: { "Content-Type": "text/plain" } }));
+  await send(view); expect(cancel).toHaveBeenCalledOnce(); expect(view.result.current.pending?.phase).not.toBe("accepted");
+  expect(view.request).toHaveBeenCalledOnce();
+});
+it("cancels an unread response from a stale generation without invoking another request", async () => {
+  const cancel = vi.fn(); let view!: View;
+  view = fixture(() => { view.generation.current++; return new Response(new ReadableStream({ cancel }), { headers: { "Content-Type": "application/json" } }); });
+  await send(view); expect(cancel).toHaveBeenCalledOnce(); expect(view.request).toHaveBeenCalledOnce();
+  expect(view.result.current.pending?.phase).not.toBe("accepted");
+});
+it.each(["reject", "stall"])("refusal cleanup %s cannot hold the operation open or expose private details", async (kind) => {
+  const cancel = vi.fn(() => kind === "reject" ? Promise.reject(new Error("PRIVATE_CLEANUP")) : new Promise<void>(() => {}));
+  const view = fixture(() => new Response(new ReadableStream({ cancel }), { status: 401 }));
+  await send(view); expect(cancel).toHaveBeenCalledOnce(); expect(view.result.current.working).toBe(false);
+  expect(view.result.current.pending?.phase).not.toBe("accepted"); expect(view.result.current.pending?.notice).not.toContain("PRIVATE_CLEANUP");
+});
+it("refuses an already locked response without stealing a foreign reader or waiting for cleanup", async () => {
+  const body = new ReadableStream<Uint8Array>(), owner = body.getReader();
+  const view = fixture(() => new Response(body, { headers: { "Content-Type": "application/json" } }));
+  try {
+    await send(view); expect(body.locked).toBe(true); expect(view.result.current.pending?.phase).toBe("unknown");
+    expect(view.result.current.working).toBe(false);
+  } finally { await owner.cancel(); owner.releaseLock(); }
+});
+it("a rejected request releases its deadline and still keeps the exact unresolved input", async () => {
+  vi.useFakeTimers(); let signal!: AbortSignal;
+  const view = fixture((_url, init) => { signal = init!.signal as AbortSignal; throw new Error("PRIVATE_TRANSPORT"); });
+  const attempt = begin(view); await send(view, attempt);
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_001); });
+  expect(signal.aborted).toBe(false); expect(view.result.current.pending).toMatchObject({ phase: "unknown", input: attempt.input });
+  expect(view.result.current.pending?.notice).not.toContain("PRIVATE_TRANSPORT");
 });

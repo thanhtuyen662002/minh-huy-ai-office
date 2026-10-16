@@ -68,13 +68,28 @@ export function useTaskSubmission({ companyId, generation, isCurrent, ready, val
   }
   async function confirm(attempt: Attempt) { return current(attempt) && await validate(attempt.generation) && current(attempt); }
   async function receive(attempt: Attempt, path: string, init?: RequestInit): Promise<{ response: Response; payload: unknown } | null> {
-    const signal = AbortSignal.any([attempt.controller.signal, AbortSignal.timeout(10000)]);
-    const response = await request(attempt.generation, path, { ...init, cache: "no-store", signal });
-    if (!current(attempt)) return null;
-    if (response.status === 401) { onUnauthorized(); return null; }
-    const payload = response.status === 404 ? null : await readSubmissionPayload(response, signal);
-    if (!await confirm(attempt)) return null;
-    return { response, payload };
+    const deadline = new AbortController();
+    const timer = setTimeout(() => deadline.abort(new DOMException("Submission deadline exceeded", "TimeoutError")), 10000);
+    const signal = AbortSignal.any([attempt.controller.signal, deadline.signal]);
+    let response: Response | undefined, consumed = false;
+    try {
+      response = await request(attempt.generation, path, { ...init, cache: "no-store", signal });
+      if (!current(attempt)) return null;
+      if (response.status === 401) { onUnauthorized(); return null; }
+      const payload = response.status === 404 ? null : await readSubmissionPayload(response, signal);
+      consumed = response.status !== 404;
+      if (!await confirm(attempt)) return null;
+      return { response, payload };
+    } finally {
+      // A completed/failed receive no longer owns a request deadline. Firing a
+      // retained timeout after a verified acceptance can cancel its transport
+      // after the caller has already consumed the whole receipt and moved on.
+      clearTimeout(timer);
+      // Early401/stale-generation/media refusals did not consume a body. The
+      // deadline no longer owns them, so release the stream without awaiting
+      // hostile/stalled cleanup or aborting a completed accepted transport.
+      if (!consumed) { try { void response?.body?.cancel().catch(() => {}); } catch { /* Refusal survives cleanup failure. */ } }
+    }
   }
   function markFailure(attempt: Attempt, status: number, value: unknown) {
     if (!current(attempt) || !stored.current) return;

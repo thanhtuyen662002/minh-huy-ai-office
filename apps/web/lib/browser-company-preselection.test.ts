@@ -68,6 +68,7 @@ it("encrypts and purpose-binds private selection to the original transaction and
   let ciphertext: unknown;
   const evaluate = vi.fn(async (script: string, _key: string, args: string[]) => {
     if (script.includes("'selectionPayload', ARGV[4]")) { ciphertext = args[3]; return 1; }
+    if (script.includes("return {1, redis.call('HGET', key, 'payload')}")) return [1, ciphertext];
     return ciphertext;
   });
   const store = createBrowserSessionCoordinator(evaluate, settings), transaction = createCompanyDiscoveryTransaction();
