@@ -14,7 +14,7 @@ namespace MinhHuy.AIOffice.GroupReference.RuntimeProof;
 // no current admission service, HTTP client or model is initialized here.
 internal static class GroupRestoredBatchRuntimeProof
 {
-    internal const string CommitLine = "PASS owned restored batch actual original SQL restored accepted result FIRST real claimed processor one automatic note evidence outbox terminal and signed frontier current epoch four cold model factory";
+    internal const string CommitLine = "PASS owned restored batch actual original SQL restored accepted result FIRST real claimed processor three automatic notes one AI two host four evidence outbox terminal and signed frontier current epoch four cold model factory";
     internal const string RecoverLine = "PASS owned restored batch separate process expired claim terminal FIRST original SELECT denied original effects and signed frontier unchanged cold model factory";
     internal static string Phase { get; private set; } = "setup";
     private static ReadProbe? activeProbe;
@@ -106,7 +106,7 @@ internal static class GroupRestoredBatchRuntimeProof
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocation.Id, token);
         var cursor = await db.GroupTerminalFrontierStates.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId, token);
-        if (terminal.OperationId != allocation.Id || terminal.ClaimEpoch != 4 || terminal.NoteCount != 1 || terminal.ContributorCount != 1
+        if (terminal.OperationId != allocation.Id || terminal.ClaimEpoch != 4 || terminal.NoteCount != 3 || terminal.ContributorCount != 1
             || terminal.SelectedMessageCount != 2 || terminal.RawRevisionCount != 2 || advance.Version != 1 || advance.AfterSequence != 0
             || advance.ThroughSequence != 2 || cursor.Version != 1 || cursor.ThroughSequence != 2
             || cursor.LastTerminalBatchId != allocation.Id || cursor.UpdatedAtUtc != advance.AdvancedAtUtc) throw new InvalidOperationException();
@@ -144,7 +144,7 @@ internal static class GroupRestoredBatchRuntimeProof
     }
 
     private static void RequireCompletedCounts((int, int, int, int, int, int) counts)
-    { if (counts != (1, 1, 1, 1, 1, 1)) throw new InvalidOperationException(); }
+    { if (counts != (3, 1, 1, 1, 1, 1)) throw new InvalidOperationException(); }
 
     internal sealed class ReadProbe : DbCommandInterceptor
     {

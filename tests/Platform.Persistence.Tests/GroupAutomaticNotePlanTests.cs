@@ -150,6 +150,37 @@ public sealed partial class GroupBatchSourceReaderTests
     }
 
     [Fact]
+    public async Task RestoredAdmissionMediaFixtureKeepsAiAndBothHostReasonsWithFourEvidenceReferences()
+    {
+        using var f = new Fixture();
+        var work = await f.CommitAsync(f.Payload(messageId: "restored-caption", eventId: "restored-caption",
+            kind: GroupSourceEventKind.Media, text: "Tra cứu tồn kho 😀\uFEFF "));
+        var secret = await f.CommitAsync(f.Payload(messageId: "restored-secret", eventId: "restored-secret",
+            kind: GroupSourceEventKind.Media, text: "Password=OWNED_AUTOMATIC_PRIVATE_SENTINEL"));
+        var preparation = GroupBatchSourcePreparation.Create(await f.Reader.ReadAsync(await f.ClaimAsync(), [work.MessageId, secret.MessageId]));
+        var candidate = Assert.Single(preparation.Candidates);
+        Assert.Equal(work.MessageId, candidate.MessageId);
+        var proposal = GroupGroundedWorkProposal.Parse(preparation, ProposalWire(candidate).ToJsonString());
+        var plan = GroupAutomaticNotePlan.Create(preparation, proposal);
+        Assert.Equal(3, plan.NoteCount);
+        Assert.Single(plan.AiNotes);
+        Assert.Equal(2, plan.HostNotes.Count);
+        var media = Assert.Single(plan.HostNotes, x => x.Reason == GroupHostAttentionReason.UnsupportedMedia);
+        Assert.Equal(new[] { work.MessageId, secret.MessageId }.Order(), media.SourceReferences.Select(x => x.MessageId).Order());
+        Assert.All(media.SourceReferences, x => Assert.Equal(1, x.Revision));
+        var quarantine = Assert.Single(plan.HostNotes, x => x.Reason == GroupHostAttentionReason.SecretQuarantine);
+        Assert.Equal(new GroupHostAttentionReference(secret.MessageId, 1), Assert.Single(quarantine.SourceReferences));
+        Assert.Equal(4, plan.AiNotes.Sum(x => x.Evidence.Count) + plan.HostNotes.Sum(x => x.SourceReferences.Count));
+        Assert.Equal(work.MessageId, Assert.Single(Assert.Single(plan.AiNotes).Evidence).MessageId);
+        Assert.Equal(GroupWorkSourceOutcome.Work, plan.SourceDispositions.Single(x => x.MessageId == work.MessageId).Outcome);
+        Assert.Equal(GroupWorkSourceOutcome.Quarantined, plan.SourceDispositions.Single(x => x.MessageId == secret.MessageId).Outcome);
+        Assert.All(plan.SourceDispositions, x => Assert.True(x.HasHostAttention));
+        Assert.All(plan.HostNotes, x => Assert.DoesNotContain("OWNED_AUTOMATIC_PRIVATE_SENTINEL", x.EncodePayload()));
+        Assert.Empty(await f.Auth.Db.GroupCustomerRequests.ToArrayAsync());
+        Assert.False(f.Auth.Db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
     public void AutomaticPlanCannotBeForgedMutatedOrAssertRetryExhaustion()
     {
         Assert.Empty(typeof(GroupAutomaticNotePlan).GetConstructors()); Assert.Empty(typeof(GroupAutomaticSourceReceipt).GetConstructors());

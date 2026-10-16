@@ -65,7 +65,10 @@ class OriginalAdmissionProofTests(unittest.TestCase):
                 if own and fault and fault.startswith('cleanup:') and phase == fault.split(':')[1] and table == 'GroupOriginalAdmissionSidecars': return 'B'*64
                 return 'A'*64
             if 'SELECT CONCAT' in query:
-                if phase == 'restored-batch-commit': return '0|1|1|1|2|2|1|1|1|1|1|1' if fault == 'batch-counts' else '1|1|1|1|2|2|1|1|1|1|1|1'
+                if phase == 'restored-batch-commit':
+                    if fault == 'batch-one-note': return '1|1|1|1|2|2|1|1|1|1|1|1'
+                    if fault == 'batch-missing-host': return '2|2|3|1|2|2|1|2|1|1|1|1'
+                    return '0|3|4|1|2|2|1|3|1|1|1|1' if fault == 'batch-counts' else '3|3|4|1|2|2|1|3|1|1|1|1'
                 return {'admission-original-prepare':'0|0|0|0|0','admission-original-expiry':'0|0|0|0|1','admission-original-commit':'1|1|1|1|2','admission-original-recover':'1|1|1|1|3','admission-original-resume':'1|1|1|1|3'}[phase]
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupCustomerRequests') or query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptFailures'): return '0'
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupModelAttemptAdmissions'):
@@ -137,7 +140,7 @@ class OriginalAdmissionProofTests(unittest.TestCase):
             self.assertNotIn(kwargs['env']['AIOFFICE_GROUP_REFERENCE_PROOF_SOURCE_KEY'],' '.join(cmd)+kwargs['input'])
 
     def test_restored_completion_refuses_missing_effects_changed_originals_private_output_and_failed_child(self):
-        for fault in ('batch-counts','batch-original-changed','batch-private-output','batch-commit-child'):
+        for fault in ('batch-counts','batch-one-note','batch-missing-host','batch-original-changed','batch-private-output','batch-commit-child'):
             with self.subTest(fault=fault):
                 _,calls,_ = self.run_control(fault)
                 self.assertEqual(2,sum(cmd[:2] == ['docker','inspect'] for cmd,_ in calls))

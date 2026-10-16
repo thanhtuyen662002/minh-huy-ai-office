@@ -33,7 +33,7 @@ JOURNAL_RUNTIME_LINE = 'PASS owned original admission actual current gate prepar
 JOURNAL_SUMMARY = 'PASS actual admitted original model journal authentic sidecar same transaction two row flush rollback committed exact companion replay no second permit actual Gateway execution current SQL before after wait one use outside SQL accepted result FIRST without sidecar or companion SELECT retained full graphs both cleanup gates synthetic adapter zero HTTP no model qualification'
 JOURNAL_EXPIRY_RUNTIME_LINE = 'PASS owned admitted journal authentic expiry observed UTC before claim issuance actual entry exact witness old interval refused replacement current no second attempt accepted graphs retained zero provider'
 
-BATCH_COMMIT_LINE = 'PASS owned restored batch actual original SQL restored accepted result FIRST real claimed processor one automatic note evidence outbox terminal and signed frontier current epoch four cold model factory'
+BATCH_COMMIT_LINE = 'PASS owned restored batch actual original SQL restored accepted result FIRST real claimed processor three automatic notes one AI two host four evidence outbox terminal and signed frontier current epoch four cold model factory'
 BATCH_RECOVER_LINE = 'PASS owned restored batch separate process expired claim terminal FIRST original SELECT denied original effects and signed frontier unchanged cold model factory'
 BATCH_SUMMARY = 'PASS actual restored batch original recovery accepted result automatic note evidence outbox terminal signed frontier expired claim terminal FIRST original SELECT denied fresh process unchanged complete scopes permissions both cleanup gates cold model factory no model qualification'
 COMPLETION_TABLES = (("GroupBatchTerminalReceipts","BatchId"),("GroupTerminalAdvances","Version"),
@@ -231,7 +231,7 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
             'GroupCustomerRequests','GroupRequestRevisions','GroupRequestEvidence','GroupWorkCommitReceipts','GroupWorkSourceDispositions',
             'GroupWorkRawDispositions','GroupNotesCommittedOutbox','GroupNotesCommittedItems','GroupBatchTerminalReceipts',
             'GroupTerminalAdvances','GroupTerminalAdvanceKeys','GroupTerminalFrontierStates'))+");")
-        assert counts == '1|1|1|1|2|2|1|1|1|1|1|1', 'Restored completion graph differs'
+        assert counts == '3|3|4|1|2|2|1|3|1|1|1|1', 'Restored completion graph differs'
         completed = graph(); unchanged()
         first = None
         try:

@@ -6,16 +6,16 @@ priority_rule: security-critical > production-blocker > active-issue > verified-
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: d2e054094e636f9805a9198e7a7448551c9b427c
+current_target_head: ef9c1f0580bf552e34186e96ffaa28de7551f491
 last_verified_commit: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 critical_paths:
   backend:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: d2e054094e636f9805a9198e7a7448551c9b427c
+    head: ef9c1f0580bf552e34186e96ffaa28de7551f491
     state: in_progress
-    next: "SAME288 actual293 d2e0540 Build38849357519/Gov38849357512 attempt1 ALL8 TERMINAL_FAILED closure6208770898: restored-batch-commit exit1 at parent line228, actual childphase/kind/rawstdout NOT_CAPTURED. Hosted5657=[6,584,25,5042]/Gov/sixprerequisites PASS; current-source270 native14939missing/5failuremarkers/163PASSpartial; entirequality116823359566/all7 read only LOCAL_RUNTIME_RESULTred; browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. Parent reached restored completion after earlier admission/corruption/permission/read/strictcounterfactual/journalexpiry calls returned, but no aggregate/actual-clause/unique-cause qualification. No failure rerun/cancel. ONLY323/code327 current329 adds closed restored phase14/kind9/read-signature diagnostics, precise proof phases and observations, retaining all original exactsuccess/graph/permissions/coldfactory/strictnegative/legacy/terminal-FIRST/cleanup assertions. No production source or schema change. Full5677=[6,584,25,5062]/format+172guard9negative PASS/source1275 unchanged. Source326 parser149 updated3 of prior38 inputs and pins restoredCPP, keeps unchanged147 bridge/markers; six inert328 controls PASS. Independent source/helper review PENDING, actual clause NOT_FIXED_UNKNOWN. Current329 durable/ordinary descendant then fresh149/full5677 all8/Gov/wholequality/all7/sixoriginalPNGs ifreached and own CI throughterminal; inspect/fix realred SAME288 immediately. Preserve d2e/f105/b37/e50/a718/fbfa ancestry; no force/reset/rebase, no partialmainmerge. Future316 remains SEPARATE_UNCOMMITTED_NOT_INCLUDED: versioned ownerpolicy contextv3/originalV4 plus local Worker-only existing Gateway environment forwarding, full5679/181Python/format/EF/sixCompose renders and real320 migrations/extracted trustedconstraint12cases/cleanup PASS; no native150, independent review/currentdurable/Git delivery. Preserve intermediate303 CRLF artifact; use canonical316 or corrective successor later. Do not piggyback316 while current restored failure is unresolved. Human292 mixed explicit feature/presentation priority retained; original227/blindlabels/244 untouched,297 amendment is preoutput only, actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY. Reuse existing Gateway/config paths247, no new AI client/config store; deployment PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protectedignored.env.production or approvedWorkersecretinjection; current shipping localCompose still does notforward provider vars. Continue full278 continuation/partial-global spending/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click/internalIT279/full233; dedicatedERPreadonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged, V2 attachment unread until currentcompletion/mainmerge. All previous failures/WITHHELD and incomplete independent245 preserved; no invented approval or mock-model score."
+    next: "SAME288 actual331 ef9c1f0 Build38857087053/Gov38857086977 attempt1 ALL8 TERMINAL_FAILED closure6209524951, native116830882523 verify-counts/invariant/111; hosted5677=[6,584,25,5062] PASS/root receipt6209199559. Preserve original run through all8terminal/wholequality/all7/cleanup/images if reached, entirequality116843116164/all7 read only LOCAL_RUNTIME_RESULTred, browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. No rerun/cancel. Private actual SQL339 reproduces restored-batch-commit at RequireCompletedCounts, verify-counts/invariant/reads111 after fixed processor returns; owned fixture338 now uses actual EnvelopeHash and no production changes.340 corrects PROOF ONLY: existing two-media fixture requires three notes (one AI plus UnsupportedMedia and SecretQuarantine), four evidence refs, one work/outbox/terminal/frontier. Parent exact graph now3|3|4|1|2|2|1|3|1|1|1|1; new source-linked unit test and parent negatives reject old one-note/missing-host graphs. No guard or host attention removed. Full5678=[6,584,25,5063]/format/172guard9strictnegative plus parent suite PASS/all1275 unchanged.343 fresh own SQL nine separate processes PASS, actual denied sidecar-companion recovery and original-sidecar-companion expired-terminal-FIRST recovery PASS, container/volumes removed. These private directSQL fixtures are operator seeded, not Core/broker/full hosted149/browser/model qualification. Code344 frozen, helper345 current38 updated only original-admission and restoredCPP RAW, separate147 bridge corrects exact graph count and retains all144/inherited guards; seven inert346 controls PASS. Independent source/helper review PENDING. Current355 durable replaces failed352 preparation which emitted no output because old run transitioned to terminal. Ordinary same288 checkpoint/fresh push now possible after exact ef9 closure. After exact ef9 closure/review, fresh149/full5678/all8/Gov/wholequality/all7/sixoriginalPNGs required for successor and root owns throughterminal. Separate first-path351 preflight passed empty commit then failed own extra Result SELECT denial during allocation-phase count verification; shipped empty/host deny three tables, model four. Correct private harness separately without changing shipping proof or claiming a product defect. Future316 versioned owner policy contextv3/originalV4 plus local Worker-only existing Gateway forwarding remains separate UNCOMMITTED/NOT_INCLUDED; do not mix before restored correction qualified. Preserve all previous closures/WITHHELD/corpus227/blind244/human292. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY; same existing Gateway/config247, no new client/config store. Continue full278 continuation/global residual spending/partial contributor preservation/coverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated ERP readonly for Medcom/Novo inventory/import-export, Windows lifecycle and actual deployment remain. Mainad747d unchanged; V2 unread until currentcompletion/mainmerge."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "SAME288 actual293 d2e0540 Build38849357519/Gov38849357512 attempt1 ALL8 TERMINAL_FAILED closure6208770898: restored-batch-commit exit1 at parent line228, actual childphase/kind/rawstdout NOT_CAPTURED. Hosted5657=[6,584,25,5042]/Gov/sixprerequisites PASS; current-source270 native14939missing/5failuremarkers/163PASSpartial; entirequality116823359566/all7 read only LOCAL_RUNTIME_RESULTred; browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. Parent reached restored completion after earlier admission/corruption/permission/read/strictcounterfactual/journalexpiry calls returned, but no aggregate/actual-clause/unique-cause qualification. No failure rerun/cancel. ONLY323/code327 current329 adds closed restored phase14/kind9/read-signature diagnostics, precise proof phases and observations, retaining all original exactsuccess/graph/permissions/coldfactory/strictnegative/legacy/terminal-FIRST/cleanup assertions. No production source or schema change. Full5677=[6,584,25,5062]/format+172guard9negative PASS/source1275 unchanged. Source326 parser149 updated3 of prior38 inputs and pins restoredCPP, keeps unchanged147 bridge/markers; six inert328 controls PASS. Independent source/helper review PENDING, actual clause NOT_FIXED_UNKNOWN. Current329 durable/ordinary descendant then fresh149/full5677 all8/Gov/wholequality/all7/sixoriginalPNGs ifreached and own CI throughterminal; inspect/fix realred SAME288 immediately. Preserve d2e/f105/b37/e50/a718/fbfa ancestry; no force/reset/rebase, no partialmainmerge. Future316 remains SEPARATE_UNCOMMITTED_NOT_INCLUDED: versioned ownerpolicy contextv3/originalV4 plus local Worker-only existing Gateway environment forwarding, full5679/181Python/format/EF/sixCompose renders and real320 migrations/extracted trustedconstraint12cases/cleanup PASS; no native150, independent review/currentdurable/Git delivery. Preserve intermediate303 CRLF artifact; use canonical316 or corrective successor later. Do not piggyback316 while current restored failure is unresolved. Human292 mixed explicit feature/presentation priority retained; original227/blindlabels/244 untouched,297 amendment is preoutput only, actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY. Reuse existing Gateway/config paths247, no new AI client/config store; deployment PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protectedignored.env.production or approvedWorkersecretinjection; current shipping localCompose still does notforward provider vars. Continue full278 continuation/partial-global spending/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click/internalIT279/full233; dedicatedERPreadonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged, V2 attachment unread until currentcompletion/mainmerge. All previous failures/WITHHELD and incomplete independent245 preserved; no invented approval or mock-model score."
+next_action: "SAME288 actual331 ef9c1f0 Build38857087053/Gov38857086977 attempt1 ALL8 TERMINAL_FAILED closure6209524951, native116830882523 verify-counts/invariant/111; hosted5677=[6,584,25,5062] PASS/root receipt6209199559. Preserve original run through all8terminal/wholequality/all7/cleanup/images if reached, entirequality116843116164/all7 read only LOCAL_RUNTIME_RESULTred, browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. No rerun/cancel. Private actual SQL339 reproduces restored-batch-commit at RequireCompletedCounts, verify-counts/invariant/reads111 after fixed processor returns; owned fixture338 now uses actual EnvelopeHash and no production changes.340 corrects PROOF ONLY: existing two-media fixture requires three notes (one AI plus UnsupportedMedia and SecretQuarantine), four evidence refs, one work/outbox/terminal/frontier. Parent exact graph now3|3|4|1|2|2|1|3|1|1|1|1; new source-linked unit test and parent negatives reject old one-note/missing-host graphs. No guard or host attention removed. Full5678=[6,584,25,5063]/format/172guard9strictnegative plus parent suite PASS/all1275 unchanged.343 fresh own SQL nine separate processes PASS, actual denied sidecar-companion recovery and original-sidecar-companion expired-terminal-FIRST recovery PASS, container/volumes removed. These private directSQL fixtures are operator seeded, not Core/broker/full hosted149/browser/model qualification. Code344 frozen, helper345 current38 updated only original-admission and restoredCPP RAW, separate147 bridge corrects exact graph count and retains all144/inherited guards; seven inert346 controls PASS. Independent source/helper review PENDING. Current355 durable replaces failed352 preparation which emitted no output because old run transitioned to terminal. Ordinary same288 checkpoint/fresh push now possible after exact ef9 closure. After exact ef9 closure/review, fresh149/full5678/all8/Gov/wholequality/all7/sixoriginalPNGs required for successor and root owns throughterminal. Separate first-path351 preflight passed empty commit then failed own extra Result SELECT denial during allocation-phase count verification; shipped empty/host deny three tables, model four. Correct private harness separately without changing shipping proof or claiming a product defect. Future316 versioned owner policy contextv3/originalV4 plus local Worker-only existing Gateway forwarding remains separate UNCOMMITTED/NOT_INCLUDED; do not mix before restored correction qualified. Preserve all previous closures/WITHHELD/corpus227/blind244/human292. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY; same existing Gateway/config247, no new client/config store. Continue full278 continuation/global residual spending/partial contributor preservation/coverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated ERP readonly for Medcom/Novo inventory/import-export, Windows lifecycle and actual deployment remain. Mainad747d unchanged; V2 unread until currentcompletion/mainmerge."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -6574,5 +6574,79 @@ group_restored_failure329_current_checkpoint:
   current_native149: NOT_RUN_FOR_NEW_SOURCE
   activation: false
   push: false
+  main_merge: false
+  V2_attachment_read: false
+
+group_restored_effects355_current_checkpoint:
+  scope: RESTORED_HOST_ATTENTION_PROOF_CORRECTION340_CURRENT355_UNPUSHED_UNREVIEWED
+  parent: ef9c1f0580bf552e34186e96ffaa28de7551f491
+  remote_build: 38857087053
+  remote_governance: 38857086977
+  attempt: 1
+  remote_status_observed: completed
+  remote_failure_phase: verify-counts
+  remote_failure_kind: invariant
+  remote_reads: '111'
+  terminal_closure354:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\native149-ef9c1f0-terminal-failed-closure-v354.json
+    bytes: 4153
+    sha256: cbeeea025da2c0bf2831e0e01309b85cccaed8e2da63e98a24e7f3068094e637
+  terminal_comment: 6209524951
+  local_negative339:
+    path: D:\CodexReviewScratch\aioffice-restored-owned-repro-v338\owned-reproduction-v339.json
+    bytes: 5023
+    sha256: 175ea49b9d3e4407a5417e6e9b8cfed111a27b4ec2c13236103bf58681ea297a
+  local_negative_phase: verify-counts
+  local_negative_kind: invariant
+  local_negative_reads: '111'
+  corrected_code344:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\restored-effects-code-only-v344.json
+    bytes: 227881
+    sha256: 6880d8fa82a306cafd229b90551fa5852d27df8280a9669f30cf6409e10d2e49
+  full_verification341:
+    path: D:\CodexReviewScratch\aioffice-restored-effects-v340\verification-v341.json
+    bytes: 228785
+    sha256: ac09d5459ccbcab4e182580464ecf6b349b0dc6d7b248db99e1d8f54f40d8a9a
+  full_dotnet: 5678
+  projects:
+  - 6
+  - 584
+  - 25
+  - 5063
+  python_guard: 172
+  python_strict_negative: 9
+  additional_parent_suite: true
+  local_positive343:
+    path: D:\CodexReviewScratch\aioffice-restored-owned-repro-v342\owned-reproduction-v343.json
+    bytes: 5222
+    sha256: efaf36deffa6889a239482b2255e7bc6ff2b65f6103c5bd4f57d752504f39eda
+  local_positive_modes: 9
+  select_denial_recovery_modes: 2
+  cleanup_verified: true
+  source1275_unchanged: true
+  helper345:
+    path: D:\CodexReviewScratch\aioffice-source340-native149-parser-v345\inventory.json
+    bytes: 20008
+    sha256: c233e878fdda0bc258d917a86edbd445617763465a064e36bf4ac571abd468d3
+  helper_controls346:
+    path: D:\CodexReviewScratch\aioffice-source340-native149-parser-v345\binding-controls-v346.json
+    bytes: 6141
+    sha256: 503a469dabfb6d2ffc23db1670544ecf466149212d4636e2e0271f173d71f673
+  production_source_changed: false
+  schema_changed: false
+  first_paths351: SEPARATE_PRIVATE_HARNESS_EXTRA_RESULT_SELECT_DENIAL_FAILED_NOT_PRODUCT_CAUSE
+  prior_current_heads:
+    project: d2e054094e636f9805a9198e7a7448551c9b427c
+    backend: d2e054094e636f9805a9198e7a7448551c9b427c
+    workstream: d2e054094e636f9805a9198e7a7448551c9b427c
+  prior_current_next: 'SAME288 actual293 d2e0540 Build38849357519/Gov38849357512 attempt1 ALL8 TERMINAL_FAILED closure6208770898: restored-batch-commit exit1 at parent line228, actual childphase/kind/rawstdout NOT_CAPTURED. Hosted5657=[6,584,25,5042]/Gov/sixprerequisites PASS; current-source270 native14939missing/5failuremarkers/163PASSpartial; entirequality116823359566/all7 read only LOCAL_RUNTIME_RESULTred; browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. Parent reached restored completion after earlier admission/corruption/permission/read/strictcounterfactual/journalexpiry calls returned, but no aggregate/actual-clause/unique-cause qualification. No failure rerun/cancel. ONLY323/code327 current329 adds closed restored phase14/kind9/read-signature diagnostics, precise proof phases and observations, retaining all original exactsuccess/graph/permissions/coldfactory/strictnegative/legacy/terminal-FIRST/cleanup assertions. No production source or schema change. Full5677=[6,584,25,5062]/format+172guard9negative PASS/source1275 unchanged. Source326 parser149 updated3 of prior38 inputs and pins restoredCPP, keeps unchanged147 bridge/markers; six inert328 controls PASS. Independent source/helper review PENDING, actual clause NOT_FIXED_UNKNOWN. Current329 durable/ordinary descendant then fresh149/full5677 all8/Gov/wholequality/all7/sixoriginalPNGs ifreached and own CI throughterminal; inspect/fix realred SAME288 immediately. Preserve d2e/f105/b37/e50/a718/fbfa ancestry; no force/reset/rebase, no partialmainmerge. Future316 remains SEPARATE_UNCOMMITTED_NOT_INCLUDED: versioned ownerpolicy contextv3/originalV4 plus local Worker-only existing Gateway environment forwarding, full5679/181Python/format/EF/sixCompose renders and real320 migrations/extracted trustedconstraint12cases/cleanup PASS; no native150, independent review/currentdurable/Git delivery. Preserve intermediate303 CRLF artifact; use canonical316 or corrective successor later. Do not piggyback316 while current restored failure is unresolved. Human292 mixed explicit feature/presentation priority retained; original227/blindlabels/244 untouched,297 amendment is preoutput only, actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY. Reuse existing Gateway/config paths247, no new AI client/config store; deployment PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protectedignored.env.production or approvedWorkersecretinjection; current shipping localCompose still does notforward provider vars. Continue full278 continuation/partial-global spending/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click/internalIT279/full233; dedicatedERPreadonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged, V2 attachment unread until currentcompletion/mainmerge. All previous failures/WITHHELD and incomplete independent245 preserved; no invented approval or mock-model score.'
+  future316: SEPARATE_PRIVATE_NOT_INCLUDED_OR_DELIVERED
+  actual_model: NOT_RUN_UNEVALUATED
+  released_model_profiles: 0
+  independent_source_review: false
+  helper_review: false
+  native149: NOT_RUN_FOR_NEW_SOURCE
+  push: false
+  activation: false
   main_merge: false
   V2_attachment_read: false
