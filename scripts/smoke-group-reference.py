@@ -230,6 +230,14 @@ def require_reference_result(result, mode, expected_lines):
         "admitted-journal-prepare", "admitted-journal-rollback", "admitted-journal-commit", "admitted-journal-replay",
         "admitted-execution-current", "admitted-execution-replay", "admitted-execution-accepted-refusal",
         "admitted-execution-accepted-transaction", "admitted-journal-retained-before-issuance", "admitted-journal-retained-old-interval", "admitted-journal-retained-replacement"}
+    restored_phases = {"setup", "claim", "baseline", "process", "process-result", "process-reads", "model-factory", "verify",
+        "verify-counts", "verify-immutable", "verify-effects", "verify-terminal", "verify-clean", "unknown"}
+    restored_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other"}
+    if (mode in {"restored-batch-commit", "restored-batch-recover"} and type(result.returncode) is int and result.returncode == 1
+            and len(lines) == 2 and lines[1] == "FAIL owned reference runtime " + mode):
+        match = re.fullmatch(r"FAIL owned restored batch runtime phase-([a-z-]+) kind-([a-z-]+) reads-([01]{3}|unknown)", lines[0])
+        if match and match[1] in restored_phases and match[2] in restored_kinds:
+            detail = "; phase=" + match[1] + "; kind=" + match[2] + "; reads=" + match[3]
     admission_kinds = {"sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other", "accepted-preflight-committed"}
     # Closed observer vocabulary from the immutable accepted-query C# proof.
     # This only exposes a safe failure category; success stays exact above.

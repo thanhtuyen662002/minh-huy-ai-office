@@ -460,7 +460,8 @@ catch (Exception error)
     if (args.Length == 1 && phase == args[0] && args[0] is ("invalidation-zero-prepare" or "invalidation-zero-commit" or "invalidation-zero-replay"))
         Console.WriteLine("FAIL owned original invalidation runtime phase-" + GroupOriginalInvalidationRuntimeProof.Phase);
     if (args.Length == 1 && phase == args[0] && args[0] is ("restored-batch-commit" or "restored-batch-recover"))
-        Console.WriteLine("FAIL owned restored batch runtime phase-" + GroupRestoredBatchRuntimeProof.Phase);
+        Console.WriteLine(GroupRestoredBatchRuntimeProof.FailureDiagnostic(GroupRestoredBatchRuntimeProof.Phase,
+            GroupRestoredBatchRuntimeProof.ReadSignature, error));
     if (args.Length == 1 && phase == args[0] && args[0].StartsWith("admission-original-", StringComparison.Ordinal))
         Console.WriteLine(GroupOriginalAdmissionRuntimeProof.FailureDiagnostic(GroupOriginalAdmissionRuntimeProof.Phase, error));
 

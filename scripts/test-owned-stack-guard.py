@@ -3140,5 +3140,46 @@ class AcceptedQueryPositiveDiagnosticControls(unittest.TestCase):
 
 
 
+class RestoredBatchFailureProtocolTests(unittest.TestCase):
+    PHASES = ("setup", "claim", "baseline", "process", "process-result", "process-reads", "model-factory", "verify",
+              "verify-counts", "verify-immutable", "verify-effects", "verify-terminal", "verify-clean", "unknown")
+    KINDS = ("sql-constraint", "sql-permission", "sql-timeout", "sql-deadlock", "sql-other", "cancelled", "denied", "invariant", "other")
+
+    def test_closed_failure_fields_survive_without_becoming_success(self):
+        for mode in ("restored-batch-commit", "restored-batch-recover"):
+            for phase in self.PHASES:
+                for kind in self.KINDS:
+                    for reads in ("000", "001", "010", "011", "100", "101", "110", "111", "unknown"):
+                        result = SimpleNamespace(returncode=1, stdout=f"FAIL owned restored batch runtime phase-{phase} kind-{kind} reads-{reads}\nFAIL owned reference runtime {mode}\n", stderr="")
+                        with self.assertRaises(AssertionError) as caught:
+                            reference_smoke.require_reference_result(result, mode, ["PASS original"])
+                        self.assertTrue(str(caught.exception).endswith(f"; phase={phase}; kind={kind}; reads={reads}"))
+
+    def test_private_or_malformed_fields_are_not_forwarded(self):
+        valid = "FAIL owned restored batch runtime phase-process kind-invariant reads-101"
+        footer = "FAIL owned reference runtime restored-batch-commit"
+        for line in (valid.replace("phase-process", "phase-private-canary"),
+                     valid.replace("kind-invariant", "kind-private-canary"),
+                     valid.replace("reads-101", "reads-private-canary"), valid + " private-canary"):
+            with self.assertRaises(AssertionError) as caught:
+                reference_smoke.require_reference_result(SimpleNamespace(returncode=1, stdout=line+"\n"+footer+"\n", stderr=""), "restored-batch-commit", ["PASS original"])
+            self.assertNotIn("canary", str(caught.exception)); self.assertNotIn("; phase=", str(caught.exception))
+
+    def test_success_stays_exact_and_failure_text_cannot_override_exit(self):
+        for mode in ("restored-batch-commit", "restored-batch-recover"):
+            reference_smoke.require_reference_result(SimpleNamespace(returncode=0, stdout="PASS original\n", stderr=""), mode, ["PASS original"])
+            with self.assertRaises(AssertionError):
+                reference_smoke.require_reference_result(SimpleNamespace(returncode=1, stdout="PASS original\n", stderr=""), mode, ["PASS original"])
+            with self.assertRaises(AssertionError):
+                reference_smoke.require_reference_result(SimpleNamespace(returncode=0, stdout="PASS original\nprivate-canary", stderr=""), mode, ["PASS original"])
+
+    def test_CSharp_formatter_and_Python_phase_kind_vocabularies_agree(self):
+        source = Path(__file__).resolve().parents[1].joinpath("tests/GroupReference.RuntimeProof/GroupRestoredBatchRuntimeProof.cs").read_text(encoding="utf-8-sig")
+        phase_block = source.split("DiagnosticPhases =", 1)[1].split("};", 1)[0]
+        kind_block = source.split("var kind = error switch", 1)[1].split("};", 1)[0]
+        self.assertEqual(set(re.findall(r'"([a-z-]+)"', phase_block)), set(self.PHASES))
+        self.assertEqual(set(re.findall(r'=> "([a-z-]+)"', kind_block)), set(self.KINDS))
+
+
 if __name__ == "__main__":
     unittest.main()

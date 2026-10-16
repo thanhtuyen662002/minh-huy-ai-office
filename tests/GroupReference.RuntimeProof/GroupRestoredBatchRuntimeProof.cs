@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using MinhHuy.AIOffice.Platform.Persistence;
@@ -16,6 +17,32 @@ internal static class GroupRestoredBatchRuntimeProof
     internal const string CommitLine = "PASS owned restored batch actual original SQL restored accepted result FIRST real claimed processor one automatic note evidence outbox terminal and signed frontier current epoch four cold model factory";
     internal const string RecoverLine = "PASS owned restored batch separate process expired claim terminal FIRST original SELECT denied original effects and signed frontier unchanged cold model factory";
     internal static string Phase { get; private set; } = "setup";
+    private static ReadProbe? activeProbe;
+    internal static string ReadSignature => activeProbe?.Signature ?? "000";
+    private static readonly HashSet<string> DiagnosticPhases = new(StringComparer.Ordinal)
+    { "setup", "claim", "baseline", "process", "process-result", "process-reads", "model-factory", "verify",
+      "verify-counts", "verify-immutable", "verify-effects", "verify-terminal", "verify-clean", "unknown" };
+
+    // Fixed tokens only. Exception messages, inner exceptions and SQL/private
+    // values are never output. Read bits are observations, not failure causes.
+    internal static string FailureDiagnostic(string phase, string reads, Exception error)
+    {
+        var safePhase = DiagnosticPhases.Contains(phase) ? phase : "unknown";
+        var safeReads = reads is { Length: 3 } && reads.All(x => x is '0' or '1') ? reads : "unknown";
+        var kind = error switch
+        {
+            OperationCanceledException => "cancelled",
+            UnauthorizedAccessException => "denied",
+            SqlException sql when sql.Number == 547 => "sql-constraint",
+            SqlException sql when sql.Number == 229 => "sql-permission",
+            SqlException sql when sql.Number == -2 => "sql-timeout",
+            SqlException sql when sql.Number == 1205 => "sql-deadlock",
+            SqlException => "sql-other",
+            InvalidOperationException => "invariant",
+            _ => "other"
+        };
+        return "FAIL owned restored batch runtime phase-" + safePhase + " kind-" + kind + " reads-" + safeReads;
+    }
 
     internal static async Task RunAsync(string mode, GroupScope scope, Guid allocationOperation,
         GroupExtractionWorkerBinding worker, DbContextOptions<PlatformDbContext> options, CancellationToken token)
@@ -23,6 +50,7 @@ internal static class GroupRestoredBatchRuntimeProof
         OwnedGroupReferenceProofGuard.RequireOwned(Environment.GetEnvironmentVariable);
         if (mode is not ("restored-batch-commit" or "restored-batch-recover")) throw new InvalidOperationException();
         var probe = new ReadProbe();
+        activeProbe = probe;
         await using var db = new PlatformDbContext(new DbContextOptionsBuilder<PlatformDbContext>(options).AddInterceptors(probe).Options);
         Phase = "claim";
         var allocation = await db.GroupBatchAllocations.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
@@ -41,7 +69,7 @@ internal static class GroupRestoredBatchRuntimeProof
         var brain = new GroupBrainCurrentReader(db, worker, clock, keys, new());
         var factoryCalls = 0;
         var processor = new GroupClaimedBatchProcessor(new GroupClaimedBatchOperations(db, worker, clock, sources, brain, keys,
-            () => { factoryCalls++; throw new InvalidOperationException(); }));
+            () => { factoryCalls++; Phase = "model-factory"; throw new InvalidOperationException(); }));
         Phase = "baseline";
         var immutable = await ImmutableAsync();
         var existing = await CountsAsync();
@@ -55,19 +83,23 @@ internal static class GroupRestoredBatchRuntimeProof
         else if (existing != (0, 0, 0, 0, 0, 0)) throw new InvalidOperationException();
         probe.Reset(); Phase = "process";
         var result = await processor.ProcessAsync(handle, token);
+        Phase = "process-result";
         if (result.Scope != scope || result.BatchId != allocation.Id || result.Disposition != GroupRestoredBatchDisposition.Completed
             || result.RetryAtUtc is not null || result.RecoveredTerminal != (mode == "restored-batch-recover") || factoryCalls != 0)
             throw new InvalidOperationException();
-        probe.Require(mode == "restored-batch-recover");
-        Phase = "verify";
+        Phase = "process-reads"; probe.Require(mode == "restored-batch-recover");
+        Phase = "verify-counts";
         RequireCompletedCounts(await CountsAsync());
+        Phase = "verify-immutable";
         var afterImmutable = await ImmutableAsync();
         if (!immutable.AsSpan().SequenceEqual(afterImmutable)) throw new InvalidOperationException();
         if (effects is not null)
         {
+            Phase = "verify-effects";
             var afterEffects = await EffectsAsync();
             if (!effects.AsSpan().SequenceEqual(afterEffects)) throw new InvalidOperationException();
         }
+        Phase = "verify-terminal";
         var terminal = await db.GroupBatchTerminalReceipts.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
             && x.CompanyId == scope.CompanyId && x.BindingId == scope.SourceBindingId && x.BatchId == allocation.Id, token);
         var advance = await db.GroupTerminalAdvances.AsNoTracking().SingleAsync(x => x.TenantId == scope.TenantId
@@ -78,6 +110,7 @@ internal static class GroupRestoredBatchRuntimeProof
             || terminal.SelectedMessageCount != 2 || terminal.RawRevisionCount != 2 || advance.Version != 1 || advance.AfterSequence != 0
             || advance.ThroughSequence != 2 || cursor.Version != 1 || cursor.ThroughSequence != 2
             || cursor.LastTerminalBatchId != allocation.Id || cursor.UpdatedAtUtc != advance.AdvancedAtUtc) throw new InvalidOperationException();
+        Phase = "verify-clean";
         if (db.ChangeTracker.HasChanges() || db.Database.CurrentTransaction is not null || db.Database.GetDbConnection().State != ConnectionState.Closed)
             throw new InvalidOperationException();
         Console.WriteLine(mode == "restored-batch-commit" ? CommitLine : RecoverLine);
@@ -116,6 +149,7 @@ internal static class GroupRestoredBatchRuntimeProof
     internal sealed class ReadProbe : DbCommandInterceptor
     {
         private int originals, accepted, terminals;
+        internal string Signature => (originals > 0 ? "1" : "0") + (accepted > 0 ? "1" : "0") + (terminals > 0 ? "1" : "0");
         internal void Reset() { originals = accepted = terminals = 0; }
         internal void Require(bool recovered)
         {
