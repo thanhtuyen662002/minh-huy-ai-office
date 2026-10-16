@@ -1,14 +1,14 @@
 workstream: frontend
 role: Frontend Product
 status: active-development
-current_issue: 260
-current_pr: 261
-current_branch: frontend/260-browser-oidc
-head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
-state: ready_for_review
-lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07T16:18:00Z'
-last_checkpoint_at: '2026-10-07T16:18:00Z'
+current_issue: 273
+current_pr: null
+current_branch: codex/273-provider-company-selection
+head: f5c42b0
+state: in_progress
+lease_owner: integration-review-273
+lease_heartbeat_at: '2026-10-16T09:10:19.138604+00:00'
+last_checkpoint_at: '2026-10-16T09:10:19.138604+00:00'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -108,7 +108,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close documentation-only final checkpoint CI and independent delta review, match approved green HEAD when merging261, and verify main CI. Full frozenbac implementation/acceptance review is approved;832 hosted web/20 actual Redis and complete actual Chromium lifecycle PASS. Keep239 Draft for clean Windows lifecycle/signing. Medcom/Novo least-privilege/schema/business-row and approved production qualification/full233 remain; Santino deferred.
+next_action: 'Claim Draft273 from accepted mainad747d0; implement ADR provider discovery/preselection, fresh target authority and owned SQL/Chromium. Prior260 verification below is historical; no273 runtime acceptance yet.'
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -127,3 +127,10 @@ implementation_checkpoint:
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'
   remaining: 'Only current documentation checkpoint exact-head CI/delta review, matching-head merge and main CI remain for260. Approved production connectivity/HTTPS/identity/TLS Redis and full product scope are separately unverified.'
+
+provider_company_preselection_273:
+  base: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+  architecture: docs/architecture/ADR_PROVIDER_COMPANY_PRESELECTION.md
+  status: architecture-checkpoint-before-code
+  actual_SQL_Chromium: NOT_RUN
+  constraints: no-default-membership-workaround; no-browser-company-authority; no-private-workspace-before-issued-session
