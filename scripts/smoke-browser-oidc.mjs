@@ -10,6 +10,7 @@ import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs"
 import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
 import { verifyCompanyPreselection } from "./smoke-browser-company-preselection.mjs";
+import { finishCompanyDiscovery } from "./owned-browser-company-discovery.mjs";
 
 let stage = "disposable-fixture-guard", browser, safeFailureLogs, restoreCoreTransport;
 const requireProof = condition => { if (!condition) throw new Error("Browser proof failed."); };
@@ -151,10 +152,11 @@ try {
     }
     stage = "verified-provider-callback";
     const callbackRequest = await response;
-    const callbackStatus = (await callbackRequest.response())?.status();
+    const callbackResponse = await callbackRequest.response();
+    const callbackStatus = callbackResponse?.status();
     if (callbackStatus !== 303) console.error(`CI callback HTTP status: ${Number.isInteger(callbackStatus) ? callbackStatus : "unavailable"}`);
     requireProof(callbackStatus === 303);
-    await page.waitForURL(url => url.origin === app && url.pathname === "/");
+    await finishCompanyDiscovery(page, app, company, callbackResponse);
     stage = "authenticated-workspace-ready";
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
     const authority = await current();

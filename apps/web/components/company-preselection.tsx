@@ -50,8 +50,9 @@ export function CompanyPreselection() {
     {error && <p role="alert">{error}</p>}
     {!choices && !error && <p role="status">Đang tải công ty được cấp quyền…</p>}
     {choices && <ul className="space-y-3">{choices.map((choice) => <li key={choice.companyId}>
-      <button type="button" disabled={busy} onClick={() => void submit(choice.companyId)}
+      <button type="button" disabled={busy} onClick={() => void submit(choice.companyId)} aria-describedby={`company-${choice.companyId}`}
         className="rounded border px-4 py-2">{choice.companyName}</button>
+      <p id={`company-${choice.companyId}`} className="text-sm">Mã công ty: {choice.companyId}</p>
     </li>)}</ul>}
     <div className="mt-6">
       {choices ? <button type="button" disabled={busy} onClick={() => void submit(null)}>Hủy và trở về trang chủ</button>

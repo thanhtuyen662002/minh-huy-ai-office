@@ -55,3 +55,11 @@ it("expired/malformed discovery cannot fall back to a configured company or old 
   render(<CompanyPreselection />); await screen.findByRole("alert"); expect(fetcher).toHaveBeenCalledOnce();
   expect(navigation).not.toHaveBeenCalled(); expect(screen.queryByRole("button", { name: "Company A" })).toBeNull();
 });
+it("distinguishes equal company names with their authorized identifiers and posts the exact selected ID", async () => {
+  fetcher.mockResolvedValueOnce(Response.json({ items: choices.items.map((choice) => ({ ...choice, companyName: "Same name" })) }));
+  render(<CompanyPreselection />); const buttons = await screen.findAllByRole("button", { name: "Same name", exact: true });
+  expect(screen.getByText("Mã công ty: " + first)).toBeTruthy(); expect(screen.getByText("Mã công ty: " + second)).toBeTruthy();
+  fetcher.mockResolvedValueOnce(Response.json({ redirectTo: "/" })); fireEvent.click(buttons[1]);
+  await waitFor(() => expect(navigation).toHaveBeenCalledWith("/"));
+  expect(JSON.parse(fetcher.mock.calls[1][1].body)).toEqual({ companyId: second });
+});
