@@ -3,6 +3,7 @@ import { resolve, join } from "node:path";
 import { readFile, mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { observeSubmissionLifecycle, submissionAbortStage, observeSubmissionWire, submissionWireStage } from "./owned-browser-submission-lifecycle.mjs";
+import { finishCompanyDiscovery } from "./owned-browser-company-discovery.mjs";
 
 export async function verifyTaskSubmission({ directory, manifest, browser, ownerPage: page, ownerContext, sql, app, identity, coreReplyFault, setStage }) {
   const proof = condition => { if (!condition) throw new Error("Task submission browser proof failed."); };
@@ -207,7 +208,8 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     const callback = page.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     const authorization = page.waitForRequest(request => request.url().startsWith(identity + "/realms/aioffice-local/protocol/openid-connect/auth?"));
     await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click();
-    proof(new URL((await authorization).url()).searchParams.get("code_challenge_method") === "S256" && (await callback).status() === 303);
+    proof(new URL((await authorization).url()).searchParams.get("code_challenge_method") === "S256");
+    await finishCompanyDiscovery(page, app, company, await callback);
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); proof(await sid(ownerContext) && await sid(ownerContext) !== oldSid);
     await page.getByRole("button", { name: "Công việc", exact: true }).click();
     const panel = page.getByRole("region", { name: "Yêu cầu đã lưu", exact: true });
@@ -273,7 +275,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     await secondary.locator("#username").waitFor({ state: "visible" }); proof(new URL(secondary.url()).origin === identity);
     await secondary.locator("#username").fill(fixture.otherUsername); await secondary.locator("#password").fill(manifest.AIOFFICE_OWNER_PASSWORD);
     const otherCallback = secondary.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
-    await secondary.locator("#kc-login").click(); proof((await otherCallback).status() === 303);
+    await secondary.locator("#kc-login").click(); await finishCompanyDiscovery(secondary, app, company, await otherCallback);
     await secondary.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
     const current = JSON.parse((await get(secondary, "/api/local/session" + query)).text); proof(current.userId === fixture.otherUserId && !current.roles.includes("admin"));
     proof((await get(secondary, savedPath + query)).status === 404);
@@ -320,7 +322,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
         && await page.getByRole("region", { name: "Yêu cầu đã lưu", exact: true }).count() === 0 && sent.length === readCount);
     } finally { sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${scope} AND UserId='${owner}';`); }
     const restored = page.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
-    await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click(); proof((await restored).status() === 303);
+    await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click(); await finishCompanyDiscovery(page, app, company, await restored);
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); await page.getByRole("button", { name: "Công việc", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor();
     proof(sent.length === readCount); equal(snapshot(), baseline);

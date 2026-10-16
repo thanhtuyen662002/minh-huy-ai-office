@@ -1,14 +1,15 @@
 workstream: frontend
 role: Frontend Product
 status: active-development
-current_issue: 260
-current_pr: 261
-current_branch: frontend/260-browser-oidc
-head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
-state: ready_for_review
-lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07T16:18:00Z'
-last_checkpoint_at: '2026-10-07T16:18:00Z'
+current_issue: 273
+current_pr: 293
+current_branch: codex/273-provider-company-selection
+head: 2613d9db716400e58f1a51a180b72874fa840bf6
+head_semantics: previous_committed_checkpoint_before_this_update
+state: in_progress
+lease_owner: integration-review-273
+lease_heartbeat_at: '2026-10-16T10:09:32+00:00'
+last_checkpoint_at: '2026-10-16T10:09:32+00:00'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -17,6 +18,7 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  provider_company_273: 'ADR precedes behavior. Ordinary v2 identity discovery, AES-GCM Redis one-shot preselection and dedicated no-workspace chooser; fresh retained-list/directory/context before SID. v1 company switch/delivery ack unchanged. Local full1354PASS/25 actualRedis SKIP before lifecycle successor; current62 hook/shipping cases,7 chooser cases,16 purpose-binding,39 Node and2 Python controls PASS; TypeScript/Next production build PASS (subsets not additive). Actual SQL/Chromium and25 Redis controls require exact implementation-head CI. No273 acceptance or merge approval.'
   shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. Exactbac shipping-default and compatibility profile controls, full Chromium/retained stack gates and independent full frozen acceptance review PASS; no customer/config/credential/OS changes.'
   chromium_verified_head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
   chromium_verified_build: 37648878161
@@ -108,7 +110,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close documentation-only final checkpoint CI and independent delta review, match approved green HEAD when merging261, and verify main CI. Full frozenbac implementation/acceptance review is approved;832 hosted web/20 actual Redis and complete actual Chromium lifecycle PASS. Keep239 Draft for clean Windows lifecycle/signing. Medcom/Novo least-privilege/schema/business-row and approved production qualification/full233 remain; Santino deferred.
+next_action: 'Own successor PR293 exact-head Build/Governance through terminal; current0d is CLOSED RED from one test typing defect after1391 hosted tests incl25 actualRedis PASS. Discovery unread-body cleanup and test typing fixed with139 targeted/TypeScript/Next build PASS. Broader457+successor458 source review pending; require actual SQL/Chromium, six original artifacts and root integration approval before merge. Repair any real red SAME293; no CI rerun/cancel.'
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -127,3 +129,28 @@ implementation_checkpoint:
   local: '139 focused tests/TypeScript PASS. All12 actual Redis tests passed in19a12c2 hosted job112619252620, including physical old-RDB restart refusal; overall web job failed a retained exact300-second OIDC assertion at299 seconds. Corrected test verifies signed absolute deadline plus bounded positive remaining lifetime; adapter now carries expiresAt to prevent later callback delay extending authority. Independent frozen19 review then reproduced EVAL remaining pending beyond3500ms after acknowledged HELLO/CLIENT; explicit hard reply deadline now destroys the stalled connection, and its real TCP regression passes. New exact-head gates/review required. No routes or identity settings enabled.'
   core_authority: '41 new focused tests/TypeScript PASS after independent84 review found initial32-role bound rejected supported33/256-role users; changed to existing256 bound before parsing with32/33/256 positive controls and257 denial. Private helper pins HTTPS or explicit local Core origin; fresh signed-access/company API authority; bounded actual-byte strict JSON/four-field GUID/role contract; same GUID scope and absolute expiry recheck after API. No route exposed. Full coordinator hosted gates/review PASS; helper exact-head review/gates still required.'
   remaining: 'Only current documentation checkpoint exact-head CI/delta review, matching-head merge and main CI remain for260. Approved production connectivity/HTTPS/identity/TLS Redis and full product scope are separately unverified.'
+
+provider_company_preselection_273:
+  base: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+  architecture: docs/architecture/ADR_PROVIDER_COMPANY_PRESELECTION.md
+  status: implementation-checkpoint-awaiting-owned-CI
+  actual_SQL_Chromium: NOT_RUN
+  baseline_docs_head: b5afcc7b7cd8d7804eb9f123a45d75a80e894ebe
+  baseline_build: 38878685114
+  baseline_governance: 38878685033
+  baseline_native: 116899851197
+  baseline_quality: 116906774390
+  baseline_result: 'CLOSED RED; whole quality read, only native failed at inherited submission-real-core202-headers-replay-timeout-after-accepted-ui. All6 prerequisites/Gov pass. No unique cause, browser artifact, rerun or cancel. Full log retained outside repo.'
+  lifecycle_repair: 'Two ended-attempt late-abort controls failed on unchanged710; unconsumed cleanup refinement counterexamples retained. Final50 hook+12 shipping=62PASS; no timeout widening/receipt/retry/current-authority changes. ROOT455 independently SCOPED_CLEAR frozen2 paths; not whole273/native approval. Receipt SHA7b4b8b7d66116e8459e9186e776709acbd965100f5d26e19aca8159d0f24df5b.'
+  implementation0d_build: 38882529099
+  implementation0d_governance: 38882528976
+  implementation0d_result: 'CLOSED RED all8+Gov terminal. Hosted1391 tests including25 actualRedis PASS, then TS2769 in new chooser test unsupported exact option; FE same typing error/native web-image build exit1 before SQL273. Four other prerequisites/Gov PASS. Entire quality read, logs/failed head frozen; no retry/cancel or runtime acceptance.'
+  discovery_cleanup_successor: 'Known0d source defect reproduced7FAIL/18PASS. Same10s/131072bytes/authority guards now nonblocking unread status/media/redirect cleanup, timeout and ignored-abort late-response cleanup; accepted EOF untouched. Final139 targeted tests/TypeScript/Next production build PASS. One-line test typing fix preserves exact string role-name semantics. Exact3 source successor frozen73c15a...8273; root independent broad457+delta458 pending.'
+  current2613_source_review: 'ROOT462/public6213048686 independently binds all710 current Git files/29-path scope and preserved455 lifecycle pair; original0d broad457 WITHHELD retained, F1/F2 closed only by correction458. No other bounded source blocker; not whole273/runtime/merge approval.'
+  current2613_build: 38883629866
+  current2613_governance: 38883629956
+  current2613_native: 116916001130
+  current2613_quality: 116919463752
+  current2613_result: 'CLOSED RED all8/Gov terminal; six prerequisites/Gov PASS, hosted1400 web including25 actualRedis and all four .NET projects PASS. Native group Chromium issued-code-session failure in SQL step13 before standalone browser step14; cleanup succeeded, no artifacts/rerun/cancel. Full native119905 bytes SHA1d4aa7a0e73b134bb78ccedd56d16ee7db65cdd11635a9fff2727154bf380f26 and entire6147-byte quality read; precise hosted throw beyond closed stage unproven.'
+  group_chooser_repair: 'Retained group-inbox ordinary login now uses the same strict authorized company chooser completion as other browser proofs before unchanged scoped private session assertions, for initial and fresh post-logout login. Original source control4PASS/1FAIL; final41 cold Node controls and syntax PASS. No production auth, scope, Code/S256, SID, private body, revoke/logout/mobile/cleanup oracle or deadline changes. Fresh exact-head owned SQL/Chromium remains mandatory.'
+  constraints: no-default-membership-workaround; no-browser-company-authority; no-private-workspace-before-issued-session

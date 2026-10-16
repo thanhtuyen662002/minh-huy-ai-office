@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
+import { finishCompanyDiscovery } from "./owned-browser-company-discovery.mjs";
 
 const proof = value => { if (!value) throw new Error("Owned group inbox proof refused."); };
 const guid = value => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
@@ -65,7 +66,7 @@ export async function verifyOwnedGroupInbox(directory, fixture) {
         await page.locator("#username").fill("owner"); await page.locator("#password").fill(manifest.AIOFFICE_OWNER_PASSWORD);
         await page.locator("#kc-login").click();
       }
-      proof((await finished).status() === 303); await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+      await finishCompanyDiscovery(page, app, company, await finished); await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
       const current = await get("/api/local/session" + query);
       proof(current.status === 200 && current.cache === "no-store" && current.body.tenantId === tenant && current.body.companyId === company && current.body.userId === owner);
     }

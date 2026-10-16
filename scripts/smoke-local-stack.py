@@ -1184,6 +1184,10 @@ def main():
     submission_spec.loader.exec_module(submission_proof)
     submission_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment,
         http=http, sql=sql, runtime_statement=runtime_statement, identity=identity, api=api, auth=member_auth)
+    company_spec = importlib.util.spec_from_file_location("provider_company_fixture", Path("scripts/owned-provider-company-fixture.py"))
+    company_fixture = importlib.util.module_from_spec(company_spec)
+    company_spec.loader.exec_module(company_fixture)
+    company_fixture.prepare(directory=directory, manifest=manifest, sql=sql, identity_admin=identity_admin, api=api)
     group_spec = importlib.util.spec_from_file_location("group_ingress_proof", Path("scripts/smoke-group-ingress.py"))
     group_proof = importlib.util.module_from_spec(group_spec)
     group_spec.loader.exec_module(group_proof)

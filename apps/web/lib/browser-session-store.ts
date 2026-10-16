@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "node:crypto";
 import { createClient } from "redis";
 import { isCanonicalCompanyId } from "./company-scope";
+import { parseCompanyChoices, type CompanyChoice } from "./company-choices";
 import { OIDC_TRANSACTION_SECONDS, type BrowserOidcSettings, type OidcTransaction } from "./browser-oidc";
 
 export const BROWSER_BINDING_SECONDS = 86_400;
@@ -20,7 +21,7 @@ function parseBinding(value: unknown): { id: string; generation: string } | null
 }
 function validTransaction(value: OidcTransaction): boolean {
   const now = nowSeconds();
-  return value.version === 1 && isCanonicalCompanyId(value.companyId)
+  return ((value.version === 1 && isCanonicalCompanyId(value.companyId)) || (value.version === 2 && value.companyId === null))
     && [value.state, value.nonce, value.verifier].every(isHandle)
     && Number.isSafeInteger(value.issuedAt) && value.issuedAt >= 0 && value.issuedAt <= now + 10
     && Number.isSafeInteger(value.expiresAt) && value.expiresAt === value.issuedAt + OIDC_TRANSACTION_SECONDS && value.expiresAt > now;
@@ -32,6 +33,12 @@ export type PrivateBrowserSession = Readonly<{
   companyId: string;
   subject: string;
   expiresAt: number;
+}>;
+export type PrivateCompanySelection = Readonly<{
+  accessToken: string;
+  subject: string;
+  expiresAt: number;
+  choices: readonly CompanyChoice[];
 }>;
 
 // Each operation has one explicitly declared Redis key. No process-local
@@ -60,13 +67,41 @@ const beginScript = currentBinding + `
 local expiry = tonumber(ARGV[4])
 if expiry <= now or expiry > now + ${OIDC_TRANSACTION_SECONDS + 10} or expiry > bindingExpiry then return false end
 redis.call('HSET', key, 'generation', ARGV[2], 'pending', ARGV[3], 'pendingExpiry', expiry, 'phase', 'pending')
-redis.call('HDEL', key, 'claim', 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration')
+redis.call('HDEL', key, 'claim', 'selectionPayload', 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration')
 return 1
 `;
 const claimScript = currentBinding + `
 if redis.call('HGET', key, 'pending') ~= ARGV[2] or redis.call('HGET', key, 'phase') ~= 'pending'
   or tonumber(redis.call('HGET', key, 'pendingExpiry') or '0') <= now then return false end
 redis.call('HSET', key, 'phase', 'processing', 'claim', ARGV[3])
+return 1
+`;
+const stageSelectionScript = currentBinding + `
+local expiry = tonumber(ARGV[5])
+if redis.call('HGET', key, 'pending') ~= ARGV[2] or redis.call('HGET', key, 'phase') ~= 'processing'
+  or redis.call('HGET', key, 'claim') ~= ARGV[3]
+  or expiry <= now or expiry > tonumber(redis.call('HGET', key, 'pendingExpiry') or '0') then return false end
+redis.call('HSET', key, 'phase', 'selecting', 'selectionPayload', ARGV[4], 'pendingExpiry', expiry)
+redis.call('HDEL', key, 'claim')
+return 1
+`;
+const readSelectionScript = currentBinding + `
+if redis.call('HGET', key, 'pending') ~= ARGV[2] or redis.call('HGET', key, 'phase') ~= 'selecting'
+  or tonumber(redis.call('HGET', key, 'pendingExpiry') or '0') <= now then return false end
+return redis.call('HGET', key, 'selectionPayload')
+`;
+const claimSelectionScript = currentBinding + `
+if redis.call('HGET', key, 'pending') ~= ARGV[2] or redis.call('HGET', key, 'phase') ~= 'selecting'
+  or tonumber(redis.call('HGET', key, 'pendingExpiry') or '0') <= now then return false end
+local payload = redis.call('HGET', key, 'selectionPayload')
+if not payload then return false end
+redis.call('HSET', key, 'phase', 'processing', 'claim', ARGV[3])
+redis.call('HDEL', key, 'selectionPayload')
+return payload
+`;
+const cancelSelectionScript = currentBinding + `
+if redis.call('HGET', key, 'pending') ~= ARGV[2] then return false end
+redis.call('HDEL', key, 'pending', 'pendingExpiry', 'phase', 'claim', 'selectionPayload')
 return 1
 `;
 const completeScript = currentBinding + `
@@ -76,7 +111,7 @@ if redis.call('HGET', key, 'pending') ~= ARGV[2] or redis.call('HGET', key, 'pha
   or tonumber(redis.call('HGET', key, 'pendingExpiry') or '0') <= now
   or expiry <= now or expiry > now + 3610 or expiry > bindingExpiry then return false end
 redis.call('HSET', key, 'replacementSid', ARGV[4], 'replacementPayload', ARGV[5], 'replacementExpiry', expiry, 'replacementGeneration', ARGV[1])
-redis.call('HDEL', key, 'pending', 'pendingExpiry', 'phase', 'claim')
+redis.call('HDEL', key, 'pending', 'pendingExpiry', 'phase', 'claim', 'selectionPayload')
 return 1
 `;
 const readScript = currentBinding + `
@@ -103,7 +138,7 @@ return false
 `;
 const revokeScript = currentBinding + `
 redis.call('HSET', key, 'generation', ARGV[2])
-redis.call('HDEL', key, 'sid', 'payload', 'sessionExpiry', 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration', 'pending', 'pendingExpiry', 'phase', 'claim')
+redis.call('HDEL', key, 'sid', 'payload', 'sessionExpiry', 'replacementSid', 'replacementPayload', 'replacementExpiry', 'replacementGeneration', 'pending', 'pendingExpiry', 'phase', 'claim', 'selectionPayload')
 return 1
 `;
 
@@ -158,6 +193,36 @@ export function createBrowserSessionCoordinator(evaluate: RedisSessionEval, sett
       return Object.freeze(value);
     } catch { return null; }
   }
+  function selectionValue(value: unknown): PrivateCompanySelection | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)
+      || Object.keys(value).sort().join(",") !== "accessToken,choices,expiresAt,subject") return null;
+    const candidate = value as PrivateCompanySelection;
+    const choices = parseCompanyChoices({ items: candidate.choices });
+    if (!choices || choices.length < 2 || !validSession({ ...candidate, companyId: choices[0].companyId })) return null;
+    return Object.freeze({ accessToken: candidate.accessToken, subject: candidate.subject, expiresAt: candidate.expiresAt, choices });
+  }
+  // Purpose separation prevents preselection ciphertext becoming an issued SID
+  // payload. Both state AND binding generation are authenticated, not browser authority.
+  function selectionAad(binding: string, state: string) { return Buffer.from(JSON.stringify([context, "company-preselection-v2", digest(binding), digest(state)])); }
+  function sealSelection(binding: string, state: string, value: PrivateCompanySelection): string {
+    const iv = randomBytes(12), cipher = createCipheriv("aes-256-gcm", encryptionKey, iv);
+    cipher.setAAD(selectionAad(binding, state));
+    const ciphertext = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()]);
+    return ["v2", iv.toString("base64url"), ciphertext.toString("base64url"), cipher.getAuthTag().toString("base64url")].join(".");
+  }
+  function openSelection(binding: string, state: string, payload: unknown): PrivateCompanySelection | null {
+    try {
+      if (typeof payload !== "string" || payload.length > 150_000) return null;
+      const pieces = payload.split(".");
+      if (pieces.length !== 4 || pieces[0] !== "v2" || pieces.slice(1).some((piece) => !/^[A-Za-z0-9_-]+$/.test(piece)
+        || Buffer.from(piece, "base64url").toString("base64url") !== piece)) return null;
+      const [iv, ciphertext, tag] = pieces.slice(1).map((piece) => Buffer.from(piece, "base64url"));
+      if (iv.length !== 12 || tag.length !== 16) return null;
+      const decipher = createDecipheriv("aes-256-gcm", encryptionKey, iv);
+      decipher.setAAD(selectionAad(binding, state)); decipher.setAuthTag(tag);
+      return selectionValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat([decipher.update(ciphertext), decipher.final()]))));
+    } catch { return null; }
+  }
   return Object.freeze({
     async register(): Promise<string> {
       // Caller cannot re-register an old binding after expiry/revocation.
@@ -187,12 +252,36 @@ export function createBrowserSessionCoordinator(evaluate: RedisSessionEval, sett
     async complete(binding: string, transaction: OidcTransaction, claim: string, session: PrivateBrowserSession): Promise<string | null> {
       const parsed = parseBinding(binding);
       if (!parsed || !validTransaction(transaction) || !isHandle(claim) || !validSession(session)
-        || session.companyId !== transaction.companyId) return null;
+        || (transaction.version === 1 && session.companyId !== transaction.companyId)) return null;
       const sid = randomHandle();
       const payload = seal(parsed.id, sid, session);
       const result = await run(completeScript, parsed.id, [digest(parsed.generation), digest(transaction.state), digest(claim),
         digest(sid), payload, String(session.expiresAt)]);
       return result === 1 ? sid : null;
+    },
+    async stageSelection(binding: string, transaction: OidcTransaction, claim: string, selection: PrivateCompanySelection): Promise<boolean> {
+      const parsed = parseBinding(binding), value = selectionValue(selection);
+      if (!parsed || !validTransaction(transaction) || transaction.version !== 2 || !isHandle(claim) || !value) return false;
+      return await run(stageSelectionScript, parsed.id, [digest(parsed.generation), digest(transaction.state), digest(claim),
+        sealSelection(binding, transaction.state, value), String(Math.min(transaction.expiresAt, value.expiresAt))]) === 1;
+    },
+    async readSelection(binding: string, transaction: OidcTransaction): Promise<PrivateCompanySelection | null> {
+      const parsed = parseBinding(binding);
+      if (!parsed || !validTransaction(transaction) || transaction.version !== 2) return null;
+      return openSelection(binding, transaction.state, await run(readSelectionScript, parsed.id, [digest(parsed.generation), digest(transaction.state)]));
+    },
+    async claimSelection(binding: string, transaction: OidcTransaction): Promise<Readonly<{ claim: string; selection: PrivateCompanySelection }> | null> {
+      const parsed = parseBinding(binding);
+      if (!parsed || !validTransaction(transaction) || transaction.version !== 2) return null;
+      const claim = randomHandle();
+      const selection = openSelection(binding, transaction.state, await run(claimSelectionScript, parsed.id,
+        [digest(parsed.generation), digest(transaction.state), digest(claim)]));
+      return selection ? Object.freeze({ claim, selection }) : null;
+    },
+    async cancelSelection(binding: string, transaction: OidcTransaction): Promise<boolean> {
+      const parsed = parseBinding(binding);
+      if (!parsed || !validTransaction(transaction) || transaction.version !== 2) return false;
+      return await run(cancelSelectionScript, parsed.id, [digest(parsed.generation), digest(transaction.state)]) === 1;
     },
     async read(binding: string, sid: string): Promise<PrivateBrowserSession | null> {
       const parsed = parseBinding(binding);

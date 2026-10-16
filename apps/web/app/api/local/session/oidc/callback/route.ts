@@ -5,6 +5,7 @@ import { browserAuthError, privateBrowserResponse, setPrivateBrowserCookie } fro
 import { OIDC_CALLBACK_PATH, oidcTransactionCookieName, openOidcTransaction } from "../../../../../../lib/browser-oidc";
 import { exchangeBrowserAuthorizationCode } from "../../../../../../lib/browser-oidc-client";
 import { authorizeBrowserSession } from "../../../../../../lib/browser-oidc-authority";
+import { authorizeDiscoveredCompany, discoverBrowserCompanies } from "../../../../../../lib/browser-company-preselection";
 import { browserBindingCookieName, browserSessionCookieName } from "../../../../../../lib/browser-session-store";
 import { reportBrowserProof, type BrowserProofStep } from "../../../../../../lib/browser-proof-diagnostic";
 import type { BrowserOidcSettings } from "../../../../../../lib/browser-oidc";
@@ -35,8 +36,21 @@ export async function GET(request: Request) {
     step = "exchange";
     const tokens = await exchangeBrowserAuthorizationCode(settings, callback, transaction);
     step = "authority";
-    const authorized = await authorizeBrowserSession(settings, transaction, tokens, fetch,
-      (name) => name === "AIOFFICE_BROWSER_CORE_API_ORIGIN" ? runtime.coreApiOrigin : undefined);
+    const environment = (name: string) => name === "AIOFFICE_BROWSER_CORE_API_ORIGIN" ? runtime.coreApiOrigin : undefined;
+    let authorized;
+    if (transaction.version === 2) {
+      const choices = await discoverBrowserCompanies(settings, transaction, tokens, fetch, environment);
+      if (choices.length === 0) return privateBrowserResponse(Response.json({
+        error: "Tài khoản chưa có quyền vào công ty nào. Vui lòng liên hệ quản trị viên để được cấp quyền.",
+      }, { status: 403 }));
+      if (choices.length > 1) {
+        if (!await runtime.sessions.stageSelection(binding, transaction, claim, {
+          accessToken: tokens.accessToken, subject: tokens.subject, expiresAt: tokens.expiresAt, choices,
+        })) return refused(401);
+        return privateBrowserResponse(NextResponse.redirect(new URL("/sign-in/company", settings.publicOrigin), 303));
+      }
+      authorized = await authorizeDiscoveredCompany(settings, transaction, tokens, choices[0].companyId, fetch, environment);
+    } else authorized = await authorizeBrowserSession(settings, transaction, tokens, fetch, environment);
     step = "publish";
     const sid = await runtime.sessions.complete(binding, transaction, claim, authorized.session);
     if (!sid) return refused(401);

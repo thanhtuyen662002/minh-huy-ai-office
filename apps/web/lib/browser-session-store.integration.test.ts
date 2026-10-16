@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createClient } from "redis";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { createOidcTransaction, readBrowserOidcSettings } from "./browser-oidc";
+import { createCompanyDiscoveryTransaction, createOidcTransaction, readBrowserOidcSettings } from "./browser-oidc";
 import { createBrowserSessionCoordinator, createBrowserSessionRedis } from "./browser-session-store";
 
 // Unit/mocked coordination is never reported as actual Redis proof. The web CI
@@ -62,6 +62,75 @@ afterAll(async () => {
   transports.forEach((transport) => transport.close());
   if (observer.isReady && ownedKeys.size) await observer.del([...ownedKeys]);
   if (observer.isOpen) observer.destroy();
+});
+
+const selectionChoices = [{ companyId, companyName: "First company" },
+  { companyId: "33333333-3333-3333-3333-333333333333", companyName: "Second company" }];
+const privateSelection = () => ({ accessToken: "private-selection-token", subject: "private-selection-subject",
+  expiresAt: Math.floor(Date.now() / 1000) + 600, choices: selectionChoices });
+async function selecting(binding?: string) {
+  const prior = new Set(ownedKeys), registered = binding || await stores[0].register();
+  const transaction = createCompanyDiscoveryTransaction(), current = (await stores[0].begin(registered, transaction))!;
+  const claim = (await stores[1].claim(current, transaction))!, selection = privateSelection();
+  expect(await stores[0].stageSelection(current, transaction, claim, selection)).toBe(true);
+  return { binding: current, transaction, claim, selection, key: binding ? undefined : onlyNewKey(prior) };
+}
+actual("holds authenticated company selection privately without a SID and permits only one cross-client claim", async () => {
+  const value = await selecting();
+  expect(await stores[1].readSelection(value.binding, value.transaction)).toEqual(value.selection);
+  expect(await stores[0].claim(value.binding, value.transaction)).toBeNull();
+  expect(await stores[1].complete(value.binding, value.transaction, value.claim, privateSession())).toBeNull();
+  const row = await observer.hGetAll(value.key!);
+  expect(row.sid).toBeUndefined(); expect(row.replacementSid).toBeUndefined();
+  for (const secret of [value.selection.accessToken, value.selection.subject, companyId, selectionChoices[0].companyName]) expect(JSON.stringify(row)).not.toContain(secret);
+  const claims = await Promise.all(Array.from({ length: 16 }, (_, index) => stores[index % 2].claimSelection(value.binding, value.transaction)));
+  expect(claims.filter(Boolean)).toHaveLength(1); const claimed = claims.find(Boolean)!;
+  expect(claimed.selection).toEqual(value.selection);
+  expect(await stores[0].readSelection(value.binding, value.transaction)).toBeNull();
+  const session = { ...privateSession(), companyId: selectionChoices[1].companyId };
+  const sid = (await stores[1].complete(value.binding, value.transaction, claimed.claim, session))!;
+  expect(await stores[0].read(value.binding, sid)).toEqual(session);
+  expect(await stores[1].complete(value.binding, value.transaction, claimed.claim, session)).toBeNull();
+});
+actual("cancellation invalidates an already claimed selection and preserves the old active SID", async () => {
+  const old = await issued(), value = await selecting(old.binding);
+  const claimed = (await stores[0].claimSelection(value.binding, value.transaction))!;
+  expect(await stores[1].cancelSelection(value.binding, value.transaction)).toBe(true);
+  expect(await stores[0].complete(value.binding, value.transaction, claimed.claim, privateSession())).toBeNull();
+  expect(await stores[1].read(value.binding, old.sid)).toEqual(old.session);
+  expect(await stores[0].readSelection(value.binding, value.transaction)).toBeNull();
+});
+actual("logout and newer login generations revoke retained and claimed preselection", async () => {
+  for (const action of ["logout", "login"]) {
+    const old = await issued(), value = await selecting(old.binding);
+    const claimed = (await stores[0].claimSelection(value.binding, value.transaction))!;
+    const newer = action === "logout" ? (await stores[1].revoke(value.binding))!
+      : (await stores[1].begin(value.binding, createCompanyDiscoveryTransaction()))!;
+    expect(await stores[0].complete(value.binding, value.transaction, claimed.claim, privateSession())).toBeNull();
+    expect(await stores[0].readSelection(value.binding, value.transaction)).toBeNull();
+    expect(await stores[0].claimSelection(newer, value.transaction)).toBeNull();
+    expect(await stores[0].read(newer, old.sid)).toEqual(action === "logout" ? null : old.session);
+  }
+});
+actual("an applied-but-unknown selection claim cannot reissue or evict the existing SID", async () => {
+  const old = await issued(), value = await selecting(old.binding);
+  const uncertain = createBrowserSessionCoordinator(async (script, key, args) => {
+    const reply = await transports[0].evaluate(script, key, args);
+    if (script.includes("local payload = redis.call('HGET', key, 'selectionPayload')")) throw new Error("lost claim reply");
+    return reply;
+  }, settings);
+  await expect(uncertain.claimSelection(value.binding, value.transaction)).rejects.toThrow(/^Browser session coordination is unavailable\.$/);
+  expect(await stores[1].claimSelection(value.binding, value.transaction)).toBeNull();
+  expect(await stores[0].read(value.binding, old.sid)).toEqual(old.session);
+});
+actual("expiry and authenticated-payload damage deny selection before any new SID", async () => {
+  const value = await selecting();
+  const original = (await observer.hGet(value.key!, "selectionPayload"))!;
+  await observer.hSet(value.key!, "selectionPayload", tamperAuthenticatedByte(original));
+  expect(await stores[1].readSelection(value.binding, value.transaction)).toBeNull();
+  await observer.hSet(value.key!, { selectionPayload: original, pendingExpiry: String(Math.floor(Date.now() / 1000) - 1) });
+  expect(await stores[1].claimSelection(value.binding, value.transaction)).toBeNull();
+  expect((await observer.hGetAll(value.key!)).replacementSid).toBeUndefined();
 });
 
 actual("checks shared registered binding generations without granting session authority", async () => {
