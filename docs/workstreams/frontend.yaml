@@ -4,12 +4,12 @@ status: active-development
 current_issue: 273
 current_pr: 293
 current_branch: codex/273-provider-company-selection
-head: 0d24ac2db1866831c7425c35f471e77bc11bd772
+head: 2613d9db716400e58f1a51a180b72874fa840bf6
 head_semantics: previous_committed_checkpoint_before_this_update
 state: in_progress
 lease_owner: integration-review-273
-lease_heartbeat_at: '2026-10-16T09:53:36.877762+00:00'
-last_checkpoint_at: '2026-10-16T09:53:36.877762+00:00'
+lease_heartbeat_at: '2026-10-16T10:09:32+00:00'
+last_checkpoint_at: '2026-10-16T10:09:32+00:00'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -146,4 +146,11 @@ provider_company_preselection_273:
   implementation0d_governance: 38882528976
   implementation0d_result: 'CLOSED RED all8+Gov terminal. Hosted1391 tests including25 actualRedis PASS, then TS2769 in new chooser test unsupported exact option; FE same typing error/native web-image build exit1 before SQL273. Four other prerequisites/Gov PASS. Entire quality read, logs/failed head frozen; no retry/cancel or runtime acceptance.'
   discovery_cleanup_successor: 'Known0d source defect reproduced7FAIL/18PASS. Same10s/131072bytes/authority guards now nonblocking unread status/media/redirect cleanup, timeout and ignored-abort late-response cleanup; accepted EOF untouched. Final139 targeted tests/TypeScript/Next production build PASS. One-line test typing fix preserves exact string role-name semantics. Exact3 source successor frozen73c15a...8273; root independent broad457+delta458 pending.'
+  current2613_source_review: 'ROOT462/public6213048686 independently binds all710 current Git files/29-path scope and preserved455 lifecycle pair; original0d broad457 WITHHELD retained, F1/F2 closed only by correction458. No other bounded source blocker; not whole273/runtime/merge approval.'
+  current2613_build: 38883629866
+  current2613_governance: 38883629956
+  current2613_native: 116916001130
+  current2613_quality: 116919463752
+  current2613_result: 'CLOSED RED all8/Gov terminal; six prerequisites/Gov PASS, hosted1400 web including25 actualRedis and all four .NET projects PASS. Native group Chromium issued-code-session failure in SQL step13 before standalone browser step14; cleanup succeeded, no artifacts/rerun/cancel. Full native119905 bytes SHA1d4aa7a0e73b134bb78ccedd56d16ee7db65cdd11635a9fff2727154bf380f26 and entire6147-byte quality read; precise hosted throw beyond closed stage unproven.'
+  group_chooser_repair: 'Retained group-inbox ordinary login now uses the same strict authorized company chooser completion as other browser proofs before unchanged scoped private session assertions, for initial and fresh post-logout login. Original source control4PASS/1FAIL; final41 cold Node controls and syntax PASS. No production auth, scope, Code/S256, SID, private body, revoke/logout/mobile/cleanup oracle or deadline changes. Fresh exact-head owned SQL/Chromium remains mandatory.'
   constraints: no-default-membership-workaround; no-browser-company-authority; no-private-workspace-before-issued-session

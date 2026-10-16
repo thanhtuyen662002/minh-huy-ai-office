@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { verifyCompanyPreselection } from "./smoke-browser-company-preselection.mjs";
 import { finishCompanyDiscovery } from "./owned-browser-company-discovery.mjs";
 
@@ -45,4 +46,28 @@ test("old proof cannot silently select missing/duplicate target or paint an old 
       { status: () => 303, headers: () => ({ location: "http://127.0.0.1:3000/sign-in/company" }) }));
     assert.equal(clicked, false);
   }
+});
+
+test("group inbox completes the authorized chooser before its unchanged private session assertion", async () => {
+  const source = await readFile(new URL("./smoke-browser-group-inbox.mjs", import.meta.url), "utf8");
+  assert(source.includes('import { finishCompanyDiscovery } from "./owned-browser-company-discovery.mjs";'));
+  const completed = source.indexOf("await finishCompanyDiscovery(page, app, company, await finished);");
+  const privateSession = source.indexOf('await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();');
+  assert(completed > 0 && privateSession > completed);
+  assert(source.includes('current.body.tenantId === tenant && current.body.companyId === company && current.body.userId === owner'));
+  assert(source.includes('stage = "new-issued-session-private-restoration"; await signIn(false);'));
+});
+
+test("chooser completion permits only exact callback303 home or authorized selection destinations", async () => {
+  let home = 0;
+  const app = "http://127.0.0.1:3000";
+  const page = { async waitForURL(check) { assert(check(new URL(app + "/"))); home++; } };
+  await finishCompanyDiscovery(page, app, "22222222-2222-2222-2222-222222222222",
+    { status: () => 303, headers: () => ({ location: app + "/" }) });
+  assert.equal(home, 1);
+  for (const [status, location] of [[200, app + "/"], [302, app + "/"], [303, "http://foreign.invalid/"], [303, app + "/private"], [303, "/"]]) {
+    await assert.rejects(() => finishCompanyDiscovery(page, app, "22222222-2222-2222-2222-222222222222",
+      { status: () => status, headers: () => ({ location }) }), /^Error: Owned company discovery proof failed\.$/);
+  }
+  assert.equal(home, 1);
 });
