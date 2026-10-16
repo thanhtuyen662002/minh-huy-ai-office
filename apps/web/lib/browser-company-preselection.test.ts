@@ -92,3 +92,48 @@ it("refuses legacy transactions or fewer than two retained choices before storin
     subject: value.subject, expiresAt: value.expiresAt, choices })).toBe(false);
   expect(evaluate).not.toHaveBeenCalled();
 });
+
+it.each([{ status: 503, media: "application/json" }, { status: 200, media: "text/plain" },
+  { status: 200, media: "application/json", redirected: true }])("releases an unread refused directory transport", async ({ status, media, redirected }) => {
+    const cancel = vi.fn(), response = new Response(new ReadableStream({ cancel }), { status, headers: { "Content-Type": media } });
+    if (redirected) Object.defineProperty(response, "redirected", { value: true });
+    await expect(discoverBrowserCompanies(settings, createCompanyDiscoveryTransaction(), tokens(), async () => response, environment)).rejects.toThrow(/^Browser company access could not be verified\.$/);
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+it.each(["reject", "stall"])("refused directory cleanup %s is nonblocking and private", async (kind) => {
+  const cancel = vi.fn(() => kind === "reject" ? Promise.reject(new Error("PRIVATE_CLEANUP")) : new Promise<void>(() => {}));
+  const response = new Response(new ReadableStream({ cancel }), { status: 403 });
+  await expect(discoverBrowserCompanies(settings, createCompanyDiscoveryTransaction(), tokens(), async () => response, environment)).rejects.toThrow(/^Browser company access could not be verified\.$/);
+  expect(cancel).toHaveBeenCalledOnce();
+});
+it("completed accepted directory EOF is neither canceled nor aborted after its deadline", async () => {
+  vi.useFakeTimers(); const cancel = vi.fn(); let signal!: AbortSignal;
+  const body = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new TextEncoder().encode(JSON.stringify({ items: choices }))); controller.close(); }, cancel });
+  const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => { signal = init!.signal as AbortSignal; return new Response(body, { headers: { "Content-Type": "application/json" } }); });
+  expect(await discoverBrowserCompanies(settings, createCompanyDiscoveryTransaction(), tokens(), fetcher, environment)).toEqual(choices);
+  await vi.advanceTimersByTimeAsync(10_001); expect(signal.aborted).toBe(false); expect(cancel).not.toHaveBeenCalled();
+});
+it("the original ten-second directory deadline cancels a genuinely pending body even if a fetch stub ignores abort", async () => {
+  vi.useFakeTimers(); const cancel = vi.fn(); let signal!: AbortSignal;
+  const operation = discoverBrowserCompanies(settings, createCompanyDiscoveryTransaction(), tokens(), async (_url, init) => {
+    signal = init!.signal as AbortSignal; return new Response(new ReadableStream({ cancel }), { headers: { "Content-Type": "application/json" } });
+  }, environment).then(() => "UNEXPECTED_SUCCESS", (error) => error.message);
+  await vi.advanceTimersByTimeAsync(10_001);
+  expect(await operation).toBe("Browser company access could not be verified."); expect(signal.aborted).toBe(true); expect(cancel).toHaveBeenCalledOnce();
+});
+it("a late fetch completion after deadline releases its unread body and cannot publish choices", async () => {
+  vi.useFakeTimers(); const cancel = vi.fn(); let resolve!: (value: Response) => void;
+  const operation = discoverBrowserCompanies(settings, createCompanyDiscoveryTransaction(), tokens(), () => new Promise<Response>((done) => { resolve = done; }), environment)
+    .then(() => "UNEXPECTED_SUCCESS", (error) => error.message);
+  await vi.advanceTimersByTimeAsync(10_001); expect(await operation).toBe("Browser company access could not be verified.");
+  resolve(new Response(new ReadableStream({ cancel }), { headers: { "Content-Type": "application/json" } }));
+  await vi.advanceTimersByTimeAsync(0); expect(cancel).toHaveBeenCalledOnce();
+});
+it("refuses a foreign locked directory reader without stealing its lock or leaking data", async () => {
+  const body = new ReadableStream<Uint8Array>(), owner = body.getReader();
+  try {
+    await expect(discoverBrowserCompanies(settings, createCompanyDiscoveryTransaction(), tokens(), async () => new Response(body, { headers: { "Content-Type": "application/json" } }), environment))
+      .rejects.toThrow(/^Browser company access could not be verified\.$/);
+    expect(body.locked).toBe(true);
+  } finally { await owner.cancel(); owner.releaseLock(); }
+});

@@ -4,12 +4,12 @@ status: active-development
 current_issue: 273
 current_pr: 293
 current_branch: codex/273-provider-company-selection
-head: 8078f1b8c32e18baa2027f8dce2b86ba1bdc2ef7
+head: 0d24ac2db1866831c7425c35f471e77bc11bd772
 head_semantics: previous_committed_checkpoint_before_this_update
 state: in_progress
 lease_owner: integration-review-273
-lease_heartbeat_at: '2026-10-16T09:43:51.778919+00:00'
-last_checkpoint_at: '2026-10-16T09:43:51.778919+00:00'
+lease_heartbeat_at: '2026-10-16T09:53:36.877762+00:00'
+last_checkpoint_at: '2026-10-16T09:53:36.877762+00:00'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -110,7 +110,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: 'Push verified PR293 implementation plus independently scoped-reviewed lifecycle repair; own all8/Governance exact-head closure, inspect real failures immediately and fix SAME293. Require two ordinary nondefault-only CodeS256 identities, chooser/no-choice/reload/source/history/revoke-restore plus retained proofs and independent broader source/security/acceptance review. No merge by specialist.'
+next_action: 'Own successor PR293 exact-head Build/Governance through terminal; current0d is CLOSED RED from one test typing defect after1391 hosted tests incl25 actualRedis PASS. Discovery unread-body cleanup and test typing fixed with139 targeted/TypeScript/Next build PASS. Broader457+successor458 source review pending; require actual SQL/Chromium, six original artifacts and root integration approval before merge. Repair any real red SAME293; no CI rerun/cancel.'
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -142,4 +142,8 @@ provider_company_preselection_273:
   baseline_quality: 116906774390
   baseline_result: 'CLOSED RED; whole quality read, only native failed at inherited submission-real-core202-headers-replay-timeout-after-accepted-ui. All6 prerequisites/Gov pass. No unique cause, browser artifact, rerun or cancel. Full log retained outside repo.'
   lifecycle_repair: 'Two ended-attempt late-abort controls failed on unchanged710; unconsumed cleanup refinement counterexamples retained. Final50 hook+12 shipping=62PASS; no timeout widening/receipt/retry/current-authority changes. ROOT455 independently SCOPED_CLEAR frozen2 paths; not whole273/native approval. Receipt SHA7b4b8b7d66116e8459e9186e776709acbd965100f5d26e19aca8159d0f24df5b.'
+  implementation0d_build: 38882529099
+  implementation0d_governance: 38882528976
+  implementation0d_result: 'CLOSED RED all8+Gov terminal. Hosted1391 tests including25 actualRedis PASS, then TS2769 in new chooser test unsupported exact option; FE same typing error/native web-image build exit1 before SQL273. Four other prerequisites/Gov PASS. Entire quality read, logs/failed head frozen; no retry/cancel or runtime acceptance.'
+  discovery_cleanup_successor: 'Known0d source defect reproduced7FAIL/18PASS. Same10s/131072bytes/authority guards now nonblocking unread status/media/redirect cleanup, timeout and ignored-abort late-response cleanup; accepted EOF untouched. Final139 targeted tests/TypeScript/Next production build PASS. One-line test typing fix preserves exact string role-name semantics. Exact3 source successor frozen73c15a...8273; root independent broad457+delta458 pending.'
   constraints: no-default-membership-workaround; no-browser-company-authority; no-private-workspace-before-issued-session

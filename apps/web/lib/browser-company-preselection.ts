@@ -13,6 +13,12 @@ export async function discoverBrowserCompanies(settings: BrowserOidcSettings, tr
   environment?: (name: string) => string | undefined): Promise<readonly CompanyChoice[]> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const controller = new AbortController();
+  let response: Response | undefined, reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let completedBody = false;
+  const cancelUnread = () => {
+    try { void (reader ? reader.cancel() : response?.body?.cancel())?.catch(() => {}); }
+    catch { /* Refusal survives locked, rejected or stalled cleanup. */ }
+  };
   try {
     const now = Math.floor(Date.now() / 1000);
     if (transaction.version !== 2 || transaction.companyId !== null || transaction.expiresAt <= now
@@ -20,23 +26,28 @@ export async function discoverBrowserCompanies(settings: BrowserOidcSettings, tr
       || !tokens.subject || tokens.subject.length > 200 || !Number.isSafeInteger(tokens.expiresAt)
       || tokens.expiresAt <= now || tokens.expiresAt > now + 3600) throw refused();
     const pending = async () => {
-      const response = await fetcher(readBrowserCoreApiOrigin(settings, environment) + "/api/auth/companies", {
+      response = await fetcher(readBrowserCoreApiOrigin(settings, environment) + "/api/auth/companies", {
         headers: { Authorization: `Bearer ${tokens.accessToken}`, Accept: "application/json" },
         cache: "no-store", redirect: "error", signal: controller.signal,
       });
+      // A late response from a transport that ignored abort still belongs to
+      // this ended operation; it cannot retain a stream or publish choices.
+      if (controller.signal.aborted) { cancelUnread(); throw refused(); }
       if (!response.ok || response.redirected || response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") throw refused();
-      const reader = response.body?.getReader();
-      if (!reader) throw refused();
+      const ownedReader = response.body?.getReader();
+      if (!ownedReader) throw refused();
+      reader = ownedReader;
       const chunks: Uint8Array[] = []; let length = 0;
       try {
         while (true) {
-          const chunk = await reader.read();
-          if (chunk.done) break;
+          const chunk = await ownedReader.read();
+          if (chunk.done) { completedBody = true; break; }
           length += chunk.value.byteLength;
-          if (length > 131_072) { void reader.cancel().catch(() => {}); throw refused(); }
+          if (length > 131_072) throw refused();
           chunks.push(chunk.value);
         }
-      } finally { reader.releaseLock(); }
+      } finally { ownedReader.releaseLock(); reader = undefined; }
+      if (controller.signal.aborted) throw refused();
       const bytes = new Uint8Array(length); let offset = 0;
       for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
       const choices = parseCompanyChoices(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
@@ -45,10 +56,13 @@ export async function discoverBrowserCompanies(settings: BrowserOidcSettings, tr
       return choices;
     };
     return await Promise.race([pending(), new Promise<never>((_resolve, reject) => {
-      timer = setTimeout(() => { controller.abort(); reject(refused()); }, 10_000);
+      timer = setTimeout(() => { controller.abort(); cancelUnread(); reject(refused()); }, 10_000);
     })]);
   } catch { throw refused(); }
-  finally { clearTimeout(timer); }
+  finally {
+    clearTimeout(timer);
+    if (!completedBody) { cancelUnread(); controller.abort(); }
+  }
 }
 
 export async function authorizeDiscoveredCompany(settings: BrowserOidcSettings, transaction: OidcTransaction,
