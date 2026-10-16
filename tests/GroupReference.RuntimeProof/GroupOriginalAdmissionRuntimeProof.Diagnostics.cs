@@ -22,6 +22,7 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         var kind = error switch
         {
             OwnedAcceptedPreflightCommitted => "accepted-preflight-committed",
+            OwnedAcceptedObservationFailure observed => observed.PublicKind,
             SqlException { Number: 547 } => "sql-constraint",
             SqlException { Number: 229 } => "sql-permission",
             SqlException { Number: -2 } => "sql-timeout",

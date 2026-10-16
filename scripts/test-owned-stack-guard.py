@@ -3088,5 +3088,57 @@ class OriginalInvalidationDiagnosticControls(unittest.TestCase):
         self.assertIn('args.Length == 1 && phase == args[0] && args[0] is ("invalidation-zero-prepare" or "invalidation-zero-commit" or "invalidation-zero-replay")', program)
 
 
+class AcceptedQueryPositiveDiagnosticControls(unittest.TestCase):
+    STAGES = ('binding','provider','before-query','dispatch','execute','read','dispose','post-query','transaction','complete')
+    KINDS = ('identity','shape','incomplete','value','reader','cancelled','sql-constraint','sql-permission','sql-timeout','sql-deadlock','sql-other','other','context','connection','transaction-identity','predicates')
+
+    def test_all_closed_accepted_query_failures_are_observable_in_positive_admission(self):
+        modes = ('admission-original-prepare','admission-original-expiry','admission-original-commit',
+            'admission-original-recover','admission-original-resume','admission-original-refuse',
+            'admission-original-permission','admission-original-sql-read','admission-original-journal-expiry')
+        for mode in modes:
+            for stage in self.STAGES:
+                for kind in self.KINDS:
+                    category = 'accepted-query-' + stage + '-' + kind
+                    wire = f'FAIL owned original admission runtime phase-admitted-execution-accepted-transaction kind-{category}\nFAIL owned reference runtime {mode}\n'
+                    with self.subTest(mode=mode,stage=stage,kind=kind),self.assertRaises(AssertionError) as error:
+                        reference_smoke.require_reference_result(SimpleNamespace(stdout=wire,stderr='',returncode=1),mode,['PASS original'])
+                    self.assertEqual(str(error.exception),f'Owned reference executable failed at {mode}; exit=1; phase=admitted-execution-accepted-transaction; kind={category}')
+
+    def test_private_malformed_extra_wrong_mode_or_code_never_projects_observer_tokens(self):
+        mode='admission-original-commit';private='PRIVATE_OBSERVER_SOURCE_221'
+        wire=f'FAIL owned original admission runtime phase-admitted-execution-accepted-transaction kind-accepted-query-provider-incomplete\nFAIL owned reference runtime {mode}'
+        cases=[(wire.replace('provider-incomplete',private),1,mode),(wire.replace('provider-incomplete','unknown-reader'),1,mode),
+            (wire.replace('provider-incomplete','provider-unknown'),1,mode),(wire.replace('provider-incomplete','provider-incomplete-private'),1,mode),
+            (wire.replace('phase-admitted-execution-accepted-transaction','phase-'+private),1,mode),
+            (wire+'\n'+private,1,mode),(wire+'\n'+private*4096,1,mode),(wire+'\n',True,mode),(wire,2,mode),
+            (wire,1,'original-plan-commit'),(wire.replace(mode,'admission-original-expiry'),1,mode),
+            (wire.replace('provider-incomplete','provider-incomplete\x00'),1,mode)]
+        for value,code,called in cases:
+            with self.subTest(code=code,called=called),self.assertRaises(AssertionError) as error:
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=value,stderr=private,returncode=code),called,['PASS original'])
+            self.assertNotIn(private,str(error.exception));self.assertNotIn('; phase=',str(error.exception))
+
+    def test_observer_diagnostics_cannot_replace_exact_positive_success_or_negative_criterion(self):
+        mode='admission-original-commit'
+        reference_smoke.require_reference_result(SimpleNamespace(stdout='PASS original\n',stderr='',returncode=0),mode,['PASS original'])
+        wire=f'FAIL owned original admission runtime phase-admitted-execution-accepted-transaction kind-accepted-query-read-value\nFAIL owned reference runtime {mode}'
+        for value,code in [(wire,0),(wire,1),('PASS original\nextra',0),('PASS original',1)]:
+            with self.assertRaises(AssertionError):
+                reference_smoke.require_reference_result(SimpleNamespace(stdout=value,stderr='',returncode=code),mode,['PASS original'])
+        spec=importlib.util.spec_from_file_location('accepted_negative221',Path(__file__).with_name('smoke-group-accepted-guard-counterfactual.py'))
+        negative=importlib.util.module_from_spec(spec);spec.loader.exec_module(negative)
+        with self.assertRaises(AssertionError):
+            negative.require_committed_preflight_refusal(SimpleNamespace(stdout=wire,stderr='',returncode=1))
+
+    def test_closed_vocabulary_matches_actual_immutable_csharp_observer_projection(self):
+        source=(Path(__file__).resolve().parent.parent/'tests/GroupReference.RuntimeProof/GroupOriginalAdmissionRuntimeProof.AcceptedTransaction.cs').read_text(encoding='utf-8')
+        stages=set(re.findall(r'AcceptedStage\.[A-Za-z]+ => "([a-z-]+)"',source))|{'complete'}
+        kinds=set(re.findall(r'AcceptedKind\.[A-Za-z]+ => "([a-z-]+)"',source))|{'other'}
+        self.assertEqual(stages,set(self.STAGES));self.assertEqual(kinds,set(self.KINDS))
+        self.assertEqual(len(stages)*len(kinds),160)
+
+
+
 if __name__ == "__main__":
     unittest.main()

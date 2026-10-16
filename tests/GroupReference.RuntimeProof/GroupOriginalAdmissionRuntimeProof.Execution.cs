@@ -64,14 +64,22 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         GroupModelAttemptPermit permit, CancellationToken token)
     {
         Phase = "admitted-execution-accepted-refusal"; var reads = probe.AfterCompanionReads; probe.Armed = true;
-        probe.Accepted.Begin();
+        probe.Accepted.Begin(db, permit.Context.Scope, permit.Context.BatchId,
+            permit.Admission!.Original.Plan.Sha256, permit.Admission.Original.OperationId);
         try
         {
-            await RefusedAsync(() => new GroupModelAttemptJournalStore(db, worker, clock, sources, brain, issuer)
-                .ExecuteAdmittedOriginalAsync(permit, token));
-            if (adapter.Executions != 1 || probe.AfterCompanionReads <= reads) throw new InvalidOperationException();
+            var refused = false;
+            try
+            {
+                await new GroupModelAttemptJournalStore(db, worker, clock, sources, brain, issuer)
+                    .ExecuteAdmittedOriginalAsync(permit, token);
+            }
+            catch (Exception error) when (error is InvalidOperationException or UnauthorizedAccessException) { refused = true; }
+            catch { Phase = "admitted-execution-accepted-transaction"; probe.Accepted.ThrowIfFailed(); throw; }
             Phase = "admitted-execution-accepted-transaction";
-            probe.Accepted.RequireRefused(db); RequireClean(db);
+            probe.Accepted.RequireRefused(db, refused);
+            if (adapter.Executions != 1 || probe.AfterCompanionReads <= reads) throw new InvalidOperationException();
+            RequireClean(db);
         }
         finally { probe.Accepted.End(); probe.Armed = false; }
     }
@@ -129,13 +137,19 @@ internal static partial class GroupOriginalAdmissionRuntimeProof
         { if (!released || !returned || BeforeCompanionReads == 0 || AfterCompanionReads == 0) throw Unavailable(); }
         public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
-        { Accepted.Query(command.Transaction, command.CommandText); ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
+        { Accepted.Query(data.Context, command, result.HasResult); ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
         public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<int> result, CancellationToken cancellationToken = default)
-        { ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
+        { Accepted.Query(data.Context, command, result.HasResult); ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
         public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData data,
             InterceptionResult<object> result, CancellationToken cancellationToken = default)
-        { ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
+        { Accepted.Query(data.Context, command, result.HasResult); ObserveCommand(command.CommandText); return ValueTask.FromResult(result); }
+        public override ValueTask<DbDataReader> ReaderExecutedAsync(DbCommand command, CommandExecutedEventData data,
+            DbDataReader result, CancellationToken token = default) => ValueTask.FromResult(Accepted.IsTarget(command)
+                ? Accepted.Executed(data.Context, command, result) : result);
+        public override Task CommandFailedAsync(DbCommand command, CommandErrorEventData data, CancellationToken token = default)
+        { Accepted.CommandFailed(command, data.Exception); return Task.CompletedTask; }
+        public override void CommandFailed(DbCommand command, CommandErrorEventData data) => Accepted.CommandFailed(command, data.Exception);
         private static InvalidOperationException Unavailable() => new("Owned admitted execution observation is not available.");
     }
 }

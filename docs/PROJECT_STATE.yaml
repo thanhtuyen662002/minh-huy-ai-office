@@ -6,16 +6,16 @@ priority_rule: security-critical > production-blocker > active-issue > verified-
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: 4e1186da9441685a898446e655dc9457575e30bd
+current_target_head: b37eea9003647c5262b6422d3175f8622e484082
 last_verified_commit: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 critical_paths:
   backend:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: 4e1186da9441685a898446e655dc9457575e30bd
+    head: b37eea9003647c5262b6422d3175f8622e484082
     state: in_progress
-    next: "Actual4e128 Build38815380781/Gov38815380774 attempt1 is TERMINAL_FAILED/all8 closure6203998841: strict accepted-guard mutant exit0/lines2/unknown-output, child lines unavailable and unique cause under source inspection. Immediately repair SAME288 with strict committed-preflight refusal/full graphs/both cleanup gates; no meaningful-failure rerun. Preserve ordinary locala7188cd/all1274 exact reviewed168; separate native179 copies only independently reviewed166 pair onto corrected168, actual25Python339 PASS177 and inherited154 compiled5589/no fresh dotnet. Review exact179 composition/durable tuple before local checkpoint; no179 push or runtime qualification inferred. Actual checkpointSQL/30s lease feasibility NOT_RUN_UNQUALIFIED, model NOT_RUN_UNEVALUATED, writer unactivated/catalogEMPTY. Original124/142/164 WITHHELD immutable; INT164-1 closes only168. Complete generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, realERP/Windows/deployment. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge."
+    next: "SAME288 actualb37 Build38838128289/Gov38838128166 attempt1 ALL8 TERMINAL_FAILED closure6206875258: positive admission-original-commit closed phase admitted-execution-accepted-transaction kind accepted-query-dispatch-identity; unique context/connection/transaction/predicate subcondition UNKNOWN. Hosted5437/Gov/six prerequisites PASS, native147/wholequality red only LOCAL_RUNTIME_RESULT, no browser artifacts, cleanup SUCCESS. No failure rerun. Private259 combines preserved native217 with additive254 (never withheld249) and narrows only observer failure categories; all9 original identity conditions and exact6predicate owner retained, new fixed160 diagnostic vocabulary. Focused168guard+9negative+79observer PASS/source1274 unchanged; full5653 inherited217, future full5657 EXPECTED_NOT_EXECUTED. Actual small owned SQL257Windows and258Linux NET10.0.13 each passed two synthetic closure/trueEOFdispose paths; not full failing-path reproduction, not native147/149 acceptance or causal fix. All3 owned containers removed after identity/label/image checks. Freeze263 current durable union of both actual e50/b37 parents and source259, obtain source review/ordinary local merge preserving e50/a718/fbfa and actualb37 ancestry, then fresh source-bound149/helper/parent tuple and owned all8 CI. Source/helper reviews PENDING; no push/main merge authorized by this private freeze. Current Gateway247 existing loader needs PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protected ignored .env.production via deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection; compose.local does not forward provider vars, Released profile catalog EMPTY and actual model NOT_RUN_UNEVALUATED. Corpus227/rubric244 pre-output only/no scores or gold approval. Complete generation/partial spending/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicated ERP readonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged; V2 attachment unread until current completion/main merge. Preserve all original WITHHELD/failure evidence."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "Actual4e128 Build38815380781/Gov38815380774 attempt1 is TERMINAL_FAILED/all8 closure6203998841: strict accepted-guard mutant exit0/lines2/unknown-output, child lines unavailable and unique cause under source inspection. Immediately repair SAME288 with strict committed-preflight refusal/full graphs/both cleanup gates; no meaningful-failure rerun. Preserve ordinary locala7188cd/all1274 exact reviewed168; separate native179 copies only independently reviewed166 pair onto corrected168, actual25Python339 PASS177 and inherited154 compiled5589/no fresh dotnet. Review exact179 composition/durable tuple before local checkpoint; no179 push or runtime qualification inferred. Actual checkpointSQL/30s lease feasibility NOT_RUN_UNQUALIFIED, model NOT_RUN_UNEVALUATED, writer unactivated/catalogEMPTY. Original124/142/164 WITHHELD immutable; INT164-1 closes only168. Complete generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, realERP/Windows/deployment. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge."
+next_action: "SAME288 actualb37 Build38838128289/Gov38838128166 attempt1 ALL8 TERMINAL_FAILED closure6206875258: positive admission-original-commit closed phase admitted-execution-accepted-transaction kind accepted-query-dispatch-identity; unique context/connection/transaction/predicate subcondition UNKNOWN. Hosted5437/Gov/six prerequisites PASS, native147/wholequality red only LOCAL_RUNTIME_RESULT, no browser artifacts, cleanup SUCCESS. No failure rerun. Private259 combines preserved native217 with additive254 (never withheld249) and narrows only observer failure categories; all9 original identity conditions and exact6predicate owner retained, new fixed160 diagnostic vocabulary. Focused168guard+9negative+79observer PASS/source1274 unchanged; full5653 inherited217, future full5657 EXPECTED_NOT_EXECUTED. Actual small owned SQL257Windows and258Linux NET10.0.13 each passed two synthetic closure/trueEOFdispose paths; not full failing-path reproduction, not native147/149 acceptance or causal fix. All3 owned containers removed after identity/label/image checks. Freeze263 current durable union of both actual e50/b37 parents and source259, obtain source review/ordinary local merge preserving e50/a718/fbfa and actualb37 ancestry, then fresh source-bound149/helper/parent tuple and owned all8 CI. Source/helper reviews PENDING; no push/main merge authorized by this private freeze. Current Gateway247 existing loader needs PRIMARY_BASE_URL/MODEL/AUTHORIZATION together in protected ignored .env.production via deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection; compose.local does not forward provider vars, Released profile catalog EMPTY and actual model NOT_RUN_UNEVALUATED. Corpus227/rubric244 pre-output only/no scores or gold approval. Complete generation/partial spending/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicated ERP readonly inventory/import-export, Windows and deployment remain. Mainad747d unchanged; V2 attachment unread until current completion/main merge. Preserve all original WITHHELD/failure evidence."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -5959,55 +5959,6 @@ group_v3_slot_expectation79_checkpoint:
   actual147: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
 
-group_first_synthetic_model89_checkpoint:
-  parent_reviewed_source79: b8539ead2acd490b304e911501e899467fbea7c9
-  parent_build: 38802805355
-  parent_governance: 38802805443
-  parent_ownership_comment: 6201736881
-  parent_state: ACTIVE_OWNED_PENDING_NATIVE147_QUALITY
-  source_review: pending_exact89
-  fixture_slot: 24
-  reserved_unknown_slots_retained: [15, 22, 23]
-  local_dotnet: 5382
-  dotnet_projects: [6, 584, 25, 4767]
-  local_python_suites: 23
-  local_python_methods: 312
-  new_read_observer_cases: 9
-  actual_compiled_guard_refusals: 8
-  full_format: PASS
-  initial_compile_failure: retained_wrong_enum_Text_corrected_to_NewText
-  actual_sql148: NOT_RUN_UNQUALIFIED
-  actual_model: NOT_RUN_UNEVALUATED
-
-group_original_invalidation101_checkpoint:
-  parent_reviewed_source89: 68b1895de36074d3ceffbae6009b892e46cfd28c
-  parent_source_review_comment: 6202036331
-  parent_remote_source79: b8539ead2acd490b304e911501e899467fbea7c9
-  parent_build: 38802805355
-  parent_governance: 38802805443
-  parent_ci_state: ACTIVE_OWNED_PENDING_NATIVE147_QUALITY
-  architecture_advice_comment: 6202262251
-  state: LOCAL_VERIFIED_NARROW_CHECKPOINT_SOURCE_REVIEW_AND_NATIVE_PENDING
-  schema: AddGroupOriginalInvalidations
-  checkpoint_fields: 13
-  scoped_restrictive_parents: 3
-  original_replacement: NOT_SUPPORTED
-  partial_batches: REFUSED
-  model_spending_and_accepted_rows: PRESERVED_NOT_CONTRIBUTORS
-  completed_terminal_first_owner: BYTE_UNCHANGED
-  activation: NOT_ENABLED
-  local_dotnet: 5528
-  dotnet_projects: [6, 584, 25, 4913]
-  new_cases: 146
-  local_python_suites: 23
-  local_python_methods: 312
-  full_format: PASS
-  pending_model: NONE
-  retained_failures: initial_test_property_compile_then_permission_exception_and_inventory_counts_then_generated_encoding
-  independent_source_review: PENDING
-  actual_sql: NOT_RUN_UNQUALIFIED
-  actual_model: NOT_RUN_UNEVALUATED
-  adr: docs/architecture/ADR_GROUP_ORIGINAL_INVALIDATION_CHECKPOINT.md
 group_accepted_preflight147_diagnostic122_checkpoint:
   parent: b8539ead2acd490b304e911501e899467fbea7c9
   actual_build: 38802805355
@@ -6059,62 +6010,149 @@ group_accepted_diagnostic128_current_identity_repair:
   actual_successor_native: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
 
-group_native154_diagnostic128_integration161_preparation:
-  ours: fbfa3aa39e6d7bb11479496b2fb2fdc44605f1cf
-  theirs: 4e1186da9441685a898446e655dc9457575e30bd
-  merge_base: b8539ead2acd490b304e911501e899467fbea7c9
-  operation: PRIVATE_ORDINARY_INTEGRATION_PREPARATION_NOT_COMMITTED_OR_PUSHED
-  previous_current_next_ours: SAME288 remote b8539ead2acd490b304e911501e899467fbea7c9 owns Build38802805355/Gov38802805443 attempt1, ownership6201736881. Keep native147 alive through terminal; source-bound capture82 must close all8/Gov, full147 markers/5373, wholequality/all7 and six individually viewed ORIGINAL images. Immediately inspect and repair real red SAME288. Local source89 68b1895de36074d3ceffbae6009b892e46cfd28c is source CLEAR6202036331 but UNPUSHED; helper148 parser91/capture95 controls are preparation only, not reviewed or dispatched. Bind genuine147 closure, finish helper review, then ordinary explicit89 successor push; never cancel the live parent. Private invalidation101 adds an additive immutable zero-contributor mismatch checkpoint, metadata inspectors, exact trusted graph-FK proof, activity fences in all existing owners and original common units, retained-expiry precedence, and unchanged completed terminal-FIRST. Local5528=[6,584,25,4913]/312Python/fullformat/no pending model PASS;146 added cases. Checkpoint writer is NOT activated; source review and native SQL remain pending. Partial effects refuse, attempts/results are retained, no replacement/provider/note/terminal/frontier authority. Review frozen new source/durable state; qualify native insertion/replay/partial/orphan/owner-permit/race/expiry/rewind/replacement/terminal-FIRST before activation. Then versioned continuation/global-residual budgets/raw coverage/scanner/shippedWorker/no-click278/internalIT279/full233. Existing Gateway/options/client/config only; actual real model NOT_RUN_UNEVALUATED and production catalogEMPTY. Preserve53/62/74 WITHHELD and e8/97ab/67 failures. No partial main merge or V2 attachment read before current work is complete and merged. Readonly Medcom/Novo identities, clean Windows lifecycle and production deployment remain external/product gates.
-  previous_current_next_theirs: SAME288 actual b8539ead2acd490b304e911501e899467fbea7c9 Build38802805355/Gov38802805443 attempt1 FAILED, closure6202929046. All8 terminal/hosted5373/Gov/six prerequisites PASS; native116655930476 failed accepted-guard counterfactual driver66 unexpected child result. Child phase/kind/unique cause UNKNOWN because outer assertion suppressed captured output. Quality116683076753 fullbody/all7 read, only localruntime red; zero browser artifacts. Minimal diagnostic122 from exact79 preserves every production/Csharp/schema/project/fixture body, strict exact committed-preflight two-line criterion, full graphs and both cleanups. Adds only bounded allowlisted exit/line-count/public-phase-kind diagnostics; unknown/private/oversized child data never echoed. Local21Python/305 PASS; no fresh dotnet needed because all compiled bodies exact actual hosted5373. This is DIAGNOSTIC_ONLY_ROOT_CAUSE_UNPROVEN, not a repaired runtime pass. Original124 WITHHELD for stale current identities; separate128 repairs them to actual b853 with prior values retained. Review exact128 five-path source/durable snapshot; bind fresh failed-parent-aware147/full5373 helper and independently review complete tuple before ordinary explicit samePR push. Own new exact CI through terminal; use actual diagnostic to repair true failure on SAME288 without weakening discrimination or rerunning meaningful failures. Preserved local89 68b1895 source CLEAR6202036331 and source114 fbfa3aa implementation-only no-blocking receipt1278ba5c/root entire report/all200 are unpublished. Whole114 NOT_PROMOTABLE_INHERITED_PARENT147_FAILURE. Old helper95 genuine-parent-success gate is INELIGIBLE; no unmodified89 push. Private116 native checkpoint foundation remains unqualified, no activation. Continue remaining invalidation generation/partial budgets/coverage/scanner/shippedWorker/no-click278/internalIT279/full233 after the active blocker. Existing Gateway/client/options/config only; actual real model NOT_RUN_UNEVALUATED, catalogEMPTY. No partial main merge or V2 attachment read before current completion/merge. ERP readonly/Windows/deployment evidence remains.
-  previous_current_heads_ours: b8539ead2acd490b304e911501e899467fbea7c9
-  previous_current_heads_theirs: b8539ead2acd490b304e911501e899467fbea7c9
-  actual_remote_head: 4e1186da9441685a898446e655dc9457575e30bd
-  actual_build: 38815380781
-  actual_governance: 38815380774
-  attempt: 1
-  ownership: 6203352692
-  actual_native: ACTIVE_OWNED_PENDING_AT_PREPARATION
-  actual_dotnet: 5373
-  prior_failed_closure: 6202929046
-  native154_archive: 28bf661e9c658ecf7a2a7db290ee3e48f5ccf2546b925d25416a08c0f7614e75
-  native154_local_dotnet: 5589
-  native154_local_python: 331
-  expected_integrated_python: 335
-  integrated_python: NOT_YET_RUN
-  original142: WITHHELD_IMMUTABLE
-  timestamp149: CLOSED_ONLY_TWO_PYTHON_FILES
-  CSharpv3: CLOSED_ONLY_TWO_CSHARP_FILES
-  full_native154_source_review: PENDING
-  integrated_durable_review: PENDING
-  actual_SQL: NOT_RUN_UNQUALIFIED
-  actual_model: NOT_RUN_UNEVALUATED
-  activation: NOT_ENABLED
-
-group_native_integrated164_verified_local_checkpoint:
-  operation: VERIFIED_PRIVATE_ORDINARY_INTEGRATION_REVIEW_CANDIDATE_NOT_COMMITTED_OR_PUSHED
-  parents:
-  - fbfa3aa39e6d7bb11479496b2fb2fdc44605f1cf
-  - 4e1186da9441685a898446e655dc9457575e30bd
-  actual_remote: 4e1186da9441685a898446e655dc9457575e30bd
+group_accepted_query194_source_checkpoint:
+  operation: PRIVATE_SIX180_PLUS_THREE_DURABLE_DOCS_NO_PUSH_OR_RUNTIME_QUALIFICATION
+  base_actual_remote: 4e1186da9441685a898446e655dc9457575e30bd
   build: 38815380781
   governance: 38815380774
   attempt: 1
-  ownership: 6203352692
-  actual_native: ACTIVE_OWNED_PENDING_AT_PREPARATION
-  actual_dotnet5373: PASS
-  local_source: EXACT1274_WITH_FIVE_PATH_DELTA_FROM154
-  local_dotnet: INHERITED5589_ALL_COMPILED_BODIES_EXACT154_NOT_FRESH_DOTNET
-  local_python: ACTUAL25_SUITES335_PASS163
-  prior_preparation_current_next: SAME288 actual4e1186da9441685a898446e655dc9457575e30bd Build38815380781/Gov38815380774 attempt1 ownership6203352692 is ACTIVE_OWNED_PENDING native147/job116698610725; hosted5373/Gov/six prerequisites PASS, native/all8/wholequality/all7/six ORIGINAL images still required. Do not push a successor while this original is live. Capture132 owns terminal closure and immediate SAME288 inspection/repair of any real red. Priorb853 failed147 closure6202929046/full3 logs immutable; unique child cause UNKNOWN. Prepare ordinary local integration of preserved114 fbfa3aa and exact diagnostic1284e, plus native154 full1274/5589dotnet/331Python/format; compiled bodies remain154, merged Python335 must be verified. Original142 WITHHELD immutable; timestamp149 and CSharpv3 findings close only their exact files, full native154 source and integrated durable review pending. Preserve both parent histories; all remaining generation/partial-budget/residual-coverage/terminal-v2/scanner/shippedWorker/no-click278/internalIT279/full233 remain. Current Gateway/client/options/config only, production catalogEMPTY and real model NOT_RUN_UNEVALUATED. Scoped provider148 observed2026-10-15T22:16:48.1327677+00:00:12 exact names/36 accessible slots0configured/7 known defaults absent; server store UNAVAILABLE_FOR_INSPECTION. No partial main merge or V2 attachment read before current completion/merge; ERP readonly/Windows/deployment qualification stays open.
-  both_parent_noncurrent_history: PRESERVED_VERIFIED161
-  original142: WITHHELD_IMMUTABLE
-  timestamp149: SCOPED_CLOSED_ONLY_TWO_PYTHON_FILES_ROOT_FULL_REPORT_ALL30
-  CSharpv3: SCOPED_CLOSED_ONLY_TWO_CSHARP_FILES_ROOT_FULL_REPORT_ALL24_EXACT_EF10_0_12_IL
-  source_and_durable_review: MUST_CONSUME_SEPARATE_GENUINE_APPLICABLE_REVIEWS_BEFORE_CHECKPOINT_PUBLICATION
-  promotion: INELIGIBLE_WHILE_ORIGINAL_CI_ACTIVE_AND_ACTUAL_RUNTIME_UNQUALIFIED
+  terminal: FAILED_ALL8_CLOSED
+  failed_closure: 6203998841
+  closure_binding:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\accepteddiag147-4e1186d-terminal-failed-closure-v178.json
+    bytes: 14609
+    sha256: 5448a9a4cf0684e9cbb771a774247eb3320410eef1e49974d5d68ff4ebb6298a
+  observed_mutant_exit: 0
+  observed_child_lines: 2
+  observed_category: unknown-output
+  child_stdout_contents: NOT_CAPTURED
+  unique_hosted_cause: UNKNOWN_UNASSERTED
+  source_gap: AG128-OBS-1_P2_SOURCE_SUPPORTED_NOT_UNIQUE_HOSTED_CAUSE
+  repair: EXACT_TRUE_RESULT_EOF_DISPOSAL_AND_TYPED_SQLCLIENT_COMMAND_OBSERVATION_STICKY_CLOSED
+  changed_scope: SIX_TEST_PROOF_PYTHON_PATHS_ONLY_PLUS_THREE_DURABLE_DOCS
+  strict_negative: ONLY_EXISTING_ACCEPTED_PREFLIGHT_COMMITTED_NO_GENERIC_SUCCESS_OR_FAILURE_SUBSTITUTE
+  implementation:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\accepted-guard-consumption-private6-frozen-v180.json
+    bytes: 7160
+    sha256: 25c683e3cb8f99628539dc1e38dbe3f28d20de0ddf43880dd0cd8b3356e7f35f
+  verification:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\accepted-query-full-verification-v192.json
+    bytes: 53289
+    sha256: b8f4d1a4fbbbfe9ee0fec504b3d2bdc823ca86e835aa5a6718b4546fda8b2635
+  dotnet: 5437
+  projects:
+  - 6
+  - 584
+  - 25
+  - 4822
+  python_suites: 21
+  python_tests: 307
+  focused75: SUBSET_NOT_ADDITIVE
+  previous_current_heads:
+    project: b8539ead2acd490b304e911501e899467fbea7c9
+    backend: b8539ead2acd490b304e911501e899467fbea7c9
+    workstream: b8539ead2acd490b304e911501e899467fbea7c9
+  previous_current_next: SAME288 actual b8539ead2acd490b304e911501e899467fbea7c9 Build38802805355/Gov38802805443 attempt1 FAILED, closure6202929046. All8 terminal/hosted5373/Gov/six prerequisites PASS; native116655930476 failed accepted-guard counterfactual driver66 unexpected child result. Child phase/kind/unique cause UNKNOWN because outer assertion suppressed captured output. Quality116683076753 fullbody/all7 read, only localruntime red; zero browser artifacts. Minimal diagnostic122 from exact79 preserves every production/Csharp/schema/project/fixture body, strict exact committed-preflight two-line criterion, full graphs and both cleanups. Adds only bounded allowlisted exit/line-count/public-phase-kind diagnostics; unknown/private/oversized child data never echoed. Local21Python/305 PASS; no fresh dotnet needed because all compiled bodies exact actual hosted5373. This is DIAGNOSTIC_ONLY_ROOT_CAUSE_UNPROVEN, not a repaired runtime pass. Original124 WITHHELD for stale current identities; separate128 repairs them to actual b853 with prior values retained. Review exact128 five-path source/durable snapshot; bind fresh failed-parent-aware147/full5373 helper and independently review complete tuple before ordinary explicit samePR push. Own new exact CI through terminal; use actual diagnostic to repair true failure on SAME288 without weakening discrimination or rerunning meaningful failures. Preserved local89 68b1895 source CLEAR6202036331 and source114 fbfa3aa implementation-only no-blocking receipt1278ba5c/root entire report/all200 are unpublished. Whole114 NOT_PROMOTABLE_INHERITED_PARENT147_FAILURE. Old helper95 genuine-parent-success gate is INELIGIBLE; no unmodified89 push. Private116 native checkpoint foundation remains unqualified, no activation. Continue remaining invalidation generation/partial budgets/coverage/scanner/shippedWorker/no-click278/internalIT279/full233 after the active blocker. Existing Gateway/client/options/config only; actual real model NOT_RUN_UNEVALUATED, catalogEMPTY. No partial main merge or V2 attachment read before current completion/merge. ERP readonly/Windows/deployment evidence remains.
+  preserved_integration_head: e50d7e4a780e28834f707437b30aa6ac6f7ea7e6
+  integration_checkpoint:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\native179-local-checkpoint-v182.json
+    bytes: 1509
+    sha256: e9b86dabecd0ff12b283a2d7b88f82385995e6c06a654137776f272e4019fec2
+  integration_delivery: UNPUBLISHED_ORDINARY_GRAPH_PRESERVED_LATER_NORMAL_MERGE_AND_REQUALIFICATION_REQUIRED
+  actual_SQL: NOT_RUN_UNQUALIFIED
+  actual_mutant_image: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  activation: NOT_ENABLED
+  source_review: PENDING_INDEPENDENT_EXACT194_AND_ACTUAL_GIT_BINDING
+  helper_review: PENDING_NEW147_COMPLETE_TUPLE
+  push: false
+  main_merge: false
+  V2_attachment_read: false
+
+group_positive_diagnostic232_source_checkpoint:
+  operation: TWO_PYTHON_POSITIVE_DIAGNOSTIC_PLUS_THREE_DURABLE_DOCS
+  actual_parent: adba50af4e265a206745179cfbc80e64acbcc72c
+  build: 38827116944
+  governance: 38827116942
+  attempt: 1
+  closure_comment: 6205581859
+  closure:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\acceptedquery147-adba50a-terminal-failed-closure-v229.json
+    bytes: 14834
+    sha256: af09cb85e3ca0be6388acc31248e67c2c0da8384d8aa719d315cd76d6c14be42
+  native_job: 116737037769
+  positive_child: admission-original-commit
+  child_exit: 1
+  child_stdout_contents: NOT_CAPTURED
+  unique_actual_cause: UNKNOWN_NOT_ASSERTED
+  strict_negative: NOT_REACHED_IN_FAILED_PARENT_UNCHANGED_SOLE_ACCEPTED_PREFLIGHT_COMMITTED
+  implementation:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\positive-admission-diagnostic-private-frozen-v221.json
+    bytes: 3266
+    sha256: 2a92c91685bc1b98d2e5d136a85c09d50be36192acbeb5ed5dc811bd81a3c452
+  focused_verification:
+    path: D:/CodexPrivateTasks/aioffice-283-browser/positive-admission221-focused-verification-v1.json
+    bytes: 1777
+    sha256: dae56e467cc88b2794779cb19dff787c68c2b50a21a27c04f36e25dece3db569
+  guard_tests: 164
+  strict_negative_tests: 9
+  inherited_parent_dotnet: 5437
+  inherited_parent_projects:
+  - 6
+  - 584
+  - 25
+  - 4822
+  new_dotnet_run: false
+  previous_current_heads:
+    project: 4e1186da9441685a898446e655dc9457575e30bd
+    backend: 4e1186da9441685a898446e655dc9457575e30bd
+    workstream: 4e1186da9441685a898446e655dc9457575e30bd
+  previous_current_next: 'SAME288 predecessor actual4e1186da9441685a898446e655dc9457575e30bd Build38815380781/Gov38815380774 attempt1 TERMINAL_FAILED/all8 closure6203998841: native116698610725 mutant exit0/lines2/category unknown-output; child stdout bodies NOT_CAPTURED and unique hosted cause UNKNOWN. Hosted5373/Gov/six prerequisites PASS, whole quality116714255694/all7 read and only localruntime failed; no browser artifacts. Minimal six-path180 repair closes source-supported AG128-OBS-1: scoped true-result/EOF/disposal observation plus typed installed SqlClient6.1.6 command events, sticky failures and subsequent raw-ADO dispatch detection; the source counterexample is NOT proven as the unique hosted cause. Final180 actual local full5437/four projects, zero failures/skips/warnings/errors, full format and 21 Python suites/307 tests PASS192; focused75 is a subset. Compose only six180 paths plus this three-doc correction; independently review frozen194/actual local commit and fresh failed-parent-aware147 helper before an ordinary explicit SAME288 repair push. Keep strict sole accepted-preflight-committed negative, full graphs and both cleanups; no meaningful-failure rerun. Own new exact-head all8/Gov/native147/wholequality/all7/six original images through terminal and fix real red immediately. Preserve unpublished ordinary e50d7e4/a7188cd/fbfa histories; later merge repaired parent with e50 by normal merge and requalify the combined native/SQL path before any integration claim. Real SQL/new mutant image NOT_RUN_UNQUALIFIED; real model NOT_RUN_UNEVALUATED, existing Gateway/options/config only. Scoped audit148 found no configured local provider values; server secret store UNAVAILABLE_FOR_INSPECTION. Required approved Worker inputs AIOFFICE_AI_PRIMARY_BASE_URL, AIOFFICE_AI_PRIMARY_MODEL, AIOFFICE_AI_PRIMARY_AUTHORIZATION belong in protected ignored production environment/secret injection. Remaining generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicated readonlyERP/Windows/deployment stay open. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge. Original124/142/164 and184 WITHHELD histories immutable.'
+  preserved_integration_head: e50d7e4a780e28834f707437b30aa6ac6f7ea7e6
+  integration: UNPUBLISHED_PRESERVED_LATER_NORMAL_MERGE_AND_REQUALIFICATION
+  scoped_gateway:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\ai-gateway-scoped-availability-v223.json
+    bytes: 7615
+    sha256: f0d0302d5d1035962af9cddbdf201e9b17b4a0037c7c6e131ee0ec45cf8669d1
+  remote_branches:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\remote-branch-eligibility-v225.json
+    bytes: 57094
+    sha256: d9320dea489fdb549f2c5fcf1a93ff6846f1d8214301ea959632dba88bf3e2ed
   actual_SQL: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
   activation: NOT_ENABLED
+  independent_review: PENDING_EXACT232_AND_ACTUAL_HEAD
+  helper_review: PENDING_NEW147_ACTUAL_FAILED_PARENT
+  push: false
+  main_merge: false
+  V2_attachment_read: false
+
+group_first_synthetic_model89_checkpoint:
+  parent_reviewed_source79: b8539ead2acd490b304e911501e899467fbea7c9
+  parent_build: 38802805355
+  parent_governance: 38802805443
+  parent_ownership_comment: 6201736881
+  parent_state: ACTIVE_OWNED_PENDING_NATIVE147_QUALITY
+  source_review: pending_exact89
+  fixture_slot: 24
+  reserved_unknown_slots_retained:
+  - 15
+  - 22
+  - 23
+  local_dotnet: 5382
+  dotnet_projects:
+  - 6
+  - 584
+  - 25
+  - 4767
+  local_python_suites: 23
+  local_python_methods: 312
+  new_read_observer_cases: 9
+  actual_compiled_guard_refusals: 8
+  full_format: PASS
+  initial_compile_failure: retained_wrong_enum_Text_corrected_to_NewText
+  actual_sql148: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
 
 group_integration168_retained_parent_identity_correction:
   original164: WITHHELD_IMMUTABLE
@@ -6148,6 +6186,37 @@ group_integration168_retained_parent_identity_correction:
   inherited_python335: UNCHANGED_SOURCE_NO_RERUN_DOCS_ONLY
   inherited_dotnet5589: UNCHANGED_COMPILED_SOURCE_NO_FRESH_RUN
   original142: WITHHELD_IMMUTABLE
+  actual_SQL: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  activation: NOT_ENABLED
+
+group_native154_diagnostic128_integration161_preparation:
+  ours: fbfa3aa39e6d7bb11479496b2fb2fdc44605f1cf
+  theirs: 4e1186da9441685a898446e655dc9457575e30bd
+  merge_base: b8539ead2acd490b304e911501e899467fbea7c9
+  operation: PRIVATE_ORDINARY_INTEGRATION_PREPARATION_NOT_COMMITTED_OR_PUSHED
+  previous_current_next_ours: SAME288 remote b8539ead2acd490b304e911501e899467fbea7c9 owns Build38802805355/Gov38802805443 attempt1, ownership6201736881. Keep native147 alive through terminal; source-bound capture82 must close all8/Gov, full147 markers/5373, wholequality/all7 and six individually viewed ORIGINAL images. Immediately inspect and repair real red SAME288. Local source89 68b1895de36074d3ceffbae6009b892e46cfd28c is source CLEAR6202036331 but UNPUSHED; helper148 parser91/capture95 controls are preparation only, not reviewed or dispatched. Bind genuine147 closure, finish helper review, then ordinary explicit89 successor push; never cancel the live parent. Private invalidation101 adds an additive immutable zero-contributor mismatch checkpoint, metadata inspectors, exact trusted graph-FK proof, activity fences in all existing owners and original common units, retained-expiry precedence, and unchanged completed terminal-FIRST. Local5528=[6,584,25,4913]/312Python/fullformat/no pending model PASS;146 added cases. Checkpoint writer is NOT activated; source review and native SQL remain pending. Partial effects refuse, attempts/results are retained, no replacement/provider/note/terminal/frontier authority. Review frozen new source/durable state; qualify native insertion/replay/partial/orphan/owner-permit/race/expiry/rewind/replacement/terminal-FIRST before activation. Then versioned continuation/global-residual budgets/raw coverage/scanner/shippedWorker/no-click278/internalIT279/full233. Existing Gateway/options/client/config only; actual real model NOT_RUN_UNEVALUATED and production catalogEMPTY. Preserve53/62/74 WITHHELD and e8/97ab/67 failures. No partial main merge or V2 attachment read before current work is complete and merged. Readonly Medcom/Novo identities, clean Windows lifecycle and production deployment remain external/product gates.
+  previous_current_next_theirs: SAME288 actual b8539ead2acd490b304e911501e899467fbea7c9 Build38802805355/Gov38802805443 attempt1 FAILED, closure6202929046. All8 terminal/hosted5373/Gov/six prerequisites PASS; native116655930476 failed accepted-guard counterfactual driver66 unexpected child result. Child phase/kind/unique cause UNKNOWN because outer assertion suppressed captured output. Quality116683076753 fullbody/all7 read, only localruntime red; zero browser artifacts. Minimal diagnostic122 from exact79 preserves every production/Csharp/schema/project/fixture body, strict exact committed-preflight two-line criterion, full graphs and both cleanups. Adds only bounded allowlisted exit/line-count/public-phase-kind diagnostics; unknown/private/oversized child data never echoed. Local21Python/305 PASS; no fresh dotnet needed because all compiled bodies exact actual hosted5373. This is DIAGNOSTIC_ONLY_ROOT_CAUSE_UNPROVEN, not a repaired runtime pass. Original124 WITHHELD for stale current identities; separate128 repairs them to actual b853 with prior values retained. Review exact128 five-path source/durable snapshot; bind fresh failed-parent-aware147/full5373 helper and independently review complete tuple before ordinary explicit samePR push. Own new exact CI through terminal; use actual diagnostic to repair true failure on SAME288 without weakening discrimination or rerunning meaningful failures. Preserved local89 68b1895 source CLEAR6202036331 and source114 fbfa3aa implementation-only no-blocking receipt1278ba5c/root entire report/all200 are unpublished. Whole114 NOT_PROMOTABLE_INHERITED_PARENT147_FAILURE. Old helper95 genuine-parent-success gate is INELIGIBLE; no unmodified89 push. Private116 native checkpoint foundation remains unqualified, no activation. Continue remaining invalidation generation/partial budgets/coverage/scanner/shippedWorker/no-click278/internalIT279/full233 after the active blocker. Existing Gateway/client/options/config only; actual real model NOT_RUN_UNEVALUATED, catalogEMPTY. No partial main merge or V2 attachment read before current completion/merge. ERP readonly/Windows/deployment evidence remains.
+  previous_current_heads_ours: b8539ead2acd490b304e911501e899467fbea7c9
+  previous_current_heads_theirs: b8539ead2acd490b304e911501e899467fbea7c9
+  actual_remote_head: 4e1186da9441685a898446e655dc9457575e30bd
+  actual_build: 38815380781
+  actual_governance: 38815380774
+  attempt: 1
+  ownership: 6203352692
+  actual_native: ACTIVE_OWNED_PENDING_AT_PREPARATION
+  actual_dotnet: 5373
+  prior_failed_closure: 6202929046
+  native154_archive: 28bf661e9c658ecf7a2a7db290ee3e48f5ccf2546b925d25416a08c0f7614e75
+  native154_local_dotnet: 5589
+  native154_local_python: 331
+  expected_integrated_python: 335
+  integrated_python: NOT_YET_RUN
+  original142: WITHHELD_IMMUTABLE
+  timestamp149: CLOSED_ONLY_TWO_PYTHON_FILES
+  CSharpv3: CLOSED_ONLY_TWO_CSHARP_FILES
+  full_native154_source_review: PENDING
+  integrated_durable_review: PENDING
   actual_SQL: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
   activation: NOT_ENABLED
@@ -6193,3 +6262,145 @@ group_native_diagnostic179_source_checkpoint:
   lease_feasibility: NOT_RUN_UNQUALIFIED
   actual_model: NOT_RUN_UNEVALUATED
   activation: NOT_ENABLED
+
+group_native_integrated164_verified_local_checkpoint:
+  operation: VERIFIED_PRIVATE_ORDINARY_INTEGRATION_REVIEW_CANDIDATE_NOT_COMMITTED_OR_PUSHED
+  parents:
+  - fbfa3aa39e6d7bb11479496b2fb2fdc44605f1cf
+  - 4e1186da9441685a898446e655dc9457575e30bd
+  actual_remote: 4e1186da9441685a898446e655dc9457575e30bd
+  build: 38815380781
+  governance: 38815380774
+  attempt: 1
+  ownership: 6203352692
+  actual_native: ACTIVE_OWNED_PENDING_AT_PREPARATION
+  actual_dotnet5373: PASS
+  local_source: EXACT1274_WITH_FIVE_PATH_DELTA_FROM154
+  local_dotnet: INHERITED5589_ALL_COMPILED_BODIES_EXACT154_NOT_FRESH_DOTNET
+  local_python: ACTUAL25_SUITES335_PASS163
+  prior_preparation_current_next: SAME288 actual4e1186da9441685a898446e655dc9457575e30bd Build38815380781/Gov38815380774 attempt1 ownership6203352692 is ACTIVE_OWNED_PENDING native147/job116698610725; hosted5373/Gov/six prerequisites PASS, native/all8/wholequality/all7/six ORIGINAL images still required. Do not push a successor while this original is live. Capture132 owns terminal closure and immediate SAME288 inspection/repair of any real red. Priorb853 failed147 closure6202929046/full3 logs immutable; unique child cause UNKNOWN. Prepare ordinary local integration of preserved114 fbfa3aa and exact diagnostic1284e, plus native154 full1274/5589dotnet/331Python/format; compiled bodies remain154, merged Python335 must be verified. Original142 WITHHELD immutable; timestamp149 and CSharpv3 findings close only their exact files, full native154 source and integrated durable review pending. Preserve both parent histories; all remaining generation/partial-budget/residual-coverage/terminal-v2/scanner/shippedWorker/no-click278/internalIT279/full233 remain. Current Gateway/client/options/config only, production catalogEMPTY and real model NOT_RUN_UNEVALUATED. Scoped provider148 observed2026-10-15T22:16:48.1327677+00:00:12 exact names/36 accessible slots0configured/7 known defaults absent; server store UNAVAILABLE_FOR_INSPECTION. No partial main merge or V2 attachment read before current completion/merge; ERP readonly/Windows/deployment qualification stays open.
+  both_parent_noncurrent_history: PRESERVED_VERIFIED161
+  original142: WITHHELD_IMMUTABLE
+  timestamp149: SCOPED_CLOSED_ONLY_TWO_PYTHON_FILES_ROOT_FULL_REPORT_ALL30
+  CSharpv3: SCOPED_CLOSED_ONLY_TWO_CSHARP_FILES_ROOT_FULL_REPORT_ALL24_EXACT_EF10_0_12_IL
+  source_and_durable_review: MUST_CONSUME_SEPARATE_GENUINE_APPLICABLE_REVIEWS_BEFORE_CHECKPOINT_PUBLICATION
+  promotion: INELIGIBLE_WHILE_ORIGINAL_CI_ACTIVE_AND_ACTUAL_RUNTIME_UNQUALIFIED
+  actual_SQL: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  activation: NOT_ENABLED
+
+group_original_invalidation101_checkpoint:
+  parent_reviewed_source89: 68b1895de36074d3ceffbae6009b892e46cfd28c
+  parent_source_review_comment: 6202036331
+  parent_remote_source79: b8539ead2acd490b304e911501e899467fbea7c9
+  parent_build: 38802805355
+  parent_governance: 38802805443
+  parent_ci_state: ACTIVE_OWNED_PENDING_NATIVE147_QUALITY
+  architecture_advice_comment: 6202262251
+  state: LOCAL_VERIFIED_NARROW_CHECKPOINT_SOURCE_REVIEW_AND_NATIVE_PENDING
+  schema: AddGroupOriginalInvalidations
+  checkpoint_fields: 13
+  scoped_restrictive_parents: 3
+  original_replacement: NOT_SUPPORTED
+  partial_batches: REFUSED
+  model_spending_and_accepted_rows: PRESERVED_NOT_CONTRIBUTORS
+  completed_terminal_first_owner: BYTE_UNCHANGED
+  activation: NOT_ENABLED
+  local_dotnet: 5528
+  dotnet_projects:
+  - 6
+  - 584
+  - 25
+  - 4913
+  new_cases: 146
+  local_python_suites: 23
+  local_python_methods: 312
+  full_format: PASS
+  pending_model: NONE
+  retained_failures: initial_test_property_compile_then_permission_exception_and_inventory_counts_then_generated_encoding
+  independent_source_review: PENDING
+  actual_sql: NOT_RUN_UNQUALIFIED
+  actual_model: NOT_RUN_UNEVALUATED
+  adr: docs/architecture/ADR_GROUP_ORIGINAL_INVALIDATION_CHECKPOINT.md
+
+group_native_identity263_integration_checkpoint:
+  scope: CURRENT_DURABLE_UNION_PLUS_NATIVE259_DIAGNOSTIC_CANDIDATE_NO_GIT_OR_DELIVERY
+  actual_remote_parent: b37eea9003647c5262b6422d3175f8622e484082
+  preserved_local_parent: e50d7e4a780e28834f707437b30aa6ac6f7ea7e6
+  preserved_graph: e50 -> a718 ordinary parents fbfa and4e; currentb37 -> adba ->4e
+  closure:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\acceptedquery147-b37eea9-terminal-failed-closure-v256.json
+    bytes: 15260
+    sha256: 6760c02e2e2da443336098bef156058198f8a3ced6555ab9b64651c63a6fb527
+  closure_comment: 6206875258
+  build: 38838128289
+  governance: 38838128166
+  exact_observed_phase: admitted-execution-accepted-transaction
+  exact_observed_kind: accepted-query-dispatch-identity
+  unique_identity_subcondition: UNKNOWN
+  source_focused_verification:
+    path: D:\CodexReviewScratch\aioffice-accepted-identity-diagnostics-v259\focused-verification-v260.json
+    bytes: 2097
+    sha256: 3f21a3941fd262ebcf8c555cc30a5d61effa4f9decc27c61d1dc5158888a089c
+  guard_tests: 168
+  strict_negative_tests: 9
+  observer_tests: 79
+  all9_prior_identity_conditions_retained: true
+  exact_predicate_owner_RAW_unchanged: true
+  diagnostic_only_not_proven_causal_fix: true
+  inherited217_dotnet: 5653
+  expected_future_dotnet: 5657
+  new_full_dotnet_execution: false
+  native149: NOT_RUN_UNQUALIFIED
+  original249_finding:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\composition249-withheld-finding-v254.json
+    bytes: 954
+    sha256: ad0e750f9c21c706b06ad4f61608a670d7dbee6e4b5b8c7a0bae1312bcbb194f
+  additive254:
+    path: D:\CodexReviewScratch\aioffice-implementation-native-positive-preserving-v254\descriptor.json
+    bytes: 1783
+    sha256: 017cc5eca5c62f3c5fd211ad7c695378c3b47938f6a7c5cd37edd91e7f444176
+  local_Windows_SQL257:
+    path: D:\CodexReviewScratch\aioffice-accepted-identity-sql-probe-v257\owned-sql-observation.json
+    bytes: 1200
+    sha256: 03cbce638888dbed7a1b1d11d71139c9c804fcf717da670aceede545a735713c
+  local_Linux_SQL258:
+    path: D:\CodexReviewScratch\aioffice-accepted-identity-sql-probe-v258\owned-linux-sql-observation.json
+    bytes: 1988
+    sha256: 0f7c21a3a8d36e5b8e2aeadd936218ff46fb17ac3b104e6655cf97edede56178
+  local_SQL_limits: Two synthetic rows/closures only; original observer passes, full production unit not reproduced. No customer DB or provider. All three own containers removed.
+  gateway247:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\gateway-existing-loader-readiness-v247.json
+    bytes: 4875
+    sha256: 18b598e0379d115547c1481d77b61c855e63bf89e2225f5c9cf4be7ebbda1992
+  remote_branch_audit225:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\remote-branch-eligibility-v225.json
+    bytes: 57094
+    sha256: d9320dea489fdb549f2c5fcf1a93ff6846f1d8214301ea959632dba88bf3e2ed
+  previous_current_values:
+    docs/PROJECT_STATE.yaml:
+      integration_next: 'Actual4e128 Build38815380781/Gov38815380774 attempt1 is TERMINAL_FAILED/all8 closure6203998841: strict accepted-guard mutant exit0/lines2/unknown-output, child lines unavailable and unique cause under source inspection. Immediately repair SAME288 with strict committed-preflight refusal/full graphs/both cleanup gates; no meaningful-failure rerun. Preserve ordinary locala7188cd/all1274 exact reviewed168; separate native179 copies only independently reviewed166 pair onto corrected168, actual25Python339 PASS177 and inherited154 compiled5589/no fresh dotnet. Review exact179 composition/durable tuple before local checkpoint; no179 push or runtime qualification inferred. Actual checkpointSQL/30s lease feasibility NOT_RUN_UNQUALIFIED, model NOT_RUN_UNEVALUATED, writer unactivated/catalogEMPTY. Original124/142/164 WITHHELD immutable; INT164-1 closes only168. Complete generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, realERP/Windows/deployment. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge.'
+      current_next: 'SAME288 actual parent adba50af4e265a206745179cfbc80e64acbcc72c Build38827116944/Gov38827116942 attempt1 ALL8 TERMINAL_FAILED closure6205581859: positive admission-original-commit exit1 before strict guard-deletion control. Child stdout/closed phase-kind NOT_CAPTURED and unique actual cause UNKNOWN, distinct from predecessor4e mutantexit0. Hosted5437=[6,584,25,4822], Governance/six prerequisites PASS; native116737037769 and wholequality116753183104 all7 read only LOCAL_RUNTIME_RESULT red, browser skipped/zeroartifacts/cleanup success. Minimal221 diagnostic adds only finite120 accepted-query-stage-kind vocabulary to positive reference helper; existing CSharp/production guard/strictnegative/allgraphs/bothcleanup remain RAW unchanged. Focused164 guard+9 strictnegative PASS/source1247 unchanged; inherited .NET5437 actual parent PASS, no new .NET run claimed. Review frozen232 twoPython+three durable docs and actual ordinary local head, then source-bound147 helper with genuine failedadba parent. Ordinary explicit push SAME288 and own exact native147/full5437/all8/Gov/wholequality/all7/six ORIGINAL images through terminal. If real red inspect immediately/fix SAMEPR; never rerun meaningful failure or infer unique cause from genericexit1. Preserve unpublishede50/a718/fbfa graph and separate code-only217/parser219 bounded clearances; whole217 remains NOT_PROMOTABLE until current durable/actual graph/composed runtime requalification. No partial main merge. ScopedGateway223 exact12names/36accessible slots0configured/7referenced defaults absent; serversecretstore UNAVAILABLE_FOR_INSPECTION. Use existing protected ignored .env.production through infra/deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection for AIOFFICE_AI_PRIMARY_BASE_URL, AIOFFICE_AI_PRIMARY_MODEL, AIOFFICE_AI_PRIMARY_AUTHORIZATION together. Actualmodel NOT_RUN_UNEVALUATED; source-only synthetic227 labels/modeloutputs0 are not evalsuccess. Remaining generation/partialbudget/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicatedERPreadonly/Windows/deployment remain. Remote143branch audit225 no newlyeligiblemainmerge; mainad747d unchanged. Do not read V2 attachment before currentcompletion/mainmerge; all originalWITHHELD/failed evidence immutable.'
+      integration_head: 4e1186da9441685a898446e655dc9457575e30bd
+      current_head: adba50af4e265a206745179cfbc80e64acbcc72c
+      integration_backend_head: 4e1186da9441685a898446e655dc9457575e30bd
+      current_backend_head: adba50af4e265a206745179cfbc80e64acbcc72c
+      integration_backend_next: 'Actual4e128 Build38815380781/Gov38815380774 attempt1 is TERMINAL_FAILED/all8 closure6203998841: strict accepted-guard mutant exit0/lines2/unknown-output, child lines unavailable and unique cause under source inspection. Immediately repair SAME288 with strict committed-preflight refusal/full graphs/both cleanup gates; no meaningful-failure rerun. Preserve ordinary locala7188cd/all1274 exact reviewed168; separate native179 copies only independently reviewed166 pair onto corrected168, actual25Python339 PASS177 and inherited154 compiled5589/no fresh dotnet. Review exact179 composition/durable tuple before local checkpoint; no179 push or runtime qualification inferred. Actual checkpointSQL/30s lease feasibility NOT_RUN_UNQUALIFIED, model NOT_RUN_UNEVALUATED, writer unactivated/catalogEMPTY. Original124/142/164 WITHHELD immutable; INT164-1 closes only168. Complete generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, realERP/Windows/deployment. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge.'
+      current_backend_next: 'SAME288 actual parent adba50af4e265a206745179cfbc80e64acbcc72c Build38827116944/Gov38827116942 attempt1 ALL8 TERMINAL_FAILED closure6205581859: positive admission-original-commit exit1 before strict guard-deletion control. Child stdout/closed phase-kind NOT_CAPTURED and unique actual cause UNKNOWN, distinct from predecessor4e mutantexit0. Hosted5437=[6,584,25,4822], Governance/six prerequisites PASS; native116737037769 and wholequality116753183104 all7 read only LOCAL_RUNTIME_RESULT red, browser skipped/zeroartifacts/cleanup success. Minimal221 diagnostic adds only finite120 accepted-query-stage-kind vocabulary to positive reference helper; existing CSharp/production guard/strictnegative/allgraphs/bothcleanup remain RAW unchanged. Focused164 guard+9 strictnegative PASS/source1247 unchanged; inherited .NET5437 actual parent PASS, no new .NET run claimed. Review frozen232 twoPython+three durable docs and actual ordinary local head, then source-bound147 helper with genuine failedadba parent. Ordinary explicit push SAME288 and own exact native147/full5437/all8/Gov/wholequality/all7/six ORIGINAL images through terminal. If real red inspect immediately/fix SAMEPR; never rerun meaningful failure or infer unique cause from genericexit1. Preserve unpublishede50/a718/fbfa graph and separate code-only217/parser219 bounded clearances; whole217 remains NOT_PROMOTABLE until current durable/actual graph/composed runtime requalification. No partial main merge. ScopedGateway223 exact12names/36accessible slots0configured/7referenced defaults absent; serversecretstore UNAVAILABLE_FOR_INSPECTION. Use existing protected ignored .env.production through infra/deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection for AIOFFICE_AI_PRIMARY_BASE_URL, AIOFFICE_AI_PRIMARY_MODEL, AIOFFICE_AI_PRIMARY_AUTHORIZATION together. Actualmodel NOT_RUN_UNEVALUATED; source-only synthetic227 labels/modeloutputs0 are not evalsuccess. Remaining generation/partialbudget/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicatedERPreadonly/Windows/deployment remain. Remote143branch audit225 no newlyeligiblemainmerge; mainad747d unchanged. Do not read V2 attachment before currentcompletion/mainmerge; all originalWITHHELD/failed evidence immutable.'
+    docs/workstreams/backend.yaml:
+      integration_next: 'Actual4e128 Build38815380781/Gov38815380774 attempt1 is TERMINAL_FAILED/all8 closure6203998841: strict accepted-guard mutant exit0/lines2/unknown-output, child lines unavailable and unique cause under source inspection. Immediately repair SAME288 with strict committed-preflight refusal/full graphs/both cleanup gates; no meaningful-failure rerun. Preserve ordinary locala7188cd/all1274 exact reviewed168; separate native179 copies only independently reviewed166 pair onto corrected168, actual25Python339 PASS177 and inherited154 compiled5589/no fresh dotnet. Review exact179 composition/durable tuple before local checkpoint; no179 push or runtime qualification inferred. Actual checkpointSQL/30s lease feasibility NOT_RUN_UNQUALIFIED, model NOT_RUN_UNEVALUATED, writer unactivated/catalogEMPTY. Original124/142/164 WITHHELD immutable; INT164-1 closes only168. Complete generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, realERP/Windows/deployment. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge.'
+      current_next: 'SAME288 actual parent adba50af4e265a206745179cfbc80e64acbcc72c Build38827116944/Gov38827116942 attempt1 ALL8 TERMINAL_FAILED closure6205581859: positive admission-original-commit exit1 before strict guard-deletion control. Child stdout/closed phase-kind NOT_CAPTURED and unique actual cause UNKNOWN, distinct from predecessor4e mutantexit0. Hosted5437=[6,584,25,4822], Governance/six prerequisites PASS; native116737037769 and wholequality116753183104 all7 read only LOCAL_RUNTIME_RESULT red, browser skipped/zeroartifacts/cleanup success. Minimal221 diagnostic adds only finite120 accepted-query-stage-kind vocabulary to positive reference helper; existing CSharp/production guard/strictnegative/allgraphs/bothcleanup remain RAW unchanged. Focused164 guard+9 strictnegative PASS/source1247 unchanged; inherited .NET5437 actual parent PASS, no new .NET run claimed. Review frozen232 twoPython+three durable docs and actual ordinary local head, then source-bound147 helper with genuine failedadba parent. Ordinary explicit push SAME288 and own exact native147/full5437/all8/Gov/wholequality/all7/six ORIGINAL images through terminal. If real red inspect immediately/fix SAMEPR; never rerun meaningful failure or infer unique cause from genericexit1. Preserve unpublishede50/a718/fbfa graph and separate code-only217/parser219 bounded clearances; whole217 remains NOT_PROMOTABLE until current durable/actual graph/composed runtime requalification. No partial main merge. ScopedGateway223 exact12names/36accessible slots0configured/7referenced defaults absent; serversecretstore UNAVAILABLE_FOR_INSPECTION. Use existing protected ignored .env.production through infra/deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection for AIOFFICE_AI_PRIMARY_BASE_URL, AIOFFICE_AI_PRIMARY_MODEL, AIOFFICE_AI_PRIMARY_AUTHORIZATION together. Actualmodel NOT_RUN_UNEVALUATED; source-only synthetic227 labels/modeloutputs0 are not evalsuccess. Remaining generation/partialbudget/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicatedERPreadonly/Windows/deployment remain. Remote143branch audit225 no newlyeligiblemainmerge; mainad747d unchanged. Do not read V2 attachment before currentcompletion/mainmerge; all originalWITHHELD/failed evidence immutable.'
+      integration_head: 4e1186da9441685a898446e655dc9457575e30bd
+      current_head: adba50af4e265a206745179cfbc80e64acbcc72c
+    docs/workstreams/qa-release.yaml:
+      integration_next: 'Actual4e128 Build38815380781/Gov38815380774 attempt1 is TERMINAL_FAILED/all8 closure6203998841: strict accepted-guard mutant exit0/lines2/unknown-output, child lines unavailable and unique cause under source inspection. Immediately repair SAME288 with strict committed-preflight refusal/full graphs/both cleanup gates; no meaningful-failure rerun. Preserve ordinary locala7188cd/all1274 exact reviewed168; separate native179 copies only independently reviewed166 pair onto corrected168, actual25Python339 PASS177 and inherited154 compiled5589/no fresh dotnet. Review exact179 composition/durable tuple before local checkpoint; no179 push or runtime qualification inferred. Actual checkpointSQL/30s lease feasibility NOT_RUN_UNQUALIFIED, model NOT_RUN_UNEVALUATED, writer unactivated/catalogEMPTY. Original124/142/164 WITHHELD immutable; INT164-1 closes only168. Complete generation/partial budgets/residual coverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, realERP/Windows/deployment. Main ad747d0 unchanged; no partial main merge or V2 attachment read before current completion/merge.'
+      current_next: 'SAME288 actual parent adba50af4e265a206745179cfbc80e64acbcc72c Build38827116944/Gov38827116942 attempt1 ALL8 TERMINAL_FAILED closure6205581859: positive admission-original-commit exit1 before strict guard-deletion control. Child stdout/closed phase-kind NOT_CAPTURED and unique actual cause UNKNOWN, distinct from predecessor4e mutantexit0. Hosted5437=[6,584,25,4822], Governance/six prerequisites PASS; native116737037769 and wholequality116753183104 all7 read only LOCAL_RUNTIME_RESULT red, browser skipped/zeroartifacts/cleanup success. Minimal221 diagnostic adds only finite120 accepted-query-stage-kind vocabulary to positive reference helper; existing CSharp/production guard/strictnegative/allgraphs/bothcleanup remain RAW unchanged. Focused164 guard+9 strictnegative PASS/source1247 unchanged; inherited .NET5437 actual parent PASS, no new .NET run claimed. Review frozen232 twoPython+three durable docs and actual ordinary local head, then source-bound147 helper with genuine failedadba parent. Ordinary explicit push SAME288 and own exact native147/full5437/all8/Gov/wholequality/all7/six ORIGINAL images through terminal. If real red inspect immediately/fix SAMEPR; never rerun meaningful failure or infer unique cause from genericexit1. Preserve unpublishede50/a718/fbfa graph and separate code-only217/parser219 bounded clearances; whole217 remains NOT_PROMOTABLE until current durable/actual graph/composed runtime requalification. No partial main merge. ScopedGateway223 exact12names/36accessible slots0configured/7referenced defaults absent; serversecretstore UNAVAILABLE_FOR_INSPECTION. Use existing protected ignored .env.production through infra/deploy-backend.ps1 -EnvironmentFile or approved Worker secret injection for AIOFFICE_AI_PRIMARY_BASE_URL, AIOFFICE_AI_PRIMARY_MODEL, AIOFFICE_AI_PRIMARY_AUTHORIZATION together. Actualmodel NOT_RUN_UNEVALUATED; source-only synthetic227 labels/modeloutputs0 are not evalsuccess. Remaining generation/partialbudget/residualcoverage/terminal-FIRST/scanner/shippedWorker/no-click278/internalIT279/full233, dedicatedERPreadonly/Windows/deployment remain. Remote143branch audit225 no newlyeligiblemainmerge; mainad747d unchanged. Do not read V2 attachment before currentcompletion/mainmerge; all originalWITHHELD/failed evidence immutable.'
+  independent_source_review: PENDING
+  helper_review: PENDING_SOURCE259_NATIVE149
+  actual_model: NOT_RUN_UNEVALUATED
+  release_catalog_entries: 0
+  activation: NOT_ENABLED
+  QA_retired_lease_preserved: true
+  push: false
+  main_merge: false
+  V2_attachment_read: false
