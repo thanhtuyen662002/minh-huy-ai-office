@@ -4,6 +4,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 from types import SimpleNamespace
 import unittest
@@ -35,7 +36,7 @@ class FrontierRootProofTests(unittest.TestCase):
                 proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=None, sql=forbidden)
 
     def oracle(self, fault=None):
-        roots = replays = cursors = migrations = 0; calls = []; queries = []
+        roots = replays = cursors = migrations = 0; cleaned = False; calls = []; queries = []
         def sql(query):
             queries.append(query)
             if query.startswith('SELECT CONVERT(varchar(40)'):
@@ -44,7 +45,25 @@ class FrontierRootProofTests(unittest.TestCase):
                 if fault == 'fifth-fixture': records.append(records[0])
                 frames = cold.cold_frames(query,records)
                 return frames[:-1] if fault == 'truncated-fixture' else frames
+            if query.startswith('/* owned-frontier-outside */'):
+                tables = ('GroupTerminalAdvances', 'GroupTerminalAdvanceKeys', 'GroupTerminalFrontierStates')
+                for table in tables:
+                    self.assertIn('SELECT * FROM aioffice.'+table+' WHERE NOT (', query)
+                self.assertEqual(3, query.count('FOR JSON PATH,INCLUDE_NULL_VALUES'))
+                sources = re.findall(r'BindingId IN \(([^)]+)\)', query)
+                self.assertEqual(3, len(sources))
+                self.assertTrue(all(value == ','.join("'"+row['sourceId']+"'" for row in self.rows) for value in sources))
+                lines = [str(i)+':'+('B' if fault == 'outside-mutation-'+str(i) and roots or
+                    fault == 'cleanup-mutation' and cleaned else 'A')*64 for i in range(3)]
+                if fault == 'outside-private': return 'PRIVATE_SQL_PASSWORD'
+                if fault == 'outside-missing': lines.pop()
+                if fault == 'outside-duplicate': lines[1] = lines[0]
+                if fault == 'outside-truncated': lines[2] = lines[2][:-1]
+                if fault == 'outside-extra': lines.append('3:'+'A'*64)
+                return '\n'.join(lines)
             if query.startswith('SELECT COUNT(*) FROM aioffice.'):
+                if 'BindingId IN (' not in query: return str(roots+4)
+                self.assertIn(f"TenantId='{self.tenant}' AND CompanyId='{self.company}'", query)
                 if fault == 'preexisting': return '1'
                 return str(roots + (1 if roots and fault == 'extra-frontier' else -1 if roots and fault == 'missing-frontier' else 0))
             if query.startswith('SET NOCOUNT ON;'):
@@ -63,7 +82,7 @@ class FrontierRootProofTests(unittest.TestCase):
                 return '\n'.join(lines)
             self.fail('Unexpected SQL shape')
         def process(command, **arguments):
-            nonlocal roots, replays, cursors, migrations
+            nonlocal roots, replays, cursors, migrations, cleaned
             calls.append((command, arguments))
             if command[:2] == ['docker', 'build']:
                 if fault == 'build-timeout': raise subprocess.TimeoutExpired(command, arguments['timeout'])
@@ -103,6 +122,7 @@ class FrontierRootProofTests(unittest.TestCase):
                     return SimpleNamespace(returncode=0, stdout='a'*64+'|'+'b'*32, stderr='')
                 return SimpleNamespace(returncode=1, stdout='', stderr='Error: No such object: '+command[-1])
             if command[:3] == ['docker', 'image', 'rm']:
+                cleaned = True
                 return SimpleNamespace(returncode=1 if fault == 'cleanup' else 0, stdout='', stderr='')
             self.fail('Unexpected process or unowned container removal')
         return sql, process, calls, queries
@@ -136,6 +156,26 @@ class FrontierRootProofTests(unittest.TestCase):
         for table in ('GroupWorkRawDispositions', 'GroupBatchClaimReceipts', 'GroupBatchTerminalReceipts', 'TaskCheckpoints'):
             self.assertTrue(all(table in query for query in originals))
         self.assertTrue(all('INCLUDE_NULL_VALUES' in query and 'SELECT *' in query for query in originals+frontiers))
+        self.assertEqual(16, len([q for q in queries if q.startswith('/* owned-frontier-outside */')]))
+
+    def test_legacy_company_wide_zero_count_refuses_existing_independent_frontiers(self):
+        sql, process, calls, _ = self.oracle()
+        def legacy_count(query):
+            if query.startswith('SELECT COUNT(*) FROM aioffice.'):
+                query = query.split(' AND BindingId IN (', 1)[0]+';'
+            return sql(query)
+        with self.assertRaises(AssertionError), patch('sys.stdout', new_callable=io.StringIO) as output:
+            self.run_proof(legacy_count, process)
+        self.assertEqual([], calls); self.assertEqual('', output.getvalue())
+
+    def test_outside_frontier_protocol_refuses_partial_duplicate_or_private_digests_before_children(self):
+        for fault in ('outside-private', 'outside-missing', 'outside-duplicate', 'outside-truncated', 'outside-extra'):
+            sql, process, calls, _ = self.oracle(fault)
+            with self.subTest(fault=fault), self.assertRaises(AssertionError) as error, \
+                    patch('sys.stdout', new_callable=io.StringIO) as output:
+                self.run_proof(sql, process)
+            self.assertEqual([], calls); self.assertEqual('', output.getvalue())
+            self.assertNotIn('PRIVATE_SQL_PASSWORD', str(error.exception))
 
     def test_incomplete_closed_frames_or_preexisting_effects_refuse_before_any_process(self):
         for fault in ('fifth-fixture', 'truncated-fixture', 'truncated-original', 'duplicate-digest', 'preexisting'):
@@ -147,7 +187,8 @@ class FrontierRootProofTests(unittest.TestCase):
     def test_failure_timeout_changed_history_or_replay_never_emit_success_and_always_attempt_owned_cleanup(self):
         for fault in ('build', 'build-timeout', 'root-timeout', 'replay-timeout', 'missing-success', 'duplicate-success',
                 'wrong-success', 'wrong-replay', 'exit', 'stderr', 'extra-frontier', 'missing-frontier', 'original-mutation',
-                'truncated-frontier', 'replay-mutation', 'prior-frontier-mutation', 'foreign-container', 'cleanup'):
+                'truncated-frontier', 'replay-mutation', 'prior-frontier-mutation', 'foreign-container', 'cleanup',
+                'outside-mutation-0', 'outside-mutation-1', 'outside-mutation-2', 'cleanup-mutation'):
             sql, process, calls, _ = self.oracle(fault)
             with self.subTest(fault=fault), self.assertRaises((AssertionError, subprocess.TimeoutExpired)), patch('sys.stdout', new_callable=io.StringIO) as output:
                 self.run_proof(sql, process)

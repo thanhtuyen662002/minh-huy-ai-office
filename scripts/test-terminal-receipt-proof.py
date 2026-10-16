@@ -56,7 +56,7 @@ class TerminalReceiptProofTests(unittest.TestCase):
                 proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=None, sql=forbidden)
 
     def oracle(self, fault=None):
-        phase = 0; calls = []; queries = []
+        phase = 0; cleaned = False; calls = []; queries = []
         def sql(query):
             queries.append(query)
             if query.startswith('SELECT CONVERT(varchar(40)'):
@@ -71,14 +71,31 @@ class TerminalReceiptProofTests(unittest.TestCase):
                     records.append(item)
                 text = cold.cold_frames(query,records)
                 return text[:-1] if fault == 'truncated-fixture' else text
+            if query.startswith('/* owned-terminal-outside */'):
+                self.assertIn('SELECT * FROM aioffice.GroupBatchTerminalReceipts WHERE NOT (', query)
+                self.assertIn('ORDER BY TenantId,CompanyId,BindingId,BatchId FOR JSON PATH,INCLUDE_NULL_VALUES', query)
+                pairs = re.findall(r"BindingId='([^']+)' AND BatchId='([^']+)'", query)
+                self.assertEqual([(row['sourceId'], row['batchId']) for row in self.rows], pairs)
+                if fault == 'outside-malformed': return 'PRIVATE_SQL_PASSWORD'
+                if fault == 'outside-truncated': return 'A'*63
+                if fault == 'outside-extra': return 'A'*64+'\n'+'B'*64
+                return ('B' if (phase and fault == 'outside-mutation') or
+                    (cleaned and fault == 'cleanup-mutation') else 'A')*64
             if query.startswith('SET NOCOUNT ON;'):
                 count = query.count('SELECT CONCAT')
                 return '\n'.join(str(i)+':'+('B' if fault == 'original-mutation' and phase else 'A')*64 for i in range(count))
             if query.startswith('SELECT COUNT(*) FROM aioffice.GroupBatchTerminalReceipts'):
+                # Four earlier independent batches coexist in this company.
+                # Another batch on an original binding and foreign scopes must
+                # also be excluded by the exact source/batch cohort.
+                pairs = re.findall(r"BindingId='([^']+)' AND BatchId='([^']+)'", query)
+                if not pairs: return str(phase + 5)
+                self.assertEqual([(row['sourceId'], row['batchId']) for row in self.rows], pairs)
+                self.assertIn(f"TenantId='{self.tenant}' AND CompanyId='{self.company}'", query)
                 return str(phase + (1 if fault == 'extra-receipt' and phase else -1 if fault == 'missing-receipt' and phase else 0))
             self.fail('Unexpected SQL shape')
         def process(command, **kwargs):
-            nonlocal phase
+            nonlocal phase, cleaned
             calls.append((command, kwargs))
             if command[:2] == ['docker', 'build']:
                 return SimpleNamespace(returncode=1 if fault == 'build' else 0, stdout='', stderr='')
@@ -92,6 +109,7 @@ class TerminalReceiptProofTests(unittest.TestCase):
             if command[:2] == ['docker', 'inspect']:
                 return SimpleNamespace(returncode=1, stdout='', stderr='Error: No such object: '+command[-1])
             if command[:3] == ['docker', 'image', 'rm']:
+                cleaned = True
                 return SimpleNamespace(returncode=1 if fault == 'cleanup' else 0, stdout='', stderr='')
             self.fail('Unexpected process')
         return sql, process, calls, queries
@@ -111,6 +129,28 @@ class TerminalReceiptProofTests(unittest.TestCase):
         snapshots = [query for query in queries if query.startswith('SET NOCOUNT ON;')]
         self.assertEqual(5, len(snapshots))
         self.assertTrue(all('GroupWorkRawDispositions' in query and 'GroupTerminalFrontierStates' in query for query in snapshots))
+        self.assertEqual(6, len([q for q in queries if q.startswith('/* owned-terminal-outside */')]))
+
+    def test_legacy_company_wide_zero_count_refuses_preexisting_independent_receipts(self):
+        sql, process, calls, _ = self.oracle()
+        def legacy_count(query):
+            if query.startswith('SELECT COUNT(*) FROM aioffice.GroupBatchTerminalReceipts'):
+                query = query.split(' AND (', 1)[0]+';'
+            return sql(query)
+        with patch.dict(os.environ, self.environment, clear=True), patch.object(proof.subprocess, 'run', process), \
+                patch('sys.stdout', new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
+            proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=self.manifest, sql=legacy_count)
+        self.assertEqual([], calls); self.assertEqual('', output.getvalue())
+
+    def test_outside_digest_protocol_refuses_private_or_incomplete_values_before_children(self):
+        for fault in ('outside-malformed', 'outside-truncated', 'outside-extra'):
+            sql, process, calls, _ = self.oracle(fault)
+            with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), \
+                    patch.object(proof.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output, \
+                    self.assertRaises(AssertionError) as error:
+                proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=self.manifest, sql=sql)
+            self.assertEqual([], calls); self.assertEqual('', output.getvalue())
+            self.assertNotIn('PRIVATE_SQL_PASSWORD', str(error.exception))
 
     def test_separate_exhaustion_receipt_does_not_replace_or_expand_original_four(self):
         sql, process, calls, queries = self.oracle('extra-exhaustion')
@@ -155,7 +195,7 @@ class TerminalReceiptProofTests(unittest.TestCase):
         self.assertEqual([],calls); self.assertEqual('',output.getvalue())
 
     def test_terminal_failures_never_emit_success_and_always_attempt_owned_cleanup(self):
-        for fault in ('build', 'missing-success', 'duplicate-success', 'wrong-success', 'exit', 'stderr', 'original-mutation', 'missing-receipt', 'extra-receipt', 'cleanup'):
+        for fault in ('build', 'missing-success', 'duplicate-success', 'wrong-success', 'exit', 'stderr', 'original-mutation', 'missing-receipt', 'extra-receipt', 'cleanup', 'outside-mutation', 'cleanup-mutation'):
             sql, process, calls, _ = self.oracle(fault)
             with self.subTest(fault=fault), patch.dict(os.environ, self.environment, clear=True), patch.object(proof.subprocess, 'run', process), patch('sys.stdout', new_callable=io.StringIO) as output, self.assertRaises(AssertionError):
                 proof.verify(directory=self.directory, api='http://127.0.0.1:8080', manifest=self.manifest, sql=sql)

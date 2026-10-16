@@ -68,6 +68,17 @@ def verify(*, directory, api, manifest, sql):
     query = original_roles.frames_query(tenant, company)
     fixtures = require_fixture_frames(sql(query), tenant, company)
     source_list = ','.join("'" + value["sourceId"] + "'" for value in fixtures)
+    cohort = base + " AND (" + ' OR '.join(
+        f"(BindingId='{row['sourceId']}' AND BatchId='{row['batchId']}')" for row in fixtures) + ")"
+
+    def outside_receipts():
+        # Earlier independent batch proofs may already have committed terminal
+        # rows. Preserve every full row outside these exact four originals.
+        value = sql("/* owned-terminal-outside */ SELECT CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+            f"(SELECT * FROM aioffice.GroupBatchTerminalReceipts WHERE NOT ({cohort}) "
+            "ORDER BY TenantId,CompanyId,BindingId,BatchId FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2);")
+        assert type(value) is str and re.fullmatch(r'[0-9A-F]{64}', value), 'Retained terminal digest shape differs'
+        return value
     original_tables = [(table, order) for table, order in automatic.SOURCE_TABLES if table not in ("GroupBatchClaimStates", "GroupBatchClaimReceipts")]
     original_tables += [("GroupWorkRawDispositions", "BatchId,CommittedSequence"), ("GroupTerminalFrontierStates", "BindingId")]
     def original_snapshot():
@@ -90,7 +101,8 @@ def verify(*, directory, api, manifest, sql):
         assert all(re.fullmatch(str(index) + r":[0-9A-F]{64}", line.strip()) for index, line in enumerate(lines))
         return tuple(line.strip() for line in lines)
     original = original_snapshot()
-    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchTerminalReceipts WHERE {base};") == "0"
+    retained = outside_receipts()
+    assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchTerminalReceipts WHERE {cohort};") == "0"
     suffix = uuid.uuid4().hex
     image = "aioffice-automatic-note-proof-" + suffix
     environment = dict(os.environ)
@@ -112,7 +124,8 @@ def verify(*, directory, api, manifest, sql):
             assert not result.stderr, "Owned terminal executable emitted unexpected diagnostics"
             reference.require_reference_result(result, "terminal-commit", [SUCCESS])
             assert original_snapshot() == original, "Terminal phase changed original source effects grants or frontier"
-            assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchTerminalReceipts WHERE {base};") == str(index + 1)
+            assert sql(f"SELECT COUNT(*) FROM aioffice.GroupBatchTerminalReceipts WHERE {cohort};") == str(index + 1)
+            assert outside_receipts() == retained, 'Terminal phase changed a retained terminal receipt'
     except BaseException as error:
         failure = error
     finally:
@@ -123,6 +136,10 @@ def verify(*, directory, api, manifest, sql):
         try:
             removed = subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30)
             if removed.returncode != 0 and failure is None: failure = AssertionError("Owned terminal image cleanup failed")
+        except BaseException as error:
+            if failure is None: failure = error
+        try:
+            assert outside_receipts() == retained, 'Terminal cleanup changed a retained terminal receipt'
         except BaseException as error:
             if failure is None: failure = error
     if failure is not None: raise failure

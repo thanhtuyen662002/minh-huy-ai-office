@@ -107,6 +107,21 @@ def verify(*, directory, api, manifest, sql):
     query = original_roles.frames_query(tenant, company, require_terminal=True)
     fixtures = terminal.require_fixture_frames(sql(query), tenant, company)
     sources = ','.join("'" + x["sourceId"] + "'" for x in fixtures)
+    cohort = base + f" AND BindingId IN ({sources})"
+    def outside_frontiers():
+        statements = []
+        for index, (table, order) in enumerate((("GroupTerminalAdvances", "Version"),
+                ("GroupTerminalAdvanceKeys", "KeyId"), ("GroupTerminalFrontierStates", "BindingId"))):
+            ordered = ','.join(dict.fromkeys(('TenantId', 'CompanyId', 'BindingId', *order.split(','))))
+            statements.append("SELECT CONCAT(N'" + str(index) + ":',CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),COALESCE("
+                f"(SELECT * FROM aioffice.{table} WHERE NOT ({cohort}) ORDER BY {ordered} "
+                "FOR JSON PATH,INCLUDE_NULL_VALUES),N'[]'))),2));")
+        value = sql('/* owned-frontier-outside */\n' + '\n'.join(statements))
+        assert type(value) is str and len(value) <= 256, 'Retained frontier digest shape differs'
+        lines = value.splitlines()
+        assert len(lines) == 3 and all(re.fullmatch(str(i) + r':[0-9A-F]{64}', line) for i, line in enumerate(lines)), \
+            'Retained frontier digest shape differs'
+        return tuple(lines)
     tables = list(automatic.SOURCE_TABLES) + [("GroupWorkRawDispositions", "BatchId,CommittedSequence"), ("GroupBatchTerminalReceipts", "BindingId,BatchId")]
     def original_snapshot():
         queries = [(table, ','.join(dict.fromkeys(("BindingId", *order.split(',')))), base + f" AND BindingId IN ({sources})") for table, order in tables]
@@ -133,8 +148,9 @@ def verify(*, directory, api, manifest, sql):
         return tuple(x.strip() for x in lines)
     def counts(expected):
         for table in ("GroupTerminalAdvances", "GroupTerminalAdvanceKeys", "GroupTerminalFrontierStates"):
-            assert sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {base};") == str(expected)
-    original = original_snapshot(); counts(0)
+            assert sql(f"SELECT COUNT(*) FROM aioffice.{table} WHERE {cohort};") == str(expected)
+        assert outside_frontiers() == retained, 'Frontier phase changed retained frontier rows'
+    original = original_snapshot(); retained = outside_frontiers(); counts(0)
     suffix = uuid.uuid4().hex; image = "aioffice-automatic-note-proof-" + suffix
     environment = dict(os.environ)
     environment.pop('AIOFFICE_GROUP_CURSOR_PROOF_OPERATOR_CONNECTION', None)
@@ -199,6 +215,10 @@ def verify(*, directory, api, manifest, sql):
         try:
             removed = subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=30)
             if removed.returncode != 0 and failure is None: failure = AssertionError("Owned frontier image cleanup failed")
+        except BaseException as error:
+            if failure is None: failure = error
+        try:
+            assert outside_frontiers() == retained, 'Frontier cleanup changed retained frontier rows'
         except BaseException as error:
             if failure is None: failure = error
     if failure is not None: raise failure
