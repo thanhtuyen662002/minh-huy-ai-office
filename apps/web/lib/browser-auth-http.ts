@@ -16,12 +16,12 @@ export function setPrivateBrowserCookie(response: NextResponse, settings: Browse
   response.cookies.set({ name, value, maxAge, httpOnly: true, secure: !settings.localHttp, sameSite: "lax", path: "/" });
 }
 
-export async function readBrowserCompany(request: Request): Promise<string | null> {
+async function readLoginBody(request: Request): Promise<unknown> {
   if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") return null;
   const reader = request.body?.getReader();
   if (!reader) return null;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  async function consume(): Promise<string | null> {
+  async function consume(): Promise<unknown> {
     const chunks: Uint8Array[] = [];
     let length = 0;
     while (true) {
@@ -38,8 +38,7 @@ export async function readBrowserCompany(request: Request): Promise<string | nul
     let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    return value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).join(",") === "companyId"
-      && isCanonicalCompanyId(value.companyId) ? value.companyId : null;
+    return value;
   }
   try {
     return await Promise.race([consume(), new Promise<null>((resolve) => {
@@ -47,4 +46,20 @@ export async function readBrowserCompany(request: Request): Promise<string | nul
     })]);
   } catch { return null; }
   finally { clearTimeout(timer); reader.releaseLock(); }
+}
+
+export async function readBrowserCompany(request: Request): Promise<string | null> {
+  const value = await readLoginBody(request);
+  return value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).join(",") === "companyId"
+    && isCanonicalCompanyId((value as { companyId?: unknown }).companyId) ? (value as { companyId: string }).companyId : null;
+}
+
+export async function readBrowserLogin(request: Request): Promise<Readonly<{ companyId: string | null }> | null> {
+  const value = await readLoginBody(request);
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (Object.keys(value).join(",") === "discoverCompanies" && (value as { discoverCompanies?: unknown }).discoverCompanies === true)
+    return Object.freeze({ companyId: null });
+  if (Object.keys(value).join(",") === "companyId" && isCanonicalCompanyId((value as { companyId?: unknown }).companyId))
+    return Object.freeze({ companyId: (value as { companyId: string }).companyId });
+  return null;
 }

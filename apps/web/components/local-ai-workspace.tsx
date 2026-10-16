@@ -313,7 +313,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
           || Object.keys(preparation).join(",") !== "ok" || Object.getOwnPropertyDescriptor(preparation, "ok")?.value !== true) throw new Error();
         const started = await fetch("/api/local/session/oidc/start", {
           method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
-          headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }),
+          headers: { "Content-Type": "application/json" }, body: JSON.stringify({ discoverCompanies: true }),
         });
         const payload = await readJson(started);
         if (!isCurrent(generation)) return;

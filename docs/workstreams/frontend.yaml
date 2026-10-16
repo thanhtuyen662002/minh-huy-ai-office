@@ -2,13 +2,14 @@ workstream: frontend
 role: Frontend Product
 status: active-development
 current_issue: 273
-current_pr: null
+current_pr: 293
 current_branch: codex/273-provider-company-selection
-head: f5c42b0
+head: b5afcc7b7cd8d7804eb9f123a45d75a80e894ebe
+head_semantics: previous_committed_checkpoint_before_this_update
 state: in_progress
 lease_owner: integration-review-273
-lease_heartbeat_at: '2026-10-16T09:10:19.138604+00:00'
-last_checkpoint_at: '2026-10-16T09:10:19.138604+00:00'
+lease_heartbeat_at: '2026-10-16T09:26:00+00:00'
+last_checkpoint_at: '2026-10-16T09:26:00+00:00'
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
@@ -17,6 +18,7 @@ scope:
   - trusted-configuration-and-encrypted-transaction-cookie
   - fresh-company-authority-and-actual-browser-proof
 verification:
+  provider_company_273: 'ADR committed before behavior. Ordinary login uses v2 identity-only discovery; Redis encrypted one-shot preselection and dedicated no-workspace chooser; existing v1 explicit switches and issued SID delivery ack retained. Local209 existing OIDC/authority/store +34 new protocol +6 chooser +19 login UI PASS, TypeScript/production Next build PASS. First full web1347PASS/1 old default-company assertionFAIL/25 actualRedis SKIP; assertion updated for intentional discovery request, final full web1354PASS/25 actualRedis SKIP, TypeScript PASS. Five new Redis controls are mandatory hosted. Node39 focused/browser controls and two Python fixture controls PASS; no actual SQL/Chromium yet. Actual SQL/Chromium and 25 Redis cases require exact new-head CI; no acceptance/merge approval.'
   shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. Exactbac shipping-default and compatibility profile controls, full Chromium/retained stack gates and independent full frozen acceptance review PASS; no customer/config/credential/OS changes.'
   chromium_verified_head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
   chromium_verified_build: 37648878161
@@ -108,7 +110,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: 'Claim Draft273 from accepted mainad747d0; implement ADR provider discovery/preselection, fresh target authority and owned SQL/Chromium. Prior260 verification below is historical; no273 runtime acceptance yet.'
+next_action: 'Own PR293 exact implementation-head CI through terminal; inspect actual Redis plus two nondefault-only provider identities/chooser/reload/source/history/revoke/restore in Chromium, repair real failures on SAME293, then request independent source/acceptance review. Prior260 records remain historical; no273 runtime acceptance yet.'
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
@@ -131,6 +133,6 @@ implementation_checkpoint:
 provider_company_preselection_273:
   base: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
   architecture: docs/architecture/ADR_PROVIDER_COMPANY_PRESELECTION.md
-  status: architecture-checkpoint-before-code
+  status: implementation-checkpoint-awaiting-owned-CI
   actual_SQL_Chromium: NOT_RUN
   constraints: no-default-membership-workaround; no-browser-company-authority; no-private-workspace-before-issued-session

@@ -9,6 +9,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { verifyCompanyAdministrators } from "./smoke-browser-administrators.mjs";
 import { verifyTaskHistory } from "./smoke-browser-task-history.mjs";
 import { verifyTaskSubmission } from "./smoke-browser-task-submission.mjs";
+import { verifyCompanyPreselection } from "./smoke-browser-company-preselection.mjs";
 
 let stage = "disposable-fixture-guard", browser, safeFailureLogs, restoreCoreTransport;
 const requireProof = condition => { if (!condition) throw new Error("Browser proof failed."); };
@@ -550,6 +551,7 @@ try {
     setStage: value => { stage = value; } });
   await verifyTaskSubmission({ directory, manifest, browser, ownerPage: page, ownerContext: context, sql, app, identity,
     coreReplyFault, setStage: value => { stage = value; } });
+  await verifyCompanyPreselection({ directory, manifest, browser, sql, app, identity, setStage: value => { stage = value; } });
   stage = "sanitized-ui-artifact";
   requireProof(!JSON.stringify(await current()).includes(manifest.AIOFFICE_OWNER_PASSWORD));
   const artifact = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof"); await mkdir(artifact, { recursive: true });

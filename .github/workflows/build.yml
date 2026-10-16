@@ -147,7 +147,9 @@ jobs:
       - name: Verify adversarial fixture execution boundary
         run: |
           python scripts/test-owned-stack-guard.py
+          python scripts/test-provider-company-fixture.py
           node --test scripts/test-browser-administrators-guard.mjs scripts/test-owned-browser-submission-lifecycle.mjs
+          node --test scripts/test-provider-company-preselection.mjs
       - name: Verify private configuration replay and browser key
         shell: pwsh
         run: ./scripts/test-local-config.ps1
@@ -169,6 +171,7 @@ jobs:
             ${{ runner.temp }}/aioffice-browser-proof/administrators.png
             ${{ runner.temp }}/aioffice-browser-proof/task-history.png
             ${{ runner.temp }}/aioffice-browser-proof/task-submission.png
+            ${{ runner.temp }}/aioffice-browser-proof/company-signin.png
             ${{ runner.temp }}/aioffice-browser-proof/group-inbox.png
             ${{ runner.temp }}/aioffice-browser-proof/group-inbox-mobile.png
           if-no-files-found: error

@@ -53,7 +53,7 @@ it("settles binding before start and navigates only to the configured Code/S256 
   await waitFor(() => expect(navigation).toHaveBeenCalledWith(authorization()));
   const [url, init] = fetcher.mock.calls[2];
   expect(url).toBe("/api/local/session/oidc/start");
-  expect(JSON.parse(init.body)).toEqual({ companyId: company });
+  expect(JSON.parse(init.body)).toEqual({ discoverCompanies: true });
   expect(init.signal).toBeUndefined(); expect(init.redirect).toBe("error"); expect(init.cache).toBe("no-store");
   expect(fetcher.mock.calls.some(([path]) => path === "/api/local/session/login")).toBe(false);
   expect(container.innerHTML).not.toMatch(/private-access|code_verifier|client_secret/);

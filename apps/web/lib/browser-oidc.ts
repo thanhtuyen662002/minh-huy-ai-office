@@ -76,8 +76,8 @@ export function oidcStartIsSameOrigin(request: Request, settings: BrowserOidcSet
 }
 
 export type OidcTransaction = Readonly<{
-  version: 1;
-  companyId: string;
+  version: 1 | 2;
+  companyId: string | null;
   issuedAt: number;
   expiresAt: number;
   state: string;
@@ -90,6 +90,16 @@ export function createOidcTransaction(companyId: string, now = Math.floor(Date.n
     || !Number.isSafeInteger(now + OIDC_TRANSACTION_SECONDS)) throw new Error("Invalid login transaction.");
   const random = () => randomBytes(32).toString("base64url");
   return Object.freeze({ version: 1, companyId, issuedAt: now, expiresAt: now + OIDC_TRANSACTION_SECONDS,
+    state: random(), nonce: random(), verifier: random() });
+}
+
+// A discovery transaction authenticates an identity, never a default company.
+// The existing v1 transaction remains the explicit signed-in company switch.
+export function createCompanyDiscoveryTransaction(now = Math.floor(Date.now() / 1000)): OidcTransaction {
+  if (!Number.isSafeInteger(now) || now < 0 || !Number.isSafeInteger(now + OIDC_TRANSACTION_SECONDS))
+    throw new Error("Invalid login transaction.");
+  const random = () => randomBytes(32).toString("base64url");
+  return Object.freeze({ version: 2, companyId: null, issuedAt: now, expiresAt: now + OIDC_TRANSACTION_SECONDS,
     state: random(), nonce: random(), verifier: random() });
 }
 
@@ -128,7 +138,7 @@ export function openOidcTransaction(
     const value = JSON.parse(Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8"));
     if (!value || typeof value !== "object" || Array.isArray(value)
       || Object.keys(value).sort().join(",") !== "companyId,expiresAt,issuedAt,nonce,state,verifier,version"
-      || value.version !== 1 || !isCanonicalCompanyId(value.companyId)
+      || !((value.version === 1 && isCanonicalCompanyId(value.companyId)) || (value.version === 2 && value.companyId === null))
       || !Number.isSafeInteger(value.issuedAt) || value.issuedAt < 0 || value.issuedAt > now + 10
       || !Number.isSafeInteger(value.expiresAt) || value.expiresAt !== value.issuedAt + OIDC_TRANSACTION_SECONDS || value.expiresAt <= now
       || [value.state, value.nonce, value.verifier].some((item) => typeof item !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(item))) return null;

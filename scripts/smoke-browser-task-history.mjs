@@ -1,6 +1,7 @@
 // Shipping archive UI against the owned disposable SQL and two Code/S256 sessions.
 import { resolve, join } from "node:path";
 import { readFile, mkdir } from "node:fs/promises";
+import { finishCompanyDiscovery } from "./owned-browser-company-discovery.mjs";
 
 export async function verifyTaskHistory({ directory, manifest, browser, ownerPage, ownerContext, sql, app, identity, setStage }) {
   const requireProof = condition => { if (!condition) throw new Error("Task history browser proof failed."); };
@@ -103,7 +104,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     await ownerPage.getByRole("button", { name: "Đăng xuất", exact: true }).click();
     const callback = ownerPage.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     await ownerPage.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click();
-    requireProof((await callback).status() === 303); await ownerPage.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
+    await finishCompanyDiscovery(ownerPage, app, selected, await callback); await ownerPage.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
     requireProof((await cookie(ownerContext)) && (await cookie(ownerContext)) !== oldSid);
     await openHistory(ownerPage); await openCompleted(ownerPage);
     console.log("PASS actual shipping owner history completed/pending/failed/detail, reload and new issued-session recovery without task rerun");
@@ -120,7 +121,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     const otherCallback = secondary.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     await secondary.locator("#username").fill(fixture.otherUsername); await secondary.locator("#password").fill(manifest.AIOFFICE_OWNER_PASSWORD);
     stage("second-provider-default-company-callback");
-    await secondary.locator("#kc-login").click(); requireProof((await otherCallback).status() === 303);
+    await secondary.locator("#kc-login").click(); await finishCompanyDiscovery(secondary, app, originalCompany, await otherCallback);
     await secondary.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor();
     const initial = await get(secondary, "/api/local/session?companyId=" + originalCompany), initialSid = await cookie(secondaryContext);
     requireProof(initial.status === 200 && initial.cache === "no-store" && JSON.parse(initial.text).userId === fixture.otherUserId
@@ -169,7 +170,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     requireProof(await ownerPage.getByText(answer, { exact: true }).count() === 0 && await ownerPage.getByText(question, { exact: true }).count() === 0);
     sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${ownerMember};`);
     const restored = ownerPage.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
-    await ownerPage.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click(); requireProof((await restored).status() === 303);
+    await ownerPage.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click(); await finishCompanyDiscovery(ownerPage, app, selected, await restored);
     await ownerPage.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); await openHistory(ownerPage); await openCompleted(ownerPage);
     requireProof(snapshot().every((value, index) => value === before[index]));
     console.log("PASS shipping late body/company-switch fence, external membership loss/private clearing and restored archive with unchanged tasks/dispatches/identity/roles/audits/credit settlements");
