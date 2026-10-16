@@ -6,16 +6,16 @@ priority_rule: security-critical > production-blocker > active-issue > verified-
 current_issue: 233
 current_branch: codex/278-group-automatic-notes
 current_pr: 288
-current_target_head: ef9c1f0580bf552e34186e96ffaa28de7551f491
+current_target_head: 5437fad97574199359a533bc31deee48d41f9df6
 last_verified_commit: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 critical_paths:
   backend:
     issue: 278
     pr: 288
     branch: codex/278-group-automatic-notes
-    head: ef9c1f0580bf552e34186e96ffaa28de7551f491
+    head: 5437fad97574199359a533bc31deee48d41f9df6
     state: in_progress
-    next: "SAME288 actual331 ef9c1f0 Build38857087053/Gov38857086977 attempt1 ALL8 TERMINAL_FAILED closure6209524951, native116830882523 verify-counts/invariant/111; hosted5677=[6,584,25,5062] PASS/root receipt6209199559. Preserve original run through all8terminal/wholequality/all7/cleanup/images if reached, entirequality116843116164/all7 read only LOCAL_RUNTIME_RESULTred, browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. No rerun/cancel. Private actual SQL339 reproduces restored-batch-commit at RequireCompletedCounts, verify-counts/invariant/reads111 after fixed processor returns; owned fixture338 now uses actual EnvelopeHash and no production changes.340 corrects PROOF ONLY: existing two-media fixture requires three notes (one AI plus UnsupportedMedia and SecretQuarantine), four evidence refs, one work/outbox/terminal/frontier. Parent exact graph now3|3|4|1|2|2|1|3|1|1|1|1; new source-linked unit test and parent negatives reject old one-note/missing-host graphs. No guard or host attention removed. Full5678=[6,584,25,5063]/format/172guard9strictnegative plus parent suite PASS/all1275 unchanged.343 fresh own SQL nine separate processes PASS, actual denied sidecar-companion recovery and original-sidecar-companion expired-terminal-FIRST recovery PASS, container/volumes removed. These private directSQL fixtures are operator seeded, not Core/broker/full hosted149/browser/model qualification. Code344 frozen, helper345 current38 updated only original-admission and restoredCPP RAW, separate147 bridge corrects exact graph count and retains all144/inherited guards; seven inert346 controls PASS. Independent source/helper review PENDING. Current355 durable replaces failed352 preparation which emitted no output because old run transitioned to terminal. Ordinary same288 checkpoint/fresh push now possible after exact ef9 closure. After exact ef9 closure/review, fresh149/full5678/all8/Gov/wholequality/all7/sixoriginalPNGs required for successor and root owns throughterminal. Separate first-path351 preflight passed empty commit then failed own extra Result SELECT denial during allocation-phase count verification; shipped empty/host deny three tables, model four. Correct private harness separately without changing shipping proof or claiming a product defect. Future316 versioned owner policy contextv3/originalV4 plus local Worker-only existing Gateway forwarding remains separate UNCOMMITTED/NOT_INCLUDED; do not mix before restored correction qualified. Preserve all previous closures/WITHHELD/corpus227/blind244/human292. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY; same existing Gateway/config247, no new client/config store. Continue full278 continuation/global residual spending/partial contributor preservation/coverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated ERP readonly for Medcom/Novo inventory/import-export, Windows lifecycle and actual deployment remain. Mainad747d unchanged; V2 unread until currentcompletion/mainmerge."
+    next: "SAME288 actual3565437fad Build38861583635/Gov38861583640 attempt1 ALL8 TERMINAL_FAILED closure6210642420. Initial invalidation require_grants reports Invalidation exact grants differ before fresh fixture; actual hosted tuple NOT_CAPTURED. Full current345149 parse23missing/no duplicates4failure179PASSpartial; hosted5678/Gov PASS, entirequality116867049176/all7 read only localruntime red, browser/artifact skipped0images/cleanupSUCCESS. Restored three-note/four-evidence and firstempty/host/syntheticmodel aggregates passed with original graphs/permission/cleanup/terminal-FIRST controls; no whole149/model qualification. Fresh private396 actual unchanged migrations yield2|4|0 explicit catalog but13columns and runtime effectiveSELECT/INSERT1 UPDATE0 allcolumns0. 398 fixes PROOF ONLY: retain exact object grant2/deny4/schema13, inspect actual aioffice_runtime effectiveSELECT/INSERT and denied UPDATE/DELETE/ALTER/CONTROL/TAKE OWNERSHIP plus all13 column rights; never demand13 redundant physical DENY rows. Actual private399 uses exact new nested oracle against fresh own migrated SQL: baseline/restore positives pass; actual column GRANT override, missing explicit SELECT and extra schema column refuse; all7cases/source340 unchanged/container-volumes removed. Code398 two Python paths only;9 parent/11 fixture/172 ownedguard tests PASS,1273 outsideRAW equal including allC#/project/config; inherit current hosted5678, no redundant local.NET rerun. Current402 additive durable/source frozen; source/helper review PENDING. Preserve old failed evidence and exact6 plus broader5 accepted-result guards, diagnostics323, corrected3notes4refs, old source reads/expiry/strictnegative/all cleanup. Next scoped independent code/durable/helper review, ordinary SAME288 successor/full current149/full5678/all8/Gov/entirequality-all7/six ORIGINAL PNGs through terminal; fix realred SAMEPR without meaningful-failure rerun/cancel. Separate installer239439bfd Build38868597535/Gov38868597539 attempt1 active owned, source/runtime386/helper391 scopedCLEAR; acceptedmainad payload excludes288, actual hosted.NET2103 and Windows job pass but full9/artifacts/runtime closure pending. Future316 humanpolicy contextv3/originalV4+local Worker existing Gateway forwarding remains separate/uncommitted/excluded; reconciliation388 identifies only test-owned-stack-guard overlap. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY, scoped3640/36settings0/7files/serverstoreUNAVAILABLE; sameGateway only. Continue full278 generations/global residual spending/partial contributors/rawcoverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated readonly Medcom/Novo inventory/import-export, actual cleanWindows/signing and production deployment remain. Mainad747d unchanged/V2 unread until currentcompletion/mainmerge."
   erp_data:
     issue: 264
     pr: 265
@@ -112,7 +112,7 @@ dependency_chain:
 - The framework deliberately contains no customer-specific business SQL. A real business-value answer requires an explicitly
   selected ERP/data source plus one semantic capability adapter tied to that schema/version.
 - Write/accounting execution remains a separate higher-risk scope and is not enabled by the read framework.
-next_action: "SAME288 actual331 ef9c1f0 Build38857087053/Gov38857086977 attempt1 ALL8 TERMINAL_FAILED closure6209524951, native116830882523 verify-counts/invariant/111; hosted5677=[6,584,25,5062] PASS/root receipt6209199559. Preserve original run through all8terminal/wholequality/all7/cleanup/images if reached, entirequality116843116164/all7 read only LOCAL_RUNTIME_RESULTred, browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. No rerun/cancel. Private actual SQL339 reproduces restored-batch-commit at RequireCompletedCounts, verify-counts/invariant/reads111 after fixed processor returns; owned fixture338 now uses actual EnvelopeHash and no production changes.340 corrects PROOF ONLY: existing two-media fixture requires three notes (one AI plus UnsupportedMedia and SecretQuarantine), four evidence refs, one work/outbox/terminal/frontier. Parent exact graph now3|3|4|1|2|2|1|3|1|1|1|1; new source-linked unit test and parent negatives reject old one-note/missing-host graphs. No guard or host attention removed. Full5678=[6,584,25,5063]/format/172guard9strictnegative plus parent suite PASS/all1275 unchanged.343 fresh own SQL nine separate processes PASS, actual denied sidecar-companion recovery and original-sidecar-companion expired-terminal-FIRST recovery PASS, container/volumes removed. These private directSQL fixtures are operator seeded, not Core/broker/full hosted149/browser/model qualification. Code344 frozen, helper345 current38 updated only original-admission and restoredCPP RAW, separate147 bridge corrects exact graph count and retains all144/inherited guards; seven inert346 controls PASS. Independent source/helper review PENDING. Current355 durable replaces failed352 preparation which emitted no output because old run transitioned to terminal. Ordinary same288 checkpoint/fresh push now possible after exact ef9 closure. After exact ef9 closure/review, fresh149/full5678/all8/Gov/wholequality/all7/sixoriginalPNGs required for successor and root owns throughterminal. Separate first-path351 preflight passed empty commit then failed own extra Result SELECT denial during allocation-phase count verification; shipped empty/host deny three tables, model four. Correct private harness separately without changing shipping proof or claiming a product defect. Future316 versioned owner policy contextv3/originalV4 plus local Worker-only existing Gateway forwarding remains separate UNCOMMITTED/NOT_INCLUDED; do not mix before restored correction qualified. Preserve all previous closures/WITHHELD/corpus227/blind244/human292. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY; same existing Gateway/config247, no new client/config store. Continue full278 continuation/global residual spending/partial contributor preservation/coverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated ERP readonly for Medcom/Novo inventory/import-export, Windows lifecycle and actual deployment remain. Mainad747d unchanged; V2 unread until currentcompletion/mainmerge."
+next_action: "SAME288 actual3565437fad Build38861583635/Gov38861583640 attempt1 ALL8 TERMINAL_FAILED closure6210642420. Initial invalidation require_grants reports Invalidation exact grants differ before fresh fixture; actual hosted tuple NOT_CAPTURED. Full current345149 parse23missing/no duplicates4failure179PASSpartial; hosted5678/Gov PASS, entirequality116867049176/all7 read only localruntime red, browser/artifact skipped0images/cleanupSUCCESS. Restored three-note/four-evidence and firstempty/host/syntheticmodel aggregates passed with original graphs/permission/cleanup/terminal-FIRST controls; no whole149/model qualification. Fresh private396 actual unchanged migrations yield2|4|0 explicit catalog but13columns and runtime effectiveSELECT/INSERT1 UPDATE0 allcolumns0. 398 fixes PROOF ONLY: retain exact object grant2/deny4/schema13, inspect actual aioffice_runtime effectiveSELECT/INSERT and denied UPDATE/DELETE/ALTER/CONTROL/TAKE OWNERSHIP plus all13 column rights; never demand13 redundant physical DENY rows. Actual private399 uses exact new nested oracle against fresh own migrated SQL: baseline/restore positives pass; actual column GRANT override, missing explicit SELECT and extra schema column refuse; all7cases/source340 unchanged/container-volumes removed. Code398 two Python paths only;9 parent/11 fixture/172 ownedguard tests PASS,1273 outsideRAW equal including allC#/project/config; inherit current hosted5678, no redundant local.NET rerun. Current402 additive durable/source frozen; source/helper review PENDING. Preserve old failed evidence and exact6 plus broader5 accepted-result guards, diagnostics323, corrected3notes4refs, old source reads/expiry/strictnegative/all cleanup. Next scoped independent code/durable/helper review, ordinary SAME288 successor/full current149/full5678/all8/Gov/entirequality-all7/six ORIGINAL PNGs through terminal; fix realred SAMEPR without meaningful-failure rerun/cancel. Separate installer239439bfd Build38868597535/Gov38868597539 attempt1 active owned, source/runtime386/helper391 scopedCLEAR; acceptedmainad payload excludes288, actual hosted.NET2103 and Windows job pass but full9/artifacts/runtime closure pending. Future316 humanpolicy contextv3/originalV4+local Worker existing Gateway forwarding remains separate/uncommitted/excluded; reconciliation388 identifies only test-owned-stack-guard overlap. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY, scoped3640/36settings0/7files/serverstoreUNAVAILABLE; sameGateway only. Continue full278 generations/global residual spending/partial contributors/rawcoverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated readonly Medcom/Novo inventory/import-export, actual cleanWindows/signing and production deployment remain. Mainad747d unchanged/V2 unread until currentcompletion/mainmerge."
 blocked_by:
 - User supplied private unencrypted Medcom/Novo connections; both metadata-only connections succeeded. Current identities
   are elevated and not qualified for read-only product execution. Schema/version inventory mapping was captured privately;
@@ -6649,4 +6649,79 @@ group_restored_effects355_current_checkpoint:
   push: false
   activation: false
   main_merge: false
+  V2_attachment_read: false
+
+group_invalidation_effective_grants402_checkpoint:
+  scope: PROOF_ONLY_INVALIDATION_EFFECTIVE_GRANTS398_CURRENT402_UNCOMMITTED_UNREVIEWED
+  parent: 5437fad97574199359a533bc31deee48d41f9df6
+  closure397:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\native149-5437fad-terminal-failed-closure-v397.json
+    bytes: 3727
+    sha256: 25d963a4d6de36263e45ed61d8a94317bc9d06e6b87ec4163d0aa570c6dc97ef
+  closure_comment: 6210642420
+  hosted_tuple: NOT_CAPTURED
+  private396:
+    path: D:\CodexReviewScratch\aioffice-invalidation-owned-v368\owned-reproduction-v396.json
+    bytes: 4276
+    sha256: 5447be26d392b03dcd8fc69d52e85f2204423ee3a97098d2cc1996a7e3ac21f8
+  private_catalog_tuple: 2|4|0
+  private399:
+    path: D:\CodexReviewScratch\aioffice-invalidation-owned-v368\owned-reproduction-v399.json
+    bytes: 4670
+    sha256: 5f4dfa2e088bc6fa9517f4ba876fb04a7698fcdd6aa04b13935c6a11c4d2c020
+  actual_SQL_cases: 7
+  SQL_cleanup: true
+  code_verification401:
+    path: D:\CodexReviewScratch\aioffice-invalidation-grants-v398\verification-v401.json
+    bytes: 233720
+    sha256: e8cd7bd4ccc6a0a7bb98ac35e672736ba2efbb90732482e338b110ee7797b21a
+  python:
+  - script: test-original-invalidation-proof.py
+    tests: 9
+    log:
+      path: D:\CodexReviewScratch\aioffice-invalidation-grants-v398\test-original-invalidation-proof.py-v401.log
+      bytes: 112
+      sha256: ae4147ebbab125f2ea6f75cffdb068685b68b5717346dbdbcbf8b0824ac83d31
+  - script: test-original-invalidation-fixture.py
+    tests: 11
+    log:
+      path: D:\CodexReviewScratch\aioffice-invalidation-grants-v398\test-original-invalidation-fixture.py-v401.log
+      bytes: 115
+      sha256: 39ed286c6d0402962f9865907b69ab0641570423fc57f705a69c5f36e46bc11e
+  - script: test-owned-stack-guard.py
+    tests: 172
+    log:
+      path: D:\CodexReviewScratch\aioffice-invalidation-grants-v398\test-owned-stack-guard.py-v401.log
+      bytes: 277
+      sha256: 9763bc6afd0f803032162e535feb1e1fae88f2d54f74cc3444d4bb86895a6fcf
+  inherited_hosted_dotnet: 5678
+  projects:
+  - 6
+  - 584
+  - 25
+  - 5063
+  fresh_dotnet_rerun: false
+  all_CSharp_config_RAW_unchanged: true
+  production_source_changed: false
+  migration_or_rights_changed: false
+  source_review: false
+  helper_review: false
+  new_native149: NOT_RUN_UNQUALIFIED
+  prior_heads:
+    project: ef9c1f0580bf552e34186e96ffaa28de7551f491
+    backend: ef9c1f0580bf552e34186e96ffaa28de7551f491
+    workstream: ef9c1f0580bf552e34186e96ffaa28de7551f491
+  prior_next: 'SAME288 actual331 ef9c1f0 Build38857087053/Gov38857086977 attempt1 ALL8 TERMINAL_FAILED closure6209524951, native116830882523 verify-counts/invariant/111; hosted5677=[6,584,25,5062] PASS/root receipt6209199559. Preserve original run through all8terminal/wholequality/all7/cleanup/images if reached, entirequality116843116164/all7 read only LOCAL_RUNTIME_RESULTred, browser14/artifact15 skipped/zeroimages/cleanup16SUCCESS. No rerun/cancel. Private actual SQL339 reproduces restored-batch-commit at RequireCompletedCounts, verify-counts/invariant/reads111 after fixed processor returns; owned fixture338 now uses actual EnvelopeHash and no production changes.340 corrects PROOF ONLY: existing two-media fixture requires three notes (one AI plus UnsupportedMedia and SecretQuarantine), four evidence refs, one work/outbox/terminal/frontier. Parent exact graph now3|3|4|1|2|2|1|3|1|1|1|1; new source-linked unit test and parent negatives reject old one-note/missing-host graphs. No guard or host attention removed. Full5678=[6,584,25,5063]/format/172guard9strictnegative plus parent suite PASS/all1275 unchanged.343 fresh own SQL nine separate processes PASS, actual denied sidecar-companion recovery and original-sidecar-companion expired-terminal-FIRST recovery PASS, container/volumes removed. These private directSQL fixtures are operator seeded, not Core/broker/full hosted149/browser/model qualification. Code344 frozen, helper345 current38 updated only original-admission and restoredCPP RAW, separate147 bridge corrects exact graph count and retains all144/inherited guards; seven inert346 controls PASS. Independent source/helper review PENDING. Current355 durable replaces failed352 preparation which emitted no output because old run transitioned to terminal. Ordinary same288 checkpoint/fresh push now possible after exact ef9 closure. After exact ef9 closure/review, fresh149/full5678/all8/Gov/wholequality/all7/sixoriginalPNGs required for successor and root owns throughterminal. Separate first-path351 preflight passed empty commit then failed own extra Result SELECT denial during allocation-phase count verification; shipped empty/host deny three tables, model four. Correct private harness separately without changing shipping proof or claiming a product defect. Future316 versioned owner policy contextv3/originalV4 plus local Worker-only existing Gateway forwarding remains separate UNCOMMITTED/NOT_INCLUDED; do not mix before restored correction qualified. Preserve all previous closures/WITHHELD/corpus227/blind244/human292. Actualmodel NOT_RUN_UNEVALUATED/ReleasedcatalogEMPTY; same existing Gateway/config247, no new client/config store. Continue full278 continuation/global residual spending/partial contributor preservation/coverage/scanner/shippedWorker/no-click/internalIT279/full233. Dedicated ERP readonly for Medcom/Novo inventory/import-export, Windows lifecycle and actual deployment remain. Mainad747d unchanged; V2 unread until currentcompletion/mainmerge.'
+  prior366_scoped_reviews:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\restored-current-reviewed-invalidation-v370.json
+    bytes: 61847
+    sha256: 4db609bfd1db5b2c9c4dc3957066fce9a22bd61916566dd5c75aa78c046c108b
+  separate_installer_dispatch:
+    path: D:\CodexPrivateTasks\aioffice-283-browser\installer-ci-dispatch-v392.json
+    bytes: 4225
+    sha256: 0faaacd41be98da577ec94224e11076bf9b9e16447278fdd37398fccdea62356
+  future316_included: false
+  actual_model: NOT_RUN_UNEVALUATED
+  main_merge: false
+  activation: false
   V2_attachment_read: false

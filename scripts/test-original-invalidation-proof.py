@@ -34,7 +34,8 @@ class OriginalInvalidationProofTests(unittest.TestCase):
 
         def sql(query):
             queries.append(query)
-            self.assertIsNone(re.search(r'\b(?:UPDATE|INSERT|DELETE|DENY|GRANT|REVOKE|ALTER)\b', query, re.IGNORECASE))
+            commands = re.sub(r"N?'(?:''|[^'])*'", "''", query)
+            self.assertIsNone(re.search(r'\b(?:UPDATE|INSERT|DELETE|DENY|GRANT|REVOKE|ALTER)\b', commands, re.IGNORECASE))
             if query.startswith('/* owned-original-invalidation-digests */'):
                 own = source in query and 'BindingId IN' not in query
                 rows = []
@@ -59,7 +60,17 @@ class OriginalInvalidationProofTests(unittest.TestCase):
                 return '\n'.join(rows)
             if query.startswith('/* owned-original-invalidation-permissions */'):
                 return ('F' if fault == 'permissions' and stage >= 3 else 'A') * 64
-            if query.startswith('/* owned-original-invalidation-grants */'): return '1|4|13' if fault == 'grants' else '2|4|13'
+            if query.startswith('/* owned-original-invalidation-grants */'):
+                self.assertIn("EXECUTE AS USER=N'aioffice_runtime';", query)
+                self.assertTrue(query.endswith('REVERT;'))
+                self.assertIn("ISNULL(HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0", query)
+                return {'grants': '1|4|13\n1|1|0|0|0|0|0|13|0',
+                    'missing-column': '2|4|12\n1|1|0|0|0|0|0|12|0',
+                    'unsafe-column': '2|4|13\n1|1|0|0|0|0|0|13|1',
+                    'unsafe-object': '2|4|13\n1|1|1|0|0|0|0|13|13',
+                    'missing-effective-line': '2|4|13',
+                    'extra-effective-line': '2|4|13\n1|1|0|0|0|0|0|13|0\n1',
+                    'private-effective-line': '2|4|13\nPRIVATE_PERMISSION_CANARY'}.get(fault, '2|4|13\n1|1|0|0|0|0|0|13|0')
             if query.startswith('/* owned-original-invalidation-counts */'):
                 values = [1 if stage >= 2 else 0] + [0] * 17 + [1 if stage >= 4 else 0, 1 if stage >= 2 else 0, 1 if stage >= 2 else 0]
                 if fault == 'preseeded': values[0] = 1
@@ -184,6 +195,11 @@ class OriginalInvalidationProofTests(unittest.TestCase):
 
     def test_retained_graphs_permissions_and_exact_grants_cannot_change(self):
         for fault in ('retained', 'retained-base', 'permissions', 'grants'):
+            with self.subTest(fault=fault): self.run_control(fault)
+
+    def test_effective_runtime_schema_and_column_rights_are_required(self):
+        for fault in ('missing-column', 'unsafe-column', 'unsafe-object', 'missing-effective-line',
+                'extra-effective-line', 'private-effective-line'):
             with self.subTest(fault=fault): self.run_control(fault)
 
     def test_failure_and_both_cleanup_errors_suppress_aggregate(self):

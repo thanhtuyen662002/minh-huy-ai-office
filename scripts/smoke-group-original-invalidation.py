@@ -68,13 +68,27 @@ def verify(*, directory, api, manifest, tenant, company, service, sql, prepare_s
         return value
 
     def require_grants():
-        assert sql("/* owned-original-invalidation-grants */ SELECT CONCAT("
+        # SQL Server can omit redundant column DENY catalog rows when the
+        # table already denies UPDATE. Require the actual complete schema and
+        # effective runtime rights; a column GRANT must still fail this proof.
+        lines = sql("/* owned-original-invalidation-grants */ SELECT CONCAT("
             "(SELECT COUNT(*) FROM sys.database_permissions WHERE grantee_principal_id=USER_ID(N'aioffice_binding_runtime') AND class=1 AND minor_id=0 "
             "AND major_id=OBJECT_ID(N'aioffice.GroupOriginalInvalidations') AND type IN ('SL','IN') AND state='G'),N'|',"
             "(SELECT COUNT(*) FROM sys.database_permissions WHERE grantee_principal_id=USER_ID(N'aioffice_binding_runtime') AND class=1 AND minor_id=0 "
             "AND major_id=OBJECT_ID(N'aioffice.GroupOriginalInvalidations') AND type IN ('UP','DL','AL','TO') AND state='D'),N'|',"
-            "(SELECT COUNT(*) FROM sys.database_permissions WHERE grantee_principal_id=USER_ID(N'aioffice_binding_runtime') AND class=1 AND minor_id>0 "
-            "AND major_id=OBJECT_ID(N'aioffice.GroupOriginalInvalidations') AND type='UP' AND state='D'));") == '2|4|13', 'Invalidation exact grants differ'
+            "(SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID(N'aioffice.GroupOriginalInvalidations')));"
+            " EXECUTE AS USER=N'aioffice_runtime'; SELECT CONCAT("
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'SELECT'),N'|',"
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'INSERT'),N'|',"
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'UPDATE'),N'|',"
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'DELETE'),N'|',"
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'ALTER'),N'|',"
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'CONTROL'),N'|',"
+            "HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'TAKE OWNERSHIP'),N'|',"
+            "(SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID(N'aioffice.GroupOriginalInvalidations')),N'|',"
+            "(SELECT COUNT(*) FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'aioffice.GroupOriginalInvalidations') "
+            "AND ISNULL(HAS_PERMS_BY_NAME(N'aioffice.GroupOriginalInvalidations',N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0)); REVERT;").splitlines()
+        assert lines == ['2|4|13', '1|1|0|0|0|0|0|13|0'], 'Invalidation exact grants differ'
 
     original = retained(); original_permissions = permissions(); require_grants()
     source = account = scope = completed = None
