@@ -14,6 +14,7 @@ import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { GroupInboxPanel } from "./group-inbox-panel";
+import { CustomerRequestPanel } from "./customer-request-panel";
 import { SubmissionRecoveryPanel } from "./submission-recovery-panel";
 import { useTaskSubmission } from "./use-task-submission";
 import { trimSubmissionQuestion } from "../lib/task-submission-intent";
@@ -35,7 +36,7 @@ type ChatMessage = {
   checkpoint?: LocalAiCheckpoint;
 };
 
-type Surface = "assistant" | "data-sources" | "members" | "tasks" | "group-inbox";
+type Surface = "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests";
 
 async function readJson(response: Response): Promise<unknown> {
   try {
@@ -618,6 +619,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             <button type="button" onClick={() => setSurface("tasks")} className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium ${surface === "tasks" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5"}`}>Công việc</button>
             <div className="px-3 py-2.5 text-sm text-slate-400">Nhật ký · sắp có</div>
             <button type="button" onClick={() => setSurface("group-inbox")} className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Hộp thư nguồn</button>
+            <button type="button" onClick={() => setSurface("customer-requests")} aria-current={surface === "customer-requests" ? "page" : undefined}
+              className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Yêu cầu khách hàng</button>
           </nav>
           <div className="mt-auto rounded-2xl bg-slate-50 p-4 text-xs leading-5 text-slate-500 dark:bg-white/5 dark:text-slate-400">
             <p className="font-semibold text-slate-700 dark:text-slate-200">{companyName}</p>
@@ -658,11 +661,16 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
               <button type="button" onClick={() => setSurface("assistant")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Trợ lý AI</button>
               <button type="button" onClick={() => setSurface("data-sources")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Nguồn dữ liệu</button>
               <button type="button" aria-label="Mở Hộp thư nguồn trên di động" onClick={() => setSurface("group-inbox")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Hộp thư nguồn</button>
+              <button type="button" aria-label="Mở Yêu cầu khách hàng trên di động" onClick={() => setSurface("customer-requests")}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Yêu cầu khách hàng</button>
               <button type="button" aria-label="Mở Công việc trên di động" onClick={() => setSurface("tasks")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Công việc</button>
               {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Thành viên</button> : null}
             </div>
 
-            {surface === "group-inbox" && auth ? <GroupInboxPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`}
+            {surface === "customer-requests" && auth ? <CustomerRequestPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`}
+              tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+              isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} />
+              : surface === "group-inbox" && auth ? <GroupInboxPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`}
               tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
               isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} /> : surface === "tasks" && auth ? <div key={`${companyId}:${auth.userId}:${sessionGeneration.current}`} className="space-y-5">
               <SubmissionRecoveryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} disabled={busy || submission.working}
