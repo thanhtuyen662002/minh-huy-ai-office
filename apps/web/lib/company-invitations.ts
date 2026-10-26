@@ -3,6 +3,7 @@ export type CompanyInvitationInput = { email: string; roles: InvitationRole[] };
 export type CompanyInvitation = { companyId: string; id: string; email: string; roles: InvitationRole[];
   createdAtUtc: string; expiresAtUtc: string; acceptedAtUtc: string | null; revokedAtUtc: string | null; version: string };
 export type CompanyInvitationPage = { companyId: string; items: CompanyInvitation[]; offset: number; limit: number; hasMore: boolean };
+export type CreatedCompanyInvitation = CompanyInvitation & { temporaryPassword?: string };
 
 const guid = (value: unknown): value is string => typeof value === "string" && value !== "00000000-0000-0000-0000-000000000000"
   && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
@@ -62,4 +63,14 @@ export function parseInvitationPage(value: unknown): CompanyInvitationPage | nul
     || !Number.isInteger(page.limit) || page.limit < 1 || page.limit > 100 || typeof page.hasMore !== "boolean") return null;
   const items = page.items.map(parseInvitation);
   return items.every((item): item is CompanyInvitation => !!item) ? { ...page, items } : null;
+}
+
+// Only the POST response may carry a credential; list/revoke remain strict.
+export function parseCreatedInvitation(value: unknown): CreatedCompanyInvitation | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const { temporaryPassword, ...invitation } = value as Record<string, unknown>;
+  const parsed = parseInvitation(invitation);
+  if (!parsed || temporaryPassword !== undefined && (typeof temporaryPassword !== "string"
+    || temporaryPassword.length < 14 || temporaryPassword.length > 128 || !/^[\x21-\x7e]+$/.test(temporaryPassword))) return null;
+  return temporaryPassword === undefined ? parsed : { ...parsed, temporaryPassword: temporaryPassword as string };
 }

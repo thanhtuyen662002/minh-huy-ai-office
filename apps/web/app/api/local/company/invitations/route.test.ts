@@ -25,6 +25,24 @@ it("creates with issued session authority and validates the bounded result", asy
   expect(JSON.parse(init.body)).toEqual(input); expect(response.headers.get("Set-Cookie")).toBeNull(); expect(response.headers.get("Cache-Control")).toBe("no-store");
 });
 
+it("passes the one-time password only on creation with no-store and without logging", async () => {
+  const log = vi.spyOn(console, "log"), warn = vi.spyOn(console, "warn"), error = vi.spyOn(console, "error");
+  const temporaryPassword = "SyntheticTemporaryPassword123!";
+  fetcher.mockResolvedValue(Response.json({ ...result, temporaryPassword }, { status: 201 }));
+  const response = await POST(mutation());
+  expect(response.status).toBe(201); expect(await response.json()).toEqual({ ...result, temporaryPassword });
+  expect(response.headers.get("Cache-Control")).toBe("no-store");
+  expect(fetcher.mock.calls[0][1].cache).toBe("no-store");
+  expect(log).not.toHaveBeenCalled(); expect(warn).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+  vi.restoreAllMocks();
+});
+
+it.each(["short", null, 123, "x".repeat(129), "invalid\npassword1234"])("refuses malformed temporary credentials", async temporaryPassword => {
+  fetcher.mockResolvedValue(Response.json({ ...result, temporaryPassword }, { status: 201 }));
+  const response = await POST(mutation()); expect(response.status).toBe(503);
+  expect(await response.text()).not.toContain("temporaryPassword");
+});
+
 it.each([null, "https://foreign.invalid", origin + "/"])("refuses bad origin %j", async requestOrigin => {
   expect((await POST(mutation(undefined, "", requestOrigin))).status).toBe(403); expect(fetcher).not.toHaveBeenCalled();
 });

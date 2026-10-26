@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CompanyMember, MemberAccessInput, MemberPage, parseMemberAccessResult, parseMemberPage } from "../lib/company-members";
 import { AdministratorInput, parseAdministratorResult } from "../lib/company-administrators";
-import { CompanyInvitation, CompanyInvitationPage, InvitationRole, parseInvitation, parseInvitationPage } from "../lib/company-invitations";
+import { CompanyInvitation, CompanyInvitationPage, InvitationRole, parseCreatedInvitation, parseInvitation, parseInvitationPage } from "../lib/company-invitations";
 
 type MemberOperation = { userId: string; name: string } &
   ({ kind: "access"; input: MemberAccessInput } | { kind: "administrator"; input: AdministratorInput });
@@ -22,17 +22,21 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   const [invitationEmail, setInvitationEmail] = useState("");
   const [invitationRole, setInvitationRole] = useState<InvitationRole>("viewer");
   const [signInUrl, setSignInUrl] = useState("");
+  const [temporaryPassword, setTemporaryPassword] = useState("");
+  const passwordEpoch = useRef(0);
   const mounted = useRef(false);
   const lock = useRef(false);
   const current = () => mounted.current && isCurrent(generation);
+  function clearTemporaryPassword() { passwordEpoch.current++; setTemporaryPassword(""); }
   async function confirmAuthority() {
-    const valid = await validate(generation);
-    if (!valid && current()) { setPage(null); setPending(null); }
+    let valid = false;
+    try { valid = await validate(generation); } catch { }
+    if (!valid && current()) { setPage(null); setPending(null); clearTemporaryPassword(); }
     return valid && current();
   }
   async function load(nextOffset: number) {
     if (lock.current || !current()) return;
-    lock.current = true; setLoading(true); setPage(null); setError(""); setOffset(nextOffset);
+    lock.current = true; setLoading(true); clearTemporaryPassword(); setPage(null); setError(""); setOffset(nextOffset);
     try {
       if (!await confirmAuthority()) return;
       const response = await request(generation, `/api/local/company/members?companyId=${encodeURIComponent(companyId)}&offset=${nextOffset}&limit=25&includeAccessVersion=true`, { cache: "no-store" });
@@ -77,11 +81,11 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   }
   async function changeInvitation(path: string, body?: { email: string; roles: InvitationRole[] }) {
     if (lock.current || !current()) return;
-    lock.current = true; setLoading(true); setInvitationError(""); setNotice("");
+    lock.current = true; setLoading(true); clearTemporaryPassword(); setInvitationError(""); setNotice("");
     try {
       if (!await confirmAuthority()) return;
       const response = await request(generation, `${path}?companyId=${encodeURIComponent(companyId)}`, {
-        method: "POST", headers: body ? { "Content-Type": "application/json" } : undefined,
+        method: "POST", cache: "no-store", headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
       });
       if (!current()) return;
@@ -101,12 +105,16 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         return;
       }
       if (!response.ok) throw new Error("Unavailable");
-      const result = parseInvitation(await response.json());
+      const received: unknown = await response.json();
+      const result = body ? parseCreatedInvitation(received) : parseInvitation(received);
       if (!result || result.companyId !== companyId || path.includes("/revoke") && result.revokedAtUtc === null) throw new Error("Invalid result");
       if (!await confirmAuthority()) return;
       if (body) setInvitationEmail("");
       lock.current = false;
       await load(offset);
+      const displayEpoch = passwordEpoch.current;
+      if (body && current() && await confirmAuthority() && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
+        && typeof result.temporaryPassword === "string") setTemporaryPassword(result.temporaryPassword);
       if (current()) setNotice(body ? "Đã tạo lời mời thành viên." : "Đã thu hồi lời mời thành viên.");
     } catch {
       if (current()) {
@@ -128,9 +136,15 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     try { await navigator.clipboard.writeText(signInUrl); if (current()) setNotice("Đã sao chép liên kết đăng nhập."); }
     catch { if (current()) setInvitationError("Không sao chép được liên kết. Hãy sao chép thủ công."); }
   }
+  async function copyTemporaryPassword() {
+    const copyEpoch = passwordEpoch.current;
+    if (!temporaryPassword || !current() || !await confirmAuthority() || copyEpoch !== passwordEpoch.current) return;
+    try { await navigator.clipboard.writeText(temporaryPassword); if (current()) setNotice("Đã sao chép mật khẩu tạm thời."); }
+    catch { if (current()) setInvitationError("Không sao chép được mật khẩu. Hãy sao chép thủ công."); }
+  }
   async function setAccess(operation: NonNullable<typeof pending>) {
     if (lock.current || !current()) return;
-    lock.current = true; setLoading(true); setPending(operation); setError(""); setNotice("");
+    lock.current = true; setLoading(true); clearTemporaryPassword(); setPending(operation); setError(""); setNotice("");
     try {
       if (!await confirmAuthority()) return;
       const response = await request(generation, `/api/local/company/members/${encodeURIComponent(operation.userId)}/${operation.kind}?companyId=${encodeURIComponent(companyId)}`,
@@ -217,6 +231,16 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         </label>
         <button type="submit" disabled={loading || !!pending} className="rounded-lg border px-3 py-2 text-sm font-medium">Thêm thành viên</button>
       </form>
+      {temporaryPassword ? <div className="mt-3 rounded-lg border border-amber-400 p-3" role="status">
+        <p className="text-sm">Mật khẩu tạm thời chỉ hiển thị một lần và sẽ không được hiển thị lại. Hãy gửi riêng cho thành viên cùng liên kết đăng nhập. Thành viên phải đổi mật khẩu khi đăng nhập lần đầu.</p>
+        <label htmlFor="member-temporary-password" className="mt-2 block text-sm">Mật khẩu tạm thời</label>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <input id="member-temporary-password" readOnly autoComplete="off" value={temporaryPassword}
+            className="min-w-0 flex-1 rounded-lg border bg-transparent px-3 py-2 font-mono" />
+          <button type="button" onClick={() => void copyTemporaryPassword()} className="rounded-lg border px-3 py-2 text-sm">Sao chép mật khẩu</button>
+          <button type="button" onClick={clearTemporaryPassword} className="rounded-lg border px-3 py-2 text-sm">Ẩn mật khẩu</button>
+        </div>
+      </div> : null}
       <div className="mt-3 grid gap-1 text-sm"><label htmlFor="company-sign-in-link">Liên kết đăng nhập để gửi cho thành viên</label>
         <div className="flex gap-2"><input id="company-sign-in-link" readOnly value={signInUrl} className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-white/15" />
           <button type="button" disabled={!signInUrl} onClick={() => void copySignInLink()} className="rounded-lg border px-3 py-2">Sao chép</button></div></div>

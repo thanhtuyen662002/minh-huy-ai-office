@@ -22,11 +22,73 @@ function fixture(override: (url: string, init?: RequestInit) => Response | Promi
     if (url.startsWith("/api/local/company/invitations?")) return Response.json({ companyId: company, items: invitations, offset: 0, limit: 25, hasMore: false });
     return Response.json({ companyId: company, items: [], offset: 0, limit: 25, hasMore: false });
   });
-  render(<CompanyMemberPanel companyId={company} userId={owner} generation={1} isCurrent={() => true}
+  const view = render(<CompanyMemberPanel companyId={company} userId={owner} generation={1} isCurrent={() => true}
     validate={validate} request={request} onUnauthorized={unauthorized} />);
-  return { request, validate, unauthorized, invitations };
+  return { request, validate, unauthorized, invitations, view };
 }
 afterEach(() => { vi.unstubAllGlobals(); });
+
+const temporaryPassword = "SyntheticTemporaryPassword123!";
+async function submitNewMember() {
+  await screen.findByText("member@example.com");
+  fireEvent.change(screen.getByLabelText("Email thành viên"), { target: { value: "new@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
+  await screen.findByText("Đã tạo lời mời thành viên.");
+}
+const provisioned = (url: string) => url === `/api/local/company/invitations?companyId=${company}`
+  ? Response.json({ ...invitation, temporaryPassword }, { status: 201 }) : undefined;
+
+it("shows and copies the temporary password once with a warning and sign-in link", async () => {
+  const writeText = vi.fn(async () => {}); vi.stubGlobal("navigator", { clipboard: { writeText } });
+  fixture(provisioned); await submitNewMember();
+  expect((screen.getByLabelText("Mật khẩu tạm thời") as HTMLInputElement).value).toBe(temporaryPassword);
+  expect(screen.getByText(/sẽ không được hiển thị lại/)).toBeTruthy();
+  expect(screen.getByLabelText("Liên kết đăng nhập để gửi cho thành viên")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Sao chép mật khẩu" }));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith(temporaryPassword));
+  fireEvent.click(screen.getByRole("button", { name: "Ẩn mật khẩu" }));
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+  expect(localStorage.length).toBe(0); expect(sessionStorage.length).toBe(0);
+});
+
+it("clears the password on reload and remount, never restoring it from the invitation list", async () => {
+  const { view } = fixture(provisioned); await submitNewMember();
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại thành viên" }));
+  await screen.findByText("member@example.com");
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+  view.unmount(); fixture(); await screen.findByText("member@example.com");
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+});
+
+it("does not show a password for an existing account", async () => {
+  fixture(); await submitNewMember(); expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+});
+
+it("clears a displayed password when fresh authority validation fails", async () => {
+  const { validate } = fixture(provisioned); await submitNewMember();
+  validate.mockResolvedValue(false);
+  fireEvent.click(screen.getByRole("button", { name: "Sao chép mật khẩu" }));
+  await waitFor(() => expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull());
+});
+
+it("does not copy a dismissed password after delayed authority validation", async () => {
+  const writeText = vi.fn(async () => {}); vi.stubGlobal("navigator", { clipboard: { writeText } });
+  const { validate } = fixture(provisioned); await submitNewMember();
+  let resolve!: (valid: boolean) => void;
+  validate.mockImplementationOnce(() => new Promise<boolean>(done => { resolve = done; }));
+  fireEvent.click(screen.getByRole("button", { name: "Sao chép mật khẩu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Ẩn mật khẩu" }));
+  resolve(true);
+  await waitFor(() => expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull());
+  expect(writeText).not.toHaveBeenCalled();
+});
+
+it("discards a displayed password when authority validation throws", async () => {
+  const { validate } = fixture(provisioned); await submitNewMember();
+  validate.mockRejectedValueOnce(new Error("Unavailable"));
+  fireEvent.click(screen.getByRole("button", { name: "Sao chép mật khẩu" }));
+  await waitFor(() => expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull());
+});
 
 it("creates a Vietnamese role invitation and reloads the pending list", async () => {
   const { request } = fixture(); await screen.findByText("member@example.com");
