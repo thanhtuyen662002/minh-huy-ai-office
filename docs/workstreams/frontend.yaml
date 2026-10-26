@@ -1,22 +1,26 @@
 workstream: frontend
 role: Frontend Product
 status: active-development
-current_issue: 260
-current_pr: 261
-current_branch: frontend/260-browser-oidc
-head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
+current_issue: 300
+current_pr: null
+current_branch: codex/300-customer-request-ui
+head: 0219e40b4c0c6848b55a52ed735a09aa49ba7404
 state: ready_for_review
-lease_owner: root-frontend-260
-lease_heartbeat_at: '2026-10-07T16:18:00Z'
-last_checkpoint_at: '2026-10-07T16:18:00Z'
+lease_owner: codex-300-operator-directed
+lease_heartbeat_at: '2026-10-26T10:03:23Z'
+last_checkpoint_at: '2026-10-26T10:03:23Z'
+stacked_on: 'PR #297 / codex/295-customer-request-bridge'
+handoff: docs/handoffs/300-customer-request-ui.md
+uncommitted: true
 last_completed_issue: 258
 last_merged_pr: 259
 last_merge_commit: 973c37be65b1db17c6b3eec279a8f2c12c6713b9
 scope:
-  - browser-oidc-authorization-code-pkce
-  - trusted-configuration-and-encrypted-transaction-cookie
-  - fresh-company-authority-and-actual-browser-proof
+  - customer-request-workspace-list-detail-and-updates
+  - existing-selected-company-session-and-member-directory
+  - frontend-only-stacked-on-297-no-git-mutations
 verification:
+  customer_request_300: 'PASS npm test (1365 passed, 20 existing Redis-gated skips, 51 new tests), npm run typecheck and npm run build from apps/web on 2026-10-26. See docs/handoffs/300-customer-request-ui.md. No backend changes, live SQL/OIDC/Zalo proof or publication. Historical verification entries below apply to their recorded earlier heads.'
   shipping_browser_default: 'After full4e actual Chromium PASS, local Compose defaults now browser PKCE true/local password UI false. Retained smoke explicitly opts its owned disposable fixture into legacy browser=false/localUI=true, verifies shipping default config independently and retains all old SQL/OIDC/audit/race/broker controls before the full browser gate. Production remains explicitly configured opt-in with HTTPS/TLS Redis. Exactbac shipping-default and compatibility profile controls, full Chromium/retained stack gates and independent full frozen acceptance review PASS; no customer/config/credential/OS changes.'
   chromium_verified_head: bac65ab46e9ab8070f18428a4c27c72ca8bcb292
   chromium_verified_build: 37648878161
@@ -108,7 +112,7 @@ verification:
   routes_result: 'All exact-head gates PASS;699 hosted web tests/type-check/build including13 actual Redis controls. Frozen9d review found HTTPS proxy protocol mismatch and committed-completion/reply-lost eviction of previous valid SID. Current checkpoint fixes both; new exact-head gates/re-review and20 actual Redis controls required.'
   coordinator_result: '599 hosted web tests/type-check/build PASS, including12 actual Redis controls/physical old-RDB restart. Frozen review approved; independent19 pending-EVAL vs aaa generic2043ms refusal/socket destroyed with exactlyoneEVAL closes reply-timeout finding.139 focused tests independently PASS. Full exact-head Build37568027869/Governance37568027934 and retained actual stack112620417758 PASS. Follow HANDOFF261 for current published head.'
 blocked_by: []
-next_action: Close documentation-only final checkpoint CI and independent delta review, match approved green HEAD when merging261, and verify main CI. Full frozenbac implementation/acceptance review is approved;832 hosted web/20 actual Redis and complete actual Chromium lifecycle PASS. Keep239 Draft for clean Windows lifecycle/signing. Medcom/Novo least-privilege/schema/business-row and approved production qualification/full233 remain; Santino deferred.
+next_action: 'Operator reviews and commits the uncommitted #300 implementation on codex/300-customer-request-ui, opens a draft PR stacked on #297, and owns exact-head CI. See docs/handoffs/300-customer-request-ui.md. Do not add/commit/push/switch branches in this coding run, weaken directory authorization, add company-ID fallbacks, touch zalo-intake or send to Zalo.'
 
 implementation_checkpoint:
   runtime_binding: '10 runtime configuration/transport lifecycle tests and TypeScript PASS; exact331 all gates/frozen review and13 actual Redis controls PASS. Complete operator boundary validates before redirect/connection, replaces/closes transports on configuration change or disable, caches no authority. Shared isCurrent inspection checks registered generation/expiry/run_id and cannot grant a session.'
