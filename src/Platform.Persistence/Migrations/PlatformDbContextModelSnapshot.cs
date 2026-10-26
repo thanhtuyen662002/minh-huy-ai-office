@@ -23,6 +23,274 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotAiSettingsRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("ProtectedApiKey")
+                        .HasMaxLength(8192)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId");
+
+                    b.ToTable("BotAiSettings", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_BotAiSettings_Version", "[Version]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotChannelAuditRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("After")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Before")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("Field")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Timestamp");
+
+                    b.ToTable("BotChannelAudits", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<long>("ConfigVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("DryRun")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SummaryScheduleJson")
+                        .IsRequired()
+                        .HasMaxLength(15000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TechGroupExternalId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "Channel");
+
+                    b.ToTable("BotChannels", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_BotChannels_Channel", "[Channel] IN ('zalo','whatsapp')");
+
+                            t.HasCheckConstraint("CK_BotChannels_Version", "[ConfigVersion]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotCommandRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("TenantId", "CompanyId", "Channel", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Channel", "ExpiresAt");
+
+                    b.ToTable("BotCommands", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_BotCommands_Kind", "[Kind] IN ('summarize-now','relogin')");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotCustomerGroupRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("TenantId", "CompanyId", "Channel", "ExternalId");
+
+                    b.ToTable("BotCustomerGroups", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotStatusRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("GroupsJson")
+                        .IsRequired()
+                        .HasMaxLength(500000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("LastSummaryAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("LoginQrContentType")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset?>("LoginQrExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("LoginQrImage")
+                        .HasMaxLength(65536)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("LoginState")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("TenantId", "CompanyId", "Channel");
+
+                    b.ToTable("BotStatuses", "aioffice");
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyAdministratorAuditRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1988,6 +2256,60 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_TaskSubmissionIntents_Question", "DATALENGTH([Question]) BETWEEN 2 AND 8000");
                         });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotAiSettingsRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotChannelAuditRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotCommandRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "Channel")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotCustomerGroupRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "Channel")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotStatusRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "Channel")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyAdministratorAuditRecord", b =>
