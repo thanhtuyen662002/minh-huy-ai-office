@@ -10,6 +10,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<PlatformMetadataRecord> PlatformMetadata => Set<PlatformMetadataRecord>();
     public DbSet<PlatformUserRecord> Users => Set<PlatformUserRecord>();
     public DbSet<CompanyRecord> Companies => Set<CompanyRecord>();
+    public DbSet<CompanyInvitationRecord> CompanyInvitations => Set<CompanyInvitationRecord>();
+    public DbSet<CompanyInvitationAuditRecord> CompanyInvitationAudits => Set<CompanyInvitationAuditRecord>();
     public DbSet<CompanyMembershipRecord> CompanyMemberships => Set<CompanyMembershipRecord>();
     public DbSet<CompanyMembershipAccessAuditRecord> CompanyMembershipAccessAudits => Set<CompanyMembershipAccessAuditRecord>();
     public DbSet<CompanyAdministratorAuditRecord> CompanyAdministratorAudits => Set<CompanyAdministratorAuditRecord>();
@@ -49,6 +51,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
+        modelBuilder.ConfigureCompanyInvitations();
         modelBuilder.ConfigureTaskSubmissionIntents();
         modelBuilder.ConfigureGroupIngress();
         modelBuilder.Entity<DataSourceSecretBindingRecord>(entity =>

@@ -87,6 +87,102 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyInvitationAuditRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("InvitationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("InvitationVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "ActorUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "InvitationId");
+
+                    b.ToTable("CompanyInvitationAudits", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyInvitationRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("AcceptedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("InvitedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset?>("RevokedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RolesJson")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("NormalizedEmail");
+
+                    b.HasIndex("TenantId", "InvitedByUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "NormalizedEmail")
+                        .IsUnique()
+                        .HasFilter("[AcceptedAtUtc] IS NULL AND [RevokedAtUtc] IS NULL");
+
+                    b.ToTable("CompanyInvitations", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CompanyInvitations_Lifetime", "[ExpiresAtUtc] > [CreatedAtUtc] AND ([AcceptedAtUtc] IS NULL OR [RevokedAtUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_CompanyInvitations_Version", "[Version] > 0");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipAccessAuditRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1262,6 +1358,11 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1699,6 +1800,34 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasForeignKey("TenantId", "CompanyId", "TargetUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyInvitationAuditRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.PlatformUserRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyInvitationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "InvitationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyInvitationRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.PlatformUserRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "InvitedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipAccessAuditRecord", b =>
