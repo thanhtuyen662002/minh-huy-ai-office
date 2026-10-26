@@ -102,7 +102,6 @@ services:
     security_opt: [no-new-privileges:true]
     environment:
       DOTNET_ENVIRONMENT: Development
-      AIOFFICE_SECRET_ENCRYPTION_KEY: ${AIOFFICE_SECRET_ENCRYPTION_KEY:?generate local configuration first}
       AIOFFICE_LOCAL_BOOTSTRAP: "true"
       AIOFFICE_INSTALLATION_ID: ${AIOFFICE_INSTALLATION_ID:?generate local configuration first}
       AIOFFICE_TENANT_ID: ${AIOFFICE_TENANT_ID:?generate local configuration first}
@@ -136,6 +135,7 @@ services:
     environment: &runtime-environment
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_ENVIRONMENT: Development
+      AIOFFICE_SECRET_ENCRYPTION_KEY: ${AIOFFICE_SECRET_ENCRYPTION_KEY:?generate local configuration first}
       AIOFFICE_DB_CONNECTION: "Server=sql;Database=AIOfficeLocal;User ID=aioffice_runtime;Password=${AIOFFICE_RUNTIME_PASSWORD};Encrypt=true;TrustServerCertificate=true"
       AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
       PILOT_ERP_CONNECTION: "Server=sql;Database=AIOfficeSample;User ID=aioffice_reader;Password=${AIOFFICE_READER_PASSWORD};Encrypt=true;TrustServerCertificate=true"

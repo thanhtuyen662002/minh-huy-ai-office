@@ -4,7 +4,7 @@ status: active-development
 current_issue: 296
 current_pr: 303
 current_branch: codex/296-customer-erp-connection
-head: a9807ac
+head: 6df1654fbea0a219f48f64933a90a65d8d9012b5
 state: in_progress
 lease_owner: codex-296-customer-erp-connection
 lease_heartbeat_at: '2026-10-26T10:00:00Z'
@@ -41,6 +41,7 @@ customer_erp_296:
   local_verification: '1518 Persistence tests,41 Configuration tests,1342 web tests PASS;20 actual Redis tests skipped without disposable Redis. TypeScript and Next production build PASS;new28 web and29 ERP service/API cases are overlapping subsets. C# format PASS;EF pending-model check and idempotent migration generation PASS;Python syntax and protected local config replay PASS. Web package has no lint script (attempt reported Missing script). Tests use isolated SDK/NuGet/PowerShell and disable Windows EventLog in process; no real .env/.env.local or customer secrets accessed.'
   pending: 'Hosted exact-head CI and mandatory new actual SQL error-code/create/rotate/queued-worker proof. Docker is unavailable locally. Production key/customer credentials require approved operator setup; no production/customer enrollment. Direct SELECT script intentionally preserves existing fixed-role/db_datareader refusal; details in ADR_CUSTOMER_ERP_CREDENTIALS.md.'
   integrated_main_verification: 'After accepted main542221c integration,1612 Persistence tests PASS and1 inherited opt-in customer-request SQL test SKIP;EF no-pending-model check and full idempotent SQL generation PASS. Same ERP tables/permissions preserved in regenerated20261026100237 migration. Exact remote HEAD and hosted run IDs remain authoritative in HANDOFF303.'
+  first_ci_terminal: '6df1654 Build40304585136 terminal RED;Gov40304584977 PASS. Web1362 incl20 actual Redis,Compose,deployment and EF gates PASS. NET121510442830 failed migration UTF8 BOM;native121510443038 failed missing protected key in runtime anchor before SQL;FE121510443096 failed startup. Reproduced actual Next500 with conflicting id/dataSourceId dynamic slugs. Same-PR repairs: UTF8 normalization, key in shared API/worker environment, credentials under existing dataSourceId tree. Local independent rendered Compose/HMAC/web-exclusion,Next production build,28 focused web and36 Node guard controls PASS;new exact-head hosted closure required.'
   cross_stream: 'Necessary Core/worker/Next BFF/form and deployment wiring edits belong to296; no company-selection/invitation contract change. Accepted295/main542221c integrated; migration20261026100237 adds independent tables after20261026090633; sequence after any future landed294 migration.'
 
 implementation_checkpoint:

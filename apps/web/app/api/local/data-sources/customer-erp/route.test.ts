@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { GET, POST } from "./route";
 import { POST as testConnection } from "../connection-test/route";
-import { PUT } from "../[id]/credentials/route";
+import { PUT } from "../[dataSourceId]/credentials/route";
 const session = vi.hoisted(() => ({ token: "synthetic-issued" as string | null }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => session.token ? { value: session.token } : undefined }) }));
 const company = "22222222-2222-2222-2222-222222222222", id = "33333333-3333-3333-3333-333333333333";
@@ -28,7 +28,7 @@ it("uses explicit SQL test and rotation paths and methods", async () => {
   fetcher.mockImplementation(async () => Response.json({ code: "ok" }));
   expect((await testConnection(request(fields))).status).toBe(200);
   expect(fetcher.mock.calls[0][0]).toBe("http://core:8080/api/data-sources/connection-test");
-  expect((await PUT(request({ ...body, bindingVersion: "1" }), { params: Promise.resolve({ id }) })).status).toBe(200);
+  expect((await PUT(request({ ...body, bindingVersion: "1" }), { params: Promise.resolve({ dataSourceId: id }) })).status).toBe(200);
   expect(fetcher.mock.calls[1][0]).toBe(`http://core:8080/api/data-sources/${id}/credentials`);
   expect(fetcher.mock.calls[1][1].method).toBe("PUT");
 });
