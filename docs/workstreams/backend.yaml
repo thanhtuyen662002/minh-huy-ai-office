@@ -1440,3 +1440,18 @@ group_connector_c619_full_approval:
   receipt: 6095552242
   scope: 'Full frozen core277 APPROVED after independent exact all8/Gov/actual/quality,2027.NET/1334web incl20 actual Redis, current native/Chromium logs and all six original artifact11664207582 images. Literal pending persistent RabbitMQ restart and strict same-snapshot/final SQL graph closes sole full542 gap. No additional concrete core277 blocker.'
   remaining: 'Accurate final doc-only review, approved final push and exact finalPR/main gates before integration. Live provider/account/production volume,278/279/installer239/readonly customer ERP/deployment/full233 remain active.'
+
+customer_request_bridge_295_local:
+  issue: 295
+  branch: codex/295-customer-request-bridge
+  base_head: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
+  implementation_committed: true
+  pushed: true
+  pr: draft
+  state: waiting_ci
+  checkpoint_at: '2026-10-26'
+  handoff: docs/handoffs/295-customer-request-bridge.md
+  completed: 'Backend-only default-off summarized-request bridge; dedicated HMAC domain, durable SQL nonces, configured company/group scope, idempotent atomic YC numbering and request graph, member list/detail/PATCH with rowversion and field audit, self-contained seven-table migration, 94 non-SQL tests and one opt-in real SQL proof, configuration/payload docs.'
+  verification: 'Solution build zero warnings/errors; solution test 2121 passed/zero failed/one skipped (new native SQL proof). Forward migration SQL and no pending EF model changes pass. No raw ingress regressions in full suite.'
+  blockers: 'None for code. Native SQL proof not executed locally (no disposable SQL admin connection); runs when AIOFFICE_CUSTOMER_REQUEST_TEST_SQL is provided.'
+  next_action: 'CI and review on the draft PR; sequence model snapshot with 294 at integration.'

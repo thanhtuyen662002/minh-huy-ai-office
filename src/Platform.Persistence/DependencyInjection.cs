@@ -25,6 +25,7 @@ public static class DependencyInjection
             services.AddScoped<IAuthenticatedCompanyDirectory, EfAuthenticatedCompanyDirectory>();
             services.AddScoped<CompanyMemberDirectory>();
             services.AddScoped<CompanyMembershipAccessService>();
+            services.AddScoped<CustomerRequestPortal>();
             services.AddScoped<CompanyAdministratorService>();
             services.AddScoped<BindingStorePermissionVerifier>();
             services.AddScoped<DataSourceSecretBindingService>();

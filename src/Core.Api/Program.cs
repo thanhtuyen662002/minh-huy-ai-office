@@ -33,6 +33,7 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
 var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString), secretResolver);
+var customerRequestsEnabled = builder.AddCustomerRequests(!string.IsNullOrWhiteSpace(platformConnectionString));
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
         .GetSection(RabbitMqWorkOptions.SectionName)
@@ -101,6 +102,7 @@ app.Use(async (httpContext, next) =>
     finally { AiOfficeTelemetry.RecordHttpRequest(httpContext.Response.StatusCode, System.Diagnostics.Stopwatch.GetElapsedTime(started)); }
 });
 app.UseMiddleware<GroupSourceRequestBoundaryMiddleware>();
+app.UseMiddleware<CustomerRequestBoundaryMiddleware>();
 if (authenticationConfigured)
 {
     app.UseAuthentication();
@@ -114,6 +116,7 @@ static IResult AuthenticationUnavailable() => Results.Problem(statusCode: Status
 app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, component = "Core.Api", environment = deploymentEnvironment.ToString(), status = "ok" }));
 app.MapHealthChecks("/health");
 app.MapGroupIngress(groupIngressEnabled);
+app.MapCustomerRequests(customerRequestsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapGroupListener(groupIngressEnabled);
 app.MapGroupEnrollment(groupIngressEnabled);
 app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);
