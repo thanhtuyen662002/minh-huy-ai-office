@@ -8,6 +8,7 @@ function fixture(options: Options = {}) {
   const receipts = new Map<string, object>();
   const validate = vi.fn(async () => state.current && state.authorized), unauthorized = vi.fn();
   const request = vi.fn(async (_generation: number, url: string, init?: RequestInit) => {
+    if (url.startsWith("/api/local/company/invitations?")) return Response.json({ companyId: company, items: [], offset: 0, limit: 25, hasMore: false });
     if (url.includes("/administrator?")) {
       const input = JSON.parse(init!.body as string);
       if (options.status) return Response.json({ code: options.code ?? "PRIVATE diagnostic" }, { status: options.status });
@@ -96,9 +97,12 @@ it("foreign success keeps exact pending request for a safe retry", async () => {
 });
 it("unmount cannot publish a late role receipt or reload a prior scope", async () => {
   let resolve!: (response: Response) => void; const pending = new Promise<Response>(done => { resolve = done; });
-  const request = vi.fn(async (_generation: number, url: string) => url.includes("/administrator?") ? pending : Response.json({ companyId: company, items: [{ userId: user, displayName: "PRIVATE MEMBER", userActive: true, membershipActive: true, roles: ["viewer"], membershipVersion: "7" }], offset: 0, limit: 25, hasMore: false }));
+  const request = vi.fn(async (_generation: number, url: string) => url.includes("/administrator?") ? pending
+    : url.startsWith("/api/local/company/invitations?") ? Response.json({ companyId: company, items: [], offset: 0, limit: 25, hasMore: false })
+    : Response.json({ companyId: company, items: [{ userId: user, displayName: "PRIVATE MEMBER", userActive: true, membershipActive: true, roles: ["viewer"], membershipVersion: "7" }], offset: 0, limit: 25, hasMore: false }));
   const view = render(<CompanyMemberPanel companyId={company} userId={owner} generation={1} isCurrent={() => true} validate={async () => true} request={request} onUnauthorized={() => {}} />);
-  await screen.findByText("PRIVATE MEMBER"); fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" })); await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+  await screen.findByText("PRIVATE MEMBER"); fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" }));
+  await waitFor(() => expect(request.mock.calls.filter(([, url]) => url.includes("/administrator?"))).toHaveLength(1));
   view.unmount(); await act(async () => resolve(Response.json({ companyId: company, userId: user, operationId: owner, membershipVersion: "8", isAdministrator: true })));
-  expect(request).toHaveBeenCalledTimes(2); expect(screen.queryByText("PRIVATE MEMBER")).toBeNull();
+  expect(request).toHaveBeenCalledTimes(3); expect(screen.queryByText("PRIVATE MEMBER")).toBeNull();
 });

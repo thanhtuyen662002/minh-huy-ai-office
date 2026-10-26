@@ -9,6 +9,7 @@ function fixture(override: (url: string, init?: RequestInit) => Response | Promi
   const validate = vi.fn(async () => state.current), unauthorized = vi.fn();
   const request = vi.fn(async (_generation: number, url: string, init?: RequestInit) => {
     const custom = override(url, init); if (custom !== undefined) return custom;
+    if (url.startsWith("/api/local/company/invitations?")) return Response.json({ companyId: company, items: [], offset: 0, limit: 25, hasMore: false });
     if (url.includes("/access?")) {
       const input = JSON.parse(init!.body as string); state.active = input.isActive; state.version = String(Number(state.version) + 1);
       return Response.json({ companyId: company, userId: user, membershipActive: input.isActive, membershipVersion: state.version, operationId: input.operationId });
@@ -26,7 +27,7 @@ it("suspends and reactivates through versioned operations then reloads the autho
   await screen.findByText("Đã khóa quyền truy cập thành viên."); expect(screen.getByText("Đã tắt thành viên")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Mở lại quyền PRIVATE MEMBER" })); await screen.findByText("Đã mở lại quyền truy cập thành viên.");
   const bodies = mutationBodies(request); expect(bodies.map(body => [body.expectedVersion, body.isActive])).toEqual([["7", false], ["8", true]]); expect(bodies[0].operationId).not.toBe(bodies[1].operationId);
-  expect(request.mock.calls.filter(([, url]) => !url.includes("/access?")).every(([, url]) => url.includes("includeAccessVersion=true"))).toBe(true);
+  expect(request.mock.calls.filter(([, url]) => url.startsWith("/api/local/company/members?")).every(([, url]) => url.includes("includeAccessVersion=true"))).toBe(true);
 });
 it("retains exactly the same operation after a lost reply and blocks other actions until resolved", async () => {
   let first = true; const { request } = fixture((url) => { if (url.includes("/access?") && first) { first = false; throw new Error("Lost reply"); } return undefined; });
@@ -54,7 +55,7 @@ it("ignores a successful response from a prior company/session generation", asyn
   await screen.findByText(member.displayName); fireEvent.click(screen.getByRole("button", { name: "Khóa quyền PRIVATE MEMBER" })); await waitFor(() => expect(mutationBodies(request)).toHaveLength(1));
   const [input] = mutationBodies(request); state.current = false;
   await act(async () => resolve(Response.json({ companyId: company, userId: user, membershipActive: false, membershipVersion: "8", operationId: input.operationId })));
-  expect(screen.queryByText("Đã khóa quyền truy cập thành viên.")).toBeNull(); expect(request.mock.calls.filter(([, url]) => !url.includes("/access?"))).toHaveLength(1);
+  expect(screen.queryByText("Đã khóa quyền truy cập thành viên.")).toBeNull(); expect(request.mock.calls.filter(([, url]) => url.startsWith("/api/local/company/members?"))).toHaveLength(1);
 });
 it("treats a foreign or malformed success as an unknown result and retries the original operation", async () => {
   fixture(url => url.includes("/access?") ? Response.json({ companyId: "66666666-6666-6666-6666-666666666666", userId: user, membershipActive: false, membershipVersion: "8", operationId: "44444444-4444-4444-4444-444444444444" }) : undefined);
