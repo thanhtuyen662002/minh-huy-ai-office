@@ -88,6 +88,23 @@ The [bridge JSON and signature contract](features/customer-group-intake/README.m
 
 For optional native SQL tests in `Platform.Persistence.Tests`, set `AIOFFICE_CUSTOMER_REQUEST_TEST_SQL` to an operator-provided SQL Server admin connection in the test process environment. The test creates, migrates and removes only its own randomly named `AIOffice_CustomerBridge_Test_<hex>` database, exercises the existing runtime role using a disposable database user, and never migrates the connection's existing database. Without that variable this native proof is explicitly skipped; the HTTP/service/contract tests still run.
 
+## Bot channel administration (#302)
+
+The internal team configures Zalo and WhatsApp in **Kênh & Bot**. This feature only stores configuration/status/commands; it never sends group messages. Existing file-configured bots are unaffected. Apply the generated `20261026111913_AddBotChannels` migration through the normal release process before enabling it. No migration is applied by API startup.
+
+| Key | Default / meaning |
+| --- | --- |
+| `AIOffice:BotChannels:Enabled` | Off unless exactly `true`; all bot/internal/admin routes return 404 while off or without platform SQL. |
+| `AIOffice:BotChannels:EncryptionKeySecretRef` | Required when enabled; `secretref://env/AIOFFICE_BOT_ENCRYPTION_KEY`. The resolved secret must be a canonical Base64 random 32-byte AES key. Use a **different key** from HMAC enrollment. |
+| `AIOffice:BotChannels:AllowedAiHosts:<n>` | Empty by default. Exact operator-approved DNS/IP hosts for the server-side AI connection test, e.g. `api.openai.com`. No wildcards. Redirects, proxy forwarding and cookies are disabled; timeout is five seconds. Explicitly allow only the intended AI service hosts, including any private on-premises AI host. This allowlist does not enable arbitrary URL probes from the browser. |
+| `AIOffice:CustomerRequests:Services:<n>:…` | Reuses the #295 service enrollment, headers, HMAC key reference, tenant/company mapping and durable nonce cache. Enrollment is loaded if either bridge is enabled; `CustomerRequests:Enabled` may remain off. Existing enrollment validation and source-group allowlists remain required. |
+
+Use double underscores in environment variables, for example `AIOffice__BotChannels__Enabled=true`. These are infrastructure settings; the AI base URL/model/key, schedules, tech destination and customer selections are managed through the admin screen. The API reports enabled availability only to current company administrators. No new public browser flag is necessary.
+
+`BotAiSettings.ProtectedApiKey` is an explicit encrypted-secret storage exception to the reference-only default below: AES-256-GCM with a fresh nonce and tenant/company/purpose authenticated data. Its encryption key remains outside SQL/Git in the secret resolver. Back up the encryption key with the database through the protected recovery process; all API instances serving this database must resolve the same key. Losing/changing it without re-encrypting the stored values makes the existing keys unreadable (bounded 503). Rotation requires a separately reviewed re-encryption procedure; changing the environment key alone is not a rotation procedure. API keys are write-only in administration: omission/null keeps the current key, `clearApiKey: true` clears it. There is no last-four hint. Only a freshly HMAC-authenticated enrolled company service receives decrypted keys through a no-store config response.
+
+See the [bot channel tables, endpoints and connector contract](features/bot-channels/README.md) for canonical signed targets, limits, versions, QR/command expiry and follow-up integration guidance. The #295 source-group enrollment remains an independent ingestion authorization boundary: selecting a bot customer group does not grant that service permission to ingest requests from it.
+
 ## Storage contract for future tables
 
 Any table that needs a credential stores a reference field such as `CredentialSecretRef`, never a password/token/connection string. Resolver/provider configuration is infrastructure metadata. Rotation changes the underlying secret or reference under controlled release policy; agents continue to request logical resources rather than credentials.

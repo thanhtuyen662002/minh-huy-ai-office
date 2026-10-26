@@ -7,6 +7,12 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> options) : DbContext(options)
 {
     public const string DefaultSchema = "aioffice";
+    public DbSet<BotChannelRecord> BotChannels => Set<BotChannelRecord>();
+    public DbSet<BotCustomerGroupRecord> BotCustomerGroups => Set<BotCustomerGroupRecord>();
+    public DbSet<BotAiSettingsRecord> BotAiSettings => Set<BotAiSettingsRecord>();
+    public DbSet<BotStatusRecord> BotStatuses => Set<BotStatusRecord>();
+    public DbSet<BotCommandRecord> BotCommands => Set<BotCommandRecord>();
+    public DbSet<BotChannelAuditRecord> BotChannelAudits => Set<BotChannelAuditRecord>();
     public DbSet<CustomerRequestRecord> CustomerRequests => Set<CustomerRequestRecord>();
     public DbSet<CustomerRequestItemRecord> CustomerRequestItems => Set<CustomerRequestItemRecord>();
     public DbSet<CustomerRequestEvidenceRecord> CustomerRequestEvidence => Set<CustomerRequestEvidenceRecord>();
@@ -55,6 +61,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
+        modelBuilder.ConfigureBotChannels();
         modelBuilder.ConfigureCustomerRequests();
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureCompanyMembershipAccess();

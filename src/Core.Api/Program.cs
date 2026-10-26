@@ -40,6 +40,7 @@ builder.Services.AddPlatformPersistence(platformConnectionString);
 builder.Services.AddSingleton(secretResolver);
 var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString), secretResolver);
 var customerRequestsEnabled = builder.AddCustomerRequests(!string.IsNullOrWhiteSpace(platformConnectionString));
+var botChannelsEnabled = builder.AddBotChannels(!string.IsNullOrWhiteSpace(platformConnectionString));
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
         .GetSection(RabbitMqWorkOptions.SectionName)
@@ -123,6 +124,7 @@ app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, compon
 app.MapHealthChecks("/health");
 app.MapGroupIngress(groupIngressEnabled);
 app.MapCustomerRequests(customerRequestsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
+app.MapBotChannels(botChannelsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapGroupListener(groupIngressEnabled);
 app.MapGroupEnrollment(groupIngressEnabled);
 app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);

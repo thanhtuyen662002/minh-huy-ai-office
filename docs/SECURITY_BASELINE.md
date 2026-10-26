@@ -4,6 +4,7 @@
 - Tenant/company/user/task scope included in authorization decisions.
 - Logical data source references; credentials stored in approved secret providers, never prompts/Git.
 - Secret-bearing application/database fields store opaque `secretref://provider/resource` references, never resolved passwords, tokens or connection strings.
+- Explicit #302 exception: `BotAiSettings.ProtectedApiKey` stores only an AES-256-GCM envelope, bound to tenant/company/purpose. The protecting key uses the secret-reference mechanism. Admin reads and audits never contain API key values or hints; only enrolled HMAC config pulls can decrypt them. See [configuration](CONFIGURATION.md#bot-channel-administration-302).
 - Resolved secrets exist only at the runtime boundary that needs them and must not be logged, audited, cached as business data or sent to models.
 - SQL writes require policy checks; destructive operations require elevated approval.
 - Row/query/time limits and transaction boundaries enforced in Tool Gateway.

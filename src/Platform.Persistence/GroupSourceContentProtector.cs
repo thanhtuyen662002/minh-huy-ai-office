@@ -25,12 +25,7 @@ public sealed class GroupSourceContentProtector
         catch (EncoderFallbackException) { throw new InvalidOperationException("Group source content is invalid."); }
         try
         {
-            var result = new byte[checked(PrefixLength + clear.Length)];
-            result[0] = 1;
-            RandomNumberGenerator.Fill(result.AsSpan(1, 12));
-            using var aes = new AesGcm(key, 16);
-            aes.Encrypt(result.AsSpan(1, 12), clear, result.AsSpan(PrefixLength), result.AsSpan(13, 16), aad);
-            return result;
+            return AesGcmEnvelope.Protect(clear, key, aad);
         }
         finally { CryptographicOperations.ZeroMemory(clear); }
     }
@@ -43,8 +38,7 @@ public sealed class GroupSourceContentProtector
         var clear = new byte[envelope.Length - PrefixLength];
         try
         {
-            using var aes = new AesGcm(key, 16);
-            aes.Decrypt(envelope.Slice(1, 12), envelope[PrefixLength..], envelope.Slice(13, 16), clear, aad);
+            AesGcmEnvelope.Unprotect(envelope, clear, key, aad);
             var text = StrictUtf8.GetString(clear);
             if (text.Length > MaximumTextLength) throw new InvalidOperationException("Group source content is unavailable.");
             return text;
