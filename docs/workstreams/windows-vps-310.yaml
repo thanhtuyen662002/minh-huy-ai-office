@@ -1,0 +1,20 @@
+workstream: windows-vps-310
+role: Dedicated local Windows VPS installer task
+current_issue: 310
+current_pr: null
+current_branch: codex/310-one-click-installer
+head: 7694ab5a0074f798df07cca109093e4883da51b1
+state: in_progress
+lease_owner: codex-local-installer-310
+last_checkpoint_at: '2026-10-26'
+handoff: docs/handoffs/310-one-click-installer.md
+stacked_on: 'PR #309; parent implementation retained and extended'
+publication: 'Draft PR against main, stacked on PR #309.'
+verification:
+  pester: '24 passed, 0 failed/skipped; inbox Pester3.4.0 under portable PowerShell7'
+  parse: '8 VPS and 3 shared scripts pass; embedded CMD bootstrap parsed without execution'
+  dry_run: '13 setup and 4 update phases pass, including absent-root no-write checks'
+  diff_check: pass
+  analyzer: 'PSScriptAnalyzer 1.24.0 + Pester 4.10.1 pass locally via Invoke-Checks.ps1; pinned Windows CI job added'
+  real_vm: 'Not run: explicitly prohibited here; operator qualification pending'
+next_action: 'Confirm hosted CI, merge PR #309 first, then operator qualifies Setup-AIOffice.cmd on the approved VM.'
