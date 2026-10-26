@@ -1,14 +1,22 @@
 workstream: qa-release
 role: QA / Security / Release
-status: active-security-servicing291
-current_issue: 291
-current_pr: 292
-current_branch: codex/291-dotnet-october-servicing
-head: 834d322a57a30be4da63bd110905a0525f613ba2
+status: local-production-identity301
+current_issue: 301
+current_pr: null
+current_branch: codex/301-production-keycloak
+head: ad747d0daf71be73e1e2af17e8bb3c4c0b4b234b
 state: in_progress
-lease_owner: root-qa-security-291
-lease_heartbeat_at: '2026-10-14'
-last_checkpoint_at: '2026-10-14'
+lease_owner: codex-identity-301
+lease_heartbeat_at: '2026-10-26T10:06:00Z'
+last_checkpoint_at: '2026-10-26T10:06:00Z'
+handoff: docs/handoffs/301-production-keycloak.md
+production_identity_301:
+  scope: 'Issue301 items1-4 only; separate production Keycloak/MSSQL, realm, preflight/config, deployment runbook.'
+  working_tree: 'Implementation is uncommitted: Git denied creation of the worktree index.lock. No push requested or performed; no Draft PR/CI run created.'
+  local_verification: 'Both identity and base+production Compose config PASS with dummy env; build PASS (0 errors,12 NU1900 network warnings); all2065 .NET tests PASS including63 Configuration; web1314 PASS/20 Redis-gated SKIP; changed C# whitespace and2 Bash syntax checks PASS.'
+  environment: 'Portable PowerShell7.5.2 on process PATH; temporary APPDATA/NuGet config for cached restore. Full tests require process-only Logging__EventLog__LogLevel__Default=None because this sandbox cannot write Windows Event Log.'
+  runtime_proof: 'NOT RUN: Docker daemon unavailable. Disposable SQL/Keycloak import, HTTPS first-login/OTP/lockout and backup/restore proof procedure is in DEPLOYMENT.md; existing local-stack CI not rerun.'
+  boundaries: 'No production env/server/database access; no page.tsx, invitations, zalo-intake or lead-owned PROJECT_STATE changes. Member-to-Keycloak provisioning remains separate.'
 scope: &id001
 - ci
 - tests
@@ -21,12 +29,10 @@ scope: &id001
 - release-gates
 - cross-workstream-pr-quality-review
 blocked_by: &id003 []
-next_action: Own repaired PR292 final exact head all8/Gov/native80/full2027/wholequality/six originals
-  and actual3image canonical-version checks to terminal; fix real failures on SAME292. Independent source/final-state
-  review remains incomplete after reviewer usage-limit interruption; do not merge before review and security
-  acceptance. Original a32 terminal RED closure is published; no retry. Normal qualified merge/main closure
-  then accepted serviced integration into288 precedes private Gateway5/8v2 promotion and full4716 reverification.
-  Actual model/customerERP/Windows/deployment/full233 incomplete.
+next_action: Review the local301 diff and HANDOFF; when Git permits, commit the verified infrastructure/realm
+  and config/tests/docs as small checkpoints. Do not push without a new user instruction. Execute the documented
+  import/login/restart/backup proof on disposable SQL/Keycloak with HTTPS, then close retained local-stack CI
+  and exact-head required gates when publication is authorized. No production deployment or invitation follow-up.
 previous_pilot_verification: &id002
   exact_head_build: 36298741274
   exact_head_governance: 36298741295

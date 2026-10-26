@@ -81,6 +81,186 @@ $apiPort = if ([string]::IsNullOrWhiteSpace($env:CORE_API_PORT)) { "8080" } else
 
 The production Compose file starts Core.Api and Agent.Worker with the same release tag. With the database, RabbitMQ, OIDC and pilot secret configured, the worker runs the bounded read-only data-source connectivity probe behind the trusted tool metadata, permission and audit gates. If any prerequisite is absent, startup or task execution fails closed; a running container alone is not proof that the pilot path has completed a task.
 
+## Company-hosted production identity (issue #301)
+
+`compose.identity.yaml` runs pinned Keycloak `26.8.0` in production `start` mode,
+as UID 1000, with capability drops and `no-new-privileges`. It uses the company
+SQL Server's **separate `AIOffice_Identity` database**. Its independent project
+name prevents the application deploy script's `--remove-orphans` from deleting
+identity. Do not merge this file into the application Compose project.
+
+### Prepare the identity database and secrets
+
+Have the DBA run [001-create-identity-database.sql](../infra/keycloak/001-create-identity-database.sql)
+against `master` on the approved private SQL Server 2019/2022. This creates only
+`AIOffice_Identity`, with UTF-8 collation and `READ_COMMITTED_SNAPSHOT ON` before
+connections exist. Keycloak owns and version-migrates its tables; never run the
+platform EF migrations against this database.
+
+Provision a dedicated SQL login through the approved secret manager and map it
+only to `AIOffice_Identity`. For Keycloak's initial schema creation/upgrades it
+needs DDL rights in that database (a database-scoped `db_owner` mapping is the
+baseline); it must have no server administration role or platform/ERP database
+grant. Never reuse `sa` or the platform login. Keep SQL private. The JDBC URL fixes
+the database name and requires encrypted, certificate-validated SQL connections;
+the configured SQL DNS name must match a certificate trusted by the JVM. Arrange
+private CA trust in the deployment image if needed; do not disable TLS validation.
+
+Populate the `AIOFFICE_KEYCLOAK_*` entries in an operator-managed, ignored env file
+using `.env.production.example` as the template. The four `*_FILE` entries are
+absolute paths to protected files supplied by the secret manager: database
+username/password and a temporary bootstrap administrator username/password.
+Each contains one UTF-8 value without BOM or CR characters. Limit host access to
+the operator/container runtime; allow the non-root container to read the mounts.
+Compose file-backed secrets are mounted files, not an encrypted secret store.
+Do not place credentials in JDBC URLs or use `secretref://` as a password value.
+The entrypoint reads mounted secrets into Keycloak's private process environment
+without logging them or putting them in arguments. Protect container inspection
+and administrative shell access accordingly.
+
+Configure these public values consistently:
+
+| Value | Required relationship |
+|---|---|
+| `AIOFFICE_KEYCLOAK_ENABLED` | `true` enables self-hosted preflight checks; it does not start a service |
+| `AIOFFICE_KEYCLOAK_HOSTNAME` | Approved HTTPS identity origin, without trailing slash |
+| `AIOFFICE_AUTHORITY`, `AIOFFICE_BROWSER_OIDC_ISSUER` | Identity origin + `/realms/aioffice` (exact equality) |
+| Browser authorization/token/JWKS endpoints | Issuer + `/protocol/openid-connect/auth`, `/token`, `/certs` respectively |
+| `AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN` | Approved HTTPS web origin, without trailing slash |
+| `AIOFFICE_BROWSER_OIDC_CLIENT_ID` | `aioffice-browser`; leave client secret empty |
+| `AIOFFICE_AUDIENCE` | API audience imported by the realm mapper; same value passed to Core.Api |
+
+Existing external-provider installations can omit `AIOFFICE_KEYCLOAK_ENABLED` or
+set it to `false`. The browser issuer still defaults to `AIOFFICE_AUTHORITY` when
+its explicit variable is absent.
+
+### First start, proxy, and realm import
+
+After filling the private configuration, run on the deployment host:
+
+```powershell
+pwsh ./infra/validate-production-env.ps1 -EnvironmentFile .env.production
+docker compose --env-file .env.production -f compose.identity.yaml config --quiet
+docker compose --env-file .env.production -f compose.identity.yaml up -d --wait keycloak
+docker compose --env-file .env.production -f compose.identity.yaml ps
+```
+
+The first start automatically imports
+[aioffice-realm.json](../infra/keycloak/aioffice-realm.json) with `--import-realm`.
+Keycloak substitutes the client/origin/audience environment placeholders directly;
+no generated secret-bearing realm file is needed. An existing `aioffice` realm is
+**skipped** on restart, preserving users and keys. Subsequent policy changes need
+a reviewed, versioned Admin API migration and database backup; editing the seed
+does not reconcile an existing realm. Never delete or override a production realm
+to reapply the seed.
+
+Route the approved HTTPS identity hostname to
+`http://127.0.0.1:<AIOFFICE_KEYCLOAK_PORT>` (default `8081`) using the existing
+host tunnel/reverse proxy. TLS terminates there; Keycloak's internal HTTP is
+explicitly enabled with `KC_PROXY_HEADERS=xforwarded` and a fixed strict HTTPS
+hostname. The proxy must overwrite `X-Forwarded-For`, `X-Forwarded-Proto`,
+`X-Forwarded-Host`, and `X-Forwarded-Port`, and prevent direct access to the origin.
+Keep `/admin`, `/realms/master`, and administration resources operator-only; allow
+the required `aioffice` realm login/account/static resources and discovery/token/
+JWKS endpoints to the approved browser and API/BFF callers. An interactive access
+gate must not intercept machine-to-machine token, discovery or JWKS requests.
+Core.Api and the BFF must reach those configured HTTPS endpoints from their
+containers. Do not publish management port `9000`; its readiness check includes
+the database pool. This profile is one Keycloak instance (`KC_CACHE=local`); HA
+requires a separately reviewed cache/topology design.
+
+Use the temporary bootstrap identity in the `master` administration console to
+create a named, permanent Keycloak operator with MFA and the necessary realm
+administration role. Test that account, then delete the temporary bootstrap
+administrator and rotate/retire its protected secret material. Bootstrap env
+values only take effect when the master realm is first created; they do not reset
+an existing operator's password on restart.
+
+### First staff / company administrator identity
+
+In `aioffice`, create the first staff username with an independently confirmed
+email, first/last name, and enabled account. Mark **Email verified** only after
+the operator verifies ownership through the company's approved process. The
+standard `email` scope emits the actual `email_verified` state; no mapper forces
+it true. SMTP is not configured by this seed, so self-service registration,
+password reset and automatic verification email are disabled. Enabling email
+verification/reset later requires approved SMTP and a tested delivery process.
+
+Set a privately delivered **temporary** password, keep `UPDATE_PASSWORD` required,
+and verify the user must replace it at first login. The seed enables this action
+by default for every new user, enforces at least 14 characters and five-password
+history, and progressively locks out brute-force attempts after five failures.
+Users can enroll TOTP through Account Console; an operator can explicitly assign
+`CONFIGURE_TOTP`. OTP is available but not mandatory for all staff.
+
+The browser client retains the [Code/S256 contract](architecture/ADR_BROWSER_OIDC.md):
+exact `/api/local/session/oidc/callback`, RS256, default `basic/profile/email`
+scopes, and disabled password/implicit/service-account grants. The access token
+gets the configured API audience and `idp=company-keycloak`; the ID token keeps
+the browser client audience. Record the actual Keycloak UUID (`sub`) and provider
+`company-keycloak` for the separately authorized first-company bootstrap.
+Keycloak realm administration roles do not grant AI Office company access: Core
+still resolves active SQL membership and roles. Automatic user creation from
+**Thêm thành viên** is a separate follow-up and is not implemented here.
+
+Leave `AIOFFICE_BROWSER_OIDC_ENABLED=false` until approved HTTPS endpoints, private
+TLS Redis, API membership and first-login proof are ready. Then enable it using
+the existing [browser operator procedure](validation/BROWSER_SIGN_IN_OPERATOR.md).
+
+### Backup and restore
+
+Schedule encrypted full and transaction-log backups of `AIOffice_Identity` using
+the company's SQL Server backup policy. Keep off-host copies, recovery keys,
+retention, and a tested point-in-time restore. Back up the exact Git release,
+private configuration/secret-manager references and required TLS trust material.
+The database contains password hashes, OTP secrets, signing keys and identity
+configuration; restrict access as sensitive authentication data. Realm export
+alone omits important state and is not the database backup.
+
+Before Keycloak image/schema upgrades, stop the identity service and take a
+recoverable database backup. Rehearse restore to an isolated **disposable** SQL
+Server with the matching image release and separate proxy/configuration. Never
+restore identity over the platform database. After a restore, invalidate browser
+sessions in the approved session store and verify fresh Code/S256 login, current
+membership and logout/revocation before restoring traffic; do not assume an old
+session snapshot preserves revocations.
+
+### Disposable import and login proof (release gate)
+
+This is a manual proof procedure, **not a recorded passing runtime result**.
+Use only an isolated SQL Server 2019/2022 with trusted TLS, throwaway credentials,
+and a disposable HTTPS proxy/web deployment; never reuse the company server or
+platform database. Copy the template to an ignored `.env.identity-proof` and set
+all identity/web endpoints and secret files to that fixture. Give Compose a
+unique project name with `-p aioffice-identity-proof-<unique-id>` on every command.
+
+1. Run `001-create-identity-database.sql` on the disposable instance, provision
+   its dedicated login, and run preflight plus `docker compose --env-file
+   .env.identity-proof -p <unique-project> -f compose.identity.yaml config --quiet`.
+2. Run the same Compose prefix with `up -d --wait keycloak`. Require healthy
+   readiness including SQL, successful `aioffice` import, configured HTTPS issuer
+   in discovery, and the exact client callback/scopes/mappers in Admin Console.
+3. Create one verified and one unverified fixture user with temporary passwords.
+   Through the real web flow require Code/S256, first-login password change, an
+   ID token whose sole audience is `aioffice-browser`, and an access token with
+   `sub`, `idp=company-keycloak`, API audience and accurate `email_verified`.
+   Keep raw tokens/passwords out of saved evidence. Check missing/wrong PKCE,
+   an unregistered redirect and password grant are denied. Prove password length,
+   history, lockout and optional TOTP enrollment/challenge.
+4. Recreate only the fixture Keycloak container; require the same realm, client
+   and user UUIDs, retained password and successful fresh browser login. Confirm
+   startup skips the existing realm. Complete the retained browser/API tenant
+   isolation, membership/revocation/logout checks with disposable platform data.
+5. Back up and restore only the fixture identity DB, verify the restore procedure,
+   and save sanitized image/release/Compose versions, statuses and assertions in
+   the release handoff. Remove only the uniquely owned fixture resources.
+
+References: [container runtime](https://www.keycloak.org/server/containers),
+[SQL Server configuration](https://www.keycloak.org/server/db),
+[realm import semantics](https://www.keycloak.org/server/importExport),
+[reverse proxy](https://www.keycloak.org/server/reverseproxy), and
+[database readiness](https://www.keycloak.org/observability/health).
+
 ## Operator path
 
 Run these steps from a clean checkout of the release SHA on the private backend host. The commands assume PowerShell 7 and Docker Compose v2.
@@ -132,7 +312,7 @@ docker compose --env-file .env.production -f compose.yaml -f compose.production.
 docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml ps
 ```
 
-RabbitMQ AMQP, Redis, OpenTelemetry and Jaeger remain loopback/private services. Only the Core.Api loopback endpoint is eligible for the approved identity-aware tunnel.
+RabbitMQ AMQP, Redis, OpenTelemetry and Jaeger remain loopback/private services. Route only the approved Core.Api, web and separately configured Keycloak loopback endpoints through the access boundary.
 
 ### 3. Start API and worker
 
@@ -299,7 +479,7 @@ It does **not** expose the API publicly, change tunnel configuration, or apply d
 
 ## Secure access boundary
 
-Approved patterns include an identity-aware outbound tunnel or a private VPN/tailnet. Configure the provider to reach only the loopback Core.Api endpoint.
+Approved patterns include an identity-aware outbound tunnel or a private VPN/tailnet. Configure each approved application hostname to reach its specific loopback endpoint; the identity hostname follows the Keycloak proxy rules above.
 
 For any Internet-reachable hostname, require provider-side access control before traffic reaches Core.Api. Core.Api validates the OIDC token and server-side company membership for customer routes, but an unauthenticated public route is still not an acceptable production configuration.
 
