@@ -4,15 +4,16 @@ status: active-development
 current_issue: 296
 current_pr: 303
 current_branch: codex/296-customer-erp-connection
-head: 6d5ac47825eeb193802b4ec4380f63ac6aa46847
-state: in_progress
+head: 56f5965041ad2da152463035934dd24f49dcd236
+state: blocked
 lease_owner: codex-296-customer-erp-connection
-lease_heartbeat_at: '2026-10-26T11:50:00Z'
-last_checkpoint_at: '2026-10-26T11:50:00Z'
+lease_heartbeat_at: '2026-10-26T11:53:00Z'
+last_checkpoint_at: '2026-10-26T11:53:00Z'
 last_merged_pr: 265
 last_merge_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 preferred_next_issue: null
-blocked_by: []
+blocked_by:
+  - 'GitHub PR303 mergeable=false/mergeable_state=dirty after the requested push; no workflow runs exist for56f5965. Owner explicitly forbids merges and changes to other branches/worktrees, so current-base integration is left to the authorized integrator.'
 scope:
   - datasource-registry
   - sql-erp-adapters
@@ -34,7 +35,7 @@ verification:
   quality: 113389149345
   independent_review: approved
   result: 'All eight Build jobs and Governance PASS. Actual safe/unsafe permissions, all four compiled read paths, replacement and mid-read discard, changed-session worker, retained revoke/replay and Chromium PASS. Frozen independent security/runtime review approved this conservative standalone engine16/current-database profile. Full650 Persistence and independent313 focused controls PASS. Final evidence-only head and main delivery closure still required.'
-next_action: 'Publish verified policy fence6d5ac47 plus this resume checkpoint to the existing296 branch, then own exact published-head CI through terminal using the connected GitHub app for read-only status. gh returned401: skip PR-body update per owner instruction; current handoff is below. Keep303 Draft; never merge or modify other branches/worktrees.'
+next_action: 'Authorized integrator must resolve PR303 dirty/conflict state before pull_request CI can start; then own exact published-head all8 Build/Governance closure.6d5ac47 and56f5965 are pushed, with this blocker checkpoint following. gh returned401: PR-body update skipped per owner instruction; current handoff is below. Keep303 Draft; never merge or modify other branches/worktrees.'
 
 customer_erp_296:
   completed: 'Separate AES-256-GCM protected customer binding store and versioned migration; immutable operator bindings preserved. Scoped API test/create/rotate/list, current admin checks, ten attempts/company/minute, strict bounded input, transaction/audit/idempotency/version fences, API and worker protected resolution. Vietnamese form/list/read-only SQL guidance and BFF. Production preflight/key wiring, stable purpose-separated local key, tracked empty templates and ADR.'
@@ -47,19 +48,20 @@ customer_erp_296:
   browser_failure_investigation: 'Inherited intermittent original-response completion failure, not a demonstrated296 regression. Real retry returns202 and shipping UI parses/verifies its receipt and displays accepted; original10s signal later reports TimeoutError/net::ERR_ABORTED while Playwright waits for response.finished(). Base main542221c Build40303013114/job121505215738 independently failed body-replay-timeout-after-accepted-ui. Main1c315853 Build40308194626/job121522743443 independently failed EXACT headers-replay-timeout-after-accepted-ui, without296. Underlying Chromium/network completion cause remains unproven; do not claim it repaired.'
   browser_source_comparison: 'Git blob identity with base542221c verified for submission scenario, lifecycle/wire observer, Core reply-loss proxy, useTaskSubmission, useLocalSession and taskSubmissionBff.296 workspace changes only import/mount the ERP panel under the data-sources surface. Shared fetchCoreApi still defaults/caps the task deadline at10000ms; only ERP calls request20000ms. The earlier Next slug failure is repaired and production build/FE runtime pass. No test, timeout, receipt equality, accepted-UI refusal or graph oracle changed.'
   resume_local_verification: '1342web PASS,20actualRedis SKIP; TypeScript and Next production build PASS;36 Node browser guard/lifecycle controls PASS. Persistence1616 PASS/1inherited opt-inSQL SKIP; Configuration41,Contracts507,Observability6 PASS. Initial whole-solution attempt needed isolated NuGet restore and pwsh on PATH; neither was a product defect. Isolated stock-Chrome HTTP202/body-reader/10s-signal/extra-CDP positive completed normally; not pinned Chromium or full SQL/OIDC acceptance. Generated Next config edits restored; no real environment files/secrets read.'
+  resume_publication: 'Requested git push origin codex/296-customer-erp-connection succeeded01ace06..56f5965, including6d5ac47. Read-only GitHub API confirms head56f5965041ad2da152463035934dd24f49dcd236, open/Draft, mergeable=false and mergeable_state=dirty at2026-10-26T11:52:30Z. Both commit-workflow and repository head_sha queries return zero runs; there are no new run IDs to record. No merge/integration attempted. This docs-only blocker checkpoint follows56f5965; resolve its exact published HEAD from GitHub.'
   resume_pr_handoff: |
     HANDOFF
     Issue: #296; Closes #296 remains in Draft PR #303.
     Branch: codex/296-customer-erp-connection
-    HEAD: Verified implementation6d5ac47825eeb193802b4ec4380f63ac6aa46847; resolve the subsequent evidence commit/exact published HEAD from GitHub.
-    State: in_progress; publish verified checkpoint and own renewed exact-head CI.
+    HEAD: Published evidence56f5965041ad2da152463035934dd24f49dcd236 includes implementation6d5ac47825eeb193802b4ec4380f63ac6aa46847; this docs-only blocker checkpoint follows.
+    State: blocked; GitHub dirty/conflict state prevents new pull_request workflows.
     Completed: All296 native SQL error-code/create/rotation/queued-worker markers passed on01ace06. Protected-policy legacy API fence6d5ac47 verified locally.
-    Current: Inherited Chromium replay completion failure confirmed independently on main542221c and1c315853; exact failure evidence above. No296 product cause found and no test weakened.
-    Remaining: Publish fence/checkpoint and close exact-head all eight Build jobs plus Governance; inspect any new terminal red immediately on this branch.
+    Current: Requested push succeeded. Inherited Chromium replay completion failure confirmed independently on main542221c and1c315853; exact failure evidence above. No296 product cause found and no test weakened.
+    Remaining: Authorized integration must resolve PR dirty/conflict state, then close exact-head all eight Build jobs plus Governance; inspect any new terminal red immediately on this branch.
     Tests/Evals: Local evidence above; actual new policy-fence full-PUT assertion needs renewed hosted native execution.
     Known risks: Underlying inherited Chromium completion cause remains unproven; prior failed run is not acceptance.
-    Blocked by: No local Docker/pinned Chromium. gh401, so PR-body update skipped per owner; connected GitHub app can read CI.
-    NEXT ACTION: Push origin codex/296-customer-erp-connection; capture exact head/run IDs and retain CI closure ownership.
+    Blocked by: PR303 dirty/conflict state; zero new workflow runs/IDs. No local Docker/pinned Chromium. gh401, so PR-body update skipped per owner; connected GitHub app can read CI.
+    NEXT ACTION: Authorized integrator resolves conflicts; resume exact-head CI closure afterward. User forbids merges in this run.
     DO NOT: Merge; modify other branches/worktrees; read real .env/.env.local or secrets; relax receipt/security/oracle requirements.
   cross_stream: 'Necessary Core/worker/Next BFF/form and deployment wiring edits belong to296; no company-selection/invitation contract change. Accepted295/main542221c integrated; migration20261026100237 adds independent tables after20261026090633; sequence after any future landed294 migration.'
 
