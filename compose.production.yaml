@@ -50,6 +50,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in ignored .env.production}
 
   core-api:
+    secrets:
+      - keycloak_provisioning_client_secret
     build:
       context: .
       dockerfile: src/Core.Api/Dockerfile
@@ -59,6 +61,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:8080
+      AIOffice__KeycloakProvisioning__Enabled: ${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED:-false}
+      AIOffice__KeycloakProvisioning__BaseUrl: ${AIOFFICE_KEYCLOAK_HOSTNAME:-}
+      AIOffice__KeycloakProvisioning__ClientSecretFile: /run/secrets/keycloak_provisioning_client_secret
       AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
       AIOffice__Authentication__Authority: ${AIOFFICE_AUTHORITY:?set AIOFFICE_AUTHORITY from the approved identity provider}
       AIOffice__Authentication__Audience: ${AIOFFICE_AUDIENCE:?set AIOFFICE_AUDIENCE from the approved identity provider}
@@ -141,3 +146,7 @@ services:
     stop_grace_period: 60s
     networks:
       - ai-office
+
+secrets:
+  keycloak_provisioning_client_secret:
+    file: ${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE:-/dev/null}

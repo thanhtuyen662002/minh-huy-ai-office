@@ -1,11 +1,14 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MinhHuy.AIOffice.Shared.Contracts;
 
 namespace MinhHuy.AIOffice.Platform.Persistence;
 
-public sealed class CompanyInvitationService(PlatformDbContext database, IAuthorizationDirectory directory)
+public sealed class CompanyInvitationService(PlatformDbContext database, IAuthorizationDirectory directory,
+    IKeycloakAdminClient? keycloak = null, ILogger<CompanyInvitationService>? logger = null)
 {
     private static readonly SemaphoreSlim NonSqlGate = new(1, 1);
 
@@ -15,32 +18,68 @@ public sealed class CompanyInvitationService(PlatformDbContext database, IAuthor
         await RequireAdminAsync(authority, cancellationToken);
         var email = CompanyInvitationPolicy.NormalizeEmail(input.Email);
         var roles = CompanyInvitationPolicy.ValidateRoles(input.Roles);
-        return await MutateAsync(async () =>
+        var accountCreated = false;
+        try
         {
-            await LockCompanyAsync(authority.TenantId, authority.CompanyId, cancellationToken);
-            await RequireAdminAsync(authority, cancellationToken);
-            await new CompanyInvitationAuditPermissionVerifier(database).RequireAppendOnlyAsync(cancellationToken);
-            if (await database.CompanyMemberships.Join(database.Users,
-                member => new { member.TenantId, Id = member.UserId }, user => new { user.TenantId, user.Id },
-                (member, user) => new { member.TenantId, member.CompanyId, user.NormalizedEmail }).AnyAsync(row =>
-                    row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId && row.NormalizedEmail == email, cancellationToken))
-                throw new CompanyInvitationConflictException("existing-member");
-            var now = DateTimeOffset.UtcNow;
-            var existing = await database.CompanyInvitations.SingleOrDefaultAsync(row => row.TenantId == authority.TenantId &&
-                row.CompanyId == authority.CompanyId && row.NormalizedEmail == email && row.AcceptedAtUtc == null && row.RevokedAtUtc == null, cancellationToken);
-            if (existing is not null)
+            return await MutateAsync(async () =>
             {
-                if (existing.ExpiresAtUtc > now) throw new CompanyInvitationConflictException("duplicate-invitation");
-                existing.RevokedAtUtc = now; existing.Version++;
-                Audit(existing, "expired", authority.UserId, now);
-                // Release the filtered unique slot before inserting its replacement.
-                await database.SaveChangesAsync(cancellationToken);
-            }
-            var invitation = NewInvitation(authority.TenantId, authority.CompanyId, email, roles, authority.UserId, now);
-            database.CompanyInvitations.Add(invitation); Audit(invitation, "created", authority.UserId, now);
-            await RequireAdminAsync(authority, cancellationToken);
-            return CompanyInvitationPolicy.Result(invitation);
-        }, cancellationToken);
+                await LockCompanyAsync(authority.TenantId, authority.CompanyId, cancellationToken);
+                await RequireAdminAsync(authority, cancellationToken);
+                await new CompanyInvitationAuditPermissionVerifier(database).RequireAppendOnlyAsync(cancellationToken);
+                if (await database.CompanyMemberships.Join(database.Users,
+                    member => new { member.TenantId, Id = member.UserId }, user => new { user.TenantId, user.Id },
+                    (member, user) => new { member.TenantId, member.CompanyId, user.NormalizedEmail }).AnyAsync(row =>
+                        row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId && row.NormalizedEmail == email, cancellationToken))
+                    throw new CompanyInvitationConflictException("existing-member");
+                var now = DateTimeOffset.UtcNow;
+                var existing = await database.CompanyInvitations.SingleOrDefaultAsync(row => row.TenantId == authority.TenantId &&
+                    row.CompanyId == authority.CompanyId && row.NormalizedEmail == email && row.AcceptedAtUtc == null && row.RevokedAtUtc == null, cancellationToken);
+                if (existing is not null)
+                {
+                    if (existing.ExpiresAtUtc > now) throw new CompanyInvitationConflictException("duplicate-invitation");
+                    existing.RevokedAtUtc = now; existing.Version++;
+                    Audit(existing, "expired", authority.UserId, now);
+                    // Release the filtered unique slot before inserting its replacement.
+                    await database.SaveChangesAsync(cancellationToken);
+                }
+                string? temporaryPassword = null;
+                string? provisioningAction = null;
+                if (keycloak?.Enabled == true)
+                {
+                    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    deadline.CancelAfter(TimeSpan.FromSeconds(8));
+                    try
+                    {
+                        if (await keycloak.UserExistsAsync(email, deadline.Token)) provisioningAction = "keycloak-existing";
+                        else
+                        {
+                            // 192 random bits, plus characters from each common policy class.
+                            var candidate = "Aa1!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
+                            accountCreated = await keycloak.CreateUserAsync(email, candidate, deadline.Token);
+                            if (accountCreated) temporaryPassword = candidate;
+                            provisioningAction = accountCreated ? "keycloak-created" : "keycloak-existing";
+                        }
+                    }
+                    catch (KeycloakProvisioningException)
+                    {
+                        logger?.LogWarning("Keycloak member provisioning failed for company {CompanyId}", authority.CompanyId);
+                        throw;
+                    }
+                }
+                var invitation = NewInvitation(authority.TenantId, authority.CompanyId, email, roles, authority.UserId, now);
+                database.CompanyInvitations.Add(invitation); Audit(invitation, "created", authority.UserId, now);
+                if (provisioningAction is not null) Audit(invitation, provisioningAction, authority.UserId, now);
+                await RequireAdminAsync(authority, cancellationToken);
+                return CompanyInvitationPolicy.Result(invitation) with { TemporaryPassword = temporaryPassword };
+            }, cancellationToken);
+        }
+        catch
+        {
+            // SQL and Keycloak cannot commit atomically. Never compensate by deleting
+            // an account or resetting it on retry; no password escapes a failed commit.
+            if (accountCreated) logger?.LogWarning("Keycloak account created but invitation commit failed for company {CompanyId}", authority.CompanyId);
+            throw;
+        }
     }
 
     public async Task<CompanyInvitationPage> ListAsync(AuthorizationContext authority, int offset = 0, int limit = 25,

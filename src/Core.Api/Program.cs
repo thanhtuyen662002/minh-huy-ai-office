@@ -33,6 +33,7 @@ var secretResolver = new CompositeSecretResolver(new ISecretResolver[] { new Env
 if (!string.IsNullOrWhiteSpace(platformConnectionSecretReference))
     platformConnectionString = await secretResolver.ResolveAsync(SecretReference.Parse(platformConnectionSecretReference));
 
+builder.AddKeycloakProvisioning();
 builder.Services.AddHealthChecks();
 // Return bounded 400 responses for invalid JSON in every environment. Letting
 // development binding errors escape clears sensitive no-store headers and

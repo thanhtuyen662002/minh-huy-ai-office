@@ -40,6 +40,8 @@ internal static class CompanyInvitationEndpoints
     {
         if (accessor.Current?.Context is not { } authority) return Results.Forbid();
         try { return await operation(authority); }
+        catch (KeycloakProvisioningException error)
+        { return Results.Json(new { error = "Keycloak account provisioning failed. No invitation was created.", code = "identity-provisioning-unavailable" }, statusCode: error.Unavailable ? 503 : 502); }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (CompanyMembershipNotFoundException) { return Results.NotFound(new { error = "Invitation is unavailable." }); }
         catch (CompanyInvitationConflictException error) { return Results.Conflict(new { error = "Invitation conflicts with current state.", code = error.Code }); }

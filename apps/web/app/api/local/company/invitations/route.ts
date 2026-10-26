@@ -1,6 +1,6 @@
 import { copyCoreResponse, fetchCoreApi, isCanonicalCompanyId, isOfficeAiUiEnabled, localUiDisabledResponse, officeMutationIsSameOrigin, unauthenticatedResponse } from "../../../../../lib/local-ai-bff";
 import { readBoundedRequestJson } from "../../../../../lib/bounded-request-json";
-import { isInvitationInput, parseInvitation, parseInvitationJson } from "../../../../../lib/company-invitations";
+import { isInvitationInput, parseCreatedInvitation, parseInvitationJson } from "../../../../../lib/company-invitations";
 
 const failure = (status: number, code?: string) => Response.json({ error: "Không xác nhận được lời mời thành viên.", ...(code ? { code } : {}) },
   { status, headers: { "Cache-Control": "no-store" } });
@@ -28,9 +28,9 @@ export async function POST(request: Request) {
   if (!body.ok) return failure(body.status);
   if (!isInvitationInput(body.value)) return failure(400);
   try {
-    const deadline = AbortSignal.timeout(10_000);
+    const deadline = AbortSignal.timeout(20_000);
     const response = await fetchCoreApi("/api/company/invitations", company,
-      { method: "POST", signal: deadline, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body.value) });
+      { method: "POST", cache: "no-store", signal: deadline, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body.value) });
     if (!response) return unauthenticatedResponse();
     if (!response.ok && response.status !== 409) { void response.body?.cancel().catch(() => {}); return failure([400, 401, 403].includes(response.status) ? response.status : 503); }
     const received = await readBoundedRequestJson(new Request("http://bounded-response.invalid", {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         ? (received.value as { code: unknown }).code : null;
       return failure(409, code === "duplicate-invitation" || code === "existing-member" ? code : undefined);
     }
-    const result = parseInvitation(received.value);
+    const result = parseCreatedInvitation(received.value);
     if (response.status !== 201 || !result || result.companyId.toLowerCase() !== company.toLowerCase()
       || result.acceptedAtUtc !== null || result.revokedAtUtc !== null) return failure(503);
     return Response.json(result, { status: 201, headers: { "Cache-Control": "no-store" } });

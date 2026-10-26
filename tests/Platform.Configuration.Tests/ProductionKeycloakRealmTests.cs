@@ -12,8 +12,8 @@ public sealed class ProductionKeycloakRealmTests
         var realm = document.RootElement;
         Assert.Equal("aioffice", realm.GetProperty("realm").GetString());
         Assert.Equal("all", realm.GetProperty("sslRequired").GetString());
-        Assert.False(realm.TryGetProperty("users", out _));
-        var client = Assert.Single(realm.GetProperty("clients").EnumerateArray());
+        Assert.All(realm.GetProperty("users").EnumerateArray(), user => Assert.True(user.TryGetProperty("serviceAccountClientId", out _)));
+        var client = Assert.Single(realm.GetProperty("clients").EnumerateArray(), item => item.GetProperty("publicClient").GetBoolean());
         Assert.Equal("${AIOFFICE_BROWSER_OIDC_CLIENT_ID}", client.GetProperty("clientId").GetString());
         Assert.True(client.GetProperty("publicClient").GetBoolean());
         Assert.True(client.GetProperty("standardFlowEnabled").GetBoolean());
@@ -64,12 +64,73 @@ public sealed class ProductionKeycloakRealmTests
         Assert.False(otp.GetProperty("defaultAction").GetBoolean());
     }
 
-    private static JsonDocument ReadRealm()
+    [Fact]
+    public void Provisioner_has_only_manage_users_in_both_service_account_and_token_scope()
+    {
+        using var document = ReadRealm();
+        var realm = document.RootElement;
+        Assert.Equal(2, realm.GetProperty("clients").GetArrayLength());
+        var client = Assert.Single(realm.GetProperty("clients").EnumerateArray(), item => item.GetProperty("clientId").GetString() == "aioffice-member-provisioner");
+        Assert.Equal("${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED}", client.GetProperty("enabled").GetString());
+        Assert.Equal("${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET}", client.GetProperty("secret").GetString());
+        Assert.True(client.GetProperty("serviceAccountsEnabled").GetBoolean());
+        foreach (var name in new[] { "publicClient", "standardFlowEnabled", "implicitFlowEnabled", "directAccessGrantsEnabled", "fullScopeAllowed", "authorizationServicesEnabled" })
+            Assert.False(client.GetProperty(name).GetBoolean());
+        foreach (var name in new[] { "defaultClientScopes", "optionalClientScopes", "redirectUris", "webOrigins" })
+            Assert.Empty(client.GetProperty(name).EnumerateArray());
+        var account = Assert.Single(realm.GetProperty("users").EnumerateArray());
+        Assert.Equal("aioffice-member-provisioner", account.GetProperty("serviceAccountClientId").GetString());
+        Assert.False(account.TryGetProperty("credentials", out _));
+        Assert.Empty(account.GetProperty("realmRoles").EnumerateArray());
+        var roles = Assert.Single(account.GetProperty("clientRoles").EnumerateObject());
+        Assert.Equal("realm-management", roles.Name);
+        Assert.Equal("manage-users", Assert.Single(roles.Value.EnumerateArray()).GetString());
+        var scopes = Assert.Single(realm.GetProperty("clientScopeMappings").EnumerateObject());
+        Assert.Equal("realm-management", scopes.Name);
+        var mapping = Assert.Single(scopes.Value.EnumerateArray());
+        Assert.Equal("aioffice-member-provisioner", mapping.GetProperty("client").GetString());
+        Assert.Equal("manage-users", Assert.Single(mapping.GetProperty("roles").EnumerateArray()).GetString());
+        var mappers = client.GetProperty("protocolMappers").EnumerateArray().ToArray();
+        Assert.Equal(3, mappers.Length);
+        var subject = Assert.Single(mappers, item => item.GetProperty("protocolMapper").GetString() == "oidc-sub-mapper");
+        Assert.Equal("true", subject.GetProperty("config").GetProperty("access.token.claim").GetString());
+        var audience = Assert.Single(mappers, item => item.GetProperty("protocolMapper").GetString() == "oidc-audience-mapper");
+        Assert.Equal("realm-management", audience.GetProperty("config").GetProperty("included.client.audience").GetString());
+        var mapper = Assert.Single(mappers, item => item.GetProperty("protocolMapper").GetString() == "oidc-usermodel-client-role-mapper");
+        Assert.Equal("realm-management", mapper.GetProperty("config").GetProperty("usermodel.clientRoleMapping.clientId").GetString());
+        Assert.Equal("resource_access.realm-management.roles", mapper.GetProperty("config").GetProperty("claim.name").GetString());
+    }
+
+    [Fact]
+    public void Production_wiring_keeps_secret_out_of_web_and_worker_and_defaults_to_disabled()
+    {
+        var root = FindRoot();
+        var production = File.ReadAllText(Path.Combine(root, "compose.production.yaml"));
+        var identity = File.ReadAllText(Path.Combine(root, "compose.identity.yaml"));
+        var template = File.ReadAllText(Path.Combine(root, ".env.production.example"));
+        var start = File.ReadAllText(Path.Combine(root, "infra", "keycloak", "start.sh"));
+        Assert.Contains("AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED=false", template);
+        Assert.Contains("AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE=", template);
+        foreach (var compose in new[] { production, identity })
+        {
+            Assert.Contains("${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED:-false}", compose);
+            Assert.Contains("file: ${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE:-/dev/null}", compose);
+            Assert.DoesNotContain("AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET:", compose);
+        }
+        Assert.Contains("/run/secrets/keycloak_provisioning_client_secret", start);
+        Assert.Contains("export AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET=", start);
+        Assert.DoesNotContain("keycloak_provisioning", production.Split("  core-api:")[0]);
+        Assert.DoesNotContain("keycloak_provisioning", production.Split("  agent-worker:")[1].Split("\nsecrets:")[0]);
+    }
+
+    private static JsonDocument ReadRealm() => JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRoot(), "infra", "keycloak", "aioffice-realm.json")));
+
+    private static string FindRoot()
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
             var path = Path.Combine(directory.FullName, "infra", "keycloak", "aioffice-realm.json");
-            if (File.Exists(path)) return JsonDocument.Parse(File.ReadAllText(path));
+            if (File.Exists(path)) return directory.FullName;
         }
         throw new InvalidOperationException("Could not locate production realm.");
     }

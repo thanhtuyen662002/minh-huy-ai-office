@@ -14,4 +14,14 @@ for name in KC_DB_USERNAME KC_DB_PASSWORD KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTR
     fi
 done
 
+export AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED="${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED:-false}"
+export AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET=""
+if [[ "$AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED" == "true" ]]; then
+    export AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET="$(</run/secrets/keycloak_provisioning_client_secret)"
+    if [[ -z "$AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET" || "$AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET" == *replace-with-* ]]; then
+        echo "Keycloak provisioning secret file is empty or contains a placeholder" >&2
+        exit 1
+    fi
+fi
+
 exec /opt/keycloak/bin/kc.sh "$@"

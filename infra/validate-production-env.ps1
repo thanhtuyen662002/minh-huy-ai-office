@@ -159,4 +159,26 @@ if ($values["AIOFFICE_KEYCLOAK_ENABLED"] -ceq "true") {
     }
 }
 
+if ($values.ContainsKey("AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED") -and
+    $values["AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED"] -cnotin @("true", "false")) {
+    throw "AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED must be true or false."
+}
+if ($values["AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED"] -ceq "true") {
+    if ($values["AIOFFICE_KEYCLOAK_ENABLED"] -cne "true") {
+        throw "AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED requires AIOFFICE_KEYCLOAK_ENABLED=true."
+    }
+    $name = "AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE"
+    Require-ProductionValue $name
+    if (-not [IO.Path]::IsPathFullyQualified($values[$name]) -or
+        -not (Test-Path -LiteralPath $values[$name] -PathType Leaf)) {
+        throw "$name must reference an existing protected secret file using an absolute path."
+    }
+    $secret = [IO.File]::ReadAllText($values[$name]).TrimEnd([char]13, [char]10)
+    if ([string]::IsNullOrWhiteSpace($secret) -or $secret -match '(?i)replace-with-' -or
+        $secret.Length -lt 32 -or $secret -match '[\r\n]') {
+        throw "$name must contain a single non-placeholder secret of at least 32 characters."
+    }
+    $secret = $null
+}
+
 Write-Host "Production environment preflight passed for required runtime values."

@@ -414,6 +414,28 @@ Invoke-RestMethod http://127.0.0.1:$apiPort/api/audit?offset=0`&limit=50 -Header
 
 An unauthenticated request to `/api/auth/context`, `/api/data-sources/`, `/api/audit` or `/api/sla/status` must return `503` when authentication is not configured; an authenticated identity without an active company membership must return `403`.
 
+## Optional Keycloak member provisioning (#307)
+
+Provisioning is disabled by default. With it enabled, an administrator's **Thêm thành viên** request creates a missing account in the fixed `aioffice` realm before committing the company invitation. The new account has verified email, an enabled login, a random temporary password and the required `UPDATE_PASSWORD` action. Existing accounts retain their credentials. Only the successful creation response contains `temporaryPassword`; list, revoke, persistence, audit rows and logs never contain it. The web panel offers a copy button and sign-in link, keeps the password only in memory, and clears it on reload, dismissal or the next action. Send it privately to the intended recipient.
+
+Have the approved secret manager generate a random service-account secret of at least 32 characters and write a single value to a protected file outside the checkout. The Keycloak UID 1000 and Core UID 1654 must be able to read the mounted secret; restrict host access to the operator/service identities. Set these references in the ignored production environment file:
+
+```text
+AIOFFICE_KEYCLOAK_ENABLED=true
+AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED=true
+AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE=<absolute-protected-secret-file-path>
+```
+
+Run `infra/validate-production-env.ps1` before deployment. Both Compose stacks mount that file at `/run/secrets/keycloak_provisioning_client_secret`. Keycloak's entrypoint reads it into the private process environment for the realm's `${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET}` placeholder; no secret value is present in the realm JSON or rendered Compose environment. When disabled, the optional mount uses `/dev/null` on the Linux Docker host. Core receives only the enable flag, HTTPS Keycloak origin and mounted file path. No provisioning credential is provided to the web or worker containers.
+
+The realm-as-code client `aioffice-member-provisioner` is confidential and supports service accounts only: browser, implicit and password grants are disabled. Its account and token scope both contain only `realm-management/manage-users`, which includes the user lookup/create permissions needed by this flow; full scope and default/optional client scopes are off. Dedicated protocol mappers emit the service-account subject, the realm-management audience and only that client's roles (without the default broad roles scope). No `realm-admin` or unrelated client roles are granted. This coarse Keycloak role can manage users throughout this realm; company access remains controlled by the platform's freshly authorized invitation. See [Keycloak service accounts and admin permissions](https://www.keycloak.org/docs/26.8.1/server_admin/).
+
+Realm startup import skips an existing realm. For an installation that already imported #301, apply the added client, service-account user, role scope mapping and mapper through a reviewed realm configuration migration before enabling Core. Do not delete/recreate the realm or assume restarting imports the change. Enable the confidential client and set its approved secret through that migration; the realm and API must use the same secret. Rotation likewise requires updating Keycloak and the mounted file together, followed by application restart. The HTTP client uses client credentials, HTTPS, two-second request timeouts and an eight-second provisioning deadline; redirect following, cookies and HttpClient logging are disabled.
+
+Outside Compose, configure `AIOffice:KeycloakProvisioning:Enabled`, `BaseUrl` (canonical HTTPS origin), and exactly one of `ClientSecretFile` (absolute protected path) or `ClientSecretRef` (`secretref://env/VARIABLE_NAME` resolved by the approved environment secret provider). The client ID is fixed to `aioffice-member-provisioner`. Never place a literal secret in application configuration. Leaving the enable flag absent preserves invitation-only behavior.
+
+Keycloak failures return a bounded 502/503 and create no invitation. Duplicate/member checks run before the external call under the existing invitation transaction lock. Keycloak and SQL cannot commit atomically: if account creation succeeds but authorization is revoked, SQL fails, or the response is lost, the password is not recoverable or returned on retry. The account is retained and retries never reset it or delete it. An authorized identity operator must verify the outcome and, when needed, issue a new temporary credential through the established Keycloak administration procedure. The UI's generic uncertain-outcome message asks the administrator to reload the invitation list. Successful outcomes are audited as `keycloak-created` / `keycloak-existing`; failures and account-created/invitation-failed outcomes emit fixed company-scoped warning events without exception bodies or credentials. No database schema migration is needed.
+
 ## Optional model-backed pilot runtime
 
 The worker keeps the verified read-only connectivity-probe executor when AI runtime configuration is absent. For normal testing and real operation, configure the direct API as the PRIMARY provider:

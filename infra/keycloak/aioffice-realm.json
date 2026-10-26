@@ -58,9 +58,15 @@
       "authorizationServicesEnabled": false,
       "fullScopeAllowed": false,
       "consentRequired": false,
-      "redirectUris": ["${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN}/api/local/session/oidc/callback"],
+      "redirectUris": [
+        "${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN}/api/local/session/oidc/callback"
+      ],
       "webOrigins": [],
-      "defaultClientScopes": ["basic", "profile", "email"],
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email"
+      ],
       "optionalClientScopes": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
@@ -92,6 +98,82 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "aioffice-member-provisioner",
+      "enabled": "${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED}",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET}",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [],
+      "optionalClientScopes": [],
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocolMappers": [
+        {
+          "name": "service-account-subject",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm-management-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "realm-management",
+            "claim.name": "resource_access.realm-management.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "admin-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "realm-management",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     }
-  ]
+  ],
+  "users": [
+    {
+      "username": "service-account-aioffice-member-provisioner",
+      "enabled": true,
+      "serviceAccountClientId": "aioffice-member-provisioner",
+      "realmRoles": [],
+      "clientRoles": {
+        "realm-management": [
+          "manage-users"
+        ]
+      }
+    }
+  ],
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "aioffice-member-provisioner",
+        "roles": [
+          "manage-users"
+        ]
+      }
+    ]
+  }
 }

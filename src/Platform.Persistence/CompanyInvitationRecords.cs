@@ -34,7 +34,12 @@ public sealed class CompanyInvitationAuditRecord
 public sealed record CompanyInvitationInput(string Email, string[] Roles);
 public sealed record CompanyInvitationResult(Guid CompanyId, Guid Id, string Email, string[] Roles,
     DateTimeOffset CreatedAtUtc, DateTimeOffset ExpiresAtUtc, DateTimeOffset? AcceptedAtUtc,
-    DateTimeOffset? RevokedAtUtc, string Version);
+    DateTimeOffset? RevokedAtUtc, string Version)
+{
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? TemporaryPassword { get; init; }
+    public override string ToString() => $"CompanyInvitationResult {{ Id = {Id:D} }}";
+}
 public sealed record CompanyInvitationPage(Guid CompanyId, IReadOnlyList<CompanyInvitationResult> Items, int Offset, int Limit, bool HasMore);
 public sealed class CompanyInvitationConflictException(string code) : Exception("Invitation conflicts with current state.")
 {
