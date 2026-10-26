@@ -87,6 +87,15 @@ public sealed class CompanyInvitationService(PlatformDbContext database, IAuthor
         string normalized;
         try { normalized = CompanyInvitationPolicy.NormalizeEmail(email!); }
         catch (ArgumentException) { return; }
+        // Authority is resolved on every BFF request. Only a new identity with
+        // a candidate invitation needs the serializable transaction/global lock.
+        // These default-isolation reads must leave the request's tracker untouched;
+        // the mutation below still rechecks both conditions under the lock.
+        if (await database.Users.AsNoTracking().AnyAsync(row => row.IdentityProvider == identityProvider &&
+            row.Subject == subject, cancellationToken)) return;
+        var candidateTime = DateTimeOffset.UtcNow;
+        if (!await database.CompanyInvitations.AsNoTracking().AnyAsync(row => row.NormalizedEmail == normalized &&
+            row.AcceptedAtUtc == null && row.RevokedAtUtc == null && row.ExpiresAtUtc > candidateTime, cancellationToken)) return;
         await MutateAsync(async () =>
         {
             // SQL's conservative candidate equality also refuses padding/case
