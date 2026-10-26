@@ -22,8 +22,7 @@ if (string.IsNullOrWhiteSpace(platformConnectionString))
         "AIOFFICE_DB_CONNECTION must be configured before the durable worker can start.");
 }
 
-builder.Services.AddSingleton(new CompositeSecretResolver(
-    new ISecretResolver[] { new EnvironmentVariableSecretResolver() }));
+builder.Services.AddProtectedDataSourceSecrets();
 builder.Services.AddSingleton<ISqlConnectionFactory, SqlServerConnectionFactory>();
 builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
 builder.Services.AddScoped<IPilotErpEvidenceReader, SqlServerPilotErpEvidenceReader>();

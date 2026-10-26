@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import base64
 import sys
 from pathlib import Path
 from browser_deployment_contract import validate_browser_deployment
@@ -113,6 +114,17 @@ if (
 
 if "AIOFFICE_DB_CONNECTION" not in api_environment:
     fail("core-api runtime database secret value is not wired")
+
+try:
+    protected_key = api_environment.get("AIOFFICE_SECRET_ENCRYPTION_KEY", "")
+    if len(base64.b64decode(protected_key, validate=True)) != 32:
+        raise ValueError()
+    if services["agent-worker"].get("environment", {}).get("AIOFFICE_SECRET_ENCRYPTION_KEY") != protected_key:
+        raise ValueError()
+    if "AIOFFICE_SECRET_ENCRYPTION_KEY" in web_environment:
+        raise ValueError()
+except (ValueError, TypeError):
+    fail("API and worker require the same protected-credential key; web must not receive it")
 
 worker_ports = services["agent-worker"].get("ports") or []
 if worker_ports:

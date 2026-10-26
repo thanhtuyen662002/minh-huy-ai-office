@@ -1,0 +1,136 @@
+"use client";
+
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { CustomerErpSource, ErpConnection, erpMessages, isErpConnection, parseCustomerErpSources, readOnlyLoginSql } from "../lib/customer-erp";
+
+type Props = {
+  companyId: string; generation: number; isCurrent: (generation: number) => boolean;
+  validate: (generation: number) => Promise<boolean>;
+  request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
+  onUnauthorized: () => void; onSaved: () => void;
+};
+const empty: ErpConnection = { host: "", port: 1433, database: "", userName: "", password: "", encrypt: true, trustServerCertificate: false };
+
+export function CustomerErpPanel({ companyId, generation, isCurrent, validate, request, onUnauthorized, onSaved }: Props) {
+  const [sources, setSources] = useState<CustomerErpSource[]>([]);
+  const [fields, setFields] = useState<ErpConnection>(empty);
+  const [name, setName] = useState("");
+  const [editing, setEditing] = useState<CustomerErpSource | null>(null);
+  const [code, setCode] = useState("");
+  const [details, setDetails] = useState("");
+  const [tested, setTested] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<{ operationId: string } | null>(null);
+  const mounted = useRef(false), lock = useRef(false);
+  const current = () => mounted.current && isCurrent(generation);
+  const selector = `companyId=${encodeURIComponent(companyId)}`;
+
+  async function authorized(response: Response) {
+    if (!current()) return false;
+    if (response.status === 401) { onUnauthorized(); return false; }
+    if (response.status === 403) {
+      setFields(empty); setTested(false); setPending(null); setSources([]); setEditing(null); setName("");
+      await validate(generation);
+      if (current()) setCode("unavailable");
+      return false;
+    }
+    return await validate(generation) && current();
+  }
+
+  async function load() {
+    try {
+      if (!await validate(generation) || !current()) return;
+      const response = await request(generation, `/api/local/data-sources/customer-erp?${selector}`, { cache: "no-store" });
+      if (!await authorized(response)) return;
+      const rows = response.ok ? parseCustomerErpSources(await response.json()) : null;
+      if (!current()) return;
+      if (!rows) { setCode("unavailable"); return; }
+      setSources(rows);
+    } catch { if (current()) setCode("unavailable"); }
+  }
+
+  useEffect(() => {
+    mounted.current = true;
+    void load();
+    return () => { mounted.current = false; };
+    // Parent remounts on every company/session authority generation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function change<K extends keyof ErpConnection>(key: K, value: ErpConnection[K]) {
+    setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails("");
+  }
+
+  async function execute(save: boolean) {
+    if (lock.current || !current() || !isErpConnection(fields) || (save && (!tested || !name.trim()))) return;
+    lock.current = true; setBusy(true); setCode(""); setDetails("");
+    try {
+      if (!await validate(generation) || !current()) return;
+      const operation = pending ?? { operationId: crypto.randomUUID() };
+      const body = save ? { ...fields, logicalName: name.trim(), ...operation, ...(editing ? { bindingVersion: editing.bindingVersion } : {}) } : fields;
+      if (save) setPending(operation);
+      const path = save ? (editing ? `${editing.id}/credentials` : "customer-erp") : "connection-test";
+      const response = await request(generation, `/api/local/data-sources/${path}?${selector}`, {
+        method: save && editing ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      if (!await authorized(response)) return;
+      let payload: Record<string, unknown> = {};
+      try { payload = await response.json(); } catch { /* An uncertain save keeps its operation ID. */ }
+      if (!current()) return;
+      if (save && response.ok) {
+        if (!parseCustomerErpSources([payload])) { setCode("unavailable"); return; }
+        setFields(empty); setName(""); setEditing(null); setPending(null); setTested(false); setCode("saved");
+        await load(); if (current()) onSaved();
+        return;
+      }
+      const resultCode = response.status === 429 ? "rate_limited" : typeof payload.code === "string" && Object.hasOwn(erpMessages, payload.code) ? payload.code : "unavailable";
+      setCode(resultCode);
+      if (!save) {
+        setTested(response.ok && resultCode === "ok");
+        if (response.ok && resultCode === "ok" && typeof payload.serverVersion === "string" && typeof payload.tableCount === "number")
+          setDetails(`SQL Server ${payload.serverVersion} · ${payload.tableCount} bảng`);
+      } else if ([400, 409, 422, 429].includes(response.status)) { setPending(null); setTested(false); }
+    } catch { if (current()) setCode("unavailable"); }
+    finally { lock.current = false; if (current()) setBusy(false); }
+  }
+
+  function resetForm(source: CustomerErpSource | null) {
+    setFields(empty); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
+  }
+  const frozen = busy || pending !== null;
+  const inputClass = "mt-1 w-full rounded-lg border border-slate-200 p-2 dark:border-white/15 dark:bg-slate-900";
+  return <section aria-label="Kết nối ERP khách hàng" className="mt-6 rounded-2xl border border-indigo-200 p-5 dark:border-indigo-400/25">
+    <h3 className="font-semibold">Kết nối ERP khách hàng</h3>
+    <p className="mt-2 text-sm text-slate-500">Thêm database SQL Server bằng tài khoản chỉ đọc. Mật khẩu được mã hoá khi lưu và không hiển thị lại.</p>
+    <ul className="mt-4 space-y-2">{sources.map(source => <li key={source.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-white/5">
+      <span>{source.logicalName} · {source.isEnabled ? "Đang bật · chỉ đọc" : "Đã tắt"}</span>
+      <button type="button" disabled={frozen} onClick={() => resetForm(source)} className="rounded-lg border px-3 py-2 disabled:opacity-50">Đổi mật khẩu<span className="sr-only"> {source.logicalName}</span></button>
+    </li>)}</ul>
+    <form aria-label={editing ? "Đổi kết nối ERP" : "Thêm kết nối ERP"} onSubmit={(event: FormEvent) => { event.preventDefault(); void execute(true); }}>
+      {editing ? <p className="mt-4 text-sm">Nhập lại máy chủ, database và tài khoản cùng mật khẩu mới cho {editing.logicalName}.</p> : null}
+      <fieldset disabled={frozen} className="mt-4 grid gap-4 sm:grid-cols-2">
+        <label className="text-sm">Tên khách hàng<input value={name} maxLength={200} readOnly={editing !== null} onChange={event => { setName(event.target.value); }} className={inputClass} required /></label>
+        <label className="text-sm">Máy chủ<input value={fields.host} maxLength={253} onChange={event => change("host", event.target.value)} placeholder="sql.khachhang.vn" className={inputClass} required autoComplete="off" /></label>
+        <label className="text-sm">Cổng<input type="number" min={1} max={65535} value={fields.port} onChange={event => change("port", Number(event.target.value))} className={inputClass} required /></label>
+        <label className="text-sm">Tên database<input value={fields.database} maxLength={128} onChange={event => change("database", event.target.value)} className={inputClass} required autoComplete="off" /></label>
+        <label className="text-sm">Tài khoản<input value={fields.userName} maxLength={128} onChange={event => change("userName", event.target.value)} className={inputClass} required autoComplete="off" /></label>
+        <label className="text-sm">Mật khẩu<input type="password" value={fields.password} maxLength={1024} onChange={event => change("password", event.target.value)} className={inputClass} required autoComplete="new-password" /></label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={fields.encrypt} onChange={event => change("encrypt", event.target.checked)} />Mã hoá đường truyền</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={fields.trustServerCertificate} onChange={event => change("trustServerCertificate", event.target.checked)} />Tin cậy chứng chỉ máy chủ (chỉ mạng được quản lý)</label>
+      </fieldset>
+      {!fields.encrypt ? <p className="mt-3 text-sm text-amber-700">Đường truyền có thể không được mã hoá. Nên bật mã hoá và dùng chứng chỉ TLS hợp lệ.</p> : null}
+      {code ? <p role={code === "ok" || code === "saved" ? "status" : "alert"} className="mt-4 text-sm">{code === "saved" ? "Đã lưu kết nối ERP khách hàng." : erpMessages[code] ?? erpMessages.unavailable} {details}</p> : null}
+      {code === "not_read_only" || code === "missing_view_definition" ? <div className="mt-4">
+        <p className="text-sm">Gửi script này cho quản trị SQL. Không dùng tài khoản sysadmin hoặc db_owner.</p>
+        <pre aria-label="SQL tạo tài khoản chỉ đọc" className="mt-2 max-h-72 overflow-auto rounded-lg bg-slate-100 p-3 text-xs dark:bg-slate-900">{readOnlyLoginSql(fields.database)}</pre>
+        <button type="button" onClick={() => { void navigator.clipboard?.writeText(readOnlyLoginSql(fields.database)).catch(() => {}); }} className="mt-2 rounded-lg border px-3 py-2 text-sm">Sao chép SQL</button>
+      </div> : null}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button type="button" disabled={frozen || !isErpConnection(fields)} onClick={() => void execute(false)} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Kiểm tra kết nối</button>
+        <button type="submit" disabled={busy || !tested || !name.trim()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">{busy ? "Đang xử lý…" : pending ? "Thử lại lưu" : "Lưu"}</button>
+        <button type="button" disabled={busy} onClick={() => resetForm(null)} className="rounded-lg border px-4 py-2 text-sm">{editing || pending ? "Huỷ" : "Xoá thông tin"}</button>
+        <button type="button" disabled={busy} onClick={() => void load()} className="rounded-lg border px-4 py-2 text-sm">Tải lại ERP khách hàng</button>
+      </div>
+    </form>
+  </section>;
+}

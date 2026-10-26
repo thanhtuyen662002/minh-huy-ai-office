@@ -112,6 +112,12 @@ try {
     $browserKeyBytes = $browserMac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes(
         'aioffice-local-browser-key-v1|' + ([Guid]$manifest.AIOFFICE_INSTALLATION_ID).ToString('D')))
     $lines.Add('AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY=' + [Convert]::ToBase64String($browserKeyBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_'))
+    # Separate purpose and output from the browser transaction key. Replaying
+    # an installation preserves the encryption key without changing its manifest.
+    $secretKeyBytes = $browserMac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes(
+        'aioffice-local-protected-secret-key-v1|' + ([Guid]$manifest.AIOFFICE_INSTALLATION_ID).ToString('D')))
+    try { $lines.Add('AIOFFICE_SECRET_ENCRYPTION_KEY=' + [Convert]::ToBase64String($secretKeyBytes)) }
+    finally { [Array]::Clear($secretKeyBytes, 0, $secretKeyBytes.Length) }
 } finally {
     $browserMac.Dispose()
     [Array]::Clear($runtimeKeyBytes, 0, $runtimeKeyBytes.Length)

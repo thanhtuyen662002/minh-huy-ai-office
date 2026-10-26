@@ -11,6 +11,7 @@ import {
 import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
+import { CustomerErpPanel } from "./customer-erp-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { GroupInboxPanel } from "./group-inbox-panel";
@@ -811,6 +812,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                     <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white">Thêm nguồn chỉ đọc</button>
                   ) : null}
                 </div>
+                {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
+                  isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
                 {addingSource && auth?.roles.includes("admin") ? (
                   <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
                     isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}

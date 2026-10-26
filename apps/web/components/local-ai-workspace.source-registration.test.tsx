@@ -25,6 +25,7 @@ function backend(override: (url: string, init?: RequestInit) => Promise<Response
     }
     if (url.startsWith("/api/local/data-sources?")) return Response.json(company === companyB ? [] : state.stored);
     if (url === "/api/local/session/logout") return Response.json({ ok: true });
+    if (url.startsWith("/api/local/data-sources/customer-erp?")) return Response.json([]);
     throw new Error("Unexpected route " + url);
   });
   vi.stubGlobal("fetch", fetcher); return { state, fetcher };

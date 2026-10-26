@@ -31,6 +31,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<RoleAssignmentRecord> RoleAssignments => Set<RoleAssignmentRecord>();
     public DbSet<DataSourceRecord> DataSources => Set<DataSourceRecord>();
     public DbSet<DataSourceSecretBindingRecord> DataSourceSecretBindings => Set<DataSourceSecretBindingRecord>();
+    public DbSet<ProtectedDataSourceSecretRecord> ProtectedDataSourceSecrets => Set<ProtectedDataSourceSecretRecord>();
+    public DbSet<CustomerErpProbeAuditRecord> CustomerErpProbeAudits => Set<CustomerErpProbeAuditRecord>();
     public DbSet<DataSourceRegistrationAuditRecord> DataSourceRegistrationAudits => Set<DataSourceRegistrationAuditRecord>();
     public DbSet<DataSourceFailoverOperationPolicyRecord> DataSourceFailoverOperationPolicies => Set<DataSourceFailoverOperationPolicyRecord>();
     public DbSet<TaskRecord> Tasks => Set<TaskRecord>();
@@ -63,6 +65,25 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.HasDefaultSchema(DefaultSchema);
         modelBuilder.ConfigureBotChannels();
         modelBuilder.ConfigureCustomerRequests();
+        modelBuilder.Entity<ProtectedDataSourceSecretRecord>(entity =>
+        {
+            entity.ToTable("ProtectedDataSourceSecrets", table => table.HasCheckConstraint("CK_ProtectedDataSourceSecrets_Version", "[Version] > 0"));
+            entity.HasKey(row => new { row.TenantId, row.CompanyId, row.Id });
+            entity.HasIndex(row => row.Id).IsUnique();
+            entity.Ignore(row => row.Reference);
+            entity.Property(row => row.Ciphertext).HasMaxLength(8192);
+            entity.Property(row => row.Nonce).HasMaxLength(12).IsFixedLength();
+            entity.Property(row => row.Tag).HasMaxLength(16).IsFixedLength();
+            entity.Property(row => row.Version).IsConcurrencyToken();
+            entity.HasOne<DataSourceRecord>().WithMany().HasForeignKey(row => new { row.TenantId, row.CompanyId, row.Id }).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<CustomerErpProbeAuditRecord>(entity =>
+        {
+            entity.ToTable("CustomerErpProbeAudits");
+            entity.HasKey(row => new { row.TenantId, row.CompanyId, row.Id });
+            entity.Property(row => row.Code).HasMaxLength(32);
+            entity.HasOne<CompanyRecord>().WithMany().HasForeignKey(row => new { row.TenantId, row.CompanyId }).OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
