@@ -1,0 +1,21 @@
+# Company invitation sign-in contention repair
+
+HANDOFF
+
+- Issue: #294 / Draft PR #298.
+- Branch: `codex/294-company-invitations`.
+- HEAD: `be7cc7a22f62ab25e540cbf91ca89c3067140c5b`; the verified repair remains uncommitted in the local worktree.
+- Parent HEAD: `be7cc7a22f62ab25e540cbf91ca89c3067140c5b` (merged main).
+- State: locally verified CI regression repair; commit blocked by Git filesystem permissions, unpushed by explicit user request.
+- Completed: `AcceptAsync` now checks persisted identities and candidate invitations with no-tracking, default-isolation reads before entering `MutateAsync`. Existing identities and emails without an unexpired, unrevoked, unaccepted invitation return without the mutation gate, transaction, global application lock, save, or tracker clearing. All transactional acceptance checks, locks, authorization and audit behavior remain unchanged.
+- Tests: regression controls hold the non-SQL invitation mutation gate through an intercepted bootstrap save. Existing-identity and no-candidate sign-ins must finish before release, with tracked entities and pending edits intact and no tracker events. Cases cover absent, expired, revoked, accepted and other-email invitations. Both concurrent new-identity sign-ins are forced to wait at the gate before the existing one-identity/membership/role/audit assertions run.
+- Reproduction: before the service fix, all seven initial regression cases failed; the clean existing-identity request timed out on the held mutation gate. The final regression matrix also includes clean no-candidate requests.
+- Tests/Evals: focused invitation/API/transaction suite 26 passed; full Release solution build 0 warnings/0 errors; full Release solution tests 2,138 passed, 0 failed, 1 existing opt-in SQL test skipped; `npm test` in `apps/web` 1,394 passed, 0 failed, 20 existing Redis-gated tests skipped. Changed C# `dotnet format --verify-no-changes` and `git diff --check` passed.
+- Local environment: restore used an isolated temporary package cache populated from the existing local NuGet cache; build/test used `--no-restore`, `-m:1` and `-nr:false`. PowerShell 7 was added to the child process PATH for all 25 existing configuration tests. The successful full .NET run set `Logging__EventLog__LogLevel__Default=None` because the sandbox denies Windows Event Log writes; other log providers and all tests remained enabled. No repository test configuration or CI gate changed.
+- Current: local repair and required local checks complete; hosted verification awaits later authorized publication.
+- Blocked by: `git add` failed with exit 128: Git cannot create `D:/Projects/AI Office/minh-huy-ai-office/.git/worktrees/wt-294/index.lock` (Permission denied). No files were staged and no commit was created. The user authorized committing only if Git allows it; no permission escalation or push was attempted.
+- PR handoff: the attempted metadata-only update to PR #298 was rejected because the connector requires approval and this session's approval policy is `never`. The remote PR body is unchanged; this local HANDOFF records the current verified state for the next session.
+- Hosted baseline: exact parent Build `40308156020` failed in job `121530511257`, Chromium step 14; native SQL/OIDC/worker step 13 passed. Governance `40308155899` passed. This baseline does not verify the local repair.
+- Known risks: the SQL Server application lock and complete SQL/OIDC/Chromium stack have not been rerun for the unpushed repair. The held-gate regression uses the existing in-memory provider and save-interceptor pattern.
+- NEXT ACTION: with normal Git worktree write access, stage and commit the four-file local repair on this same branch and copy this verified handoff into PR #298 when connector access permits. Do not push without later authorization. After authorized publication, own renewed exact-head CI through terminal results, including Complete local stack integration. This repair does not complete all #294 migration/review acceptance.
+- DO NOT: push during this requested local-only run; change smoke scripts, CI workflows, `apps/web/app/page.tsx` or zalo-intake; weaken test gates or acceptance locks; claim hosted CI closure for an unpushed commit.
