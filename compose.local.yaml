@@ -102,6 +102,7 @@ services:
     security_opt: [no-new-privileges:true]
     environment:
       DOTNET_ENVIRONMENT: Development
+      AIOFFICE_SECRET_ENCRYPTION_KEY: ${AIOFFICE_SECRET_ENCRYPTION_KEY:?generate local configuration first}
       AIOFFICE_LOCAL_BOOTSTRAP: "true"
       AIOFFICE_INSTALLATION_ID: ${AIOFFICE_INSTALLATION_ID:?generate local configuration first}
       AIOFFICE_TENANT_ID: ${AIOFFICE_TENANT_ID:?generate local configuration first}

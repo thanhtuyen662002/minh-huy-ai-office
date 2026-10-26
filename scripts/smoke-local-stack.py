@@ -202,6 +202,11 @@ def main():
     expected_key = base64.urlsafe_b64encode(hmac.digest(manifest["AIOFFICE_RUNTIME_PASSWORD"].encode(),
         ("aioffice-local-browser-key-v1|" + manifest["AIOFFICE_INSTALLATION_ID"]).encode(), hashlib.sha256)).decode().rstrip("=")
     assert browser_key == expected_key and re.fullmatch("[A-Za-z0-9_-]{43}", browser_key)
+    expected_secret_key = base64.b64encode(hmac.digest(manifest["AIOFFICE_RUNTIME_PASSWORD"].encode(),
+        ("aioffice-local-protected-secret-key-v1|" + manifest["AIOFFICE_INSTALLATION_ID"]).encode(), hashlib.sha256)).decode()
+    assert all(services[name]["environment"]["AIOFFICE_SECRET_ENCRYPTION_KEY"] == expected_secret_key
+               for name in ("core-api", "agent-worker"))
+    assert "AIOFFICE_SECRET_ENCRYPTION_KEY" not in services["web"]["environment"]
     assert all(secret not in json.dumps(services["web"]["environment"]) for secret in secrets)
     print("PASS local service configuration, secret references and isolated loopback profile")
     run("up", "--build", "-d", timeout=1500)
@@ -1194,6 +1199,16 @@ def main():
     group_auth = {"Authorization": "Bearer " + next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token"),
         "X-AIOffice-Company-Id": company}
     group_proof.verify(directory=directory, manifest=manifest, compose=compose, environment=legacy_environment, api=api, auth=group_auth)
+    # Run after retained graph assertions so the new task/audit evidence cannot
+    # alter their original fixtures. Refresh current owner authority first.
+    login()
+    customer_erp_auth = {"Authorization": "Bearer " + next(cookie.value for cookie in cookies if cookie.name == "aioffice_local_access_token"),
+        "X-AIOffice-Company-Id": company}
+    customer_erp_spec = importlib.util.spec_from_file_location("customer_erp_proof", Path("scripts/smoke-customer-erp.py"))
+    customer_erp_proof = importlib.util.module_from_spec(customer_erp_spec)
+    customer_erp_spec.loader.exec_module(customer_erp_proof)
+    customer_erp_proof.verify(directory=directory, manifest=manifest, http=http, sql=sql,
+        wait_for=wait_for, api=api, auth=customer_erp_auth)
     print("PASS complete local stack integration")
 
 

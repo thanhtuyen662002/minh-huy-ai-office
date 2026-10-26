@@ -1,14 +1,14 @@
 workstream: erp-data
 role: "ERP / Data"
 status: active-development
-current_issue: 264
-current_pr: 265
-current_branch: codex/264-erp-readonly-qualification
-head: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
-state: done
-lease_owner: root-erp-264
-lease_heartbeat_at: '2026-10-08'
-last_checkpoint_at: '2026-10-08'
+current_issue: 296
+current_pr: null
+current_branch: codex/296-customer-erp-connection
+head: a9807ac
+state: in_progress
+lease_owner: codex-296-customer-erp-connection
+lease_heartbeat_at: '2026-10-26T10:00:00Z'
+last_checkpoint_at: '2026-10-26T10:00:00Z'
 last_merged_pr: 265
 last_merge_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 preferred_next_issue: null
@@ -34,7 +34,13 @@ verification:
   quality: 113389149345
   independent_review: approved
   result: 'All eight Build jobs and Governance PASS. Actual safe/unsafe permissions, all four compiled read paths, replacement and mid-read discard, changed-session worker, retained revoke/replay and Chromium PASS. Frozen independent security/runtime review approved this conservative standalone engine16/current-database profile. Full650 Persistence and independent313 focused controls PASS. Final evidence-only head and main delivery closure still required.'
-next_action: '264/265 delivered at002e5cd with exact PR/main gates PASS. Continue266 complete company selection from accepted main; ERP profile/adapters require dedicated Medcom/Novo credentials and legacy dependency/version qualification, followed by business reconciliation. Santino deferred;239 Draft;233 active.'
+next_action: 'Publish296 same branch and one Draft PR; capture exact HEAD/run IDs and own CI to terminal, fixing any actual SQL/web failure on this PR. Never merge. Preserve293 company selection and294 invitation ownership. Last verified implementation checkpoint is a9807ac; exact published HEAD belongs in PR HANDOFF.'
+
+customer_erp_296:
+  completed: 'Separate AES-256-GCM protected customer binding store and versioned migration; immutable operator bindings preserved. Scoped API test/create/rotate/list, current admin checks, ten attempts/company/minute, strict bounded input, transaction/audit/idempotency/version fences, API and worker protected resolution. Vietnamese form/list/read-only SQL guidance and BFF. Production preflight/key wiring, stable purpose-separated local key, tracked empty templates and ADR.'
+  local_verification: '1518 Persistence tests,41 Configuration tests,1342 web tests PASS;20 actual Redis tests skipped without disposable Redis. TypeScript and Next production build PASS;new28 web and29 ERP service/API cases are overlapping subsets. C# format PASS;EF pending-model check and idempotent migration generation PASS;Python syntax and protected local config replay PASS. Web package has no lint script (attempt reported Missing script). Tests use isolated SDK/NuGet/PowerShell and disable Windows EventLog in process; no real .env/.env.local or customer secrets accessed.'
+  pending: 'Hosted exact-head CI and mandatory new actual SQL error-code/create/rotate/queued-worker proof. Docker is unavailable locally. Production key/customer credentials require approved operator setup; no production/customer enrollment. Direct SELECT script intentionally preserves existing fixed-role/db_datareader refusal; details in ADR_CUSTOMER_ERP_CREDENTIALS.md.'
+  cross_stream: 'Necessary Core/worker/Next BFF/form and deployment wiring edits belong to296; no company-selection/invitation contract change. Migration20261026094528 adds independent tables; sequence after any landed294 migration.'
 
 implementation_checkpoint:
   completed: 'Conservative live effective-rights profile; exact open connection initial/final checks for catalog/capability/schema reads. Explicit qualified probe mode for read-only source tests and worker tasks; write-enabled connectivity preserved and policy race denied. Initial owned sample metadata grants preserve revoked rights on replay. Bounded API/browser credential guidance.'

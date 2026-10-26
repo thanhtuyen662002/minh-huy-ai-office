@@ -10,15 +10,25 @@ function BrowserKey {
     Require ($keyLines.Count -eq 1)
     return $keyLines[0].Substring('AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY='.Length)
 }
+function ProtectedSecretKey {
+    $lines = [System.IO.File]::ReadAllLines((Join-Path $fixture 'local.env'))
+    $keyLines = @($lines | Where-Object { $_.StartsWith('AIOFFICE_SECRET_ENCRYPTION_KEY=') })
+    Require ($keyLines.Count -eq 1)
+    return $keyLines[0].Substring('AIOFFICE_SECRET_ENCRYPTION_KEY='.Length)
+}
 try {
     & $configScript -DataDirectory $fixture | Out-Null
     $manifestPath = Join-Path $fixture 'installation.json'
     $original = [System.IO.File]::ReadAllText($manifestPath)
     $key = BrowserKey
+    $protectedKey = ProtectedSecretKey
+    Require ([Convert]::FromBase64String($protectedKey).Length -eq 32)
+    Require ($protectedKey.TrimEnd('=').Replace('+', '-').Replace('/', '_') -cne $key)
     Require ($key -cmatch '\A[A-Za-z0-9_-]{43}\z')
     & $configScript -DataDirectory $fixture | Out-Null
     Require ([System.IO.File]::ReadAllText($manifestPath) -ceq $original)
     Require ((BrowserKey) -ceq $key)
+    Require ((ProtectedSecretKey) -ceq $protectedKey)
     # Independent Python HMAC/SHA256 reference vector, with synthetic fixture
     # material. The original manifest remains immutable under real replay.
     $synthetic = $original | ConvertFrom-Json
