@@ -69,6 +69,25 @@ AIOffice__PlatformDatabase__ConnectionSecretRef=secretref://env/AIOFFICE_DB_CONN
 
 The process receives the actual `AIOFFICE_DB_CONNECTION` value from an ignored local environment file, service manager, container secret injection, or an approved secret-manager adapter. The API resolves it in memory and passes it to the persistence layer; it is not written back to configuration or the platform database.
 
+## Summarized customer request bridge (#295)
+
+This backend bridge is independent of `AIOffice:GroupIntake:Enabled`. It performs no model calls or Zalo sends. Apply the versioned `AddCustomerRequestBridge` migration before enabling it; its seven new tables are in `aioffice`. The migration grants the existing `aioffice_binding_runtime` role bounded ticket writes and append-only evidence/events. Original summaries, source identity, origin and customer desired due text cannot be changed by the runtime role.
+
+| Key | Default / meaning |
+| --- | --- |
+| `AIOffice:CustomerRequests:Enabled` | Off unless exactly `true`; bridge routes return 404 while off or without platform SQL. |
+| `AIOffice:CustomerRequests:Services:<n>:ServiceId` | Nonempty service UUID, unique across all entries; a service maps to exactly one company. |
+| `AIOffice:CustomerRequests:Services:<n>:TenantId` | Existing tenant UUID from the platform company scope. |
+| `AIOffice:CustomerRequests:Services:<n>:CompanyId` | Existing active company UUID; never selected from the request body. |
+| `AIOffice:CustomerRequests:Services:<n>:SecretRef` | `secretref://env/AIOFFICE_CUSTOMER_REQUEST_HMAC`; resolves through `ISecretResolver`. The environment variable contains a canonical Base64-encoded, randomly generated 32-byte signing key. |
+| `AIOffice:CustomerRequests:Services:<n>:AllowedSourceGroupExternalIds:<m>` | Exact, case-sensitive source group IDs; at least one per service. No wildcard. |
+
+Use double underscores for environment variable configuration, for example `AIOffice__CustomerRequests__Services__0__CompanyId`. Provision the actual signing key through the service environment; never put it in appsettings, Git, logs, payloads or responses. Unknown services, unknown/disallowed groups, absent/inactive companies and invalid signatures return 403 without storing anything. Invalid enrollment fails closed at startup. Configuration changes take effect on API restart.
+
+The [bridge JSON and signature contract](features/customer-group-intake/README.md#summarized-customer-request-bridge-295) specifies headers, HMAC bytes, limits and portal calls. Portal access uses the existing BFF/session-backed bearer identity plus `X-AIOffice-Company-Id`; membership is resolved from SQL and must match the company in the URL. There is no new browser authentication mechanism.
+
+For optional native SQL tests in `Platform.Persistence.Tests`, set `AIOFFICE_CUSTOMER_REQUEST_TEST_SQL` to an operator-provided SQL Server admin connection in the test process environment. The test creates, migrates and removes only its own randomly named `AIOffice_CustomerBridge_Test_<hex>` database, exercises the existing runtime role using a disposable database user, and never migrates the connection's existing database. Without that variable this native proof is explicitly skipped; the HTTP/service/contract tests still run.
+
 ## Storage contract for future tables
 
 Any table that needs a credential stores a reference field such as `CredentialSecretRef`, never a password/token/connection string. Resolver/provider configuration is infrastructure metadata. Rotation changes the underlying secret or reference under controlled release policy; agents continue to request logical resources rather than credentials.

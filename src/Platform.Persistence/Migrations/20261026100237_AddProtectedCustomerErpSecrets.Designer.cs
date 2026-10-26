@@ -12,7 +12,7 @@ using MinhHuy.AIOffice.Platform.Persistence;
 namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 {
     [DbContext(typeof(PlatformDbContext))]
-    [Migration("20261026094528_AddProtectedCustomerErpSecrets")]
+    [Migration("20261026100237_AddProtectedCustomerErpSecrets")]
     partial class AddProtectedCustomerErpSecrets
     {
         /// <inheritdoc />
@@ -244,6 +244,310 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.HasKey("TenantId", "CompanyId", "Id");
 
                     b.ToTable("CustomerErpProbeAudits", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestCounterRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("LastNumber")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId");
+
+                    b.ToTable("CustomerRequestCounters", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRequestCounters_Number", "[LastNumber]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestEventRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorType")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "RequestId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "RequestId", "Timestamp");
+
+                    b.ToTable("CustomerRequestEvents", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRequestEvents_Values", "[EventType] IN ('created','status_changed','assignee_changed') AND [ActorType] IN ('service','user') AND DATEPART(tz,[Timestamp])=0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestEvidenceRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("MessageTimestamp")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Quote")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SourceMessageId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.HasKey("TenantId", "CompanyId", "RequestId", "Ordinal");
+
+                    b.ToTable("CustomerRequestEvidence", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRequestEvidence_Time", "[Ordinal]>=0 AND DATEPART(tz,[MessageTimestamp])=0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestItemRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.HasKey("TenantId", "CompanyId", "RequestId", "Ordinal");
+
+                    b.ToTable("CustomerRequestItems", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRequestItems_Values", "[Ordinal]>=0 AND [Priority] IN ('high','medium','low') AND [Kind] IN ('bug','feature','question','data')");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestNonceRecord", b =>
+                {
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Nonce")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ServiceId", "Nonce");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.ToTable("CustomerRequestNonces", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestOpenQuestionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("TenantId", "CompanyId", "RequestId", "Ordinal");
+
+                    b.ToTable("CustomerRequestOpenQuestions", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRequestOpenQuestions_Ordinal", "[Ordinal]>=0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssigneeUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CustomerDesiredDueText")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("ReportedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SourceGroupExternalId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("SourceGroupName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("SourceWindowFrom")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("SourceWindowTo")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AssigneeUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "CustomerName", "CreatedAt");
+
+                    b.HasIndex("TenantId", "CompanyId", "Status", "CreatedAt");
+
+                    b.ToTable("CustomerRequests", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRequests_Origin", "[Origin] = 'ai_extracted'");
+
+                            t.HasCheckConstraint("CK_CustomerRequests_Status", "[Status] IN ('new','needs_clarification','in_progress','done','rejected')");
+
+                            t.HasCheckConstraint("CK_CustomerRequests_Times", "[SourceWindowFrom] <= [SourceWindowTo] AND [CreatedAt] <= [UpdatedAt] AND DATEPART(tz,[SourceWindowFrom])=0 AND DATEPART(tz,[SourceWindowTo])=0 AND DATEPART(tz,[CreatedAt])=0 AND DATEPART(tz,[UpdatedAt])=0");
+                        });
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerSlaPolicyRevisionRecord", b =>
@@ -1814,6 +2118,65 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasForeignKey("TenantId", "CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestCounterRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestEventRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestEvidenceRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestItemRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestOpenQuestionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerRequestRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AssigneeUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.DataSourceFailoverOperationPolicyRecord", b =>
