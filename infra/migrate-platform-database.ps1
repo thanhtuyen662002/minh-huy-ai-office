@@ -48,6 +48,8 @@ if ((($databaseConnection.StartsWith('"') -and $databaseConnection.EndsWith('"')
 $env:AIOFFICE_DB_CONNECTION = $databaseConnection
 
 Invoke-Checked -Command "dotnet" -Arguments @("tool", "restore")
+# A fresh checkout has no project.assets.json; dotnet ef needs the project restored first.
+Invoke-Checked -Command "dotnet" -Arguments @("restore", "src/Platform.Persistence/Platform.Persistence.csproj")
 
 $efArguments = @(
     "ef", "database", "update",
