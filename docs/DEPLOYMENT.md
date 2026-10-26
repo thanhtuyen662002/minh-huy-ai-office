@@ -336,12 +336,28 @@ The deployment script does not create an identity provider, a first company, a t
 
 ### 4. Configure identity and the first company
 
-Configure an OIDC issuer and audience in the approved secret/configuration store. Core.Api accepts an authenticated request only when the JWT is valid and the server can resolve the `(identity provider, subject, company id)` tuple to active rows in `aioffice.Users`, `aioffice.Companies`, `aioffice.CompanyMemberships` and `aioffice.RoleAssignments`. Browser-supplied tenant and user headers are ignored; `X-AIOffice-Company-Id` is only a company selector and is verified against the membership directory.
-
-There is no bootstrap-admin HTTP endpoint in this release. A designated administrator/DBA must provision the first IdP subject, company, membership and role through the approved versioned bootstrap procedure, then verify the server-derived context:
+Configure an OIDC issuer and audience in the approved secret/configuration store. Generate and retain stable tenant and company identifiers, then run the idempotent operator command after the database migration:
 
 ```powershell
-$headers = @{ Authorization = "Bearer <short-lived-pilot-token>"; "X-AIOffice-Company-Id" = "<company-guid>" }
+$tenantId = [Guid]::NewGuid()
+$companyId = [Guid]::NewGuid()
+pwsh ./infra/bootstrap-company.ps1 `
+  -EnvironmentFile .env.production `
+  -TenantId $tenantId `
+  -CompanyId $companyId `
+  -CompanyCode "pilot" `
+  -CompanyName "Minh Huy Pilot" `
+  -AdminEmail "administrator@example.com"
+```
+
+The command creates one company and one pending administrator invitation, and records an append-only invitation audit entry. Re-running it with the same identifiers and values returns the existing bootstrap invitation. A conflicting rerun fails closed. The command reads `AIOFFICE_DB_CONNECTION` through the same ignored environment file convention as the migration script and does not print the connection string or provider exception details.
+
+No invitation email is sent. Give the administrator the normal web sign-in URL through the approved internal channel. On the first sign-in, Core.Api accepts the invitation only when the validated OIDC principal contains `email_verified=true`, its email matches the active unexpired invitation, and its `(identity provider, subject)` is new. The server then creates the user, membership and administrator role in one transaction. Browser-supplied identity, tenant and company assertions are ignored.
+
+After the administrator signs in, verify the server-derived context with the company identifier retained above:
+
+```powershell
+$headers = @{ Authorization = "Bearer <short-lived-pilot-token>"; "X-AIOffice-Company-Id" = $companyId }
 Invoke-RestMethod http://127.0.0.1:$apiPort/api/auth/context -Headers $headers
 ```
 

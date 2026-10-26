@@ -12,6 +12,9 @@ public sealed class PlatformUserRecord
 
     public required string DisplayName { get; set; }
 
+    // Only populated from a validated provider's verified email, never browser input.
+    public string? NormalizedEmail { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTimeOffset CreatedAtUtc { get; set; }

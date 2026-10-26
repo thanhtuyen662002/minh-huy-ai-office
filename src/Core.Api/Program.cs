@@ -13,6 +13,12 @@ using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Platform.Observability;
 using MinhHuy.AIOffice.Shared.Contracts;
 
+if (args.Contains("--bootstrap-company", StringComparer.Ordinal))
+{
+    Environment.ExitCode = await CompanyBootstrapCommand.RunAsync(args);
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 var deploymentEnvironment = DeploymentEnvironment.Parse(builder.Environment.EnvironmentName);
 
@@ -178,6 +184,7 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
 {
     app.MapCompanyMembershipAccess();
     app.MapCompanyAdministrator();
+    app.MapCompanyInvitations();
     app.MapTaskSubmissionIntents();
     app.MapGet("/api/company/members", async (IRequestAuthorizationContextAccessor accessor,
         [FromServices] CompanyMemberDirectory directory, [FromQuery] int? offset, [FromQuery] int? limit, [FromQuery] bool? includeAccessVersion, CancellationToken cancellationToken) =>
@@ -305,6 +312,8 @@ else
     app.MapGet("/api/company/members", () => Results.Json(new { error = "Company directory is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/access", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
     app.MapPost("/api/company/members/{userId:guid}/administrator", () => Results.Json(new { error = "Company administration is not configured." }, statusCode: StatusCodes.Status503ServiceUnavailable));
+    app.MapMethods("/api/company/invitations", ["GET", "POST"], () => Results.Json(new { error = "Company invitations are not configured." }, statusCode: 503));
+    app.MapPost("/api/company/invitations/{id:guid}/revoke", () => Results.Json(new { error = "Company invitations are not configured." }, statusCode: 503));
 }
 
 var dataSources = app.MapGroup("/api/data-sources");

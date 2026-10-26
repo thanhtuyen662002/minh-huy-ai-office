@@ -1455,3 +1455,18 @@ customer_request_bridge_295_local:
   verification: 'Solution build zero warnings/errors; solution test 2121 passed/zero failed/one skipped (new native SQL proof). Forward migration SQL and no pending EF model changes pass. No raw ingress regressions in full suite.'
   blockers: 'None for code. Native SQL proof not executed locally (no disposable SQL admin connection); runs when AIOFFICE_CUSTOMER_REQUEST_TEST_SQL is provided.'
   next_action: 'CI and review on the draft PR; sequence model snapshot with 294 at integration.'
+
+company_invitation_294_ci_regression_local:
+  issue: 294
+  pr: 298
+  branch: codex/294-company-invitations
+  parent_head: be7cc7a22f62ab25e540cbf91ca89c3067140c5b
+  state: in_progress
+  checkpoint_at: '2026-10-26'
+  committed: false
+  pushed: false
+  handoff: docs/handoffs/294-company-invitations-ci-regression.md
+  completed: 'No-tracking default-isolation acceptance fast paths bypass mutation for existing identities and emails without candidate invitations; serializable acceptance rechecks and security semantics retained. Held-gate/tracker regression controls and forced concurrent-first-login coverage added.'
+  verification: 'PASS focused26; full Release build0warnings/errors; full .NET2138passed/1existing opt-in SQL skipped; web1394passed/20existing Redis skipped; changed C# format/diff. Isolated cached NuGet restore and child-process EventLog logging suppression used for sandbox restrictions; no gate modified. Exact-parent Build40308156020 failed Chromium job121530511257; Governance40308155899 passed. Hosted repair verification requires a later authorized push.'
+  blocked_by: 'git add exited128: cannot create shared .git/worktrees/wt-294/index.lock (Permission denied). No files staged or commit created; no permission escalation attempted. Metadata-only PR handoff update also rejected: connector requires approval, session policy never. Remote PR body unchanged; local handoff is current.'
+  next_action: 'Local four-file repair is verified but uncommitted; commit on this branch when normal Git write access permits and copy local handoff into PR298 when connector access permits. Do not push without later authorization; after publication own exact-head CI through terminal results. Full issue294 acceptance remains open.'
