@@ -1,0 +1,57 @@
+# Single Windows host overlay (IIS in front, Docker Desktop behind).
+# Use together with compose.yaml + compose.production.yaml; see docs/DEPLOYMENT_WINDOWS_VPS.md.
+#
+# - session-redis: private TLS Redis for browser sessions. The base plaintext
+#   Redis is never browser session authority.
+# - extra_hosts: the public HTTPS names resolve to this host so server-side calls
+#   (token exchange, JWKS, Core origin) reach IIS directly instead of relying on
+#   router NAT hairpinning. TLS is still validated against the IIS certificate.
+services:
+  session-redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --port
+      - "0"
+      - --tls-port
+      - "6380"
+      - --tls-cert-file
+      - /tls/session-redis.crt
+      - --tls-key-file
+      - /tls/session-redis.key
+      - --tls-ca-cert-file
+      - /tls/ca.crt
+      - --tls-auth-clients
+      - "no"
+      - --requirepass
+      - ${AIOFFICE_SESSION_REDIS_PASSWORD:?set AIOFFICE_SESSION_REDIS_PASSWORD in the ignored env file}
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+    volumes:
+      - ${AIOFFICE_VPS_TLS_DIR:?set AIOFFICE_VPS_TLS_DIR to the session Redis TLS folder}:/tls:ro
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - ai-office
+
+  web:
+    environment:
+      NODE_EXTRA_CA_CERTS: /tls/ca.crt
+    volumes:
+      - ${AIOFFICE_VPS_TLS_DIR}/ca.crt:/tls/ca.crt:ro
+    extra_hosts: &public-names
+      - "${AIOFFICE_VPS_WEB_HOST:?set AIOFFICE_VPS_WEB_HOST}:host-gateway"
+      - "${AIOFFICE_VPS_IDENTITY_HOST:?set AIOFFICE_VPS_IDENTITY_HOST}:host-gateway"
+      - "${AIOFFICE_VPS_API_HOST:?set AIOFFICE_VPS_API_HOST}:host-gateway"
+    depends_on:
+      session-redis:
+        condition: service_started
+
+  core-api:
+    extra_hosts: *public-names
+
+  agent-worker:
+    extra_hosts: *public-names

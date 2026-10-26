@@ -1,5 +1,7 @@
 param(
-    [string]$EnvironmentFile = ".env.production"
+    [string]$EnvironmentFile = ".env.production",
+    # Extra Compose overlays applied after compose.production.yaml, e.g. compose.vps.yaml.
+    [string[]]$AdditionalComposeFile = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,6 +47,12 @@ $composeBase = @(
     "-f", "compose.yaml",
     "-f", "compose.production.yaml"
 )
+foreach ($file in $AdditionalComposeFile) {
+    if (-not (Test-Path -LiteralPath $file)) {
+        throw "Missing Compose overlay $file."
+    }
+    $composeBase += @("-f", $file)
+}
 
 Invoke-Checked -Command "docker" -Arguments ($composeBase + @("config", "--quiet"))
 Invoke-Checked -Command "docker" -Arguments (
