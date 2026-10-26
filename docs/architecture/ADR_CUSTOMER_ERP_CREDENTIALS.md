@@ -11,6 +11,9 @@ optimistic version. The scoped binding service projects this binding only after
 fresh directory and operator-store permission checks. Workers use the same
 `ScopedDataSourceSecretResolver` before and after decryption, so rotation or
 revocation while resolution awaits refuses the stale binding.
+Legacy full source-management routes cannot clone, rebind, change the kind or
+enable write policy for protected customer sources; ordinary metadata updates
+remain available. Credentials can only change through verified rotation.
 
 AES-256-GCM encrypts the server-built connection string. A fresh 12-byte nonce
 and 16-byte authentication tag accompany every ciphertext. Versioned associated

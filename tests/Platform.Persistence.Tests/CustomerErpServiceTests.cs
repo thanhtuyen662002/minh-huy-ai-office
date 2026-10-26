@@ -10,6 +10,32 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class CustomerErpServiceTests
 {
+    [Theory]
+    [InlineData("write")]
+    [InlineData("kind")]
+    [InlineData("rebind")]
+    [InlineData("clone")]
+    public async Task LegacyRegistryCannotWeakenOrReplaceProtectedCustomerConnections(string mode)
+    {
+        await using var fixture = await Fixture.Create();
+        var source = await fixture.Service.SaveAsync(fixture.Authority, Request());
+        BindingFixture.Grant(fixture.Db, fixture.Authority, "secretref://env/OTHER_APPROVED_FIXTURE");
+        await fixture.Db.SaveChangesAsync();
+        var reference = Assert.Single(fixture.Db.ProtectedDataSourceSecrets).Reference;
+        var registry = new DataSourceRegistryService(fixture.Db, new EfAuthorizationDirectory(fixture.Db));
+        var request = new DataSourceRegistryWriteRequest(mode == "clone" ? "Clone" : source.LogicalName,
+            mode == "kind" ? "other" : "sql-server", "Production", "ERP", mode == "rebind"
+                ? "secretref://env/OTHER_APPROVED_FIXTURE" : mode == "clone" ? reference : null,
+            true, mode == "write", 2);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        {
+            if (mode == "clone") await registry.CreateAsync(fixture.Authority, request);
+            else await registry.UpdateAsync(fixture.Authority, source.Id, request);
+        });
+        var retained = Assert.Single(fixture.Db.DataSources);
+        Assert.True(retained.AllowRead); Assert.False(retained.AllowWrite); Assert.Equal(reference, retained.ConnectionSecretReference);
+    }
+
     [Fact]
     public async Task CreateIsEncryptedScopedReadOnlyAuditedAndRetrySafe()
     {

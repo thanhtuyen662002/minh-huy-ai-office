@@ -47,6 +47,9 @@ def verify(*, directory, manifest, http, sql, wait_for, api, auth):
         created = call("/api/data-sources/customer-erp", create)
         source_id = str(uuid.UUID(created["id"]))
         assert created["bindingVersion"] == "1" and call("/api/data-sources/customer-erp", create) == created
+        call(f"/api/data-sources/{source_id}", {"logicalName": create["logicalName"], "kind": "sql-server",
+            "environment": "Production", "purpose": "ERP", "allowRead": True, "allowWrite": True,
+            "maxConcurrency": 2, "isEnabled": True}, "PUT", expected=403)
         scope = f"TenantId='{tenant}' AND CompanyId='{company}' AND Id='{source_id}'"
         assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.ProtectedDataSourceSecrets WHERE {scope} AND Version=1 AND DATALENGTH(Nonce)=12 AND DATALENGTH(Tag)=16;") == "1"
         assert sql(f"USE AIOfficeLocal; SELECT COUNT(*) FROM aioffice.DataSources WHERE {scope} AND AllowRead=1 AND AllowWrite=0;") == "1"

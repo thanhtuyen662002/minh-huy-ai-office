@@ -4,11 +4,11 @@ status: active-development
 current_issue: 296
 current_pr: 303
 current_branch: codex/296-customer-erp-connection
-head: 6df1654fbea0a219f48f64933a90a65d8d9012b5
+head: 01ace066f08f82eb239ef3afb4b5460d677a5a68
 state: in_progress
 lease_owner: codex-296-customer-erp-connection
-lease_heartbeat_at: '2026-10-26T10:00:00Z'
-last_checkpoint_at: '2026-10-26T10:00:00Z'
+lease_heartbeat_at: '2026-10-26T10:20:00Z'
+last_checkpoint_at: '2026-10-26T10:20:00Z'
 last_merged_pr: 265
 last_merge_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 preferred_next_issue: null
@@ -42,6 +42,8 @@ customer_erp_296:
   pending: 'Hosted exact-head CI and mandatory new actual SQL error-code/create/rotate/queued-worker proof. Docker is unavailable locally. Production key/customer credentials require approved operator setup; no production/customer enrollment. Direct SELECT script intentionally preserves existing fixed-role/db_datareader refusal; details in ADR_CUSTOMER_ERP_CREDENTIALS.md.'
   integrated_main_verification: 'After accepted main542221c integration,1612 Persistence tests PASS and1 inherited opt-in customer-request SQL test SKIP;EF no-pending-model check and full idempotent SQL generation PASS. Same ERP tables/permissions preserved in regenerated20261026100237 migration. Exact remote HEAD and hosted run IDs remain authoritative in HANDOFF303.'
   first_ci_terminal: '6df1654 Build40304585136 terminal RED;Gov40304584977 PASS. Web1362 incl20 actual Redis,Compose,deployment and EF gates PASS. NET121510442830 failed migration UTF8 BOM;native121510443038 failed missing protected key in runtime anchor before SQL;FE121510443096 failed startup. Reproduced actual Next500 with conflicting id/dataSourceId dynamic slugs. Same-PR repairs: UTF8 normalization, key in shared API/worker environment, credentials under existing dataSourceId tree. Local independent rendered Compose/HMAC/web-exclusion,Next production build,28 focused web and36 Node guard controls PASS;new exact-head hosted closure required.'
+  policy_fence: 'Four new counterexamples FAIL on01ace06: legacy full source API can enable writes/change kind/rebind/clone a protected customer source. Current guard refuses those paths while preserving env-source behavior and metadata updates. Local44 focused ERP/registry and full1616 Persistence PASS,1 inherited opt-in SQL SKIP;format/Python syntax PASS. Hosted SQL proof now also requires old full PUT write-policy refusal. No customer/production change.'
+  current_ci: 'Published01ace06 Build40305387035/Gov40305387020;all six prerequisites and Gov PASS,including2166 .NET tests plus1 inherited SQL SKIP,1362 web with20 actualRedis and actual FE runtime. Native121513095178 remains active;own terminal closure before publishing the verified policy-fence checkpoint. Current exact GitHub HEAD/status belongs in HANDOFF303.'
   cross_stream: 'Necessary Core/worker/Next BFF/form and deployment wiring edits belong to296; no company-selection/invitation contract change. Accepted295/main542221c integrated; migration20261026100237 adds independent tables after20261026090633; sequence after any future landed294 migration.'
 
 implementation_checkpoint:
