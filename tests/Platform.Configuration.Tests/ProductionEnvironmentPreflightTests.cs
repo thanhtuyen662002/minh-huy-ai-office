@@ -173,6 +173,44 @@ public sealed class ProductionEnvironmentPreflightTests
         Assert.Equal(0, result.ExitCode);
     }
 
+    [Fact]
+    public async Task Provisioning_is_explicit_and_uses_a_protected_secret_file()
+    {
+        using var fixture = new KeycloakEnvironment();
+        fixture.Values["AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED"] = "false";
+        Assert.Equal(0, (await RunPreflightAsync(fixture.Values)).ExitCode);
+        var path = fixture.Values["AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE"];
+        fixture.Values.Remove("AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE");
+        fixture.Values["AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED"] = "true";
+        Assert.NotEqual(0, (await RunPreflightAsync(fixture.Values)).ExitCode);
+        fixture.Values["AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE"] = path;
+        var valid = await RunPreflightAsync(fixture.Values);
+        Assert.Equal(0, valid.ExitCode);
+        Assert.DoesNotContain(KeycloakEnvironment.SecretValue, valid.Output);
+        foreach (var content in new[] { "", "short", "replace-with-private-secret-value-that-is-long", "first-line\nsecond-line-long-enough-to-not-pass" })
+        {
+            await File.WriteAllTextAsync(path, content);
+            var invalid = await RunPreflightAsync(fixture.Values);
+            Assert.NotEqual(0, invalid.ExitCode);
+            Assert.Contains("AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE", invalid.Output);
+            if (content.Length != 0) Assert.DoesNotContain(content, invalid.Output);
+        }
+    }
+
+    [Theory]
+    [InlineData("yes", "true")]
+    [InlineData("true", "false")]
+    public async Task Provisioning_rejects_invalid_flag_or_disabled_identity(string provisioning, string identity)
+    {
+        using var fixture = new KeycloakEnvironment();
+        var environment = fixture.Values;
+        environment["AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED"] = provisioning;
+        environment["AIOFFICE_KEYCLOAK_ENABLED"] = identity;
+        var result = await RunPreflightAsync(environment);
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED", result.Output);
+    }
+
     private sealed class KeycloakEnvironment : IDisposable
     {
         public const string SecretValue = "unit-test-only-private-identity-value";
@@ -194,7 +232,7 @@ public sealed class ProductionEnvironmentPreflightTests
             Values["AIOFFICE_KEYCLOAK_DB_HOST"] = "private-sql.example.test";
             Values["AIOFFICE_KEYCLOAK_DB_PORT"] = "1433";
             Values["AIOFFICE_KEYCLOAK_PORT"] = "8081";
-            foreach (var name in new[] { "DB_USERNAME", "DB_PASSWORD", "ADMIN_USERNAME", "ADMIN_PASSWORD" })
+            foreach (var name in new[] { "DB_USERNAME", "DB_PASSWORD", "ADMIN_USERNAME", "ADMIN_PASSWORD", "PROVISIONING_CLIENT_SECRET" })
             {
                 var path = Path.Combine(directory, name + ".txt");
                 File.WriteAllText(path, SecretValue);

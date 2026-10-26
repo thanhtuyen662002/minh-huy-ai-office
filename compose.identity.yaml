@@ -10,6 +10,7 @@ services:
     entrypoint: ["/bin/bash", "/opt/aioffice/start.sh"]
     command: ["start", "--import-realm"]
     environment:
+      AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED: ${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED:-false}
       KC_DB: mssql
       # No configurable database name or JDBC properties: never use the platform DB.
       KC_DB_URL: "jdbc:sqlserver://${AIOFFICE_KEYCLOAK_DB_HOST:?set private SQL hostname}:${AIOFFICE_KEYCLOAK_DB_PORT:-1433};databaseName=AIOffice_Identity;encrypt=true;trustServerCertificate=false"
@@ -32,6 +33,7 @@ services:
       - ./infra/keycloak/healthcheck.sh:/opt/aioffice/healthcheck.sh:ro
       - ./infra/keycloak/aioffice-realm.json:/opt/keycloak/data/import/aioffice-realm.json:ro
     secrets:
+      - keycloak_provisioning_client_secret
       - keycloak_db_username
       - keycloak_db_password
       - keycloak_bootstrap_admin_username
@@ -49,6 +51,8 @@ services:
     stop_grace_period: 60s
 
 secrets:
+  keycloak_provisioning_client_secret:
+    file: ${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE:-/dev/null}
   keycloak_db_username:
     file: ${AIOFFICE_KEYCLOAK_DB_USERNAME_FILE:?set private secret file path}
   keycloak_db_password:
