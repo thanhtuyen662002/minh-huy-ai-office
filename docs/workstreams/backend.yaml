@@ -1,14 +1,21 @@
 workstream: backend
-role: 'Backend Platform; root-owned task history API/BFF/UI plus lead durable integration state'
+role: 'Backend Platform; issue 302 persistence, API and web screen'
 status: active-development
-current_issue: 286
+current_issue: 302
 current_pr: null
-current_branch: codex/286-restored-browser-receipt
-head: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
-state: in_progress
-lease_owner: root-backend-286
-lease_heartbeat_at: '2026-10-10'
-last_checkpoint_at: '2026-10-10'
+current_branch: codex/302-bot-channel-settings
+head: 1c31585318fd9983ff780e51e81a7edb602ce04f
+state: ready_for_review
+lease_owner: root-302-user-assigned-uncommitted
+lease_heartbeat_at: '2026-10-26T11:53:00Z'
+last_checkpoint_at: '2026-10-26T11:53:00Z'
+bot_channels_302_checkpoint:
+  handoff: docs/handoffs/302-bot-channel-settings.md
+  delivery: 'Working tree only, as explicitly instructed by user; no commit, push, PR, deployment, real database migration or running bot changes.'
+  completed: 'Six tenant/company-scoped tables and generated EF migration/snapshot; shared HMAC enrollment/replay and AES envelope reuse; config/version/audit/status/QR/command services; admin-only APIs and Vietnamese web/BFF with session fences and write-only AI keys.'
+  verification: 'Release build PASS; full .NET tests 2187 PASS, 1 inherited SQL test skipped; web 1398 PASS, 20 inherited Redis tests skipped; format verify and TypeScript PASS; web has no lint script.'
+  limitations: 'No hosted CI run (no push requested); migration SQL/model/HTTP fixtures verified without live SQL; no live AI/account/connector integration. API flag remains off by default.'
+  next_action: 'User review of uncommitted diff and handoff, then user-owned commit/PR/CI. Apply migration and provision encryption key/AI host allowlist only through a later authorized release.'
 last_completed_issue: 276
 last_merged_pr: 285
 last_merge_commit: aeb534baebc1e13d59a174b644f5cc7f8e8eb4a1
@@ -195,7 +202,7 @@ submission_full_runtime_276:
   browser: 'Actual committedCore202 header/body loss, sameSID/op/fingerprint-only explicitretry/onegraph-worker-dispatch-settlement PASS; actualFEFFprepare replyloss/reload/newCodeS256SID/GET-only/current-source403/restored explicit202 PASS; twoowners/twocompanies/adminreciprocal404, heldprivate200 acrossproviderswitch/discard/restoredGET, externalmemberloss/privateclear/newSID restoredGET/noeffects PASS.'
   images: 'Root and independent reviewer inspected all4 current11641216062 images readable/reachable/unclipped/no credentials, including original1440x5809 submission with maxUnicode wrapping. Full frozen scope approved6087833026; finaldocsreview/exactPR-main remain.'
   review: 'Full independent frozen276 shipping/security/runtime/all4images APPROVED6087833026. Shipping/statica8436086781182, frozenbd3proofdelta6087479625 withSQL160/10Python/AST/YAML/diff and frozen276bounded-recovery6087625337 with26independentcallercontract controls retained. See docs/validation/TASK_SUBMISSION_BROWSER.md.'
-next_action: 'Freeze/review286 actual historical restored-source caller using unchanged strict original-response reader; local36 Node controls PASS including13 new positive/refusals. Merged285/mainaeb native application/literal Rabbit restart PASS but Chromium direct json await failed before receipt equality, cause unproven. Own one Draft and exact PR/main all8 closure before277 delivery.278 private design/proposed120 primary40 independent labels remain unevaluated, no implementation lease;279/full233 ACTIVE.'
+next_action: 'User review of issue 302 uncommitted working tree and docs/handoffs/302-bot-channel-settings.md, followed by user-owned commit/PR and hosted CI. No deployment, feature activation, production migration or bot changes authorized. Historical 286 checkpoint below is superseded by the current repository base and explicit issue 302 assignment.'
 
 group_connector_transport_review_closure:
   head: 9d498b4574e92aa65d56d9c5c666a1286407326d
