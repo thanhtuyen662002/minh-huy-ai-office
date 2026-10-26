@@ -13,6 +13,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  windows-vps:
+    name: Windows VPS installer safety
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse and analyze every VPS script and run Pester safety tests
+        shell: pwsh
+        run: ./tests/windows-vps/Invoke-Checks.ps1 -ModulePath (Join-Path $env:RUNNER_TEMP 'vps-test-modules')
+      - name: Walk all setup phases without machine changes
+        shell: pwsh
+        run: |
+          $setup = @(./infra/windows-vps/Setup-Wizard.ps1 -WhatIf -Root (Join-Path $env:RUNNER_TEMP 'never-create-vps') -RepositoryRoot 'Z:\absent-repository')
+          if ($setup.Count -ne 13 -or @($setup | Where-Object Status -ne 'planned').Count) { throw 'Incomplete setup dry run.' }
+          $setup | Format-Table
+          $update = @(./infra/windows-vps/Setup-Wizard.ps1 -WhatIf -Update)
+          if ($update.Count -ne 4) { throw 'Incomplete update dry run.' }
+          if (Test-Path (Join-Path $env:RUNNER_TEMP 'never-create-vps')) { throw 'Dry run wrote to disk.' }
+
   dotnet:
     name: .NET format, build and tests
     runs-on: ubuntu-latest
@@ -335,7 +354,7 @@ jobs:
   quality-gates:
     name: Required quality gates
     if: ${{ always() }}
-    needs: [dotnet, web, web-runtime, local-runtime, infrastructure, deployment, migrations]
+    needs: [dotnet, web, web-runtime, local-runtime, infrastructure, deployment, migrations, windows-vps]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -348,10 +367,11 @@ jobs:
           INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
           DEPLOYMENT_RESULT: ${{ needs.deployment.result }}
           MIGRATIONS_RESULT: ${{ needs.migrations.result }}
+          WINDOWS_VPS_RESULT: ${{ needs['windows-vps'].result }}
         run: |
           set -euo pipefail
           failed=0
-          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT LOCAL_RUNTIME_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT; do
+          for gate in DOTNET_RESULT WEB_RESULT WEB_RUNTIME_RESULT LOCAL_RUNTIME_RESULT INFRASTRUCTURE_RESULT DEPLOYMENT_RESULT MIGRATIONS_RESULT WINDOWS_VPS_RESULT; do
             result="${!gate}"
             echo "${gate}=${result}"
             if [ "${result}" != "success" ]; then

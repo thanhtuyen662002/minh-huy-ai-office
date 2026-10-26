@@ -12,24 +12,10 @@ services:
     restart: unless-stopped
     command:
       - redis-server
-      - --port
-      - "0"
-      - --tls-port
-      - "6380"
-      - --tls-cert-file
-      - /tls/session-redis.crt
-      - --tls-key-file
-      - /tls/session-redis.key
-      - --tls-ca-cert-file
-      - /tls/ca.crt
-      - --tls-auth-clients
-      - "no"
-      - --requirepass
-      - ${AIOFFICE_SESSION_REDIS_PASSWORD:?set AIOFFICE_SESSION_REDIS_PASSWORD in the ignored env file}
-      - --save
-      - ""
-      - --appendonly
-      - "no"
+      # Password is read from a mounted file, never redis-server's process argv.
+      - /run/secrets/session-redis.conf
+    secrets:
+      - session_redis_config
     volumes:
       - ${AIOFFICE_VPS_TLS_DIR:?set AIOFFICE_VPS_TLS_DIR to the session Redis TLS folder}:/tls:ro
     security_opt:
@@ -55,3 +41,7 @@ services:
 
   agent-worker:
     extra_hosts: *public-names
+
+secrets:
+  session_redis_config:
+    file: ${AIOFFICE_VPS_REDIS_CONFIG_FILE:?set protected session Redis configuration file path}

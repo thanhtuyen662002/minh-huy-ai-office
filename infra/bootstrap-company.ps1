@@ -7,6 +7,7 @@ param(
     [string]$EnvironmentFile = ""
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'windows-vps/Setup-Helpers.ps1')
 $previousConnection = $env:AIOFFICE_DB_CONNECTION
 try {
     if ($EnvironmentFile) {
@@ -20,7 +21,7 @@ try {
         }
         if ([string]::IsNullOrWhiteSpace($connection) -or $connection -match "(?i)replace-with-") { throw "Missing database connection." }
         if (($connection.StartsWith('"') -and $connection.EndsWith('"')) -or ($connection.StartsWith("'") -and $connection.EndsWith("'"))) {
-            $connection = $connection.Substring(1, $connection.Length - 2)
+            $connection = ConvertFrom-SetupEnvValue $connection
         }
         $env:AIOFFICE_DB_CONNECTION = $connection
     }

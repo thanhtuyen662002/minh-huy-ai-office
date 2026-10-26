@@ -16,34 +16,27 @@ param(
     [Parameter(Mandatory = $true)][string]$ApiHost,
     [Parameter(Mandatory = $true)][string]$IdentityHost,
     [string]$SecretsDirectory = "C:\AIOffice\secrets",
-    [string]$RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+    [string]$RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
+    # In-process only. The wizard passes SecureStrings, never command-line values.
+    [hashtable]$WizardInput,
+    [hashtable]$SetupOptions
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'Setup-Helpers.ps1')
+. (Join-Path $PSScriptRoot 'Setup-Actions.ps1')
 
-function New-RandomBytes([int]$Count) {
+function New-RandomByte([int]$Count) {
     return [System.Security.Cryptography.RandomNumberGenerator]::GetBytes($Count)
 }
 
 function New-Password {
     # URL-safe so it can be embedded in rediss:// URLs without escaping.
-    return [Convert]::ToBase64String((New-RandomBytes 24)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
-}
-
-function Set-EnvValue {
-    param([System.Collections.Generic.List[string]]$Lines, [string]$Name, [string]$Value)
-    $prefix = "$Name="
-    for ($i = 0; $i -lt $Lines.Count; $i++) {
-        if ($Lines[$i].StartsWith($prefix, [StringComparison]::Ordinal)) {
-            $Lines[$i] = $prefix + $Value
-            return
-        }
-    }
-    $Lines.Add($prefix + $Value)
+    return [Convert]::ToBase64String((New-RandomByte 24)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
 }
 
 function Write-SecretFile([string]$Path, [string]$Value) {
-    Set-Content -LiteralPath $Path -Value $Value -NoNewline -Encoding ascii
+    Set-Content -LiteralPath $Path -Value $Value -NoNewline -Encoding utf8NoBOM
 }
 
 $envFile = Join-Path $SecretsDirectory ".env.production"
@@ -54,11 +47,7 @@ if (Test-Path -LiteralPath $envFile) {
 # Administrators, SYSTEM and the signed-in operator only. The operator is named
 # explicitly because Docker Desktop runs unelevated and must read the mounts.
 New-Item -ItemType Directory -Force -Path $SecretsDirectory | Out-Null
-$operator = "$env:USERDOMAIN\$env:USERNAME"
-& icacls $SecretsDirectory /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" "${operator}:(OI)(CI)F" | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    throw "Unable to restrict permissions on $SecretsDirectory."
-}
+Set-SetupDirectoryAcl $SecretsDirectory
 
 $webOrigin = "https://$WebHost"
 $identityOrigin = "https://$IdentityHost"
@@ -93,12 +82,13 @@ $generated = [ordered]@{
     AIOFFICE_BROWSER_OIDC_JWKS_URI = "$issuer/protocol/openid-connect/certs"
     AIOFFICE_BROWSER_OIDC_CLIENT_ID = "aioffice-browser"
     AIOFFICE_BROWSER_OIDC_CLIENT_SECRET = ""
-    AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY = [Convert]::ToBase64String((New-RandomBytes 32)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
+    AIOFFICE_BROWSER_OIDC_TRANSACTION_KEY = [Convert]::ToBase64String((New-RandomByte 32)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
     AIOFFICE_BROWSER_CORE_API_ORIGIN = "https://$ApiHost"
     AIOFFICE_BROWSER_SESSION_REDIS_URL = "rediss://:$sessionRedisPassword@session-redis:6380/0"
-    AIOFFICE_SECRET_ENCRYPTION_KEY = [Convert]::ToBase64String((New-RandomBytes 32))
+    AIOFFICE_SECRET_ENCRYPTION_KEY = [Convert]::ToBase64String((New-RandomByte 32))
     AIOFFICE_SESSION_REDIS_PASSWORD = $sessionRedisPassword
     AIOFFICE_VPS_TLS_DIR = (Join-Path $SecretsDirectory "session-redis-tls")
+    AIOFFICE_VPS_REDIS_CONFIG_FILE = (Join-Path $SecretsDirectory 'session-redis.conf')
     AIOFFICE_VPS_WEB_HOST = $WebHost
     AIOFFICE_VPS_API_HOST = $ApiHost
     AIOFFICE_VPS_IDENTITY_HOST = $IdentityHost
@@ -106,7 +96,29 @@ $generated = [ordered]@{
 foreach ($entry in $generated.GetEnumerator()) {
     Set-EnvValue -Lines $lines -Name $entry.Key -Value $entry.Value
 }
-Set-Content -LiteralPath $envFile -Value $lines -Encoding utf8NoBOM
+if ($WizardInput) {
+    Assert-SetupOption $SetupOptions
+    Assert-SetupSecretInput $SetupOptions $WizardInput
+    $dbConnection = ConvertFrom-SetupSecureString $WizardInput.DatabaseConnection
+    $null = Get-SetupSqlEndpoint $dbConnection
+    Set-EnvValue $lines 'AIOFFICE_DB_CONNECTION' $dbConnection
+    Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_DB_HOST' $SetupOptions.SqlHost
+    Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_DB_PORT' $SetupOptions.SqlPort
+    Set-EnvValue $lines 'AIOFFICE_COMPANY_ID' $SetupOptions.CompanyId
+    Set-EnvValue $lines 'AIOFFICE_COMPANY_NAME' $SetupOptions.CompanyName
+    # No ERP credential is collected by this installer. A closed loopback endpoint
+    # satisfies the legacy deployment contract but can never authorize ERP reads.
+    Set-EnvValue $lines 'PILOT_ERP_CONNECTION' ("Server=127.0.0.1,1;Database=unconfigured;User ID=disabled;Password=" + (New-Password) + ';Encrypt=true;TrustServerCertificate=false;Connect Timeout=1')
+    if ($SetupOptions.AiBaseUrl) {
+        Set-EnvValue $lines 'AIOFFICE_AI_PRIMARY_BASE_URL' $SetupOptions.AiBaseUrl
+        Set-EnvValue $lines 'AIOFFICE_AI_PRIMARY_MODEL' $SetupOptions.AiModel
+        Set-EnvValue $lines 'AIOFFICE_AI_PRIMARY_AUTHORIZATION' ('Bearer ' + (ConvertFrom-SetupSecureString $WizardInput.AiApiKey))
+    }
+    Write-SecretFile (Join-Path $SecretsDirectory 'keycloak-db-username') (ConvertFrom-SetupSecureString $WizardInput.SqlLogin)
+    Write-SecretFile (Join-Path $SecretsDirectory 'keycloak-db-password') (ConvertFrom-SetupSecureString $WizardInput.SqlPassword)
+}
+
+Write-SecretFile $generated.AIOFFICE_VPS_REDIS_CONFIG_FILE (Get-SetupRedisConfiguration $sessionRedisPassword)
 
 # Private CA + server certificate for the session Redis TLS listener.
 $tlsDirectory = $generated["AIOFFICE_VPS_TLS_DIR"]
@@ -122,10 +134,20 @@ openssl x509 -req -in session-redis.csr -CA ca.crt -CAkey ca.key -CAcreateserial
 rm -f ca.key ca.srl session-redis.csr ext.cnf
 chmod 644 session-redis.key
 '@
-& docker run --rm -v "${tlsDirectory}:/out" alpine:3.22 sh -c $openssl.Replace("`r", "")
+& docker run --rm -v "${tlsDirectory}:/out" alpine:3.22 sh -c $openssl.Replace("`r", "") *> $null
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to create session Redis TLS certificates. Is Docker Desktop running?"
 }
+
+# Publish the env file last. Failed TLS creation never leaves a deployable env file.
+if ($WizardInput) {
+    # Whitelisted non-secret options keep tenant/company IDs stable on retries.
+    Write-SetupOption -Path (Join-Path $SecretsDirectory 'setup-options.json') -Options $SetupOptions
+}
+[IO.File]::WriteAllLines("$envFile.tmp", $lines, [Text.UTF8Encoding]::new($false))
+[IO.File]::Move("$envFile.tmp", $envFile)
+
+if ($WizardInput) { return }
 
 Write-Host "Created $envFile and generated host secrets."
 Write-Host ""
