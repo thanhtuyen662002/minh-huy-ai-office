@@ -20,6 +20,41 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Tests;
 
 public sealed class CoreApiCompanyInvitationTests
 {
+    [Theory]
+    [InlineData(false, false, true, 201)]
+    [InlineData(true, false, true, 201)]
+    [InlineData(false, true, true, 503)]
+    [InlineData(false, false, true, 502)]
+    [InlineData(false, false, false, 403)]
+    public async Task Provisioning_response_is_private_once_and_failures_do_not_create_invitations(bool exists, bool failure, bool admin, int status)
+    {
+        var authority = MemberDirectoryFixture.Authority();
+        var keycloak = new CompanyInvitationProvisioningTests.FakeKeycloak { Exists = exists, FailLookup = failure, FailCreate = status == 502 };
+        await using var fixture = new InvitationApiFixture(authority, keycloak);
+        await fixture.SeedAsync(admin ? "admin" : "viewer");
+        using var client = fixture.Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var response = await client.PostAsJsonAsync("/api/company/invitations", new { email = "member@example.com", roles = new[] { "viewer" } });
+        Assert.Equal(status, (int)response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        var body = await response.Content.ReadAsStringAsync();
+        if (status == 201)
+        {
+            if (exists) Assert.DoesNotContain("temporaryPassword", body);
+            else Assert.Contains(keycloak.Password!, body);
+            var listing = await client.GetStringAsync("/api/company/invitations");
+            Assert.DoesNotContain("temporaryPassword", listing);
+            if (keycloak.Password is not null) Assert.DoesNotContain(keycloak.Password, listing);
+        }
+        else
+        {
+            if (keycloak.Password is not null) Assert.DoesNotContain(keycloak.Password, body);
+            await using var scope = fixture.Factory.Services.CreateAsyncScope();
+            Assert.Empty(scope.ServiceProvider.GetRequiredService<PlatformDbContext>().CompanyInvitations);
+        }
+        if (!admin) Assert.Equal(0, keycloak.Lookups);
+    }
+
     [Fact]
     public async Task AdministratorApiCreatesListsRejectsDuplicateAndScopesRevoke()
     {
@@ -99,7 +134,7 @@ public sealed class CoreApiCompanyInvitationTests
         public WebApplicationFactory<Program> Factory { get; }
         private readonly AuthorizationContext authority;
 
-        public InvitationApiFixture(AuthorizationContext authority)
+        public InvitationApiFixture(AuthorizationContext authority, IKeycloakAdminClient? keycloak = null)
         {
             this.authority = authority;
             Environment.SetEnvironmentVariable(variable, "synthetic-test-not-a-real-connection");
@@ -112,6 +147,11 @@ public sealed class CoreApiCompanyInvitationTests
                 builder.UseSetting("AIOffice:PlatformDatabase:ConnectionSecretRef", "secretref://env/" + variable);
                 builder.ConfigureServices(services =>
                 {
+                    if (keycloak is not null)
+                    {
+                        services.RemoveAll<IKeycloakAdminClient>();
+                        services.AddSingleton(keycloak);
+                    }
                     services.AddAuthentication(options =>
                     {
                         options.DefaultAuthenticateScheme = InvitationAuthenticationHandler.AuthenticationScheme;
