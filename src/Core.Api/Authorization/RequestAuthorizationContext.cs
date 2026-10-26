@@ -55,6 +55,29 @@ public sealed class RequestAuthorizationContextMiddleware(RequestDelegate next)
             ?? httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var companyHeader = httpContext.Request.Headers[AuthorizationHeaders.CompanyId].FirstOrDefault();
 
+        // Authentication middleware has validated the provider token. Enrollment
+        // runs before directory/company resolution and uses no browser selector.
+        if (httpContext.Request.Path is var path && (path == "/api/auth/companies" || path == "/api/auth/context") &&
+            provider is not null && subject is not null &&
+            httpContext.User.FindAll(AuthenticationClaimTypes.IdentityProvider).Count() == 1 &&
+            httpContext.User.FindAll(AuthenticationClaimTypes.Subject).Count() == 1 &&
+            httpContext.User.FindAll("email").Count() == 1 &&
+            httpContext.User.FindAll("email_verified").Count() == 1 &&
+            httpContext.User.FindFirstValue("email_verified") == "true" &&
+            httpContext.RequestServices.GetService<CompanyInvitationService>() is { } invitations)
+        {
+            try
+            {
+                await invitations.AcceptAsync(provider, subject, httpContext.User.FindFirstValue("email"), true, httpContext.RequestAborted);
+            }
+            catch (Exception error) when (error is System.Data.Common.DbException or Microsoft.EntityFrameworkCore.DbUpdateException or InvalidOperationException or ArgumentException)
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                await httpContext.Response.WriteAsJsonAsync(new { error = "Invitation acceptance is temporarily unavailable." });
+                return;
+            }
+        }
+
         if (httpContext.GetEndpoint()?.Metadata.GetMetadata<IdentityCompanyDirectoryEndpoint>() is not null)
         {
             if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject)
