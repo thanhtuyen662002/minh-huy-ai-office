@@ -216,6 +216,33 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.ToTable("Companies", "aioffice");
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerErpProbeAuditRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.ToTable("CustomerErpProbeAudits", "aioffice");
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerSlaPolicyRevisionRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1275,6 +1302,52 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.ToTable("Users", "aioffice");
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.ProtectedDataSourceSecretRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Ciphertext")
+                        .IsRequired()
+                        .HasMaxLength(8192)
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("Nonce")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("binary(12)")
+                        .IsFixedLength();
+
+                    b.Property<byte[]>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("binary(16)")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("ProtectedDataSourceSecrets", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProtectedDataSourceSecrets_Version", "[Version] > 0");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.RoleAssignmentRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1731,6 +1804,15 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.CustomerErpProbeAuditRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.DataSourceFailoverOperationPolicyRecord", b =>
                 {
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.DataSourceRecord", null)
@@ -2018,6 +2100,15 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.ProtectedDataSourceSecretRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.DataSourceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

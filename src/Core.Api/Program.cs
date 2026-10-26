@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -31,7 +33,25 @@ builder.Services.AddHealthChecks();
 // renders serializer/stack details through DeveloperExceptionPage.
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
 builder.Services.AddPlatformPersistence(platformConnectionString);
-builder.Services.AddSingleton(secretResolver);
+if (!string.IsNullOrWhiteSpace(platformConnectionString)) builder.Services.AddProtectedDataSourceSecrets();
+else builder.Services.AddSingleton(secretResolver);
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("customer-erp", context =>
+    {
+        var current = context.RequestServices.GetRequiredService<IRequestAuthorizationContextAccessor>().Current;
+        if (current is null || !current.Roles.Contains("admin", StringComparer.Ordinal)) return RateLimitPartition.GetNoLimiter<string>("unauthorized");
+        var authorityContext = current.Context;
+        return RateLimitPartition.GetFixedWindowLimiter($"{authorityContext?.TenantId}:{authorityContext?.CompanyId}", _ => new()
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
 var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString), secretResolver);
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
@@ -41,6 +61,8 @@ builder.Services.AddSingleton<IWorkEnvelopePublisher, RabbitMqWorkPublisher>();
 _ = builder.Services.AddGroupIngressReferenceProducer(builder.Configuration, !string.IsNullOrWhiteSpace(platformConnectionString));
 if (!string.IsNullOrWhiteSpace(platformConnectionString))
 {
+    builder.Services.AddScoped<ICustomerErpConnectionVerifier, SqlCustomerErpConnectionVerifier>();
+    builder.Services.AddScoped<CustomerErpService>();
     builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(
         services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<IAuthorizationDirectory>(),
         services.GetRequiredService<BindingStorePermissionVerifier>(), platformConnectionSecretReference));
@@ -107,6 +129,9 @@ if (authenticationConfigured)
     app.UseMiddleware<RequestAuthorizationContextMiddleware>();
     app.UseAuthorization();
 }
+
+app.UseRateLimiter();
+app.MapCustomerErp(!string.IsNullOrWhiteSpace(platformConnectionString), authenticationConfigured);
 
 static AuthorizationContext? AuthorizedContext(IRequestAuthorizationContextAccessor accessor) => accessor.Current?.Context;
 static IResult AuthenticationUnavailable() => Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Authentication is not configured.");
