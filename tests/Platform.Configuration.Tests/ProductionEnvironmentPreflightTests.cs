@@ -6,13 +6,18 @@ namespace MinhHuy.AIOffice.Platform.Configuration.Tests;
 public sealed class ProductionEnvironmentPreflightTests
 {
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("not-base64")]
-    [InlineData("AA==")]
-    public async Task Preflight_requires_256_bit_protected_credentials_key(string? value)
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("not-base64", false)]
+    [InlineData("AA==", false)]
+    [InlineData(null, true)]
+    [InlineData("", true)]
+    [InlineData("not-base64", true)]
+    [InlineData("AA==", true)]
+    public async Task Preflight_requires_256_bit_protected_credentials_key(string? value, bool keycloakEnabled)
     {
-        var environment = CreateValidEnvironment();
+        using var keycloak = keycloakEnabled ? new KeycloakEnvironment() : null;
+        var environment = keycloak?.Values ?? CreateValidEnvironment();
         if (value is null) environment.Remove("AIOFFICE_SECRET_ENCRYPTION_KEY");
         else environment["AIOFFICE_SECRET_ENCRYPTION_KEY"] = value;
         var result = await RunPreflightAsync(environment);
@@ -74,6 +79,149 @@ public sealed class ProductionEnvironmentPreflightTests
             "RABBITMQ_DEFAULT_PASS has unmatched or mixed quotes",
             result.Output,
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Preflight_accepts_self_hosted_identity_with_file_backed_secrets()
+    {
+        using var fixture = new KeycloakEnvironment();
+        fixture.Values["AIOFFICE_KEYCLOAK_DB_PASSWORD_FILE"] = DoubleQuoted(
+            fixture.Values["AIOFFICE_KEYCLOAK_DB_PASSWORD_FILE"]);
+
+        var result = await RunPreflightAsync(fixture.Values);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.DoesNotContain(KeycloakEnvironment.SecretValue, result.Output, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("AIOFFICE_KEYCLOAK_HOSTNAME", "http://identity.example.test")]
+    [InlineData("AIOFFICE_KEYCLOAK_HOSTNAME", "https://identity.example.test/")]
+    [InlineData("AIOFFICE_KEYCLOAK_HOSTNAME", "https://user:private@identity.example.test")]
+    [InlineData("AIOFFICE_KEYCLOAK_HOSTNAME", "https://identity.example.test/path")]
+    [InlineData("AIOFFICE_KEYCLOAK_HOSTNAME", "https://identity.example.test?query=private")]
+    [InlineData("AIOFFICE_KEYCLOAK_HOSTNAME", "https://localhost")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN", "https://office.example.test/")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN", "https://office.example.invalid")]
+    [InlineData("AIOFFICE_AUTHORITY", "https://identity.example.test/realms/other")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_ISSUER", "https://identity.example.test/realms/aioffice/")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_AUTHORIZATION_ENDPOINT", "https://foreign.example.test/auth")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_TOKEN_ENDPOINT", "http://keycloak:8080/realms/aioffice/protocol/openid-connect/token")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_JWKS_URI", "https://foreign.example.test/certs")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_CLIENT_ID", "other-client")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_CLIENT_SECRET", "private-confidential-secret")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_LOCAL_HTTP", "true")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_HOST", "sql.example.test;databaseName=AI_Office")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_HOST", "sql.example.test;trustServerCertificate=true")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_HOST", "replace-with-private-sql-hostname")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_PORT", "0")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_PORT", "65536")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_PORT", "1433;databaseName=other")]
+    [InlineData("AIOFFICE_KEYCLOAK_PORT", "-1")]
+    [InlineData("AIOFFICE_KEYCLOAK_ENABLED", "yes")]
+    public async Task Preflight_rejects_inconsistent_or_unsafe_keycloak_configuration(string name, string value)
+    {
+        using var fixture = new KeycloakEnvironment();
+        fixture.Values[name] = value;
+
+        var result = await RunPreflightAsync(fixture.Values);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains(name, result.Output, StringComparison.Ordinal);
+        Assert.DoesNotContain(KeycloakEnvironment.SecretValue, result.Output, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_USERNAME_FILE")]
+    [InlineData("AIOFFICE_KEYCLOAK_DB_PASSWORD_FILE")]
+    [InlineData("AIOFFICE_KEYCLOAK_ADMIN_USERNAME_FILE")]
+    [InlineData("AIOFFICE_KEYCLOAK_ADMIN_PASSWORD_FILE")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_ISSUER")]
+    [InlineData("AIOFFICE_BROWSER_OIDC_CLIENT_ID")]
+    public async Task Preflight_requires_each_keycloak_secret_reference_and_browser_identity(string name)
+    {
+        using var fixture = new KeycloakEnvironment();
+        fixture.Values.Remove(name);
+
+        var result = await RunPreflightAsync(fixture.Values);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains(name, result.Output, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("replace-with-secret-file")]
+    [InlineData("secretref://env/PRIVATE_KEYCLOAK_PASSWORD")]
+    [InlineData("relative-secret.txt")]
+    public async Task Preflight_rejects_unresolved_keycloak_secret_files(string reference)
+    {
+        using var fixture = new KeycloakEnvironment();
+        fixture.Values["AIOFFICE_KEYCLOAK_DB_PASSWORD_FILE"] = reference;
+
+        var result = await RunPreflightAsync(fixture.Values);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("AIOFFICE_KEYCLOAK_DB_PASSWORD_FILE", result.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Preflight_rejects_missing_and_empty_keycloak_secret_files()
+    {
+        using var fixture = new KeycloakEnvironment();
+        var path = fixture.Values["AIOFFICE_KEYCLOAK_ADMIN_PASSWORD_FILE"];
+        await File.WriteAllTextAsync(path, string.Empty);
+        var empty = await RunPreflightAsync(fixture.Values);
+        File.Delete(path);
+        var missing = await RunPreflightAsync(fixture.Values);
+
+        Assert.NotEqual(0, empty.ExitCode);
+        Assert.NotEqual(0, missing.ExitCode);
+        Assert.Contains("AIOFFICE_KEYCLOAK_ADMIN_PASSWORD_FILE", empty.Output, StringComparison.Ordinal);
+        Assert.Contains("AIOFFICE_KEYCLOAK_ADMIN_PASSWORD_FILE", missing.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Preflight_keeps_external_identity_compatible_when_keycloak_is_disabled()
+    {
+        var environment = CreateValidEnvironment();
+        environment["AIOFFICE_KEYCLOAK_ENABLED"] = "false";
+        environment["AIOFFICE_KEYCLOAK_DB_HOST"] = "replace-with-unused-host";
+
+        var result = await RunPreflightAsync(environment);
+
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    private sealed class KeycloakEnvironment : IDisposable
+    {
+        public const string SecretValue = "unit-test-only-private-identity-value";
+        private readonly string directory = Path.Combine(Path.GetTempPath(), $"aioffice identity {Guid.NewGuid():N}");
+        public Dictionary<string, string> Values { get; } = CreateValidEnvironment();
+
+        public KeycloakEnvironment()
+        {
+            Directory.CreateDirectory(directory);
+            Values["AIOFFICE_KEYCLOAK_ENABLED"] = "true";
+            Values["AIOFFICE_KEYCLOAK_HOSTNAME"] = "https://identity.example.test";
+            Values["AIOFFICE_AUTHORITY"] = "https://identity.example.test/realms/aioffice";
+            Values["AIOFFICE_BROWSER_OIDC_ISSUER"] = Values["AIOFFICE_AUTHORITY"];
+            Values["AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN"] = "https://office.example.test";
+            Values["AIOFFICE_BROWSER_OIDC_CLIENT_ID"] = "aioffice-browser";
+            Values["AIOFFICE_BROWSER_OIDC_AUTHORIZATION_ENDPOINT"] = Values["AIOFFICE_AUTHORITY"] + "/protocol/openid-connect/auth";
+            Values["AIOFFICE_BROWSER_OIDC_TOKEN_ENDPOINT"] = Values["AIOFFICE_AUTHORITY"] + "/protocol/openid-connect/token";
+            Values["AIOFFICE_BROWSER_OIDC_JWKS_URI"] = Values["AIOFFICE_AUTHORITY"] + "/protocol/openid-connect/certs";
+            Values["AIOFFICE_KEYCLOAK_DB_HOST"] = "private-sql.example.test";
+            Values["AIOFFICE_KEYCLOAK_DB_PORT"] = "1433";
+            Values["AIOFFICE_KEYCLOAK_PORT"] = "8081";
+            foreach (var name in new[] { "DB_USERNAME", "DB_PASSWORD", "ADMIN_USERNAME", "ADMIN_PASSWORD" })
+            {
+                var path = Path.Combine(directory, name + ".txt");
+                File.WriteAllText(path, SecretValue);
+                Values[$"AIOFFICE_KEYCLOAK_{name}_FILE"] = path;
+            }
+        }
+
+        public void Dispose() => Directory.Delete(directory, recursive: true);
     }
 
     private static Dictionary<string, string> CreateValidEnvironment() =>

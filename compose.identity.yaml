@@ -1,0 +1,59 @@
+# Separate project: application deploys use --remove-orphans and must not remove identity.
+name: minh-huy-ai-office-identity
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.0
+    restart: unless-stopped
+    init: true
+    user: "1000:0"
+    entrypoint: ["/bin/bash", "/opt/aioffice/start.sh"]
+    command: ["start", "--import-realm"]
+    environment:
+      KC_DB: mssql
+      # No configurable database name or JDBC properties: never use the platform DB.
+      KC_DB_URL: "jdbc:sqlserver://${AIOFFICE_KEYCLOAK_DB_HOST:?set private SQL hostname}:${AIOFFICE_KEYCLOAK_DB_PORT:-1433};databaseName=AIOffice_Identity;encrypt=true;trustServerCertificate=false"
+      KC_HOSTNAME: ${AIOFFICE_KEYCLOAK_HOSTNAME:?set HTTPS identity origin}
+      KC_HOSTNAME_STRICT: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      # Metrics enables the database pool readiness check; port 9000 is not published.
+      KC_METRICS_ENABLED: "true"
+      KC_HTTP_MANAGEMENT_SCHEME: http
+      KC_CACHE: local
+      AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN: ${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN:?set HTTPS web origin}
+      AIOFFICE_BROWSER_OIDC_CLIENT_ID: ${AIOFFICE_BROWSER_OIDC_CLIENT_ID:-aioffice-browser}
+      AIOFFICE_AUDIENCE: ${AIOFFICE_AUDIENCE:?set API audience}
+    ports:
+      - "127.0.0.1:${AIOFFICE_KEYCLOAK_PORT:-8081}:8080"
+    volumes:
+      - ./infra/keycloak/start.sh:/opt/aioffice/start.sh:ro
+      - ./infra/keycloak/healthcheck.sh:/opt/aioffice/healthcheck.sh:ro
+      - ./infra/keycloak/aioffice-realm.json:/opt/keycloak/data/import/aioffice-realm.json:ro
+    secrets:
+      - keycloak_db_username
+      - keycloak_db_password
+      - keycloak_bootstrap_admin_username
+      - keycloak_bootstrap_admin_password
+    healthcheck:
+      test: ["CMD", "/bin/bash", "/opt/aioffice/healthcheck.sh"]
+      interval: 15s
+      timeout: 5s
+      start_period: 120s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 60s
+
+secrets:
+  keycloak_db_username:
+    file: ${AIOFFICE_KEYCLOAK_DB_USERNAME_FILE:?set private secret file path}
+  keycloak_db_password:
+    file: ${AIOFFICE_KEYCLOAK_DB_PASSWORD_FILE:?set private secret file path}
+  keycloak_bootstrap_admin_username:
+    file: ${AIOFFICE_KEYCLOAK_ADMIN_USERNAME_FILE:?set private secret file path}
+  keycloak_bootstrap_admin_password:
+    file: ${AIOFFICE_KEYCLOAK_ADMIN_PASSWORD_FILE:?set private secret file path}
