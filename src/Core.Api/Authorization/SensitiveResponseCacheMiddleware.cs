@@ -25,6 +25,8 @@ public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
             || context.Request.Path.Equals(SlaStatusPath)
             || context.Request.Path.StartsWithSegments(TasksPath)
             || context.Request.Path.StartsWithSegments(CompanyPath)
+            || context.Request.Path.StartsWithSegments("/api/companies")
+            || context.Request.Path.StartsWithSegments("/internal/customer-requests")
             || context.Request.Path.StartsWithSegments(GroupIngressPath)
             || context.Request.Path.StartsWithSegments(GroupSourcesPath))
         {
