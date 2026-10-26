@@ -7,6 +7,13 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> options) : DbContext(options)
 {
     public const string DefaultSchema = "aioffice";
+    public DbSet<CustomerRequestRecord> CustomerRequests => Set<CustomerRequestRecord>();
+    public DbSet<CustomerRequestItemRecord> CustomerRequestItems => Set<CustomerRequestItemRecord>();
+    public DbSet<CustomerRequestEvidenceRecord> CustomerRequestEvidence => Set<CustomerRequestEvidenceRecord>();
+    public DbSet<CustomerRequestOpenQuestionRecord> CustomerRequestOpenQuestions => Set<CustomerRequestOpenQuestionRecord>();
+    public DbSet<CustomerRequestEventRecord> CustomerRequestEvents => Set<CustomerRequestEventRecord>();
+    public DbSet<CustomerRequestCounterRecord> CustomerRequestCounters => Set<CustomerRequestCounterRecord>();
+    public DbSet<CustomerRequestNonceRecord> CustomerRequestNonces => Set<CustomerRequestNonceRecord>();
     public DbSet<PlatformMetadataRecord> PlatformMetadata => Set<PlatformMetadataRecord>();
     public DbSet<PlatformUserRecord> Users => Set<PlatformUserRecord>();
     public DbSet<CompanyRecord> Companies => Set<CompanyRecord>();
@@ -46,6 +53,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(DefaultSchema);
+        modelBuilder.ConfigureCustomerRequests();
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
