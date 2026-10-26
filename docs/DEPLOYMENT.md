@@ -23,6 +23,8 @@ This document defines the P0 deployment contract for Minh Huy AI Office. It is i
 
 ## Topology
 
+For a single Windows VM running IIS in front of Docker Desktop (no Vercel or tunnel), follow [DEPLOYMENT_WINDOWS_VPS.md](DEPLOYMENT_WINDOWS_VPS.md).
+
 ```text
 Vercel (Next.js web)
         |
