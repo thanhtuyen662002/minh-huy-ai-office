@@ -1,0 +1,2 @@
+# Shell bind mounts must work on Windows checkouts as well as Linux hosts.
+infra/keycloak/*.sh text eol=lf
