@@ -19,6 +19,7 @@ function backend(override: (url: string, init?: RequestInit) => Promise<Response
   const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
     const custom = override(url, init);
     if (custom !== undefined) return custom;
+    if (url.startsWith("/api/local/data-sources/customer-erp?")) return Response.json([]);
     const company = new URL(url, "http://fixture.invalid").searchParams.get("companyId") ?? companyA;
     if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: "tenant", companyId: company, userId: state.user, roles: state.roles });
     if (url === "/api/local/session/logout") return Response.json({ ok: true });
