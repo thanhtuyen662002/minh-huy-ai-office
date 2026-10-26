@@ -3,6 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'windows-vps/Setup-Helpers.ps1')
 
 function Normalize-EnvironmentValue {
     param(
@@ -26,7 +27,7 @@ function Normalize-EnvironmentValue {
             throw "$Name has unmatched or mixed quotes."
         }
 
-        $normalized = $normalized.Substring(1, $normalized.Length - 2).Trim()
+        $normalized = ConvertFrom-SetupEnvValue $normalized
     }
 
     return $normalized

@@ -12,36 +12,46 @@ param(
     [string]$RepositoryRoot = "C:\AIOffice\app",
     [string]$EnvironmentFile = "C:\AIOffice\secrets\.env.production",
     [string]$Ref = "origin/main",
-    [switch]$Migrate
+    [switch]$Migrate,
+    [ValidateSet('All', 'Migrate', 'Keycloak', 'Deploy')][string]$Phase = 'All',
+    [switch]$SkipFetch
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'Setup-Helpers.ps1')
 
 function Invoke-Checked {
     param([string]$Command, [string[]]$Arguments)
     & $Command @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "$Command $($Arguments -join ' ') failed with exit code $LASTEXITCODE"
+        throw 'Deployment command failed. Check the current phase and retry.'
     }
 }
 
 Push-Location $RepositoryRoot
 try {
-    Invoke-Checked git @("fetch", "--prune", "origin")
-    Invoke-Checked git @("checkout", "--detach", $Ref)
+    if (-not $SkipFetch) {
+        $dirty = & git status --porcelain
+        if ($LASTEXITCODE -ne 0 -or $dirty) { throw 'Update requires a clean Git working tree.' }
+        Invoke-Checked git @("fetch", "--prune", "origin")
+        Invoke-Checked git @("checkout", "--detach", $Ref)
+    }
     Write-Host "Deploying $(git rev-parse --short HEAD) ($Ref)"
 
-    if ($Migrate) {
+    if ($Migrate -and $Phase -in @('All', 'Migrate')) {
         Invoke-Checked dotnet @("tool", "restore")
         & (Join-Path $RepositoryRoot "infra\migrate-platform-database.ps1") -EnvironmentFile $EnvironmentFile
     }
 
     $keycloakEnabled = Select-String -LiteralPath $EnvironmentFile -Pattern '^AIOFFICE_KEYCLOAK_ENABLED=true$' -Quiet
-    if ($keycloakEnabled) {
+    if ($keycloakEnabled -and $Phase -in @('All', 'Keycloak')) {
         Invoke-Checked docker @("compose", "--env-file", $EnvironmentFile, "-f", "compose.identity.yaml", "up", "-d", "--wait", "keycloak")
     }
 
-    & (Join-Path $RepositoryRoot "infra\deploy-backend.ps1") -EnvironmentFile $EnvironmentFile -AdditionalComposeFile "compose.vps.yaml"
+    if ($Phase -in @('All', 'Deploy')) {
+        Initialize-SetupRedisConfiguration $EnvironmentFile
+        & (Join-Path $RepositoryRoot "infra\deploy-backend.ps1") -EnvironmentFile $EnvironmentFile -AdditionalComposeFile "compose.vps.yaml"
+    }
 }
 finally {
     Pop-Location

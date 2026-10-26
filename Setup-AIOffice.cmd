@@ -1,0 +1,12 @@
+@echo off
+setlocal
+rem Save only paths and a whitelisted mode in the environment, never credentials.
+set "AIOFFICE_ENTRY=%~f0"
+set "AIOFFICE_ENTRY_ROOT=%~dp0"
+set "AIOFFICE_SETUP_MODE="
+if /i "%~1"=="--update" set "AIOFFICE_SETUP_MODE=-Update"
+rem --resume deliberately uses the same state-driven entry path as a normal run.
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $admin=([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator); if(-not $admin) { $mode=if($env:AIOFFICE_SETUP_MODE){'--update'}else{'--resume'}; $p=Start-Process -FilePath $env:ComSpec -Verb RunAs -ArgumentList ('/d /c ""'+$env:AIOFFICE_ENTRY+'" '+$mode+'"') -Wait -PassThru; exit $p.ExitCode }; if(-not(Get-Command winget -ErrorAction SilentlyContinue)){throw 'App Installer required'}; $pwsh=Join-Path $env:ProgramFiles 'PowerShell\7\pwsh.exe'; if(-not(Test-Path -LiteralPath $pwsh)){ & winget install --exact --id Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements *> $null; if($LASTEXITCODE -ne 0){throw 'PowerShell installation failed'} }; $repo=$env:AIOFFICE_ENTRY_ROOT; if(-not(Test-Path -LiteralPath (Join-Path $repo 'infra\windows-vps\Setup-Wizard.ps1'))){ $repo='C:\AIOffice\app'; if(-not(Test-Path -LiteralPath (Join-Path $repo '.git'))){ $git=Join-Path $env:ProgramFiles 'Git\cmd\git.exe'; if(-not(Test-Path -LiteralPath $git)){ & winget install --exact --id Git.Git --silent --accept-package-agreements --accept-source-agreements *> $null; if($LASTEXITCODE -ne 0){throw 'Git installation failed'} }; & $git clone https://github.com/thanhtuyen662002/minh-huy-ai-office.git $repo *> $null; if($LASTEXITCODE -ne 0){throw 'Clone failed'} } }; $repo=[IO.Path]::GetFullPath($repo).TrimEnd([char]92); $wizard=Join-Path $repo 'infra\windows-vps\Setup-Wizard.ps1'; if(-not(Test-Path -LiteralPath $wizard)){throw 'Installer release unavailable'}; $a=@('-NoLogo','-NoProfile','-STA','-ExecutionPolicy','Bypass','-File',$wizard,'-RepositoryRoot',$repo); if($env:AIOFFICE_SETUP_MODE){$a+=$env:AIOFFICE_SETUP_MODE}; & $pwsh @a; exit $LASTEXITCODE } catch { Write-Host 'Khong the mo cai dat. Can quyen quan tri, App Installer (winget), Internet va ban phat hanh co Setup-Wizard.ps1.'; exit 1 }"
+set "AIOFFICE_SETUP_EXIT=%errorlevel%"
+if not "%AIOFFICE_SETUP_EXIT%"=="0" pause
+exit /b %AIOFFICE_SETUP_EXIT%

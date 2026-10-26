@@ -14,7 +14,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-function Enable-Features {
+function Enable-Feature {
     param([string[]]$Names)
     $restart = $false
     foreach ($name in $Names) {
@@ -61,7 +61,7 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     throw "winget is missing. Install 'App Installer' from the Microsoft Store, then re-run."
 }
 
-$restartNeeded = Enable-Features @(
+$restartNeeded = Enable-Feature @(
     "Microsoft-Windows-Subsystem-Linux",
     "VirtualMachinePlatform",
     "IIS-WebServerRole",
