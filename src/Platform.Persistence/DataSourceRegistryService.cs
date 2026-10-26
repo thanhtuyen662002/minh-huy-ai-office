@@ -69,6 +69,9 @@ public sealed partial class DataSourceRegistryService(
             id,
             request);
         var secretReference = SecretReference.Parse(request.ConnectionSecretReference);
+        // Runtime-managed customer bindings may only be created with verified,
+        // atomic customer enrollment, never attached to an unrelated source.
+        if (secretReference.Provider == "protected") throw DataSourceSecretBindingService.Unavailable();
         await bindings.RequireReferenceAsync(authorized.Context, secretReference.Value, cancellationToken);
 
         if (await LogicalNameExistsAsync(
@@ -145,6 +148,12 @@ public sealed partial class DataSourceRegistryService(
         var secretReference = request.ConnectionSecretReference is null
             ? null
             : SecretReference.Parse(request.ConnectionSecretReference);
+        var protectedCustomer = SecretReference.TryParse(record.ConnectionSecretReference, out var originalReference)
+            && originalReference!.Provider == "protected";
+        if ((protectedCustomer && (!validated.AllowRead || validated.AllowWrite || validated.Kind != "sql-server"
+                || (secretReference is not null && secretReference.Value != record.ConnectionSecretReference)))
+            || (!protectedCustomer && secretReference?.Provider == "protected"))
+            throw DataSourceSecretBindingService.Unavailable();
         await bindings.RequireStoreAsync(cancellationToken);
         if (secretReference is not null || validated.IsEnabled)
         {

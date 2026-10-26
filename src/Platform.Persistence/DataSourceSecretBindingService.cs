@@ -96,6 +96,23 @@ public sealed class DataSourceSecretBindingService(
             await verifier.RequireReadOnlyAsync(cancellationToken);
             if (!SecretReference.TryParse(reference, out var parsed) || IsInfrastructureReference(parsed!))
                 throw Unavailable();
+            if (parsed!.Provider == "protected")
+            {
+                if (!Guid.TryParseExact(parsed.Resource, "D", out var id) || parsed.Value != $"secretref://protected/{id:D}") throw Unavailable();
+                var secret = await database.ProtectedDataSourceSecrets.AsNoTracking().SingleOrDefaultAsync(row =>
+                    row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId && row.Id == id, cancellationToken);
+                if (secret is null || secret.Version < 1) throw Unavailable();
+                return new()
+                {
+                    TenantId = secret.TenantId,
+                    CompanyId = secret.CompanyId,
+                    Id = secret.Id,
+                    CanonicalReference = secret.Reference,
+                    Label = "Customer ERP",
+                    IsEnabled = true,
+                    Version = secret.Version
+                };
+            }
             var grants = await database.Set<DataSourceSecretBindingRecord>().AsNoTracking()
                 .Where(row => row.TenantId == authority.TenantId && row.CompanyId == authority.CompanyId
                     && row.CanonicalReference == parsed!.Value)
@@ -125,6 +142,7 @@ public sealed class DataSourceSecretBindingService(
                 || (readOnly && (!source.AllowRead || source.AllowWrite))
                 || source.MaxConcurrency is < 1 or > 1024) throw Unavailable();
             var grant = await RequireReferenceAsync(authority, source.ConnectionSecretReference, cancellationToken);
+            if (grant.CanonicalReference.StartsWith("secretref://protected/", StringComparison.Ordinal) && grant.Id != sourceId) throw Unavailable();
             return new(authority, sourceId, SecretReference.Parse(grant.CanonicalReference), grant.Id, grant.Version);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }

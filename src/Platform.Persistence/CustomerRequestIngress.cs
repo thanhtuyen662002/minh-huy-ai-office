@@ -26,14 +26,7 @@ public sealed class CustomerRequestIngress(PlatformDbContext database, CustomerR
                 throw CustomerRequestServiceDirectory.Denied();
             authentication.RequireFresh(signature.Timestamp);
             var now = clock.GetUtcNow();
-            if (await database.CustomerRequestNonces.AnyAsync(x => x.ServiceId == signature.ServiceId && x.Nonce == signature.Nonce, cancellationToken))
-                throw CustomerRequestServiceDirectory.Denied();
-            // Cleanup is scoped to this locked service, with a lifetime exceeding the entire signing window.
-            if (database.Database.IsSqlServer())
-                await database.CustomerRequestNonces.Where(x => x.ServiceId == signature.ServiceId && x.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
-            else
-                database.CustomerRequestNonces.RemoveRange(await database.CustomerRequestNonces.Where(x => x.ServiceId == signature.ServiceId && x.ExpiresAt < now).ToArrayAsync(cancellationToken));
-            database.CustomerRequestNonces.Add(new() { ServiceId = signature.ServiceId, Nonce = signature.Nonce, ExpiresAt = now.AddMinutes(10) });
+            await CustomerRequestReplayProtection.ConsumeAsync(database, signature, clock, cancellationToken);
             var existing = await database.CustomerRequests.AsNoTracking().SingleOrDefaultAsync(x =>
                 x.TenantId == binding.TenantId && x.CompanyId == binding.CompanyId && x.IdempotencyKey == input.IdempotencyKey, cancellationToken);
             if (existing is not null)

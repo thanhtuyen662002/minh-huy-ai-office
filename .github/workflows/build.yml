@@ -190,6 +190,10 @@ jobs:
     name: Deployment contract and container builds
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # Disposable rendering fixture only; production preflight requires an
+      # independently generated deployment key from the approved secret source.
+      AIOFFICE_SECRET_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/configure-docker-cache

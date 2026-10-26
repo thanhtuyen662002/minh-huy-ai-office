@@ -14,7 +14,8 @@ internal static class CustomerRequestEndpoints
 
     internal static bool AddCustomerRequests(this WebApplicationBuilder builder, bool hasDatabase)
     {
-        if (builder.Configuration["AIOffice:CustomerRequests:Enabled"] != "true" || !hasDatabase) return false;
+        var enabled = builder.Configuration["AIOffice:CustomerRequests:Enabled"] == "true" && hasDatabase;
+        if (!enabled && !(builder.Configuration["AIOffice:BotChannels:Enabled"] == "true" && hasDatabase)) return false;
         var bindings = builder.Configuration.GetSection("AIOffice:CustomerRequests:Services").GetChildren().Select(section =>
         {
             if (!Guid.TryParse(section["ServiceId"], out var service) || !Guid.TryParse(section["TenantId"], out var tenant) ||
@@ -27,7 +28,7 @@ internal static class CustomerRequestEndpoints
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddScoped<CustomerRequestAuthenticator>();
         builder.Services.AddScoped<CustomerRequestIngress>();
-        return true;
+        return enabled;
     }
 
     internal static void MapCustomerRequests(this WebApplication app, bool enabled, bool portalAvailable)
@@ -104,7 +105,7 @@ internal static class CustomerRequestEndpoints
 
     private static IResult Unavailable() => Results.Json(new { error = "Customer requests are temporarily unavailable." }, statusCode: 503);
 
-    private static CustomerRequestSignature Signature(HttpRequest request)
+    internal static CustomerRequestSignature Signature(HttpRequest request)
     {
         string Header(string name)
         {
@@ -126,7 +127,7 @@ internal static class CustomerRequestEndpoints
     private static int Number(HttpRequest request, string name, int fallback) => !request.Query.ContainsKey(name) ? fallback :
         int.TryParse(request.Query[name], NumberStyles.None, CultureInfo.InvariantCulture, out var value) ? value : throw new ArgumentException();
 
-    private static async Task<byte[]> ReadBody(HttpRequest request, int maximum, CancellationToken ct)
+    internal static async Task<byte[]> ReadBody(HttpRequest request, int maximum, CancellationToken ct)
     {
         if (!request.HasJsonContentType()) throw new ArgumentException();
         if (request.ContentLength > maximum) throw new BadHttpRequestException("Request is too large.", StatusCodes.Status413PayloadTooLarge);
@@ -152,7 +153,9 @@ public sealed class CustomerRequestBoundaryMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!context.Request.Path.StartsWithSegments("/internal/customer-requests") && !context.Request.Path.StartsWithSegments("/api/companies"))
+        if (!context.Request.Path.StartsWithSegments("/internal/customer-requests") && !context.Request.Path.StartsWithSegments("/api/companies") &&
+            !context.Request.Path.StartsWithSegments("/internal/bot-config") && !context.Request.Path.StartsWithSegments("/internal/bot-status") &&
+            !context.Request.Path.StartsWithSegments("/internal/bot-commands"))
         { await next(context); return; }
         var callerAbort = context.RequestAborted;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(callerAbort);

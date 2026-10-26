@@ -31,6 +31,9 @@ public sealed class CustomerRequestServiceDirectory
         bindings.TryGetValue(serviceId, out var binding) && binding.AllowedSourceGroupExternalIds.Contains(group, StringComparer.Ordinal)
             ? binding : throw Denied();
 
+    internal CustomerRequestServiceBinding Require(Guid serviceId) =>
+        bindings.TryGetValue(serviceId, out var binding) ? binding : throw Denied();
+
     internal static UnauthorizedAccessException Denied() => new("Customer request service access is unavailable.");
 }
 
@@ -42,14 +45,18 @@ public sealed class CustomerRequestAuthenticator(CustomerRequestServiceDirectory
 
     public async Task<CustomerRequestServiceBinding> AuthenticateAsync(CustomerRequestSignature signature,
         ReadOnlyMemory<byte> body, string sourceGroup, CancellationToken cancellationToken = default)
+        => await AuthenticateAsync(signature, body, "POST", Path, sourceGroup, cancellationToken);
+
+    public async Task<CustomerRequestServiceBinding> AuthenticateAsync(CustomerRequestSignature signature,
+        ReadOnlyMemory<byte> body, string method, string pathAndQuery, string? sourceGroup, CancellationToken cancellationToken = default)
     {
         if (signature.ServiceId == Guid.Empty || signature.Nonce == Guid.Empty || signature.SignatureHex is null ||
             signature.SignatureHex.Length != 64 || !signature.SignatureHex.All(c => c is >= '0' and <= '9' or >= 'A' and <= 'F'))
             throw CustomerRequestServiceDirectory.Denied();
         RequireFresh(signature.Timestamp);
-        var binding = directory.Require(signature.ServiceId, sourceGroup);
+        var binding = sourceGroup is null ? directory.Require(signature.ServiceId) : directory.Require(signature.ServiceId, sourceGroup);
         // Capture the signed digest before the asynchronous resolver can yield.
-        var signingBytes = SigningBytes(signature, body.Span);
+        var signingBytes = SigningBytes(signature, body.Span, method, pathAndQuery);
         byte[] key;
         try
         {
@@ -70,8 +77,10 @@ public sealed class CustomerRequestAuthenticator(CustomerRequestServiceDirectory
         finally { CryptographicOperations.ZeroMemory(key); }
     }
 
-    public static byte[] SigningBytes(CustomerRequestSignature signature, ReadOnlySpan<byte> body) => Encoding.ASCII.GetBytes(
-        FormattableString.Invariant($"{Domain}\n{signature.ServiceId:D}\nPOST\n{Path}\n{signature.Timestamp}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
+    public static byte[] SigningBytes(CustomerRequestSignature signature, ReadOnlySpan<byte> body) => SigningBytes(signature, body, "POST", Path);
+
+    public static byte[] SigningBytes(CustomerRequestSignature signature, ReadOnlySpan<byte> body, string method, string pathAndQuery) => Encoding.ASCII.GetBytes(
+        FormattableString.Invariant($"{Domain}\n{signature.ServiceId:D}\n{method}\n{pathAndQuery}\n{signature.Timestamp}\n{signature.Nonce:D}\n{Convert.ToHexString(SHA256.HashData(body))}"));
 
     internal void RequireFresh(long timestamp)
     {

@@ -70,7 +70,8 @@ $requiredValues = @(
     "AIOFFICE_DB_CONNECTION",
     "AIOFFICE_AUTHORITY",
     "AIOFFICE_AUDIENCE",
-    "PILOT_ERP_CONNECTION"
+    "PILOT_ERP_CONNECTION",
+    "AIOFFICE_SECRET_ENCRYPTION_KEY"
 )
 
 foreach ($name in $requiredValues) {
@@ -79,6 +80,15 @@ foreach ($name in $requiredValues) {
 
 if ($values["RABBITMQ_DEFAULT_USER"] -eq "ai-office-dev") {
     throw "RABBITMQ_DEFAULT_USER must not use the local-development identity in production."
+}
+
+try {
+    $encryptionKeyBytes = [Convert]::FromBase64String($values["AIOFFICE_SECRET_ENCRYPTION_KEY"])
+    if ($encryptionKeyBytes.Length -ne 32) { throw "Invalid key length." }
+} catch {
+    throw "AIOFFICE_SECRET_ENCRYPTION_KEY must be base64 encoding exactly 32 random bytes."
+} finally {
+    if ($null -ne $encryptionKeyBytes) { [Array]::Clear($encryptionKeyBytes, 0, $encryptionKeyBytes.Length) }
 }
 
 function Require-HttpsOrigin {

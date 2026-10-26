@@ -619,7 +619,8 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
 
     private static WebApplicationFactory<Program> AuthenticatedFactory(AuthenticatedAuthorizationEntry? entry,
         string? platformReference = null, ISecretResolver? resolver = null, IDataSourceConnectionProbe? probe = null,
-        DbConnection? platformProofConnection = null, bool useRealDirectory = false)
+        DbConnection? platformProofConnection = null, bool useRealDirectory = false,
+        Action<IServiceCollection>? additionalServices = null)
     {
         var databaseName = $"core-api-datasource-{Guid.NewGuid():N}";
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -661,6 +662,7 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
                 }
                 if (resolver is not null) services.AddSingleton(new CompositeSecretResolver([resolver]));
                 if (probe is not null) services.AddSingleton(probe);
+                additionalServices?.Invoke(services);
             });
         });
     }

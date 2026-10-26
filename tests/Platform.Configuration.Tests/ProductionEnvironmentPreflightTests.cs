@@ -5,6 +5,25 @@ namespace MinhHuy.AIOffice.Platform.Configuration.Tests;
 
 public sealed class ProductionEnvironmentPreflightTests
 {
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("not-base64", false)]
+    [InlineData("AA==", false)]
+    [InlineData(null, true)]
+    [InlineData("", true)]
+    [InlineData("not-base64", true)]
+    [InlineData("AA==", true)]
+    public async Task Preflight_requires_256_bit_protected_credentials_key(string? value, bool keycloakEnabled)
+    {
+        using var keycloak = keycloakEnabled ? new KeycloakEnvironment() : null;
+        var environment = keycloak?.Values ?? CreateValidEnvironment();
+        if (value is null) environment.Remove("AIOFFICE_SECRET_ENCRYPTION_KEY");
+        else environment["AIOFFICE_SECRET_ENCRYPTION_KEY"] = value;
+        var result = await RunPreflightAsync(environment);
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("AIOFFICE_SECRET_ENCRYPTION_KEY", result.Output);
+    }
     [Fact]
     public async Task Preflight_rejects_unsafe_quoted_values()
     {
@@ -252,7 +271,8 @@ public sealed class ProductionEnvironmentPreflightTests
                 "Server=127.0.0.1,1433;Database=AIOfficeValidation;Integrated Security=true;TrustServerCertificate=true",
             ["AIOFFICE_AUTHORITY"] = "https://identity.example.test/",
             ["AIOFFICE_AUDIENCE"] = "minh-huy-ai-office-tests",
-            ["PILOT_ERP_CONNECTION"] = "Server=127.0.0.1,1433;Database=Pilot;Integrated Security=true"
+            ["PILOT_ERP_CONNECTION"] = "Server=127.0.0.1,1433;Database=Pilot;Integrated Security=true",
+            ["AIOFFICE_SECRET_ENCRYPTION_KEY"] = Convert.ToBase64String(Enumerable.Range(0, 32).Select(i => (byte)i).ToArray())
         };
 
     private static string DoubleQuoted(string value) =>

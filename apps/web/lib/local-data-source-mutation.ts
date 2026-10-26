@@ -6,7 +6,7 @@ function failure(message: string, status: number) {
 }
 
 export async function mutateLocalDataSource(request: Request, method: "POST" | "PUT", path: string,
-  strict?: { validate: (value: unknown) => boolean; maxBodyBytes: number }) {
+  strict?: { validate: (value: unknown) => boolean; maxBodyBytes: number; timeoutMs?: number }) {
   if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
   const url = new URL(request.url);
   if (!officeMutationIsSameOrigin(request)) return failure("Same-origin request is required.", 403);
@@ -18,7 +18,7 @@ export async function mutateLocalDataSource(request: Request, method: "POST" | "
   if (strict && !strict.validate(payload)) return failure("Invalid source registration.", 400);
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return failure("Invalid source metadata.", 400);
   try {
-    const response = await fetchCoreApi(path, companyId, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const response = await fetchCoreApi(path, companyId, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }, strict?.timeoutMs);
     return response ? copyCoreResponse(response) : unauthenticatedResponse();
   } catch {
     return failure("Core API is unavailable.", 502);
