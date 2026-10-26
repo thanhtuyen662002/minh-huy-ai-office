@@ -4,11 +4,11 @@ status: active-development
 current_issue: 296
 current_pr: 303
 current_branch: codex/296-customer-erp-connection
-head: 057944a540cfb26ca7414f800c80d503840d5dd4
-state: in_progress
+head: 75af45fc7ff70d5096418942c9ac9fdab6f4fed4
+state: waiting_ci
 lease_owner: codex-296-customer-erp-connection
-lease_heartbeat_at: '2026-10-26T12:19:00Z'
-last_checkpoint_at: '2026-10-26T12:19:00Z'
+lease_heartbeat_at: '2026-10-26T12:26:00Z'
+last_checkpoint_at: '2026-10-26T12:26:00Z'
 last_merged_pr: 265
 last_merge_commit: 002e5cd9c1fd95eabc02dd3580bb8e964409764b
 preferred_next_issue: null
@@ -34,12 +34,12 @@ verification:
   quality: 113389149345
   independent_review: approved
   result: 'All eight Build jobs and Governance PASS. Actual safe/unsafe permissions, all four compiled read paths, replacement and mid-read discard, changed-session worker, retained revoke/replay and Chromium PASS. Frozen independent security/runtime review approved this conservative standalone engine16/current-database profile. Full650 Persistence and independent313 focused controls PASS. Final evidence-only head and main delivery closure still required.'
-next_action: 'Own exact merge057944a Build40320206213 and Governance40320205911 through terminal; inspect and repair real failures on this same branch/PR. Conflict is cleared and GitHub reports mergeable=true. gh returned401, so skip PR-body update per owner and retain the current HANDOFF below. Keep303 Draft; never merge the PR, force-push or modify other branches/worktrees.'
+next_action: 'Resolve the published final documentation HEAD following75af45f and own its exact-head Build/Governance closure. Implementation057944a Build40320206213/all8 and Governance40320205911 are terminal SUCCESS, including actual customer ERP SQL/rotation/worker and Chromium. gh401: PR-body update skipped per owner; current HANDOFF is below. Keep303 Draft; never merge the PR, force-push or modify other branches/worktrees.'
 
 customer_erp_296:
   completed: 'Separate AES-256-GCM protected customer binding store and versioned migration; immutable operator bindings preserved. Scoped API test/create/rotate/list, current admin checks, ten attempts/company/minute, strict bounded input, transaction/audit/idempotency/version fences, API and worker protected resolution. Vietnamese form/list/read-only SQL guidance and BFF. Production preflight/key wiring, stable purpose-separated local key, tracked empty templates and ADR.'
   local_verification: '1518 Persistence tests,41 Configuration tests,1342 web tests PASS;20 actual Redis tests skipped without disposable Redis. TypeScript and Next production build PASS;new28 web and29 ERP service/API cases are overlapping subsets. C# format PASS;EF pending-model check and idempotent migration generation PASS;Python syntax and protected local config replay PASS. Web package has no lint script (attempt reported Missing script). Tests use isolated SDK/NuGet/PowerShell and disable Windows EventLog in process; no real .env/.env.local or customer secrets accessed.'
-  pending: 'Post-main exact-head hosted closure including protected-policy full-PUT refusal; actual SQL error-code/create/rotate/queued-worker proof previously PASSED on01ace06. Docker is unavailable locally. Production key/customer credentials require approved operator setup; no production/customer enrollment. Direct SELECT script intentionally preserves existing fixed-role/db_datareader refusal; details in ADR_CUSTOMER_ERP_CREDENTIALS.md.'
+  pending: 'Final documentation checkpoint exact-head gates and lead review. Merge057944a hosted SQL error-code/create/rotation/queued-worker proof, protected-policy full-PUT refusal and Chromium all PASS. Production key/customer credentials require approved operator setup; no production/customer enrollment. Direct SELECT script intentionally preserves existing fixed-role/db_datareader refusal; details in ADR_CUSTOMER_ERP_CREDENTIALS.md.'
   integrated_main_verification: 'After accepted main542221c integration,1612 Persistence tests PASS and1 inherited opt-in customer-request SQL test SKIP;EF no-pending-model check and full idempotent SQL generation PASS. Same ERP tables/permissions preserved in regenerated20261026100237 migration. Exact remote HEAD and hosted run IDs remain authoritative in HANDOFF303.'
   first_ci_terminal: '6df1654 Build40304585136 terminal RED;Gov40304584977 PASS. Web1362 incl20 actual Redis,Compose,deployment and EF gates PASS. NET121510442830 failed migration UTF8 BOM;native121510443038 failed missing protected key in runtime anchor before SQL;FE121510443096 failed startup. Reproduced actual Next500 with conflicting id/dataSourceId dynamic slugs. Same-PR repairs: UTF8 normalization, key in shared API/worker environment, credentials under existing dataSourceId tree. Local independent rendered Compose/HMAC/web-exclusion,Next production build,28 focused web and36 Node guard controls PASS;new exact-head hosted closure required.'
   policy_fence: 'Four new counterexamples FAIL on01ace06: legacy full source API can enable writes/change kind/rebind/clone a protected customer source. Current guard refuses those paths while preserving env-source behavior and metadata updates. Local44 focused ERP/registry and full1616 Persistence PASS,1 inherited opt-in SQL SKIP;format/Python syntax PASS. Hosted SQL proof now also requires old full PUT write-policy refusal. No customer/production change.'
@@ -58,20 +58,23 @@ customer_erp_296:
     publication: 'Resume verified that057944a was already published: git ls-remote and connected GitHub both return057944a540cfb26ca7414f800c80d503840d5dd4. PR303 remains open/Draft/mergeable=true at base63a2e15. Keycloak-enabled encryption-key refusal cases are committed in057944a. gh401: PR HANDOFF update skipped as explicitly requested; current handoff is preserved here.'
     build: 40320206213
     governance: 40320205911
-    ci_status: 'Build in_progress; Governance SUCCESS. Owner remains active through exact-head closure.'
+    actual_stack: 121562907730
+    required_quality: 121570450779
+    ci_status: 'Terminal SUCCESS: Build40320206213/all8 and Governance40320205911. Completed native job121562907730 logs independently inspected: all three customer ERP markers PASS, including the protected-source legacy full-PUT403 assertion, actual error codes, encrypted atomic create/rotation/replay/version/rate fences and shipping queued worker resolution after rotation. Actual Chromium gate PASS. Prior intermittent original-response completion cause remains unproven; this positive does not claim a repair.'
+    documentation_checkpoint: '75af45fc7ff70d5096418942c9ac9fdab6f4fed4 records the reviewed merge and fresh local checks; this final docs-only CI closure checkpoint follows. Resolve its actual published HEAD/run IDs from GitHub; no product code changes after verified057944a.'
   resume_pr_handoff: |
     HANDOFF
     Issue: #296; Closes #296 remains in Draft PR #303.
     Branch: codex/296-customer-erp-connection
-    HEAD: Merge057944a540cfb26ca7414f800c80d503840d5dd4, pushed to the existing branch; current documentation checkpoint follows.
-    State: in_progress; conflict cleared, exact-head CI active and owned.
+    HEAD: Final docs-only checkpoint follows75af45fc7ff70d5096418942c9ac9fdab6f4fed4. Verified implementation057944a540cfb26ca7414f800c80d503840d5dd4 is already pushed; resolve the final branch HEAD before CI closure.
+    State: waiting_ci for the final documentation checkpoint; implementation gates are all green.
     Completed: Ordinary main63a2e15 integration preserves ERP and Keycloak preflights, Compose/template wiring, ERP/admin panel and customer-request UI. Migration order/no-model-change verified. Prior native296 proof and policy-fence implementation retained.
-    Current: GitHub confirms mergeable=true, open Draft303. Build40320206213 active; Governance40320205911 SUCCESS. No tests or security/receipt oracles weakened.
-    Remaining: Close exact-head all eight Build jobs plus Governance; inspect terminal failures immediately on this branch. Hosted native SQL and actual Redis/browser acceptance are not inferred from local tests.
-    Tests/Evals: Fresh Configuration83/Persistence1616/web1393 PASS;1 opt-in SQL and20 disposable Redis SKIP. TypeScript/Next build/EF pending-model/idempotent SQL/history order PASS. This Persistence run has no failures.
-    Known risks: Underlying inherited Chromium completion cause remains unproven; prior failed run is not acceptance.
+    Current: Open Draft303, conflict cleared. Implementation057944a Build40320206213/all8 and Governance40320205911 terminal SUCCESS; actual121562907730 and quality121570450779 PASS. No tests or security/receipt oracles weakened.
+    Remaining: Close final docs-only exact-head Build/Governance and obtain lead review. Customer/production enrollment remains operator setup outside this verification run.
+    Tests/Evals: Fresh Configuration83/Persistence1616/web1393 PASS;1 opt-in SQL and20 disposable Redis SKIP locally. TypeScript/Next build/EF pending-model/idempotent SQL/history order/targeted format/diff PASS. Hosted actual SQL ERP error codes/create/rotation/replay/legacy policy refusal/rate cap/queued worker and Chromium PASS; hosted web/actual Redis gate PASS.
+    Known risks: Earlier intermittent Chromium completion cause remains unproven; current positive run does not claim it repaired.
     Blocked by: No local Docker/pinned Chromium. gh401, so PR-body update skipped per owner; connected GitHub app can read CI. Former GitHub conflict blocker is cleared.
-    NEXT ACTION: Own exact057944a CI closure, inspect terminal jobs/logs and repair same branch. Keep PR Draft and never merge it.
+    NEXT ACTION: Resolve the final published documentation HEAD and own its exact CI closure, then lead review. Keep PR Draft and never merge it.
     DO NOT: Merge the PR; force-push; modify other branches/worktrees; read real .env/.env.local or secrets; relax receipt/security/oracle requirements.
   cross_stream: 'Necessary Core/worker/Next BFF/form and deployment wiring edits belong to296; no company-selection/invitation contract change. Accepted295/main542221c integrated; migration20261026100237 adds independent tables after20261026090633; sequence after any future landed294 migration.'
 
