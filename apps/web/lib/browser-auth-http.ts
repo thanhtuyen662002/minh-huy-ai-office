@@ -11,6 +11,27 @@ export function privateBrowserResponse<T extends Response>(response: T): T {
 export function browserAuthError(status: number): Response {
   return privateBrowserResponse(Response.json({ error: "Browser sign-in could not be verified." }, { status }));
 }
+// The provider callback is a top-level page, so a refused sign-in (most often an expired
+// sign-in page) shows a short notice and returns to the app, which starts a fresh sign-in.
+export function browserCallbackRefusal(status: number): Response {
+  const page = `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="3;url=/"><title>Đăng nhập lại</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font:15px/1.6 system-ui,sans-serif;background:#f8fafc;color:#0f172a}
+main{max-width:420px;padding:24px;text-align:center}a{color:#2563eb}</style></head>
+<body><main><h1 style="font-size:20px">Phiên đăng nhập đã hết hạn</h1>
+<p>Trang đăng nhập đã mở quá lâu hoặc không còn hợp lệ. AI Office sẽ tự mở lại sau vài giây.</p>
+<p><a href="/">Quay lại AI Office</a></p></main></body></html>`;
+  return privateBrowserResponse(new Response(page, { status, headers: { "Content-Type": "text/html; charset=utf-8" } }));
+}
+// Silent renewal runs the callback in a hidden same-origin frame; it answers with a bare
+// marker page the parent reads instead of loading the app or the notice above.
+export function isFramedCallback(request: Request): boolean {
+  return request.headers.get("sec-fetch-dest") === "iframe";
+}
+export function framedCallbackPage(result: "ok" | "refused", status: number): NextResponse {
+  return privateBrowserResponse(new NextResponse(`<!doctype html><html data-sign-in="${result}"><title>AI Office</title></html>`, {
+    status, headers: { "Content-Type": "text/html; charset=utf-8", "Content-Security-Policy": "frame-ancestors 'self'" } }));
+}
 export function setPrivateBrowserCookie(response: NextResponse, settings: BrowserOidcSettings,
   name: string, value: string, maxAge: number) {
   response.cookies.set({ name, value, maxAge, httpOnly: true, secure: !settings.localHttp, sameSite: "lax", path: "/" });

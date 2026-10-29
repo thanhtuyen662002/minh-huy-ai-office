@@ -7,6 +7,10 @@ const navigation = vi.hoisted(() => vi.fn());
 vi.mock("../lib/browser-login-navigation", async importOriginal => ({
   ...await importOriginal<typeof import("../lib/browser-login-navigation")>(), navigateBrowserLogin: navigation,
 }));
+const renewal = vi.hoisted(() => vi.fn());
+vi.mock("../lib/browser-silent-renew", async importOriginal => ({
+  ...await importOriginal<typeof import("../lib/browser-silent-renew")>(), renewBrowserSessionSilently: renewal,
+}));
 const company = "22222222-2222-2222-2222-222222222222";
 const companyB = "33333333-3333-3333-3333-333333333333";
 const settings: PublicBrowserLogin = { authorizationEndpoint: "https://identity.example.invalid/authorize",
@@ -28,7 +32,7 @@ function workspace(id = company) {
   return <LocalAiWorkspace companyId={id} companyName="Synthetic Company" loginMode="browser" browserLogin={settings} />;
 }
 beforeEach(() => {
-  navigation.mockReset(); fetcher.mockReset().mockImplementation(async (url: string) => {
+  navigation.mockReset(); renewal.mockReset().mockResolvedValue("failed"); fetcher.mockReset().mockImplementation(async (url: string) => {
     if (url.startsWith("/api/local/session?")) return Response.json({}, { status: 401 });
     if (url === "/api/local/session/oidc/binding") return Response.json({ ok: true });
     if (url === "/api/local/session/oidc/start") return Response.json({ authorizationUrl: authorization() });
@@ -137,5 +141,33 @@ it("goes straight to the provider on first load so there is only one sign-in pag
   expect(navigation).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Đăng nhập doanh nghiệp" }));
   await waitFor(() => expect(navigation).toHaveBeenCalledOnce());
+  expect(renewal).toHaveBeenCalledWith(company, settings);
+  window.sessionStorage.clear();
+});
+
+it("renews a lapsed session in the background without going to the sign-in page", async () => {
+  window.sessionStorage.clear();
+  let signedIn = false;
+  const original = fetcher.getMockImplementation()!;
+  fetcher.mockImplementation((url, init) => url.startsWith("/api/local/session?") && signedIn
+    ? Promise.resolve(Response.json({ tenantId: "11111111-1111-1111-1111-111111111111", companyId: company,
+      userId: "44444444-4444-4444-4444-444444444444", roles: ["member"] })) : original(url, init));
+  let finish!: (result: string) => void;
+  renewal.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  render(<LocalAiWorkspace companyId={company} companyName="Synthetic Company" loginMode="browser" browserLogin={settings} autoStartLogin />);
+  await screen.findByText("Đang gia hạn phiên đăng nhập…");
+  signedIn = true;
+  await act(async () => finish("renewed"));
+  await waitFor(() => expect(screen.queryByText("Đang gia hạn phiên đăng nhập…")).toBeNull());
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Đăng nhập doanh nghiệp" })).toBeNull());
+  expect(navigation).not.toHaveBeenCalled();
+  expect(renewal).toHaveBeenCalledOnce();
+});
+
+it("leaves background renewal off when sign-in is driven by hand", async () => {
+  window.sessionStorage.setItem("aioffice-auto-login", "off");
+  render(<LocalAiWorkspace companyId={company} companyName="Synthetic Company" loginMode="browser" browserLogin={settings} autoStartLogin />);
+  await screen.findByText("Đăng nhập bằng tài khoản công ty để tiếp tục.");
+  expect(renewal).not.toHaveBeenCalled(); expect(navigation).not.toHaveBeenCalled();
   window.sessionStorage.clear();
 });

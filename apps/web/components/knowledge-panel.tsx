@@ -4,6 +4,7 @@ import { Building2, FileText, Lightbulb, Plus, Search } from "lucide-react";
 import { parseMemberPage } from "../lib/company-members";
 import { KnowledgePage, KnowledgeSummary, knowledgeBlocks, knowledgeLimits, knowledgeTicketCodes, parseKnowledgeList, parseKnowledgePage,
   toggleKnowledgeTodo } from "../lib/knowledge-pages";
+import { Loading, Skeleton } from "./skeleton";
 
 type Props = { companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
@@ -150,7 +151,10 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
         <input type="search" value={filter} onChange={event => setFilter(event.target.value)} aria-label="Tìm trang" placeholder="Tìm trang…"
           className="h-9 w-full rounded-lg border bg-background pl-8 pr-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" />
       </div>
-      {pages === null ? <p className="px-2 py-4 text-sm text-muted-foreground">Đang tải…</p> : <>
+      {pages === null ? <Loading label="Đang tải…" className="mt-4 space-y-2.5 px-2.5">
+        <Skeleton className="h-3 w-12" />{[80, 64, 72].map(width => <Skeleton key={width} className="h-4" />)}
+        <Skeleton className="mt-4 h-3 w-20" />{[70, 56].map(width => <Skeleton key={width} className="h-4" />)}
+      </Loading> : <>
         <p className="mt-4 px-2.5 text-xs font-semibold tracking-wide text-muted-foreground">CHUNG</p>
         <ul className="mt-1 space-y-0.5">{general.map(pageButton)}</ul>
         {general.length === 0 ? <p className="px-2.5 py-1 text-xs text-muted-foreground">Chưa có trang chung.</p> : null}
@@ -193,6 +197,10 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
         onEdit={() => editor(page.id)({ title: page.title, customerName: page.customerName ?? "", body: page.body })}
         onToggle={line => { void save({ title: page.title, customerName: page.customerName ?? "", body: toggleKnowledgeTodo(page.body, line) }, page.rowVersion, page.id); }}
         onDelete={() => confirmDelete ? void remove() : setConfirmDelete(true)} onCancelDelete={() => setConfirmDelete(false)} onOpenTickets={onOpenTickets} />
+      : selected && !error ? <Loading label="Đang mở trang…" className="space-y-3 py-2">
+        <Skeleton className="h-7 w-2/3" /><Skeleton className="h-3 w-40" />
+        {[90, 75, 85, 60].map(width => <Skeleton key={width} className="h-4" />)}
+      </Loading>
       : pages !== null ? <div className="grid h-full place-items-center py-16 text-center">
         <div>
           <FileText aria-hidden className="mx-auto size-8 text-muted-foreground" />

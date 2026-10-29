@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { parseTaskHistoryDetail, parseTaskHistoryPage, TaskHistoryDetail, TaskHistoryPage, taskHistoryStatus } from "../lib/task-history";
+import { SkeletonRows } from "./skeleton";
 
 type Props = { companyId: string; userId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
@@ -81,7 +82,7 @@ export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, val
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Công việc của tôi</h2>
       <button type="button" className={button} onClick={() => void read(offset)}>Tải lại công việc</button></div>
     <p className="mt-2 text-sm text-slate-500">Xem công việc đã lưu của bạn trong công ty đang chọn. Tải lại hoặc mở kết quả không chạy lại công việc.</p>
-    {loading ? <p role="status" className="mt-4">Đang tải công việc…</p> : null}
+    {loading ? <SkeletonRows label="Đang tải công việc…" rows={3} className="mt-4" /> : null}
     {error ? <div className="mt-4"><p role="alert" className="text-rose-600">{error}</p>
       <button type="button" className={`${button} mt-3`} onClick={() => void read(offset, selected)}>Thử tải lại</button></div> : null}
     {page ? <><div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr>

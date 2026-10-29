@@ -161,9 +161,9 @@ export function SectionHeader({ title, description, eyebrow, actions }: { title:
 
 export function SectionTabs<T extends string>({ label, tabs, value, onChange }: {
   label: string; tabs: readonly (readonly [T, string])[]; value: T; onChange: (value: T) => void }) {
-  return <div role="group" aria-label={label} className="mb-5 flex max-w-full gap-5 overflow-x-auto border-b">
+  return <div role="group" aria-label={label} className="no-scrollbar mb-5 flex max-w-full gap-5 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--border)]">
     {tabs.map(([key, text]) => <button key={key} type="button" aria-pressed={key === value} onClick={() => onChange(key)}
-      className={`-mb-px shrink-0 border-b-2 pb-2.5 pt-1 text-sm font-medium ${key === value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+      className={`shrink-0 border-b-2 pb-2.5 pt-1 text-sm font-medium ${key === value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
       {text}
     </button>)}
   </div>;

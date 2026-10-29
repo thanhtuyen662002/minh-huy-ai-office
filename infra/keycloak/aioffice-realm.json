@@ -70,6 +70,7 @@
       "optionalClientScopes": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "3600",
         "id.token.signed.response.alg": "RS256",
         "access.token.signed.response.alg": "RS256"
       },

@@ -2,7 +2,9 @@ import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:cr
 import { isCanonicalCompanyId } from "./company-scope";
 
 export const OIDC_CALLBACK_PATH = "/api/local/session/oidc/callback";
-export const OIDC_TRANSACTION_SECONDS = 300;
+// Matches Keycloak's 30-minute login timeout, so a sign-in page left open while the
+// user looks up a password still completes.
+export const OIDC_TRANSACTION_SECONDS = 1800;
 const invalidConfiguration = () => new Error("Browser identity configuration is invalid.");
 const loopback = new Set(["localhost", "127.0.0.1", "[::1]"]);
 

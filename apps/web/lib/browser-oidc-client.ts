@@ -43,11 +43,13 @@ function configuration(settings: BrowserOidcSettings) {
   return config;
 }
 
-export async function browserAuthorizationUrl(settings: BrowserOidcSettings, transaction: OidcTransaction): Promise<URL> {
+// A silent request (prompt=none) renews from the provider's existing sign-in without showing a page.
+export async function browserAuthorizationUrl(settings: BrowserOidcSettings, transaction: OidcTransaction, silent = false): Promise<URL> {
   return oidc.buildAuthorizationUrl(configuration(settings), {
     response_type: "code", scope: "openid", redirect_uri: settings.redirectUri,
     state: transaction.state, nonce: transaction.nonce,
     code_challenge: await oidc.calculatePKCECodeChallenge(transaction.verifier), code_challenge_method: "S256",
+    ...(silent ? { prompt: "none" } : {}),
   });
 }
 

@@ -5,6 +5,7 @@ import { parseMemberPage, type CompanyMember } from "../lib/company-members";
 import { type CustomerRequest, type CustomerRequestDetail as Detail, type CustomerRequestPage, type CustomerRequestPatch, type RequestStatus,
   parseCustomerRequest, parseCustomerRequestDetail, parseCustomerRequestPage, requestConflict, requestStatuses } from "../lib/customer-requests";
 import { CustomerRequestDetail, StatusChip, initials, requestAge as age, requestButton as button, requestField as field, requestTime, statusTone } from "./customer-request-detail";
+import { BoardSkeleton, SkeletonRows } from "./skeleton";
 
 type Props = { tenantId: string; companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
@@ -14,7 +15,7 @@ type Selection = { view: View; status: string; customer: string; offset: number;
 // Rejected tickets stay out of the board; the list view still finds them.
 const boardStatuses = ["new", "needs_clarification", "in_progress", "done"] as const satisfies readonly RequestStatus[];
 type BoardStatus = typeof boardStatuses[number];
-type Board = Record<BoardStatus, CustomerRequestPage>;
+type Board = Record<BoardStatus, CustomerRequestPage & { failed?: boolean }>;
 const boardLimit = 100, listLimit = 25;
 type State = { scope: string; page: CustomerRequestPage | null; board: Board | null; detail: Detail | null; members: CompanyMember[] | null;
   memberError: string; loading: boolean; saving: boolean; conflict: boolean; error: string; notice: string; selection: Selection };
@@ -81,10 +82,15 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
       if (!page) throw new Error();
       return { page, board: null };
     }
-    const bodies = await Promise.all(boardStatuses.map(status => get(pageUrl(selection, status, 0, boardLimit), value, signal)));
+    // One slow or failing column shows its own error instead of blanking the board; refusals still clear everything.
+    const failed = Symbol();
+    const bodies = await Promise.all(boardStatuses.map(status => get(pageUrl(selection, status, 0, boardLimit), value, signal)
+      .catch((error: unknown) => { if (error instanceof ReadFailure && error.status < 500) throw error; return failed; })));
     if (bodies.some(body => body === null)) return null;
+    if (bodies.every(body => body === failed)) throw new Error();
     const board = {} as Board;
     boardStatuses.forEach((status, index) => {
+      if (bodies[index] === failed) { board[status] = { items: [], offset: 0, limit: boardLimit, hasMore: false, failed: true }; return; }
       const page = parseCustomerRequestPage(bodies[index], 0, boardLimit);
       if (!page) throw new Error();
       // A ticket that changed column between the column reads shows only where its own status puts it.
@@ -225,13 +231,14 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
     <p role="note" className="text-xs text-muted-foreground">AI tóm tắt từ Zalo · Nội dung chưa được nhân viên xác nhận.
       {view === "board" ? " Kéo thẻ sang cột khác để đổi trạng thái." : " Sắp xếp mới nhất trước."}</p>
     <div aria-live="polite" className="space-y-1 text-sm empty:hidden">
-      {visible.loading && !visible.board && !visible.page ? <p role="status" className="text-muted-foreground">Đang tải yêu cầu khách hàng…</p> : null}
       {visible.saving ? <p role="status" className="text-muted-foreground">Đang lưu thay đổi…</p> : null}
       {visible.notice ? <p role="status" className="text-emerald-700 dark:text-emerald-300">{visible.notice}</p> : null}
     </div>
     {visible.error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{visible.error}</p> : null}
     <div className={visible.detail ? "grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]" : ""}>
       <div className="min-w-0 space-y-3">
+        {visible.loading && !visible.board && !visible.page ? view === "board" ? <BoardSkeleton label="Đang tải yêu cầu khách hàng…" />
+          : <SkeletonRows label="Đang tải yêu cầu khách hàng…" rows={6} className="rounded-xl border bg-card p-4" /> : null}
         {visible.board ? <div className="grid auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-3 overflow-x-auto pb-2">
           {boardStatuses.map(status => {
             const column = visible.board![status];
@@ -241,8 +248,9 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
               className={`flex min-h-48 flex-col gap-2 rounded-xl bg-muted/70 p-2.5 transition-colors ${dropTarget === status ? "ring-2 ring-ring/40" : ""}`}>
               <h3 className="flex items-center gap-2 px-1 pt-0.5 text-sm font-semibold">
                 <span className={`size-2 rounded-full ${statusTone[status].dot}`} aria-hidden="true" />{requestStatuses[status]}
-                <span className="text-xs font-medium text-muted-foreground">{column.items.length}{column.hasMore ? "+" : ""}</span></h3>
-              {column.items.length ? <ul className="m-0 flex list-none flex-col gap-2 p-0">{column.items.map(card)}</ul>
+                <span className="text-xs font-medium text-muted-foreground">{column.failed ? "" : column.items.length}{column.hasMore ? "+" : ""}</span></h3>
+              {column.failed ? <p role="alert" className="rounded-lg border border-dashed border-rose-300 px-3 py-6 text-center text-xs text-rose-700 dark:border-rose-400/40 dark:text-rose-200">Không tải được cột này. Bấm Tải lại phiếu để thử lại.</p>
+                : column.items.length ? <ul className="m-0 flex list-none flex-col gap-2 p-0">{column.items.map(card)}</ul>
                 : <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">Không có phiếu</p>}
             </section>;
           })}
@@ -264,7 +272,7 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
             <button type="button" className={button} disabled={disabled || !visible.page.hasMore || visible.selection.offset >= 100000}
               onClick={() => void read({ ...visible.selection, code: undefined, offset: visible.selection.offset + listLimit })}>Trang sau</button></div>
         </> : null}
-        {visible.board && boardStatuses.every(status => !visible.board![status].items.length)
+        {visible.board && boardStatuses.every(status => !visible.board![status].items.length && !visible.board![status].failed)
           ? <p className="text-sm text-muted-foreground">Chưa có yêu cầu khách hàng phù hợp với bộ lọc.</p> : null}
         {visible.memberError && !visible.detail && (visible.page || visible.board) ? <p role="note" className="text-sm text-amber-700 dark:text-amber-200">{visible.memberError}</p> : null}
       </div>

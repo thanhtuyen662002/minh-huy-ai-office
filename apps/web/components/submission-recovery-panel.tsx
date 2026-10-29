@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { verifiedSubmissionIntent, verifiedSubmissionPage, type SubmissionIntent, type SubmissionPage } from "../lib/task-submission-intent";
 import { readSubmissionPayload } from "./use-task-submission";
+import { SkeletonRows } from "./skeleton";
 
 type Props = { companyId: string; userId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
@@ -69,7 +70,7 @@ export function SubmissionRecoveryPanel({ companyId, userId, generation, isCurre
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Yêu cầu đã lưu</h2>
       <button type="button" className={button} onClick={() => void read(offset)}>Tải lại yêu cầu</button></div>
     <p className="mt-2 text-sm text-slate-500">Khôi phục yêu cầu của bạn sau khi tải lại hoặc đăng nhập lại. Xem danh sách không gửi công việc; yêu cầu chưa gửi được giữ trong 24 giờ.</p>
-    {loading ? <p role="status" className="mt-4">Đang tải yêu cầu…</p> : null}
+    {loading ? <SkeletonRows label="Đang tải yêu cầu…" rows={2} className="mt-4" /> : null}
     {error ? <p role="alert" className="mt-4 text-rose-600">{error}</p> : null}
     {page ? <><ul className="mt-4 space-y-3">{page.items.map(intent => <li key={intent.operationId} className="rounded-xl border border-slate-100 p-3 dark:border-white/10">
       <p className="break-words whitespace-pre-wrap">{intent.question ?? "Thông tin yêu cầu chưa có"}</p>

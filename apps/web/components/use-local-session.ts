@@ -113,12 +113,13 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
 
   const ready = useCallback(() => mounted.current && phaseRef.current === "ready" && !mutation.current, []);
 
-  const beginMutation = useCallback((expected: "signed-out" | "ready") => {
+  // A quiet mutation (silent renewal of the same sign-in) does not make other tabs re-check.
+  const beginMutation = useCallback((expected: "signed-out" | "ready", announce = true) => {
     if (!mounted.current || mutation.current || phaseRef.current !== expected) return null;
     let release!: () => void;
     const pending = new Promise<void>((resolve) => { release = resolve; });
     mutation.current = pending;
-    const notify = broadcast.current;
+    const notify = announce ? broadcast.current : null;
     notify?.();
     return () => {
       if (mutation.current !== pending) return;

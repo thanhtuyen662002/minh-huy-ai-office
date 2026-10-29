@@ -11,6 +11,8 @@ namespace MinhHuy.AIOffice.Core.Api;
 internal static class CustomerRequestEndpoints
 {
     private const string PortalPath = "/api/companies/{companyId:guid}/customer-requests";
+    // Refusals stay generic for callers; the server log keeps the cause of each 503.
+    private static ILogger? log;
 
     internal static bool AddCustomerRequests(this WebApplicationBuilder builder, bool hasDatabase)
     {
@@ -36,6 +38,7 @@ internal static class CustomerRequestEndpoints
 
     internal static void MapCustomerRequests(this WebApplication app, bool enabled, bool portalAvailable)
     {
+        log = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MinhHuy.AIOffice.CustomerRequests");
         if (!enabled)
         {
             app.MapPost(CustomerRequestAuthenticator.Path, () => Results.NotFound());
@@ -125,7 +128,10 @@ internal static class CustomerRequestEndpoints
         catch (BadHttpRequestException error) { return Results.Json(new { error = "Invalid customer request." }, statusCode: error.StatusCode); }
         catch (Exception error) when (error is ArgumentException or JsonException) { return Results.BadRequest(new { error = "Invalid customer request." }); }
         catch (Exception error) when (error is System.Data.Common.DbException or DbUpdateException or InvalidOperationException or OperationCanceledException)
-        { return Unavailable(); }
+        {
+            log?.LogWarning(error, "Customer request call answered 503 after {ExceptionType}.", error.GetType().Name);
+            return Unavailable();
+        }
     }
 
     private static IResult Unavailable() => Results.Json(new { error = "Customer requests are temporarily unavailable." }, statusCode: 503);
@@ -176,7 +182,7 @@ internal static class CustomerRequestEndpoints
 // Covers company-directory authentication awaits as well as request-body/SQL work.
 public sealed class CustomerRequestBoundaryMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ILogger<CustomerRequestBoundaryMiddleware> logger)
     {
         if (!context.Request.Path.StartsWithSegments("/internal/customer-requests") && !context.Request.Path.StartsWithSegments("/api/companies") &&
             !context.Request.Path.StartsWithSegments("/internal/bot-config") && !context.Request.Path.StartsWithSegments("/internal/bot-status") &&
@@ -188,8 +194,9 @@ public sealed class CustomerRequestBoundaryMiddleware(RequestDelegate next)
         context.RequestAborted = deadline.Token;
         try { await next(context); }
         catch (OperationCanceledException) when (callerAbort.IsCancellationRequested) { throw; }
-        catch (Exception) when (!context.Response.HasStarted)
+        catch (Exception error) when (!context.Response.HasStarted)
         {
+            logger.LogWarning(error, "Request {Path} answered 503 after {ExceptionType}.", context.Request.Path.Value, error.GetType().Name);
             context.Response.Clear();
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             context.Response.Headers.CacheControl = "no-store";

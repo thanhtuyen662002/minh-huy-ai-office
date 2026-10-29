@@ -12,6 +12,8 @@ export async function POST(request: Request) {
     const runtime = getBrowserAuthRuntime();
     if (!runtime) return browserAuthError(503);
     if (!oidcStartIsSameOrigin(request, runtime.settings)) return browserAuthError(403);
+    const search = new URL(request.url).search;
+    if (search && search !== "?prompt=none") return browserAuthError(400);
     const companyId = await readBrowserCompany(request);
     if (!companyId) return browserAuthError(400);
     const cookieStore = await cookies(), bindingName = browserBindingCookieName(runtime.settings);
@@ -20,7 +22,7 @@ export async function POST(request: Request) {
     // replace browser bindings, including after logout or out-of-order replies.
     if (!binding) return browserAuthError(409);
     const transaction = createOidcTransaction(companyId);
-    const authorizationUrl = await browserAuthorizationUrl(runtime.settings, transaction);
+    const authorizationUrl = await browserAuthorizationUrl(runtime.settings, transaction, search === "?prompt=none");
     const sealed = sealOidcTransaction(transaction, runtime.settings);
     const nextBinding = await runtime.sessions.begin(binding, transaction);
     if (!nextBinding) return browserAuthError(409);

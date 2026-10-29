@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from "vitest";
-import { createOidcTransaction, OIDC_CALLBACK_PATH, oidcStartIsSameOrigin, oidcTransactionCookieName,
+import { createOidcTransaction, OIDC_CALLBACK_PATH, OIDC_TRANSACTION_SECONDS, oidcStartIsSameOrigin, oidcTransactionCookieName,
   openOidcTransaction, readBrowserOidcSettings, sealOidcTransaction } from "./browser-oidc";
 
 const company = "22222222-2222-2222-2222-222222222222";
@@ -134,8 +134,8 @@ it("encrypts company/verifier/state/nonce and accepts only its bounded lifetime"
   for (const privateValue of [company, transaction.state, transaction.nonce, transaction.verifier, config.transactionKey]) expect(cookie).not.toContain(privateValue);
   expect(cookie.length).toBeLessThan(2048);
   expect(openOidcTransaction(cookie, config, 1000)).toEqual(transaction);
-  expect(openOidcTransaction(cookie, config, 1299)).toEqual(transaction);
-  expect(openOidcTransaction(cookie, config, 1300)).toBeNull();
+  expect(openOidcTransaction(cookie, config, 999 + OIDC_TRANSACTION_SECONDS)).toEqual(transaction);
+  expect(openOidcTransaction(cookie, config, 1000 + OIDC_TRANSACTION_SECONDS)).toBeNull();
   expect(openOidcTransaction(cookie, config, 989)).toBeNull();
   expect(openOidcTransaction(cookie, config, 990)).toEqual(transaction);
   expect(sealOidcTransaction(transaction, config)).not.toBe(cookie);
@@ -161,7 +161,7 @@ it.each([
 });
 it.each([
   { version: 2 }, { companyId: "foreign" }, { issuedAt: -1 }, { issuedAt: 1000.5 },
-  { expiresAt: 1301 }, { state: "short" }, { nonce: "bad\nnonce" }, { verifier: "" }, { tenantId: "caller-authority" },
+  { expiresAt: 1001 + OIDC_TRANSACTION_SECONDS }, { state: "short" }, { nonce: "bad\nnonce" }, { verifier: "" }, { tenantId: "caller-authority" },
 ])("denies malformed authenticated transaction contents", (changes) => {
   const config = settings();
   const transaction = { ...createOidcTransaction(company, 1000), ...changes };

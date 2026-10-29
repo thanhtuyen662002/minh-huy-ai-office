@@ -8,6 +8,7 @@ import { type CustomerRequest, type RequestStatus, parseCustomerRequestPage, req
 import { parseMemberPage } from "../lib/company-members";
 import { StatusChip, requestAge, statusTone } from "./customer-request-detail";
 import { SectionHeader } from "./workspace-shell";
+import { SkeletonRows } from "./skeleton";
 
 const shortcuts: { section: WorkspaceSection; title: string; text: string; icon: typeof Bot }[] = [
   { section: "tin-nhan", title: "Tin nhắn", text: "Tin nhắn từ các nhóm Zalo khách hàng mà bot đang theo dõi.", icon: MessagesSquare },
@@ -152,7 +153,8 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
               <StatusChip status={item.status} />
             </button></li>)}</ul>
             : <p className="px-5 py-8 text-center text-sm text-muted-foreground">Không có việc mới hay việc cần hỏi lại. Mọi thứ đang ổn.</p>
-            : <p className="px-5 py-8 text-center text-sm text-muted-foreground">{load.state === "loading" ? "Đang tải…" : "—"}</p>}
+            : load.state === "loading" ? <SkeletonRows label="Đang tải…" rows={4} className="px-5 py-4" />
+            : <p className="px-5 py-8 text-center text-sm text-muted-foreground">—</p>}
         </section>
         <div className="grid gap-4">
           {bots?.length ? <section aria-label="Kênh và bot" className={`${card} px-5 pb-2.5 pt-4`}>
