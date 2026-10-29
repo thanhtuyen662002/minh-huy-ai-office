@@ -40,7 +40,7 @@ public sealed class CustomerRequestDigestReader(PlatformDbContext database, Cust
         authentication.RequireFresh(signature.Timestamp);
         await CustomerRequestReplayProtection.ConsumeAsync(database, signature, clock, ct);
 
-        var groups = binding.AllowedSourceGroupExternalIds.ToArray();
+        var groups = await CustomerRequestGroupGrants.GroupsAsync(database, binding, ct);
         var scoped = database.CustomerRequests.AsNoTracking().Where(x => x.TenantId == binding.TenantId && x.CompanyId == binding.CompanyId &&
             groups.Contains(x.SourceGroupExternalId));
         var grouped = await scoped.GroupBy(x => x.Status).Select(x => new { Status = x.Key, Count = x.Count() }).ToArrayAsync(ct);

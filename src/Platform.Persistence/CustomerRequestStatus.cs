@@ -27,7 +27,7 @@ public sealed class CustomerRequestStatusUpdater(PlatformDbContext database, Cus
                 throw CustomerRequestServiceDirectory.Denied();
             authentication.RequireFresh(signature.Timestamp);
             await CustomerRequestReplayProtection.ConsumeAsync(database, signature, clock, cancellationToken);
-            var groups = binding.AllowedSourceGroupExternalIds.ToArray();
+            var groups = await CustomerRequestGroupGrants.GroupsAsync(database, binding, cancellationToken);
             // Tickets of other companies or groups the service may not read are indistinguishable from missing codes.
             var ticket = await database.CustomerRequests.AsNoTracking().SingleOrDefaultAsync(x => x.TenantId == binding.TenantId &&
                 x.CompanyId == binding.CompanyId && x.Code == input.Code && groups.Contains(x.SourceGroupExternalId), cancellationToken)

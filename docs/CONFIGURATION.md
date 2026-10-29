@@ -80,7 +80,8 @@ This backend bridge is independent of `AIOffice:GroupIntake:Enabled`. It perform
 | `AIOffice:CustomerRequests:Services:<n>:TenantId` | Existing tenant UUID from the platform company scope. |
 | `AIOffice:CustomerRequests:Services:<n>:CompanyId` | Existing active company UUID; never selected from the request body. |
 | `AIOffice:CustomerRequests:Services:<n>:SecretRef` | `secretref://env/AIOFFICE_CUSTOMER_REQUEST_HMAC`; resolves through `ISecretResolver`. The environment variable contains a canonical Base64-encoded, randomly generated 32-byte signing key. |
-| `AIOffice:CustomerRequests:Services:<n>:AllowedSourceGroupExternalIds:<m>` | Exact, case-sensitive source group IDs; at least one per service. No wildcard. |
+| `AIOffice:CustomerRequests:Services:<n>:AllowedSourceGroupExternalIds:<m>` | Exact, case-sensitive source group IDs; at least one per service unless `GrantBotChannelGroups` is on. No wildcard. |
+| `AIOffice:CustomerRequests:Services:<n>:GrantBotChannelGroups` | Off unless exactly `true`. When on, the customer groups an administrator selects in **Kênh & Bot** for the service's own tenant/company are also allowed, checked per request after the signature, so adding or removing a group needs no API restart. Removing a group there also hides its tickets from the digest and status commands. Matching is exact (`wa:` prefix included for WhatsApp). |
 
 Use double underscores for environment variable configuration, for example `AIOffice__CustomerRequests__Services__0__CompanyId`. Provision the actual signing key through the service environment; never put it in appsettings, Git, logs, payloads or responses. Unknown services, unknown/disallowed groups, absent/inactive companies and invalid signatures return 403 without storing anything. Invalid enrollment fails closed at startup. Configuration changes take effect on API restart.
 

@@ -18,10 +18,10 @@ internal sealed class CustomerRequestFixture : IDisposable
     internal readonly CompositeSecretResolver Secrets = new([new EnvironmentVariableSecretResolver()]);
     internal CustomerRequestServiceDirectory Directory { get; }
     internal PlatformDbContext Database() => new(Options);
-    internal CustomerRequestFixture()
+    internal CustomerRequestFixture(bool grantBotChannelGroups = false)
     {
         Environment.SetEnvironmentVariable(Variable, Convert.ToBase64String(Key));
-        Directory = new([new(ServiceId, Authority.TenantId, Authority.CompanyId, "secretref://env/" + Variable, ["customer-group-1"])]);
+        Directory = new([new(ServiceId, Authority.TenantId, Authority.CompanyId, "secretref://env/" + Variable, ["customer-group-1"], grantBotChannelGroups)]);
         using var db = Database(); MemberDirectoryFixture.Seed(db, Authority, role: null); db.SaveChanges();
     }
     internal CustomerRequestAuthenticator Authenticator() => new(Directory, Secrets, TimeProvider.System);

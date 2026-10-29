@@ -24,6 +24,7 @@ public sealed class CustomerRequestIngress(PlatformDbContext database, CustomerR
             await CustomerRequestLocks.AcquireAsync(database, $"company:{binding.TenantId:D}:{binding.CompanyId:D}", cancellationToken);
             if (!await database.Companies.AsNoTracking().AnyAsync(x => x.TenantId == binding.TenantId && x.Id == binding.CompanyId && x.IsActive, cancellationToken))
                 throw CustomerRequestServiceDirectory.Denied();
+            await CustomerRequestGroupGrants.RequireAsync(database, binding, input.SourceGroupExternalId, cancellationToken);
             authentication.RequireFresh(signature.Timestamp);
             var now = clock.GetUtcNow();
             await CustomerRequestReplayProtection.ConsumeAsync(database, signature, clock, cancellationToken);
