@@ -476,16 +476,23 @@ try {
     await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
     stage = "original-company-private-chat-positive";
     await waitForSource();
+    stage = "original-company-private-chat-compose";
     const switchMessage = "Disposable company-switch private chat " + randomUUID();
     await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source.id);
     await page.locator('textarea[name="question"]').fill(switchMessage);
+    stage = "original-company-private-chat-submit";
     const switchSubmitted = page.waitForResponse(response => response.request().method() === "POST"
       && new URL(response.url()).pathname.startsWith("/api/local/tasks/intents/")
       && new URL(response.url()).pathname.endsWith("/submit") && new URL(response.url()).search === query);
     await page.getByRole("button", { name: "Gửi", exact: true }).click();
-    const switchAccepted = await switchSubmitted; requireProof(switchAccepted.status() === 202);
+    const switchAccepted = await switchSubmitted;
+    // Status codes carry no private data; they say which layer refused the submit.
+    if (switchAccepted.status() !== 202) console.error(`CI chat submit HTTP status: ${switchAccepted.status()} session: ${(await current()).status}`);
+    requireProof(switchAccepted.status() === 202);
     const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));
+    stage = "original-company-private-chat-message";
     await page.getByText(switchMessage, { exact: true }).waitFor();
+    stage = "original-company-private-chat-draft";
     await page.locator('textarea[name="question"]:enabled').waitFor();
     await page.locator('textarea[name="question"]').fill(privateDraft);
     const oldAuthority = await context.cookies(app);
