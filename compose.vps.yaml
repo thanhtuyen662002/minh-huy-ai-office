@@ -45,6 +45,12 @@ services:
 
   core-api:
     extra_hosts: *public-names
+    # Optional protected file of extra Core.Api settings that do not fit fixed Compose keys,
+    # e.g. AIOffice__CustomerRequests__Services__<n>__... (any number of bot services/groups)
+    # and their AIOFFICE_CUSTOMER_REQUEST_HMAC key. Absent file = feature stays off.
+    env_file:
+      - path: ${AIOFFICE_VPS_CORE_API_ENV_FILE:-.core-api.env}
+        required: false
 
   agent-worker:
     extra_hosts: *public-names
