@@ -333,6 +333,7 @@ try {
     requireProof((await mutate(sourcePath, "PUT", changed)).status === 403);
     stage = "member-ui-clearing-after-role-revocation";
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await page.getByRole("button", { name: "Kết nối", exact: true }).click();
     await page.waitForFunction(() => ![...document.querySelectorAll("button")].some(item => item.textContent?.trim() === "Thành viên")
       && !document.querySelector('section[aria-label="Thành viên công ty"] tbody'));
   } finally {
@@ -343,6 +344,7 @@ try {
   stage = "fresh-authority-after-role-restoration";
   requireProof((await current()).body.roles.includes("admin") && (await get("/api/local/company/members" + query)).status === 200);
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.getByRole("button", { name: "Kết nối", exact: true }).click();
   await page.getByRole("button", { name: "Thành viên", exact: true }).first().waitFor();
   console.log("PASS actual SQL role revoke/restore under same opaque SID and private member UI clearing");
 
