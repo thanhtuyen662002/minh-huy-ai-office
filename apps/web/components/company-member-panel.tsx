@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { CompanyMember, MemberAccessInput, MemberPage, parseMemberAccessResult, parseMemberPage } from "../lib/company-members";
 import { AdministratorInput, parseAdministratorResult } from "../lib/company-administrators";
 import { CompanyInvitation, CompanyInvitationPage, InvitationRole, parseCreatedInvitation, parseInvitation, parseInvitationPage } from "../lib/company-invitations";
+import { SkeletonRows } from "./skeleton";
 
 type MemberOperation = { userId: string; name: string } &
   ({ kind: "access"; input: MemberAccessInput } | { kind: "administrator"; input: AdministratorInput });
@@ -212,7 +213,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   return <section aria-label="Thành viên công ty" className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#11182a]">
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Thành viên công ty</h2>
       <button type="button" disabled={loading || !!pending} onClick={() => void load(offset)} className="rounded-lg border px-3 py-2 text-sm">Tải lại thành viên</button></div>
-    {loading ? <p role="status" className="mt-4">Đang tải thành viên…</p> : null}
+    {loading ? <SkeletonRows label="Đang tải thành viên…" rows={3} className="mt-4" /> : null}
     {error ? <p role="alert" className="mt-4 text-rose-600">{error}</p> : null}
     {notice ? <p role="status" className="mt-4">{notice}</p> : null}
     <section aria-label="Lời mời thành viên" className="mt-5 rounded-xl border border-slate-200 p-4 dark:border-white/10">

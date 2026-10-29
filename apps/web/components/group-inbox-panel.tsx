@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { GroupMessage, GroupMessages, GroupSources, parseGroupMessage, parseGroupMessages, parseGroupSources } from "../lib/group-source";
+import { SkeletonRows } from "./skeleton";
 
 type Props = { tenantId: string; companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
@@ -122,7 +123,7 @@ export function GroupInboxPanel({ tenantId, companyId, userId, generation, isCur
         {visible.messages ? <button type="button" className={smallButton} onClick={() => void read({ kind: "messages", sourceId: visible.messages!.source.sourceBindingId })}>Tin mới nhất</button> : null}
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
-        {visible.loading ? <p role="status" className="text-sm text-muted-foreground">Đang đọc hộp thư…</p> : null}
+        {visible.loading ? <SkeletonRows label="Đang đọc hộp thư…" rows={4} /> : null}
         {visible.error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{visible.error}</p> : null}
         {visible.messages ? <>
           {visible.messages.hasCoverageGap ? <p role="note" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">Nguồn có khoảng gián đoạn. Lịch sử đang hiển thị có thể chưa đầy đủ.</p> : null}

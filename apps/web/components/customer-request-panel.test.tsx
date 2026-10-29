@@ -234,3 +234,10 @@ it("opens detail beside the board, applies quick status actions and closes witho
   expect(view.request.mock.calls).toHaveLength(reads);
   expect(within(screen.getByRole("region", { name: "Cột Đang xử lý" })).getByRole("button", { name: "YC-0001" })).toBeTruthy();
 });
+it("keeps the other columns when one board column fails with a server error", async () => {
+  fixture(url => url.startsWith("/api/local/customer-requests?") && url.includes("status=new")
+    ? Response.json({ private: "PRIVATE" }, { status: 503 }) : undefined);
+  expect((await within(await screen.findByRole("region", { name: "Cột Mới" })).findByRole("alert")).textContent).toMatch(/Không tải được cột này/);
+  expect(screen.getByRole("region", { name: "Cột Đang xử lý" })).toBeTruthy();
+  expect(screen.queryByText("PRIVATE")).toBeNull();
+});
