@@ -20,7 +20,8 @@ function backend(override: (url: string, init?: RequestInit) => Response | Promi
 async function open() {
   const view = render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
   await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
-  fireEvent.click(screen.getAllByRole("button", { name: "Thành viên" })[0]); return view;
+  fireEvent.click(screen.getByRole("button", { name: "Kết nối" }));
+  fireEvent.click(screen.getByRole("button", { name: "Thành viên" })); return view;
 }
 beforeEach(() => vi.stubGlobal("BroadcastChannel", undefined));
 afterEach(() => vi.unstubAllGlobals());
@@ -31,6 +32,7 @@ it("renders scoped statuses and roles after fresh authority confirmation", async
 it("keeps member navigation absent for viewers", async () => {
   const { state } = backend(); state.roles = ["viewer"];
   const view = render(<LocalAiWorkspace companyId={company} companyName="Fixture" />); await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
+  fireEvent.click(screen.getByRole("button", { name: "Kết nối" }));
   expect(screen.queryByRole("button", { name: "Thành viên" })).toBeNull();
 });
 it("clears the member panel and navigation when a mutation discovers revoked admin authority", async () => {

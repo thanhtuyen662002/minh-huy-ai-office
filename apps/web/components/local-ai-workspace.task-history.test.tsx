@@ -25,7 +25,7 @@ function backend() {
 async function open() {
   const view = render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
   await waitFor(() => expect(screen.queryByRole("button", { name: "Công việc" })).toBeTruthy());
-  fireEvent.click(screen.getByRole("button", { name: "Công việc" })); await screen.findByText(task.summary); return view;
+  fireEvent.click(screen.getByRole("button", { name: "Công việc" })); fireEvent.click(screen.getByRole("button", { name: "Việc giao cho AI" })); await screen.findByText(task.summary); return view;
 }
 afterEach(() => vi.unstubAllGlobals());
 it("makes history available to ordinary members and restores it after workspace reload", async () => {

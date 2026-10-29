@@ -20,9 +20,10 @@ it("opens tracker for the shell-selected company on mobile and cancels private r
   });
   vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
   render(<LocalAiWorkspace companyId={company} companyName="Công ty đã chọn" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Mở Yêu cầu khách hàng trên di động" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Công việc" }));
   await screen.findByRole("button", { name: "YC-0001" });
-  expect(screen.getByRole("button", { name: "Yêu cầu khách hàng" }).getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("button", { name: "Công việc" }).getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("button", { name: "Yêu cầu khách hàng" }).getAttribute("aria-pressed")).toBe("true");
   expect(fetcher.mock.calls.every(([, init]) => !init?.method)).toBe(true);
   held = true; fireEvent.click(screen.getByRole("button", { name: "Tải lại phiếu" }));
   await waitFor(() => expect(release).toBeTruthy()); const pendingSignal = signal;

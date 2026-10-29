@@ -33,7 +33,7 @@ function backend(override: (url: string, init?: RequestInit) => Promise<Response
 async function open() {
   const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />);
   await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
-  fireEvent.click(view.container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(await screen.findByRole("button", { name: "Thêm nguồn chỉ đọc" }));
   await screen.findByRole("option", { name: "PRIVATE COMPANY A" });
   fireEvent.change(screen.getByLabelText("Tên nguồn mới"), { target: { value: "NEW ERP" } });
@@ -87,7 +87,7 @@ it("keeps registration absent for viewers", async () => {
   const { state } = backend(); state.roles = ["viewer"];
   const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />);
   await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
-  fireEvent.click(view.container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!);
   expect(screen.queryByRole("button", { name: "Thêm nguồn chỉ đọc" })).toBeNull();
 });
 it("clears private choices and draft immediately on registration 401", async () => {

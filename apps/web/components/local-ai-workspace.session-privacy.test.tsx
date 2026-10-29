@@ -45,7 +45,7 @@ it.each(["logout", "source-expiry", "submit-expiry", "poll-expiry"] as const)("c
     fireEvent.click(container.querySelector("header button")!);
   } else if (boundary === "source-expiry") {
     sourcesExpired = true;
-    fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+    fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
     fireEvent.click(container.querySelector("section button")!);
   } else {
     taskSubmissionExpired = boundary === "submit-expiry";

@@ -45,7 +45,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     const context = await get(page, `/api/local/session?companyId=${target}`); requireProof(context.status === 200 && JSON.parse(context.text).companyId === target);
   }
   async function openHistory(page) {
-    await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await page.getByRole("button", { name: "Công việc", exact: true }).click(); await page.getByRole("button", { name: "Việc giao cho AI", exact: true }).click();
     await page.getByRole("region", { name: "Công việc của tôi", exact: true }).waitFor();
     await page.getByRole("cell", { name: question, exact: true }).first().waitFor();
   }
@@ -77,6 +77,8 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
   const before = snapshot(); requireProof(before.every(value => /^[0-9A-F]{64}$/.test(value)));
   stage("owned-second-browser-context");
   const secondaryContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  // Drive sign-in explicitly; the direct provider redirect is proven separately in smoke-browser-oidc.
+  await secondaryContext.addInitScript(() => { try { sessionStorage.setItem("aioffice-auto-login", "off"); } catch { /* Storage may be unavailable. */ } });
   let held, release, fulfilled, routePattern;
   try {
     stage("shipping-owner-list-detail"); await switchCompany(ownerPage, selected); await openHistory(ownerPage);
@@ -133,7 +135,7 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
     requireProof(otherCurrent.status === 200 && otherCurrent.cache === "no-store" && JSON.parse(otherCurrent.text).userId === fixture.otherUserId
       && JSON.parse(otherCurrent.text).companyId === selected && JSON.parse(otherCurrent.text).roles.includes("admin")
       && otherSid && otherSid !== initialSid && otherSid !== await cookie(ownerContext));
-    await secondary.getByRole("button", { name: "Công việc", exact: true }).click(); await secondary.getByRole("cell", { name: "Other owner task", exact: true }).waitFor();
+    await secondary.getByRole("button", { name: "Công việc", exact: true }).click(); await secondary.getByRole("button", { name: "Việc giao cho AI", exact: true }).click(); await secondary.getByRole("cell", { name: "Other owner task", exact: true }).waitFor();
     const otherList = await get(secondary, "/api/local/tasks" + query); requireProof(otherList.status === 200 && JSON.parse(otherList.text).items.length === 1
       && JSON.parse(otherList.text).items[0].taskId === fixture.taskIds[3] && !otherList.text.includes(question));
     requireProof((await get(secondary, `/api/local/tasks/${fixture.taskIds[0]}/history` + query)).status === 404);

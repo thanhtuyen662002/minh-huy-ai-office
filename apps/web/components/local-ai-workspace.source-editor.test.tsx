@@ -43,7 +43,7 @@ function backend(override: (url: string, init?: RequestInit) => Promise<Response
 async function open() {
   const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />);
   await screen.findByRole("option", { name: "ERP-A" });
-  fireEvent.click(view.container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(await screen.findByRole("button", { name: "Chỉnh sửa" }));
   await screen.findByRole("form", { name: "Chỉnh sửa nguồn dữ liệu" });
   return view;
@@ -71,14 +71,14 @@ it("uses metadata-only PUT without protected fields and confirms an authoritativ
 it("disabling the selected source removes it from task selection and re-enabling makes it selectable/testable", async () => {
   const { state } = backend(); const view = await open();
   fireEvent.click(screen.getByLabelText("Bật nguồn dữ liệu")); submit(); await screen.findByText(success);
-  fireEvent.click(view.container.querySelector("nav button:first-child")!);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(4)")!);
   expect(view.container.querySelector("select")!.value).toBe("");
   expect(screen.queryByRole("option", { name: "ERP-A" })).toBeNull();
   expect(view.container.querySelector('textarea + button')!.hasAttribute("disabled")).toBe(true);
-  fireEvent.click(view.container.querySelector("nav button:nth-child(2)")!); fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa" }));
+  fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!); fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa" }));
   await screen.findByLabelText("Bật nguồn dữ liệu"); fireEvent.click(screen.getByLabelText("Bật nguồn dữ liệu")); submit(); await screen.findByText(success);
   expect(state.stored.isEnabled).toBe(true); fireEvent.click(screen.getByRole("button", { name: "Kiểm tra" })); await screen.findByText("Kết nối tốt");
-  fireEvent.click(view.container.querySelector("nav button:first-child")!); expect(screen.getByRole("option", { name: "ERP-A" })).toBeTruthy();
+  fireEvent.click(view.container.querySelector("nav button:nth-child(4)")!); expect(screen.getByRole("option", { name: "ERP-A" })).toBeTruthy();
 });
 
 it("cancel discards draft without mutations or success; reopening shows the registered values", async () => {
@@ -96,7 +96,7 @@ it.each(["0", "1025", "1.5", "", "NaN"])("rejects invalid concurrency before mut
 
 it("members see no editor and issue no mutation", async () => {
   const { state } = backend(); state.roles = ["member"];
-  const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />); await screen.findByRole("option", { name: "ERP-A" }); fireEvent.click(view.container.querySelector("nav button:nth-child(2)")!);
+  const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />); await screen.findByRole("option", { name: "ERP-A" }); fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!);
   expect(screen.queryByRole("button", { name: "Chỉnh sửa" })).toBeNull(); expect(state.puts).toBe(0);
 });
 it("revocation discovered during save clears the editor before sending PUT", async () => {
@@ -157,7 +157,7 @@ it("metadata-only save retains protected fields changed after its last preflight
   expect(credential).toBe("secretref://env/FIXTURE-ROTATED");
   expect(stored.allowRead).toBe(false); expect(stored.allowWrite).toBe(true);
   expect(stored.environment).toBe("Production"); expect(stored.kind).toBe("Postgres");
-  fireEvent.click(view.container.querySelector("nav button:first-child")!);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(4)")!);
   expect(view.container.querySelector("select")!.value).toBe("");
   expect(screen.queryByRole("option", { name: "RENAMED-ONLY" })).toBeNull();
 });
@@ -168,7 +168,7 @@ it.each(["malformed-put", "failed-reload", "stale-reload"])("does not invent suc
     if (url.startsWith("/api/local/data-sources?") && written) return mode === "failed-reload" ? Response.json({}, { status: 502 }) : mode === "stale-reload" ? Response.json([original]) : undefined;
   });
   const view = await open(); change(); submit(); expect((await screen.findByRole("alert")).textContent).toContain("chưa xác nhận"); expect(screen.queryByText(success)).toBeNull();
-  fireEvent.click(view.container.querySelector("nav button:first-child")!);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(4)")!);
   expect(view.container.querySelector("select")!.value).toBe("");
   expect(view.container.querySelector('textarea + button')!.hasAttribute("disabled")).toBe(true);
 });

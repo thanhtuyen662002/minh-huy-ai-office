@@ -16,9 +16,9 @@ it("ordinary mobile readers can open inbox directly without preparing a task; lo
   });
   vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
   render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
-  const mobile = await screen.findByRole("button", { name: "Mở Hộp thư nguồn trên di động" });
-  expect(mobile.parentElement?.className).toContain("flex-wrap"); expect(screen.queryByRole("button", { name: "Thành viên" })).toBeNull();
-  fireEvent.click(mobile); await screen.findByRole("button", { name: "PRIVATE_GRANTED_SOURCE" });
+  const inbox = await screen.findByRole("button", { name: "Tin nhắn" });
+  expect(inbox.parentElement?.className).toContain("overflow-x-auto"); expect(screen.queryByRole("button", { name: "Thành viên" })).toBeNull();
+  fireEvent.click(inbox); await screen.findByRole("button", { name: "PRIVATE_GRANTED_SOURCE" });
   expect(fetcher.mock.calls.every(([url, init]) => !url.startsWith("/api/local/tasks") && (!init?.method || init.method === "GET"))).toBe(true);
   held = new Promise<Response>(resolve => { finish = resolve; }); const previous = signal;
   fireEvent.click(screen.getByRole("button", { name: "Tải lại nguồn" })); await waitFor(() => expect(signal).not.toBe(previous));
@@ -44,7 +44,7 @@ it("source ReaderGrant refusal clears the shipping inbox while the same issued-s
   });
   vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
   render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Mở Hộp thư nguồn trên di động" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Tin nhắn" }));
   fireEvent.click(await screen.findByRole("button", { name: "PRIVATE_GRANTED_SOURCE" }));
   fireEvent.click(await screen.findByRole("button", { name: "Đọc tin 1" }));
   await screen.findByText("PRIVATE_GROUP_BODY");

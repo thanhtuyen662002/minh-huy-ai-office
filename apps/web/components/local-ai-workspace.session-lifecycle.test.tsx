@@ -68,7 +68,7 @@ it("removes draft and private controls synchronously while logout is pending", a
   const draft = container.querySelector("textarea")!;
   fireEvent.change(draft, { target: { value: "PRIVATE-DRAFT" } });
   const oldForm = draft.closest("form")!;
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   const refresh = container.querySelector("section button")!;
   const connection = container.querySelector("article button")!;
   fireEvent.click(container.querySelector("header button")!);
@@ -110,7 +110,7 @@ it("invalidates chat and ERP evidence on a connection-test 401", async () => {
   fixture((url) => url.includes("/connection-test?") ? Response.json({}, { status: 401 }) : undefined);
   const { container } = render(workspace());
   await answered(container);
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("article button")!);
   await waitFor(() => expect(container.querySelector('input[name="username"]')).toBeTruthy());
   privateGone();
@@ -121,7 +121,7 @@ it.each(["read_only_unqualified", "__proto__"])("shows bounded credential guidan
     ? Response.json({ code, succeeded: false, message: "PRIVATE-PASSWORD-ENDPOINT" }, { status: 400 }) : undefined);
   const { container } = render(workspace());
   await ready();
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("article button")!);
   await screen.findByText(code === "read_only_unqualified"
     ? "Cần tài khoản ERP chỉ đọc và quyền xem metadata phù hợp. Liên hệ quản trị viên để cấu hình."
@@ -170,7 +170,7 @@ it.each(["user", "tenant", "roles"])("discards old chat when authoritative %s ch
   });
   const { container } = render(workspace()); await answered(container);
   switched = true;
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("section button")!);
   await ready("SOURCE-CHANGED"); privateGone();
   expect((container.querySelector("textarea") as HTMLTextAreaElement).value).toBe("");
@@ -279,7 +279,7 @@ it("fails closed if authority revalidation fails instead of treating sources as 
   let offline = false;
   fixture((url) => offline && url.startsWith("/api/local/session?") ? Promise.reject(new Error("offline")) : undefined);
   const { container } = render(workspace()); await answered(container); offline = true;
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("section button")!);
   await waitFor(() => expect(container.querySelector('input[name="username"]')).toBeTruthy());
   privateGone();
@@ -295,7 +295,7 @@ it("handles rejected source requests without an unhandled background promise", a
 it("closes an unauthorized connection response without waiting for its body", async () => {
   fixture((url) => url.includes("/connection-test?") ? new Response(new ReadableStream(), { status: 401 }) : undefined);
   const { container } = render(workspace()); await ready();
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("article button")!);
   await waitFor(() => expect(container.querySelector('input[name="username"]')).toBeTruthy());
 });
@@ -359,10 +359,10 @@ it("preserves same-session valid errors without discarding chat", async () => {
   let fail = false;
   fixture((url) => fail && url.startsWith("/api/local/data-sources?") ? Response.json({ error: "FIXTURE-SOURCE-ERROR" }, { status: 503 }) : undefined);
   const { container } = render(workspace()); await answered(container); fail = true;
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("section button")!);
   await waitFor(() => expect(container.querySelector("section button")!.textContent).not.toContain("Đang tải"));
-  fireEvent.click(container.querySelector("nav button:nth-child(1)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(4)")!);
   await screen.findByText("FIXTURE-SOURCE-ERROR");
   expect(screen.getByText(checkpoint.answer)).toBeTruthy();
   expect(screen.getByText("PRIVATE-A-DATABASE")).toBeTruthy();

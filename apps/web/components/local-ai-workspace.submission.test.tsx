@@ -46,7 +46,7 @@ it.each(["\uFEFFTồn kho", "Tồn kho\uFEFF", "\uFEFF"])("composer/reload/delib
   await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" });
   const preparedBody = server.posts()[0][1]!.body;
   expect(JSON.parse(preparedBody as string).question).toBe(exactQuestion);
-  view.unmount(); view = await open(); fireEvent.click(screen.getByRole("button", { name: "Công việc" }));
+  view.unmount(); view = await open(); fireEvent.click(screen.getByRole("button", { name: "Công việc" })); fireEvent.click(screen.getByRole("button", { name: "Việc giao cho AI" }));
   const saved = await screen.findByRole("button", { name: /Lấy yêu cầu đã lưu/ });
   expect(server.posts()).toHaveLength(1); fireEvent.click(saved);
   await screen.findByRole("button", { name: "Gửi yêu cầu đã lưu" }); expect(server.posts()).toHaveLength(1);
@@ -95,7 +95,7 @@ it("reload recovers an unsent server intent by owner reads and waits for an expl
   const server = backend("prepare"); let view = await open(); compose(view.container);
   await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" }); view.unmount(); view = await open();
   expect(screen.queryByLabelText("Yêu cầu đang giữ")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Công việc" }));
+  fireEvent.click(screen.getByRole("button", { name: "Công việc" })); fireEvent.click(screen.getByRole("button", { name: "Việc giao cho AI" }));
   await screen.findByRole("button", { name: `Lấy yêu cầu đã lưu ${question}` }); expect(server.posts()).toHaveLength(1);
   fireEvent.click(screen.getByRole("button", { name: `Lấy yêu cầu đã lưu ${question}` }));
   await screen.findByRole("button", { name: "Gửi yêu cầu đã lưu" }); expect(server.posts()).toHaveLength(1);
@@ -121,7 +121,7 @@ it("navigation to saved requests while an unknown outcome remains never automati
   const server = backend("submit"), view = await open(); compose(view.container); await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" });
   fireEvent.click(screen.getByRole("button", { name: "Mở Công việc và yêu cầu đã lưu" }));
   await screen.findByText(/Đã nhận · xem Công việc/); expect(server.posts()).toHaveLength(2);
-  fireEvent.click(view.container.querySelector("nav button")!); await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" }); expect(server.posts()).toHaveLength(2);
+  fireEvent.click(view.container.querySelector("nav button:nth-child(4)")!); await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" }); expect(server.posts()).toHaveLength(2);
 });
 it("navigation to saved requests remains read-only while an existing polling loop is active", async () => {
   const server = backend(), view = await open(); compose(view.container);

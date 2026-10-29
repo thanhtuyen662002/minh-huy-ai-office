@@ -123,3 +123,19 @@ it("allows explicit loopback HTTP and refuses remote HTTP, credentials, fragment
   }
   expect(browserLoginDestination({ authorizationUrl: authorization(), accessToken: "private" }, settings)).toBeNull();
 });
+
+it("goes straight to the provider on first load so there is only one sign-in page, at most once a minute", async () => {
+  window.sessionStorage.clear();
+  const auto = () => <LocalAiWorkspace companyId={company} companyName="Synthetic Company" loginMode="browser" browserLogin={settings} autoStartLogin />;
+  const first = render(auto());
+  await waitFor(() => expect(navigation).toHaveBeenCalledWith(authorization()));
+  expect(screen.getByText("Đang chuyển đến trang đăng nhập…")).toBeTruthy();
+  first.unmount(); navigation.mockReset();
+  // A provider callback that lands back here signed out must not redirect again in a loop.
+  render(auto());
+  await screen.findByText("Đăng nhập bằng tài khoản công ty để tiếp tục.");
+  expect(navigation).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Đăng nhập doanh nghiệp" }));
+  await waitFor(() => expect(navigation).toHaveBeenCalledOnce());
+  window.sessionStorage.clear();
+});
