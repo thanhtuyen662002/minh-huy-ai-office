@@ -4,11 +4,11 @@ import { RefreshCw, Search } from "lucide-react";
 import { parseMemberPage, type CompanyMember } from "../lib/company-members";
 import { type CustomerRequest, type CustomerRequestDetail as Detail, type CustomerRequestPage, type CustomerRequestPatch, type RequestStatus,
   parseCustomerRequest, parseCustomerRequestDetail, parseCustomerRequestPage, requestConflict, requestStatuses } from "../lib/customer-requests";
-import { CustomerRequestDetail, StatusChip, initials, requestButton as button, requestField as field, requestTime, statusTone } from "./customer-request-detail";
+import { CustomerRequestDetail, StatusChip, initials, requestAge as age, requestButton as button, requestField as field, requestTime, statusTone } from "./customer-request-detail";
 
 type Props = { tenantId: string; companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
-  request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
+  request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void; initialCustomer?: string };
 type View = "board" | "list";
 type Selection = { view: View; status: string; customer: string; offset: number; code?: string };
 // Rejected tickets stay out of the board; the list view still finds them.
@@ -22,15 +22,8 @@ const initialSelection = (): Selection => ({ view: "board", status: "", customer
 const empty = (scope: string, selection = initialSelection()): State => ({ scope, selection, page: null, board: null, detail: null, members: null,
   memberError: "", loading: false, saving: false, conflict: false, error: "", notice: "" });
 class ReadFailure extends Error { constructor(readonly status: number) { super("Customer request unavailable"); } }
-const relative = new Intl.RelativeTimeFormat("vi", { numeric: "auto" });
-function age(value: string) {
-  const minutes = Math.round((Date.parse(value) - Date.now()) / 60000);
-  if (Math.abs(minutes) < 60) return relative.format(minutes, "minute");
-  if (Math.abs(minutes) < 60 * 24) return relative.format(Math.round(minutes / 60), "hour");
-  return relative.format(Math.round(minutes / 60 / 24), "day");
-}
 
-export function CustomerRequestPanel({ tenantId, companyId, userId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+export function CustomerRequestPanel({ tenantId, companyId, userId, generation, isCurrent, validate, request, onUnauthorized, initialCustomer = "" }: Props) {
   const scope = `${tenantId}:${companyId}:${userId}:${generation}`;
   const [state, setState] = useState(() => empty(scope));
   const [statusFilter, setStatusFilter] = useState(""), [customerFilter, setCustomerFilter] = useState("");
@@ -165,8 +158,8 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
   }
   const latest = useRef(read); latest.current = read;
   useEffect(() => {
-    mounted.current = true; saving.current = null; setStatusFilter(""); setCustomerFilter("");
-    void latest.current(initialSelection());
+    mounted.current = true; saving.current = null; setStatusFilter(""); setCustomerFilter(initialCustomer);
+    void latest.current(initialCustomer ? { ...initialSelection(), view: "list", customer: initialCustomer } : initialSelection());
     return () => { mounted.current = false; cancel(); };
     // Scope replacement clears all data and cancels both reads and writes.
     // eslint-disable-next-line react-hooks/exhaustive-deps

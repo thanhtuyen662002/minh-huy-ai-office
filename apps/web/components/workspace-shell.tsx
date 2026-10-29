@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { BookOpen, Bot, KanbanSquare, LayoutDashboard, LogOut, MessagesSquare, Moon, PanelLeftClose, PanelLeftOpen, Plug, Sun } from "lucide-react";
+import { BookOpen, Bot, KanbanSquare, LayoutDashboard, LogOut, MessagesSquare, Moon, PanelLeftClose, PanelLeftOpen, Plug, Search, Sun } from "lucide-react";
 import { workspaceSections, type WorkspaceSection } from "../lib/workspace-sections";
 import type { CompanyChoice } from "../lib/company-choices";
 
@@ -42,13 +42,32 @@ type Props = {
   onSelectCompany: (companyId: string) => void;
   roleLabel: string;
   accountLabel: string;
+  userName?: string | null;
+  counts?: Partial<Record<WorkspaceSection, string>>;
+  bot?: { label: string; running: boolean } | null;
+  onSearch?: (query: string) => void;
   onSignOut: () => void;
   children: ReactNode;
 };
 
+const avatar = (name: string) => {
+  const words = name.trim().split(/\s+/);
+  return (words.length > 1 ? words[0][0] + words[words.length - 1][0] : name.slice(0, 2)).toUpperCase();
+};
+
 export function WorkspaceShell({ section, onSection, companyId, companyName, companies, companyDisabled, onSelectCompany,
-  roleLabel, accountLabel, onSignOut, children }: Props) {
+  roleLabel, accountLabel, userName, counts, bot, onSearch, onSignOut, children }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+  const [query, setQuery] = useState("");
+  const search = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (!onSearch) return;
+    const focus = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); search.current?.focus(); }
+    };
+    window.addEventListener("keydown", focus);
+    return () => window.removeEventListener("keydown", focus);
+  }, [onSearch]);
   useEffect(() => { setCollapsed(readPreference("aioffice-sidebar") === "collapsed"); }, []);
   // On phones the menu is a horizontal strip; keep the current section visible in it.
   const activeItem = useRef<HTMLButtonElement | null>(null);
@@ -62,63 +81,78 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
     <main className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen flex-col lg:flex-row">
         <aside className={`shrink-0 border-b border-sidebar-border bg-sidebar lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${collapsed ? "lg:w-16" : "lg:w-60"}`}>
-          <div className={`flex h-14 items-center gap-2.5 px-4 ${collapsed ? "lg:justify-center lg:px-0" : ""}`}>
+          <div className={`flex h-16 items-center gap-2.5 px-4 ${collapsed ? "lg:justify-center lg:px-0" : ""}`}>
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">AI</div>
             <div className={collapsed ? "lg:hidden" : ""}>
               <p className="text-sm font-semibold leading-tight">AI Office</p>
               <p className="text-xs text-muted-foreground">Minh Huy</p>
             </div>
           </div>
-          <nav aria-label="Điều hướng chính" className="flex gap-1 overflow-x-auto px-3 pb-2 lg:mt-2 lg:flex-1 lg:flex-col lg:overflow-visible lg:pb-0">
+          <nav aria-label="Điều hướng chính" className="flex gap-1 overflow-x-auto px-3 pb-2 lg:mt-1 lg:flex-1 lg:flex-col lg:gap-1.5 lg:overflow-visible lg:pb-0">
             {sections.map(([key, label]) => {
-              const Icon = icons[key], active = key === section;
+              const Icon = icons[key], active = key === section, count = counts?.[key];
               return <button key={key} ref={active ? activeItem : undefined} type="button" onClick={() => onSection(key)} aria-current={active ? "page" : undefined} title={collapsed ? label : undefined}
-                className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active
+                className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors lg:h-11 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active
                   ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
                 <span className={collapsed ? "lg:sr-only" : ""}>{label}</span>
+                {count && !collapsed ? <span aria-hidden="true" className={`ml-auto hidden text-xs font-semibold tabular-nums lg:inline ${active ? "" : "text-muted-foreground"}`}>{count}</span> : null}
               </button>;
             })}
           </nav>
-          <div className="hidden border-t border-sidebar-border p-3 lg:block">
-            <button type="button" onClick={toggleSidebar} aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? "justify-center px-0" : ""}`}>
-              {collapsed ? <PanelLeftOpen className="size-4" /> : <><PanelLeftClose className="size-4" /> Thu gọn</>}
+          <div className={`hidden items-center gap-1 border-t border-sidebar-border p-3 lg:flex ${collapsed ? "flex-col" : ""}`}>
+            <span className={`min-w-0 flex-1 items-center gap-2.5 ${collapsed ? "hidden" : "flex"}`}>
+              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{avatar(userName || accountLabel)}</span>
+              <span className="min-w-0"><span className="block truncate text-sm font-medium leading-tight">{userName || accountLabel}</span>
+                <span className="block truncate text-xs text-muted-foreground">{roleLabel}</span></span>
+            </span>
+            <button type="button" onClick={toggleSidebar} aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"} title={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+              {collapsed ? <PanelLeftOpen className="size-4" aria-hidden="true" /> : <PanelLeftClose className="size-4" aria-hidden="true" />}
             </button>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center justify-between gap-3 border-b bg-background/85 px-4 py-2 backdrop-blur sm:px-6">
-            <div className="min-w-0">
-              {companies.length > 1 ? <>
-                <label htmlFor="workspace-company" className="sr-only">Chuyển công ty</label>
-                <select id="workspace-company" value={companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyId ?? companyId}
-                  disabled={companyDisabled} onChange={event => onSelectCompany(event.target.value)}
-                  className="max-w-full rounded-lg border bg-card px-2.5 py-1.5 text-sm font-medium">
-                  {companies.map(item => <option key={item.companyId} value={item.companyId}>{item.companyName}</option>)}
-                </select>
-              </> : <h2 className="break-words text-sm font-semibold">{companyName}</h2>}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="hidden text-xs text-muted-foreground sm:inline">{accountLabel} · {roleLabel}</span>
-              <button type="button" onClick={onSignOut} className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted">
-                <LogOut className="size-4" aria-hidden="true" />Đăng xuất
-              </button>
+          <header className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-3 border-b bg-sidebar/90 px-4 py-2.5 backdrop-blur sm:px-6">
+            {onSearch ? <form role="search" className="relative w-full max-w-md flex-1" onSubmit={event => { event.preventDefault(); if (query.trim()) onSearch(query.trim()); }}>
+              <label htmlFor="workspace-search" className="sr-only">Tìm phiếu theo khách hàng</label>
+              <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" aria-hidden="true" />
+              <input ref={search} id="workspace-search" type="search" maxLength={200} value={query} onChange={event => setQuery(event.target.value)}
+                placeholder="Tìm phiếu theo khách hàng…" className="h-9 w-full rounded-lg border bg-background pl-9 pr-16 text-sm" />
+              <kbd className="pointer-events-none absolute right-2 top-2 hidden rounded border bg-card px-1.5 py-0.5 font-sans text-[11px] text-muted-foreground sm:block">Ctrl K</kbd>
+            </form> : null}
+            {companies.length > 1 ? <div className="min-w-0">
+              <label htmlFor="workspace-company" className="sr-only">Chuyển công ty</label>
+              <select id="workspace-company" value={companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyId ?? companyId}
+                disabled={companyDisabled} onChange={event => onSelectCompany(event.target.value)}
+                className="h-9 max-w-full rounded-lg border bg-card px-2.5 text-sm font-medium">
+                {companies.map(item => <option key={item.companyId} value={item.companyId}>{item.companyName}</option>)}
+              </select>
+            </div> : onSearch ? null : <h2 className="break-words text-sm font-semibold">{companyName}</h2>}
+            <div className="ml-auto flex items-center gap-2">
+              {/* First in the header for keyboard users, drawn last. */}
+              <button type="button" onClick={onSignOut} aria-label="Đăng xuất" title="Đăng xuất"
+                className="order-last inline-flex size-9 items-center justify-center rounded-lg border bg-card text-muted-foreground hover:text-foreground">
+                <LogOut className="size-4" aria-hidden="true" /></button>
+              {bot ? <span className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium ${bot.running
+                ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200" : "bg-muted text-muted-foreground"}`}>
+                <span aria-hidden="true" className={`size-1.5 rounded-full ${bot.running ? "bg-emerald-500" : "bg-slate-400"}`} />{bot.label}</span> : null}
               <ThemeToggle />
             </div>
           </header>
-          <div className="min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-6">{children}</div>
+          <div className="min-w-0 flex-1 px-4 py-5 sm:px-8 sm:py-7">{children}</div>
         </div>
       </div>
     </main>
   );
 }
 
-export function SectionHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
+export function SectionHeader({ title, description, eyebrow, actions }: { title: string; description?: string; eyebrow?: string; actions?: ReactNode }) {
   return <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+      {eyebrow ? <p className="mb-1 text-sm text-muted-foreground">{eyebrow}</p> : null}
+      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
       {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
     </div>
     {actions}
@@ -127,9 +161,9 @@ export function SectionHeader({ title, description, actions }: { title: string; 
 
 export function SectionTabs<T extends string>({ label, tabs, value, onChange }: {
   label: string; tabs: readonly (readonly [T, string])[]; value: T; onChange: (value: T) => void }) {
-  return <div role="group" aria-label={label} className="mb-5 inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-muted p-1">
+  return <div role="group" aria-label={label} className="mb-5 flex max-w-full gap-5 overflow-x-auto border-b">
     {tabs.map(([key, text]) => <button key={key} type="button" aria-pressed={key === value} onClick={() => onChange(key)}
-      className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium ${key === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+      className={`-mb-px shrink-0 border-b-2 pb-2.5 pt-1 text-sm font-medium ${key === value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
       {text}
     </button>)}
   </div>;

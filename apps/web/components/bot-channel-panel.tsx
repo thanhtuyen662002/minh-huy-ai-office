@@ -128,11 +128,11 @@ export function BotChannelPanel(props: BotSessionProps) {
     </> : null}</section>;
 }
 
-export function useBotChannelsAvailable(props: BotSessionProps, enabled: boolean) {
-  const [available, setAvailable] = useState<string | null>(null), scope = `${props.companyId}:${props.userId}:${props.generation}`;
+export function useBotChannels(props: BotSessionProps, enabled: boolean): BotAdminView | null {
+  const [loaded, setLoaded] = useState<{ scope: string; view: BotAdminView } | null>(null), scope = `${props.companyId}:${props.userId}:${props.generation}`;
   const latest = useRef(props); latest.current = props;
   useEffect(() => {
-    let active = true; const controller = new AbortController(); setAvailable(null);
+    let active = true; const controller = new AbortController(); setLoaded(null);
     if (enabled) void (async () => {
       const p = latest.current;
       try {
@@ -141,10 +141,14 @@ export function useBotChannelsAvailable(props: BotSessionProps, enabled: boolean
         if (!active || !p.isCurrent(p.generation)) return;
         if (!response.ok) return;
         const view = parseBotAdmin(await response.json());
-        if (view && await p.validate(p.generation) && active && p.isCurrent(p.generation)) setAvailable(scope);
+        if (view && await p.validate(p.generation) && active && p.isCurrent(p.generation)) setLoaded({ scope, view });
       } catch { /* A missing or disabled feature has no navigation entry. */ }
     })();
     return () => { active = false; controller.abort(); };
   }, [scope, enabled]);
-  return enabled && available === scope && props.isCurrent(props.generation);
+  return enabled && loaded?.scope === scope && props.isCurrent(props.generation) ? loaded.view : null;
+}
+
+export function useBotChannelsAvailable(props: BotSessionProps, enabled: boolean) {
+  return useBotChannels(props, enabled) !== null;
 }

@@ -16,7 +16,7 @@ import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { GroupInboxPanel } from "./group-inbox-panel";
 import { CustomerRequestPanel } from "./customer-request-panel";
-import { BotChannelPanel, useBotChannelsAvailable } from "./bot-channel-panel";
+import { BotChannelPanel, useBotChannels } from "./bot-channel-panel";
 import { SubmissionRecoveryPanel } from "./submission-recovery-panel";
 import { useTaskSubmission } from "./use-task-submission";
 import { trimSubmissionQuestion } from "../lib/task-submission-intent";
@@ -25,7 +25,7 @@ import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin 
 import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
 import { workspaceSectionFromPath, workspaceSectionPath, type WorkspaceSection } from "../lib/workspace-sections";
 import { SectionHeader, SectionTabs, WorkspaceShell } from "./workspace-shell";
-import { WorkspaceOverview } from "./workspace-overview";
+import { WorkspaceOverview, type OverviewGlance } from "./workspace-overview";
 
 type Props = {
   companyId: string;
@@ -148,8 +148,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
     validate, pause, restore, beginMutation, ready } = useLocalSession(companyId, clearPrivateState);
-  const botChannelsAvailable = useBotChannelsAvailable({ companyId, userId: auth?.userId ?? "", generation: sessionGeneration.current,
+  const botView = useBotChannels({ companyId, userId: auth?.userId ?? "", generation: sessionGeneration.current,
     isCurrent, validate, request, onUnauthorized: () => reset("signed-out") }, sessionState === "ready" && !!auth?.roles.includes("admin"));
+  const botChannelsAvailable = botView !== null;
+  const [glanceState, setGlance] = useState<{ scope: string; value: OverviewGlance } | null>(null);
+  const [ticketSearch, setTicketSearch] = useState({ customer: "", serial: 0 });
   const submission = useTaskSubmission({ companyId, generation: sessionGeneration, isCurrent, ready, validate, request,
     onUnauthorized: () => reset("signed-out") });
   submissionReset.current = submission.reset;
@@ -644,9 +647,16 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }
 
   const isAdmin = !!auth?.roles.includes("admin");
+  const zalo = botView?.channels.find(channel => channel.channel === "zalo") ?? null;
+  const zaloRunning = !!zalo?.enabled && zalo.status?.loginState === "logged_in";
+  // The sidebar opens Kết nối on the bot page when this reader can manage bots.
+  const openSection = (next: WorkspaceSection) => setSurface(next === "ket-noi" && botChannelsAvailable ? "bot-channels" : sectionSurfaces[next]);
   const onUnauthorized = () => reset("signed-out");
   const section = surfaceSection(surface);
   const scopeKey = `${companyId}:${auth?.userId ?? ""}:${sessionGeneration.current}`;
+  // Name and open-ticket count come from the last overview load in this session only.
+  const glance = glanceState?.scope === scopeKey ? glanceState.value : null;
+
   const connectionTabs = [
     ...(botChannelsAvailable ? [["bot-channels", "Kênh & Bot"] as const] : []),
     ["data-sources", "Nguồn dữ liệu ERP"] as const,
@@ -655,8 +665,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   let content: ReactNode = null;
   if (section === "tong-quan") {
-    content = <WorkspaceOverview key={scopeKey} companyName={companyName} onOpen={next => setSurface(sectionSurfaces[next])}
-      data={auth ? { companyId, generation: sessionGeneration.current, isCurrent, validate, request, onUnauthorized } : undefined} />;
+    content = <WorkspaceOverview key={scopeKey} companyName={companyName} onOpen={openSection} bots={botView?.channels ?? null}
+      data={auth ? { companyId, userId: auth.userId, generation: sessionGeneration.current, isCurrent, validate, request, onUnauthorized,
+        onGlance: value => { if (isCurrent(sessionGeneration.current)) setGlance({ scope: scopeKey, value }); } } : undefined} />;
   } else if (section === "tin-nhan") {
     content = <>
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
@@ -665,7 +676,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     </>;
   } else if (section === "cong-viec") {
     content = <>
-      <SectionHeader title="Công việc" description="Yêu cầu AI tổng hợp từ tin nhắn khách và việc đã giao cho trợ lý." />
+      <SectionHeader eyebrow="Yêu cầu khách hàng · AI tự tạo phiếu từ nhóm Zalo" title="Công việc" />
       <SectionTabs label="Loại công việc" value={surface === "tasks" ? "tasks" : "customer-requests"} onChange={setSurface}
         tabs={[["customer-requests", "Yêu cầu khách hàng"], ["tasks", "Việc giao cho AI"]]} />
       {surface === "tasks" && auth ? <div key={scopeKey} className="space-y-5">
@@ -674,7 +685,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
           onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
         <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
-      </div> : auth ? <CustomerRequestPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+      </div> : auth ? <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
         isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /> : null}
     </>;
   } else if (section === "kien-thuc") {
@@ -685,7 +696,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   } else if (section === "ket-noi") {
     const tab = connectionTabs.some(([key]) => key === surface) ? surface : "data-sources";
     content = <>
-      <SectionHeader title="Kết nối" description="Bot nhắn tin, nguồn dữ liệu ERP và thành viên được dùng AI Office." />
+      <SectionHeader title="Kết nối" description="Mọi bật/tắt và thông số điều chỉnh ở đây, không cần dòng lệnh." />
       <SectionTabs label="Loại kết nối" value={tab} onChange={setSurface} tabs={connectionTabs} />
       {tab === "bot-channels" && botChannelsAvailable && auth ? <BotChannelPanel key={scopeKey}
         companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request}
@@ -867,9 +878,13 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }
 
   return (
-    <WorkspaceShell section={section} onSection={next => setSurface(sectionSurfaces[next])} companyId={companyId} companyName={companyName}
+    <WorkspaceShell section={section} onSection={openSection} companyId={companyId} companyName={companyName}
       companies={loginMode === "browser" ? companies : []} companyDisabled={busy || sourceSaving} onSelectCompany={id => void selectCompany(id)}
-      roleLabel={auth?.roles.join(", ") || "member"} accountLabel={loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · chỉ đọc"}
+      roleLabel={isAdmin ? "Quản trị viên" : auth?.roles.length ? auth.roles.join(", ") : "Thành viên"}
+      accountLabel={loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · chỉ đọc"} userName={glance?.displayName}
+      counts={glance ? { "cong-viec": glance.openTickets } : undefined} bot={zalo ? { running: zaloRunning,
+        label: zaloRunning ? "Bot Zalo đang chạy" : zalo.enabled ? "Bot Zalo chưa đăng nhập" : "Bot Zalo đang tắt" } : null}
+      onSearch={auth ? customer => { setTicketSearch(old => ({ customer, serial: old.serial + 1 })); setSurface("customer-requests"); } : undefined}
       onSignOut={() => void signOut()}>
       <div key={`${companyId}:${sessionGeneration.current}`}>
         {companyChoiceError ? <div role="alert" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100">

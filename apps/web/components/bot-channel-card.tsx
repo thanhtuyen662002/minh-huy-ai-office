@@ -88,10 +88,10 @@ export function BotChannelCard({ channel, busy, qr, save, command, refreshQr }: 
         {error ? <p role="alert" className="text-sm text-rose-600 dark:text-rose-300">{error}</p> : null}
       </div>
       <footer className="flex flex-wrap items-center gap-2 border-t bg-muted/40 px-5 py-3">
-        <button className={botPrimaryButton} type="submit">Lưu kênh {name}</button>
-        <button type="button" className={botButton} onClick={() => command("summarize-now")}><Play className="size-4" aria-hidden="true" />Tóm tắt ngay {name}</button>
-        <button type="button" className={botButton} onClick={() => command("relogin")}><RotateCw className="size-4" aria-hidden="true" />Đăng nhập lại {name}</button>
-        <button type="button" className={botButton} onClick={refreshQr}><QrCode className="size-4" aria-hidden="true" />Xem mã QR {name}</button>
+        <button className={botPrimaryButton} type="submit">Lưu<span className="sr-only"> kênh {name}</span></button>
+        <button type="button" className={botButton} onClick={() => command("summarize-now")}><Play className="size-4" aria-hidden="true" />Tóm tắt ngay<span className="sr-only"> {name}</span></button>
+        <button type="button" className={botButton} onClick={() => command("relogin")}><RotateCw className="size-4" aria-hidden="true" />Đăng nhập lại<span className="sr-only"> {name}</span></button>
+        <button type="button" className={botButton} onClick={refreshQr}><QrCode className="size-4" aria-hidden="true" />Xem mã QR<span className="sr-only"> {name}</span></button>
       </footer>
     </fieldset></form>
     {qr ? <div className="flex flex-wrap items-center gap-5 border-t p-5">
