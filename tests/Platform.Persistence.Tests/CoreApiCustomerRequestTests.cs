@@ -195,15 +195,37 @@ public sealed class CoreApiCustomerRequestTests
             var source = db.CustomerRequests.AsNoTracking().Single(x => x.Code == first.Code);
             db.CustomerRequests.Add(new()
             {
-                TenantId = source.TenantId, CompanyId = source.CompanyId, Id = Guid.NewGuid(), Code = "YC-0900", SourceGroupExternalId = "removed-group",
-                SourceGroupName = "Removed", CustomerName = "Hidden", ReportedBy = "Lan", Summary = "Hidden", Status = "new", IdempotencyKey = "hidden-1",
-                CreatedAt = source.CreatedAt, UpdatedAt = source.UpdatedAt, RowVersion = [1]
+                TenantId = source.TenantId,
+                CompanyId = source.CompanyId,
+                Id = Guid.NewGuid(),
+                Code = "YC-0900",
+                SourceGroupExternalId = "removed-group",
+                SourceGroupName = "Removed",
+                CustomerName = "Hidden",
+                ReportedBy = "Lan",
+                Summary = "Hidden",
+                Status = "new",
+                IdempotencyKey = "hidden-1",
+                CreatedAt = source.CreatedAt,
+                UpdatedAt = source.UpdatedAt,
+                RowVersion = [1]
             });
             db.CustomerRequests.Add(new()
             {
-                TenantId = source.TenantId, CompanyId = Guid.NewGuid(), Id = Guid.NewGuid(), Code = "YC-0901", SourceGroupExternalId = "customer-group-1",
-                SourceGroupName = "Foreign", CustomerName = "Foreign", ReportedBy = "Lan", Summary = "Foreign", Status = "in_progress", IdempotencyKey = "hidden-2",
-                CreatedAt = source.CreatedAt, UpdatedAt = source.UpdatedAt, RowVersion = [2]
+                TenantId = source.TenantId,
+                CompanyId = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
+                Code = "YC-0901",
+                SourceGroupExternalId = "customer-group-1",
+                SourceGroupName = "Foreign",
+                CustomerName = "Foreign",
+                ReportedBy = "Lan",
+                Summary = "Foreign",
+                Status = "in_progress",
+                IdempotencyKey = "hidden-2",
+                CreatedAt = source.CreatedAt,
+                UpdatedAt = source.UpdatedAt,
+                RowVersion = [2]
             });
             await db.SaveChangesAsync();
         }
