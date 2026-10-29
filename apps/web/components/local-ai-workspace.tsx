@@ -57,9 +57,11 @@ function surfaceSection(surface: Surface): WorkspaceSection {
 }
 
 // Limits automatic redirects so a failing provider callback cannot loop.
+// Browser smoke scripts set "aioffice-auto-login" to "off" to drive sign-in explicitly.
 const AUTO_LOGIN_KEY = "aioffice-auto-login-at";
 function claimAutoLogin() {
   try {
+    if (window.sessionStorage.getItem("aioffice-auto-login") === "off") return false;
     const last = Number(window.sessionStorage.getItem(AUTO_LOGIN_KEY));
     if (Number.isFinite(last) && Date.now() - last < 60_000) return false;
     window.sessionStorage.setItem(AUTO_LOGIN_KEY, String(Date.now()));

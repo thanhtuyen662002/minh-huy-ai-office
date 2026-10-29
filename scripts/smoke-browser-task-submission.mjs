@@ -79,7 +79,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     proof(false);
   }
   async function composer(question) {
-    await page.getByRole("button", { name: "Trợ lý AI", exact: true }).first().click();
+    await page.getByRole("button", { name: "Trợ lý", exact: true }).first().click();
     await page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true }).selectOption(source);
     await page.locator('textarea[name="question"]').fill(question);
   }
@@ -209,7 +209,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click();
     proof(new URL((await authorization).url()).searchParams.get("code_challenge_method") === "S256" && (await callback).status() === 303);
     await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); proof(await sid(ownerContext) && await sid(ownerContext) !== oldSid);
-    await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await page.getByRole("button", { name: "Công việc", exact: true }).click(); await page.getByRole("button", { name: "Việc giao cho AI", exact: true }).click();
     const panel = page.getByRole("region", { name: "Yêu cầu đã lưu", exact: true });
     await panel.getByRole("button", { name: "Lấy yêu cầu đã lưu " + question, exact: true }).waitFor();
     proof(sent.length === count + 1); equal(snapshot(), frozen);
@@ -266,6 +266,8 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     const fixture = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     proof(guid(fixture.companyId) && guid(fixture.otherUserId) && /^archive-proof-[0-9a-f]{32}$/.test(fixture.otherUsername));
     secondaryContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    // Drive sign-in explicitly; the direct provider redirect is proven separately in smoke-browser-oidc.
+    await secondaryContext.addInitScript(() => { try { sessionStorage.setItem("aioffice-auto-login", "off"); } catch { /* Storage may be unavailable. */ } });
     const secondary = await secondaryContext.newPage(); secondary.setDefaultTimeout(15_000); await secondary.goto(app);
     const auth = secondary.waitForRequest(request => request.url().startsWith(identity + "/realms/aioffice-local/protocol/openid-connect/auth?"));
     await secondary.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click();
@@ -292,7 +294,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
         body: JSON.stringify({ operationId: lateOp, dataSourceId: source, question: lateQuestion }) }); return response.status;
     }, { query, lateOp, source, lateQuestion }); proof(created === 200);
     const baseline = snapshot(), readCount = sent.length;
-    await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await page.getByRole("button", { name: "Công việc", exact: true }).click(); await page.getByRole("button", { name: "Việc giao cho AI", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor();
     heldPattern = `**/api/local/tasks/intents/${lateOp}?companyId=${company}`;
     let captured, finished, failed = false, attempted = false;
@@ -308,7 +310,7 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     await page.unroute(heldPattern); heldPattern = null;
     proof(attempted && !failed && await page.getByText(lateQuestion, { exact: true }).count() === 0 && sent.length === readCount);
     proof((await get(page, `/api/local/tasks/intents/${lateOp}?companyId=${fixture.companyId}`)).status === 404);
-    await switchCompany(page, company, "held-private-intent-switch-back"); await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await switchCompany(page, company, "held-private-intent-switch-back"); await page.getByRole("button", { name: "Công việc", exact: true }).click(); await page.getByRole("button", { name: "Việc giao cho AI", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor(); equal(snapshot(), baseline);
     console.log("PASS actual successful private intent held across provider company switch is discarded, restored GET-only recovery preserves all effect and intent bytes");
     stage("external-member-loss-private-clear-restored-recovery");
@@ -321,11 +323,11 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
     } finally { sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${scope} AND UserId='${owner}';`); }
     const restored = page.waitForResponse(response => response.url().startsWith(app + "/api/local/session/oidc/callback?"));
     await page.getByRole("button", { name: "Đăng nhập doanh nghiệp", exact: true }).click(); proof((await restored).status() === 303);
-    await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); await page.getByRole("button", { name: "Công việc", exact: true }).click();
+    await page.getByRole("button", { name: "Đăng xuất", exact: true }).waitFor(); await page.getByRole("button", { name: "Công việc", exact: true }).click(); await page.getByRole("button", { name: "Việc giao cho AI", exact: true }).click();
     await page.getByRole("button", { name: "Lấy yêu cầu đã lưu " + lateQuestion, exact: true }).waitFor();
     proof(sent.length === readCount); equal(snapshot(), baseline);
     console.log("PASS shipping owner recovery clears private data after external membership loss and restores GET-only under a new issued session with unchanged durable bytes");
-    await page.getByRole("button", { name: "Trợ lý AI", exact: true }).first().click();
+    await page.getByRole("button", { name: "Trợ lý", exact: true }).first().click();
   } finally {
     await wireObservation?.dispose().catch(() => {});
     await page.evaluate(() => window.__aiofficeOwnedSubmissionLifecycle?.dispose()).catch(() => {});

@@ -78,6 +78,8 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
   await ownerPage.getByRole("button", { name: "Tải lại thành viên", exact: true }).click();
   await button(false).waitFor();
   const secondaryContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  // Drive sign-in explicitly; the direct provider redirect is proven separately in smoke-browser-oidc.
+  await secondaryContext.addInitScript(() => { try { sessionStorage.setItem("aioffice-auto-login", "off"); } catch { /* Storage may be unavailable. */ } });
   try {
     const secondary = await secondaryContext.newPage(); secondary.setDefaultTimeout(15_000); secondary.setDefaultNavigationTimeout(20_000);
     stage("secondary-provider-code-s256-sign-in");
@@ -93,6 +95,7 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     const secondarySid = await cookie(secondaryContext), initial = await current(secondary);
     requireProof(secondarySid && secondarySid !== ownerSid && initial.status === 200 && initial.body.userId === member
       && initial.body.companyId === company && !initial.body.roles.includes("admin") && initial.cache === "no-store");
+    await secondary.getByRole("button", { name: "Kết nối", exact: true }).click();
     requireProof(await secondary.getByRole("button", { name: "Thành viên", exact: true }).count() === 0);
 
     stage("shipping-grant-fresh-existing-sid");
@@ -101,7 +104,7 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     requireProof(state() === "1:2:1" && auditCount() === "1" && (await current(secondary)).body.roles.includes("admin")
       && await cookie(secondaryContext) === secondarySid);
     await focus(secondary);
-    await secondary.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await secondary.getByRole("button", { name: "Kết nối", exact: true }).click(); await secondary.getByRole("button", { name: "Thành viên", exact: true }).click();
     await secondary.getByRole("cell", { name, exact: true }).waitFor();
     requireProof(await secondary.getByRole("button", { name: `Gỡ quyền quản trị ${name}`, exact: true }).isDisabled());
 
@@ -138,7 +141,7 @@ export async function verifyCompanyAdministrators({ directory, manifest, browser
     await button(true).waitFor();
     await ownerPage.getByText("Đã cấp quyền quản trị công ty.", { exact: true }).waitFor();
     requireProof(state() === "1:4:1" && auditCount() === "3");
-    await focus(secondary); await secondary.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await focus(secondary); await secondary.getByRole("button", { name: "Kết nối", exact: true }).click(); await secondary.getByRole("button", { name: "Thành viên", exact: true }).click();
     await secondary.getByRole("cell", { name, exact: true }).waitFor();
     await button(true).click(); await button(false).waitFor();
     await ownerPage.getByText("Đã gỡ quyền quản trị công ty.", { exact: true }).waitFor();

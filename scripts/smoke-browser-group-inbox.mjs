@@ -49,7 +49,10 @@ export async function verifyOwnedGroupInbox(directory, fixture) {
       if (ready) break; await delay(500);
     }
     proof(ready); browser = await chromium.launch({ headless: true, timeout: 15000 });
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage();
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    // Drive sign-in explicitly; the direct provider redirect is proven separately in smoke-browser-oidc.
+    await context.addInitScript(() => { try { sessionStorage.setItem("aioffice-auto-login", "off"); } catch { /* Storage may be unavailable. */ } });
+    const page = await context.newPage();
     page.setDefaultTimeout(15000); page.setDefaultNavigationTimeout(20000);
     const callback = app + "/api/local/session/oidc/callback", query = `?companyId=${company}`;
     const get = async path => {
@@ -77,7 +80,7 @@ export async function verifyOwnedGroupInbox(directory, fixture) {
     }
     stage = "issued-code-session"; await signIn(true); const originalSid = await sid(); proof(originalSid && /^[A-Za-z0-9_-]{43}$/.test(originalSid));
     stage = "granted-source-metadata-private-positive";
-    await page.getByRole("button", { name: "Hộp thư nguồn", exact: true }).first().click(); await open();
+    await page.getByRole("button", { name: "Tin nhắn", exact: true }).first().click(); await open();
     const privatePath = `/api/local/group-sources/${fixture.sourceId}/messages/${fixture.messageId}${query}`;
     const value = await get(privatePath); proof(value.status === 200 && value.cache === "no-store" && value.body.text === fixture.text
       && value.body.source.tenantId === tenant && value.body.source.companyId === company && value.body.source.sourceBindingId === fixture.sourceId);
@@ -118,13 +121,13 @@ export async function verifyOwnedGroupInbox(directory, fixture) {
     const obsolete = await context.request.get(app + privatePath, { headers: { Cookie: oldCookies.filter(item => item.name.startsWith("aioffice_browser_")).map(item => `${item.name}=${item.value}`).join("; ") } });
     proof(obsolete.status() === 401);
     stage = "new-issued-session-private-restoration"; await signIn(false); proof(await sid() !== originalSid);
-    await page.getByRole("button", { name: "Hộp thư nguồn", exact: true }).first().click(); await open();
+    await page.getByRole("button", { name: "Tin nhắn", exact: true }).first().click(); await open();
     const artifacts = join(resolve(process.env.RUNNER_TEMP), "aioffice-browser-proof"); await mkdir(artifacts, { recursive: true });
     await page.screenshot({ path: join(artifacts, "group-inbox.png"), fullPage: true });
     stage = "mobile-direct-reader-navigation";
     await page.setViewportSize({ width: 375, height: 900 });
-    await page.getByRole("button", { name: "Trợ lý AI", exact: true }).click(); proof(await article().count() === 0);
-    await page.getByRole("button", { name: "Mở Hộp thư nguồn trên di động", exact: true }).click(); await open();
+    await page.getByRole("button", { name: "Trợ lý", exact: true }).click(); proof(await article().count() === 0);
+    await page.getByRole("button", { name: "Tin nhắn", exact: true }).click(); await open();
     proof(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await page.screenshot({ path: join(artifacts, "group-inbox-mobile.png"), fullPage: true });
     console.log("PASS owned group Chromium held actual private BFF body discarded on logout, old SID401 and fresh issued session/source read after reload without writes");

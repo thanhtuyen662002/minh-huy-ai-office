@@ -108,10 +108,13 @@ try {
   requireProof(ready);
   browser = await chromium.launch({ headless: true, timeout: 15_000 });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  // Drive sign-in explicitly; the direct provider redirect is proven separately in smoke-browser-oidc.
+  await context.addInitScript(() => { try { sessionStorage.setItem("aioffice-auto-login", "off"); } catch { /* Storage may be unavailable. */ } });
   const page = await context.newPage(); page.setDefaultTimeout(15_000); page.setDefaultNavigationTimeout(20_000);
   const company = manifest.AIOFFICE_COMPANY_ID, tenant = manifest.AIOFFICE_TENANT_ID, user = manifest.AIOFFICE_USER_ID;
   const query = `?companyId=${company}`;
   const waitForSource = async () => {
+    await page.getByRole("button", { name: "Trợ lý", exact: true }).click();
     const selector = page.getByRole("combobox", { name: "Nguồn dữ liệu", exact: true });
     await selector.waitFor();
     // Native select options have no rendered box while the popup is closed.
@@ -172,6 +175,20 @@ try {
   requireProof(!visibleCookies.includes(sid.value) && !visibleCookies.includes(binding.value));
   console.log("PASS actual Chromium provider-page Code/S256 sign-in, scoped Core authority and opaque HttpOnly cookies");
 
+  stage = "single-sign-in-page-redirect";
+  // A fresh signed-out browser goes straight to the provider page; the web shows no sign-in page of its own.
+  const directContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  try {
+    const directPage = await directContext.newPage(); directPage.setDefaultTimeout(15_000); directPage.setDefaultNavigationTimeout(20_000);
+    const directAuthorization = directPage.waitForRequest(request => request.url().startsWith(identity + "/")
+      && new URL(request.url()).pathname.endsWith("/protocol/openid-connect/auth"));
+    await directPage.goto(app);
+    const direct = new URL((await directAuthorization).url());
+    requireProof(direct.searchParams.get("response_type") === "code" && direct.searchParams.get("code_challenge_method") === "S256");
+    await directPage.locator("#username").waitFor({ state: "visible" });
+  } finally { await directContext.close(); }
+  console.log("PASS actual Chromium signed-out visit redirects directly to the provider Code/S256 page");
+
   stage = "company-source-member-access";
   const sources = await get("/api/local/data-sources" + query);
   const members = await get("/api/local/company/members" + query);
@@ -183,7 +200,7 @@ try {
   stage = "company-source-selector-ready";
   await waitForSource();
   stage = "company-member-panel-ready";
-  await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+  await page.getByRole("button", { name: "Kết nối", exact: true }).click(); await page.getByRole("button", { name: "Thành viên", exact: true }).click();
   await page.locator('section[aria-label="Thành viên công ty"] tbody tr').first().waitFor();
   const ownerMember = JSON.parse(members.text).items.find(item => item.userId === user);
   requireProof(await page.getByRole("button", { name: `Khóa quyền ${ownerMember.displayName}`, exact: true }).isDisabled());
@@ -528,12 +545,12 @@ try {
     sql(`USE AIOfficeLocal; UPDATE aioffice.CompanyMemberships SET IsActive=1 WHERE ${selectedScope};`);
     await page.reload(); await companyPicker.locator(`option[value="${selectedCompany}"]`).waitFor({ state: "attached" });
     stage = "original-member-panel-positive-before-switch";
-    await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await page.getByRole("button", { name: "Kết nối", exact: true }).click(); await page.getByRole("button", { name: "Thành viên", exact: true }).click();
     await page.getByRole("cell", { name: "Disposable browser member", exact: true }).waitFor();
     stage = "second-member-panel-after-switch";
     await switchCompany(selectedCompany);
     requireProof(await page.getByRole("cell", { name: "Disposable browser member", exact: true }).count() === 0);
-    await page.getByRole("button", { name: "Thành viên", exact: true }).first().click();
+    await page.getByRole("button", { name: "Kết nối", exact: true }).click(); await page.getByRole("button", { name: "Thành viên", exact: true }).click();
     await page.getByRole("cell", { name: "Disposable second-company member", exact: true }).waitFor();
     requireProof(await page.getByRole("cell", { name: "Disposable browser member", exact: true }).count() === 0);
     stage = "second-member-panel-clears-on-original-switch";
