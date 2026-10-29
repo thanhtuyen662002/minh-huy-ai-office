@@ -1927,6 +1927,59 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.KnowledgePageRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "CustomerName", "Title");
+
+                    b.ToTable("KnowledgePages", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_KnowledgePages_Times", "[CreatedAt] <= [UpdatedAt] AND DATEPART(tz,[CreatedAt])=0 AND DATEPART(tz,[UpdatedAt])=0");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.PlatformMetadataRecord", b =>
                 {
                     b.Property<string>("Key")
@@ -2932,6 +2985,15 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.GroupBindingRecord", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "BindingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.KnowledgePageRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

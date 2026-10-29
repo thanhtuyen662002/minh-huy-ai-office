@@ -12,6 +12,7 @@ import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CustomerErpPanel } from "./customer-erp-panel";
+import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { GroupInboxPanel } from "./group-inbox-panel";
@@ -693,7 +694,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   } else if (section === "kien-thuc") {
     content = <>
       <SectionHeader title="Kiến thức" description="Tài liệu khách hàng, quy trình xử lý và ghi chú gắn với công việc." />
-      <div className="rounded-xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">Mục này đang được xây dựng.</div>
+      {auth ? <KnowledgePanel key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized}
+        onOpenTickets={customer => { setTicketSearch(old => ({ customer, serial: old.serial + 1 })); setSurface("customer-requests"); }} /> : null}
     </>;
   } else if (section === "ket-noi") {
     const tab = connectionTabs.some(([key]) => key === surface) ? surface : "data-sources";

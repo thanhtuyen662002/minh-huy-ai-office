@@ -20,6 +20,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<CustomerRequestEventRecord> CustomerRequestEvents => Set<CustomerRequestEventRecord>();
     public DbSet<CustomerRequestCounterRecord> CustomerRequestCounters => Set<CustomerRequestCounterRecord>();
     public DbSet<CustomerRequestNonceRecord> CustomerRequestNonces => Set<CustomerRequestNonceRecord>();
+    public DbSet<KnowledgePageRecord> KnowledgePages => Set<KnowledgePageRecord>();
     public DbSet<PlatformMetadataRecord> PlatformMetadata => Set<PlatformMetadataRecord>();
     public DbSet<PlatformUserRecord> Users => Set<PlatformUserRecord>();
     public DbSet<CompanyRecord> Companies => Set<CompanyRecord>();
@@ -65,6 +66,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.HasDefaultSchema(DefaultSchema);
         modelBuilder.ConfigureBotChannels();
         modelBuilder.ConfigureCustomerRequests();
+        modelBuilder.ConfigureKnowledgePages();
         modelBuilder.Entity<ProtectedDataSourceSecretRecord>(entity =>
         {
             entity.ToTable("ProtectedDataSourceSecrets", table => table.HasCheckConstraint("CK_ProtectedDataSourceSecrets_Version", "[Version] > 0"));
