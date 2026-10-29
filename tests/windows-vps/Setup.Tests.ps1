@@ -275,6 +275,6 @@ Describe 'Sentinel secret leak regression' {
     It 'does not put the Redis password in container command arguments' {
         $overlay = [IO.File]::ReadAllText((Join-Path $repo 'compose.vps.yaml'))
         $overlay | Should Not Match '--requirepass|AIOFFICE_SESSION_REDIS_PASSWORD'
-        $overlay | Should Match '/run/secrets/session-redis.conf'
+        $overlay | Should Match '- /run/secrets/session_redis_config'
     }
 }
