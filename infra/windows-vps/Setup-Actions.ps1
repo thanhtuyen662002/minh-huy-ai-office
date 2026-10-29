@@ -152,11 +152,15 @@ function New-SetupShortcut {
     param([string]$RepositoryRoot, [string]$WebHost)
     $desktop = [Environment]::GetFolderPath('DesktopDirectory')
     $shell = New-Object -ComObject WScript.Shell
-    $update = $shell.CreateShortcut((Join-Path $desktop 'Cập nhật AI Office.lnk'))
+    # WScript.Shell cannot save to a non-ANSI file name ("Cập nhật" becomes "C?p nh?t").
+    # Save under an ASCII name, then rename with .NET, which is Unicode-safe.
+    $staging = Join-Path $desktop 'AIOffice-update.lnk'
+    $update = $shell.CreateShortcut($staging)
     $update.TargetPath = Join-Path $RepositoryRoot 'Setup-AIOffice.cmd'
     $update.Arguments = '--update'
     $update.WorkingDirectory = $RepositoryRoot
     $update.Save()
+    [IO.File]::Move($staging, (Join-Path $desktop 'Cập nhật AI Office.lnk'), $true)
     [IO.File]::WriteAllText((Join-Path $desktop 'Mở AI Office.url'), "[InternetShortcut]`r`nURL=https://$WebHost/`r`n")
 }
 
