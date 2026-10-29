@@ -46,6 +46,7 @@ type ChatMessage = {
 
 type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge";
 
+const questionIdeas = ["Doanh thu tháng này so với tháng trước?", "Khách nào đang nợ quá hạn trên 30 ngày?", "Có phiếu thu nào bất thường không?"];
 const sectionSurfaces: Record<WorkspaceSection, Surface> = {
   "tong-quan": "overview", "tin-nhan": "group-inbox", "cong-viec": "customer-requests",
   "tro-ly": "assistant", "kien-thuc": "knowledge", "ket-noi": "data-sources",
@@ -101,6 +102,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const [surface, setSurface] = useState<Surface>(initialSurface.current);
   const [sources, setSources] = useState<readonly LocalDataSource[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState("");
+  const question = useRef<HTMLTextAreaElement | null>(null);
   const [sourceLoading, setSourceLoading] = useState(false);
   const [connectionState, setConnectionState] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
@@ -789,8 +791,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
                   <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
                     {messages.map((message) => (
-                      <article key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+                      <article key={message.id} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                        {message.role === "user" ? null : <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-bold text-accent-foreground">AI</span>}
+                        <div className={`max-w-[88%] sm:max-w-[78%] ${message.role === "user" ? "rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground" : "pt-0.5 text-foreground"}`}>
                           <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
                           {message.checkpoint ? (
                             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-current/10 pt-2 text-[11px] opacity-65">
@@ -827,15 +830,20 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                         <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
                       </> : null}
                     </div> : null}
-                    <div className="flex items-end gap-3 rounded-2xl border bg-muted p-2 focus-within:border-ring">
+                    {readOnlySources.length && !messages.some(message => message.role === "user") ? <div className="mb-3 flex flex-wrap gap-2" aria-label="Câu hỏi gợi ý">
+                      {questionIdeas.map(idea => <button key={idea} type="button" onClick={() => { if (question.current) { question.current.value = idea; question.current.focus(); } }}
+                        className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{idea}</button>)}
+                    </div> : null}
+                    <div className="flex items-end gap-3 rounded-2xl border bg-card p-2 shadow-sm focus-within:border-ring">
                       <textarea
+                        ref={question}
                         name="question"
                         rows={2}
                         disabled={busy || submission.working || !!submission.pending && submission.pending.phase !== "accepted"}
                         placeholder="Hỏi AI Office về nguồn dữ liệu đã chọn…"
                         className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
                       />
-                      <button type="submit" disabled={busy || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40">
+                      <button type="submit" disabled={busy || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
                         Gửi
                       </button>
                     </div>

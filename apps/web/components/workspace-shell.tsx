@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { BookOpen, Bot, KanbanSquare, LayoutDashboard, LogOut, MessagesSquare, Moon, PanelLeftClose, PanelLeftOpen, Plug, Search, Sun } from "lucide-react";
+import { BookOpen, Bot, UserRound, KanbanSquare, LayoutDashboard, LogOut, MessagesSquare, Moon, PanelLeftClose, PanelLeftOpen, Plug, Search, Sun } from "lucide-react";
 import { workspaceSections, type WorkspaceSection } from "../lib/workspace-sections";
 import type { CompanyChoice } from "../lib/company-choices";
 
@@ -102,7 +102,7 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
           </nav>
           <div className={`hidden items-center gap-1 border-t border-sidebar-border p-3 lg:flex ${collapsed ? "flex-col" : ""}`}>
             <span className={`min-w-0 flex-1 items-center gap-2.5 ${collapsed ? "hidden" : "flex"}`}>
-              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{avatar(userName || accountLabel)}</span>
+              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{userName ? avatar(userName) : <UserRound className="size-4" />}</span>
               <span className="min-w-0"><span className="block truncate text-sm font-medium leading-tight">{userName || accountLabel}</span>
                 <span className="block truncate text-xs text-muted-foreground">{roleLabel}</span></span>
             </span>
