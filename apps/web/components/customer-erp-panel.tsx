@@ -99,7 +99,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   }
   const frozen = busy || pending !== null;
   const inputClass = "mt-1 w-full rounded-lg border border-slate-200 p-2 dark:border-white/15 dark:bg-slate-900";
-  return <section aria-label="Kết nối ERP khách hàng" className="mt-6 rounded-2xl border border-indigo-200 p-5 dark:border-indigo-400/25">
+  return <section aria-label="Kết nối ERP khách hàng" className="mt-6 rounded-xl border p-5">
     <h3 className="font-semibold">Kết nối ERP khách hàng</h3>
     <p className="mt-2 text-sm text-slate-500">Thêm database SQL Server bằng tài khoản chỉ đọc. Mật khẩu được mã hoá khi lưu và không hiển thị lại.</p>
     <ul className="mt-4 space-y-2">{sources.map(source => <li key={source.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-white/5">
@@ -127,7 +127,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       </div> : null}
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" disabled={frozen || !isErpConnection(fields)} onClick={() => void execute(false)} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Kiểm tra kết nối</button>
-        <button type="submit" disabled={busy || !tested || !name.trim()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">{busy ? "Đang xử lý…" : pending ? "Thử lại lưu" : "Lưu"}</button>
+        <button type="submit" disabled={busy || !tested || !name.trim()} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50">{busy ? "Đang xử lý…" : pending ? "Thử lại lưu" : "Lưu"}</button>
         <button type="button" disabled={busy} onClick={() => resetForm(null)} className="rounded-lg border px-4 py-2 text-sm">{editing || pending ? "Huỷ" : "Xoá thông tin"}</button>
         <button type="button" disabled={busy} onClick={() => void load()} className="rounded-lg border px-4 py-2 text-sm">Tải lại ERP khách hàng</button>
       </div>

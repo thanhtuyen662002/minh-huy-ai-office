@@ -8,6 +8,13 @@ export const requestButton = "inline-flex h-9 items-center justify-center gap-2 
 export const requestPrimaryButton = "inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 export const requestField = "h-9 rounded-lg border bg-card px-2.5 text-sm disabled:opacity-50";
 export const requestTime = (value: string) => new Date(value).toLocaleString("vi-VN");
+const relative = new Intl.RelativeTimeFormat("vi", { numeric: "auto" });
+export function requestAge(value: string) {
+  const minutes = Math.round((Date.parse(value) - Date.now()) / 60000);
+  if (Math.abs(minutes) < 60) return relative.format(minutes, "minute");
+  if (Math.abs(minutes) < 60 * 24) return relative.format(Math.round(minutes / 60), "hour");
+  return relative.format(Math.round(minutes / 60 / 24), "day");
+}
 export const statusTone: Record<RequestStatus, { chip: string; dot: string }> = {
   new: { chip: "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200", dot: "bg-indigo-500" },
   needs_clarification: { chip: "bg-amber-50 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200", dot: "bg-amber-500" },
