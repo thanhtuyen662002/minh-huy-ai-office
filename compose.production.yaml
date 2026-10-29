@@ -69,6 +69,10 @@ services:
       AIOffice__Authentication__Audience: ${AIOFFICE_AUDIENCE:?set AIOFFICE_AUDIENCE from the approved identity provider}
       AIOFFICE_DB_CONNECTION: ${AIOFFICE_DB_CONNECTION:?set AIOFFICE_DB_CONNECTION from the approved runtime secret source}
       AIOFFICE_SECRET_ENCRYPTION_KEY: ${AIOFFICE_SECRET_ENCRYPTION_KEY:?set a shared base64 32-byte key from the approved secret source}
+      # Kênh & Bot admin (#302): off unless AIOFFICE_BOT_CHANNELS_ENABLED=true; uses its own 32-byte key.
+      AIOffice__BotChannels__Enabled: ${AIOFFICE_BOT_CHANNELS_ENABLED:-false}
+      AIOffice__BotChannels__EncryptionKeySecretRef: secretref://env/AIOFFICE_BOT_ENCRYPTION_KEY
+      AIOFFICE_BOT_ENCRYPTION_KEY: ${AIOFFICE_BOT_ENCRYPTION_KEY:-}
       PILOT_ERP_CONNECTION: ${PILOT_ERP_CONNECTION:?set PILOT_ERP_CONNECTION from the approved pilot secret source}
       RabbitMqWork__HostName: rabbitmq
       RabbitMqWork__Port: 5672

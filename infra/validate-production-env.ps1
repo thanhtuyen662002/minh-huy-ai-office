@@ -92,6 +92,23 @@ try {
     if ($null -ne $encryptionKeyBytes) { [Array]::Clear($encryptionKeyBytes, 0, $encryptionKeyBytes.Length) }
 }
 
+if ($values.ContainsKey("AIOFFICE_BOT_CHANNELS_ENABLED") -and $values["AIOFFICE_BOT_CHANNELS_ENABLED"] -cnotin @("true", "false")) {
+    throw "AIOFFICE_BOT_CHANNELS_ENABLED must be true or false."
+}
+if ($values["AIOFFICE_BOT_CHANNELS_ENABLED"] -ceq "true") {
+    try {
+        $botKeyBytes = [Convert]::FromBase64String($values["AIOFFICE_BOT_ENCRYPTION_KEY"])
+        if ($botKeyBytes.Length -ne 32) { throw "Invalid key length." }
+    } catch {
+        throw "AIOFFICE_BOT_ENCRYPTION_KEY must be base64 encoding exactly 32 random bytes when bot channels are enabled."
+    } finally {
+        if ($null -ne $botKeyBytes) { [Array]::Clear($botKeyBytes, 0, $botKeyBytes.Length) }
+    }
+    if ($values["AIOFFICE_BOT_ENCRYPTION_KEY"] -ceq $values["AIOFFICE_SECRET_ENCRYPTION_KEY"]) {
+        throw "AIOFFICE_BOT_ENCRYPTION_KEY must differ from AIOFFICE_SECRET_ENCRYPTION_KEY."
+    }
+}
+
 function Require-HttpsOrigin {
     param([string]$Name)
     Require-ProductionValue $Name
