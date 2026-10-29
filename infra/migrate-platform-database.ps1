@@ -24,13 +24,18 @@ if (-not (Test-Path -LiteralPath $EnvironmentFile)) {
     throw "Missing $EnvironmentFile. Copy .env.production.example and populate it from approved secret sources."
 }
 
+# The runtime login must not own the schema (Core.Api's startup permission proof rejects
+# db_owner), so migrations prefer a separate owner connection when one is configured.
 $databaseConnection = $null
-foreach ($line in Get-Content -LiteralPath $EnvironmentFile) {
-    $trimmed = $line.Trim()
-    if ($trimmed -and -not $trimmed.StartsWith("#") -and $trimmed.StartsWith("AIOFFICE_DB_CONNECTION=")) {
-        $databaseConnection = $trimmed.Substring("AIOFFICE_DB_CONNECTION=".Length).Trim()
-        break
+foreach ($name in @("AIOFFICE_DB_MIGRATION_CONNECTION", "AIOFFICE_DB_CONNECTION")) {
+    foreach ($line in Get-Content -LiteralPath $EnvironmentFile) {
+        $trimmed = $line.Trim()
+        if ($trimmed -and -not $trimmed.StartsWith("#") -and $trimmed.StartsWith("$name=")) {
+            $databaseConnection = $trimmed.Substring("$name=".Length).Trim()
+            break
+        }
     }
+    if ($databaseConnection) { break }
 }
 
 $missingDatabaseConnection = [string]::IsNullOrWhiteSpace($databaseConnection)

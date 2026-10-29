@@ -13,7 +13,8 @@ services:
     command:
       - redis-server
       # Password is read from a mounted file, never redis-server's process argv.
-      - /run/secrets/session-redis.conf
+      # Compose mounts a file secret at /run/secrets/<secret name>.
+      - /run/secrets/session_redis_config
     secrets:
       - session_redis_config
     volumes:
