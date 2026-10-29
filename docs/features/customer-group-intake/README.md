@@ -75,6 +75,32 @@ Company members use the existing authenticated portal API and `X-AIOffice-Compan
 
 Portal responses are `no-store`. Inactive, revoked or foreign membership returns 403; unavailable ticket codes within the authorized company return 404. Bounded operational failures return 503; reconcile/retry the same summary key with fresh signature headers. No UI or bot changes are included.
 
+### Status digest for the bot (#313)
+
+`GET /internal/customer-requests/digest` (optionally `?since=<UTC Unix seconds>`) lets the same enrolled service read a ticket status digest to post into the internal technical group. It uses the same headers, key domain and nonce rules as ingestion, signs method `GET`, the exact path including the `since` query when present, and the SHA256 of an empty body. No other query field is accepted. `since` defaults to 24 hours ago and must be in the past and at most 31 days old. The route is off with the bridge (404).
+
+Only tickets of the service's company and allowed source groups are included. Example response:
+
+```json
+{
+  "generatedAt": "2026-10-29T10:30:00+00:00",
+  "since": "2026-10-28T10:30:00+00:00",
+  "counts": { "new": 2, "needs_clarification": 1, "in_progress": 3, "done": 5, "rejected": 0 },
+  "open": [
+    { "code": "YC-0003", "customerName": "Customer A", "sourceGroupName": "Khách hàng A", "summary": "Không lưu được đơn hàng…",
+      "status": "in_progress", "assigneeName": "Minh", "createdAt": "2026-10-26T02:00:00+00:00", "ageDays": 3 }
+  ],
+  "openTotal": 6,
+  "closedSince": [
+    { "code": "YC-0001", "customerName": "Customer A", "sourceGroupName": "Khách hàng A", "summary": "…", "status": "done",
+      "assigneeName": null, "closedAt": "2026-10-29T08:00:00+00:00" }
+  ],
+  "closedTotal": 1
+}
+```
+
+`open` lists not-done, not-rejected tickets oldest first; `closedSince` lists tickets currently done or rejected whose last such status change happened since `since`, newest first. Each list holds at most 50 entries (totals give the full counts), summaries are cut to 120 characters, and no evidence quotes or message IDs are returned.
+
 ## Tài liệu
 
 - [OWNER_CORRECTION_AUTO_IT.md](OWNER_CORRECTION_AUTO_IT.md): quyết định sản phẩm và luồng chính.

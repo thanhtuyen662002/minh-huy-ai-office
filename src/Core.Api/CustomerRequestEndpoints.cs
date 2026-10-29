@@ -28,6 +28,7 @@ internal static class CustomerRequestEndpoints
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddScoped<CustomerRequestAuthenticator>();
         builder.Services.AddScoped<CustomerRequestIngress>();
+        builder.Services.AddScoped<CustomerRequestDigestReader>();
         return enabled;
     }
 
@@ -36,6 +37,7 @@ internal static class CustomerRequestEndpoints
         if (!enabled)
         {
             app.MapPost(CustomerRequestAuthenticator.Path, () => Results.NotFound());
+            app.MapGet(CustomerRequestDigestReader.Path, () => Results.NotFound());
             app.MapGet(PortalPath, () => Results.NotFound());
             app.MapGet(PortalPath + "/{code}", () => Results.NotFound());
             app.MapPatch(PortalPath + "/{code}", () => Results.NotFound());
@@ -49,6 +51,17 @@ internal static class CustomerRequestEndpoints
                 var bytes = await ReadBody(request, CustomerRequestJson.MaximumBodyBytes, ct);
                 try { return Results.Ok(await ingress.AcceptAsync(signature, bytes, ct)); }
                 finally { CryptographicOperations.ZeroMemory(bytes); }
+            }));
+        app.MapGet(CustomerRequestDigestReader.Path, (HttpRequest request, [FromServices] CustomerRequestDigestReader digest, CancellationToken ct) =>
+            Execute(async () =>
+            {
+                if (request.ContentLength > 0 || request.Headers.TransferEncoding.Count > 0) throw new ArgumentException();
+                if (request.Query.Any(x => x.Key != "since" || x.Value.Count != 1)) throw new ArgumentException();
+                long? since = request.Query.ContainsKey("since") ? long.TryParse(request.Query["since"], NumberStyles.None, CultureInfo.InvariantCulture, out var value)
+                    ? value : throw new ArgumentException() : null;
+                // Refuse aliases/escaping so the exact signed target is unambiguous.
+                if (request.Path + request.QueryString != CustomerRequestDigestReader.Target(since)) throw new ArgumentException();
+                return Results.Ok(await digest.ReadAsync(Signature(request), since, ct));
             }));
 
         if (!portalAvailable)
