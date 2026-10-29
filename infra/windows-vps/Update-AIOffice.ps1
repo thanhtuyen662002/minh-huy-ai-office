@@ -57,7 +57,9 @@ try {
 
     if ($Phase -in @('All', 'Deploy')) {
         Initialize-SetupRedisConfiguration $EnvironmentFile
-        & (Join-Path $RepositoryRoot "infra\deploy-backend.ps1") -EnvironmentFile $EnvironmentFile -AdditionalComposeFile "compose.vps.yaml"
+        $overlays = @("compose.vps.yaml")
+        if (Test-Path -LiteralPath $tunnelToken -PathType Leaf) { $overlays += "compose.vps-tunnel.yaml" }
+        & (Join-Path $RepositoryRoot "infra\deploy-backend.ps1") -EnvironmentFile $EnvironmentFile -AdditionalComposeFile $overlays
     }
 }
 finally {

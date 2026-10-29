@@ -1,0 +1,16 @@
+# Cloudflare Tunnel mode overlay, applied after compose.vps.yaml by Update-AIOffice.ps1
+# when the tunnel token file exists.
+#
+# In tunnel mode IIS only has self-signed origin certificates, so server-side calls to
+# the public HTTPS names must not be pinned to this host (host-gateway): TLS would fail
+# with DEPTH_ZERO_SELF_SIGNED_CERT and browser sign-in could not be verified. Resolve
+# the public names normally instead; Cloudflare presents a publicly trusted certificate.
+services:
+  web:
+    extra_hosts: !reset []
+
+  core-api:
+    extra_hosts: !reset []
+
+  agent-worker:
+    extra_hosts: !reset []

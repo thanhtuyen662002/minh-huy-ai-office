@@ -107,7 +107,10 @@ a Cloudflare Tunnel instead of Let's Encrypt:
    creates self-signed SNI origin bindings in IIS
    (`Configure-TunnelOriginCertificates.ps1`), and starts `cloudflared` from
    [`compose.tunnel.yaml`](../compose.tunnel.yaml) (its own Compose project,
-   so application deploys do not remove it). `Update-AIOffice.ps1` keeps it up.
+   so application deploys do not remove it). `Update-AIOffice.ps1` keeps it up
+   and adds [`compose.vps-tunnel.yaml`](../compose.vps-tunnel.yaml), so
+   server-side OIDC calls reach the public names through Cloudflare instead of
+   the self-signed IIS origin.
 
 Through the tunnel IIS sees connections from Docker's gateway, not the office
 LAN, so the LAN-only Keycloak administration rule cannot identify the real
