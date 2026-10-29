@@ -10,8 +10,15 @@ public sealed class CustomerRequestGroupGrantTests
     private static async Task Select(CustomerRequestFixture fixture, string group, Guid? company = null)
     {
         await using var db = fixture.Database();
-        db.BotCustomerGroups.Add(new() { TenantId = fixture.Authority.TenantId, CompanyId = company ?? fixture.Authority.CompanyId, Channel = "whatsapp",
-            ExternalId = group, DisplayName = "Khách WhatsApp", CustomerName = "Công ty WA" });
+        db.BotCustomerGroups.Add(new()
+        {
+            TenantId = fixture.Authority.TenantId,
+            CompanyId = company ?? fixture.Authority.CompanyId,
+            Channel = "whatsapp",
+            ExternalId = group,
+            DisplayName = "Khách WhatsApp",
+            CustomerName = "Công ty WA"
+        });
         await db.SaveChangesAsync();
     }
 
