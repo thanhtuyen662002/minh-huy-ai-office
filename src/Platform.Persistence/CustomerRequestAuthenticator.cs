@@ -6,7 +6,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence;
 
 public sealed record CustomerRequestSignature(Guid ServiceId, long Timestamp, Guid Nonce, string SignatureHex);
 public sealed record CustomerRequestServiceBinding(Guid ServiceId, Guid TenantId, Guid CompanyId,
-    string SecretRef, IReadOnlyList<string> AllowedSourceGroupExternalIds);
+    string SecretRef, IReadOnlyList<string> AllowedSourceGroupExternalIds, bool GrantBotChannelGroups = false);
 
 public sealed class CustomerRequestServiceDirectory
 {
@@ -18,7 +18,8 @@ public sealed class CustomerRequestServiceDirectory
         {
             if (service.ServiceId == Guid.Empty || service.TenantId == Guid.Empty || service.CompanyId == Guid.Empty ||
                 !SecretReference.TryParse(service.SecretRef, out var reference) || reference!.Provider != "env" ||
-                service.AllowedSourceGroupExternalIds is null || service.AllowedSourceGroupExternalIds.Count is < 1 or > 1000)
+                service.AllowedSourceGroupExternalIds is null || service.AllowedSourceGroupExternalIds.Count > 1000 ||
+                service.AllowedSourceGroupExternalIds.Count < 1 && !service.GrantBotChannelGroups)
                 throw new InvalidOperationException("Invalid customer request service configuration.");
             foreach (var group in service.AllowedSourceGroupExternalIds) CustomerRequestJson.Text(group, 200, opaque: true);
             if (service.AllowedSourceGroupExternalIds.Distinct(StringComparer.Ordinal).Count() != service.AllowedSourceGroupExternalIds.Count ||
@@ -28,7 +29,8 @@ public sealed class CustomerRequestServiceDirectory
     }
 
     internal CustomerRequestServiceBinding Require(Guid serviceId, string group) =>
-        bindings.TryGetValue(serviceId, out var binding) && binding.AllowedSourceGroupExternalIds.Contains(group, StringComparer.Ordinal)
+        bindings.TryGetValue(serviceId, out var binding) &&
+            (binding.GrantBotChannelGroups || binding.AllowedSourceGroupExternalIds.Contains(group, StringComparer.Ordinal))
             ? binding : throw Denied();
 
     internal CustomerRequestServiceBinding Require(Guid serviceId) =>

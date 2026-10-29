@@ -22,7 +22,8 @@ internal static class CustomerRequestEndpoints
                 !Guid.TryParse(section["CompanyId"], out var company))
                 throw new InvalidOperationException("Invalid customer request service configuration.");
             return new CustomerRequestServiceBinding(service, tenant, company, section["SecretRef"] ?? "",
-                section.GetSection("AllowedSourceGroupExternalIds").GetChildren().Select(x => x.Value ?? "").ToArray());
+                section.GetSection("AllowedSourceGroupExternalIds").GetChildren().Select(x => x.Value ?? "").ToArray(),
+                section["GrantBotChannelGroups"] == "true");
         }).ToArray();
         builder.Services.AddSingleton(new CustomerRequestServiceDirectory(bindings));
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
