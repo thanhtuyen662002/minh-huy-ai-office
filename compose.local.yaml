@@ -45,6 +45,9 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${AIOFFICE_IDENTITY_ADMIN_PASSWORD:?generate local configuration first}
       KC_HOSTNAME: http://127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_SPI_THEME__DEFAULT: ${AIOFFICE_KEYCLOAK_LOGIN_THEME:-aioffice}
+    volumes:
+      - ./infra/keycloak/themes/aioffice:/opt/keycloak/themes/aioffice:ro
     ports:
       - "127.0.0.1:${AIOFFICE_IDENTITY_PORT:-8081}:8080"
     depends_on:

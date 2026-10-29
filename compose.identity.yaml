@@ -23,6 +23,8 @@ services:
       KC_METRICS_ENABLED: "true"
       KC_HTTP_MANAGEMENT_SCHEME: http
       KC_CACHE: local
+      # Sign-in pages in AI Office style; set AIOFFICE_KEYCLOAK_LOGIN_THEME=keycloak to go back to the stock pages.
+      KC_SPI_THEME__DEFAULT: ${AIOFFICE_KEYCLOAK_LOGIN_THEME:-aioffice}
       AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN: ${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN:?set HTTPS web origin}
       AIOFFICE_BROWSER_OIDC_CLIENT_ID: ${AIOFFICE_BROWSER_OIDC_CLIENT_ID:-aioffice-browser}
       AIOFFICE_AUDIENCE: ${AIOFFICE_AUDIENCE:?set API audience}
@@ -32,6 +34,7 @@ services:
       - ./infra/keycloak/start.sh:/opt/aioffice/start.sh:ro
       - ./infra/keycloak/healthcheck.sh:/opt/aioffice/healthcheck.sh:ro
       - ./infra/keycloak/aioffice-realm.json:/opt/keycloak/data/import/aioffice-realm.json:ro
+      - ./infra/keycloak/themes/aioffice:/opt/keycloak/themes/aioffice:ro
     secrets:
       - keycloak_provisioning_client_secret
       - keycloak_db_username
