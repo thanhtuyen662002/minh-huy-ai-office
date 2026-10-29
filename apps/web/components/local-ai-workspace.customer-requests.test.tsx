@@ -14,7 +14,7 @@ it("opens tracker for the shell-selected company on mobile and cancels private r
     if (url.startsWith("/api/local/customer-requests?")) {
       expect(new URL(url, "http://web.test").searchParams.get("companyId")).toBe(company);
       signal = init?.signal;
-      return held ? new Promise<Response>(resolve => { release = resolve; }) : Response.json({ items: [requestTicket], offset: 0, limit: 25, hasMore: false });
+      return held ? new Promise<Response>(resolve => { release = resolve; }) : Response.json({ items: [requestTicket], offset: 0, limit: 100, hasMore: false });
     }
     throw new Error("Unexpected route");
   });
@@ -29,7 +29,7 @@ it("opens tracker for the shell-selected company on mobile and cancels private r
   await waitFor(() => expect(release).toBeTruthy()); const pendingSignal = signal;
   fireEvent.click(screen.getByRole("button", { name: "Đăng xuất" })); await screen.findByText("Local Pilot");
   expect(pendingSignal?.aborted).toBe(true);
-  await act(async () => release(Response.json({ items: [requestTicket], offset: 0, limit: 25, hasMore: false })));
+  await act(async () => release(Response.json({ items: [requestTicket], offset: 0, limit: 100, hasMore: false })));
   expect(screen.queryByRole("region", { name: "Yêu cầu khách hàng" })).toBeNull();
   expect(screen.queryByText(requestTicket.customerName)).toBeNull();
 });

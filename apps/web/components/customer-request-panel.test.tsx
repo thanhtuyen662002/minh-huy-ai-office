@@ -4,6 +4,10 @@ import { CustomerRequestPanel } from "./customer-request-panel";
 import { assigneeUser, memberDirectory, requestCompany as company, requestDetail, requestTenant, requestTicket, requestUser } from "../lib/customer-request-test-fixture";
 import { requestConflict } from "../lib/customer-requests";
 
+const page = (url: string, items: unknown[], hasMore = false) => {
+  const query = new URL(url, "http://web.test").searchParams;
+  return { items, offset: Number(query.get("offset")), limit: Number(query.get("limit")), hasMore };
+};
 type Override = (url: string, init?: RequestInit) => Response | Promise<Response> | undefined;
 function fixture(override: Override = () => undefined) {
   const active = { current: true }, onUnauthorized = vi.fn(), validate = vi.fn(async () => active.current);
@@ -19,11 +23,15 @@ function fixture(override: Override = () => undefined) {
       return Response.json(ticket);
     }
     return Response.json(url.includes(`/${requestTicket.code}?`) ? { ...detail, request: ticket }
-      : { items: [ticket], offset: Number(new URL(url, "http://web.test").searchParams.get("offset")), limit: 25, hasMore: false });
+      : page(url, [ticket]));
   });
   const props = { tenantId: requestTenant, companyId: company, userId: requestUser, generation: 1,
     isCurrent: () => active.current, validate, request, onUnauthorized };
   return { ...render(<CustomerRequestPanel {...props} />), props, request, active, validate, onUnauthorized };
+}
+async function listView() {
+  fireEvent.click(await screen.findByRole("button", { name: "YC-0001" }).then(() => screen.getByRole("button", { name: "Danh sách" })));
+  return screen.findByRole("table");
 }
 async function open() {
   fireEvent.click(await screen.findByRole("button", { name: "YC-0001" }));
@@ -32,7 +40,7 @@ async function open() {
 
 it("renders list and evidence-backed AI detail with Vietnamese labels through reads only", async () => {
   const view = fixture();
-  const table = await screen.findByRole("table");
+  const table = await listView();
   expect(within(table).getAllByRole("columnheader").map(item => item.textContent)).toEqual([
     "Mã phiếu", "Khách hàng", "Nhóm Zalo", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo",
   ]);
@@ -55,11 +63,12 @@ it("filters by status and customer, pages newest-first on the server, and resets
     id: `60000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}` }));
   const view = fixture(url => {
     if (url.startsWith("/api/local/customer-requests?")) {
-      const offset = Number(new URL(url, "http://web.test").searchParams.get("offset"));
-      return Response.json({ items, offset, limit: 25, hasMore: offset === 0 });
+      const query = new URL(url, "http://web.test").searchParams;
+      if (query.get("limit") === "100") return Response.json(page(url, [requestTicket]));
+      return Response.json(page(url, items, query.get("offset") === "0"));
     }
   });
-  await screen.findByRole("table");
+  await listView();
   fireEvent.change(screen.getByLabelText("Lọc trạng thái"), { target: { value: "needs_clarification" } });
   fireEvent.change(screen.getByLabelText("Khách hàng"), { target: { value: "  Minh & An  " } });
   fireEvent.click(screen.getByRole("button", { name: "Lọc phiếu" }));
@@ -123,11 +132,12 @@ it("loads later directory pages and only offers active company members", async (
   expect(screen.getByRole("option", { name: "Kỹ thuật 99" })).toBeTruthy();
 });
 it("supports loading, empty, missing, forbidden and recoverable error states", async () => {
-  let release!: (response: Response) => void;
-  const view = fixture(url => url.startsWith("/api/local/customer-requests?") ? new Promise(resolve => { release = resolve; }) : undefined);
+  const releases: (() => void)[] = [];
+  const view = fixture(url => url.startsWith("/api/local/customer-requests?")
+    ? new Promise(resolve => { releases.push(() => resolve(Response.json(page(url, [])))); }) : undefined);
   expect(screen.getByText("Đang tải yêu cầu khách hàng…")).toBeTruthy();
-  await waitFor(() => expect(release).toBeTruthy());
-  await act(async () => release(Response.json({ items: [], offset: 0, limit: 25, hasMore: false })));
+  await waitFor(() => expect(releases).toHaveLength(4));
+  await act(async () => releases.forEach(release => release()));
   await screen.findByText(/Chưa có yêu cầu khách hàng/); view.unmount();
   for (const status of [403, 404, 503]) {
     const next = fixture(() => Response.json({ private: "PRIVATE" }, { status }));
@@ -148,13 +158,13 @@ it("aborts and discards late detail when company, user or tenant changes", async
   const foreign = "88888888-8888-4888-8888-888888888888";
   view.rerender(<CustomerRequestPanel {...view.props} tenantId={foreign} companyId={foreign} userId={foreign} generation={2}
     request={async (_generation, url) => Response.json(url.startsWith("/api/local/company/members?") ? { ...memberDirectory, companyId: foreign }
-      : { items: [], offset: 0, limit: 25, hasMore: false })} />);
+      : page(url, []))} />);
   expect(signal?.aborted).toBe(true);
   await act(async () => release(Response.json(requestDetail)));
   await screen.findByText(/Chưa có yêu cầu khách hàng/); expect(screen.queryByRole("article")).toBeNull();
 });
 it("does not publish a response if final session validation fails", async () => {
-  const view = fixture(url => url.includes("/customer-requests?") ? (view.active.current = false, Response.json({ items: [requestTicket], offset: 0, limit: 25, hasMore: false })) : undefined);
+  const view = fixture(url => url.includes("/customer-requests?") ? (view.active.current = false, Response.json(page(url, [requestTicket]))) : undefined);
   await waitFor(() => expect(view.active.current).toBe(false)); expect(screen.queryByRole("table")).toBeNull();
 });
 it("serializes explicit saves and aborts the pending write on unmount", async () => {
@@ -186,4 +196,41 @@ it("shows the tech-group Zalo member who changed a status", async () => {
   await open();
   expect(screen.getByText("Đổi trạng thái: Mới → Xong")).toBeTruthy();
   expect(screen.getByText(/Nhóm Kỹ thuật Zalo: Minh Kỹ thuật/)).toBeTruthy();
+});it("shows a board with one column per open status and places tickets by their own status", async () => {
+  const doing = { ...requestTicket, code: "YC-0002", id: "55555555-5555-4555-8555-555555555556", status: "in_progress" as const };
+  const view = fixture(url => url.startsWith("/api/local/customer-requests?") ? Response.json(page(url,
+    new URL(url, "http://web.test").searchParams.get("status") === "in_progress" ? [doing] : [requestTicket])) : undefined);
+  await screen.findByRole("button", { name: "YC-0001" });
+  const statuses = view.request.mock.calls.filter(([, url]) => url.startsWith("/api/local/customer-requests?"))
+    .map(([, url]) => new URL(url, "http://web.test").searchParams.get("status"));
+  expect(statuses).toEqual(["new", "needs_clarification", "in_progress", "done"]);
+  expect(within(screen.getByRole("region", { name: "Cột Mới" })).getAllByRole("button").map(item => item.getAttribute("aria-label"))).toEqual(["YC-0001"]);
+  expect(within(screen.getByRole("region", { name: "Cột Đang xử lý" })).getByRole("button", { name: "YC-0002" })).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "Cột Xong" })).getByText("Không có phiếu")).toBeTruthy();
+});
+it("moves a ticket by dropping it on another column with its RowVersion", async () => {
+  const view = fixture();
+  const card = await screen.findByRole("button", { name: "YC-0001" });
+  const target = screen.getByRole("region", { name: "Cột Đang xử lý" });
+  fireEvent.dragStart(card, { dataTransfer: { effectAllowed: "" } });
+  fireEvent.dragOver(target); fireEvent.drop(target);
+  await screen.findByText("Đã lưu thay đổi.");
+  expect(view.request.mock.calls.filter(([, , init]) => init?.method === "PATCH").map(([, , init]) => JSON.parse(String(init!.body))))
+    .toEqual([{ rowVersion: requestTicket.rowVersion, status: "in_progress" }]);
+  fireEvent.dragStart(await screen.findByRole("button", { name: "YC-0001" }), { dataTransfer: { effectAllowed: "" } });
+  fireEvent.drop(screen.getByRole("region", { name: "Cột Mới" }));
+  expect(view.request.mock.calls.filter(([, , init]) => init?.method === "PATCH")).toHaveLength(1);
+});
+it("opens detail beside the board, applies quick status actions and closes without reloading the board", async () => {
+  const view = fixture(); await open();
+  expect(screen.getByRole("region", { name: "Cột Mới" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Bắt đầu xử lý" }));
+  await screen.findByText("Đổi trạng thái: Mới → Đang xử lý");
+  expect(JSON.parse(String(view.request.mock.calls.find(([, , init]) => init?.method === "PATCH")![2]!.body)))
+    .toEqual({ rowVersion: requestTicket.rowVersion, status: "in_progress" });
+  const reads = view.request.mock.calls.length;
+  fireEvent.click(screen.getByRole("button", { name: "Đóng chi tiết phiếu" }));
+  expect(screen.queryByRole("article")).toBeNull();
+  expect(view.request.mock.calls).toHaveLength(reads);
+  expect(within(screen.getByRole("region", { name: "Cột Đang xử lý" })).getByRole("button", { name: "YC-0001" })).toBeTruthy();
 });
