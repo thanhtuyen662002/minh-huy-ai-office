@@ -497,6 +497,8 @@ try {
       Cookie: oldAuthority.filter(item => item.name.startsWith("aioffice_browser_")).map(item => `${item.name}=${item.value}`).join("; "),
     } }); requireProof(obsolete.status() === 401);
     stage = "second-company-private-state-and-data-isolation";
+    // The provider callback lands on Tổng quan; open Trợ lý to inspect the composer.
+    await page.getByRole("button", { name: "Trợ lý", exact: true }).click();
     requireProof(await page.getByText(switchMessage, { exact: true }).count() === 0
       && (await page.locator('textarea[name="question"]').inputValue()) === ""
       && await page.locator(`option[value="${source.id}"]`).count() === 0);
@@ -512,6 +514,7 @@ try {
     await page.reload(); await companyPicker.waitFor();
     requireProof(await companyPicker.inputValue() === selectedCompany && (await get("/api/local/session" + secondQuery)).status === 200);
     stage = "provider-company-switch-back-original";
+    await page.getByRole("button", { name: "Trợ lý", exact: true }).click();
     await page.locator('textarea[name="question"]').fill("Disposable second-company private draft");
     await switchCompany(company); await waitForSource();
     requireProof((await page.locator('textarea[name="question"]').inputValue()) === ""
