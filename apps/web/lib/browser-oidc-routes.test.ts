@@ -60,7 +60,8 @@ async function refusal(response: Response, status: number) {
   expect(response.headers.get("referrer-policy")).toBe("no-referrer");
   if (response.headers.get("content-type")?.startsWith("text/html")) {
     const page = await response.text();
-    expect(page).toContain("Phiên đăng nhập đã hết hạn"); expect(page).toContain('content="3;url=/"');
+    if (page.includes('data-sign-in="refused"')) expect(page).not.toContain("url=/");
+    else { expect(page).toContain("Phiên đăng nhập đã hết hạn"); expect(page).toContain('content="3;url=/"'); }
   } else expect(await response.json()).toEqual({ error: "Browser sign-in could not be verified." });
 }
 function useLocalSettings() {
@@ -178,6 +179,16 @@ describe("browser preparation and start", () => {
     for (const cookie of cookies) for (const flag of ["HttpOnly", "Secure", "SameSite=lax", "Path=/"]) expect(cookie).toContain(flag);
     expect(mocks.exchange).not.toHaveBeenCalled(); expect(mocks.authorize).not.toHaveBeenCalled();
   });
+  it("asks the provider not to show a page only for a silent renewal start", async () => {
+    pending();
+    const silent = new URL((await (await start(new Request(post().url + "?prompt=none", post()))).json()).authorizationUrl);
+    expect(silent.searchParams.getAll("prompt")).toEqual(["none"]);
+    expect(new URL((await (await start(post())).json()).authorizationUrl).searchParams.has("prompt")).toBe(false);
+    for (const query of ["?prompt=login", "?prompt=none&prompt=none", "?x=1"]) {
+      await refusal(await start(new Request(post().url + query, post())), 400);
+    }
+    expect(sessions.begin).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("browser callback authority and publication", () => {
@@ -238,6 +249,19 @@ describe("browser callback authority and publication", () => {
     expect(cookie).not.toContain(secretToken); expect(cookie).not.toContain(secretSubject); expect(cookie).not.toContain(companyId);
     expect(await response.text()).not.toContain(secretToken);
     expect(sessions.complete).toHaveBeenCalledWith(binding, transaction, "private-claim", expect.objectContaining({ accessToken: secretToken, companyId }));
+  });
+  it("answers a silent renewal frame with a marker page and the same session cookie, and refusals without a redirect", async () => {
+    pending(); const framed = incoming(); framed.headers.set("Sec-Fetch-Dest", "iframe");
+    const response = await callback(framed);
+    expect(response.status).toBe(200); expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("content-security-policy")).toBe("frame-ancestors 'self'");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.text()).toContain('data-sign-in="ok"');
+    expect(response.headers.get("set-cookie")).toContain(`${browserSessionCookieName(settings)}=${sid}`);
+    const denied = incoming(`error=login_required&state=${transaction.state}`); denied.headers.set("Sec-Fetch-Dest", "iframe");
+    const refused = await callback(denied);
+    expect(refused.headers.get("content-security-policy")).toBe("frame-ancestors 'self'");
+    expect(await refused.clone().text()).toContain('data-sign-in="refused"'); await refusal(refused, 401);
   });
   it("pins provider callback/Core origin despite internal request URL and later environment changes", async () => {
     pending(); vi.stubEnv("AIOFFICE_BROWSER_CORE_API_ORIGIN", "https://untrusted-later.example.test");

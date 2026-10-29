@@ -23,6 +23,7 @@ import { useTaskSubmission } from "./use-task-submission";
 import { trimSubmissionQuestion } from "../lib/task-submission-intent";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
+import { renewBrowserSessionSilently, SILENT_RENEW_INTERVAL_MS } from "../lib/browser-silent-renew";
 import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
 import { workspaceSectionFromPath, workspaceSectionPath, type WorkspaceSection } from "../lib/workspace-sections";
 import { SectionHeader, SectionTabs, WorkspaceShell } from "./workspace-shell";
@@ -61,9 +62,12 @@ function surfaceSection(surface: Surface): WorkspaceSection {
 // Limits automatic redirects so a failing provider callback cannot loop.
 // Browser smoke scripts set "aioffice-auto-login" to "off" to drive sign-in explicitly.
 const AUTO_LOGIN_KEY = "aioffice-auto-login-at";
+function autoLoginAllowed() {
+  try { return window.sessionStorage.getItem("aioffice-auto-login") !== "off"; } catch { return false; }
+}
 function claimAutoLogin() {
   try {
-    if (window.sessionStorage.getItem("aioffice-auto-login") === "off") return false;
+    if (!autoLoginAllowed()) return false;
     const last = Number(window.sessionStorage.getItem(AUTO_LOGIN_KEY));
     if (Number.isFinite(last) && Date.now() - last < 60_000) return false;
     window.sessionStorage.setItem(AUTO_LOGIN_KEY, String(Date.now()));
@@ -335,12 +339,44 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   const signedOutByUser = useRef(false);
   const [autoLoginTried, setAutoLoginTried] = useState(false);
+  // A lapsed session first renews in the background from the provider's sign-in; only when
+  // that needs the user does the page go to the sign-in screen.
+  const [silentRenewal, setSilentRenewal] = useState<"idle" | "running" | "done">("idle");
+  useEffect(() => { if (sessionState === "ready") setSilentRenewal("idle"); }, [sessionState]);
   useEffect(() => {
-    if (!autoStartLogin || sessionState !== "signed-out" || !browserLogin || signedOutByUser.current || autoLoginTried) return;
+    if (sessionState !== "signed-out" || loginMode !== "browser" || !browserLogin || signedOutByUser.current) return;
+    if (silentRenewal === "idle" && autoStartLogin && autoLoginAllowed()) {
+      const finish = beginMutation("signed-out", false);
+      if (!finish) return;
+      setSilentRenewal("running");
+      void (async () => {
+        let result: Awaited<ReturnType<typeof renewBrowserSessionSilently>> = "failed";
+        try {
+          result = await renewBrowserSessionSilently(companyId, browserLogin);
+          // Another tab is renewing; its cookie is shared, so check again shortly.
+          if (result === "busy") await new Promise(resolve => setTimeout(resolve, 3000));
+        } finally { finish(); }
+        setSilentRenewal("done");
+        if (result !== "failed") await restore();
+      })();
+      return;
+    }
+    if (silentRenewal === "running" || !autoStartLogin || autoLoginTried) return;
     setAutoLoginTried(true);
     if (claimAutoLogin()) void startBrowserLogin();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the first session check finds no session.
-  }, [autoStartLogin, autoLoginTried, browserLogin, sessionState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reacts to session and renewal state only.
+  }, [autoStartLogin, autoLoginTried, browserLogin, sessionState, silentRenewal]);
+
+  // Renew ahead of expiry while the page is open, which also keeps the provider sign-in alive.
+  useEffect(() => {
+    if (sessionState !== "ready" || loginMode !== "browser" || !browserLogin || !autoStartLogin || !autoLoginAllowed()) return;
+    const timer = setInterval(() => {
+      const finish = beginMutation("ready", false);
+      if (!finish) return;
+      void renewBrowserSessionSilently(companyId, browserLogin).finally(finish);
+    }, SILENT_RENEW_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [autoStartLogin, beginMutation, browserLogin, companyId, loginMode, sessionState]);
 
   // Keep the address bar on the current section so links and reloads land on the same screen.
   const firstSurface = useRef(true);
@@ -612,6 +648,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }
 
   if (sessionState === "signed-out") {
+    const renewing = loginMode === "browser" && silentRenewal === "running";
     const redirecting = loginMode === "browser" && (busy || autoStartLogin && !!browserLogin && !signedOutByUser.current && !autoLoginTried);
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">
@@ -625,7 +662,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             {loginMode === "local" ? <span className="ml-auto rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">Local Pilot</span> : null}
           </div>
           {loginMode === "browser" ? <p className="mt-6 text-sm leading-6 text-muted-foreground">
-            {redirecting ? "Đang chuyển đến trang đăng nhập…" : signedOutByUser.current ? "Bạn đã đăng xuất." : "Đăng nhập bằng tài khoản công ty để tiếp tục."}
+            {renewing ? "Đang gia hạn phiên đăng nhập…" : redirecting ? "Đang chuyển đến trang đăng nhập…" : signedOutByUser.current ? "Bạn đã đăng xuất." : "Đăng nhập bằng tài khoản công ty để tiếp tục."}
           </p> : <>
             <label className="mt-6 block text-sm font-medium">
               Tên đăng nhập

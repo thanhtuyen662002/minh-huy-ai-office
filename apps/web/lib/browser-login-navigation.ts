@@ -7,7 +7,7 @@ export type PublicBrowserLogin = Readonly<{
 
 // These public values come from validated server configuration, never cookies,
 // browser location, provider responses or caller-supplied return URLs.
-export function browserLoginDestination(value: unknown, settings: PublicBrowserLogin): string | null {
+export function browserLoginDestination(value: unknown, settings: PublicBrowserLogin, silent = false): string | null {
   if (!value || typeof value !== "object" || Array.isArray(value)
     || Object.keys(value).join(",") !== "authorizationUrl") return null;
   const raw = Object.getOwnPropertyDescriptor(value, "authorizationUrl")?.value;
@@ -21,7 +21,7 @@ export function browserLoginDestination(value: unknown, settings: PublicBrowserL
       || url.href !== raw) return null;
     const required: Record<string, string> = {
       client_id: settings.clientId, redirect_uri: settings.redirectUri, response_type: "code",
-      scope: "openid", code_challenge_method: "S256",
+      scope: "openid", code_challenge_method: "S256", ...(silent ? { prompt: "none" } : {}),
     };
     for (const [name, expected] of Object.entries(required)) {
       if (url.searchParams.getAll(name).length !== 1 || url.searchParams.get(name) !== expected) return null;

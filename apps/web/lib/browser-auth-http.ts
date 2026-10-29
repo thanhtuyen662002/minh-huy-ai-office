@@ -23,6 +23,15 @@ main{max-width:420px;padding:24px;text-align:center}a{color:#2563eb}</style></he
 <p><a href="/">Quay lại AI Office</a></p></main></body></html>`;
   return privateBrowserResponse(new Response(page, { status, headers: { "Content-Type": "text/html; charset=utf-8" } }));
 }
+// Silent renewal runs the callback in a hidden same-origin frame; it answers with a bare
+// marker page the parent reads instead of loading the app or the notice above.
+export function isFramedCallback(request: Request): boolean {
+  return request.headers.get("sec-fetch-dest") === "iframe";
+}
+export function framedCallbackPage(result: "ok" | "refused", status: number): NextResponse {
+  return privateBrowserResponse(new NextResponse(`<!doctype html><html data-sign-in="${result}"><title>AI Office</title></html>`, {
+    status, headers: { "Content-Type": "text/html; charset=utf-8", "Content-Security-Policy": "frame-ancestors 'self'" } }));
+}
 export function setPrivateBrowserCookie(response: NextResponse, settings: BrowserOidcSettings,
   name: string, value: string, maxAge: number) {
   response.cookies.set({ name, value, maxAge, httpOnly: true, secure: !settings.localHttp, sameSite: "lax", path: "/" });

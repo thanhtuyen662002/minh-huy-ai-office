@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getBrowserAuthRuntime } from "../../../../../../lib/browser-auth-runtime";
-import { browserCallbackRefusal, privateBrowserResponse, setPrivateBrowserCookie } from "../../../../../../lib/browser-auth-http";
+import { browserCallbackRefusal, framedCallbackPage, isFramedCallback, privateBrowserResponse, setPrivateBrowserCookie } from "../../../../../../lib/browser-auth-http";
 import { OIDC_CALLBACK_PATH, oidcTransactionCookieName, openOidcTransaction } from "../../../../../../lib/browser-oidc";
 import { exchangeBrowserAuthorizationCode } from "../../../../../../lib/browser-oidc-client";
 import { authorizeBrowserSession } from "../../../../../../lib/browser-oidc-authority";
@@ -11,7 +11,11 @@ import type { BrowserOidcSettings } from "../../../../../../lib/browser-oidc";
 
 export async function GET(request: Request) {
   let settings: BrowserOidcSettings | undefined, step: BrowserProofStep = "configuration";
-  const refused = (status: number, error?: unknown) => { reportBrowserProof(settings, step, error); return browserCallbackRefusal(status); };
+  const framed = isFramedCallback(request);
+  const refused = (status: number, error?: unknown) => {
+    reportBrowserProof(settings, step, error);
+    return framed ? framedCallbackPage("refused", status) : browserCallbackRefusal(status);
+  };
   try {
     const runtime = getBrowserAuthRuntime();
     if (!runtime) return refused(503);
@@ -43,7 +47,7 @@ export async function GET(request: Request) {
     step = "lifetime";
     const maxAge = tokens.expiresAt - Math.floor(Date.now() / 1000);
     if (maxAge <= 0) return refused(401);
-    const response = privateBrowserResponse(NextResponse.redirect(new URL(settings.publicOrigin), 303));
+    const response = framed ? framedCallbackPage("ok", 200) : privateBrowserResponse(NextResponse.redirect(new URL(settings.publicOrigin), 303));
     setPrivateBrowserCookie(response, settings, browserSessionCookieName(settings), sid, maxAge);
     setPrivateBrowserCookie(response, settings, oidcTransactionCookieName(settings), "", 0);
     // The current binding is never written by callback, so delayed/reordered
