@@ -34,6 +34,7 @@ public sealed class CoreApiCustomerRequestTests
         });
         using var client = factory.CreateClient();
         await Check(await client.PostAsJsonAsync(CustomerRequestAuthenticator.Path, new { }), HttpStatusCode.NotFound);
+        await Check(await client.GetAsync(CustomerRequestDigestReader.Path), HttpStatusCode.NotFound);
         var path = $"/api/companies/{Guid.NewGuid():D}/customer-requests";
         await Check(await client.GetAsync(path), HttpStatusCode.NotFound);
         await Check(await client.GetAsync(path + "/YC-0001"), HttpStatusCode.NotFound);
@@ -181,6 +182,86 @@ public sealed class CoreApiCustomerRequestTests
         await using var db = fixture.State.Database(); Assert.Single(db.CustomerRequestEvents); Assert.Equal("new", db.CustomerRequests.Single().Status);
     }
 
+    [Fact]
+    public async Task SignedDigestCountsOpenAndRecentlyClosedTicketsWithinServiceScopeOnly()
+    {
+        await using var fixture = new ApiFixture(); using var client = fixture.Client(portal: true);
+        var first = await fixture.State.Accept();
+        var second = await fixture.State.Accept(CustomerRequestContractTests.Sample() with { IdempotencyKey = "summary-002", OpenQuestions = ["Version?"] });
+        var third = await fixture.State.Accept(CustomerRequestContractTests.Sample() with { IdempotencyKey = "summary-003", Summary = new string('x', 300) });
+        await using (var db = fixture.State.Database())
+        {
+            // A ticket from a group the service is no longer allowed to read, and one from another company, stay invisible.
+            var source = db.CustomerRequests.AsNoTracking().Single(x => x.Code == first.Code);
+            db.CustomerRequests.Add(new()
+            {
+                TenantId = source.TenantId, CompanyId = source.CompanyId, Id = Guid.NewGuid(), Code = "YC-0900", SourceGroupExternalId = "removed-group",
+                SourceGroupName = "Removed", CustomerName = "Hidden", ReportedBy = "Lan", Summary = "Hidden", Status = "new", IdempotencyKey = "hidden-1",
+                CreatedAt = source.CreatedAt, UpdatedAt = source.UpdatedAt, RowVersion = [1]
+            });
+            db.CustomerRequests.Add(new()
+            {
+                TenantId = source.TenantId, CompanyId = Guid.NewGuid(), Id = Guid.NewGuid(), Code = "YC-0901", SourceGroupExternalId = "customer-group-1",
+                SourceGroupName = "Foreign", CustomerName = "Foreign", ReportedBy = "Lan", Summary = "Foreign", Status = "in_progress", IdempotencyKey = "hidden-2",
+                CreatedAt = source.CreatedAt, UpdatedAt = source.UpdatedAt, RowVersion = [2]
+            });
+            await db.SaveChangesAsync();
+        }
+        var detail = (await client.GetFromJsonAsync<CustomerRequestDetail>(fixture.Path + "/" + first.Code))!;
+        await Check(await client.PatchAsJsonAsync(fixture.Path + "/" + first.Code, new { rowVersion = detail.Request.RowVersion, status = "done" }), HttpStatusCode.OK);
+        detail = (await client.GetFromJsonAsync<CustomerRequestDetail>(fixture.Path + "/" + third.Code))!;
+        await Check(await client.PatchAsJsonAsync(fixture.Path + "/" + third.Code,
+            new { rowVersion = detail.Request.RowVersion, status = "in_progress", assigneeUserId = fixture.State.Authority.UserId }), HttpStatusCode.OK);
+
+        using var request = fixture.Digest(); var response = await client.SendAsync(request); await Check(response, HttpStatusCode.OK);
+        var digest = (await response.Content.ReadFromJsonAsync<CustomerRequestDigest>())!;
+        Assert.Equal(1, digest.Counts["needs_clarification"]); Assert.Equal(1, digest.Counts["in_progress"]); Assert.Equal(1, digest.Counts["done"]);
+        Assert.Equal(0, digest.Counts["new"]); Assert.Equal(0, digest.Counts["rejected"]); Assert.Equal(2, digest.OpenTotal);
+        Assert.Equal(new[] { second.Code, third.Code }, digest.Open.Select(x => x.Code));
+        var assigned = digest.Open.Single(x => x.Code == third.Code);
+        Assert.NotNull(assigned.AssigneeName); Assert.Equal(CustomerRequestDigestReader.SummaryLength, assigned.Summary.Length);
+        var closed = Assert.Single(digest.ClosedSince); Assert.Equal(first.Code, closed.Code); Assert.Equal("done", closed.Status); Assert.Equal(1, digest.ClosedTotal);
+        var text = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("Hidden", text); Assert.DoesNotContain("Foreign", text); Assert.DoesNotContain("msg-123", text);
+
+        using var future = fixture.Digest(since: DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds()); await Check(await client.SendAsync(future), HttpStatusCode.BadRequest);
+        using var window = fixture.Digest(since: DateTimeOffset.UtcNow.AddMinutes(-1).ToUnixTimeSeconds()); response = await client.SendAsync(window);
+        await Check(response, HttpStatusCode.OK); Assert.Single((await response.Content.ReadFromJsonAsync<CustomerRequestDigest>())!.ClosedSince);
+    }
+
+    [Theory]
+    [InlineData("post-signature")]
+    [InlineData("other-target")]
+    [InlineData("extra-query")]
+    [InlineData("old-window")]
+    [InlineData("replayed")]
+    public async Task DigestRefusesMismatchedSignedTargetsExtraQueriesWideWindowsAndReplays(string attack)
+    {
+        await using var fixture = new ApiFixture(); using var client = fixture.Client(); await fixture.State.Accept();
+        var since = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeSeconds();
+        HttpRequestMessage request = attack switch
+        {
+            "post-signature" => fixture.Digest(auth: fixture.State.Sign([], method: "POST", path: CustomerRequestDigestReader.Path)),
+            "other-target" => fixture.Digest(since: since, auth: fixture.State.Sign([], method: "GET", path: CustomerRequestDigestReader.Path)),
+            "extra-query" => fixture.Digest(target: CustomerRequestDigestReader.Path + "?since=" + since + "&limit=5"),
+            "old-window" => fixture.Digest(since: DateTimeOffset.UtcNow.AddDays(-40).ToUnixTimeSeconds()),
+            _ => fixture.Digest()
+        };
+        using (request)
+        {
+            if (attack == "replayed")
+            {
+                var headers = request.Headers.ToDictionary(x => x.Key, x => x.Value.ToArray());
+                await Check(await client.SendAsync(request), HttpStatusCode.OK);
+                using var replay = new HttpRequestMessage(HttpMethod.Get, CustomerRequestDigestReader.Path);
+                foreach (var (key, values) in headers) replay.Headers.Add(key, values);
+                await Check(await client.SendAsync(replay), HttpStatusCode.Forbidden);
+                return;
+            }
+            await Check(await client.SendAsync(request), attack is "extra-query" or "old-window" ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
+        }
+    }
+
     private static async Task Check(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode); Assert.True(response.Headers.CacheControl?.NoStore);
@@ -231,6 +312,14 @@ public sealed class CoreApiCustomerRequestTests
             body ??= CustomerRequestContractTests.Bytes(); auth ??= State.Sign(body);
             var request = new HttpRequestMessage(HttpMethod.Post, CustomerRequestAuthenticator.Path) { Content = new ByteArrayContent(body) };
             request.Content.Headers.ContentType = new("application/json");
+            request.Headers.Add("X-AIOffice-Request-Service", auth.ServiceId.ToString("D")); request.Headers.Add("X-AIOffice-Request-Nonce", auth.Nonce.ToString("D"));
+            request.Headers.Add("X-AIOffice-Request-Timestamp", auth.Timestamp.ToString(System.Globalization.CultureInfo.InvariantCulture)); request.Headers.Add("X-AIOffice-Request-Signature", auth.SignatureHex);
+            return request;
+        }
+        internal HttpRequestMessage Digest(long? since = null, CustomerRequestSignature? auth = null, string? target = null)
+        {
+            target ??= CustomerRequestDigestReader.Target(since); auth ??= State.Sign([], method: "GET", path: target);
+            var request = new HttpRequestMessage(HttpMethod.Get, target);
             request.Headers.Add("X-AIOffice-Request-Service", auth.ServiceId.ToString("D")); request.Headers.Add("X-AIOffice-Request-Nonce", auth.Nonce.ToString("D"));
             request.Headers.Add("X-AIOffice-Request-Timestamp", auth.Timestamp.ToString(System.Globalization.CultureInfo.InvariantCulture)); request.Headers.Add("X-AIOffice-Request-Signature", auth.SignatureHex);
             return request;
