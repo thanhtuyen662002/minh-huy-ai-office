@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as prepare } from "../app/api/local/session/oidc/binding/route";
 import { POST as start } from "../app/api/local/session/oidc/start/route";
 import { GET as callback } from "../app/api/local/session/oidc/callback/route";
-import { createOidcTransaction, OIDC_CALLBACK_PATH, oidcTransactionCookieName, openOidcTransaction,
+import { createOidcTransaction, OIDC_CALLBACK_PATH, OIDC_TRANSACTION_SECONDS, oidcTransactionCookieName, openOidcTransaction,
   readBrowserOidcSettings, sealOidcTransaction } from "./browser-oidc";
 import { browserBindingCookieName, browserSessionCookieName } from "./browser-session-store";
 import { readBrowserCompany } from "./browser-auth-http";
@@ -189,7 +189,7 @@ describe("browser callback authority and publication", () => {
   });
   it("refuses missing binding and expired/future transactions before claim", async () => {
     pending(); jar.delete(browserBindingCookieName(settings)); await refusal(await callback(incoming()), 401);
-    for (const offset of [-300, 11]) {
+    for (const offset of [-OIDC_TRANSACTION_SECONDS, 11]) {
       transaction = createOidcTransaction(companyId, Math.floor(Date.now() / 1000) + offset); pending();
       await refusal(await callback(incoming()), 401);
     }
