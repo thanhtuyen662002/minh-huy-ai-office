@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { botObject, parseBotAdmin, parseBotAudit, parseBotQr, type BotAdminView, type BotAudit, type BotChannel, type BotChannelView, type BotQr } from "../lib/bot-channels";
-import { BotChannelCard, botButton } from "./bot-channel-card";
+import { RefreshCw } from "lucide-react";
+import { BotChannelCard, botButton, botInput, botPrimaryButton } from "./bot-channel-card";
 
 export type BotSessionProps = { companyId: string; userId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
@@ -79,11 +80,18 @@ export function BotChannelPanel(props: BotSessionProps) {
     setKey(""); void run(async value => { const raw = await call("/ai", value, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
       if (raw === null) return; await load(value); if (current(value)) setNotice("Đã lưu thiết lập AI."); });
   }
-  return <section aria-label="Kênh & Bot" className="space-y-5"><header className="flex items-center justify-between"><h2 className="text-2xl font-semibold">Kênh & Bot</h2>
-    <button className={botButton} disabled={busy} onClick={() => void run(load)}>Tải lại cấu hình</button></header>
-    <p className="text-sm text-slate-500">Quản lý bot tiếp nhận Zalo và WhatsApp. Bot nhận cấu hình trong lần đồng bộ tiếp theo.</p>
-    {error ? <p role="alert">{error}</p> : null}{notice ? <p role="status">{notice}</p> : null}{busy ? <p role="status">Đang xử lý…</p> : null}
-    {view ? <><div className="grid gap-5 xl:grid-cols-2">{view.channels.map(channel => <BotChannelCard key={`${scope}:${channel.channel}:${channel.configVersion}:${channel.status?.receivedAt ?? ""}`} channel={channel} busy={busy}
+  const field = "grid gap-1.5 text-xs font-medium text-muted-foreground";
+  return <section aria-label="Kênh & Bot" className="space-y-5">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm text-muted-foreground">Bật/tắt bot, giờ tóm tắt và nhóm khách đều chỉnh ở đây. Bot nhận cấu hình mới trong lần đồng bộ tiếp theo.</p>
+      <button className={botButton} disabled={busy} onClick={() => void run(load)}><RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} aria-hidden="true" />Tải lại cấu hình</button>
+    </div>
+    <div aria-live="polite" className="space-y-1 text-sm empty:hidden">
+      {busy ? <p role="status" className="text-muted-foreground">Đang xử lý…</p> : null}
+      {notice ? <p role="status" className="text-emerald-700 dark:text-emerald-300">{notice}</p> : null}
+    </div>
+    {error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{error}</p> : null}
+    {view ? <><div className="grid items-start gap-4 xl:grid-cols-2">{view.channels.map(channel => <BotChannelCard key={`${scope}:${channel.channel}:${channel.configVersion}:${channel.status?.receivedAt ?? ""}`} channel={channel} busy={busy}
       qr={qr[channel.channel] && Date.parse(qr[channel.channel]!.expiresAt) > Date.now() ? qr[channel.channel]! : null} save={saveChannel}
       refreshQr={() => void run(value => fetchQr(channel.channel, value))} command={kind => void run(async value => {
         setQr(old => ({ ...old, [channel.channel]: undefined }));
@@ -91,21 +99,32 @@ export function BotChannelPanel(props: BotSessionProps) {
         if (raw === null || !current(value)) return; setNotice(kind === "relogin" ? "Đã yêu cầu đăng nhập lại. Chờ bot gửi mã QR mới." : "Đã xếp lệnh tóm tắt; chờ bot nhận lệnh.");
         if (kind === "relogin") await fetchQr(channel.channel, value);
       })} />)}</div>
-      <form onSubmit={saveAi} aria-label="Thiết lập AI" className="grid gap-4 rounded-2xl border border-slate-200 p-5 dark:border-white/10"><h3 className="text-lg font-semibold">Thiết lập AI dùng chung</h3>
-        <fieldset disabled={busy} className="grid gap-4"><label className="grid gap-1">Địa chỉ API AI<input type="url" required maxLength={1000} className="rounded-lg border bg-transparent p-2" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} /></label>
-          <label className="grid gap-1">Mô hình AI<input required maxLength={200} className="rounded-lg border bg-transparent p-2" value={model} onChange={e => setModel(e.target.value)} /></label>
-          <p>{view.ai.apiKeyConfigured ? "Đã cấu hình khóa API." : "Chưa cấu hình khóa API."} Để trống để giữ khóa hiện tại.</p>
-          <label className="grid gap-1">Khóa API mới<input type="password" autoComplete="new-password" maxLength={4096} disabled={clearKey} className="rounded-lg border bg-transparent p-2" value={key} onChange={e => setKey(e.target.value)} /></label>
-          <label className="flex gap-2"><input type="checkbox" checked={clearKey} onChange={e => { setClearKey(e.target.checked); setKey(""); }} />Xóa khóa API đã lưu</label>
-          <div className="flex gap-2"><button className={botButton} type="submit">Lưu thiết lập AI</button><button className={botButton} type="button" onClick={() => void run(async value => {
+      <div className="grid items-start gap-4 xl:grid-cols-2">
+      <form onSubmit={saveAi} aria-label="Thiết lập AI" className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="border-b px-5 py-4"><h3 className="text-base font-semibold">Thiết lập AI dùng chung</h3>
+          <p className="text-xs text-muted-foreground">Mô hình bot dùng để tóm tắt tin nhắn và đọc ảnh.</p></div>
+        <fieldset disabled={busy} className="m-0 grid gap-4 border-0 p-5 disabled:opacity-70"><label className={field}>Địa chỉ API AI<input type="url" required maxLength={1000} className={botInput} value={baseUrl} onChange={e => setBaseUrl(e.target.value)} /></label>
+          <label className={field}>Mô hình AI<input required maxLength={200} className={botInput} value={model} onChange={e => setModel(e.target.value)} /></label>
+          <p className="text-sm">{view.ai.apiKeyConfigured ? "Đã cấu hình khóa API." : "Chưa cấu hình khóa API."} Để trống để giữ khóa hiện tại.</p>
+          <label className={field}>Khóa API mới<input type="password" autoComplete="new-password" maxLength={4096} disabled={clearKey} className={botInput} value={key} onChange={e => setKey(e.target.value)} /></label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={clearKey} onChange={e => { setClearKey(e.target.checked); setKey(""); }} />Xóa khóa API đã lưu</label>
+          <div className="flex flex-wrap items-center gap-2"><button className={botPrimaryButton} type="submit">Lưu thiết lập AI</button><button className={botButton} type="button" onClick={() => void run(async value => {
             const result = await call("/ai/test", value, { method: "POST" }); if (!botObject(result) || !current(value)) return;
             setNotice(result.success === true ? "Kết nối AI thành công." : result.code === "host_not_allowed" ? "Địa chỉ AI chưa được hệ thống cho phép kiểm tra. Liên hệ người vận hành."
               : "Không kết nối được AI. Kiểm tra địa chỉ và khóa đã lưu.");
-          })}>Kiểm tra kết nối</button></div><p className="text-xs text-slate-500">Kiểm tra sử dụng thiết lập đã lưu.</p>
+          })}>Kiểm tra kết nối</button><span className="text-xs text-muted-foreground">Kiểm tra sử dụng thiết lập đã lưu.</span></div>
         </fieldset></form>
-      <section className="space-y-3"><h3 className="font-semibold">Lịch sử thay đổi</h3><button className={botButton} disabled={busy} onClick={() => void run(async value => {
-        const raw = await call("/audit", value); if (raw === null || !current(value)) return; const rows = parseBotAudit(raw); if (!rows) throw new Error(); setAudit(rows);
-      })}>Xem lịch sử thay đổi</button><ul className="space-y-2 text-sm">{audit.map(row => <li key={row.id}>{new Date(row.timestamp).toLocaleString("vi-VN")} · {row.channel ?? "AI dùng chung"} · {row.field} · {row.actorUserId}</li>)}</ul></section>
+      <section aria-label="Lịch sử thay đổi" className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b px-5 py-4"><h3 className="text-base font-semibold">Lịch sử thay đổi</h3>
+          <button className={botButton} disabled={busy} onClick={() => void run(async value => {
+            const raw = await call("/audit", value); if (raw === null || !current(value)) return; const rows = parseBotAudit(raw); if (!rows) throw new Error(); setAudit(rows);
+          })}>Xem lịch sử thay đổi</button></div>
+        {audit.length ? <ul className="m-0 list-none divide-y p-0 text-sm">{audit.map(row => <li key={row.id} className="grid gap-0.5 px-5 py-2.5">
+          <span>{row.channel ?? "AI dùng chung"} · {row.field}</span>
+          <span className="break-all text-xs text-muted-foreground">{new Date(row.timestamp).toLocaleString("vi-VN")} · {row.actorUserId}</span></li>)}</ul>
+          : <p className="px-5 py-4 text-sm text-muted-foreground">Ai đã đổi gì, lúc nào. Bấm nút để xem.</p>}
+      </section>
+      </div>
     </> : null}</section>;
 }
 

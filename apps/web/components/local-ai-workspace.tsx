@@ -648,8 +648,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const section = surfaceSection(surface);
   const scopeKey = `${companyId}:${auth?.userId ?? ""}:${sessionGeneration.current}`;
   const connectionTabs = [
-    ...(botChannelsAvailable ? [["bot-channels", "Bot Zalo & WhatsApp"] as const] : []),
-    ["data-sources", "Nguồn dữ liệu"] as const,
+    ...(botChannelsAvailable ? [["bot-channels", "Kênh & Bot"] as const] : []),
+    ["data-sources", "Nguồn dữ liệu ERP"] as const,
     ...(isAdmin ? [["members", "Thành viên"] as const] : []),
   ];
 
