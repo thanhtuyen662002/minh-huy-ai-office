@@ -55,9 +55,13 @@ foreach ($file in $AdditionalComposeFile) {
 }
 
 Invoke-Checked -Command "docker" -Arguments ($composeBase + @("config", "--quiet"))
+# Build before touching running containers. A long build on a single host can starve
+# RabbitMQ's health probe; "up --build" then aborts after recreating the app containers
+# and leaves the site down. Building first keeps the old release serving meanwhile.
+Invoke-Checked -Command "docker" -Arguments ($composeBase + @("build", "core-api", "agent-worker", "web"))
 Invoke-Checked -Command "docker" -Arguments (
     $composeBase + @(
-        "up", "-d", "--build", "--remove-orphans",
+        "up", "-d", "--remove-orphans",
         "rabbitmq", "redis", "otel-collector", "jaeger", "core-api", "agent-worker", "web"
     )
 )

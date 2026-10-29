@@ -37,6 +37,12 @@ services:
       session-redis:
         condition: service_started
 
+  # Single shared host: a busy CPU (image builds, Windows Update) can delay the probe
+  # past 5s. Allow longer before RabbitMQ counts as unhealthy and blocks a deploy.
+  rabbitmq:
+    healthcheck:
+      timeout: 20s
+
   core-api:
     extra_hosts: *public-names
 
