@@ -189,8 +189,9 @@ Describe 'Wizard validation and metadata separation' {
     It 'parses SQL without connecting and never reflects bad credentials in errors' {
         $connection = 'Server=tcp:sql.office.test,1444;Database=AI_Office;User ID=fixture;Password=sentinel;Encrypt=true;TrustServerCertificate=false'
         $endpoint = Get-SetupSqlEndpoint $connection
-        $endpoint.HostName | Should Be 'sql.office.test'; $endpoint.Port | Should Be 1444
-        foreach ($bad in @('Password=sentinel;invalid syntax', $connection.Replace('AI_Office', 'master'), $connection.Replace('Encrypt=true', 'Encrypt=false'), $connection.Replace('TrustServerCertificate=false', 'TrustServerCertificate=true'))) {
+        $endpoint.HostName | Should Be 'sql.office.test'; $endpoint.Port | Should Be 1444; $endpoint.TrustServerCertificate | Should Be $false
+        (Get-SetupSqlEndpoint $connection.Replace('TrustServerCertificate=false', 'TrustServerCertificate=true')).TrustServerCertificate | Should Be $true
+        foreach ($bad in @('Password=sentinel;invalid syntax', $connection.Replace('AI_Office', 'master'), $connection.Replace('Encrypt=true', 'Encrypt=false'))) {
             try { $null = Get-SetupSqlEndpoint $bad; throw 'expected rejection' }
             catch { $_.Exception.Message | Should Not Match 'sentinel|expected rejection' }
         }

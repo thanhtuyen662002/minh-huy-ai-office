@@ -13,7 +13,7 @@ param(
     [string]$EnvironmentFile = "C:\AIOffice\secrets\.env.production",
     [string]$Ref = "origin/main",
     [switch]$Migrate,
-    [ValidateSet('All', 'Migrate', 'Keycloak', 'Deploy')][string]$Phase = 'All',
+    [ValidateSet('All', 'Migrate', 'Keycloak', 'Tunnel', 'Deploy')][string]$Phase = 'All',
     [switch]$SkipFetch
 )
 
@@ -46,6 +46,13 @@ try {
     $keycloakEnabled = Select-String -LiteralPath $EnvironmentFile -Pattern '^AIOFFICE_KEYCLOAK_ENABLED=true$' -Quiet
     if ($keycloakEnabled -and $Phase -in @('All', 'Keycloak')) {
         Invoke-Checked docker @("compose", "--env-file", $EnvironmentFile, "-f", "compose.identity.yaml", "up", "-d", "--wait", "keycloak")
+    }
+
+    # Optional Cloudflare Tunnel ingress, enabled by the protected token file next to the env file.
+    $tunnelToken = Join-Path (Split-Path -Parent $EnvironmentFile) 'cloudflare-tunnel-token'
+    if ($Phase -in @('All', 'Tunnel') -and (Test-Path -LiteralPath $tunnelToken -PathType Leaf)) {
+        $env:AIOFFICE_CLOUDFLARE_TUNNEL_TOKEN_FILE = $tunnelToken
+        Invoke-Checked docker @("compose", "-f", "compose.tunnel.yaml", "up", "-d", "cloudflared")
     }
 
     if ($Phase -in @('All', 'Deploy')) {

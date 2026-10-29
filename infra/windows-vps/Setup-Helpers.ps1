@@ -195,13 +195,16 @@ function Get-SetupSqlEndpoint {
         $user = if ($builder.ContainsKey('User ID')) { $builder['User ID'] } else { $builder['UID'] }
         $password = if ($builder.ContainsKey('Password')) { $builder['Password'] } else { $builder['PWD'] }
         if ($db -cne 'AI_Office' -or -not $user -or -not $password -or $builder['Integrated Security'] -match 'true|sspi' -or
-            $builder['Encrypt'] -notmatch '\A(?i:true|mandatory)\z' -or $builder['TrustServerCertificate'] -match '\A(?i:true|yes)\z') { throw 'Invalid SQL.' }
+            $builder['Encrypt'] -notmatch '\A(?i:true|mandatory)\z') { throw 'Invalid SQL.' }
+        # TrustServerCertificate=true is an explicit operator opt-in for a self-signed SQL
+        # certificate. It is carried to the Keycloak connection; encryption stays mandatory.
+        $trust = $builder.ContainsKey('TrustServerCertificate') -and $builder['TrustServerCertificate'] -match '\A(?i:true|yes)\z'
         $parts = ($server -replace '\Atcp:', '') -split ','
         Assert-SetupHost $parts[0]
         $port = if ($parts.Count -eq 2) { $parts[1] } else { '1433' }
         if ($parts.Count -gt 2 -or $port -notmatch '\A[1-9][0-9]{0,4}\z' -or [int]$port -gt 65535) { throw 'Invalid SQL.' }
-        return @{ HostName = $parts[0]; Port = [int]$port }
-    } catch { throw 'Chuỗi kết nối cần SQL login, Database=AI_Office, Server=tên,cổng, Encrypt=true và TrustServerCertificate=false.' }
+        return @{ HostName = $parts[0]; Port = [int]$port; TrustServerCertificate = $trust }
+    } catch { throw 'Chuỗi kết nối cần SQL login, Database=AI_Office, Server=tên,cổng và Encrypt=true (TrustServerCertificate=true chỉ khi SQL dùng chứng chỉ tự ký).' }
 }
 
 function New-SetupSqlStartInfo {

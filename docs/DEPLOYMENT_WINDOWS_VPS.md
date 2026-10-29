@@ -91,6 +91,35 @@ virtualization, public DNS, router forwarding, or SQL's trusted TLS certificate.
 Its virtualization guidance is: **Nhờ quản trị máy chủ bật nested virtualization / CPU type host**.
 The external TCP probe follows the [Check-Host API](https://check-host.net/about/api).
 
+### Without inbound 80/443: Cloudflare Tunnel
+
+When the office cannot forward ports 80/443 (double NAT, no router access), use
+a Cloudflare Tunnel instead of Let's Encrypt:
+
+1. Move the domain's nameservers to Cloudflare. In Zero Trust, create a tunnel
+   and add one **Public Hostname** per host (web, API, login), each pointing to
+   `https://host.docker.internal:443` with **No TLS Verify** on and **Origin
+   Server Name** set to that same host. Delete any old A/AAAA records for those
+   hosts so the tunnel's CNAMEs take effect (an A record gives error 522).
+2. Before **Cài đặt / tiếp tục**, save only the tunnel token (one line) to
+   `C:\AIOffice\secrets\cloudflare-tunnel-token`.
+3. The certificates phase then skips the public port 80 check and win-acme,
+   creates self-signed SNI origin bindings in IIS
+   (`Configure-TunnelOriginCertificates.ps1`), and starts `cloudflared` from
+   [`compose.tunnel.yaml`](../compose.tunnel.yaml) (its own Compose project,
+   so application deploys do not remove it). `Update-AIOffice.ps1` keeps it up.
+
+Through the tunnel IIS sees connections from Docker's gateway, not the office
+LAN, so the LAN-only Keycloak administration rule cannot identify the real
+client and the console stays blocked through the public name. Protect it with
+Cloudflare Access before relaxing that rule.
+
+**SQL with a self-signed certificate:** the preferred fix is a trusted
+certificate on SQL Server. If that is not possible yet, put
+`TrustServerCertificate=true` in the `AI_Office` connection string; the wizard
+then also sets `AIOFFICE_KEYCLOAK_DB_TRUST_SERVER_CERTIFICATE=true` for
+Keycloak. Traffic stays encrypted, but the server certificate is not verified.
+
 ### Recovery and secrets
 
 Phase order is fixed:

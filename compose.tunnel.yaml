@@ -1,0 +1,23 @@
+# Optional Cloudflare Tunnel ingress for a host without inbound 80/443 (double NAT,
+# no port forwarding). Separate project: application deploys use --remove-orphans.
+#
+# Cloudflare terminates public TLS. In the tunnel's Public Hostnames, point every
+# host to https://host.docker.internal:443 with "No TLS Verify" and
+# "Origin Server Name" = that host, so IIS selects the right SNI binding.
+name: minh-huy-ai-office-tunnel
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.4
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run", "--token-file", "/run/secrets/cloudflare_tunnel_token"]
+    secrets:
+      - cloudflare_tunnel_token
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  cloudflare_tunnel_token:
+    file: ${AIOFFICE_CLOUDFLARE_TUNNEL_TOKEN_FILE:?set protected Cloudflare Tunnel token file path}

@@ -175,7 +175,7 @@ try {
                 Assert-SetupOption $options
                 if (-not $script:configReady) { Assert-SetupSecretInput $options $secrets; $null = Get-SetupSqlEndpoint (ConvertFrom-SetupSecureString $secrets.DatabaseConnection) }
             }
-            catch { $message.Text = 'Kiểm tra tên miền, LAN, email, công ty và AI tùy chọn; không nhập ký tự điều khiển. Chuỗi SQL cần Database=AI_Office, SQL login và TLS tin cậy.'; return }
+            catch { $message.Text = 'Kiểm tra tên miền, LAN, email, công ty và AI tùy chọn; không nhập ký tự điều khiển. Chuỗi SQL cần Database=AI_Office, SQL login và Encrypt=true.' + [Environment]::NewLine + 'Chi tiết: ' + $_.Exception.Message; return }
         }
         $button.Enabled = $false; $fields.Enabled = $false
         $logPath = Join-Path $Root ('logs\setup-' + [Guid]::NewGuid().ToString('N') + '.log')

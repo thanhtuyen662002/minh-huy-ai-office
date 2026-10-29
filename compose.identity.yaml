@@ -13,7 +13,7 @@ services:
       AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED: ${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED:-false}
       KC_DB: mssql
       # No configurable database name or JDBC properties: never use the platform DB.
-      KC_DB_URL: "jdbc:sqlserver://${AIOFFICE_KEYCLOAK_DB_HOST:?set private SQL hostname}:${AIOFFICE_KEYCLOAK_DB_PORT:-1433};databaseName=AIOffice_Identity;encrypt=true;trustServerCertificate=false"
+      KC_DB_URL: "jdbc:sqlserver://${AIOFFICE_KEYCLOAK_DB_HOST:?set private SQL hostname}:${AIOFFICE_KEYCLOAK_DB_PORT:-1433};databaseName=AIOffice_Identity;encrypt=true;trustServerCertificate=${AIOFFICE_KEYCLOAK_DB_TRUST_SERVER_CERTIFICATE:-false}"
       KC_HOSTNAME: ${AIOFFICE_KEYCLOAK_HOSTNAME:?set HTTPS identity origin}
       KC_HOSTNAME_STRICT: "true"
       KC_HTTP_ENABLED: "true"

@@ -100,10 +100,11 @@ if ($WizardInput) {
     Assert-SetupOption $SetupOptions
     Assert-SetupSecretInput $SetupOptions $WizardInput
     $dbConnection = ConvertFrom-SetupSecureString $WizardInput.DatabaseConnection
-    $null = Get-SetupSqlEndpoint $dbConnection
+    $sqlEndpoint = Get-SetupSqlEndpoint $dbConnection
     Set-EnvValue $lines 'AIOFFICE_DB_CONNECTION' $dbConnection
     Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_DB_HOST' $SetupOptions.SqlHost
     Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_DB_PORT' $SetupOptions.SqlPort
+    Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_DB_TRUST_SERVER_CERTIFICATE' ([string]$sqlEndpoint.TrustServerCertificate).ToLowerInvariant()
     Set-EnvValue $lines 'AIOFFICE_COMPANY_ID' $SetupOptions.CompanyId
     Set-EnvValue $lines 'AIOFFICE_COMPANY_NAME' $SetupOptions.CompanyName
     # No ERP credential is collected by this installer. A closed loopback endpoint

@@ -80,7 +80,7 @@ function Assert-SetupSqlConnection {
     $builder['User ID'] = ConvertFrom-SetupSecureString $Secrets.SqlLogin
     $builder['Password'] = ConvertFrom-SetupSecureString $Secrets.SqlPassword
     $builder['Encrypt'] = 'true'
-    $builder['TrustServerCertificate'] = 'false'
+    $builder['TrustServerCertificate'] = ([string]$endpoint.TrustServerCertificate).ToLowerInvariant()
     $builder['Connect Timeout'] = '10'
     Test-SetupSqlLogin $builder.get_ConnectionString()
 }
@@ -230,6 +230,13 @@ function New-SetupAction {
     $windowsPowerShell = Join-Path $env:windir 'System32\WindowsPowerShell\v1.0\powershell.exe'
     $actions['iis'] = { Invoke-SetupNative $windowsPowerShell $iis }.GetNewClosure()
     $actions['certificates'] = {
+        # Tunnel mode is chosen by saving the Cloudflare Tunnel token before setup.
+        if (Test-Path -LiteralPath (Join-Path $Root 'secrets\cloudflare-tunnel-token') -PathType Leaf) {
+            Invoke-SetupNative $windowsPowerShell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $scripts 'Configure-TunnelOriginCertificates.ps1'),
+                '-HostNames', ($Options.WebHost + ',' + $Options.ApiHost + ',' + $Options.IdentityHost))
+            & (Join-Path $scripts 'Update-AIOffice.ps1') -RepositoryRoot $RepositoryRoot -EnvironmentFile $envFile -Phase Tunnel -SkipFetch
+            return
+        }
         Assert-SetupPublicIngress $Options
         Invoke-SetupNative $windowsPowerShell ($iis + @('-RequestCertificates', '-CertificateEmail', $Options.CertificateEmail, '-WinAcmePath', (Join-Path $Root 'tools\win-acme\wacs.exe')))
     }.GetNewClosure()

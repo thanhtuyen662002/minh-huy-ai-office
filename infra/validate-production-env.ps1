@@ -160,6 +160,11 @@ if ($values["AIOFFICE_KEYCLOAK_ENABLED"] -ceq "true") {
     }
 }
 
+if ($values.ContainsKey("AIOFFICE_KEYCLOAK_DB_TRUST_SERVER_CERTIFICATE") -and
+    $values["AIOFFICE_KEYCLOAK_DB_TRUST_SERVER_CERTIFICATE"] -cnotin @("true", "false")) {
+    throw "AIOFFICE_KEYCLOAK_DB_TRUST_SERVER_CERTIFICATE must be true or false."
+}
+
 if ($values.ContainsKey("AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED") -and
     $values["AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED"] -cnotin @("true", "false")) {
     throw "AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED must be true or false."
