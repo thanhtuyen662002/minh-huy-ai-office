@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   LocalAiCheckpoint,
   LocalDataSource,
@@ -23,12 +23,18 @@ import { trimSubmissionQuestion } from "../lib/task-submission-intent";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
 import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
 import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
+import { workspaceSectionFromPath, workspaceSectionPath, type WorkspaceSection } from "../lib/workspace-sections";
+import { SectionHeader, SectionTabs, WorkspaceShell } from "./workspace-shell";
+import { WorkspaceOverview } from "./workspace-overview";
 
 type Props = {
   companyId: string;
   companyName: string;
   loginMode?: "local" | "browser";
   browserLogin?: PublicBrowserLogin;
+  initialSection?: WorkspaceSection;
+  /** Sends a signed-out browser straight to the identity provider instead of showing a second sign-in page. */
+  autoStartLogin?: boolean;
 };
 
 type ChatMessage = {
@@ -38,7 +44,28 @@ type ChatMessage = {
   checkpoint?: LocalAiCheckpoint;
 };
 
-type Surface = "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels";
+type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge";
+
+const sectionSurfaces: Record<WorkspaceSection, Surface> = {
+  "tong-quan": "overview", "tin-nhan": "group-inbox", "cong-viec": "customer-requests",
+  "tro-ly": "assistant", "kien-thuc": "knowledge", "ket-noi": "data-sources",
+};
+function surfaceSection(surface: Surface): WorkspaceSection {
+  if (surface === "tasks") return "cong-viec";
+  if (surface === "members" || surface === "bot-channels") return "ket-noi";
+  return (Object.keys(sectionSurfaces) as WorkspaceSection[]).find(key => sectionSurfaces[key] === surface) ?? "tong-quan";
+}
+
+// Limits automatic redirects so a failing provider callback cannot loop.
+const AUTO_LOGIN_KEY = "aioffice-auto-login-at";
+function claimAutoLogin() {
+  try {
+    const last = Number(window.sessionStorage.getItem(AUTO_LOGIN_KEY));
+    if (Number.isFinite(last) && Date.now() - last < 60_000) return false;
+    window.sessionStorage.setItem(AUTO_LOGIN_KEY, String(Date.now()));
+    return true;
+  } catch { return false; }
+}
 
 async function readJson(response: Response): Promise<unknown> {
   try {
@@ -63,11 +90,13 @@ function sourceLabel(source: LocalDataSource) {
   return "Không có quyền đọc";
 }
 
-export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, loginMode = "local", browserLogin }: Props) {
+export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, loginMode = "local", browserLogin,
+  initialSection = "tro-ly", autoStartLogin = false }: Props) {
+  const initialSurface = useRef(sectionSurfaces[initialSection]);
   const [companies, setCompanies] = useState<readonly CompanyChoice[]>([]);
   const [companyChoiceError, setCompanyChoiceError] = useState("");
   const companyName = companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyName ?? initialCompanyName;
-  const [surface, setSurface] = useState<Surface>("assistant");
+  const [surface, setSurface] = useState<Surface>(initialSurface.current);
   const [sources, setSources] = useState<readonly LocalDataSource[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const [sourceLoading, setSourceLoading] = useState(false);
@@ -111,7 +140,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     setSourceSaving(false);
     setEditorError("");
     sourceSave.current = null;
-    setSurface("assistant");
+    setSurface(initialSurface.current);
     setMessages((current) => current.filter((message) => message.id === "welcome"));
   }, []);
 
@@ -296,42 +325,75 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     }
   }
 
+  const signedOutByUser = useRef(false);
+  const [autoLoginTried, setAutoLoginTried] = useState(false);
+  useEffect(() => {
+    if (!autoStartLogin || sessionState !== "signed-out" || !browserLogin || signedOutByUser.current || autoLoginTried) return;
+    setAutoLoginTried(true);
+    if (claimAutoLogin()) void startBrowserLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the first session check finds no session.
+  }, [autoStartLogin, autoLoginTried, browserLogin, sessionState]);
+
+  // Keep the address bar on the current section so links and reloads land on the same screen.
+  const firstSurface = useRef(true);
+  useEffect(() => {
+    const path = workspaceSectionPath(surfaceSection(surface));
+    if (window.location.pathname !== path) {
+      if (firstSurface.current) window.history.replaceState(null, "", path);
+      else window.history.pushState(null, "", path);
+    }
+    firstSurface.current = false;
+  }, [surface]);
+  useEffect(() => {
+    const onPop = () => {
+      const section = workspaceSectionFromPath(window.location.pathname);
+      if (section) setSurface(current => surfaceSection(current) === section ? current : sectionSurfaces[section]);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  async function startBrowserLogin() {
+    if (sessionState !== "signed-out" || loginMode !== "browser") return;
+    if (!browserLogin) { setNotice("Dịch vụ đăng nhập chưa sẵn sàng."); return; }
+    const finish = beginMutation("signed-out");
+    if (!finish) return;
+    const generation = sessionGeneration.current;
+    setNotice(""); setBusy(true);
+    let navigating = false;
+    try {
+      // Settle both cookie mutations in order. Aborting would not undo a
+      // received cookie, so company changes wait before restoring context.
+      const prepared = await fetch("/api/local/session/oidc/binding", {
+        method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
+      });
+      const preparation = await readJson(prepared);
+      if (!isCurrent(generation)) return;
+      if (!prepared.ok || !preparation || typeof preparation !== "object"
+        || Object.keys(preparation).join(",") !== "ok" || Object.getOwnPropertyDescriptor(preparation, "ok")?.value !== true) throw new Error();
+      const started = await fetch("/api/local/session/oidc/start", {
+        method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }),
+      });
+      const payload = await readJson(started);
+      if (!isCurrent(generation)) return;
+      const destination = started.ok ? browserLoginDestination(payload, browserLogin) : null;
+      if (!destination) throw new Error();
+      navigateBrowserLogin(destination);
+      navigating = true;
+    } catch {
+      if (isCurrent(generation)) setNotice("Không bắt đầu được đăng nhập. Hãy thử lại.");
+    } finally {
+      finish();
+      if (isCurrent(generation) && !navigating) setBusy(false);
+    }
+  }
+
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sessionState !== "signed-out") return;
     if (loginMode === "browser") {
-      if (!browserLogin) { setNotice("Dịch vụ đăng nhập chưa sẵn sàng."); return; }
-      const finish = beginMutation("signed-out");
-      if (!finish) return;
-      const generation = sessionGeneration.current;
-      setNotice(""); setBusy(true);
-      let navigating = false;
-      try {
-        // Settle both cookie mutations in order. Aborting would not undo a
-        // received cookie, so company changes wait before restoring context.
-        const prepared = await fetch("/api/local/session/oidc/binding", {
-          method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
-        });
-        const preparation = await readJson(prepared);
-        if (!isCurrent(generation)) return;
-        if (!prepared.ok || !preparation || typeof preparation !== "object"
-          || Object.keys(preparation).join(",") !== "ok" || Object.getOwnPropertyDescriptor(preparation, "ok")?.value !== true) throw new Error();
-        const started = await fetch("/api/local/session/oidc/start", {
-          method: "POST", cache: "no-store", redirect: "error", credentials: "same-origin",
-          headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }),
-        });
-        const payload = await readJson(started);
-        if (!isCurrent(generation)) return;
-        const destination = started.ok ? browserLoginDestination(payload, browserLogin) : null;
-        if (!destination) throw new Error();
-        navigateBrowserLogin(destination);
-        navigating = true;
-      } catch {
-        if (isCurrent(generation)) setNotice("Không bắt đầu được đăng nhập. Hãy thử lại.");
-      } finally {
-        finish();
-        if (isCurrent(generation) && !navigating) setBusy(false);
-      }
+      await startBrowserLogin();
       return;
     }
     const form = event.currentTarget;
@@ -377,6 +439,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   async function signOut() {
     if (!ready()) return;
+    signedOutByUser.current = true;
     const finish = beginMutation("ready");
     if (!finish) return;
     const generation = reset("closing");
@@ -531,170 +594,170 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   if (sessionState === "checking" || sessionState === "closing" || (auth && auth.companyId !== companyId)) {
     return (
-      <main className="min-h-screen bg-[#f5f6f8] text-[#172033] dark:bg-[#0b1020] dark:text-[#edf2ff]">
-        <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-6">
-          <div className="rounded-3xl border border-black/10 bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#11182a]">
-            <p className="text-sm font-semibold tracking-[0.2em] text-indigo-600 dark:text-indigo-300">MINH HUY AI OFFICE</p>
-            <h1 className="mt-3 text-2xl font-semibold">Đang kiểm tra phiên đăng nhập…</h1>
-          </div>
+      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+        <div className="rounded-xl border bg-card p-8 shadow-sm">
+          <p className="text-xs font-semibold tracking-[0.2em] text-primary">MINH HUY AI OFFICE</p>
+          <h1 className="mt-3 text-xl font-semibold">Đang kiểm tra phiên đăng nhập…</h1>
         </div>
       </main>
     );
   }
 
   if (sessionState === "signed-out") {
+    const redirecting = loginMode === "browser" && (busy || autoStartLogin && !!browserLogin && !signedOutByUser.current && !autoLoginTried);
     return (
-      <main className="min-h-screen bg-[#f5f6f8] px-6 py-10 text-[#172033] dark:bg-[#0b1020] dark:text-[#edf2ff]">
-        <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <section>
-            <div className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-200">
-              {loginMode === "browser" ? "Không gian làm việc" : "Local Pilot"}
+      <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">
+        <form onSubmit={signIn} className="w-full max-w-sm rounded-xl border bg-card p-7 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">AI</div>
+            <div>
+              <h1 className="text-lg font-semibold leading-tight">AI Office</h1>
+              <p className="text-sm text-muted-foreground">{companyName}</p>
             </div>
-            <p className="mt-7 text-sm font-semibold tracking-[0.2em] text-indigo-600 dark:text-indigo-300">MINH HUY</p>
-            <h1 className="mt-3 max-w-2xl text-5xl font-semibold tracking-[-0.04em] sm:text-6xl">AI Office</h1>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              {loginMode === "browser" ? "Làm việc với ERP và AI bằng tài khoản doanh nghiệp. Mỗi nguồn dữ liệu được kiểm tra theo quyền truy cập của bạn."
-                : "Làm việc với ERP và AI trên một giao diện duy nhất. Phiên local hiện dùng quyền chỉ đọc và OpenAI trực tiếp."}
-            </p>
-            <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
-              {["ERP chỉ đọc", "Công việc được lưu", "AI có bằng chứng"].map((item) => (
-                <div key={item} className="rounded-2xl border border-black/10 bg-white p-4 text-sm font-medium shadow-sm dark:border-white/10 dark:bg-white/5">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <form onSubmit={signIn} className="rounded-[28px] border border-black/10 bg-white p-7 shadow-xl shadow-slate-900/5 dark:border-white/10 dark:bg-[#11182a]">
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{loginMode === "browser" ? "Đăng nhập doanh nghiệp" : "Đăng nhập local"}</p>
-            <h2 className="mt-2 text-2xl font-semibold">{companyName}</h2>
-            {loginMode === "browser" ? <p className="mt-7 text-sm leading-6 text-slate-600 dark:text-slate-300">Tiếp tục đến trang đăng nhập của doanh nghiệp để vào không gian làm việc.</p> : <><label className="mt-7 block text-sm font-medium">
+            {loginMode === "local" ? <span className="ml-auto rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">Local Pilot</span> : null}
+          </div>
+          {loginMode === "browser" ? <p className="mt-6 text-sm leading-6 text-muted-foreground">
+            {redirecting ? "Đang chuyển đến trang đăng nhập…" : signedOutByUser.current ? "Bạn đã đăng xuất." : "Đăng nhập bằng tài khoản công ty để tiếp tục."}
+          </p> : <>
+            <label className="mt-6 block text-sm font-medium">
               Tên đăng nhập
-              <input
-                name="username"
-                defaultValue="pilot-admin"
-                autoComplete="username"
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-transparent px-4 py-3 outline-none transition focus:border-indigo-500 dark:border-white/15"
-              />
+              <input name="username" defaultValue="pilot-admin" autoComplete="username"
+                className="mt-1.5 w-full rounded-lg border bg-background px-3 py-2 outline-none focus:border-ring" />
             </label>
             <label className="mt-4 block text-sm font-medium">
               Mật khẩu
-              <input
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-transparent px-4 py-3 outline-none transition focus:border-indigo-500 dark:border-white/15"
-              />
-            </label></>}
-            {notice ? <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">{notice}</p> : null}
-            <button
-              type="submit"
-              disabled={busy}
-              className="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {busy ? "Đang đăng nhập…" : loginMode === "browser" ? "Đăng nhập doanh nghiệp" : "Vào AI Office"}
-            </button>
-            <p className="mt-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              {loginMode === "browser" ? "Quyền truy cập được xác minh lại khi bạn sử dụng nguồn dữ liệu."
-                : "Token được giữ trong cookie HttpOnly của web local, không hiển thị cho JavaScript phía trình duyệt."}
-            </p>
-          </form>
-        </div>
+              <input name="password" type="password" autoComplete="current-password"
+                className="mt-1.5 w-full rounded-lg border bg-background px-3 py-2 outline-none focus:border-ring" />
+            </label>
+          </>}
+          {notice ? <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">{notice}</p> : null}
+          <button type="submit" disabled={busy}
+            className="mt-6 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
+            {busy ? "Đang đăng nhập…" : loginMode === "browser" ? "Đăng nhập doanh nghiệp" : "Vào AI Office"}
+          </button>
+          {loginMode === "local" ? <p className="mt-4 text-xs leading-5 text-muted-foreground">Phiên local chỉ đọc. Token được giữ trong cookie HttpOnly, không hiển thị cho JavaScript.</p> : null}
+        </form>
       </main>
     );
   }
 
-  return (
-    <main className="min-h-screen bg-[#f5f6f8] text-[#172033] dark:bg-[#0b1020] dark:text-[#edf2ff]">
-      <div className="mx-auto flex min-h-screen max-w-[1500px]">
-        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white px-4 py-6 dark:border-white/10 dark:bg-[#0f1627] lg:flex lg:flex-col">
-          <div className="px-3">
-            <p className="text-xs font-semibold tracking-[0.2em] text-indigo-600 dark:text-indigo-300">MINH HUY</p>
-            <h1 className="mt-1 text-xl font-semibold">AI Office</h1>
-          </div>
-          <nav className="mt-8 space-y-1" aria-label="Điều hướng chính">
-            <button type="button" onClick={() => setSurface("assistant")} className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium ${surface === "assistant" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5"}`}>
-              Trợ lý AI
-            </button>
-            <button type="button" onClick={() => setSurface("data-sources")} className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium ${surface === "data-sources" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5"}`}>
-              Nguồn dữ liệu
-            </button>
-            {botChannelsAvailable ? <button type="button" onClick={() => setSurface("bot-channels")} aria-current={surface === "bot-channels" ? "page" : undefined} className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Kênh &amp; Bot</button> : null}
-            {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Thành viên</button> : null}
-            <button type="button" onClick={() => setSurface("tasks")} className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium ${surface === "tasks" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5"}`}>Công việc</button>
-            <div className="px-3 py-2.5 text-sm text-slate-400">Nhật ký · sắp có</div>
-            <button type="button" onClick={() => setSurface("group-inbox")} className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Hộp thư nguồn</button>
-            <button type="button" onClick={() => setSurface("customer-requests")} aria-current={surface === "customer-requests" ? "page" : undefined}
-              className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium">Yêu cầu khách hàng</button>
-          </nav>
-          <div className="mt-auto rounded-2xl bg-slate-50 p-4 text-xs leading-5 text-slate-500 dark:bg-white/5 dark:text-slate-400">
-            <p className="font-semibold text-slate-700 dark:text-slate-200">{companyName}</p>
-            <p className="mt-1">Vai trò: {auth?.roles.join(", ") || "member"}</p>
-            <p className="mt-1">{loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · Read-only"}</p>
-          </div>
-        </aside>
+  const isAdmin = !!auth?.roles.includes("admin");
+  const onUnauthorized = () => reset("signed-out");
+  const section = surfaceSection(surface);
+  const scopeKey = `${companyId}:${auth?.userId ?? ""}:${sessionGeneration.current}`;
+  const connectionTabs = [
+    ...(botChannelsAvailable ? [["bot-channels", "Bot Zalo & WhatsApp"] as const] : []),
+    ["data-sources", "Nguồn dữ liệu"] as const,
+    ...(isAdmin ? [["members", "Thành viên"] as const] : []),
+  ];
 
-        <div className="min-w-0 flex-1">
-          <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-5 py-3 backdrop-blur dark:border-white/10 dark:bg-[#0f1627]/90 sm:px-8">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Công ty đang làm việc</p>
-              <h2 className="mt-0.5 break-words font-semibold">{companyName}</h2>
-              {loginMode === "browser" && companies.length > 1 ? <div className="mt-2">
-                <label htmlFor="workspace-company" className="mr-2 text-sm">Chuyển công ty</label>
-                <select id="workspace-company" value={companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyId ?? companyId} disabled={busy || sourceSaving}
-                  onChange={event => void selectCompany(event.target.value)}
-                  className="max-w-full rounded-lg border border-slate-200 bg-transparent px-2 py-1 text-sm dark:border-white/15">
-                  {companies.map(item => <option key={item.companyId} value={item.companyId}>{item.companyName}</option>)}
-                </select>
-              </div> : null}
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200 sm:inline-flex">
-                Đã đăng nhập
-              </span>
-              <button type="button" onClick={() => void signOut()} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium dark:border-white/15">
-                Đăng xuất
-              </button>
-            </div>
-          </header>
-
-          <div key={`${companyId}:${sessionGeneration.current}`} className="px-4 py-5 sm:px-8 sm:py-7">
-            {companyChoiceError ? <div role="alert" className="mb-4 rounded-xl border border-amber-200 p-3 text-sm dark:border-amber-400/30">
-              {companyChoiceError} <button type="button" onClick={() => void loadCompanies()} className="ml-2 underline">Làm mới công ty</button>
-            </div> : null}
-            <div className="mb-5 flex flex-wrap gap-2 lg:hidden">
-              <button type="button" onClick={() => setSurface("assistant")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Trợ lý AI</button>
-              <button type="button" onClick={() => setSurface("data-sources")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Nguồn dữ liệu</button>
-              <button type="button" aria-label="Mở Hộp thư nguồn trên di động" onClick={() => setSurface("group-inbox")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Hộp thư nguồn</button>
-              <button type="button" aria-label="Mở Yêu cầu khách hàng trên di động" onClick={() => setSurface("customer-requests")}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Yêu cầu khách hàng</button>
-              <button type="button" aria-label="Mở Công việc trên di động" onClick={() => setSurface("tasks")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Công việc</button>
-              {botChannelsAvailable ? <button type="button" aria-label="Mở Kênh & Bot trên di động" onClick={() => setSurface("bot-channels")} aria-current={surface === "bot-channels" ? "page" : undefined} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Kênh &amp; Bot</button> : null}
-              {auth?.roles.includes("admin") ? <button type="button" onClick={() => setSurface("members")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5">Thành viên</button> : null}
-            </div>
-
-            {surface === "bot-channels" ? (botChannelsAvailable && auth ? <BotChannelPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`}
-              companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request}
-              onUnauthorized={() => reset("signed-out")} /> : null) : surface === "customer-requests" && auth ? <CustomerRequestPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`}
-              tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-              isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} />
-              : surface === "group-inbox" && auth ? <GroupInboxPanel key={`${companyId}:${auth.userId}:${sessionGeneration.current}`}
-              tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-              isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} /> : surface === "tasks" && auth ? <div key={`${companyId}:${auth.userId}:${sessionGeneration.current}`} className="space-y-5">
-              <SubmissionRecoveryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} disabled={busy || submission.working}
-                isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")}
-                onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
-              <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-                isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} />
-            </div> : surface === "members" ? (auth?.roles.includes("admin") ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-              isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} /> : null) : surface === "assistant" ? (
+  let content: ReactNode = null;
+  if (section === "tong-quan") {
+    content = <WorkspaceOverview companyName={companyName} onOpen={next => setSurface(sectionSurfaces[next])} />;
+  } else if (section === "tin-nhan") {
+    content = <>
+      <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
+      {auth ? <GroupInboxPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /> : null}
+    </>;
+  } else if (section === "cong-viec") {
+    content = <>
+      <SectionHeader title="Công việc" description="Yêu cầu AI tổng hợp từ tin nhắn khách và việc đã giao cho trợ lý." />
+      <SectionTabs label="Loại công việc" value={surface === "tasks" ? "tasks" : "customer-requests"} onChange={setSurface}
+        tabs={[["customer-requests", "Yêu cầu khách hàng"], ["tasks", "Việc giao cho AI"]]} />
+      {surface === "tasks" && auth ? <div key={scopeKey} className="space-y-5">
+        <SubmissionRecoveryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} disabled={busy || submission.working}
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized}
+          onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
+        <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+      </div> : auth ? <CustomerRequestPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /> : null}
+    </>;
+  } else if (section === "kien-thuc") {
+    content = <>
+      <SectionHeader title="Kiến thức" description="Tài liệu khách hàng, quy trình xử lý và ghi chú gắn với công việc." />
+      <div className="rounded-xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">Mục này đang được xây dựng.</div>
+    </>;
+  } else if (section === "ket-noi") {
+    const tab = connectionTabs.some(([key]) => key === surface) ? surface : "data-sources";
+    content = <>
+      <SectionHeader title="Kết nối" description="Bot nhắn tin, nguồn dữ liệu ERP và thành viên được dùng AI Office." />
+      <SectionTabs label="Loại kết nối" value={tab} onChange={setSurface} tabs={connectionTabs} />
+      {tab === "bot-channels" && botChannelsAvailable && auth ? <BotChannelPanel key={scopeKey}
+        companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request}
+        onUnauthorized={onUnauthorized} />
+      : tab === "members" && isAdmin && auth ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId}
+        generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+      : (
+              <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">Nguồn dữ liệu</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">Quản lý và kiểm tra các nguồn ERP của công ty.</p>
+                  </div>
+                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="rounded-xl border px-4 py-2 text-sm font-medium">
+                    {sourceLoading ? "Đang tải…" : "Làm mới"}
+                  </button>
+                  {auth?.roles.includes("admin") && !addingSource ? (
+                    <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Thêm nguồn chỉ đọc</button>
+                  ) : null}
+                </div>
+                {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
+                  isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
+                {addingSource && auth?.roles.includes("admin") ? (
+                  <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
+                    isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}
+                    onUnauthorized={() => reset("signed-out")}
+                    onRegistered={fresh => { setSources(fresh); setSelectedSourceId(current => taskSourceSelection(fresh, current)); setAddingSource(false); setNotice("Đã đăng ký nguồn chỉ đọc và xác nhận lại danh sách."); }} />
+                ) : null}
+                {notice ? <p role="status" className="mt-4 text-sm text-accent-foreground">{notice}</p> : null}
+                {!editingSource && editorError ? <p role="alert" className="mt-4 text-sm text-rose-600 dark:text-rose-300">{editorError}</p> : null}
+                <div className="mt-6 grid gap-4 xl:grid-cols-2">
+                  {sources.map((source) => (
+                    <article key={source.id} className="rounded-2xl border p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="font-semibold">{source.logicalName}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{source.purpose}</p>
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${source.allowRead && !source.allowWrite ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200" : "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-200"}`}>
+                          {sourceLabel(source)}
+                        </span>
+                      </div>
+                      <dl className="mt-5 grid grid-cols-3 gap-3 text-sm">
+                        <div><dt className="text-xs text-muted-foreground">Loại</dt><dd className="mt-1 font-medium">{source.kind}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Môi trường</dt><dd className="mt-1 font-medium">{source.environment}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Đồng thời</dt><dd className="mt-1 font-medium">{source.maxConcurrency}</dd></div>
+                      </dl>
+                      <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-muted p-3">
+                        <span className="text-sm">{connectionState[source.id] ?? "Chưa kiểm tra trong phiên này"}</span>
+                        <button type="button" onClick={() => void testConnection(source)} className="rounded-lg border bg-card px-3 py-2 text-xs font-semibold hover:bg-muted">
+                          Kiểm tra
+                        </button>
+                      </div>
+                      {auth?.roles.includes("admin") && editingSource?.id !== source.id ? (
+                        <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => void editSource(source)} className="mt-4 rounded-lg border px-3 py-2 text-sm font-medium disabled:opacity-50">Chỉnh sửa</button>
+                      ) : null}
+                      {editingSource?.id === source.id ? (
+                        <SourceMetadataEditor source={editingSource} saving={sourceSaving} error={editorError} onSave={draft => void saveSource(draft)} onCancel={() => { setEditingSource(null); setEditorError(""); }} />
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+                {!sourceLoading && sources.length === 0 ? <p className="mt-6 rounded-xl bg-muted p-5 text-sm text-muted-foreground">Chưa có nguồn dữ liệu được cấp quyền.</p> : null}
+              </section>
+      )}
+    </>;
+  } else {
+    content = (
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
-                <section className="flex min-h-[calc(100vh-9rem)] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#11182a]">
-                  <div className="border-b border-slate-100 px-5 py-4 dark:border-white/10 sm:px-6">
+                <section className="flex min-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
+                  <div className="border-b px-5 py-4 sm:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h2 className="text-lg font-semibold">Trợ lý AI</h2>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {selectedSource ? `Nguồn: ${selectedSource.logicalName}` : "Chưa có nguồn dữ liệu"}
                         </p>
                       </div>
@@ -702,7 +765,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                         aria-label="Nguồn dữ liệu"
                         value={selectedSourceId}
                         onChange={(event) => setSelectedSourceId(event.target.value)}
-                        className="max-w-xs rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-white/15"
+                        className="max-w-xs rounded-xl border bg-card px-3 py-2 text-sm"
                       >
                         <option value="">Chọn nguồn dữ liệu</option>
                         {readOnlySources.map((source) => <option key={source.id} value={source.id}>{source.logicalName}</option>)}
@@ -713,7 +776,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                   <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
                     {messages.map((message) => (
                       <article key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] ${message.role === "user" ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-800 dark:bg-white/7 dark:text-slate-100"}`}>
+                        <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
                           <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
                           {message.checkpoint ? (
                             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-current/10 pt-2 text-[11px] opacity-65">
@@ -727,14 +790,14 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                     ))}
                     {taskStage ? (
                       <div className="flex justify-start">
-                        <div className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200">{taskStage}</div>
+                        <div className="rounded-2xl bg-accent px-4 py-3 text-sm text-accent-foreground">{taskStage}</div>
                       </div>
                     ) : null}
                   </div>
 
-                  <form onSubmit={askAi} className="border-t border-slate-100 p-4 dark:border-white/10 sm:p-5">
+                  <form onSubmit={askAi} className="border-t p-4 sm:p-5">
                     {notice ? <p role="status" className="mb-3 text-sm text-rose-600 dark:text-rose-300">{notice}</p> : null}
-                    {submission.pending ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-indigo-200 p-3 text-sm dark:border-indigo-400/30">
+                    {submission.pending ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-ring/40 bg-accent/40 p-3 text-sm">
                       {!messages.some(message => message.role === "user" && message.text === submission.pending!.input.question)
                         ? <p className="whitespace-pre-wrap break-words">{submission.pending.input.question}</p> : null}
                       <p role="status" className="mt-2">{submission.pending.notice}</p>
@@ -750,116 +813,67 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                         <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
                       </> : null}
                     </div> : null}
-                    <div className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2 focus-within:border-indigo-400 dark:border-white/10 dark:bg-white/5">
+                    <div className="flex items-end gap-3 rounded-2xl border bg-muted p-2 focus-within:border-ring">
                       <textarea
                         name="question"
                         rows={2}
                         disabled={busy || submission.working || !!submission.pending && submission.pending.phase !== "accepted"}
                         placeholder="Hỏi AI Office về nguồn dữ liệu đã chọn…"
-                        className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400"
+                        className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
                       />
-                      <button type="submit" disabled={busy || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40">
+                      <button type="submit" disabled={busy || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40">
                         Gửi
                       </button>
                     </div>
-                    <p className="mt-2 px-1 text-xs text-slate-400">Câu trả lời dựa trên nguồn dữ liệu bạn được cấp quyền.</p>
+                    <p className="mt-2 px-1 text-xs text-muted-foreground">Câu trả lời dựa trên nguồn dữ liệu bạn được cấp quyền.</p>
                   </form>
                 </section>
 
                 <aside className="space-y-5">
-                  <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#11182a]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Nguồn đang dùng</p>
+                  <section className="rounded-xl border bg-card p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Nguồn đang dùng</p>
                     {selectedSource ? (
                       <>
                         <h3 className="mt-3 font-semibold">{selectedSource.logicalName}</h3>
-                        <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">{selectedSource.purpose}</p>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">{selectedSource.purpose}</p>
                         <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                          <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/5"><dt className="text-xs text-slate-400">Quyền</dt><dd className="mt-1 font-medium">{sourceLabel(selectedSource)}</dd></div>
-                          <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/5"><dt className="text-xs text-slate-400">Đồng thời</dt><dd className="mt-1 font-medium">{selectedSource.maxConcurrency}</dd></div>
+                          <div className="rounded-xl bg-muted p-3"><dt className="text-xs text-muted-foreground">Quyền</dt><dd className="mt-1 font-medium">{sourceLabel(selectedSource)}</dd></div>
+                          <div className="rounded-xl bg-muted p-3"><dt className="text-xs text-muted-foreground">Đồng thời</dt><dd className="mt-1 font-medium">{selectedSource.maxConcurrency}</dd></div>
                         </dl>
                       </>
-                    ) : <p className="mt-3 text-sm text-slate-500">Chưa có nguồn read-only khả dụng.</p>}
+                    ) : <p className="mt-3 text-sm text-muted-foreground">Chưa có nguồn read-only khả dụng.</p>}
                   </section>
 
                   {messages.slice().reverse().find((message) => message.checkpoint)?.checkpoint ? (() => {
                     const checkpoint = messages.slice().reverse().find((message) => message.checkpoint)!.checkpoint!;
                     return (
-                      <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#11182a]">
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Evidence gần nhất</p>
+                      <section className="rounded-xl border bg-card p-5 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Evidence gần nhất</p>
                         <dl className="mt-4 space-y-3 text-sm">
-                          <div><dt className="text-slate-400">Database</dt><dd className="mt-1 font-medium">{checkpoint.erpDatabase ?? "—"}</dd></div>
-                          <div><dt className="text-slate-400">Số bảng</dt><dd className="mt-1 font-medium">{checkpoint.erpTableCount ?? "—"}</dd></div>
-                          <div><dt className="text-slate-400">Model</dt><dd className="mt-1 font-medium">{checkpoint.model}</dd></div>
-                          <div><dt className="text-slate-400">Token</dt><dd className="mt-1 font-medium">{checkpoint.inputTokens} in · {checkpoint.outputTokens} out</dd></div>
+                          <div><dt className="text-muted-foreground">Database</dt><dd className="mt-1 font-medium">{checkpoint.erpDatabase ?? "—"}</dd></div>
+                          <div><dt className="text-muted-foreground">Số bảng</dt><dd className="mt-1 font-medium">{checkpoint.erpTableCount ?? "—"}</dd></div>
+                          <div><dt className="text-muted-foreground">Model</dt><dd className="mt-1 font-medium">{checkpoint.model}</dd></div>
+                          <div><dt className="text-muted-foreground">Token</dt><dd className="mt-1 font-medium">{checkpoint.inputTokens} in · {checkpoint.outputTokens} out</dd></div>
                         </dl>
                       </section>
                     );
                   })() : null}
                 </aside>
               </div>
-            ) : (
-              <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#11182a] sm:p-7">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Resource Plane</p>
-                    <h2 className="mt-2 text-2xl font-semibold">Nguồn dữ liệu</h2>
-                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Quản lý và kiểm tra các nguồn ERP của công ty.</p>
-                  </div>
-                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium dark:border-white/15">
-                    {sourceLoading ? "Đang tải…" : "Làm mới"}
-                  </button>
-                  {auth?.roles.includes("admin") && !addingSource ? (
-                    <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white">Thêm nguồn chỉ đọc</button>
-                  ) : null}
-                </div>
-                {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
-                  isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
-                {addingSource && auth?.roles.includes("admin") ? (
-                  <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
-                    isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}
-                    onUnauthorized={() => reset("signed-out")}
-                    onRegistered={fresh => { setSources(fresh); setSelectedSourceId(current => taskSourceSelection(fresh, current)); setAddingSource(false); setNotice("Đã đăng ký nguồn chỉ đọc và xác nhận lại danh sách."); }} />
-                ) : null}
-                {notice ? <p role="status" className="mt-4 text-sm text-indigo-700 dark:text-indigo-300">{notice}</p> : null}
-                {!editingSource && editorError ? <p role="alert" className="mt-4 text-sm text-rose-600 dark:text-rose-300">{editorError}</p> : null}
-                <div className="mt-6 grid gap-4 xl:grid-cols-2">
-                  {sources.map((source) => (
-                    <article key={source.id} className="rounded-2xl border border-slate-200 p-5 dark:border-white/10">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-semibold">{source.logicalName}</h3>
-                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{source.purpose}</p>
-                        </div>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${source.allowRead && !source.allowWrite ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200" : "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-200"}`}>
-                          {sourceLabel(source)}
-                        </span>
-                      </div>
-                      <dl className="mt-5 grid grid-cols-3 gap-3 text-sm">
-                        <div><dt className="text-xs text-slate-400">Loại</dt><dd className="mt-1 font-medium">{source.kind}</dd></div>
-                        <div><dt className="text-xs text-slate-400">Môi trường</dt><dd className="mt-1 font-medium">{source.environment}</dd></div>
-                        <div><dt className="text-xs text-slate-400">Đồng thời</dt><dd className="mt-1 font-medium">{source.maxConcurrency}</dd></div>
-                      </dl>
-                      <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3 dark:bg-white/5">
-                        <span className="text-sm">{connectionState[source.id] ?? "Chưa kiểm tra trong phiên này"}</span>
-                        <button type="button" onClick={() => void testConnection(source)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-white/10 dark:bg-white/5">
-                          Kiểm tra
-                        </button>
-                      </div>
-                      {auth?.roles.includes("admin") && editingSource?.id !== source.id ? (
-                        <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => void editSource(source)} className="mt-4 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-50 dark:border-white/15">Chỉnh sửa</button>
-                      ) : null}
-                      {editingSource?.id === source.id ? (
-                        <SourceMetadataEditor source={editingSource} saving={sourceSaving} error={editorError} onSave={draft => void saveSource(draft)} onCancel={() => { setEditingSource(null); setEditorError(""); }} />
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-                {!sourceLoading && sources.length === 0 ? <p className="mt-6 rounded-xl bg-slate-50 p-5 text-sm text-slate-500 dark:bg-white/5">Chưa có nguồn dữ liệu được cấp quyền.</p> : null}
-              </section>
-            )}
-          </div>
-        </div>
+    );
+  }
+
+  return (
+    <WorkspaceShell section={section} onSection={next => setSurface(sectionSurfaces[next])} companyId={companyId} companyName={companyName}
+      companies={loginMode === "browser" ? companies : []} companyDisabled={busy || sourceSaving} onSelectCompany={id => void selectCompany(id)}
+      roleLabel={auth?.roles.join(", ") || "member"} accountLabel={loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · chỉ đọc"}
+      onSignOut={() => void signOut()}>
+      <div key={`${companyId}:${sessionGeneration.current}`}>
+        {companyChoiceError ? <div role="alert" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100">
+          {companyChoiceError} <button type="button" onClick={() => void loadCompanies()} className="ml-2 underline">Làm mới công ty</button>
+        </div> : null}
+        {content}
       </div>
-    </main>
+    </WorkspaceShell>
   );
 }

@@ -39,7 +39,7 @@ it("does not commit A sources when invalidation lands after validate resolves bu
   }));
   const { container } = render(<LocalAiWorkspace companyId={company} companyName="Synthetic" />);
   await screen.findByRole("option", { name: "INITIAL-A" });
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("section button")!);
   await waitFor(() => expect(notificationSent).toBe(true));
   await waitFor(() => expect(sourceCalls).toBe(3));
@@ -69,7 +69,7 @@ it("does not commit A sources after a concurrent authoritative focus validation 
   }));
   const { container } = render(<LocalAiWorkspace companyId={company} companyName="Synthetic" />);
   await screen.findByRole("option", { name: "INITIAL-A" });
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   fireEvent.click(container.querySelector("section button")!);
   await waitFor(() => expect(contextCalls).toBe(5));
   fireEvent(window, new Event("focus"));
@@ -125,7 +125,7 @@ it.each([
   const { container } = render(<LocalAiWorkspace companyId={company} companyName="Synthetic" />);
   await screen.findByRole("option", { name: "INITIAL-A" });
   if (operation === "sources" || operation === "connection") {
-    fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+    fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
     fireEvent.click(container.querySelector(operation === "sources" ? "section button" : "article button")!);
   } else {
     const input = container.querySelector("textarea")!;
@@ -148,7 +148,7 @@ it.each([
   if (operation === "poll" && phase === "pre") expect(polls).toBe(0);
   await act(async () => sourceB.resolve(Response.json(sources("PUBLIC-B"))));
   await screen.findByRole("option", { name: "PUBLIC-B" });
-  fireEvent.click(container.querySelector("nav button:nth-child(2)")!);
+  fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
   expect(screen.queryByText("Kết nối tốt")).toBeNull();
   expect(container.textContent).not.toContain("PRIVATE-LATE-A");
 }, 10000);
