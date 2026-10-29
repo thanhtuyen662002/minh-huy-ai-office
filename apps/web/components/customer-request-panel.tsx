@@ -1,27 +1,43 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
+import { RefreshCw, Search } from "lucide-react";
 import { parseMemberPage, type CompanyMember } from "../lib/company-members";
-import { type CustomerRequestDetail as Detail, type CustomerRequestPage, type CustomerRequestPatch,
+import { type CustomerRequest, type CustomerRequestDetail as Detail, type CustomerRequestPage, type CustomerRequestPatch, type RequestStatus,
   parseCustomerRequest, parseCustomerRequestDetail, parseCustomerRequestPage, requestConflict, requestStatuses } from "../lib/customer-requests";
-import { CustomerRequestDetail, requestButton as button, requestTime } from "./customer-request-detail";
+import { CustomerRequestDetail, StatusChip, initials, requestButton as button, requestField as field, requestTime, statusTone } from "./customer-request-detail";
 
 type Props = { tenantId: string; companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
-type Selection = { status: string; customer: string; offset: number; code?: string };
-type State = { scope: string; page: CustomerRequestPage | null; detail: Detail | null; members: CompanyMember[] | null;
+type View = "board" | "list";
+type Selection = { view: View; status: string; customer: string; offset: number; code?: string };
+// Rejected tickets stay out of the board; the list view still finds them.
+const boardStatuses = ["new", "needs_clarification", "in_progress", "done"] as const satisfies readonly RequestStatus[];
+type BoardStatus = typeof boardStatuses[number];
+type Board = Record<BoardStatus, CustomerRequestPage>;
+const boardLimit = 100, listLimit = 25;
+type State = { scope: string; page: CustomerRequestPage | null; board: Board | null; detail: Detail | null; members: CompanyMember[] | null;
   memberError: string; loading: boolean; saving: boolean; conflict: boolean; error: string; notice: string; selection: Selection };
-const initialSelection = (): Selection => ({ status: "", customer: "", offset: 0 });
-const empty = (scope: string, selection = initialSelection()): State => ({ scope, selection, page: null, detail: null, members: null,
+const initialSelection = (): Selection => ({ view: "board", status: "", customer: "", offset: 0 });
+const empty = (scope: string, selection = initialSelection()): State => ({ scope, selection, page: null, board: null, detail: null, members: null,
   memberError: "", loading: false, saving: false, conflict: false, error: "", notice: "" });
 class ReadFailure extends Error { constructor(readonly status: number) { super("Customer request unavailable"); } }
+const relative = new Intl.RelativeTimeFormat("vi", { numeric: "auto" });
+function age(value: string) {
+  const minutes = Math.round((Date.parse(value) - Date.now()) / 60000);
+  if (Math.abs(minutes) < 60) return relative.format(minutes, "minute");
+  if (Math.abs(minutes) < 60 * 24) return relative.format(Math.round(minutes / 60), "hour");
+  return relative.format(Math.round(minutes / 60 / 24), "day");
+}
 
 export function CustomerRequestPanel({ tenantId, companyId, userId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
   const scope = `${tenantId}:${companyId}:${userId}:${generation}`;
   const [state, setState] = useState(() => empty(scope));
   const [statusFilter, setStatusFilter] = useState(""), [customerFilter, setCustomerFilter] = useState("");
+  const [dropTarget, setDropTarget] = useState<BoardStatus | null>(null);
   const live = useRef(scope); live.current = scope;
   const mounted = useRef(false), serial = useRef(0), controller = useRef<AbortController | null>(null), saving = useRef<object | null>(null);
+  const dragged = useRef<string | null>(null);
   const current = (value: number) => mounted.current && live.current === scope && serial.current === value && isCurrent(generation);
   function cancel() { serial.current++; controller.current?.abort(); controller.current = null; }
   async function confirm(value: number) {
@@ -39,6 +55,12 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
     return await confirm(value) ? body : null;
   }
   const root = `/api/local/customer-requests`, companyQuery = `companyId=${encodeURIComponent(companyId)}`;
+  const pageUrl = (selection: Selection, status: string, offset: number, limit: number) => {
+    const query = new URLSearchParams({ companyId, offset: String(offset), limit: String(limit) });
+    if (status) query.set("status", status);
+    if (selection.customer) query.set("customer", selection.customer);
+    return `${root}?${query}`;
+  };
   async function directory(value: number, signal: AbortSignal) {
     try {
       const members: CompanyMember[] = [];
@@ -58,21 +80,43 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
         : "Không tải được đầy đủ danh bạ thành viên. Tải lại phiếu để thử lại; vẫn có thể đổi trạng thái." }));
     }
   }
-  async function read(selection: Selection, notice = "") {
+  async function collection(selection: Selection, value: number, signal: AbortSignal) {
+    if (selection.view === "list") {
+      const body = await get(pageUrl(selection, selection.status, selection.offset, listLimit), value, signal);
+      if (body === null) return null;
+      const page = parseCustomerRequestPage(body, selection.offset, listLimit);
+      if (!page) throw new Error();
+      return { page, board: null };
+    }
+    const bodies = await Promise.all(boardStatuses.map(status => get(pageUrl(selection, status, 0, boardLimit), value, signal)));
+    if (bodies.some(body => body === null)) return null;
+    const board = {} as Board;
+    boardStatuses.forEach((status, index) => {
+      const page = parseCustomerRequestPage(bodies[index], 0, boardLimit);
+      if (!page) throw new Error();
+      // A ticket that changed column between the column reads shows only where its own status puts it.
+      board[status] = { ...page, items: page.items.filter(item => item.status === status) };
+    });
+    return { page: null, board };
+  }
+  // Opening or closing a ticket keeps the loaded board; every other read replaces it.
+  async function read(selection: Selection, notice = "", keepCollection = false) {
     if (!mounted.current || !isCurrent(generation) || saving.current) return;
     cancel(); const value = serial.current, abort = new AbortController(); controller.current = abort;
-    setState({ ...empty(scope, selection), loading: true, notice });
-    const members = directory(value, abort.signal);
+    setState(old => {
+      const reusable = old.scope === scope ? old : empty(scope, selection);
+      return { ...reusable, selection, loading: true, saving: false, notice: "", error: "", conflict: false,
+        page: keepCollection ? reusable.page : null, board: keepCollection ? reusable.board : null,
+        detail: selection.code && reusable.detail?.request.code === selection.code ? reusable.detail : null };
+    });
+    const members = keepCollection && state.members ? Promise.resolve() : directory(value, abort.signal);
     try {
-      const query = new URLSearchParams({ companyId, offset: String(selection.offset), limit: "25" });
-      if (selection.status) query.set("status", selection.status);
-      if (selection.customer) query.set("customer", selection.customer);
-      const body = await get(selection.code ? `${root}/${encodeURIComponent(selection.code)}?${companyQuery}` : `${root}?${query}`, value, abort.signal);
-      if (body === null || !current(value)) return;
+      const [loaded, body] = await Promise.all([keepCollection ? Promise.resolve(undefined) : collection(selection, value, abort.signal),
+        selection.code ? get(`${root}/${encodeURIComponent(selection.code)}?${companyQuery}`, value, abort.signal) : Promise.resolve(undefined)]);
+      if (loaded === null || body === null || !current(value)) return;
       const detail = selection.code ? parseCustomerRequestDetail(body, selection.code) : null;
-      const page = selection.code ? null : parseCustomerRequestPage(body, selection.offset, 25);
-      if (!detail && !page) throw new Error();
-      setState(old => ({ ...old, detail, page, loading: false }));
+      if (selection.code && !detail) throw new Error();
+      setState(old => ({ ...old, ...(loaded ?? {}), detail, notice, loading: false }));
     } catch (error) {
       if (current(value)) {
         cancel(); // Also discard a directory response racing a ticket refusal.
@@ -86,11 +130,10 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
       await members;
     }
   }
-  async function save(patch: CustomerRequestPatch) {
-    if (saving.current || state.loading || state.conflict || !state.detail || !isCurrent(generation)) return;
+  async function save(code: string, patch: CustomerRequestPatch) {
+    if (saving.current || state.loading || state.conflict || !isCurrent(generation)) return;
     const operation = {}; saving.current = operation; cancel();
     const value = serial.current, abort = new AbortController(); controller.current = abort;
-    const code = state.detail.request.code;
     setState(old => ({ ...old, saving: true, error: "", notice: "" }));
     try {
       const body = await get(`${root}/${encodeURIComponent(code)}?${companyQuery}`, value, abort.signal,
@@ -115,6 +158,11 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
       if (current(value)) setState(old => ({ ...old, saving: false }));
     }
   }
+  function close() {
+    if (saving.current) return;
+    cancel();
+    setState(old => ({ ...old, loading: false, detail: null, selection: { ...old.selection, code: undefined } }));
+  }
   const latest = useRef(read); latest.current = read;
   useEffect(() => {
     mounted.current = true; saving.current = null; setStatusFilter(""); setCustomerFilter("");
@@ -125,52 +173,111 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
   }, [scope]);
   const visible = state.scope === scope && isCurrent(generation) ? state : empty(scope);
   const disabled = visible.loading || visible.saving;
+  const view = visible.selection.view;
+  const memberName = (id: string | null) => id === null ? null : visible.members?.find(member => member.userId === id)?.displayName ?? null;
   function filter(event: FormEvent) {
     event.preventDefault();
-    void read({ status: statusFilter, customer: customerFilter.trim(), offset: 0 });
+    void read({ view, status: view === "list" ? statusFilter : "", customer: customerFilter.trim(), offset: 0 });
   }
-  return <section aria-label="Yêu cầu khách hàng" aria-busy={disabled}
-    className="min-w-0 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#11182a]">
-    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Yêu cầu khách hàng</h2>
-      <button type="button" className={button} disabled={disabled} onClick={() => void read(visible.selection)}>Tải lại phiếu</button></div>
-    <p role="note" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-200">
-      AI tóm tắt từ Zalo · Nội dung chưa được nhân viên xác nhận.</p>
-    {visible.loading ? <p role="status">Đang tải yêu cầu khách hàng…</p> : null}
-    {visible.saving ? <p role="status">Đang lưu thay đổi…</p> : null}
-    {visible.error ? <p role="alert" className="text-sm text-rose-600 dark:text-rose-200">{visible.error}</p> : null}
-    {visible.notice ? <p role="status">{visible.notice}</p> : null}
-    {visible.selection.code ? <button type="button" className={button} disabled={disabled}
-      onClick={() => void read({ ...visible.selection, code: undefined })}>Về danh sách</button> : <>
-      <form onSubmit={filter} aria-label="Lọc yêu cầu khách hàng" className="flex flex-wrap items-end gap-3">
-        <label className="grid gap-1 text-sm">Lọc trạng thái<select className={button} value={statusFilter} disabled={disabled}
-          onChange={event => setStatusFilter(event.target.value)}><option value="">Tất cả trạng thái</option>
-          {Object.entries(requestStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label className="grid gap-1 text-sm">Khách hàng<input className={button} type="search" maxLength={200} value={customerFilter}
-          disabled={disabled} onChange={event => setCustomerFilter(event.target.value)} placeholder="Tên khách hàng" /></label>
+  const openTicket = (code: string) => void read({ ...visible.selection, code }, "", true);
+  function drop(event: DragEvent, status: BoardStatus) {
+    event.preventDefault(); setDropTarget(null);
+    const code = dragged.current; dragged.current = null;
+    const item = boardStatuses.flatMap(column => visible.board?.[column].items ?? []).find(ticket => ticket.code === code);
+    if (!item || item.status === status || disabled || visible.conflict) return;
+    void save(item.code, { rowVersion: item.rowVersion, status });
+  }
+  function card(item: CustomerRequest) {
+    const owner = memberName(item.assigneeUserId), selected = visible.selection.code === item.code;
+    return <li key={item.id}>
+      <button type="button" aria-label={item.code} aria-describedby={`request-${item.id}`} aria-pressed={selected} disabled={visible.saving}
+        draggable={!disabled && !visible.conflict} onDragStart={event => { dragged.current = item.code; event.dataTransfer.effectAllowed = "move"; }}
+        onDragEnd={() => { dragged.current = null; setDropTarget(null); }} onClick={() => openTicket(item.code)}
+        className={`flex w-full flex-col gap-2 rounded-lg border bg-card p-3 text-left shadow-sm transition-colors hover:border-ring/60 disabled:opacity-60 ${selected ? "border-ring ring-2 ring-ring/20" : ""}`}>
+        <span className="flex w-full items-center gap-2 text-xs text-muted-foreground"><span className="font-mono">{item.code}</span>
+          <span className="ml-auto">{age(item.createdAt)}</span></span>
+        <span id={`request-${item.id}`} className="line-clamp-3 whitespace-pre-wrap break-words text-sm font-medium leading-snug">{item.summary}</span>
+        <span className="flex w-full items-center gap-2 text-xs text-muted-foreground">
+          <span className="min-w-0 flex-1 truncate">{item.customerName}</span>
+          <span title={owner ?? (item.assigneeUserId === null ? "Chưa phân công" : "Đã phân công")}
+            className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground">
+            {owner ? initials(owner) : item.assigneeUserId === null ? "—" : "•"}</span>
+        </span>
+      </button>
+    </li>;
+  }
+  const viewButton = (value: View, label: string) => <button type="button" aria-pressed={view === value} disabled={disabled}
+    onClick={() => view !== value && void read({ ...initialSelection(), view: value, customer: visible.selection.customer })}
+    className={`h-7 rounded-md px-3 text-sm font-medium disabled:opacity-60 ${view === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{label}</button>;
+  return <section aria-label="Yêu cầu khách hàng" aria-busy={disabled} className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-center gap-2">
+      <div role="group" aria-label="Kiểu xem" className="inline-flex gap-0.5 rounded-lg bg-muted p-1">
+        {viewButton("board", "Bảng")}{viewButton("list", "Danh sách")}</div>
+      <form onSubmit={filter} aria-label="Lọc yêu cầu khách hàng" className="flex flex-wrap items-center gap-2">
+        {view === "list" ? <>
+          <label htmlFor="request-status-filter" className="sr-only">Lọc trạng thái</label>
+          <select id="request-status-filter" className={field} value={statusFilter} disabled={disabled}
+            onChange={event => setStatusFilter(event.target.value)}><option value="">Tất cả trạng thái</option>
+            {Object.entries(requestStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+        </> : null}
+        <label htmlFor="request-customer-filter" className="sr-only">Khách hàng</label>
+        <span className="relative"><Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" aria-hidden="true" />
+          <input id="request-customer-filter" className={`${field} w-56 pl-8`} type="search" maxLength={200} value={customerFilter}
+            disabled={disabled} onChange={event => setCustomerFilter(event.target.value)} placeholder="Tên khách hàng" /></span>
         <button type="submit" className={button} disabled={disabled}>Lọc phiếu</button>
       </form>
-      <p className="text-sm text-slate-500">Sắp xếp mới nhất trước.</p>
-    </>}
-    {visible.page ? <>
-      {visible.page.items.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm" aria-label="Danh sách yêu cầu khách hàng">
-        <thead><tr>{["Mã phiếu", "Khách hàng", "Nhóm Zalo", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo"].map(label => <th scope="col" className="p-3" key={label}>{label}</th>)}</tr></thead>
-        <tbody>{visible.page.items.map(item => <tr key={item.id} className="border-t border-slate-100 align-top dark:border-white/10">
-          <td className="p-3"><button className={`${button} whitespace-nowrap`} type="button" disabled={disabled}
-            onClick={() => void read({ ...visible.selection, code: item.code })}>{item.code}</button></td>
-          <td className="p-3 break-words">{item.customerName}</td><td className="p-3 break-words">{item.sourceGroupName}</td>
-          <td className="max-w-sm p-3"><p className="line-clamp-3 whitespace-pre-wrap break-words">{item.summary}</p></td>
-          <td className="p-3">{requestStatuses[item.status]}</td><td className="p-3 break-all">{item.assigneeUserId === null ? "Chưa phân công"
-            : visible.members?.find(member => member.userId === item.assigneeUserId)?.displayName ?? item.assigneeUserId}</td><td className="p-3">{requestTime(item.createdAt)}</td>
-        </tr>)}</tbody></table></div> : <p>Chưa có yêu cầu khách hàng phù hợp với bộ lọc.</p>}
-      <div className="flex flex-wrap items-center gap-3"><button type="button" className={button} disabled={disabled || visible.selection.offset === 0}
-        onClick={() => void read({ ...visible.selection, offset: visible.selection.offset - 25 })}>Trang trước</button>
-        <span>Trang {Math.floor(visible.selection.offset / 25) + 1}</span>
-        <button type="button" className={button} disabled={disabled || !visible.page.hasMore || visible.selection.offset >= 100000}
-          onClick={() => void read({ ...visible.selection, offset: visible.selection.offset + 25 })}>Trang sau</button></div>
-      {visible.memberError ? <p role="note" className="text-sm text-amber-700 dark:text-amber-200">{visible.memberError}</p> : null}
-    </> : null}
-    {visible.detail ? <CustomerRequestDetail key={`${scope}:${visible.detail.request.code}:${visible.detail.request.rowVersion}`}
-      detail={visible.detail} members={visible.members} memberError={visible.memberError} disabled={disabled || visible.conflict}
-      onSave={patch => void save(patch)} /> : null}
+      <button type="button" className={`${button} ml-auto`} disabled={disabled} onClick={() => void read(visible.selection)}>
+        <RefreshCw className={`size-4 ${visible.loading ? "animate-spin" : ""}`} aria-hidden="true" />Tải lại phiếu</button>
+    </div>
+    <p role="note" className="text-xs text-muted-foreground">AI tóm tắt từ Zalo · Nội dung chưa được nhân viên xác nhận.
+      {view === "board" ? " Kéo thẻ sang cột khác để đổi trạng thái." : " Sắp xếp mới nhất trước."}</p>
+    <div aria-live="polite" className="space-y-1 text-sm empty:hidden">
+      {visible.loading && !visible.board && !visible.page ? <p role="status" className="text-muted-foreground">Đang tải yêu cầu khách hàng…</p> : null}
+      {visible.saving ? <p role="status" className="text-muted-foreground">Đang lưu thay đổi…</p> : null}
+      {visible.notice ? <p role="status" className="text-emerald-700 dark:text-emerald-300">{visible.notice}</p> : null}
+    </div>
+    {visible.error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{visible.error}</p> : null}
+    <div className={visible.detail ? "grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]" : ""}>
+      <div className="min-w-0 space-y-3">
+        {visible.board ? <div className="grid auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-3 overflow-x-auto pb-2">
+          {boardStatuses.map(status => {
+            const column = visible.board![status];
+            return <section key={status} aria-label={`Cột ${requestStatuses[status]}`}
+              onDragOver={event => { if (dragged.current) { event.preventDefault(); setDropTarget(status); } }}
+              onDragLeave={() => setDropTarget(old => old === status ? null : old)} onDrop={event => drop(event, status)}
+              className={`flex min-h-48 flex-col gap-2 rounded-xl bg-muted/70 p-2.5 transition-colors ${dropTarget === status ? "ring-2 ring-ring/40" : ""}`}>
+              <h3 className="flex items-center gap-2 px-1 pt-0.5 text-sm font-semibold">
+                <span className={`size-2 rounded-full ${statusTone[status].dot}`} aria-hidden="true" />{requestStatuses[status]}
+                <span className="text-xs font-medium text-muted-foreground">{column.items.length}{column.hasMore ? "+" : ""}</span></h3>
+              {column.items.length ? <ul className="m-0 flex list-none flex-col gap-2 p-0">{column.items.map(card)}</ul>
+                : <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">Không có phiếu</p>}
+            </section>;
+          })}
+        </div> : null}
+        {visible.page ? <>
+          {visible.page.items.length ? <div className="overflow-x-auto rounded-xl border bg-card shadow-sm"><table className="w-full text-left text-sm" aria-label="Danh sách yêu cầu khách hàng">
+            <thead className="border-b text-xs text-muted-foreground"><tr>{["Mã phiếu", "Khách hàng", "Nhóm Zalo", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo"].map(label => <th scope="col" className="px-3 py-2.5 font-medium" key={label}>{label}</th>)}</tr></thead>
+            <tbody>{visible.page.items.map(item => <tr key={item.id} className={`border-t align-top hover:bg-muted/50 ${visible.selection.code === item.code ? "bg-accent/60" : ""}`}>
+              <td className="px-3 py-2.5"><button className="whitespace-nowrap font-mono text-xs font-medium text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-300" type="button" disabled={visible.saving}
+                onClick={() => openTicket(item.code)}>{item.code}</button></td>
+              <td className="px-3 py-2.5 break-words">{item.customerName}</td><td className="px-3 py-2.5 break-words text-muted-foreground">{item.sourceGroupName}</td>
+              <td className="max-w-sm px-3 py-2.5"><p className="line-clamp-2 whitespace-pre-wrap break-words">{item.summary}</p></td>
+              <td className="px-3 py-2.5"><StatusChip status={item.status} /></td><td className="px-3 py-2.5 break-all">{item.assigneeUserId === null ? "Chưa phân công"
+                : memberName(item.assigneeUserId) ?? item.assigneeUserId}</td><td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{requestTime(item.createdAt)}</td>
+            </tr>)}</tbody></table></div> : <p className="rounded-xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">Chưa có yêu cầu khách hàng phù hợp với bộ lọc.</p>}
+          <div className="flex flex-wrap items-center gap-3 text-sm"><button type="button" className={button} disabled={disabled || visible.selection.offset === 0}
+            onClick={() => void read({ ...visible.selection, code: undefined, offset: visible.selection.offset - listLimit })}>Trang trước</button>
+            <span>Trang {Math.floor(visible.selection.offset / listLimit) + 1}</span>
+            <button type="button" className={button} disabled={disabled || !visible.page.hasMore || visible.selection.offset >= 100000}
+              onClick={() => void read({ ...visible.selection, code: undefined, offset: visible.selection.offset + listLimit })}>Trang sau</button></div>
+        </> : null}
+        {visible.board && boardStatuses.every(status => !visible.board![status].items.length)
+          ? <p className="text-sm text-muted-foreground">Chưa có yêu cầu khách hàng phù hợp với bộ lọc.</p> : null}
+        {visible.memberError && !visible.detail && (visible.page || visible.board) ? <p role="note" className="text-sm text-amber-700 dark:text-amber-200">{visible.memberError}</p> : null}
+      </div>
+      {visible.detail ? <div className="min-w-0 xl:sticky xl:top-20"><CustomerRequestDetail key={`${scope}:${visible.detail.request.code}:${visible.detail.request.rowVersion}`}
+        detail={visible.detail} members={visible.members} memberError={visible.memberError} disabled={disabled || visible.conflict}
+        onSave={patch => void save(visible.detail!.request.code, patch)} onClose={close} /></div> : null}
+    </div>
   </section>;
 }

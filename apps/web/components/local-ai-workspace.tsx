@@ -655,7 +655,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
   let content: ReactNode = null;
   if (section === "tong-quan") {
-    content = <WorkspaceOverview companyName={companyName} onOpen={next => setSurface(sectionSurfaces[next])} />;
+    content = <WorkspaceOverview key={scopeKey} companyName={companyName} onOpen={next => setSurface(sectionSurfaces[next])}
+      data={auth ? { companyId, generation: sessionGeneration.current, isCurrent, validate, request, onUnauthorized } : undefined} />;
   } else if (section === "tin-nhan") {
     content = <>
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
