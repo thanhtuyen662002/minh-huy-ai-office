@@ -133,6 +133,12 @@ $sites = @(
     @{ Host = $IdentityHost; Port = $IdentityPort; Keycloak = $true }
 )
 
+New-Item -ItemType Directory -Force -Path $SitesRoot | Out-Null
+# The setup root is locked to administrators; IIS worker identities (IIS_IUSRS) must read web.config
+# or every request fails with 500.19. Only proxy configuration lives here, never secrets.
+& icacls.exe $SitesRoot /grant "*S-1-5-32-568:(OI)(CI)(RX)" | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "Unable to grant IIS read access to $SitesRoot." }
+
 foreach ($site in $sites) {
     $name = $site.Host
     $path = Join-Path $SitesRoot $name
