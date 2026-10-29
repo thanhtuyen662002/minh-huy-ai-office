@@ -10,7 +10,7 @@ export const requestDetail: CustomerRequestDetail = { request: requestTicket, re
   sourceWindowFrom: "2026-10-26T00:00:00+00:00", sourceWindowTo: "2026-10-26T01:00:00+00:00",
   items: [{ content: "Kiểm tra lỗi khi chọn kho", priority: "high", kind: "bug" }],
   evidence: [{ quote: "Chọn kho mới thì không lưu được đơn <script>alert(1)</script>", sourceMessageId: "m-123", senderName: "Lan", messageTimestamp: "2026-10-26T00:30:00+00:00" }],
-  openQuestions: ["Phiên bản ERP và mã kho nào?"], events: [{ eventType: "created", actorType: "service", actorId: requestUser, oldValue: null, newValue: "new", timestamp: requestTicket.createdAt }] };
+  openQuestions: ["Phiên bản ERP và mã kho nào?"], events: [{ eventType: "created", actorType: "service", actorId: requestUser, actorName: null, oldValue: null, newValue: "new", timestamp: requestTicket.createdAt }] };
 export const memberDirectory = { companyId: requestCompany, items: [
   { userId: assigneeUser, displayName: "Huy", userActive: true, membershipActive: true, roles: ["member"] },
   { userId: requestUser, displayName: "Đã ngừng hoạt động", userActive: false, membershipActive: true, roles: [] },

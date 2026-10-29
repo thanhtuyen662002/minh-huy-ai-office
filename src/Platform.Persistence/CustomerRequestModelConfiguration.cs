@@ -60,14 +60,19 @@ internal static class CustomerRequestModelConfiguration
         });
         model.Entity<CustomerRequestEventRecord>(entity =>
         {
-            entity.ToTable("CustomerRequestEvents", table => table.HasCheckConstraint("CK_CustomerRequestEvents_Values", "[EventType] IN ('created','status_changed','assignee_changed') AND [ActorType] IN ('service','user') AND DATEPART(tz,[Timestamp])=0"));
+            entity.ToTable("CustomerRequestEvents", table => table.HasCheckConstraint("CK_CustomerRequestEvents_Values", "[EventType] IN ('created','status_changed','assignee_changed') AND [ActorType] IN ('service','user','zalo_member') AND DATEPART(tz,[Timestamp])=0 AND ([ActorType]<>'zalo_member' OR ([ActorName] IS NOT NULL AND [ActorExternalId] IS NOT NULL AND [SourceMessageId] IS NOT NULL))"));
             entity.HasKey(x => new { x.TenantId, x.CompanyId, x.RequestId, x.Id });
             entity.Property(x => x.EventType).HasMaxLength(24).UseCollation(Binary);
-            entity.Property(x => x.ActorType).HasMaxLength(8).UseCollation(Binary);
+            entity.Property(x => x.ActorType).HasMaxLength(16).UseCollation(Binary);
+            entity.Property(x => x.ActorName).HasMaxLength(200);
+            entity.Property(x => x.ActorExternalId).HasMaxLength(200).UseCollation(Binary);
+            entity.Property(x => x.SourceMessageId).HasMaxLength(200).UseCollation(Binary);
             entity.Property(x => x.OldValue).HasMaxLength(64);
             entity.Property(x => x.NewValue).HasMaxLength(64);
             entity.HasOne<CustomerRequestRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, Id = x.RequestId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.RequestId, x.Timestamp });
+            // One applied Zalo command per tech-group message and ticket.
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.RequestId, x.SourceMessageId }).IsUnique().HasFilter("[SourceMessageId] IS NOT NULL");
         });
         model.Entity<CustomerRequestCounterRecord>(entity =>
         {

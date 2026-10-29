@@ -60,6 +60,9 @@ public sealed class CustomerRequestEventRecord
     public required string EventType { get; set; }
     public required string ActorType { get; set; }
     public Guid ActorId { get; set; }
+    public string? ActorName { get; set; }
+    public string? ActorExternalId { get; set; }
+    public string? SourceMessageId { get; set; }
     public string? OldValue { get; set; }
     public string? NewValue { get; set; }
     public DateTimeOffset Timestamp { get; set; }

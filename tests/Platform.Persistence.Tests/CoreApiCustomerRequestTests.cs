@@ -35,6 +35,7 @@ public sealed class CoreApiCustomerRequestTests
         using var client = factory.CreateClient();
         await Check(await client.PostAsJsonAsync(CustomerRequestAuthenticator.Path, new { }), HttpStatusCode.NotFound);
         await Check(await client.GetAsync(CustomerRequestDigestReader.Path), HttpStatusCode.NotFound);
+        await Check(await client.PostAsJsonAsync(CustomerRequestStatusUpdater.Path, new { }), HttpStatusCode.NotFound);
         var path = $"/api/companies/{Guid.NewGuid():D}/customer-requests";
         await Check(await client.GetAsync(path), HttpStatusCode.NotFound);
         await Check(await client.GetAsync(path + "/YC-0001"), HttpStatusCode.NotFound);
@@ -284,6 +285,60 @@ public sealed class CoreApiCustomerRequestTests
         }
     }
 
+    [Fact]
+    public async Task SignedStatusCommandUpdatesInScopeTicketIdempotentlyAndPortalShowsZaloActor()
+    {
+        await using var fixture = new ApiFixture(); using var client = fixture.Client(portal: true); var receipt = await fixture.State.Accept();
+        var body = CustomerRequestStatusTests.Bytes(receipt.Code, "done", "tech-msg-1");
+        var response = await client.SendAsync(fixture.Status(body)); await Check(response, HttpStatusCode.OK);
+        Assert.Equal(new CustomerRequestStatusReceipt(receipt.Code, "done", "new", true), await response.Content.ReadFromJsonAsync<CustomerRequestStatusReceipt>());
+        response = await client.SendAsync(fixture.Status(body)); await Check(response, HttpStatusCode.OK);
+        Assert.Equal(new CustomerRequestStatusReceipt(receipt.Code, "done", "done", false), await response.Content.ReadFromJsonAsync<CustomerRequestStatusReceipt>());
+        response = await client.SendAsync(fixture.Status(CustomerRequestStatusTests.Bytes(receipt.Code, "done", "tech-msg-2"))); await Check(response, HttpStatusCode.OK);
+        Assert.False((await response.Content.ReadFromJsonAsync<CustomerRequestStatusReceipt>())!.Changed);
+        var detail = (await client.GetFromJsonAsync<CustomerRequestDetail>(fixture.Path + "/" + receipt.Code))!;
+        var change = Assert.Single(detail.Events, x => x.EventType == "status_changed");
+        Assert.Equal("zalo_member", change.ActorType); Assert.Equal("Minh Kỹ thuật", change.ActorName); Assert.Equal("done", detail.Request.Status);
+        await Check(await client.SendAsync(fixture.Status(CustomerRequestStatusTests.Bytes("YC-9999"))), HttpStatusCode.NotFound);
+    }
+
+    [Theory]
+    [InlineData("signature", 403)]
+    [InlineData("path", 403)]
+    [InlineData("stale", 403)]
+    [InlineData("service", 403)]
+    [InlineData("replayed-nonce", 403)]
+    [InlineData("query", 400)]
+    [InlineData("invalid-status", 400)]
+    [InlineData("unknown-field", 400)]
+    [InlineData("other-group", 404)]
+    public async Task StatusCommandRefusalsChangeNothing(string change, int status)
+    {
+        await using var fixture = new ApiFixture(); using var client = fixture.Client(); var receipt = await fixture.State.Accept();
+        if (change == "other-group") { await using var db = fixture.State.Database(); db.CustomerRequests.Single().SourceGroupExternalId = "removed-group"; await db.SaveChangesAsync(); }
+        var body = change switch
+        {
+            "invalid-status" => Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(CustomerRequestStatusTests.Bytes(receipt.Code)).Replace("\"done\"", "\"approved\"", StringComparison.Ordinal)),
+            "unknown-field" => Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(CustomerRequestStatusTests.Bytes(receipt.Code)).Replace("{", "{\"companyId\":\"x\",", StringComparison.Ordinal)),
+            _ => CustomerRequestStatusTests.Bytes(receipt.Code)
+        };
+        var auth = fixture.State.Sign(body, path: change == "path" ? CustomerRequestAuthenticator.Path : CustomerRequestStatusUpdater.Path,
+            timestamp: DateTimeOffset.UtcNow.AddMinutes(change == "stale" ? -6 : 0).ToUnixTimeSeconds(), service: change == "service" ? Guid.NewGuid() : null);
+        if (change == "signature") auth = auth with { SignatureHex = new string('0', 64) };
+        if (change == "replayed-nonce")
+        {
+            var first = CustomerRequestStatusTests.Bytes(receipt.Code, "in_progress", "tech-msg-0"); var used = fixture.State.Sign(first, path: CustomerRequestStatusUpdater.Path);
+            await Check(await client.SendAsync(fixture.Status(first, used)), HttpStatusCode.OK);
+            auth = fixture.State.Sign(body, path: CustomerRequestStatusUpdater.Path, nonce: used.Nonce);
+        }
+        using var request = fixture.Status(body, auth);
+        if (change == "query") request.RequestUri = new Uri(CustomerRequestStatusUpdater.Path + "?code=" + receipt.Code, UriKind.Relative);
+        await Check(await client.SendAsync(request), (HttpStatusCode)status);
+        await using var check = fixture.State.Database();
+        Assert.Equal(change == "replayed-nonce" ? "in_progress" : "new", check.CustomerRequests.Single().Status);
+        Assert.Equal(change == "replayed-nonce" ? 1 : 0, await check.CustomerRequestEvents.CountAsync(x => x.EventType == "status_changed"));
+    }
+
     private static async Task Check(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode); Assert.True(response.Headers.CacheControl?.NoStore);
@@ -336,6 +391,12 @@ public sealed class CoreApiCustomerRequestTests
             request.Content.Headers.ContentType = new("application/json");
             request.Headers.Add("X-AIOffice-Request-Service", auth.ServiceId.ToString("D")); request.Headers.Add("X-AIOffice-Request-Nonce", auth.Nonce.ToString("D"));
             request.Headers.Add("X-AIOffice-Request-Timestamp", auth.Timestamp.ToString(System.Globalization.CultureInfo.InvariantCulture)); request.Headers.Add("X-AIOffice-Request-Signature", auth.SignatureHex);
+            return request;
+        }
+        internal HttpRequestMessage Status(byte[] body, CustomerRequestSignature? auth = null)
+        {
+            auth ??= State.Sign(body, path: CustomerRequestStatusUpdater.Path);
+            var request = Request(body, auth); request.RequestUri = new Uri(CustomerRequestStatusUpdater.Path, UriKind.Relative);
             return request;
         }
         internal HttpRequestMessage Digest(long? since = null, CustomerRequestSignature? auth = null, string? target = null)

@@ -11,7 +11,7 @@ export type CustomerRequest = {
 };
 export type CustomerRequestPage = { items: CustomerRequest[]; offset: number; limit: number; hasMore: boolean };
 export type CustomerRequestEvent = { eventType: "created" | "status_changed" | "assignee_changed";
-  actorType: "service" | "user"; actorId: string; oldValue: string | null; newValue: string | null; timestamp: string };
+  actorType: "service" | "user" | "zalo_member"; actorId: string; actorName: string | null; oldValue: string | null; newValue: string | null; timestamp: string };
 export type CustomerRequestDetail = {
   request: CustomerRequest; reportedBy: string; customerDesiredDueText: string | null; sourceWindowFrom: string; sourceWindowTo: string;
   items: { content: string; priority: "high" | "medium" | "low"; kind: "bug" | "feature" | "question" | "data" }[];
@@ -74,10 +74,11 @@ export function parseCustomerRequestDetail(value: unknown, code: string): Custom
   }
   for (const item of value.events) {
     if (!object(item) || !["created", "status_changed", "assignee_changed"].includes(String(item.eventType))
-      || !["service", "user"].includes(String(item.actorType)) || !isCanonicalCompanyId(item.actorId)
+      || !["service", "user", "zalo_member"].includes(String(item.actorType)) || !isCanonicalCompanyId(item.actorId)
+      || item.actorName !== undefined && item.actorName !== null && !text(item.actorName, 200) || item.actorType === "zalo_member" && !text(item.actorName, 200)
       || item.oldValue !== null && !text(item.oldValue, 200) || item.newValue !== null && !text(item.newValue, 200) || !date(item.timestamp)) return null;
     events.push({ eventType: item.eventType as CustomerRequestEvent["eventType"], actorType: item.actorType as CustomerRequestEvent["actorType"],
-      actorId: item.actorId, oldValue: item.oldValue, newValue: item.newValue, timestamp: item.timestamp });
+      actorId: item.actorId, actorName: typeof item.actorName === "string" ? item.actorName : null, oldValue: item.oldValue, newValue: item.newValue, timestamp: item.timestamp });
   }
   return { request, reportedBy: value.reportedBy, customerDesiredDueText: value.customerDesiredDueText, sourceWindowFrom: value.sourceWindowFrom,
     sourceWindowTo: value.sourceWindowTo, items, evidence, openQuestions: value.openQuestions, events };
