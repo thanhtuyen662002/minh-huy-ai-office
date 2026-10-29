@@ -58,7 +58,10 @@ async function refusal(response: Response, status: number) {
   expect(response.headers.get("location")).toBeNull();
   expect(response.headers.get("cache-control")).toBe("no-store");
   expect(response.headers.get("referrer-policy")).toBe("no-referrer");
-  expect(await response.json()).toEqual({ error: "Browser sign-in could not be verified." });
+  if (response.headers.get("content-type")?.startsWith("text/html")) {
+    const page = await response.text();
+    expect(page).toContain("Phiên đăng nhập đã hết hạn"); expect(page).toContain('content="3;url=/"');
+  } else expect(await response.json()).toEqual({ error: "Browser sign-in could not be verified." });
 }
 function useLocalSettings() {
   settings = readBrowserOidcSettings((name) => ({ ...environment,

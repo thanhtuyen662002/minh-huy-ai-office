@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getBrowserAuthRuntime } from "../../../../../../lib/browser-auth-runtime";
-import { browserAuthError, privateBrowserResponse, setPrivateBrowserCookie } from "../../../../../../lib/browser-auth-http";
+import { browserCallbackRefusal, privateBrowserResponse, setPrivateBrowserCookie } from "../../../../../../lib/browser-auth-http";
 import { OIDC_CALLBACK_PATH, oidcTransactionCookieName, openOidcTransaction } from "../../../../../../lib/browser-oidc";
 import { exchangeBrowserAuthorizationCode } from "../../../../../../lib/browser-oidc-client";
 import { authorizeBrowserSession } from "../../../../../../lib/browser-oidc-authority";
@@ -11,7 +11,7 @@ import type { BrowserOidcSettings } from "../../../../../../lib/browser-oidc";
 
 export async function GET(request: Request) {
   let settings: BrowserOidcSettings | undefined, step: BrowserProofStep = "configuration";
-  const refused = (status: number, error?: unknown) => { reportBrowserProof(settings, step, error); return browserAuthError(status); };
+  const refused = (status: number, error?: unknown) => { reportBrowserProof(settings, step, error); return browserCallbackRefusal(status); };
   try {
     const runtime = getBrowserAuthRuntime();
     if (!runtime) return refused(503);
