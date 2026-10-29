@@ -151,6 +151,7 @@ app.MapHealthChecks("/health");
 app.MapGroupIngress(groupIngressEnabled);
 app.MapCustomerRequests(customerRequestsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapBotChannels(botChannelsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
+app.MapKnowledge(authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapGroupListener(groupIngressEnabled);
 app.MapGroupEnrollment(groupIngressEnabled);
 app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);
