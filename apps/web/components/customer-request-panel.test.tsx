@@ -14,7 +14,7 @@ function fixture(override: Override = () => undefined) {
     if (init?.method === "PATCH") {
       const patch = JSON.parse(String(init.body));
       ticket = { ...ticket, ...patch, rowVersion: "AAAAAAAAAAI=" };
-      detail = { ...detail, request: ticket, events: [...detail.events, { eventType: "status_changed", actorType: "user", actorId: requestUser,
+      detail = { ...detail, request: ticket, events: [...detail.events, { eventType: "status_changed", actorType: "user", actorId: requestUser, actorName: null,
         oldValue: "new", newValue: ticket.status, timestamp: ticket.updatedAt }] };
       return Response.json(ticket);
     }
@@ -178,4 +178,12 @@ it.each([403, 503])("handles PATCH %i without repeating a write or retaining for
     expect((screen.getByRole("button", { name: "Lưu thay đổi" }) as HTMLButtonElement).disabled).toBe(true);
   }
   expect(view.request.mock.calls.filter(([, , init]) => init?.method === "PATCH")).toHaveLength(1);
+});
+it("shows the tech-group Zalo member who changed a status", async () => {
+  fixture(url => url.includes(`/${requestTicket.code}?`) ? Response.json({ ...requestDetail, request: { ...requestTicket, status: "done" },
+    events: [...requestDetail.events, { eventType: "status_changed", actorType: "zalo_member", actorId: requestUser, actorName: "Minh Kỹ thuật",
+      oldValue: "new", newValue: "done", timestamp: requestTicket.updatedAt }] }) : undefined);
+  await open();
+  expect(screen.getByText("Đổi trạng thái: Mới → Xong")).toBeTruthy();
+  expect(screen.getByText(/Nhóm Kỹ thuật Zalo: Minh Kỹ thuật/)).toBeTruthy();
 });

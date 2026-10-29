@@ -69,7 +69,8 @@ export function CustomerRequestDetail({ detail, members, memberError, disabled, 
         <p>{event.eventType === "created" ? `Tạo phiếu · ${statusLabel(event.newValue)}` : event.eventType === "status_changed"
           ? `Đổi trạng thái: ${statusLabel(event.oldValue)} → ${statusLabel(event.newValue)}`
           : `Đổi người phụ trách: ${name(event.oldValue)} → ${name(event.newValue)}`}</p>
-        <p className="mt-1 break-words">{event.actorType === "service" ? "Dịch vụ tiếp nhận tự động" : `Nhân viên: ${name(event.actorId)}`} · {requestTime(event.timestamp)}</p></li>)}</ol>
+        <p className="mt-1 break-words">{event.actorType === "service" ? "Dịch vụ tiếp nhận tự động" : event.actorType === "zalo_member"
+          ? `Nhóm Kỹ thuật Zalo: ${event.actorName}` : `Nhân viên: ${name(event.actorId)}`} · {requestTime(event.timestamp)}</p></li>)}</ol>
         : <p>Chưa có sự kiện được ghi nhận.</p>}</section>
   </article>;
 }

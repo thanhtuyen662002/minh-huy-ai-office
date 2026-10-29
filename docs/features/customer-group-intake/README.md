@@ -101,6 +101,24 @@ Only tickets of the service's company and allowed source groups are included. Ex
 
 `open` lists not-done, not-rejected tickets oldest first; `closedSince` lists tickets currently done or rejected whose last such status change happened since `since`, newest first. Each list holds at most 50 entries (totals give the full counts), summaries are cut to 120 characters, and no evidence quotes or message IDs are returned.
 
+### Status commands from the technical group (#316)
+
+Tech staff change a ticket's status in the internal technical Zalo group with a message such as `#xong YC-0012`. The `zalo-intake` bot parses the command (out of scope here) and calls `POST /internal/customer-requests/status` as the same enrolled service. Headers, key domain, nonce rules and the off-by-default flag (404) are the same as ingestion; sign method `POST`, the exact path `/internal/customer-requests/status` (no query string) and the SHA256 of the exact JSON body. Example body:
+
+```json
+{
+  "code": "YC-0012",
+  "status": "done",
+  "actorName": "Minh Kỹ thuật",
+  "actorExternalId": "<Zalo user id>",
+  "sourceMessageId": "<technical group message id>"
+}
+```
+
+All fields are required and nonblank, at most 2,048 bytes: `code` ≤24, the other strings ≤200 UTF-16 units; `actorExternalId`/`sourceMessageId` are opaque IDs without surrounding whitespace or control characters. `status` is `new|needs_clarification|in_progress|done|rejected`. Unknown fields, duplicate properties and invalid values return 400. A ticket outside the service's company or allowed source groups returns 404, exactly like a missing code.
+
+Response: `{ "code": "YC-0012", "status": "done", "previousStatus": "in_progress", "changed": true }`. A change records a `status_changed` event with actor type `zalo_member`, the service UUID as actor ID, and the Zalo actor name/ID and source message ID; it updates the ticket's `updatedAt` and `rowVersion` under the same company lock as the portal PATCH, so a portal edit holding the old `rowVersion` then gets 409. Each `sourceMessageId` applies at most once per ticket: a retry (with a fresh nonce/signature) returns the current state with `changed: false` and `previousStatus` equal to `status`, and records nothing. Setting the current status is also a no-op without an event. The portal detail events include `actorName` (null for service and user events), shown in the web event history as the Zalo member's name.
+
 ## Tài liệu
 
 - [OWNER_CORRECTION_AUTO_IT.md](OWNER_CORRECTION_AUTO_IT.md): quyết định sản phẩm và luồng chính.

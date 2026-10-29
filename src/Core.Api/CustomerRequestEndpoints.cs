@@ -29,6 +29,7 @@ internal static class CustomerRequestEndpoints
         builder.Services.AddScoped<CustomerRequestAuthenticator>();
         builder.Services.AddScoped<CustomerRequestIngress>();
         builder.Services.AddScoped<CustomerRequestDigestReader>();
+        builder.Services.AddScoped<CustomerRequestStatusUpdater>();
         return enabled;
     }
 
@@ -38,6 +39,7 @@ internal static class CustomerRequestEndpoints
         {
             app.MapPost(CustomerRequestAuthenticator.Path, () => Results.NotFound());
             app.MapGet(CustomerRequestDigestReader.Path, () => Results.NotFound());
+            app.MapPost(CustomerRequestStatusUpdater.Path, () => Results.NotFound());
             app.MapGet(PortalPath, () => Results.NotFound());
             app.MapGet(PortalPath + "/{code}", () => Results.NotFound());
             app.MapPatch(PortalPath + "/{code}", () => Results.NotFound());
@@ -50,6 +52,15 @@ internal static class CustomerRequestEndpoints
                 var signature = Signature(request);
                 var bytes = await ReadBody(request, CustomerRequestJson.MaximumBodyBytes, ct);
                 try { return Results.Ok(await ingress.AcceptAsync(signature, bytes, ct)); }
+                finally { CryptographicOperations.ZeroMemory(bytes); }
+            }));
+        app.MapPost(CustomerRequestStatusUpdater.Path, (HttpRequest request, [FromServices] CustomerRequestStatusUpdater updater, CancellationToken ct) =>
+            Execute(async () =>
+            {
+                if (request.Query.Count != 0 || request.Path.Value != CustomerRequestStatusUpdater.Path || request.Method != "POST") throw new ArgumentException();
+                var signature = Signature(request);
+                var bytes = await ReadBody(request, CustomerRequestJson.MaximumStatusBytes, ct);
+                try { return Results.Ok(await updater.UpdateAsync(signature, bytes, ct)); }
                 finally { CryptographicOperations.ZeroMemory(bytes); }
             }));
         app.MapGet(CustomerRequestDigestReader.Path, (HttpRequest request, [FromServices] CustomerRequestDigestReader digest, CancellationToken ct) =>

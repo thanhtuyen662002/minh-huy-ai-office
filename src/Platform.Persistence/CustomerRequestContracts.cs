@@ -12,11 +12,14 @@ public sealed record CustomerRequestInput(string IdempotencyKey, string SourceGr
     string? CustomerDesiredDueText = null);
 
 public sealed record CustomerRequestReceipt(string Code, Guid Id, string Status);
+public sealed record CustomerRequestStatusInput(string Code, string Status, string ActorName, string ActorExternalId, string SourceMessageId);
+public sealed record CustomerRequestStatusReceipt(string Code, string Status, string PreviousStatus, bool Changed);
 public sealed record CustomerRequestListItem(string Code, Guid Id, string Status, string Origin, string CustomerName,
     string Summary, string SourceGroupExternalId, string SourceGroupName, Guid? AssigneeUserId,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, string RowVersion);
 public sealed record CustomerRequestPage(IReadOnlyList<CustomerRequestListItem> Items, int Offset, int Limit, bool HasMore);
-public sealed record CustomerRequestEventView(string EventType, string ActorType, Guid ActorId, string? OldValue, string? NewValue, DateTimeOffset Timestamp);
+public sealed record CustomerRequestEventView(string EventType, string ActorType, Guid ActorId, string? OldValue, string? NewValue, DateTimeOffset Timestamp,
+    string? ActorName = null);
 public sealed record CustomerRequestDetail(CustomerRequestListItem Request, string ReportedBy, string? CustomerDesiredDueText,
     DateTimeOffset SourceWindowFrom, DateTimeOffset SourceWindowTo, IReadOnlyList<CustomerRequestItemInput> Items,
     IReadOnlyList<CustomerRequestEvidenceInput> Evidence, IReadOnlyList<string> OpenQuestions, IReadOnlyList<CustomerRequestEventView> Events);
@@ -30,6 +33,7 @@ public static class CustomerRequestJson
 {
     public const int MaximumBodyBytes = 65536;
     public const int MaximumPatchBytes = 2048;
+    public const int MaximumStatusBytes = 2048;
     private static readonly UTF8Encoding Utf8 = new(false, true);
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -64,6 +68,16 @@ public static class CustomerRequestJson
             Text(evidence.Quote, 2000); Text(evidence.SourceMessageId, 200, opaque: true); Text(evidence.SenderName, 200);
         }
         foreach (var question in input.OpenQuestions) Text(question, 1000);
+        return input;
+    }
+
+    public static CustomerRequestStatusInput ReadStatus(ReadOnlyMemory<byte> bytes)
+    {
+        using var document = Document(bytes, MaximumStatusBytes);
+        var input = document.Deserialize<CustomerRequestStatusInput>(Options) ?? throw Invalid();
+        Text(input.Code, 24, opaque: true);
+        if (!IsStatus(input.Status)) throw Invalid();
+        Text(input.ActorName, 200); Text(input.ActorExternalId, 200, opaque: true); Text(input.SourceMessageId, 200, opaque: true);
         return input;
     }
 

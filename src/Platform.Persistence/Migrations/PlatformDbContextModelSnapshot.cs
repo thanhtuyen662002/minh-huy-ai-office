@@ -640,13 +640,22 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ActorExternalId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
                     b.Property<Guid>("ActorId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ActorName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("ActorType")
                         .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
                         .UseCollation("Latin1_General_100_BIN2");
 
                     b.Property<string>("EventType")
@@ -663,16 +672,25 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("SourceMessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("TenantId", "CompanyId", "RequestId", "Id");
 
+                    b.HasIndex("TenantId", "CompanyId", "RequestId", "SourceMessageId")
+                        .IsUnique()
+                        .HasFilter("[SourceMessageId] IS NOT NULL");
+
                     b.HasIndex("TenantId", "CompanyId", "RequestId", "Timestamp");
 
                     b.ToTable("CustomerRequestEvents", "aioffice", t =>
                         {
-                            t.HasCheckConstraint("CK_CustomerRequestEvents_Values", "[EventType] IN ('created','status_changed','assignee_changed') AND [ActorType] IN ('service','user') AND DATEPART(tz,[Timestamp])=0");
+                            t.HasCheckConstraint("CK_CustomerRequestEvents_Values", "[EventType] IN ('created','status_changed','assignee_changed') AND [ActorType] IN ('service','user','zalo_member') AND DATEPART(tz,[Timestamp])=0 AND ([ActorType]<>'zalo_member' OR ([ActorName] IS NOT NULL AND [ActorExternalId] IS NOT NULL AND [SourceMessageId] IS NOT NULL))");
                         });
                 });
 

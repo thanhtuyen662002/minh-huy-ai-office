@@ -33,7 +33,7 @@ public sealed class CustomerRequestPortal(PlatformDbContext database, IAuthoriza
         var questions = await database.CustomerRequestOpenQuestions.AsNoTracking().Where(x => x.TenantId == authority.TenantId && x.CompanyId == companyId && x.RequestId == ticket.Id)
             .OrderBy(x => x.Ordinal).Select(x => x.Content).ToArrayAsync(cancellationToken);
         var events = await database.CustomerRequestEvents.AsNoTracking().Where(x => x.TenantId == authority.TenantId && x.CompanyId == companyId && x.RequestId == ticket.Id)
-            .OrderBy(x => x.Timestamp).ThenBy(x => x.Id).Select(x => new CustomerRequestEventView(x.EventType, x.ActorType, x.ActorId, x.OldValue, x.NewValue, x.Timestamp)).ToArrayAsync(cancellationToken);
+            .OrderBy(x => x.Timestamp).ThenBy(x => x.Id).Select(x => new CustomerRequestEventView(x.EventType, x.ActorType, x.ActorId, x.OldValue, x.NewValue, x.Timestamp, x.ActorName)).ToArrayAsync(cancellationToken);
         await RequireMemberAsync(authority, companyId, cancellationToken);
         return new(View(ticket), ticket.ReportedBy, ticket.CustomerDesiredDueText, ticket.SourceWindowFrom, ticket.SourceWindowTo, items, evidence, questions, events);
     }
