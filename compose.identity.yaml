@@ -5,6 +5,8 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.0
     restart: unless-stopped
+    # Shared single host: keep Keycloak from taking every core (start-up and theme builds are bursty).
+    cpus: ${AIOFFICE_KEYCLOAK_CPUS:-1.5}
     init: true
     user: "1000:0"
     entrypoint: ["/bin/bash", "/opt/aioffice/start.sh"]

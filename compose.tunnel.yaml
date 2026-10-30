@@ -10,6 +10,7 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:2026.10.4
     restart: unless-stopped
+    cpus: 0.5
     command: ["tunnel", "--no-autoupdate", "run", "--token-file", "/run/secrets/cloudflare_tunnel_token"]
     secrets:
       - cloudflare_tunnel_token
