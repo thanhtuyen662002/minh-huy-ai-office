@@ -181,9 +181,12 @@ public sealed class BotChannelService(PlatformDbContext database, IAuthorization
         input = BotChannelJson.Heartbeat(input, clock.GetUtcNow());
         await EnsureChannelAsync(binding.TenantId, binding.CompanyId, input.Channel, ct);
         var row = await StatusAsync(binding.TenantId, binding.CompanyId, input.Channel, ct);
+        var fresh = row is null;
         if (row is null) { row = new() { TenantId = binding.TenantId, CompanyId = binding.CompanyId, Channel = input.Channel, LoginState = input.LoginState }; database.BotStatuses.Add(row); }
         else Attach(row);
-        row.LoginState = input.LoginState; row.GroupsJson = JsonSerializer.Serialize(input.Groups); row.LastSummaryAt = input.LastSummaryAt;
+        // A bot that is restarting or signed out reports no groups; keep the last signed-in list so saved selections stay valid.
+        if (fresh || input.LoginState == "logged_in" && input.Groups.Length > 0) row.GroupsJson = JsonSerializer.Serialize(input.Groups);
+        row.LoginState = input.LoginState; row.LastSummaryAt = input.LastSummaryAt;
         row.LastError = input.LastError; row.ReceivedAt = clock.GetUtcNow();
         row.LoginQrImage = BotChannelJson.QrBytes(input.LoginQrContentType, input.LoginQrBase64); row.LoginQrContentType = input.LoginQrContentType;
         row.LoginQrExpiresAt = row.LoginQrImage is null ? null : row.ReceivedAt.AddMinutes(2); Stamp(row);

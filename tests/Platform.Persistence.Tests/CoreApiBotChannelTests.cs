@@ -59,6 +59,8 @@ public sealed class CoreApiBotChannelTests
         var commandResponse = await client.PostAsJsonAsync(f.Path + "/zalo/commands", new { kind = "relogin" }); await Check(commandResponse, HttpStatusCode.OK);
         var command = (await commandResponse.Content.ReadFromJsonAsync<BotCommandView>())!;
         using var pull = f.Signed("GET", "/internal/bot-config?channel=zalo", []); var response = await client.SendAsync(pull); await Check(response, HttpStatusCode.OK);
+        var raw = await response.Content.ReadAsStringAsync();
+        Assert.Matches("\"createdAt\":\"\\d{4}-\\d{2}-\\d{2}T[0-9:.]+Z\"", raw); Assert.Matches("\"expiresAt\":\"[0-9T:.-]+Z\"", raw); Assert.DoesNotContain("+00:00", raw);
         var config = (await response.Content.ReadFromJsonAsync<BotConfigView>())!; Assert.Equal("PRIVATE-API-KEY", config.Ai.ApiKey); Assert.Equal(command.Id, Assert.Single(config.Commands).Id);
         using var ack = f.Signed("POST", $"/internal/bot-commands/{command.Id:D}/ack", BotChannelFixture.Bytes(new BotCommandAck("zalo")));
         await Check(await client.SendAsync(ack), HttpStatusCode.OK);

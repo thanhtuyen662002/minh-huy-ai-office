@@ -129,6 +129,23 @@ public sealed class BotChannelServiceTests
         await f.Heartbeat(new("zalo", "logged_in", [])); Assert.Null(await service.QrAsync(f.Authority, "zalo"));
     }
 
+    [Fact]
+    public async Task SignedOutOrEmptyHeartbeatKeepsLastReportedGroupsSoSavedSelectionsStayValid()
+    {
+        using var f = new BotChannelFixture(); await f.Heartbeat();
+        await using (var db = f.Database()) await f.Service(db).UpdateAsync(f.Authority, "zalo", f.Update());
+        await f.Heartbeat(new("zalo", "logged_out", []));
+        await f.Heartbeat(new("zalo", "logged_in", []));
+        await using (var db = f.Database())
+        {
+            var service = f.Service(db); var status = (await service.GetAsync(f.Authority)).Channels[0].Status!;
+            Assert.Equal("logged_in", status.LoginState); Assert.Equal(2, status.Groups.Length);
+            Assert.Equal("3", (await service.UpdateAsync(f.Authority, "zalo", f.Update("2") with { DryRun = false })).ConfigVersion);
+        }
+        await f.Heartbeat(new("zalo", "logged_in", [new("tech", "Kỹ thuật")]));
+        await using (var db = f.Database()) Assert.Single((await f.Service(db).GetAsync(f.Authority)).Channels[0].Status!.Groups);
+    }
+
     [Theory]
     [InlineData("groups")]
     [InlineData("duplicates")]
