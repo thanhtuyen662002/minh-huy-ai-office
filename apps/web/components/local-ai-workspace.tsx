@@ -15,7 +15,8 @@ import { CustomerErpPanel } from "./customer-erp-panel";
 import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
-import { GroupInboxPanel } from "./group-inbox-panel";
+import { BotMessagesPanel } from "./bot-messages-panel";
+import { OptionalGroupInboxPanel } from "./group-inbox-panel";
 import { CustomerRequestPanel } from "./customer-request-panel";
 import { TelegramLinkCard } from "./telegram-link-card";
 import { BotChannelPanel, useBotChannels } from "./bot-channel-panel";
@@ -712,8 +713,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   } else if (section === "tin-nhan") {
     content = <>
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
-      {auth ? <GroupInboxPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+      {auth ? <BotMessagesPanel key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
         isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
+      {auth ? <OptionalGroupInboxPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
+        generation={sessionGeneration.current} isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
     </>;
   } else if (section === "cong-viec") {
     content = <>

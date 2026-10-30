@@ -42,6 +42,36 @@ public sealed class CoreApiBotChannelTests
         await Check(await client.PutAsJsonAsync(root + "/ai", new { }), HttpStatusCode.NotFound);
         await Check(await client.PostAsync(root + "/ai/test", null), HttpStatusCode.NotFound);
         await Check(await client.PostAsJsonAsync(root + "/zalo/commands", new { }), HttpStatusCode.NotFound);
+        await Check(await client.PostAsJsonAsync("/internal/bot-messages", new { }), HttpStatusCode.NotFound);
+        var messages = root.Replace("/bot-channels", "/bot-messages", StringComparison.Ordinal);
+        await Check(await client.GetAsync(messages), HttpStatusCode.NotFound); await Check(await client.GetAsync(messages + "/zalo?group=g"), HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task SignedMessagesAreReadableInTheTinNhanPortal()
+    {
+        await using var f = new ApiFixture(); using var client = f.Client();
+        using var heartbeat = f.Signed("POST", "/internal/bot-status", BotChannelFixture.Bytes(new BotHeartbeat("zalo", "logged_in", [new("tech", "IT"), new("customer", "Khách A")])));
+        await Check(await client.SendAsync(heartbeat), HttpStatusCode.OK);
+        var view = (await client.GetFromJsonAsync<BotAdminView>(f.Path))!;
+        var update = new BotChannelUpdate(view.Channels[0].ConfigVersion, true, true, ["08:00"], "tech", [new("customer", "Khách A", "Customer A")]);
+        await Check(await client.PutAsJsonAsync(f.Path + "/zalo", update), HttpStatusCode.OK);
+        var sent = f.State.Clock.Now.AddMinutes(-1);
+        using var post = f.Signed("POST", "/internal/bot-messages", BotChannelFixture.Bytes(new BotMessageBatch("zalo", [new("customer", "m1", "Anh Minh", sent, "Máy in lỗi")])));
+        var receipt = await client.SendAsync(post); await Check(receipt, HttpStatusCode.OK);
+        Assert.Equal(1, (await receipt.Content.ReadFromJsonAsync<BotMessageReceipt>())!.Accepted);
+
+        var messages = f.Path.Replace("/bot-channels", "/bot-messages", StringComparison.Ordinal);
+        var groups = await client.GetAsync(messages); await Check(groups, HttpStatusCode.OK);
+        Assert.Equal(1, Assert.Single((await groups.Content.ReadFromJsonAsync<BotMessageGroupView[]>())!).MessageCount);
+        var page = await client.GetAsync(messages + "/zalo?group=customer&limit=10"); await Check(page, HttpStatusCode.OK);
+        Assert.Equal("Máy in lỗi", Assert.Single((await page.Content.ReadFromJsonAsync<BotMessagePage>())!.Items).Text);
+        var before = Uri.EscapeDataString(sent.ToString("O", CultureInfo.InvariantCulture));
+        var older = await client.GetAsync(messages + $"/zalo?group=customer&before={before}"); await Check(older, HttpStatusCode.OK);
+        Assert.Empty((await older.Content.ReadFromJsonAsync<BotMessagePage>())!.Items);
+        await Check(await client.GetAsync(messages + "/zalo?group=unknown"), HttpStatusCode.NotFound);
+        await Check(await client.GetAsync(messages + "/zalo"), HttpStatusCode.BadRequest);
+        await Check(await client.GetAsync(messages + "/zalo?group=customer&extra=1"), HttpStatusCode.BadRequest);
     }
 
     [Fact]

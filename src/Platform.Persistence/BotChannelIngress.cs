@@ -19,6 +19,13 @@ public sealed class BotChannelIngress(PlatformDbContext database, CustomerReques
         { await service.HeartbeatAsync(binding, input, ct); return true; }, ct);
     }
 
+    public Task<BotMessageReceipt> MessagesAsync(CustomerRequestSignature signature, ReadOnlyMemory<byte> body, CancellationToken ct = default)
+    {
+        var captured = body.ToArray();
+        var input = BotChannelJson.Messages(BotChannelJson.Read<BotMessageBatch>(captured), clock.GetUtcNow());
+        return ExecuteAsync(signature, captured, "POST", "/internal/bot-messages", binding => service.StoreMessagesAsync(binding, input, ct), ct);
+    }
+
     public Task<bool> AckAsync(CustomerRequestSignature signature, Guid id, ReadOnlyMemory<byte> body, CancellationToken ct = default)
     {
         var captured = body.ToArray(); var input = BotChannelJson.Read<BotCommandAck>(captured); BotChannelJson.Channel(input.Channel);

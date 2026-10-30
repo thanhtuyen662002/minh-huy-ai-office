@@ -156,3 +156,26 @@ export function GroupInboxPanel({ tenantId, companyId, userId, generation, isCur
     </div>
   </section>;
 }
+
+// The older group-intake inbox is shown only where that subsystem is switched on; elsewhere
+// its source list answers 404 and Tin nhắn shows just the bot's messages.
+export function OptionalGroupInboxPanel(props: Props) {
+  const { companyId, generation, isCurrent, validate, request } = props;
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const abort = new AbortController();
+    void (async () => {
+      try {
+        if (!await validate(generation) || !isCurrent(generation)) return;
+        const response = await request(generation, `/api/local/group-sources?companyId=${encodeURIComponent(companyId)}&offset=0&limit=25`,
+          { cache: "no-store", signal: abort.signal });
+        void response.body?.cancel().catch(() => {});
+        if (!abort.signal.aborted && isCurrent(generation)) setEnabled(response.status !== 404);
+      } catch { /* Stays hidden; the bot messages panel is the page. */ }
+    })();
+    return () => abort.abort();
+    // Probe once per authenticated scope.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId, generation]);
+  return enabled ? <div className="mt-5"><GroupInboxPanel {...props} /></div> : null;
+}

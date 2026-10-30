@@ -236,6 +236,57 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.ToTable("BotCustomerGroups", "aioffice");
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotMessageRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("GroupExternalId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("MessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<bool>("HasImage")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("TenantId", "CompanyId", "Channel", "GroupExternalId", "MessageId");
+
+                    b.HasIndex("TenantId", "CompanyId", "SentAt");
+
+                    b.HasIndex("TenantId", "CompanyId", "Channel", "GroupExternalId", "SentAt");
+
+                    b.ToTable("BotMessages", "aioffice");
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotStatusRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -2604,6 +2655,15 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotCustomerGroupRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "Channel")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotMessageRecord", b =>
                 {
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.BotChannelRecord", null)
                         .WithMany()

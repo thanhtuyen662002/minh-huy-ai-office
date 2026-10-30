@@ -11,6 +11,7 @@ it("ordinary mobile readers can open inbox directly without preparing a task; lo
     if (url === "/api/local/session/logout") { active = false; return Response.json({ ok: true }); }
     if (url.startsWith("/api/local/session?")) return active ? Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] }) : Response.json({}, { status: 401 });
     if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/bot-messages")) return Response.json({}, { status: 404 });
     if (url.startsWith("/api/local/group-sources?")) { signal = init?.signal; return held ?? Response.json(page); }
     throw new Error("Unexpected owned fixture route");
   });
@@ -34,6 +35,7 @@ it("source ReaderGrant refusal clears the shipping inbox while the same issued-s
   const fetcher = vi.fn(async (url: string) => {
     if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
     if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/bot-messages")) return Response.json({}, { status: 404 });
     if (url.startsWith("/api/local/group-sources?")) return Response.json({ ...page, items: granted ? page.items : [] });
     if (url.includes(`/messages/${messageId}?`)) return granted ? Response.json({ source, messageId, externalMessageId: "m ",
       revision: 1, committedSequence: 1, kind: 1, senderId: "sender ", replyToMessageId: null, occurredAtUtc,

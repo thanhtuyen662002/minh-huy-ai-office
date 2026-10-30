@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ namespace MinhHuy.AIOffice.Core.Api;
 internal static class BotChannelEndpoints
 {
     private const string Portal = "/api/companies/{companyId:guid}/bot-channels";
+    private const string MessagesPortal = "/api/companies/{companyId:guid}/bot-messages";
 
     internal static bool AddBotChannels(this WebApplicationBuilder builder, bool hasDatabase)
     {
@@ -36,6 +38,7 @@ internal static class BotChannelEndpoints
             app.MapGet("/internal/bot-config", () => Results.NotFound());
             app.MapPost("/internal/bot-status", () => Results.NotFound());
             app.MapPost("/internal/bot-commands/{id:guid}/ack", () => Results.NotFound());
+            app.MapPost("/internal/bot-messages", () => Results.NotFound());
             MapPortalUnavailable(app, () => Results.NotFound()); return;
         }
         app.MapGet("/internal/bot-config", (HttpRequest request, [FromServices] BotChannelIngress ingress, CancellationToken ct) => Execute(async () =>
@@ -60,7 +63,28 @@ internal static class BotChannelEndpoints
             try { await ingress.AckAsync(signature, id, bytes, ct); return Results.Ok(new { acknowledged = true }); }
             finally { CryptographicOperations.ZeroMemory(bytes); }
         }));
+        app.MapPost("/internal/bot-messages", (HttpRequest request, [FromServices] BotChannelIngress ingress, CancellationToken ct) => Execute(async () =>
+        {
+            if (request.Query.Count != 0 || request.Path != "/internal/bot-messages") throw new ArgumentException();
+            var signature = CustomerRequestEndpoints.Signature(request); var bytes = await CustomerRequestEndpoints.ReadBody(request, BotChannelJson.MaximumBodyBytes, ct);
+            try { return Results.Ok(await ingress.MessagesAsync(signature, bytes, ct)); }
+            finally { CryptographicOperations.ZeroMemory(bytes); }
+        }));
         if (!portalAvailable) { MapPortalUnavailable(app, Unavailable); return; }
+        app.MapGet(MessagesPortal, (Guid companyId, HttpRequest request, IRequestAuthorizationContextAccessor accessor, [FromServices] BotChannelService service, CancellationToken ct) =>
+            Execute(async () => { var authority = Authority(companyId, accessor); NoQuery(request); return Results.Ok(await service.MessageGroupsAsync(authority, ct)); })).RequireAuthorization();
+        app.MapGet(MessagesPortal + "/{channel}", (Guid companyId, string channel, HttpRequest request, IRequestAuthorizationContextAccessor accessor,
+            [FromServices] BotChannelService service, CancellationToken ct) => Execute(async () =>
+            {
+                var authority = Authority(companyId, accessor);
+                if (request.Query.Any(x => x.Key is not ("group" or "before" or "limit") || x.Value.Count != 1) || !request.Query.ContainsKey("group")) throw new ArgumentException();
+                DateTimeOffset? before = null;
+                if (request.Query.ContainsKey("before"))
+                    before = DateTimeOffset.TryParse(request.Query["before"].ToString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed)
+                        ? parsed.ToUniversalTime() : throw new ArgumentException();
+                var limit = request.Query.ContainsKey("limit") ? checked((int)BotChannelJson.Version(request.Query["limit"].ToString())) : 50;
+                return Results.Ok(await service.MessagesAsync(authority, channel, request.Query["group"].ToString(), before, limit, ct));
+            })).RequireAuthorization();
         app.MapGet(Portal, (Guid companyId, HttpRequest request, IRequestAuthorizationContextAccessor accessor, [FromServices] BotChannelService service, CancellationToken ct) =>
             Execute(async () => { var authority = Authority(companyId, accessor); NoQuery(request); return Results.Ok(await service.GetAsync(authority, ct)); })).RequireAuthorization();
         app.MapPut(Portal + "/{channel}", (Guid companyId, string channel, HttpRequest request, IRequestAuthorizationContextAccessor accessor, [FromServices] BotChannelService service, CancellationToken ct) =>
@@ -106,6 +130,7 @@ internal static class BotChannelEndpoints
         app.MapGet(Portal, response); app.MapPut(Portal + "/{channel}", response); app.MapPut(Portal + "/ai", response);
         app.MapPost(Portal + "/ai/test", response); app.MapPost(Portal + "/{channel}/commands", response);
         app.MapGet(Portal + "/{channel}/qr", response); app.MapGet(Portal + "/audit", response);
+        app.MapGet(MessagesPortal, response); app.MapGet(MessagesPortal + "/{channel}", response);
     }
     private static AuthorizationContext Authority(Guid companyId, IRequestAuthorizationContextAccessor accessor) =>
         accessor.Current?.Context is { } authority && authority.CompanyId == companyId ? authority : throw new UnauthorizedAccessException();

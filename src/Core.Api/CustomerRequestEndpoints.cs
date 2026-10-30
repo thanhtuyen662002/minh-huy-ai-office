@@ -186,7 +186,7 @@ public sealed class CustomerRequestBoundaryMiddleware(RequestDelegate next)
     {
         if (!context.Request.Path.StartsWithSegments("/internal/customer-requests") && !context.Request.Path.StartsWithSegments("/api/companies") &&
             !context.Request.Path.StartsWithSegments("/internal/bot-config") && !context.Request.Path.StartsWithSegments("/internal/bot-status") &&
-            !context.Request.Path.StartsWithSegments("/internal/bot-commands"))
+            !context.Request.Path.StartsWithSegments("/internal/bot-commands") && !context.Request.Path.StartsWithSegments("/internal/bot-messages"))
         { await next(context); return; }
         var callerAbort = context.RequestAborted;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(callerAbort);
