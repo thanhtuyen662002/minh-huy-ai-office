@@ -48,7 +48,12 @@ if (primaryAiOptions is null && backupAiOptions is not null)
         "A backup AI provider cannot be configured without a primary AI provider.");
 }
 
-if (primaryAiOptions is null)
+// "AI dùng chung" from Kết nối answers the assistant whenever the company has filled it in;
+// the server-configured providers above remain the fallback.
+var botSecretRef = builder.Configuration["AIOffice:BotChannels:EncryptionKeySecretRef"];
+var companyAiEnabled = SecretReference.TryParse(botSecretRef ?? "", out var botSecret) && botSecret!.Provider == "env";
+
+if (primaryAiOptions is null && !companyAiEnabled)
 {
     builder.Services.AddDurableRabbitMqWorkExecution<
         PilotDataSourceProbeExecutor,
@@ -73,20 +78,27 @@ else
     {
         Timeout = TimeSpan.FromSeconds(120)
     };
-    var primaryAdapter = new OpenAiCompatibleResponsesAdapter(
-        aiHttpClient,
-        primaryAiOptions);
-    var backupAdapter = backupAiOptions is null
+    IAiGateway? serverGateway = primaryAiOptions is null
         ? null
-        : new OpenAiCompatibleResponsesAdapter(aiHttpClient, backupAiOptions);
+        : new OrderedFailoverAiGateway(
+            new OpenAiCompatibleResponsesAdapter(aiHttpClient, primaryAiOptions),
+            backupAiOptions is null ? null : new OpenAiCompatibleResponsesAdapter(aiHttpClient, backupAiOptions));
 
     builder.Services.AddSingleton(aiHttpClient);
-    builder.Services.AddSingleton<IAiGateway>(
-        new OrderedFailoverAiGateway(primaryAdapter, backupAdapter));
+    if (companyAiEnabled)
+    {
+        builder.Services.AddScoped(services => new BotSecretProtector(services.GetRequiredService<CompositeSecretResolver>(), botSecretRef!));
+        builder.Services.AddScoped<IAiGateway>(services => new CompanyAiSettingsGateway(
+            services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<BotSecretProtector>(), aiHttpClient, serverGateway));
+    }
+    else
+    {
+        builder.Services.AddSingleton(serverGateway!);
+    }
     builder.Services.AddSingleton(
         new PilotAiRuntimeDescriptor(
-            primaryAiOptions.ProviderId,
-            primaryAiOptions.Model));
+            primaryAiOptions?.ProviderId ?? CompanyAiSettingsGateway.ProviderId,
+            primaryAiOptions?.Model ?? "company-configured"));
     builder.Services.AddDurableRabbitMqWorkExecution<
         PilotAiQuestionExecutor,
         PilotAiQuestionToolMetadataProvider,
