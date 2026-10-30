@@ -65,8 +65,9 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   function change<K extends keyof ErpConnection>(key: K, value: ErpConnection[K]) {
     setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails(""); setCreatedReader("");
   }
-  // SQL Server tools write the address as "host,port" (or "host:port"); split it into the two fields.
-  function changeHost(value: string) {
+  // SQL Server tools write the address as "host,port" (or "host:port"); split it into the two fields once the
+  // address is complete (pasted or the field is left), never while it is still being typed.
+  function settleHost(value: string) {
     const match = /^\s*([^\s,:;\\/=]+)\s*[,:]\s*(\d{1,5})\s*$/.exec(value);
     if (match && Number(match[2]) >= 1 && Number(match[2]) <= 65535) {
       setFields(previous => ({ ...previous, host: match[1], port: Number(match[2]) })); setTested(false); setCode(""); setDetails(""); setCreatedReader("");
@@ -158,7 +159,12 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       {editing ? <p className="mt-4 text-sm">Nhập lại máy chủ, database và tài khoản cùng mật khẩu mới cho {editing.logicalName}.</p> : null}
       <fieldset disabled={frozen} className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className="text-sm">Tên khách hàng<input value={name} maxLength={200} readOnly={editing !== null} onChange={event => { setName(event.target.value); }} className={inputClass} required /></label>
-        <label className="text-sm">Máy chủ<input value={fields.host} maxLength={253} onChange={event => changeHost(event.target.value)} placeholder="sql.khachhang.vn" className={inputClass} required autoComplete="off" /></label>
+        <label className="text-sm">Máy chủ<input value={fields.host} maxLength={253} onChange={event => change("host", event.target.value)}
+          onBlur={event => settleHost(event.target.value)} onPaste={event => {
+            const input = event.currentTarget, pasted = event.clipboardData.getData("text");
+            const next = input.value.slice(0, input.selectionStart ?? input.value.length) + pasted + input.value.slice(input.selectionEnd ?? input.value.length);
+            event.preventDefault(); settleHost(next);
+          }} placeholder="sql.khachhang.vn" className={inputClass} required autoComplete="off" /></label>
         <label className="text-sm">Cổng<input type="number" min={1} max={65535} value={fields.port} onChange={event => change("port", Number(event.target.value))} className={inputClass} required /></label>
         <label className="text-sm">Tên database<input value={fields.database} maxLength={128} onChange={event => change("database", event.target.value)} className={inputClass} required autoComplete="off" /></label>
         <label className="text-sm">Tài khoản<input value={fields.userName} maxLength={128} onChange={event => change("userName", event.target.value)} className={inputClass} required autoComplete="off" /></label>

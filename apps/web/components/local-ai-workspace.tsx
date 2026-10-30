@@ -27,7 +27,7 @@ import { SubmissionRecoveryPanel } from "./submission-recovery-panel";
 import { useTaskSubmission } from "./use-task-submission";
 import { trimSubmissionQuestion } from "../lib/task-submission-intent";
 import { sameSourceMetadata, sourceMetadataUpdate, SourceMetadataDraft, taskSourceSelection } from "../lib/source-metadata-editor";
-import { browserLoginDestination, navigateBrowserLogin, type PublicBrowserLogin } from "../lib/browser-login-navigation";
+import { browserLoginDestination, navigateBrowserLogin, takeLoginReturnPath, type PublicBrowserLogin } from "../lib/browser-login-navigation";
 import { renewBrowserSessionSilently, SILENT_RENEW_INTERVAL_MS } from "../lib/browser-silent-renew";
 import { parseCompanyChoices, type CompanyChoice } from "../lib/company-choices";
 import { workspaceSectionFromPath, workspaceSectionPath, type WorkspaceSection } from "../lib/workspace-sections";
@@ -110,6 +110,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const [companyChoiceError, setCompanyChoiceError] = useState("");
   const companyName = companies.find(item => item.companyId.toLowerCase() === companyId.toLowerCase())?.companyName ?? initialCompanyName;
   const [surface, setSurface] = useState<Surface>(initialSurface.current);
+  const surfaceNow = useRef(surface); surfaceNow.current = surface;
+  const signedInScope = useRef(""), kept = useRef<{ scope: string; surface: Surface } | null>(null);
   const [sources, setSources] = useState<readonly LocalDataSource[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const question = useRef<HTMLTextAreaElement | null>(null);
@@ -154,6 +156,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     setSourceSaving(false);
     setEditorError("");
     sourceSave.current = null;
+    // Remember the open page so the same sign-in coming back (renewal, another tab) does not jump to another page.
+    if (signedInScope.current) kept.current = { scope: signedInScope.current, surface: surfaceNow.current };
     setSurface(initialSurface.current);
     setMessages((current) => current.filter((message) => message.id === "welcome"));
   }, []);
@@ -163,6 +167,14 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const botView = useBotChannels({ companyId, userId: auth?.userId ?? "", generation: sessionGeneration.current,
     isCurrent, validate: validateRecent, request, onUnauthorized: () => reset("signed-out") }, sessionState === "ready" && !!auth?.roles.includes("admin"));
   const botChannelsAvailable = botView !== null;
+  const authScope = auth ? JSON.stringify([auth.tenantId, auth.companyId, auth.userId, [...auth.roles].sort()]) : "";
+  signedInScope.current = authScope;
+  useEffect(() => {
+    if (!authScope) return;
+    const previous = kept.current; kept.current = null;
+    if (previous?.scope === authScope) setSurface(previous.surface);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- every accepted sign-in, even one with the same scope.
+  }, [auth]);
   const [glanceState, setGlance] = useState<{ scope: string; value: OverviewGlance } | null>(null);
   const [botGroups, setBotGroups] = useState<{ scope: string; count: number } | null>(null);
   const [ticketSearch, setTicketSearch] = useState({ customer: "", serial: 0 });
@@ -402,14 +414,21 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }, [autoStartLogin, beginMutation, browserLogin, companyId, loginMode, sessionState]);
 
   // Keep the address bar on the current section so links and reloads land on the same screen.
-  const firstSurface = useRef(true);
+  const firstSurface = useRef(true), returning = useRef<Surface | null>(null);
+  // Back from the provider's sign-in (which always lands on "/"): reopen the page the user was on.
   useEffect(() => {
+    if (window.location.pathname !== "/") return;
+    const stored = takeLoginReturnPath(), section = stored ? workspaceSectionFromPath(stored) : null;
+    if (section && section !== surfaceSection(initialSurface.current)) { returning.current = sectionSurfaces[section]; setSurface(returning.current); }
+  }, []);
+  useEffect(() => {
+    if (returning.current && returning.current !== surface) return;
     const path = workspaceSectionPath(surfaceSection(surface));
     if (window.location.pathname !== path) {
       if (firstSurface.current) window.history.replaceState(null, "", path);
       else window.history.pushState(null, "", path);
     }
-    firstSurface.current = false;
+    firstSurface.current = false; returning.current = null;
   }, [surface]);
   useEffect(() => {
     const onPop = () => {
