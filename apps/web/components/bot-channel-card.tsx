@@ -34,8 +34,8 @@ export function BotChannelCard({ channel, busy, qr, save, command, refreshQr }: 
   }
   const customers = groups.filter(g => g.externalId !== draft.techGroupExternalId);
   const missing = draft.customerGroups.filter(g => !groups.some(reported => reported.externalId === g.externalId));
-  return <article aria-label={`Kênh ${name}`} className="overflow-hidden rounded-xl border bg-card shadow-sm">
-    <form onSubmit={submit}><fieldset disabled={busy} className="m-0 min-w-0 border-0 p-0 disabled:opacity-70">
+  return <article aria-label={`Kênh ${name}`} className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
+    <form onSubmit={submit} className="flex flex-1 flex-col"><fieldset disabled={busy} className="m-0 flex min-w-0 flex-1 flex-col border-0 p-0 disabled:opacity-70">
       <header className="flex flex-wrap items-center gap-3 border-b p-5">
         <span className={`flex size-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${tiles[channel.channel]}`} aria-hidden="true">{channel.channel === "zalo" ? "Zalo" : "WA"}</span>
         <div className="min-w-0 flex-1">
@@ -47,7 +47,7 @@ export function BotChannelCard({ channel, busy, qr, save, command, refreshQr }: 
           <span className={`size-1.5 rounded-full ${running ? "bg-emerald-500" : "bg-slate-400"}`} aria-hidden="true" />{running ? "Đang chạy" : channel.enabled ? "Đã bật" : "Đang tắt"}</span>
         <Toggle role="switch" label={`Bật kênh ${name}`} checked={draft.enabled} onChange={enabled => setDraft({ ...draft, enabled })} />
       </header>
-      <div className="grid gap-4 p-5">
+      <div className="grid flex-1 content-start gap-4 p-5">
         {channel.status?.lastError ? <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">{channel.status.lastError}</p> : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5 text-xs text-muted-foreground"><label className="grid gap-1.5 font-medium">Lịch tóm tắt {name} (HH:mm)

@@ -91,7 +91,7 @@ export function BotChannelPanel(props: BotSessionProps) {
       {notice ? <p role="status" className="text-emerald-700 dark:text-emerald-300">{notice}</p> : null}
     </div>
     {error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{error}</p> : null}
-    {view ? <><div className="grid items-start gap-4 xl:grid-cols-2">{view.channels.map(channel => <BotChannelCard key={`${scope}:${channel.channel}:${channel.configVersion}:${channel.status?.receivedAt ?? ""}`} channel={channel} busy={busy}
+    {view ? <><div className="grid gap-4 xl:grid-cols-2">{view.channels.map(channel => <BotChannelCard key={`${scope}:${channel.channel}:${channel.configVersion}:${channel.status?.receivedAt ?? ""}`} channel={channel} busy={busy}
       qr={qr[channel.channel] && Date.parse(qr[channel.channel]!.expiresAt) > Date.now() ? qr[channel.channel]! : null} save={saveChannel}
       refreshQr={() => void run(value => fetchQr(channel.channel, value))} command={kind => void run(async value => {
         setQr(old => ({ ...old, [channel.channel]: undefined }));
@@ -99,11 +99,11 @@ export function BotChannelPanel(props: BotSessionProps) {
         if (raw === null || !current(value)) return; setNotice(kind === "relogin" ? "Đã yêu cầu đăng nhập lại. Chờ bot gửi mã QR mới." : "Đã xếp lệnh tóm tắt; chờ bot nhận lệnh.");
         if (kind === "relogin") await fetchQr(channel.channel, value);
       })} />)}</div>
-      <div className="grid items-start gap-4 xl:grid-cols-2">
-      <form onSubmit={saveAi} aria-label="Thiết lập AI" className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="grid gap-4 xl:grid-cols-2">
+      <form onSubmit={saveAi} aria-label="Thiết lập AI" className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="border-b px-5 py-4"><h3 className="text-base font-semibold">Thiết lập AI dùng chung</h3>
           <p className="text-xs text-muted-foreground">Mô hình bot dùng để tóm tắt tin nhắn và đọc ảnh.</p></div>
-        <fieldset disabled={busy} className="m-0 grid gap-4 border-0 p-5 disabled:opacity-70"><label className={field}>Địa chỉ API AI<input type="url" required maxLength={1000} className={botInput} value={baseUrl} onChange={e => setBaseUrl(e.target.value)} /></label>
+        <fieldset disabled={busy} className="m-0 grid flex-1 content-start gap-4 border-0 p-5 disabled:opacity-70"><label className={field}>Địa chỉ API AI<input type="url" required maxLength={1000} className={botInput} value={baseUrl} onChange={e => setBaseUrl(e.target.value)} /></label>
           <label className={field}>Mô hình AI<input required maxLength={200} className={botInput} value={model} onChange={e => setModel(e.target.value)} /></label>
           <p className="text-sm">{view.ai.apiKeyConfigured ? "Đã cấu hình khóa API." : "Chưa cấu hình khóa API."} Để trống để giữ khóa hiện tại.</p>
           <label className={field}>Khóa API mới<input type="password" autoComplete="new-password" maxLength={4096} disabled={clearKey} className={botInput} value={key} onChange={e => setKey(e.target.value)} /></label>
@@ -114,12 +114,12 @@ export function BotChannelPanel(props: BotSessionProps) {
               : "Không kết nối được AI. Kiểm tra địa chỉ và khóa đã lưu.");
           })}>Kiểm tra kết nối</button><span className="text-xs text-muted-foreground">Kiểm tra sử dụng thiết lập đã lưu.</span></div>
         </fieldset></form>
-      <section aria-label="Lịch sử thay đổi" className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <section aria-label="Lịch sử thay đổi" className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b px-5 py-4"><h3 className="text-base font-semibold">Lịch sử thay đổi</h3>
           <button className={botButton} disabled={busy} onClick={() => void run(async value => {
             const raw = await call("/audit", value); if (raw === null || !current(value)) return; const rows = parseBotAudit(raw); if (!rows) throw new Error(); setAudit(rows);
           })}>Xem lịch sử thay đổi</button></div>
-        {audit.length ? <ul className="m-0 list-none divide-y p-0 text-sm">{audit.map(row => <li key={row.id} className="grid gap-0.5 px-5 py-2.5">
+        {audit.length ? <ul className="m-0 max-h-[25rem] list-none divide-y overflow-y-auto p-0 text-sm">{audit.map(row => <li key={row.id} className="grid gap-0.5 px-5 py-2.5">
           <span>{row.channel ?? "AI dùng chung"} · {row.field}</span>
           <span className="break-all text-xs text-muted-foreground">{new Date(row.timestamp).toLocaleString("vi-VN")} · {row.actorUserId}</span></li>)}</ul>
           : <p className="px-5 py-4 text-sm text-muted-foreground">Ai đã đổi gì, lúc nào. Bấm nút để xem.</p>}
