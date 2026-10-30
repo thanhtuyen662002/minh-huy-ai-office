@@ -14,7 +14,10 @@ public sealed record BotHeartbeat(string Channel, string LoginState, BotGroup[] 
     string? LastError = null, string? LoginQrContentType = null, string? LoginQrBase64 = null);
 public sealed record BotCommandInput(string Kind);
 public sealed record BotCommandAck(string Channel);
-public sealed record BotCommandView(Guid Id, string Kind, DateTimeOffset CreatedAt, DateTimeOffset ExpiresAt);
+// Bots parse command times as UTC ISO strings ending in "Z", as JavaScript toISOString writes them; the default "+00:00" form made them reject the whole config pull.
+public sealed record BotCommandView(Guid Id, string Kind,
+    [property: JsonConverter(typeof(UtcInstantConverter))] DateTimeOffset CreatedAt,
+    [property: JsonConverter(typeof(UtcInstantConverter))] DateTimeOffset ExpiresAt);
 public sealed record BotStatusView(string LoginState, BotGroup[] Groups, DateTimeOffset? LastSummaryAt, string? LastError, DateTimeOffset ReceivedAt);
 public sealed record BotChannelView(string Channel, bool Enabled, bool DryRun, string[] SummarySchedule, string TimeZone,
     string? TechGroupExternalId, BotCustomerGroup[] CustomerGroups, string ConfigVersion, BotStatusView? Status);
@@ -24,6 +27,12 @@ public sealed record BotLoginQr(string ContentType, string Base64, DateTimeOffse
 public sealed record BotConfigView(BotChannelView Config, BotAiConfig Ai, BotCommandView[] Commands);
 public sealed record BotAiConfig(string BaseUrl, string Model, string? ApiKey);
 public sealed record BotAuditView(Guid Id, string? Channel, Guid ActorUserId, string Field, string? Before, string? After, DateTimeOffset Timestamp);
+public sealed class UtcInstantConverter : JsonConverter<DateTimeOffset>
+{
+    public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => reader.GetDateTimeOffset();
+    public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options) =>
+        writer.WriteStringValue(value.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture));
+}
 public sealed class BotChannelNotFoundException() : Exception("Bot channel is unavailable.");
 public sealed class BotChannelConflictException() : Exception("Bot settings changed. Reload before updating.");
 
