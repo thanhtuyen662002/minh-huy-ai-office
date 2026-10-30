@@ -17,7 +17,7 @@
     <#if themeResources?? && themeResources.favicons?has_content>
         <@themeResourceTags.renderFavicons themeResources.favicons url.resourcesPath />
     <#else>
-        <link rel="icon" href="${url.resourcesPath}/img/favicon.ico" />
+        <link rel="icon" type="image/svg+xml" href="${url.resourcesPath}/img/logo-icon.svg" />
     </#if>
     <#if themeResources?? && themeResources.stylesCommon?has_content>
         <@themeResourceTags.renderStyles themeResources.stylesCommon url.resourcesCommonPath />
@@ -101,7 +101,7 @@
 <body class="${properties.kcBodyClass!}" data-page-id="login-${pageId}">
 <div class="aio-shell">
     <aside class="aio-brand" aria-label="AI Office">
-        <div class="aio-logo"><span class="aio-logo-mark">AI</span><span>AI Office · Minh Huy</span></div>
+        <div class="aio-logo"><img class="aio-logo-mark" src="${url.resourcesPath}/img/logo-icon.svg" alt="" /><span>AI Office · Minh Huy</span></div>
         <div class="aio-pitch">
             <p class="aio-headline">${msg("aioHeadline")}</p>
             <p class="aio-lead">${msg("aioLead")}</p>

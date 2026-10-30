@@ -48,8 +48,7 @@ a:hover { text-decoration: underline; }
 }
 .aio-logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 16px; }
 .aio-logo-mark {
-  width: 36px; height: 36px; border-radius: 9px; background: #fff; color: #151821;
-  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+  width: 36px; height: 36px; border-radius: 9px; display: block;
 }
 .aio-pitch { max-width: 460px; }
 .aio-headline { margin: 0 0 20px; font-size: 34px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; }

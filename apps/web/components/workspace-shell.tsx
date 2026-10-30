@@ -82,7 +82,7 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
       <div className="flex min-h-screen flex-col lg:flex-row">
         <aside className={`shrink-0 border-b border-sidebar-border bg-sidebar lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${collapsed ? "lg:w-16" : "lg:w-60"}`}>
           <div className={`flex h-16 items-center gap-2.5 px-4 ${collapsed ? "lg:justify-center lg:px-0" : ""}`}>
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">AI</div>
+            <img src="/brand/logo-icon.svg" alt="" className="size-8 shrink-0 rounded-lg" />
             <div className={collapsed ? "lg:hidden" : ""}>
               <p className="text-sm font-semibold leading-tight">AI Office</p>
               <p className="text-xs text-muted-foreground">Minh Huy</p>
