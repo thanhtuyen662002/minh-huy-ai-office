@@ -10,9 +10,9 @@ type MemberOperation = { userId: string; name: string } &
   ({ kind: "access"; input: MemberAccessInput } | { kind: "administrator"; input: AdministratorInput });
 
 type Props = { companyId: string; userId?: string; generation: number; isCurrent: (generation: number) => boolean;
-  validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
+  validate: (generation: number) => Promise<boolean>; validateRecent?: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
 
-export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, validate, validateRecent = validate, request, onUnauthorized }: Props) {
   const [page, setPage] = useState<MemberPage | null>(null);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,8 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   function clearTemporaryPassword() { passwordEpoch.current++; setTemporaryPassword(""); }
   async function confirmAuthority() {
     let valid = false;
-    try { valid = await validate(generation); } catch { }
+    // Routine fences reuse a confirmation from the last few seconds; a refusal (403) still re-checks in full.
+    try { valid = await validateRecent(generation); } catch { }
     if (!valid && current()) { setPage(null); setPending(null); clearTemporaryPassword(); }
     return valid && current();
   }
@@ -115,10 +116,12 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       const received: unknown = await response.json();
       const result = body ? parseCreatedInvitation(received) : parseInvitation(received);
       if (!result || result.companyId !== companyId || path.includes("/revoke") && result.revokedAtUtc === null) throw new Error("Invalid result");
-      if (!await confirmAuthority()) return;
       if (body) setInvitationEmail("");
-      lock.current = false;
-      await load(offset, true);
+      // Invitations never change the member list, so only they are reloaded, then authority is confirmed.
+      const refreshed = await fetchInvitations();
+      if (!current() || !await confirmAuthority()) return;
+      if (refreshed.page) setInvitationPage(refreshed.page);
+      else { setInvitationPage(null); if (refreshed.error) setInvitationError(refreshed.error); }
       const displayEpoch = passwordEpoch.current;
       if (body && current() && await confirmAuthority() && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
         && typeof result.temporaryPassword === "string") setTemporaryPassword(result.temporaryPassword);
@@ -185,7 +188,6 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         result.operationId !== operation.input.operationId) throw new Error("Invalid result");
       if (operation.kind === "access" ? !("membershipActive" in result) || result.membershipActive !== operation.input.isActive
         : !("isAdministrator" in result) || result.isAdministrator !== operation.input.isAdministrator) throw new Error("Invalid result");
-      if (!await confirmAuthority()) return;
       setPending(null); lock.current = false; await load(offset, true);
       if (current()) setNotice(operation.kind === "access"
         ? operation.input.isActive ? "Đã mở lại quyền truy cập thành viên." : "Đã khóa quyền truy cập thành viên."
