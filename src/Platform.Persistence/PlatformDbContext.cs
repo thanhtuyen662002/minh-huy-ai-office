@@ -21,6 +21,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<CustomerRequestCounterRecord> CustomerRequestCounters => Set<CustomerRequestCounterRecord>();
     public DbSet<CustomerRequestNonceRecord> CustomerRequestNonces => Set<CustomerRequestNonceRecord>();
     public DbSet<KnowledgePageRecord> KnowledgePages => Set<KnowledgePageRecord>();
+    public DbSet<TelegramAccountLinkRecord> TelegramAccountLinks => Set<TelegramAccountLinkRecord>();
+    public DbSet<TelegramLinkCodeRecord> TelegramLinkCodes => Set<TelegramLinkCodeRecord>();
     public DbSet<PlatformMetadataRecord> PlatformMetadata => Set<PlatformMetadataRecord>();
     public DbSet<PlatformUserRecord> Users => Set<PlatformUserRecord>();
     public DbSet<CompanyRecord> Companies => Set<CompanyRecord>();
@@ -67,6 +69,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureBotChannels();
         modelBuilder.ConfigureCustomerRequests();
         modelBuilder.ConfigureKnowledgePages();
+        modelBuilder.ConfigureTelegramTech();
         modelBuilder.Entity<ProtectedDataSourceSecretRecord>(entity =>
         {
             entity.ToTable("ProtectedDataSourceSecrets", table => table.HasCheckConstraint("CK_ProtectedDataSourceSecrets_Version", "[Version] > 0"));

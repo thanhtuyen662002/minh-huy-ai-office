@@ -118,7 +118,7 @@ internal static class CustomerRequestEndpoints
             })).RequireAuthorization();
     }
 
-    private static async Task<IResult> Execute(Func<Task<IResult>> action)
+    internal static async Task<IResult> Execute(Func<Task<IResult>> action)
     {
         try { return await action(); }
         catch (UnauthorizedAccessException) { return Results.Json(new { error = "Customer request access is unavailable." }, statusCode: 403); }
