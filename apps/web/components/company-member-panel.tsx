@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { CompanyMember, MemberAccessInput, MemberPage, parseMemberAccessResult, parseMemberPage } from "../lib/company-members";
 import { AdministratorInput, parseAdministratorResult } from "../lib/company-administrators";
 import { CompanyInvitation, CompanyInvitationPage, InvitationRole, parseCreatedInvitation, parseInvitation, parseInvitationPage } from "../lib/company-invitations";
@@ -15,6 +16,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   const [page, setPage] = useState<MemberPage | null>(null);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState<MemberOperation | null>(null);
   const [notice, setNotice] = useState("");
@@ -35,11 +37,15 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     if (!valid && current()) { setPage(null); setPending(null); clearTemporaryPassword(); }
     return valid && current();
   }
-  async function load(nextOffset: number) {
+  // After a confirmed change the lists stay on screen while they refresh, and both are fetched together.
+  async function load(nextOffset: number, keep = false) {
     if (lock.current || !current()) return;
-    lock.current = true; setLoading(true); clearTemporaryPassword(); setPage(null); setError(""); setOffset(nextOffset);
+    lock.current = true; setLoading(true); clearTemporaryPassword(); if (!keep) setPage(null); setError(""); setOffset(nextOffset);
     try {
-      if (!await confirmAuthority()) return;
+      if (!keep && !await confirmAuthority()) return;
+      if (!keep) setInvitationPage(null);
+      setInvitationError("");
+      const invitations = fetchInvitations();
       const response = await request(generation, `/api/local/company/members?companyId=${encodeURIComponent(companyId)}&offset=${nextOffset}&limit=25&includeAccessVersion=true`, { cache: "no-store" });
       if (!current()) return;
       if (response.status === 401) { onUnauthorized(); return; }
@@ -53,36 +59,36 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (!current()) return;
       if (!received || received.companyId !== companyId || received.offset !== nextOffset || received.limit !== 25)
         throw new Error("Danh sách thành viên không hợp lệ. Hãy thử lại.");
-      if (!await confirmAuthority()) return;
+      const invitationResult = await invitations;
+      if (!current() || !await confirmAuthority()) return;
       setPage(received);
-      await loadInvitations();
+      if (invitationResult.page) setInvitationPage(invitationResult.page);
+      else { setInvitationPage(null); if (invitationResult.error) setInvitationError(invitationResult.error); }
     } catch {
-      if (current()) { setPage(null); setError("Không thể xác nhận danh sách thành viên. Hãy tải lại."); }
+      if (current()) { setPage(null); setInvitationPage(null); setError("Không thể xác nhận danh sách thành viên. Hãy tải lại."); }
     } finally { lock.current = false; if (current()) setLoading(false); }
   }
-  async function loadInvitations() {
-    setInvitationPage(null); setInvitationError("");
+  // Only shown once the member page it belongs to has been accepted.
+  async function fetchInvitations(): Promise<{ page?: CompanyInvitationPage; error?: string }> {
     try {
       const response = await request(generation, `/api/local/company/invitations?companyId=${encodeURIComponent(companyId)}&offset=0&limit=25`, { cache: "no-store" });
-      if (!current()) return;
-      if (response.status === 401) { onUnauthorized(); return; }
+      if (!current()) return {};
+      if (response.status === 401) { onUnauthorized(); return {}; }
       if (response.status === 403) {
         await validate(generation);
-        if (current()) setInvitationError("Không còn quyền xem lời mời. Hãy xác nhận lại quyền quản trị.");
-        return;
+        return { error: "Không còn quyền xem lời mời. Hãy xác nhận lại quyền quản trị." };
       }
       if (!response.ok) throw new Error("Unavailable");
       const received = parseInvitationPage(await response.json());
       if (!received || received.companyId !== companyId || received.offset !== 0 || received.limit !== 25) throw new Error("Invalid page");
-      if (!await confirmAuthority()) return;
-      setInvitationPage(received);
+      return { page: received };
     } catch {
-      if (current()) setInvitationError("Không thể xác nhận danh sách lời mời đang chờ. Hãy tải lại.");
+      return { error: "Không thể xác nhận danh sách lời mời đang chờ. Hãy tải lại." };
     }
   }
-  async function changeInvitation(path: string, body?: { email: string; roles: InvitationRole[] }) {
+  async function changeInvitation(path: string, body?: { email: string; roles: InvitationRole[] }, label = "invite") {
     if (lock.current || !current()) return;
-    lock.current = true; setLoading(true); clearTemporaryPassword(); setInvitationError(""); setNotice("");
+    lock.current = true; setLoading(true); setBusy(label); clearTemporaryPassword(); setInvitationError(""); setNotice("");
     try {
       if (!await confirmAuthority()) return;
       const response = await request(generation, `${path}?companyId=${encodeURIComponent(companyId)}`, {
@@ -112,7 +118,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (!await confirmAuthority()) return;
       if (body) setInvitationEmail("");
       lock.current = false;
-      await load(offset);
+      await load(offset, true);
       const displayEpoch = passwordEpoch.current;
       if (body && current() && await confirmAuthority() && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
         && typeof result.temporaryPassword === "string") setTemporaryPassword(result.temporaryPassword);
@@ -122,7 +128,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         let valid = false; try { valid = await validate(generation); } catch { }
         if (valid && current()) setInvitationError("Chưa xác nhận được kết quả. Hãy tải lại danh sách lời mời.");
       }
-    } finally { lock.current = false; if (current()) setLoading(false); }
+    } finally { lock.current = false; if (current()) { setLoading(false); setBusy(""); } }
   }
   function submitInvitation(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -145,7 +151,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   }
   async function setAccess(operation: NonNullable<typeof pending>) {
     if (lock.current || !current()) return;
-    lock.current = true; setLoading(true); clearTemporaryPassword(); setPending(operation); setError(""); setNotice("");
+    lock.current = true; setLoading(true); setBusy(`${operation.kind}:${operation.userId}`); clearTemporaryPassword(); setPending(operation); setError(""); setNotice("");
     try {
       if (!await confirmAuthority()) return;
       const response = await request(generation, `/api/local/company/members/${encodeURIComponent(operation.userId)}/${operation.kind}?companyId=${encodeURIComponent(companyId)}`,
@@ -180,7 +186,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (operation.kind === "access" ? !("membershipActive" in result) || result.membershipActive !== operation.input.isActive
         : !("isAdministrator" in result) || result.isAdministrator !== operation.input.isAdministrator) throw new Error("Invalid result");
       if (!await confirmAuthority()) return;
-      setPending(null); lock.current = false; await load(offset);
+      setPending(null); lock.current = false; await load(offset, true);
       if (current()) setNotice(operation.kind === "access"
         ? operation.input.isActive ? "Đã mở lại quyền truy cập thành viên." : "Đã khóa quyền truy cập thành viên."
         : operation.input.isAdministrator ? "Đã cấp quyền quản trị công ty." : "Đã gỡ quyền quản trị công ty.");
@@ -192,7 +198,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         if (!valid || !current()) { setPending(null); return; }
         setError("Chưa xác nhận được kết quả. Thử lại thao tác để tránh thay đổi trùng lặp.");
       }
-    } finally { lock.current = false; if (current()) setLoading(false); }
+    } finally { lock.current = false; if (current()) { setLoading(false); setBusy(""); } }
   }
   function startAccess(member: CompanyMember) {
     if (!member.membershipVersion) return;
@@ -204,6 +210,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     void setAccess({ kind: "administrator", userId: member.userId, name: member.displayName,
       input: { operationId: crypto.randomUUID(), expectedVersion: member.membershipVersion, isAdministrator: !member.roles.includes("admin") } });
   }
+  const spinner = (label: string) => busy === label ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null;
   useEffect(() => {
     mounted.current = true; setSignInUrl(new URL("/", window.location.origin).toString()); void load(0);
     return () => { mounted.current = false; };
@@ -213,7 +220,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   return <section aria-label="Thành viên công ty" className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#11182a]">
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Thành viên công ty</h2>
       <button type="button" disabled={loading || !!pending} onClick={() => void load(offset)} className="rounded-lg border px-3 py-2 text-sm">Tải lại thành viên</button></div>
-    {loading ? <SkeletonRows label="Đang tải thành viên…" rows={3} className="mt-4" /> : null}
+    {loading && !page ? <SkeletonRows label="Đang tải thành viên…" rows={3} className="mt-4" /> : null}
     {error ? <p role="alert" className="mt-4 text-rose-600">{error}</p> : null}
     {notice ? <p role="status" className="mt-4">{notice}</p> : null}
     <section aria-label="Lời mời thành viên" className="mt-5 rounded-xl border border-slate-200 p-4 dark:border-white/10">
@@ -230,7 +237,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
             <option value="viewer">Thành viên</option><option value="admin">Quản trị viên</option>
           </select>
         </label>
-        <button type="submit" disabled={loading || !!pending} className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Thêm thành viên</button>
+        <button type="submit" disabled={loading || !!pending} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">{spinner("invite")}Thêm thành viên</button>
       </form>
       {temporaryPassword ? <div className="mt-3 rounded-lg border border-amber-400 p-3" role="status">
         <p className="text-sm">Mật khẩu tạm thời chỉ hiển thị một lần và sẽ không được hiển thị lại. Hãy gửi riêng cho thành viên cùng liên kết đăng nhập. Thành viên phải đổi mật khẩu khi đăng nhập lần đầu.</p>
@@ -251,8 +258,8 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         <li key={invitation.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 p-3 text-sm dark:border-white/10">
           <span><strong>{invitation.email}</strong> · {invitation.roles.includes("admin") ? "Quản trị viên" : "Thành viên"}
             <span className="ml-2 text-slate-500">Hết hạn {new Date(invitation.expiresAtUtc).toLocaleDateString("vi-VN")}</span></span>
-          <button type="button" disabled={loading || !!pending} onClick={() => void changeInvitation(`/api/local/company/invitations/${encodeURIComponent(invitation.id)}/revoke`)}
-            className="rounded-lg border px-3 py-2" aria-label={`Thu hồi lời mời ${invitation.email}`}>Thu hồi</button>
+          <button type="button" disabled={loading || !!pending} onClick={() => void changeInvitation(`/api/local/company/invitations/${encodeURIComponent(invitation.id)}/revoke`, undefined, invitation.id)}
+            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 disabled:opacity-60" aria-label={`Thu hồi lời mời ${invitation.email}`}>{spinner(invitation.id)}Thu hồi</button>
         </li>)}</ul> : <p className="mt-2 text-sm text-slate-500">Chưa có lời mời đang chờ.</p> : null}
     </section>
     {pending && !loading ? <button type="button" onClick={() => void setAccess(pending)} className="mt-3 rounded-lg border px-3 py-2 text-sm">Thử lại thao tác với {pending.name}</button> : null}
@@ -262,9 +269,9 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       <td className="p-2">{member.displayName}</td><td className="p-2">{member.userActive ? "Đang hoạt động" : "Đã khóa tài khoản"}</td>
       <td className="p-2">{member.membershipActive ? "Đang hoạt động" : "Đã tắt thành viên"}</td><td className="p-2">{roleName(member.roles)}</td>
       <td className="p-2"><button type="button" disabled={loading || !!pending || !member.membershipVersion || !member.userActive || member.userId === userId}
-        onClick={() => startAccess(member)} className="rounded-lg border px-3 py-2 text-sm" aria-label={`${member.membershipActive ? "Khóa quyền" : "Mở lại quyền"} ${member.displayName}`}>{member.membershipActive ? "Khóa quyền" : "Mở lại quyền"}</button>
+        onClick={() => startAccess(member)} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm disabled:opacity-60" aria-label={`${member.membershipActive ? "Khóa quyền" : "Mở lại quyền"} ${member.displayName}`}>{spinner(`access:${member.userId}`)}{member.membershipActive ? "Khóa quyền" : "Mở lại quyền"}</button>
         <button type="button" disabled={loading || !!pending || !member.membershipVersion || !member.userActive || !member.membershipActive || member.userId === userId}
-          onClick={() => startAdministrator(member)} className="ml-2 rounded-lg border px-3 py-2 text-sm" aria-label={`${member.roles.includes("admin") ? "Gỡ quyền quản trị" : "Cấp quyền quản trị"} ${member.displayName}`}>{member.roles.includes("admin") ? "Gỡ quyền quản trị" : "Cấp quyền quản trị"}</button></td>
+          onClick={() => startAdministrator(member)} className="ml-2 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm disabled:opacity-60" aria-label={`${member.roles.includes("admin") ? "Gỡ quyền quản trị" : "Cấp quyền quản trị"} ${member.displayName}`}>{spinner(`administrator:${member.userId}`)}{member.roles.includes("admin") ? "Gỡ quyền quản trị" : "Cấp quyền quản trị"}</button></td>
     </tr>)}</tbody></table></div>{!page.items.length ? <p className="mt-4">Chưa có thành viên trong trang này.</p> : null}
     <div className="mt-4 flex items-center gap-3"><button type="button" disabled={loading || !!pending || offset === 0} onClick={() => void load(Math.max(0, offset - 25))} className="rounded-lg border px-3 py-2 text-sm">Trang trước</button>
       <span className="text-sm">Trang {Math.floor(offset / 25) + 1}</span>

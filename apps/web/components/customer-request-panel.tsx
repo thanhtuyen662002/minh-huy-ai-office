@@ -165,11 +165,17 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
   const latest = useRef(read); latest.current = read;
   const closeLatest = useRef(close); closeLatest.current = close;
   const hasDetail = !!state.detail;
+  const drawer = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!hasDetail) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") closeLatest.current(); };
+    // A click outside the drawer closes it and still reaches what was clicked, such as the sidebar.
+    const onPointer = (event: PointerEvent) => {
+      if (event.target instanceof Node && !drawer.current?.contains(event.target)) closeLatest.current();
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer, true);
+    return () => { window.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onPointer, true); };
   }, [hasDetail]);
   useEffect(() => {
     mounted.current = true; saving.current = null; setStatusFilter(""); setCustomerFilter(initialCustomer);
@@ -285,9 +291,9 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
         {visible.memberError && !visible.detail && (visible.page || visible.board) ? <p role="note" className="text-sm text-amber-700 dark:text-amber-200">{visible.memberError}</p> : null}
       </div>
       {/* The ticket opens over the board so the columns keep their width. */}
-      {visible.detail ? <div className="fixed inset-0 z-40 flex justify-end">
-        <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={close} />
-        <div className="relative h-full w-full max-w-[30rem] overflow-y-auto bg-background p-3 shadow-2xl">
+      {visible.detail ? <div className="pointer-events-none fixed inset-0 z-40 flex justify-end">
+        <div aria-hidden="true" className="absolute inset-0 bg-black/25" />
+        <div ref={drawer} className="pointer-events-auto relative h-full w-full max-w-[30rem] overflow-y-auto bg-background p-3 shadow-2xl">
           <CustomerRequestDetail key={`${scope}:${visible.detail.request.code}:${visible.detail.request.rowVersion}`}
             detail={visible.detail} members={visible.members} memberError={visible.memberError} disabled={disabled || visible.conflict}
             onSave={patch => void save(visible.detail!.request.code, patch)} onClose={close} /></div></div> : null}

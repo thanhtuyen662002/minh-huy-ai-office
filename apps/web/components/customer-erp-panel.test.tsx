@@ -53,10 +53,17 @@ describe("customer ERP setup", () => {
   });
   it("splits a pasted SQL Server address with its port so the connection can be tested", async () => {
     const { bodies } = setup(); fill();
-    fireEvent.change(screen.getByLabelText("Máy chủ"), { target: { value: "123.25.21.20,17456 " } });
-    expect((screen.getByLabelText("Máy chủ") as HTMLInputElement).value).toBe("123.25.21.20");
+    const host = screen.getByLabelText("Máy chủ") as HTMLInputElement;
+    // Typed key by key: nothing is split until the field is left.
+    for (const partial of ["123.25.21.20", "123.25.21.20,", "123.25.21.20,1", "123.25.21.20,17456 "]) fireEvent.change(host, { target: { value: partial } });
+    expect(host.value).toBe("123.25.21.20,17456 ");
+    expect((screen.getByLabelText("Cổng") as HTMLInputElement).value).toBe("1433");
+    fireEvent.blur(host);
+    expect(host.value).toBe("123.25.21.20");
     expect((screen.getByLabelText("Cổng") as HTMLInputElement).value).toBe("17456");
-    fireEvent.change(screen.getByLabelText("Máy chủ"), { target: { value: "sql.example.test:1500" } });
+    fireEvent.change(host, { target: { value: "" } });
+    fireEvent.paste(host, { clipboardData: { getData: () => "sql.example.test:1500" } });
+    expect(host.value).toBe("sql.example.test");
     expect((screen.getByLabelText("Cổng") as HTMLInputElement).value).toBe("1500");
     expect((screen.getByRole("button", { name: "Kiểm tra kết nối" }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));

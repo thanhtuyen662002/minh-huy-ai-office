@@ -110,6 +110,19 @@ it("lists and revokes pending invitations through company-scoped routes", async 
   expect(request.mock.calls.some(([, url]) => url === `/api/local/company/invitations/${invitation.id}/revoke?companyId=${company}`)).toBe(true);
 });
 
+it("keeps the lists on screen while a revoke is confirmed", async () => {
+  let release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  fixture(url => url.includes("/revoke?") ? held.then(() => Response.json({ ...invitation, revokedAtUtc: "2026-10-26T01:00:00+00:00", version: "2" })) : undefined);
+  await screen.findByText("member@example.com");
+  fireEvent.click(screen.getByRole("button", { name: "Thu hồi lời mời member@example.com" }));
+  await waitFor(() => expect((screen.getByRole("button", { name: "Thu hồi lời mời member@example.com" }) as HTMLButtonElement).disabled).toBe(true));
+  expect(screen.queryByText("Đang tải thành viên…")).toBeNull();
+  expect(screen.getByText("member@example.com")).toBeTruthy();
+  release(); await screen.findByText("Đã thu hồi lời mời thành viên.");
+  expect(screen.queryByText("Đang tải thành viên…")).toBeNull();
+});
+
 it.each([["duplicate-invitation", "Email này đã có lời mời đang chờ."], ["existing-member", "Email này đã là thành viên công ty."]])
   ("shows bounded conflict %s", async (code, message) => {
     fixture((url) => url === `/api/local/company/invitations?companyId=${company}` ? Response.json({ code, error: "PRIVATE" }, { status: 409 }) : undefined);

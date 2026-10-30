@@ -171,3 +171,15 @@ it("leaves background renewal off when sign-in is driven by hand", async () => {
   expect(renewal).not.toHaveBeenCalled(); expect(navigation).not.toHaveBeenCalled();
   window.sessionStorage.clear();
 });
+
+it("reopens the page the user was on after coming back from the sign-in page", async () => {
+  window.history.replaceState(null, "", "/");
+  window.sessionStorage.setItem("aioffice-return-path", JSON.stringify({ path: "/cong-viec", at: Date.now() }));
+  fetcher.mockImplementation(async (url: string) => url.startsWith("/api/local/session?")
+    ? Response.json({ tenantId: "11111111-1111-1111-1111-111111111111", companyId: company,
+      userId: "44444444-4444-4444-4444-444444444444", roles: ["member"] }) : Response.json({}, { status: 404 }));
+  render(workspace());
+  await waitFor(() => expect(window.location.pathname).toBe("/cong-viec"));
+  expect(window.sessionStorage.getItem("aioffice-return-path")).toBeNull();
+  window.history.replaceState(null, "", "/");
+});

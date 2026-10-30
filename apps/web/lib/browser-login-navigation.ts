@@ -35,4 +35,21 @@ export function browserLoginDestination(value: unknown, settings: PublicBrowserL
   } catch { return null; }
 }
 
-export function navigateBrowserLogin(destination: string) { window.location.assign(destination); }
+const RETURN_KEY = "aioffice-return-path";
+
+// The provider always returns to the site root; remember which page the user was on so the app can go back to it.
+export function navigateBrowserLogin(destination: string) {
+  try { window.sessionStorage.setItem(RETURN_KEY, JSON.stringify({ path: window.location.pathname, at: Date.now() })); } catch { /* Storage may be off. */ }
+  window.location.assign(destination);
+}
+
+export function takeLoginReturnPath(maxAgeMs = 15 * 60_000): string | null {
+  try {
+    const raw = window.sessionStorage.getItem(RETURN_KEY);
+    window.sessionStorage.removeItem(RETURN_KEY);
+    const value: unknown = raw ? JSON.parse(raw) : null;
+    if (!value || typeof value !== "object") return null;
+    const { path, at } = value as { path?: unknown; at?: unknown };
+    return typeof path === "string" && /^\/[a-z-]*$/.test(path) && typeof at === "number" && Date.now() - at < maxAgeMs ? path : null;
+  } catch { return null; }
+}

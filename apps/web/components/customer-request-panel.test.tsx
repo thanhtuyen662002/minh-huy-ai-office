@@ -234,6 +234,15 @@ it("opens detail beside the board, applies quick status actions and closes witho
   expect(view.request.mock.calls).toHaveLength(reads);
   expect(within(screen.getByRole("region", { name: "Cột Đang xử lý" })).getByRole("button", { name: "YC-0001" })).toBeTruthy();
 });
+it("closes detail on an outside press without swallowing the press", async () => {
+  fixture(); await open(); await screen.findByRole("article");
+  const outside = document.createElement("button"); document.body.append(outside);
+  const pressed = vi.fn(); outside.addEventListener("pointerdown", pressed);
+  fireEvent.pointerDown(screen.getByRole("article")); expect(screen.getByRole("article")).toBeTruthy();
+  fireEvent.pointerDown(outside);
+  expect(pressed).toHaveBeenCalled(); expect(screen.queryByRole("article")).toBeNull();
+  outside.remove();
+});
 it("keeps the other columns when one board column fails with a server error", async () => {
   fixture(url => url.startsWith("/api/local/customer-requests?") && url.includes("status=new")
     ? Response.json({ private: "PRIVATE" }, { status: 503 }) : undefined);
