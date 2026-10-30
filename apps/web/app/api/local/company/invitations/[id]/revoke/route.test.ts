@@ -32,3 +32,14 @@ it("rejects injected selectors and mismatched results", async () => {
   fetcher.mockResolvedValue(Response.json({ ...result, id: "44444444-4444-4444-4444-444444444444" }));
   expect((await invoke(request())).status).toBe(503);
 });
+it("accepts the empty body stream Next.js gives a bodyless POST and rejects a real body", async () => {
+  fetcher.mockResolvedValue(Response.json(result));
+  const empty = new Request(`${origin}/api/local/company/invitations/${id}/revoke?companyId=${company}`,
+    { method: "POST", headers: { Origin: origin }, body: new ReadableStream({ start(controller) { controller.close(); } }), duplex: "half" } as RequestInit);
+  expect(empty.body).not.toBeNull();
+  expect((await invoke(empty)).status).toBe(200);
+  fetcher.mockClear();
+  const withBody = new Request(`${origin}/api/local/company/invitations/${id}/revoke?companyId=${company}`,
+    { method: "POST", headers: { Origin: origin }, body: "{}" });
+  expect((await invoke(withBody)).status).toBe(400); expect(fetcher).not.toHaveBeenCalled();
+});
