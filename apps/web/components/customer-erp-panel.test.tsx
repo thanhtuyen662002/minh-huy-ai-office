@@ -50,6 +50,17 @@ describe("customer ERP setup", () => {
     await screen.findByText(/SQL Server 16.0/);
     expect(bodies[0].body).toMatchObject({ host: "sql.example.test", port: 1500 });
   });
+  it("shows a spinner on the button whose request is running", async () => {
+    const { props } = setup(); fill();
+    let finish!: (response: Response) => void;
+    props.request.mockImplementationOnce(async () => new Promise<Response>(resolve => { finish = resolve; }));
+    const test = screen.getByRole("button", { name: "Kiểm tra kết nối" });
+    fireEvent.click(test);
+    await waitFor(() => expect(test.querySelector(".animate-spin")).not.toBeNull());
+    expect(screen.getByRole("button", { name: "Lưu" }).querySelector(".animate-spin")).toBeNull();
+    await act(async () => finish(Response.json({ code: "ok", serverVersion: "16.0", tableCount: 1 })));
+    await screen.findByText(/SQL Server 16.0/); expect(test.querySelector(".animate-spin")).toBeNull();
+  });
   it.each(["unreachable", "login_failed", "database_not_found", "not_read_only", "missing_view_definition"])("shows safe Vietnamese message for %s and keeps save disabled", async code => {
     setup({ result: code }); fill();
     fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));

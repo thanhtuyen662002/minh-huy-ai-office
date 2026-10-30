@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { Check, Loader2 } from "lucide-react";
 import { CustomerErpSource, ErpConnection, erpMessages, isErpConnection, parseCustomerErpSources, readOnlyLoginSql } from "../lib/customer-erp";
 
 type Props = {
@@ -20,6 +21,8 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const [details, setDetails] = useState("");
   const [tested, setTested] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [action, setAction] = useState<"test" | "save" | null>(null);
+  const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<{ operationId: string } | null>(null);
   const mounted = useRef(false), lock = useRef(false);
   const current = () => mounted.current && isCurrent(generation);
@@ -70,7 +73,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
 
   async function execute(save: boolean) {
     if (lock.current || !current() || !isErpConnection(fields) || (save && (!tested || !name.trim()))) return;
-    lock.current = true; setBusy(true); setCode(""); setDetails("");
+    lock.current = true; setBusy(true); setAction(save ? "save" : "test"); setCode(""); setDetails("");
     try {
       if (!await validate(generation) || !current()) return;
       const operation = pending ?? { operationId: crypto.randomUUID() };
@@ -98,13 +101,14 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
           setDetails(`SQL Server ${payload.serverVersion} · ${payload.tableCount} bảng`);
       } else if ([400, 409, 422, 429].includes(response.status)) { setPending(null); setTested(false); }
     } catch { if (current()) setCode("unavailable"); }
-    finally { lock.current = false; if (current()) setBusy(false); }
+    finally { lock.current = false; if (current()) { setBusy(false); setAction(null); } }
   }
 
   function resetForm(source: CustomerErpSource | null) {
     setFields(empty); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
   }
   const frozen = busy || pending !== null;
+  const outline = "rounded-lg border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50";
   const inputClass = "mt-1 w-full rounded-lg border border-slate-200 p-2 dark:border-white/15 dark:bg-slate-900";
   return <section aria-label="Kết nối ERP khách hàng" className="mt-6 rounded-xl border p-5">
     <h3 className="font-semibold">Kết nối ERP khách hàng</h3>
@@ -130,16 +134,23 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       {code === "not_read_only" || code === "missing_view_definition" ? <div className="mt-4">
         <p className="text-sm">Gửi script này cho quản trị SQL. Không dùng tài khoản sysadmin hoặc db_owner.</p>
         <pre aria-label="SQL tạo tài khoản chỉ đọc" className="mt-2 max-h-72 overflow-auto rounded-lg bg-slate-100 p-3 text-xs dark:bg-slate-900">{readOnlyLoginSql(fields.database)}</pre>
-        <button type="button" onClick={() => { void navigator.clipboard?.writeText(readOnlyLoginSql(fields.database)).catch(() => {}); }} className="mt-2 rounded-lg border px-3 py-2 text-sm">Sao chép SQL</button>
+        <button type="button" onClick={() => {
+          void navigator.clipboard?.writeText(readOnlyLoginSql(fields.database)).then(() => {
+            if (!current()) return; setCopied(true); setTimeout(() => { if (mounted.current) setCopied(false); }, 2000);
+          }).catch(() => {});
+        }} className="mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
+          {copied ? <><Check className="size-4" aria-hidden="true" />Đã sao chép</> : "Sao chép SQL"}</button>
       </div> : null}
       {!frozen && !tested && !code ? <p className="mt-4 text-sm text-muted-foreground">{isErpConnection(fields)
         ? "Bấm “Kiểm tra kết nối” trước; nút Lưu bật khi kết nối thành công."
         : "Điền đủ máy chủ (chỉ địa chỉ, cổng nhập ở ô Cổng), database, tài khoản và mật khẩu để kiểm tra kết nối."}</p> : null}
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="button" disabled={frozen || !isErpConnection(fields)} onClick={() => void execute(false)} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Kiểm tra kết nối</button>
-        <button type="submit" disabled={busy || !tested || !name.trim()} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50">{busy ? "Đang xử lý…" : pending ? "Thử lại lưu" : "Lưu"}</button>
-        <button type="button" disabled={busy} onClick={() => resetForm(null)} className="rounded-lg border px-4 py-2 text-sm">{editing || pending ? "Huỷ" : "Xoá thông tin"}</button>
-        <button type="button" disabled={busy} onClick={() => void load()} className="rounded-lg border px-4 py-2 text-sm">Tải lại ERP khách hàng</button>
+        <button type="button" disabled={frozen || !isErpConnection(fields)} onClick={() => void execute(false)} className={`${outline} inline-flex items-center gap-2`}>
+          {action === "test" ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}Kiểm tra kết nối</button>
+        <button type="submit" disabled={busy || !tested || !name.trim()} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+          {action === "save" ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}{action === "save" ? "Đang lưu…" : pending ? "Thử lại lưu" : "Lưu"}</button>
+        <button type="button" disabled={busy} onClick={() => resetForm(null)} className={outline}>{editing || pending ? "Huỷ" : "Xoá thông tin"}</button>
+        <button type="button" disabled={busy} onClick={() => void load()} className={outline}>Tải lại ERP khách hàng</button>
       </div>
     </form>
   </section>;

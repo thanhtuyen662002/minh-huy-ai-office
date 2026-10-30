@@ -67,6 +67,20 @@
     border-color: var(--border);
   }
 
+  /* Every button shows that it was pressed, and a disabled one says so on hover. */
+  button {
+    cursor: pointer;
+    transition: background-color 150ms, color 150ms, opacity 150ms, box-shadow 150ms, transform 100ms;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
