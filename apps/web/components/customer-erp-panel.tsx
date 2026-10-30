@@ -60,6 +60,13 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   function change<K extends keyof ErpConnection>(key: K, value: ErpConnection[K]) {
     setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails("");
   }
+  // SQL Server tools write the address as "host,port" (or "host:port"); split it into the two fields.
+  function changeHost(value: string) {
+    const match = /^\s*([^\s,:;\\/=]+)\s*[,:]\s*(\d{1,5})\s*$/.exec(value);
+    if (match && Number(match[2]) >= 1 && Number(match[2]) <= 65535) {
+      setFields(previous => ({ ...previous, host: match[1], port: Number(match[2]) })); setTested(false); setCode(""); setDetails("");
+    } else change("host", value.trim());
+  }
 
   async function execute(save: boolean) {
     if (lock.current || !current() || !isErpConnection(fields) || (save && (!tested || !name.trim()))) return;
@@ -110,7 +117,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       {editing ? <p className="mt-4 text-sm">Nhập lại máy chủ, database và tài khoản cùng mật khẩu mới cho {editing.logicalName}.</p> : null}
       <fieldset disabled={frozen} className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className="text-sm">Tên khách hàng<input value={name} maxLength={200} readOnly={editing !== null} onChange={event => { setName(event.target.value); }} className={inputClass} required /></label>
-        <label className="text-sm">Máy chủ<input value={fields.host} maxLength={253} onChange={event => change("host", event.target.value)} placeholder="sql.khachhang.vn" className={inputClass} required autoComplete="off" /></label>
+        <label className="text-sm">Máy chủ<input value={fields.host} maxLength={253} onChange={event => changeHost(event.target.value)} placeholder="sql.khachhang.vn" className={inputClass} required autoComplete="off" /></label>
         <label className="text-sm">Cổng<input type="number" min={1} max={65535} value={fields.port} onChange={event => change("port", Number(event.target.value))} className={inputClass} required /></label>
         <label className="text-sm">Tên database<input value={fields.database} maxLength={128} onChange={event => change("database", event.target.value)} className={inputClass} required autoComplete="off" /></label>
         <label className="text-sm">Tài khoản<input value={fields.userName} maxLength={128} onChange={event => change("userName", event.target.value)} className={inputClass} required autoComplete="off" /></label>
@@ -125,6 +132,9 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
         <pre aria-label="SQL tạo tài khoản chỉ đọc" className="mt-2 max-h-72 overflow-auto rounded-lg bg-slate-100 p-3 text-xs dark:bg-slate-900">{readOnlyLoginSql(fields.database)}</pre>
         <button type="button" onClick={() => { void navigator.clipboard?.writeText(readOnlyLoginSql(fields.database)).catch(() => {}); }} className="mt-2 rounded-lg border px-3 py-2 text-sm">Sao chép SQL</button>
       </div> : null}
+      {!frozen && !tested && !code ? <p className="mt-4 text-sm text-muted-foreground">{isErpConnection(fields)
+        ? "Bấm “Kiểm tra kết nối” trước; nút Lưu bật khi kết nối thành công."
+        : "Điền đủ máy chủ (chỉ địa chỉ, cổng nhập ở ô Cổng), database, tài khoản và mật khẩu để kiểm tra kết nối."}</p> : null}
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" disabled={frozen || !isErpConnection(fields)} onClick={() => void execute(false)} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Kiểm tra kết nối</button>
         <button type="submit" disabled={busy || !tested || !name.trim()} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50">{busy ? "Đang xử lý…" : pending ? "Thử lại lưu" : "Lưu"}</button>

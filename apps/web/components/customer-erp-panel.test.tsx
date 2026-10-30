@@ -38,6 +38,18 @@ describe("customer ERP setup", () => {
     expect(bodies.at(-1)?.body.operationId).toEqual(expect.any(String));
     expect(bodies.at(-1)?.body).not.toHaveProperty("connectionString");
   });
+  it("splits a pasted SQL Server address with its port so the connection can be tested", async () => {
+    const { bodies } = setup(); fill();
+    fireEvent.change(screen.getByLabelText("Máy chủ"), { target: { value: "123.25.21.20,17456 " } });
+    expect((screen.getByLabelText("Máy chủ") as HTMLInputElement).value).toBe("123.25.21.20");
+    expect((screen.getByLabelText("Cổng") as HTMLInputElement).value).toBe("17456");
+    fireEvent.change(screen.getByLabelText("Máy chủ"), { target: { value: "sql.example.test:1500" } });
+    expect((screen.getByLabelText("Cổng") as HTMLInputElement).value).toBe("1500");
+    expect((screen.getByRole("button", { name: "Kiểm tra kết nối" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
+    await screen.findByText(/SQL Server 16.0/);
+    expect(bodies[0].body).toMatchObject({ host: "sql.example.test", port: 1500 });
+  });
   it.each(["unreachable", "login_failed", "database_not_found", "not_read_only", "missing_view_definition"])("shows safe Vietnamese message for %s and keeps save disabled", async code => {
     setup({ result: code }); fill();
     fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
