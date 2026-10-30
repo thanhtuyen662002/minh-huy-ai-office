@@ -126,6 +126,9 @@ services:
       AIOFFICE_AI_MODEL: ${AIOFFICE_AI_MODEL:-}
       AIOFFICE_AI_AUTHORIZATION: ${AIOFFICE_AI_AUTHORIZATION:-}
       AIOFFICE_AI_PROVIDER_ID: ${AIOFFICE_AI_PROVIDER_ID:-openai-compatible}
+      # Trợ lý uses the company's "AI dùng chung" (Kết nối) when it is filled in; the values above are the fallback.
+      AIOffice__BotChannels__EncryptionKeySecretRef: secretref://env/AIOFFICE_BOT_ENCRYPTION_KEY
+      AIOFFICE_BOT_ENCRYPTION_KEY: ${AIOFFICE_BOT_ENCRYPTION_KEY:-}
       RabbitMqWork__HostName: rabbitmq
       RabbitMqWork__Port: 5672
       RabbitMqWork__UserName: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in ignored .env.production}

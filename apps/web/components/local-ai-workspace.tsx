@@ -155,9 +155,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }, []);
 
   const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
-    validate, pause, restore, beginMutation, ready } = useLocalSession(companyId, clearPrivateState);
+    validate, validateRecent, pause, restore, beginMutation, ready } = useLocalSession(companyId, clearPrivateState);
   const botView = useBotChannels({ companyId, userId: auth?.userId ?? "", generation: sessionGeneration.current,
-    isCurrent, validate, request, onUnauthorized: () => reset("signed-out") }, sessionState === "ready" && !!auth?.roles.includes("admin"));
+    isCurrent, validate: validateRecent, request, onUnauthorized: () => reset("signed-out") }, sessionState === "ready" && !!auth?.roles.includes("admin"));
   const botChannelsAvailable = botView !== null;
   const [glanceState, setGlance] = useState<{ scope: string; value: OverviewGlance } | null>(null);
   const [ticketSearch, setTicketSearch] = useState({ customer: "", serial: 0 });
@@ -213,17 +213,17 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     const generation = sessionGeneration.current;
     setCompanies([]); setCompanyChoiceError("");
     try {
-      if (!await validate(generation) || !isCurrent(generation)) return;
+      if (!await validateRecent(generation) || !isCurrent(generation)) return;
       const response = await request(generation, `/api/local/companies?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
       const payload = await readJson(response);
-      if (!isCurrent(generation) || !await validate(generation) || !isCurrent(generation)) return;
+      if (!isCurrent(generation) || !await validateRecent(generation) || !isCurrent(generation)) return;
       const items = response.ok ? parseCompanyChoices(payload) : null;
       if (!items || !items.some(item => item.companyId.toLowerCase() === companyId.toLowerCase())) throw new Error();
       setCompanies(items);
     } catch {
       if (isCurrent(generation)) { setCompanies([]); setCompanyChoiceError("Không tải được công ty được cấp quyền. Hãy làm mới để thử lại."); }
     }
-  }, [companyId, isCurrent, loginMode, ready, request, sessionGeneration, validate]);
+  }, [companyId, isCurrent, loginMode, ready, request, sessionGeneration, validateRecent]);
 
   useEffect(() => { if (sessionState === "ready") void loadCompanies(); }, [sessionState, auth, loadCompanies]);
 
@@ -707,13 +707,13 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   let content: ReactNode = null;
   if (section === "tong-quan") {
     content = <WorkspaceOverview key={scopeKey} companyName={companyName} onOpen={openSection} bots={botView?.channels ?? null}
-      data={auth ? { companyId, userId: auth.userId, generation: sessionGeneration.current, isCurrent, validate, request, onUnauthorized,
+      data={auth ? { companyId, userId: auth.userId, generation: sessionGeneration.current, isCurrent, validate: validateRecent, request, onUnauthorized,
         onGlance: value => { if (isCurrent(sessionGeneration.current)) setGlance({ scope: scopeKey, value }); } } : undefined} />;
   } else if (section === "tin-nhan") {
     content = <>
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
       {auth ? <GroupInboxPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /> : null}
+        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
     </>;
   } else if (section === "cong-viec") {
     content = <>
@@ -730,13 +730,13 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
         <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></> : null}
+        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /></> : null}
     </>;
   } else if (section === "kien-thuc") {
     content = <>
       <SectionHeader title="Kiến thức" description="Tài liệu khách hàng, quy trình xử lý và ghi chú gắn với công việc." />
       {auth ? <KnowledgePanel key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized}
+        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
         onOpenTickets={customer => { setTicketSearch(old => ({ customer, serial: old.serial + 1 })); setSurface("customer-requests"); }} /> : null}
     </>;
   } else if (section === "ket-noi") {
