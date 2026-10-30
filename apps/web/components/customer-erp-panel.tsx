@@ -21,7 +21,8 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const [details, setDetails] = useState("");
   const [tested, setTested] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [action, setAction] = useState<"test" | "save" | null>(null);
+  const [action, setAction] = useState<"test" | "save" | "reader" | null>(null);
+  const [createdReader, setCreatedReader] = useState("");
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<{ operationId: string } | null>(null);
   const mounted = useRef(false), lock = useRef(false);
@@ -61,23 +62,23 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   }, []);
 
   function change<K extends keyof ErpConnection>(key: K, value: ErpConnection[K]) {
-    setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails("");
+    setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails(""); setCreatedReader("");
   }
   // SQL Server tools write the address as "host,port" (or "host:port"); split it into the two fields.
   function changeHost(value: string) {
     const match = /^\s*([^\s,:;\\/=]+)\s*[,:]\s*(\d{1,5})\s*$/.exec(value);
     if (match && Number(match[2]) >= 1 && Number(match[2]) <= 65535) {
-      setFields(previous => ({ ...previous, host: match[1], port: Number(match[2]) })); setTested(false); setCode(""); setDetails("");
+      setFields(previous => ({ ...previous, host: match[1], port: Number(match[2]) })); setTested(false); setCode(""); setDetails(""); setCreatedReader("");
     } else change("host", value.trim());
   }
 
-  async function execute(save: boolean) {
-    if (lock.current || !current() || !isErpConnection(fields) || (save && (!tested || !name.trim()))) return;
+  async function execute(save: boolean, connection = fields) {
+    if (lock.current || !current() || !isErpConnection(connection) || (save && (!tested || !name.trim()))) return;
     lock.current = true; setBusy(true); setAction(save ? "save" : "test"); setCode(""); setDetails("");
     try {
       if (!await validate(generation) || !current()) return;
       const operation = pending ?? { operationId: crypto.randomUUID() };
-      const body = save ? { ...fields, logicalName: name.trim(), ...operation, ...(editing ? { bindingVersion: editing.bindingVersion } : {}) } : fields;
+      const body = save ? { ...connection, logicalName: name.trim(), ...operation, ...(editing ? { bindingVersion: editing.bindingVersion } : {}) } : connection;
       if (save) setPending(operation);
       const path = save ? (editing ? `${editing.id}/credentials` : "customer-erp") : "connection-test";
       const response = await request(generation, `/api/local/data-sources/${path}?${selector}`, {
@@ -89,7 +90,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       if (!current()) return;
       if (save && response.ok) {
         if (!parseCustomerErpSources([payload])) { setCode("unavailable"); return; }
-        setFields(empty); setName(""); setEditing(null); setPending(null); setTested(false); setCode("saved");
+        setFields(empty); setName(""); setEditing(null); setPending(null); setTested(false); setCode("saved"); setCreatedReader("");
         await load(); if (current()) onSaved();
         return;
       }
@@ -104,8 +105,34 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
     finally { lock.current = false; if (current()) { setBusy(false); setAction(null); } }
   }
 
+  // The administrator account in the form is used once by the server to create a new read-only login; it is never saved.
+  async function createReader() {
+    if (lock.current || !current() || !isErpConnection(fields)) return;
+    lock.current = true; setBusy(true); setAction("reader"); setCode(""); setDetails(""); setCreatedReader("");
+    let reader: { userName: string; password: string } | null = null;
+    try {
+      if (!await validate(generation) || !current()) return;
+      const response = await request(generation, `/api/local/data-sources/reader-login?${selector}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fields),
+      });
+      if (!await authorized(response)) return;
+      let payload: Record<string, unknown> = {};
+      try { payload = await response.json(); } catch { /* Reported as unavailable below. */ }
+      if (!current()) return;
+      if (response.ok && payload.code === "created" && typeof payload.userName === "string" && /^aioffice_reader_[0-9a-f]{8}$/.test(payload.userName)
+        && typeof payload.password === "string" && payload.password.length >= 16 && payload.password.length <= 128)
+        reader = { userName: payload.userName, password: payload.password };
+      else setCode(response.status === 429 ? "rate_limited" : typeof payload.code === "string" && payload.code !== "created" && Object.hasOwn(erpMessages, payload.code) ? payload.code : "unavailable");
+    } catch { if (current()) setCode("unavailable"); }
+    finally { lock.current = false; if (current()) { setBusy(false); setAction(null); } }
+    if (!reader || !current()) return;
+    const connection = { ...fields, ...reader };
+    setFields(connection); setCreatedReader(reader.userName);
+    await execute(false, connection);
+  }
+
   function resetForm(source: CustomerErpSource | null) {
-    setFields(empty); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
+    setFields(empty); setCreatedReader(""); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
   }
   const frozen = busy || pending !== null;
   const outline = "rounded-lg border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50";
@@ -131,8 +158,14 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       </fieldset>
       {!fields.encrypt ? <p className="mt-3 text-sm text-amber-700">Đường truyền có thể không được mã hoá. Nên bật mã hoá và dùng chứng chỉ TLS hợp lệ.</p> : null}
       {code ? <p role={code === "ok" || code === "saved" ? "status" : "alert"} className="mt-4 text-sm">{code === "saved" ? "Đã lưu kết nối ERP khách hàng." : erpMessages[code] ?? erpMessages.unavailable} {details}</p> : null}
-      {code === "not_read_only" || code === "missing_view_definition" ? <div className="mt-4">
-        <p className="text-sm">Gửi script này cho quản trị SQL. Không dùng tài khoản sysadmin hoặc db_owner.</p>
+      {createdReader ? <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+        Đã tạo tài khoản chỉ đọc <strong>{createdReader}</strong> và điền sẵn mật khẩu. Mật khẩu quản trị không được lưu lại.{tested ? " Bấm Lưu để lưu kết nối." : ""}</p> : null}
+      {code === "not_read_only" || code === "missing_view_definition" || code === "not_permitted" || action === "reader" ? <div className="mt-4 rounded-lg border p-4">
+        <p className="text-sm">Nếu tài khoản vừa nhập là quản trị SQL (ví dụ sa), AI Office có thể dùng nó một lần để tạo tài khoản chỉ đọc mới cho database này và điền sẵn vào form. Mật khẩu quản trị không được lưu.</p>
+        <button type="button" disabled={frozen || !isErpConnection(fields)} onClick={() => void createReader()} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+          {action === "reader" ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}{action === "reader" ? "Đang tạo tài khoản…" : "Tạo tài khoản chỉ đọc giúp tôi"}</button>
+        <details className="mt-3">
+        <summary className="cursor-pointer text-sm text-muted-foreground">Hoặc gửi script SQL cho quản trị SQL tự chạy</summary>
         <pre aria-label="SQL tạo tài khoản chỉ đọc" className="mt-2 max-h-72 overflow-auto rounded-lg bg-slate-100 p-3 text-xs dark:bg-slate-900">{readOnlyLoginSql(fields.database)}</pre>
         <button type="button" onClick={() => {
           void navigator.clipboard?.writeText(readOnlyLoginSql(fields.database)).then(() => {
@@ -140,6 +173,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
           }).catch(() => {});
         }} className="mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
           {copied ? <><Check className="size-4" aria-hidden="true" />Đã sao chép</> : "Sao chép SQL"}</button>
+        </details>
       </div> : null}
       {!frozen && !tested && !code ? <p className="mt-4 text-sm text-muted-foreground">{isErpConnection(fields)
         ? "Bấm “Kiểm tra kết nối” trước; nút Lưu bật khi kết nối thành công."

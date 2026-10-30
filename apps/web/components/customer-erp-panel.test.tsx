@@ -69,6 +69,43 @@ describe("customer ERP setup", () => {
     if (code === "not_read_only") expect(screen.getByLabelText("SQL tạo tài khoản chỉ đọc").textContent).toContain("USE [Demo]");
     expect(screen.queryByText("synthetic-only")).toBeNull();
   });
+  it("creates a read-only reader from an admin account, fills it in and tests it", async () => {
+    const { props, bodies } = setup({ result: "not_read_only" }); fill();
+    fireEvent.change(screen.getByLabelText("Tài khoản"), { target: { value: "sa" } });
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
+    const create = await screen.findByRole("button", { name: "Tạo tài khoản chỉ đọc giúp tôi" });
+    let finish!: (response: Response) => void;
+    props.request.mockImplementationOnce(async (_g, path, init) => {
+      bodies.push({ path, body: JSON.parse(String(init?.body)) });
+      return new Promise<Response>(resolve => { finish = resolve; });
+    });
+    props.request.mockImplementationOnce(async (_g, path, init) => {
+      bodies.push({ path, body: JSON.parse(String(init?.body)) });
+      return Response.json({ code: "ok", serverVersion: "16.0", tableCount: 12 });
+    });
+    fireEvent.click(create);
+    await screen.findByRole("button", { name: "Đang tạo tài khoản…" });
+    const reader = bodies.at(-1)!;
+    expect(reader.path).toContain("/api/local/data-sources/reader-login?companyId=");
+    expect(reader.body).toMatchObject({ userName: "sa", password: "synthetic-only", database: "Demo" });
+    await act(async () => finish(Response.json({ code: "created", userName: "aioffice_reader_0a1b2c3d", password: "Generated0Reader0Password0Abc123" })));
+    await screen.findByText(/SQL Server 16.0/);
+    expect(bodies.at(-1)?.path).toContain("connection-test");
+    expect(bodies.at(-1)?.body).toMatchObject({ userName: "aioffice_reader_0a1b2c3d", password: "Generated0Reader0Password0Abc123" });
+    expect((screen.getByLabelText("Tài khoản") as HTMLInputElement).value).toBe("aioffice_reader_0a1b2c3d");
+    expect(screen.getByText(/Đã tạo tài khoản chỉ đọc/).textContent).toContain("Bấm Lưu");
+    expect((screen.getByRole("button", { name: "Lưu" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+  it("explains when the account cannot create logins", async () => {
+    const { props } = setup({ result: "not_read_only" }); fill();
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
+    const create = await screen.findByRole("button", { name: "Tạo tài khoản chỉ đọc giúp tôi" });
+    props.request.mockImplementationOnce(async () => Response.json({ code: "not_permitted" }, { status: 422 }));
+    fireEvent.click(create);
+    await screen.findByText(erpMessages.not_permitted);
+    expect((screen.getByLabelText("Tài khoản") as HTMLInputElement).value).toBe("reader");
+    expect(screen.getByRole("button", { name: "Tạo tài khoản chỉ đọc giúp tôi" })).toBeTruthy();
+  });
   it("rotates with the listed binding version and retyped credentials", async () => {
     const { bodies } = setup({ sources: true });
     fireEvent.click(await screen.findByRole("button", { name: "Đổi mật khẩu Khách A" }));

@@ -65,6 +65,27 @@ public sealed class CustomerErpService(PlatformDbContext database, IAuthorizatio
         return result;
     }
 
+    public async Task<CustomerErpReaderResult> CreateReaderAsync(AuthorizationContext authority, CustomerErpConnectionInput admin,
+        ICustomerErpReaderProvisioner provisioner, CancellationToken token = default)
+    {
+        await RequireAdminAsync(authority, token);
+        var result = await provisioner.CreateAsync(admin, token);
+        await RequireAdminAsync(authority, token);
+        // The audit keeps only a fixed code; neither the administrator nor the new reader credentials are stored.
+        await new CustomerErpStorePermissions(database).RequireAsync(token);
+        database.CustomerErpProbeAudits.Add(new()
+        {
+            TenantId = authority.TenantId,
+            CompanyId = authority.CompanyId,
+            Id = Guid.NewGuid(),
+            ActorUserId = authority.UserId,
+            Code = "reader_" + result.Code,
+            OccurredAtUtc = DateTimeOffset.UtcNow
+        });
+        await database.SaveChangesAsync(token);
+        return result;
+    }
+
     public async Task<CustomerErpSource> SaveAsync(AuthorizationContext authority, CustomerErpSaveRequest request,
         Guid? sourceId = null, CancellationToken token = default)
     {
