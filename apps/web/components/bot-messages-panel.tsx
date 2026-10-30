@@ -53,6 +53,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
       if (!current(value)) return;
       if (status === "unauthorized") { setState(empty(scope)); onUnauthorized(); return; }
       setState(old => ({ ...old, loading: false, error: status === 403 ? "Bạn không còn quyền xem tin nhắn của công ty này."
+        : status === 404 && !selected ? "Kênh bot Zalo/WhatsApp chưa được bật trên máy chủ."
         : status === 404 ? "Nhóm này không còn được chọn ở Kết nối. Hãy tải lại danh sách." : "Chưa đọc được tin nhắn. Hãy thử lại sau." }));
     };
     try {
