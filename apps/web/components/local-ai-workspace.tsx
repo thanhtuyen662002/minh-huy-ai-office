@@ -715,7 +715,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
       {auth ? <BotMessagesPanel key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
         isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
-      {auth ? <OptionalGroupInboxPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
+      {auth ? <OptionalGroupInboxPanel key={`${scopeKey}:group-inbox`} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
     </>;
   } else if (section === "cong-viec") {
