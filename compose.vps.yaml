@@ -6,6 +6,8 @@
 # - extra_hosts: the public HTTPS names resolve to this host so server-side calls
 #   (token exchange, JWKS, Core origin) reach IIS directly instead of relying on
 #   router NAT hairpinning. TLS is still validated against the IIS certificate.
+# - cpus: one shared VM also runs Windows, IIS, Keycloak and the bots. Each service is
+#   capped so no single container (or a busy RabbitMQ scheduler) can take every core.
 services:
   session-redis:
     image: redis:8-alpine
@@ -23,8 +25,10 @@ services:
       - no-new-privileges:true
     networks:
       - ai-office
+    cpus: 0.5
 
   web:
+    cpus: 1
     environment:
       NODE_EXTRA_CA_CERTS: /tls/ca.crt
     volumes:
@@ -42,8 +46,22 @@ services:
   rabbitmq:
     healthcheck:
       timeout: 20s
+    cpus: 1
+    environment:
+      # Erlang schedulers busy-wait by default, burning idle CPU on a shared VM.
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+sbwt none +sbwtdcpu none +sbwtdio none"
+
+  redis:
+    cpus: 0.5
+
+  otel-collector:
+    cpus: 0.5
+
+  jaeger:
+    cpus: 0.5
 
   core-api:
+    cpus: 2
     extra_hosts: *public-names
     # Optional protected file of extra Core.Api settings that do not fit fixed Compose keys,
     # e.g. AIOffice__CustomerRequests__Services__<n>__... (any number of bot services/groups)
@@ -53,6 +71,7 @@ services:
         required: false
 
   agent-worker:
+    cpus: 1
     extra_hosts: *public-names
 
 secrets:
