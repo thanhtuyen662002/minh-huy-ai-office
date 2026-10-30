@@ -61,6 +61,7 @@ builder.Services.AddRateLimiter(options =>
 });
 var groupIngressEnabled = builder.AddGroupIngress(!string.IsNullOrWhiteSpace(platformConnectionString), secretResolver);
 var customerRequestsEnabled = builder.AddCustomerRequests(!string.IsNullOrWhiteSpace(platformConnectionString));
+var telegramEnabled = builder.AddTelegramTech(customerRequestsEnabled);
 var botChannelsEnabled = builder.AddBotChannels(!string.IsNullOrWhiteSpace(platformConnectionString));
 builder.Services.AddOptions<RabbitMqWorkOptions>()
     .Configure(options => builder.Configuration
@@ -150,6 +151,7 @@ app.MapGet("/", () => Results.Ok(new { service = ProjectInfo.ProductName, compon
 app.MapHealthChecks("/health");
 app.MapGroupIngress(groupIngressEnabled);
 app.MapCustomerRequests(customerRequestsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
+app.MapTelegramTech(telegramEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapBotChannels(botChannelsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapKnowledge(authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapGroupListener(groupIngressEnabled);

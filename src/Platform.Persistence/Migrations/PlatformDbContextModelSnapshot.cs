@@ -2503,6 +2503,70 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.TelegramAccountLinkRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("LinkedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("TelegramName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long>("TelegramUserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "UserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "TelegramUserId")
+                        .IsUnique();
+
+                    b.ToTable("TelegramAccountLinks", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_TelegramAccountLinks_Values", "[TelegramUserId] > 0 AND DATEPART(tz,[LinkedAt])=0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.TelegramLinkCodeRecord", b =>
+                {
+                    b.Property<byte[]>("CodeHash")
+                        .HasMaxLength(32)
+                        .HasColumnType("binary(32)")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CodeHash");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("TenantId", "CompanyId", "UserId");
+
+                    b.ToTable("TelegramLinkCodes", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_TelegramLinkCodes_Hash", "DATALENGTH([CodeHash]) = 32");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotAiSettingsRecord", b =>
                 {
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
@@ -3091,6 +3155,24 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.TaskSubmissionIntentRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.TelegramAccountLinkRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.TelegramLinkCodeRecord", b =>
                 {
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
                         .WithMany()

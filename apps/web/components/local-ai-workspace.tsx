@@ -17,6 +17,7 @@ import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { GroupInboxPanel } from "./group-inbox-panel";
 import { CustomerRequestPanel } from "./customer-request-panel";
+import { TelegramLinkCard } from "./telegram-link-card";
 import { BotChannelPanel, useBotChannels } from "./bot-channel-panel";
 import { SubmissionRecoveryPanel } from "./submission-recovery-panel";
 import { useTaskSubmission } from "./use-task-submission";
@@ -725,8 +726,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
           onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
         <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
-      </div> : auth ? <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /> : null}
+      </div> : auth ? <>
+        <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+        <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></> : null}
     </>;
   } else if (section === "kien-thuc") {
     content = <>
