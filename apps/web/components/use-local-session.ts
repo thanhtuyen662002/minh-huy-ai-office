@@ -5,6 +5,10 @@ import { LocalAuthContext, parseAuthContext } from "../lib/local-ai-workspace";
 
 type Phase = "checking" | "signed-out" | "ready" | "closing";
 const channelName = "ai-office-local-session";
+// Each page load makes many panels re-check the session. Every BFF read still checks the
+// server session, so a recent confirmation of this same generation answers them without
+// another round-trip through the tunnel.
+export const SESSION_CONFIRMATION_MS = 30_000;
 const sameScope = (a: LocalAuthContext, b: LocalAuthContext) =>
   a.tenantId === b.tenantId && a.companyId === b.companyId && a.userId === b.userId
   && JSON.stringify([...a.roles].sort()) === JSON.stringify([...b.roles].sort());
@@ -21,6 +25,8 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
   const requests = useRef(new Set<AbortController>());
   const mutation = useRef<Promise<void> | null>(null);
   const broadcast = useRef<(() => void) | null>(null);
+  const confirmed = useRef<{ generation: number; at: number } | null>(null);
+  const confirming = useRef<{ generation: number; result: Promise<boolean> } | null>(null);
 
   const isCurrent = useCallback((value: number) => mounted.current && generation.current === value, []);
   const abortRequests = useCallback(() => {
@@ -30,6 +36,8 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
   const reset = useCallback((next: Phase) => {
     generation.current += 1;
     abortRequests();
+    confirmed.current = null;
+    confirming.current = null;
     phaseRef.current = next;
     authRef.current = null;
     if (mounted.current) {
@@ -41,6 +49,7 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
   }, [abortRequests, clearPrivateState]);
   const accept = useCallback((context: LocalAuthContext) => {
     authRef.current = context;
+    confirmed.current = { generation: generation.current, at: Date.now() };
     phaseRef.current = "ready";
     setAuth(context);
     setPhase("ready");
@@ -91,12 +100,25 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
         accept(context);
         return false;
       }
+      confirmed.current = { generation: value, at: Date.now() };
       return true;
     } catch {
       if (isCurrent(value)) reset("signed-out");
       return false;
     }
   }, [accept, companyId, isCurrent, request, reset]);
+
+  // For read-only panels: reuse a confirmation of this generation from the last few seconds and
+  // share one in-flight check. Mutations, focus and recovery paths keep calling validate.
+  const validateRecent = useCallback(async (value: number) => {
+    if (!isCurrent(value) || phaseRef.current !== "ready" || !authRef.current) return false;
+    const recent = confirmed.current;
+    if (recent?.generation === value && Date.now() - recent.at < SESSION_CONFIRMATION_MS) return true;
+    if (confirming.current?.generation === value) return confirming.current.result;
+    const result = validate(value);
+    confirming.current = { generation: value, result };
+    try { return await result; } finally { if (confirming.current?.result === result) confirming.current = null; }
+  }, [isCurrent, validate]);
 
   const pause = useCallback((value: number, milliseconds: number) => new Promise<boolean>((resolve) => {
     if (!isCurrent(value)) { resolve(false); return; }
@@ -199,6 +221,6 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
     };
   }, [ready, restore, validate]);
 
-  return { phase, auth, generation, isCurrent, reset, request, validate, pause, restore, beginMutation,
+  return { phase, auth, generation, isCurrent, reset, request, validate, validateRecent, pause, restore, beginMutation,
     ready };
 }
