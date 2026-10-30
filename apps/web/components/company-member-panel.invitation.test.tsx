@@ -142,3 +142,20 @@ it("copies only the application sign-in URL without invitation authority", async
   fireEvent.click(screen.getByRole("button", { name: "Sao chép" }));
   await waitFor(() => expect(writeText).toHaveBeenCalledWith("http://localhost:3000/"));
 });
+
+it("revokes without a full session re-check when a recent confirmation is available", async () => {
+  const validate = vi.fn(async () => true), validateRecent = vi.fn(async () => true);
+  const rows = [invitation];
+  const request = vi.fn(async (_generation: number, url: string) => {
+    if (url.includes("/revoke?")) { rows.length = 0; return Response.json({ ...invitation, revokedAtUtc: "2026-10-26T01:00:00+00:00", version: "2" }); }
+    if (url.startsWith("/api/local/company/invitations?")) return Response.json({ companyId: company, items: rows, offset: 0, limit: 25, hasMore: false });
+    return Response.json({ companyId: company, items: [], offset: 0, limit: 25, hasMore: false });
+  });
+  render(<CompanyMemberPanel companyId={company} userId={owner} generation={1} isCurrent={() => true}
+    validate={validate} validateRecent={validateRecent} request={request} onUnauthorized={vi.fn()} />);
+  await screen.findByText("member@example.com");
+  fireEvent.click(screen.getByRole("button", { name: "Thu hồi lời mời member@example.com" }));
+  await screen.findByText("Đã thu hồi lời mời thành viên.");
+  expect(validate).not.toHaveBeenCalled(); expect(validateRecent).toHaveBeenCalled();
+  expect(request.mock.calls.filter(([, url]) => url.includes("/members?")).length).toBe(1);
+});
