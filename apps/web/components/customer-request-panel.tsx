@@ -163,6 +163,14 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
     setState(old => ({ ...old, loading: false, detail: null, selection: { ...old.selection, code: undefined } }));
   }
   const latest = useRef(read); latest.current = read;
+  const closeLatest = useRef(close); closeLatest.current = close;
+  const hasDetail = !!state.detail;
+  useEffect(() => {
+    if (!hasDetail) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") closeLatest.current(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [hasDetail]);
   useEffect(() => {
     mounted.current = true; saving.current = null; setStatusFilter(""); setCustomerFilter(initialCustomer);
     void latest.current(initialCustomer ? { ...initialSelection(), view: "list", customer: initialCustomer } : initialSelection());
@@ -228,14 +236,14 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
       <button type="button" className={`${button} ml-auto`} disabled={disabled} onClick={() => void read(visible.selection)}>
         <RefreshCw className={`size-4 ${visible.loading ? "animate-spin" : ""}`} aria-hidden="true" />Tải lại phiếu</button>
     </div>
-    <p role="note" className="text-xs text-muted-foreground">AI tóm tắt từ Zalo · Nội dung chưa được nhân viên xác nhận.
+    <p role="note" className="text-xs text-muted-foreground">AI tóm tắt từ Zalo/WhatsApp · Nội dung chưa được nhân viên xác nhận.
       {view === "board" ? " Kéo thẻ sang cột khác để đổi trạng thái." : " Sắp xếp mới nhất trước."}</p>
     <div aria-live="polite" className="space-y-1 text-sm empty:hidden">
       {visible.saving ? <p role="status" className="text-muted-foreground">Đang lưu thay đổi…</p> : null}
       {visible.notice ? <p role="status" className="text-emerald-700 dark:text-emerald-300">{visible.notice}</p> : null}
     </div>
     {visible.error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{visible.error}</p> : null}
-    <div className={visible.detail ? "grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]" : ""}>
+    <div>
       <div className="min-w-0 space-y-3">
         {visible.loading && !visible.board && !visible.page ? view === "board" ? <BoardSkeleton label="Đang tải yêu cầu khách hàng…" />
           : <SkeletonRows label="Đang tải yêu cầu khách hàng…" rows={6} className="rounded-xl border bg-card p-4" /> : null}
@@ -257,7 +265,7 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
         </div> : null}
         {visible.page ? <>
           {visible.page.items.length ? <div className="overflow-x-auto rounded-xl border bg-card shadow-sm"><table className="w-full text-left text-sm" aria-label="Danh sách yêu cầu khách hàng">
-            <thead className="border-b text-xs text-muted-foreground"><tr>{["Mã phiếu", "Khách hàng", "Nhóm Zalo", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo"].map(label => <th scope="col" className="px-3 py-2.5 font-medium" key={label}>{label}</th>)}</tr></thead>
+            <thead className="border-b text-xs text-muted-foreground"><tr>{["Mã phiếu", "Khách hàng", "Nhóm khách", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo"].map(label => <th scope="col" className="px-3 py-2.5 font-medium" key={label}>{label}</th>)}</tr></thead>
             <tbody>{visible.page.items.map(item => <tr key={item.id} className={`border-t align-top hover:bg-muted/50 ${visible.selection.code === item.code ? "bg-accent/60" : ""}`}>
               <td className="px-3 py-2.5"><button className="whitespace-nowrap font-mono text-xs font-medium text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-300" type="button" disabled={visible.saving}
                 onClick={() => openTicket(item.code)}>{item.code}</button></td>
@@ -276,9 +284,13 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
           ? <p className="text-sm text-muted-foreground">Chưa có yêu cầu khách hàng phù hợp với bộ lọc.</p> : null}
         {visible.memberError && !visible.detail && (visible.page || visible.board) ? <p role="note" className="text-sm text-amber-700 dark:text-amber-200">{visible.memberError}</p> : null}
       </div>
-      {visible.detail ? <div className="min-w-0 xl:sticky xl:top-20"><CustomerRequestDetail key={`${scope}:${visible.detail.request.code}:${visible.detail.request.rowVersion}`}
-        detail={visible.detail} members={visible.members} memberError={visible.memberError} disabled={disabled || visible.conflict}
-        onSave={patch => void save(visible.detail!.request.code, patch)} onClose={close} /></div> : null}
+      {/* The ticket opens over the board so the columns keep their width. */}
+      {visible.detail ? <div className="fixed inset-0 z-40 flex justify-end">
+        <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={close} />
+        <div className="relative h-full w-full max-w-[30rem] overflow-y-auto bg-background p-3 shadow-2xl">
+          <CustomerRequestDetail key={`${scope}:${visible.detail.request.code}:${visible.detail.request.rowVersion}`}
+            detail={visible.detail} members={visible.members} memberError={visible.memberError} disabled={disabled || visible.conflict}
+            onSave={patch => void save(visible.detail!.request.code, patch)} onClose={close} /></div></div> : null}
     </div>
   </section>;
 }

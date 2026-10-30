@@ -111,3 +111,15 @@ it("navigation appears only after an enabled admin response", async () => {
     request: vi.fn(async () => Response.json(botView)), onUnauthorized: vi.fn() };
   render(<Navigation props={props} admin />); expect(await screen.findByRole("button", { name: "Kênh & Bot" })).toBeTruthy();
 });
+it("shows each result beside the control that was used, red when it failed", async () => {
+  fixture(url => url.includes("/ai/test?") ? Response.json({ success: false, code: "host_not_allowed" }) : undefined);
+  const zalo = await screen.findByRole("article", { name: "Kênh Zalo" });
+  fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("chưa được hệ thống cho phép");
+  expect(screen.getByRole("form", { name: "Thiết lập AI" }).contains(alert)).toBe(true);
+  fireEvent.click(within(zalo).getByRole("button", { name: "Tóm tắt ngay Zalo" }));
+  const done = await screen.findByText("Đã xếp lệnh tóm tắt; chờ bot nhận lệnh.");
+  expect(zalo.parentElement!.contains(done)).toBe(true);
+  expect(screen.queryByRole("alert")).toBeNull();
+});
