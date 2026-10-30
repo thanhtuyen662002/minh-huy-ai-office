@@ -141,7 +141,7 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
         className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:opacity-90">
         Mở bảng công việc<ArrowRight className="size-4" aria-hidden="true" /></button>} />
     {load ? <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-busy={load.state === "loading"}>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-busy={load.state === "loading"}>
         {kpis.map(({ status, label }) => <div key={status} className={`${card} space-y-2 p-5`}>
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><span className={`size-2 rounded-sm ${statusTone[status].dot}`} aria-hidden="true" />{label}</p>
           <p className="text-3xl font-semibold tracking-tight">{numbers ? numbers.value(status) : <span className="inline-block h-8 w-12 animate-pulse rounded bg-muted" aria-label="Đang tải" />}</p>

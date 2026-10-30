@@ -35,9 +35,9 @@ const bodies = (request: ReturnType<typeof fixture>["request"]) => request.mock.
 it("grants/removes through exact versioned operations and reloads authoritative roles", async () => {
   const f = fixture(); await screen.findByText("PRIVATE MEMBER");
   fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" })); await screen.findByText("Đã cấp quyền quản trị công ty.");
-  expect(screen.getByText("admin, viewer")).toBeTruthy();
+  expect(screen.getByRole("cell", { name: "Quản trị viên" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Gỡ quyền quản trị PRIVATE MEMBER" })); await screen.findByText("Đã gỡ quyền quản trị công ty.");
-  expect(screen.getByText("viewer")).toBeTruthy();
+  expect(screen.getByRole("cell", { name: "Thành viên" })).toBeTruthy();
   const operations = bodies(f.request); expect(operations.map(item => [item.expectedVersion, item.isAdministrator])).toEqual([["7", true], ["8", false]]);
   expect(operations[0].operationId).not.toBe(operations[1].operationId);
 });
@@ -59,10 +59,10 @@ it("historical lost-reply receipt reloads current roles and uses the later versi
   fireEvent.click(screen.getByRole("button", { name: "Thử lại thao tác với PRIVATE MEMBER" }));
   await screen.findByText("Đã cấp quyền quản trị công ty.");
   expect(bodies(f.request)[1]).toEqual(original); expect(f.receipts.size).toBe(1);
-  expect(f.state.version).toBe(9); expect(screen.getByText("viewer")).toBeTruthy();
+  expect(f.state.version).toBe(9); expect(screen.getByRole("cell", { name: "Thành viên" })).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Gỡ quyền quản trị PRIVATE MEMBER" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Cấp quyền quản trị PRIVATE MEMBER" }));
-  await screen.findByText("admin, viewer");
+  await screen.findByRole("cell", { name: "Quản trị viên" });
   const next = bodies(f.request)[2]; expect(next.expectedVersion).toBe("9"); expect(next.isAdministrator).toBe(true);
   expect(next.operationId).not.toBe(original.operationId); expect(f.receipts.size).toBe(2);
 });

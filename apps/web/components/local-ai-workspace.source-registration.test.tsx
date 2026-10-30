@@ -34,7 +34,7 @@ async function open() {
   const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />);
   await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
   fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!);
-  fireEvent.click(await screen.findByRole("button", { name: "Thêm nguồn chỉ đọc" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Nâng cao: đăng ký nguồn bằng secret có sẵn trên máy chủ" }));
   await screen.findByRole("option", { name: "PRIVATE COMPANY A" });
   fireEvent.change(screen.getByLabelText("Tên nguồn mới"), { target: { value: "NEW ERP" } });
   fireEvent.change(screen.getByLabelText("Mục đích nguồn mới"), { target: { value: "Reporting" } });
@@ -88,7 +88,7 @@ it("keeps registration absent for viewers", async () => {
   const view = render(<LocalAiWorkspace companyId={companyA} companyName="Fixture" />);
   await waitFor(() => expect(view.container.querySelector("nav")).toBeTruthy());
   fireEvent.click(view.container.querySelector("nav button:nth-child(6)")!);
-  expect(screen.queryByRole("button", { name: "Thêm nguồn chỉ đọc" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Nâng cao: đăng ký nguồn bằng secret có sẵn trên máy chủ" })).toBeNull();
 });
 it("clears private choices and draft immediately on registration 401", async () => {
   backend(url => url.includes("read-only-registration") ? Response.json({}, { status: 401 }) : undefined);

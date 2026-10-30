@@ -12,7 +12,8 @@ export const erpMessages: Record<string, string> = {
   missing_view_definition: "Tài khoản thiếu quyền VIEW ANY DEFINITION hoặc VIEW DEFINITION.",
   conflict: "Nguồn hoặc phiên bản kết nối đã thay đổi. Tải lại danh sách trước khi thử lại.",
   invalid_fields: "Thông tin kết nối không hợp lệ. Kiểm tra lại các trường.",
-  unavailable: "Chưa xác nhận được kết quả. Thử lại sẽ dùng cùng mã thao tác.",
+  unavailable: "Chưa nhận được kết quả từ máy chủ. Bấm lại để thử lần nữa.",
+  load_failed: "Không tải được danh sách kết nối ERP. Bấm “Tải lại” để thử lại.",
   rate_limited: "Đã đạt giới hạn kiểm tra kết nối. Vui lòng đợi một phút.",
   not_permitted: "Tài khoản này không có quyền tạo tài khoản mới. Nhập tài khoản quản trị SQL (ví dụ sa) rồi bấm lại.",
 };

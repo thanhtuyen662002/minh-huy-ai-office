@@ -16,10 +16,21 @@ function setup(options: { result?: string; sources?: boolean } = {}) {
   return { ...view, props, bodies };
 }
 function fill() {
+  const open = screen.queryByRole("button", { name: "Thêm kết nối ERP" });
+  if (open && !screen.queryByRole("form")) fireEvent.click(open);
   for (const [label, value] of [["Tên khách hàng", "Khách A"], ["Máy chủ", "sql.example.test"], ["Tên database", "Demo"], ["Tài khoản", "reader"], ["Mật khẩu", "synthetic-only"]])
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
 describe("customer ERP setup", () => {
+  it("keeps the form closed until asked and explains an empty list", async () => {
+    setup();
+    await screen.findByText(/Chưa có kết nối ERP nào/);
+    expect(screen.queryByRole("form")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Thêm kết nối ERP" }));
+    expect(screen.getByRole("form", { name: "Thêm kết nối ERP" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ" }));
+    expect(screen.queryByRole("form")).toBeNull();
+  });
   it("requires a successful test, invalidates it on edits, saves structured fields and clears the password", async () => {
     const { bodies, props } = setup();
     fill();
@@ -33,6 +44,8 @@ describe("customer ERP setup", () => {
     await waitFor(() => expect((screen.getByRole("button", { name: "Lưu" }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
     await screen.findByText("Đã lưu kết nối ERP khách hàng.");
+    expect(screen.queryByLabelText("Mật khẩu")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Thêm kết nối ERP" }));
     expect((screen.getByLabelText("Mật khẩu") as HTMLInputElement).value).toBe("");
     expect(props.onSaved).toHaveBeenCalledOnce();
     expect(bodies.at(-1)?.body.operationId).toEqual(expect.any(String));

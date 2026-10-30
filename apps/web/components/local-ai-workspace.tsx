@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import {
   LocalAiCheckpoint,
   LocalDataSource,
@@ -12,6 +13,7 @@ import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CustomerErpPanel } from "./customer-erp-panel";
+import { parseMemberPage } from "../lib/company-members";
 import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
@@ -161,6 +163,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     isCurrent, validate: validateRecent, request, onUnauthorized: () => reset("signed-out") }, sessionState === "ready" && !!auth?.roles.includes("admin"));
   const botChannelsAvailable = botView !== null;
   const [glanceState, setGlance] = useState<{ scope: string; value: OverviewGlance } | null>(null);
+  const [botGroups, setBotGroups] = useState<{ scope: string; count: number } | null>(null);
   const [ticketSearch, setTicketSearch] = useState({ customer: "", serial: 0 });
   const submission = useTaskSubmission({ companyId, generation: sessionGeneration, isCurrent, ready, validate, request,
     onUnauthorized: () => reset("signed-out") });
@@ -227,6 +230,23 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }, [companyId, isCurrent, loginMode, ready, request, sessionGeneration, validateRecent]);
 
   useEffect(() => { if (sessionState === "ready") void loadCompanies(); }, [sessionState, auth, loadCompanies]);
+
+  // The sidebar shows who is signed in on every page, not only after Tổng quan has loaded.
+  const [signedInName, setSignedInName] = useState<{ scope: string; name: string } | null>(null);
+  useEffect(() => {
+    if (sessionState !== "ready" || !auth?.userId) return;
+    const generation = sessionGeneration.current, scope = `${companyId}:${auth.userId}:${generation}`;
+    let live = true;
+    void (async () => {
+      try {
+        const response = await request(generation, `/api/local/company/members?${new URLSearchParams({ companyId, offset: "0", limit: "100" })}`, { cache: "no-store" });
+        const page = response.ok ? parseMemberPage(await response.json()) : null;
+        const name = page?.items.find(member => member.userId.toLowerCase() === auth.userId.toLowerCase())?.displayName;
+        if (live && name && isCurrent(generation)) setSignedInName({ scope, name });
+      } catch { /* The sidebar keeps its generic label. */ }
+    })();
+    return () => { live = false; };
+  }, [sessionState, auth?.userId, companyId, isCurrent, request, sessionGeneration]);
 
   async function selectCompany(targetCompanyId: string) {
     if (loginMode !== "browser" || !browserLogin || !ready() || busy || sourceSaving
@@ -714,8 +734,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     content = <>
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
       {auth ? <BotMessagesPanel key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
-      {auth ? <OptionalGroupInboxPanel key={`${scopeKey}:group-inbox`} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
+        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
+        onGroups={count => setBotGroups({ scope: scopeKey, count })} /> : null}
+      {/* The older source inbox only appears when the bot has no customer groups, so one page never shows two inboxes. */}
+      {auth && botGroups?.scope === scopeKey && botGroups.count === 0 ? <OptionalGroupInboxPanel key={`${scopeKey}:group-inbox`} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
     </>;
   } else if (section === "cong-viec") {
@@ -754,20 +776,17 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
       : (
               <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-semibold">Nguồn dữ liệu</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">Quản lý và kiểm tra các nguồn ERP của công ty.</p>
-                  </div>
-                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="rounded-xl border px-4 py-2 text-sm font-medium">
-                    {sourceLoading ? "Đang tải…" : "Làm mới"}
-                  </button>
-                  {auth?.roles.includes("admin") && !addingSource ? (
-                    <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Thêm nguồn chỉ đọc</button>
-                  ) : null}
-                </div>
                 {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
                   isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
+                <div className={`flex flex-wrap items-center justify-between gap-4 ${auth?.roles.includes("admin") ? "mt-8 border-t pt-6" : ""}`}>
+                  <div>
+                    <h2 className="text-lg font-semibold">Nguồn dữ liệu đã cấp quyền</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Các nguồn Trợ lý được dùng. Bấm “Kiểm tra” để thử kết nối.</p>
+                  </div>
+                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50">
+                    {sourceLoading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}{sourceLoading ? "Đang tải…" : "Làm mới"}
+                  </button>
+                </div>
                 {addingSource && auth?.roles.includes("admin") ? (
                   <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
                     isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}
@@ -809,6 +828,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                   ))}
                 </div>
                 {!sourceLoading && sources.length === 0 ? <p className="mt-6 rounded-xl bg-muted p-5 text-sm text-muted-foreground">Chưa có nguồn dữ liệu được cấp quyền.</p> : null}
+                {auth?.roles.includes("admin") && !addingSource ? (
+                  <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }}
+                    className="mt-6 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50">Nâng cao: đăng ký nguồn bằng secret có sẵn trên máy chủ</button>
+                ) : null}
               </section>
       )}
     </>;
@@ -936,7 +959,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     <WorkspaceShell section={section} onSection={openSection} companyId={companyId} companyName={companyName}
       companies={loginMode === "browser" ? companies : []} companyDisabled={busy || sourceSaving} onSelectCompany={id => void selectCompany(id)}
       roleLabel={isAdmin ? "Quản trị viên" : auth?.roles.length ? auth.roles.join(", ") : "Thành viên"}
-      accountLabel={loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · chỉ đọc"} userName={glance?.displayName}
+      accountLabel={loginMode === "browser" ? "Tài khoản của bạn" : "Local Pilot · chỉ đọc"}
+      userName={glance?.displayName ?? (signedInName?.scope === scopeKey ? signedInName.name : null)}
       counts={glance ? { "cong-viec": glance.openTickets } : undefined} bot={zalo ? { running: zaloRunning,
         label: zaloRunning ? "Bot Zalo đang chạy" : zalo.enabled ? "Bot Zalo chưa đăng nhập" : "Bot Zalo đang tắt" } : null}
       onSearch={auth ? customer => { setTicketSearch(old => ({ customer, serial: old.serial + 1 })); setSurface("customer-requests"); } : undefined}

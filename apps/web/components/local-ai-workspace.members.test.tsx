@@ -27,7 +27,7 @@ beforeEach(() => vi.stubGlobal("BroadcastChannel", undefined));
 afterEach(() => vi.unstubAllGlobals());
 it("renders scoped statuses and roles after fresh authority confirmation", async () => {
   backend(); await open(); await screen.findByText(member.displayName);
-  expect(screen.getByText("Đã khóa tài khoản")).toBeTruthy(); expect(screen.getByText("Đã tắt thành viên")).toBeTruthy(); expect(screen.getByText("viewer")).toBeTruthy();
+  expect(screen.getByText("Đã khóa tài khoản")).toBeTruthy(); expect(screen.getByText("Đã tắt thành viên")).toBeTruthy(); expect(screen.getByText(member.displayName).closest("tr")?.textContent).toContain("Thành viên");
 });
 it("keeps member navigation absent for viewers", async () => {
   const { state } = backend(); state.roles = ["viewer"];

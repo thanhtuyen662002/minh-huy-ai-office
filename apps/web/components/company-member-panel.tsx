@@ -230,7 +230,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
             <option value="viewer">Thành viên</option><option value="admin">Quản trị viên</option>
           </select>
         </label>
-        <button type="submit" disabled={loading || !!pending} className="rounded-lg border px-3 py-2 text-sm font-medium">Thêm thành viên</button>
+        <button type="submit" disabled={loading || !!pending} className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Thêm thành viên</button>
       </form>
       {temporaryPassword ? <div className="mt-3 rounded-lg border border-amber-400 p-3" role="status">
         <p className="text-sm">Mật khẩu tạm thời chỉ hiển thị một lần và sẽ không được hiển thị lại. Hãy gửi riêng cho thành viên cùng liên kết đăng nhập. Thành viên phải đổi mật khẩu khi đăng nhập lần đầu.</p>
@@ -257,10 +257,10 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     </section>
     {pending && !loading ? <button type="button" onClick={() => void setAccess(pending)} className="mt-3 rounded-lg border px-3 py-2 text-sm">Thử lại thao tác với {pending.name}</button> : null}
     {page ? <><div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr>
-      <th className="p-2">Thành viên</th><th className="p-2">Tài khoản</th><th className="p-2">Quyền thành viên</th><th className="p-2">Vai trò</th><th className="p-2">Thao tác</th>
+      <th className="p-2">Thành viên</th><th className="p-2">Tài khoản đăng nhập</th><th className="p-2">Quyền vào công ty</th><th className="p-2">Vai trò</th><th className="p-2">Thao tác</th>
     </tr></thead><tbody>{page.items.map(member => <tr key={member.userId} className="border-t border-slate-100 dark:border-white/10">
       <td className="p-2">{member.displayName}</td><td className="p-2">{member.userActive ? "Đang hoạt động" : "Đã khóa tài khoản"}</td>
-      <td className="p-2">{member.membershipActive ? "Đang hoạt động" : "Đã tắt thành viên"}</td><td className="p-2">{member.roles.join(", ") || "Chưa gán vai trò"}</td>
+      <td className="p-2">{member.membershipActive ? "Đang hoạt động" : "Đã tắt thành viên"}</td><td className="p-2">{roleName(member.roles)}</td>
       <td className="p-2"><button type="button" disabled={loading || !!pending || !member.membershipVersion || !member.userActive || member.userId === userId}
         onClick={() => startAccess(member)} className="rounded-lg border px-3 py-2 text-sm" aria-label={`${member.membershipActive ? "Khóa quyền" : "Mở lại quyền"} ${member.displayName}`}>{member.membershipActive ? "Khóa quyền" : "Mở lại quyền"}</button>
         <button type="button" disabled={loading || !!pending || !member.membershipVersion || !member.userActive || !member.membershipActive || member.userId === userId}
@@ -271,4 +271,10 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       <button type="button" disabled={loading || !!pending || !page.hasMore || offset + 25 > 1000} onClick={() => void load(offset + 25)} className="rounded-lg border px-3 py-2 text-sm">Trang sau</button></div>
     {page.hasMore && offset + 25 > 1000 ? <p className="mt-3 text-sm">Đã đến giới hạn danh sách. Liên hệ quản trị viên hạ tầng để xem thêm.</p> : null}</> : null}
   </section>;
+}
+
+function roleName(roles: readonly string[]) {
+  if (roles.includes("admin")) return "Quản trị viên";
+  if (roles.includes("viewer")) return "Thành viên";
+  return roles.join(", ") || "Chưa gán vai trò";
 }

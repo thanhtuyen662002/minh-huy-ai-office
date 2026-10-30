@@ -23,6 +23,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const [busy, setBusy] = useState(false);
   const [action, setAction] = useState<"test" | "save" | "reader" | null>(null);
   const [createdReader, setCreatedReader] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<{ operationId: string } | null>(null);
   const mounted = useRef(false), lock = useRef(false);
@@ -48,9 +49,9 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       if (!await authorized(response)) return;
       const rows = response.ok ? parseCustomerErpSources(await response.json()) : null;
       if (!current()) return;
-      if (!rows) { setCode("unavailable"); return; }
+      if (!rows) { setCode("load_failed"); return; }
       setSources(rows);
-    } catch { if (current()) setCode("unavailable"); }
+    } catch { if (current()) setCode("load_failed"); }
   }
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       if (!current()) return;
       if (save && response.ok) {
         if (!parseCustomerErpSources([payload])) { setCode("unavailable"); return; }
-        setFields(empty); setName(""); setEditing(null); setPending(null); setTested(false); setCode("saved"); setCreatedReader("");
+        setFields(empty); setName(""); setEditing(null); setPending(null); setTested(false); setCode("saved"); setCreatedReader(""); setFormOpen(false);
         await load(); if (current()) onSaved();
         return;
       }
@@ -131,20 +132,29 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
     await execute(false, connection);
   }
 
-  function resetForm(source: CustomerErpSource | null) {
-    setFields(empty); setCreatedReader(""); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
+  function resetForm(source: CustomerErpSource | null, open = source !== null) {
+    setFormOpen(open); setFields(empty); setCreatedReader(""); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
   }
   const frozen = busy || pending !== null;
   const outline = "rounded-lg border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50";
   const inputClass = "mt-1 w-full rounded-lg border border-slate-200 p-2 dark:border-white/15 dark:bg-slate-900";
-  return <section aria-label="Kết nối ERP khách hàng" className="mt-6 rounded-xl border p-5">
-    <h3 className="font-semibold">Kết nối ERP khách hàng</h3>
-    <p className="mt-2 text-sm text-slate-500">Thêm database SQL Server bằng tài khoản chỉ đọc. Mật khẩu được mã hoá khi lưu và không hiển thị lại.</p>
-    <ul className="mt-4 space-y-2">{sources.map(source => <li key={source.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-white/5">
-      <span>{source.logicalName} · {source.isEnabled ? "Đang bật · chỉ đọc" : "Đã tắt"}</span>
-      <button type="button" disabled={frozen} onClick={() => resetForm(source)} className="rounded-lg border px-3 py-2 disabled:opacity-50">Đổi mật khẩu<span className="sr-only"> {source.logicalName}</span></button>
-    </li>)}</ul>
-    <form aria-label={editing ? "Đổi kết nối ERP" : "Thêm kết nối ERP"} onSubmit={(event: FormEvent) => { event.preventDefault(); void execute(true); }}>
+  return <section aria-label="Kết nối ERP khách hàng" className="rounded-xl border p-5">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h3 className="font-semibold">Kết nối ERP khách hàng</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Database SQL Server của khách mà Trợ lý được đọc. Chỉ đọc, mật khẩu được mã hoá và không hiển thị lại.</p>
+      </div>
+      <div className="flex gap-2">
+        <button type="button" disabled={busy} onClick={() => void load()} className={outline}>Tải lại</button>
+        {!formOpen ? <button type="button" onClick={() => resetForm(null, true)} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">Thêm kết nối ERP</button> : null}
+      </div>
+    </div>
+    {sources.length ? <ul className="mt-4 space-y-2">{sources.map(source => <li key={source.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted p-3 text-sm">
+      <span><span className="font-medium">{source.logicalName}</span> · {source.isEnabled ? "Đang bật · chỉ đọc" : "Đã tắt"}</span>
+      <button type="button" disabled={frozen} onClick={() => resetForm(source)} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Đổi mật khẩu<span className="sr-only"> {source.logicalName}</span></button>
+    </li>)}</ul> : !formOpen && code !== "load_failed" ? <p className="mt-4 rounded-lg bg-muted p-4 text-sm text-muted-foreground">Chưa có kết nối ERP nào. Bấm “Thêm kết nối ERP” để bắt đầu.</p> : null}
+    {!formOpen && code ? <p role={code === "saved" ? "status" : "alert"} className="mt-4 text-sm">{code === "saved" ? "Đã lưu kết nối ERP khách hàng." : erpMessages[code] ?? erpMessages.unavailable}</p> : null}
+    {formOpen ? <form aria-label={editing ? "Đổi kết nối ERP" : "Thêm kết nối ERP"} className="mt-4 rounded-lg border p-4" onSubmit={(event: FormEvent) => { event.preventDefault(); void execute(true); }}>
       {editing ? <p className="mt-4 text-sm">Nhập lại máy chủ, database và tài khoản cùng mật khẩu mới cho {editing.logicalName}.</p> : null}
       <fieldset disabled={frozen} className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className="text-sm">Tên khách hàng<input value={name} maxLength={200} readOnly={editing !== null} onChange={event => { setName(event.target.value); }} className={inputClass} required /></label>
@@ -183,9 +193,8 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
           {action === "test" ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}Kiểm tra kết nối</button>
         <button type="submit" disabled={busy || !tested || !name.trim()} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
           {action === "save" ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}{action === "save" ? "Đang lưu…" : pending ? "Thử lại lưu" : "Lưu"}</button>
-        <button type="button" disabled={busy} onClick={() => resetForm(null)} className={outline}>{editing || pending ? "Huỷ" : "Xoá thông tin"}</button>
-        <button type="button" disabled={busy} onClick={() => void load()} className={outline}>Tải lại ERP khách hàng</button>
+        <button type="button" disabled={busy} onClick={() => resetForm(null)} className={outline}>Huỷ</button>
       </div>
-    </form>
+    </form> : null}
   </section>;
 }
