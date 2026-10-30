@@ -61,3 +61,15 @@ it("still loads when the member directory is not readable", async () => {
   await screen.findByRole("heading", { name: "Chào bạn, hôm nay chưa có việc mới cần xem" });
   expect(source.onGlance).toHaveBeenCalledWith({ displayName: null, openTickets: "0" });
 });
+it("retries a status read once after a server error before reporting failure", async () => {
+  let failures = 1;
+  const flaky = data(status => status === "new" && failures-- > 0 ? Response.json({}, { status: 503 })
+    : Response.json({ items: status === "new" ? [ticket("YC-0002", "new")] : [], offset: 0, limit: 100, hasMore: false }));
+  render(<WorkspaceOverview companyName="Minh Huy" onOpen={vi.fn()} data={flaky} />);
+  await vi.waitFor(() => expect(screen.getByText("Việc mới").nextSibling?.textContent).toBe("1"));
+  expect(flaky.request.mock.calls.filter(([, url]) => url.includes("status=new"))).toHaveLength(2);
+  const down = data(status => status === "new" ? Response.json({}, { status: 503 }) : Response.json({ items: [], offset: 0, limit: 100, hasMore: false }));
+  render(<WorkspaceOverview companyName="Minh Huy" onOpen={vi.fn()} data={down} />);
+  await screen.findByText("Chưa tải được số liệu công việc.");
+  expect(down.request.mock.calls.filter(([, url]) => url.includes("status=new"))).toHaveLength(2);
+});

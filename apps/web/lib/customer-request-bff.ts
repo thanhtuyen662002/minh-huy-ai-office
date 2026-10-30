@@ -1,6 +1,7 @@
 import { fetchCoreApi, isCanonicalCompanyId, isOfficeAiUiEnabled, localUiDisabledResponse,
   officeMutationIsSameOrigin, officeSessionIsCurrent, unauthenticatedResponse } from "./local-ai-bff";
 import { readBoundedRequestJson } from "./bounded-request-json";
+import { reportCoreCallFailure } from "./core-call-diagnostic";
 import { parseSubmissionJson } from "./task-submission-intent";
 import { isCustomerRequestPatch, isRequestCode, isRequestStatus, parseCustomerRequest, parseCustomerRequestDetail, parseCustomerRequestPage } from "./customer-requests";
 
@@ -29,6 +30,7 @@ export async function customerRequestBff(request: Request, code?: string): Promi
   if (!number(offset, 100000) || !number(limit, 100, 1) || status !== null && !isRequestStatus(status)
     || customer !== null && (!customer.trim() || customer.length > 200 || customer.includes("\0"))) return failure(400);
   const companyId = company.toLowerCase(), signal = AbortSignal.any([request.signal, AbortSignal.timeout(10000)]);
+  const startedAt = performance.now();
   try {
     let init: RequestInit = { signal, redirect: "error" };
     if (patch) {
@@ -54,7 +56,10 @@ export async function customerRequestBff(request: Request, code?: string): Promi
       : patch ? parseCustomerRequest(body.value, code) : parseCustomerRequestDetail(body.value, code);
     if (!view) return failure(502);
     const current = await bounded(officeSessionIsCurrent(companyId), signal);
-    if (signal.aborted) return failure(503);
+    if (signal.aborted) { reportCoreCallFailure(new URL(request.url).pathname, signal.reason, startedAt); return failure(503); }
     return current ? Response.json(view, { headers }) : unauthenticatedResponse();
-  } catch { return failure(503); }
+  } catch (error) {
+    reportCoreCallFailure(new URL(request.url).pathname, signal.aborted ? signal.reason : error, startedAt);
+    return failure(503);
+  }
 }

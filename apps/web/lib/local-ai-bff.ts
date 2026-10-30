@@ -4,6 +4,7 @@ import { getBrowserAuthRuntime } from "./browser-auth-runtime";
 import { oidcStartIsSameOrigin } from "./browser-oidc";
 import { browserBindingCookieName, browserSessionCookieName } from "./browser-session-store";
 import { hasSameOrigin } from "./request-origin";
+import { reportCoreCallFailure } from "./core-call-diagnostic";
 
 export { COMPANY_SELECTOR_HEADER, isCanonicalCompanyId } from "./company-scope";
 
@@ -134,6 +135,7 @@ export async function fetchCoreApi(
       const signal = init.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
       let response: Response;
       let bytes: Uint8Array<ArrayBuffer>;
+      const startedAt = performance.now();
       try {
         response = await fetch(`${runtime.coreApiOrigin}${path}`, {
           ...init, headers, cache: "no-store", redirect: "error",
@@ -142,7 +144,8 @@ export async function fetchCoreApi(
         // fetch resolves at headers. Consume the bounded body before the final
         // shared authority fence, so a slow stream cannot carry post-logout data.
         bytes = await readBrowserCoreBody(response, signal);
-      } catch {
+      } catch (error) {
+        reportCoreCallFailure(path, error, startedAt);
         // Core may have committed a mutation before its reply was lost. A
         // still-issued session permits a retry with the same operation ID;
         // session loss or coordinator failure remains an authentication denial.

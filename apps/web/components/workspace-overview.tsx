@@ -21,6 +21,7 @@ const kpis: { status: typeof counted[number]; label: string }[] = [
   { status: "needs_clarification", label: "Cần hỏi lại khách" }, { status: "done", label: "Xong hôm nay" },
 ];
 const limit = 100;
+const retryDelayMs = 400;
 type Pages = Record<typeof counted[number], { items: CustomerRequest[]; hasMore: boolean }>;
 export type OverviewGlance = { displayName: string | null; openTickets: string };
 export type OverviewData = { companyId: string; userId?: string; generation: number; isCurrent: (generation: number) => boolean;
@@ -63,8 +64,16 @@ function useOverview(data: OverviewData | undefined): Load | null {
         // The member directory only supplies the greeting name; a reader without it still gets the overview.
         const directory = userId ? request(generation, `/api/local/company/members?${new URLSearchParams({ companyId, offset: "0", limit: String(limit) })}`,
           { cache: "no-store", signal: abort.signal }).then(async response => response.ok ? parseMemberPage(await response.json()) : null).catch(() => null) : Promise.resolve(null);
-        const responses = await Promise.all(counted.map(status => request(generation,
-          `/api/local/customer-requests?${new URLSearchParams({ companyId, status, offset: "0", limit: String(limit) })}`, { cache: "no-store", signal: abort.signal })));
+        // A read that hits a transient server error is retried once before the whole overview reports failure.
+        const read = (status: RequestStatus) => request(generation,
+          `/api/local/customer-requests?${new URLSearchParams({ companyId, status, offset: "0", limit: String(limit) })}`, { cache: "no-store", signal: abort.signal });
+        const responses = await Promise.all(counted.map(async status => {
+          const first = await read(status);
+          if (first.status < 500 || !current()) return first;
+          void first.body?.cancel().catch(() => {});
+          await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+          return current() ? read(status) : first;
+        }));
         const members = await directory;
         if (!current()) return;
         if (responses.some(response => response.status === 401)) { onUnauthorized(); return; }
