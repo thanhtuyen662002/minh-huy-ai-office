@@ -26,6 +26,12 @@ public sealed record BotAdminView(bool Enabled, BotChannelView[] Channels, BotAi
 public sealed record BotLoginQr(string ContentType, string Base64, DateTimeOffset ExpiresAt);
 public sealed record BotConfigView(BotChannelView Config, BotAiConfig Ai, BotCommandView[] Commands);
 public sealed record BotAiConfig(string BaseUrl, string Model, string? ApiKey);
+public sealed record BotMessageInput(string GroupExternalId, string MessageId, string SenderName, DateTimeOffset SentAt, string? Text = null, bool HasImage = false);
+public sealed record BotMessageBatch(string Channel, BotMessageInput[] Messages);
+public sealed record BotMessageReceipt(int Accepted, int Ignored);
+public sealed record BotMessageGroupView(string Channel, string ExternalId, string DisplayName, string CustomerName, DateTimeOffset? LastMessageAt, int MessageCount);
+public sealed record BotMessageView(string MessageId, string SenderName, string Text, bool HasImage, DateTimeOffset SentAt);
+public sealed record BotMessagePage(BotMessageView[] Items, bool HasMore);
 public sealed record BotAuditView(Guid Id, string? Channel, Guid ActorUserId, string Field, string? Before, string? After, DateTimeOffset Timestamp);
 public sealed class UtcInstantConverter : JsonConverter<DateTimeOffset>
 {
@@ -141,6 +147,28 @@ public static class BotChannelJson
             for (var bit = 0; bit < 8; bit++) value = (value >> 1) ^ ((value & 1) == 0 ? 0 : 0xedb88320u);
         }
         return ~value;
+    }
+
+    public const int MaximumMessageText = 4000;
+
+    // Messages from groups the bot reads. Text may be empty only for an image-only message.
+    public static BotMessageBatch Messages(BotMessageBatch input, DateTimeOffset now)
+    {
+        Channel(input.Channel);
+        if (input.Messages is null || input.Messages.Length is < 1 or > 200) throw Invalid();
+        var messages = input.Messages.Select(message =>
+        {
+            if (message is null) throw Invalid();
+            CustomerRequestJson.Text(message.GroupExternalId, 200, opaque: true);
+            CustomerRequestJson.Text(message.MessageId, 200, opaque: true);
+            if (message.SentAt == default || message.SentAt.Offset != TimeSpan.Zero || message.SentAt > now.AddMinutes(5)) throw Invalid();
+            var text = message.Text ?? "";
+            if (text.Length > MaximumMessageText || text.Contains('\0') || text.Length == 0 && !message.HasImage) throw Invalid();
+            if (text.Length > 0) CustomerRequestJson.Text(text, MaximumMessageText);
+            return message with { SenderName = Display(message.SenderName), Text = text };
+        }).ToArray();
+        if (messages.Select(x => (x.GroupExternalId, x.MessageId)).Distinct().Count() != messages.Length) throw Invalid();
+        return input with { Messages = messages };
     }
 
     private static string Display(string value)

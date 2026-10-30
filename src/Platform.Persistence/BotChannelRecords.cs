@@ -78,3 +78,17 @@ public sealed class BotChannelAuditRecord
     public string? After { get; set; }
     public DateTimeOffset Timestamp { get; set; }
 }
+
+public sealed class BotMessageRecord
+{
+    public Guid TenantId { get; set; }
+    public Guid CompanyId { get; set; }
+    public required string Channel { get; set; }
+    public required string GroupExternalId { get; set; }
+    public required string MessageId { get; set; }
+    public required string SenderName { get; set; }
+    public string Text { get; set; } = "";
+    public bool HasImage { get; set; }
+    public DateTimeOffset SentAt { get; set; }
+    public DateTimeOffset ReceivedAt { get; set; }
+}

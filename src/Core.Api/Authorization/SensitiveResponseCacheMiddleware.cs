@@ -30,6 +30,7 @@ public sealed class SensitiveResponseCacheMiddleware(RequestDelegate next)
             || context.Request.Path.StartsWithSegments("/internal/bot-config")
             || context.Request.Path.StartsWithSegments("/internal/bot-status")
             || context.Request.Path.StartsWithSegments("/internal/bot-commands")
+            || context.Request.Path.StartsWithSegments("/internal/bot-messages")
             || context.Request.Path.StartsWithSegments(GroupIngressPath)
             || context.Request.Path.StartsWithSegments(GroupSourcesPath))
         {

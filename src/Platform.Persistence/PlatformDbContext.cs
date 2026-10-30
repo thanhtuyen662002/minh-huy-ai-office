@@ -13,6 +13,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<BotStatusRecord> BotStatuses => Set<BotStatusRecord>();
     public DbSet<BotCommandRecord> BotCommands => Set<BotCommandRecord>();
     public DbSet<BotChannelAuditRecord> BotChannelAudits => Set<BotChannelAuditRecord>();
+    public DbSet<BotMessageRecord> BotMessages => Set<BotMessageRecord>();
     public DbSet<CustomerRequestRecord> CustomerRequests => Set<CustomerRequestRecord>();
     public DbSet<CustomerRequestItemRecord> CustomerRequestItems => Set<CustomerRequestItemRecord>();
     public DbSet<CustomerRequestEvidenceRecord> CustomerRequestEvidence => Set<CustomerRequestEvidenceRecord>();

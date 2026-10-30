@@ -199,6 +199,83 @@ public sealed class BotChannelService(PlatformDbContext database, IAuthorization
         command.AcknowledgedAt ??= clock.GetUtcNow();
     }
 
+    public static readonly TimeSpan MessageRetention = TimeSpan.FromDays(90);
+
+    // Only groups an admin selected on Kết nối are kept; anything else the bot sends is dropped.
+    internal async Task<BotMessageReceipt> StoreMessagesAsync(CustomerRequestServiceBinding binding, BotMessageBatch input, CancellationToken ct)
+    {
+        var now = clock.GetUtcNow();
+        var selected = (await GroupsAsync(binding.TenantId, binding.CompanyId, input.Channel, ct)).Select(x => x.ExternalId).ToHashSet(StringComparer.Ordinal);
+        var wanted = input.Messages.Where(x => selected.Contains(x.GroupExternalId) && x.SentAt > now - MessageRetention).ToArray();
+        var groups = wanted.Select(x => x.GroupExternalId).Distinct().ToArray();
+        var ids = wanted.Select(x => x.MessageId).Distinct().ToArray();
+        var existing = (await database.BotMessages.AsNoTracking()
+            .Where(x => x.TenantId == binding.TenantId && x.CompanyId == binding.CompanyId && x.Channel == input.Channel &&
+                groups.Contains(x.GroupExternalId) && ids.Contains(x.MessageId))
+            .Select(x => new { x.GroupExternalId, x.MessageId }).ToArrayAsync(ct))
+            .Select(x => (x.GroupExternalId, x.MessageId)).ToHashSet();
+        var accepted = 0;
+        foreach (var message in wanted.Where(x => !existing.Contains((x.GroupExternalId, x.MessageId))))
+        {
+            database.BotMessages.Add(new()
+            {
+                TenantId = binding.TenantId,
+                CompanyId = binding.CompanyId,
+                Channel = input.Channel,
+                GroupExternalId = message.GroupExternalId,
+                MessageId = message.MessageId,
+                SenderName = message.SenderName,
+                Text = message.Text ?? "",
+                HasImage = message.HasImage,
+                SentAt = message.SentAt,
+                ReceivedAt = now
+            });
+            accepted++;
+        }
+        var cutoff = now - MessageRetention;
+        database.BotMessages.RemoveRange(await database.BotMessages
+            .Where(x => x.TenantId == binding.TenantId && x.CompanyId == binding.CompanyId && x.SentAt < cutoff).Take(500).ToArrayAsync(ct));
+        return new(accepted, input.Messages.Length - accepted);
+    }
+
+    public async Task<BotMessageGroupView[]> MessageGroupsAsync(AuthorizationContext authority, CancellationToken ct = default)
+    {
+        await RequireMemberAsync(authority, ct);
+        var groups = await database.BotCustomerGroups.AsNoTracking()
+            .Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId).ToArrayAsync(ct);
+        var stats = await database.BotMessages.AsNoTracking()
+            .Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId)
+            .GroupBy(x => new { x.Channel, x.GroupExternalId })
+            .Select(x => new { x.Key.Channel, x.Key.GroupExternalId, Last = x.Max(m => m.SentAt), Count = x.Count() }).ToArrayAsync(ct);
+        await RequireMemberAsync(authority, ct);
+        return groups.Select(group =>
+        {
+            var stat = stats.SingleOrDefault(x => x.Channel == group.Channel && x.GroupExternalId == group.ExternalId);
+            return new BotMessageGroupView(group.Channel, group.ExternalId, group.DisplayName, group.CustomerName, stat?.Last, stat?.Count ?? 0);
+        }).OrderByDescending(x => x.LastMessageAt ?? DateTimeOffset.MinValue).ThenBy(x => x.DisplayName, StringComparer.CurrentCulture).ToArray();
+    }
+
+    public async Task<BotMessagePage> MessagesAsync(AuthorizationContext authority, string channel, string group, DateTimeOffset? before, int limit,
+        CancellationToken ct = default)
+    {
+        BotChannelJson.Channel(channel); CustomerRequestJson.Text(group, 200, opaque: true);
+        if (limit is < 1 or > 200) throw new ArgumentException("Invalid bot channel request.");
+        await RequireMemberAsync(authority, ct);
+        if (!await database.BotCustomerGroups.AsNoTracking().AnyAsync(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId &&
+            x.Channel == channel && x.ExternalId == group, ct)) throw new BotChannelNotFoundException();
+        var query = database.BotMessages.AsNoTracking().Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId &&
+            x.Channel == channel && x.GroupExternalId == group);
+        if (before is { } cursor) query = query.Where(x => x.SentAt < cursor);
+        var rows = await query.OrderByDescending(x => x.SentAt).ThenByDescending(x => x.MessageId).Take(limit + 1).ToArrayAsync(ct);
+        await RequireMemberAsync(authority, ct);
+        return new(rows.Take(limit).Select(x => new BotMessageView(x.MessageId, x.SenderName, x.Text, x.HasImage, x.SentAt)).ToArray(), rows.Length > limit);
+    }
+
+    private async Task RequireMemberAsync(AuthorizationContext authority, CancellationToken ct)
+    {
+        if ((await directory.ResolveAsync(authority, ct))?.Context != authority) throw CustomerRequestServiceDirectory.Denied();
+    }
+
     public async Task RequireAdminAsync(AuthorizationContext authority, CancellationToken ct)
     {
         var current = await directory.ResolveAsync(authority, ct);
