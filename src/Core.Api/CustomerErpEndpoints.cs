@@ -18,6 +18,7 @@ public static class CustomerErpEndpoints
         {
             static IResult Unavailable() => Results.Json(new { code = "unavailable" }, statusCode: 503);
             routes.MapPost("/connection-test", Unavailable);
+            routes.MapPost("/reader-login", Unavailable);
             routes.MapGet("/customer-erp", Unavailable);
             routes.MapPost("/customer-erp", Unavailable);
             routes.MapPut("/{id:guid}/credentials", Unavailable);
@@ -29,6 +30,14 @@ public static class CustomerErpEndpoints
         routes.MapPost("/connection-test", (IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
             HttpRequest http) => Handle(http, accessor, async (authority, token) =>
                 await service.TestAsync(authority, await ReadAsync<CustomerErpConnectionInput>(http, token), token)))
+            .RequireRateLimiting("customer-erp");
+        // Uses administrator credentials once to create a read-only login; they are never stored.
+        routes.MapPost("/reader-login", async (IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
+            ICustomerErpReaderProvisioner provisioner, HttpRequest http) => await Handle(http, accessor, async (authority, token) =>
+            {
+                var result = await service.CreateReaderAsync(authority, await ReadAsync<CustomerErpConnectionInput>(http, token), provisioner, token);
+                return result.Code == "created" ? result : throw new CustomerErpVerificationException(new(result.Code));
+            }))
             .RequireRateLimiting("customer-erp");
         routes.MapPost("/customer-erp", (IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
             HttpRequest http) => Handle(http, accessor, async (authority, token) =>

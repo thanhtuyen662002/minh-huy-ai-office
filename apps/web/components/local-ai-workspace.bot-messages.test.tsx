@@ -51,3 +51,45 @@ it("an unselected group shows an alert and logout discards late messages", async
   expect(pending.aborted).toBe(true); await act(async () => finish(Response.json({ items: [message(1)], hasMore: false })));
   expect(screen.queryByText("PRIVATE_TEXT_1")).toBeNull(); expect(screen.queryByRole("region", { name: "Tin nhắn nhóm khách" })).toBeNull();
 });
+
+it("leaving Tin nhắn removes its panels so other sections are not pushed down", async () => {
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
+    if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/bot-messages?")) return Response.json([group]);
+    if (url.startsWith("/api/local/group-sources?")) return Response.json({}, { status: 404 });
+    return Response.json({}, { status: 404 });
+  });
+  vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
+  // Two siblings sharing a key let production React leave a stale Tin nhắn panel mounted.
+  const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+  render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
+  for (const next of ["Trợ lý", "Kiến thức", "Tổng quan"]) {
+    fireEvent.click(await screen.findByRole("button", { name: "Tin nhắn" }));
+    await screen.findByRole("button", { name: "PRIVATE_GROUP" });
+    expect(screen.getAllByRole("region", { name: "Tin nhắn nhóm khách" })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: next }));
+    await waitFor(() => expect(screen.queryByRole("region", { name: "Tin nhắn nhóm khách" })).toBeNull());
+  }
+  expect(errors.mock.calls.filter(call => String(call[0]).includes("same key"))).toEqual([]);
+  errors.mockRestore();
+});
+
+it("opens the group with the newest messages without an extra click", async () => {
+  const quiet = { ...group, externalId: "g-0", displayName: "QUIET_GROUP", lastMessageAt: null, messageCount: 0 };
+  const older = { ...group, externalId: "g-2", displayName: "OLDER_GROUP", lastMessageAt: "2026-10-29T02:00:00Z" };
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
+    if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/group-sources?")) return Response.json({}, { status: 404 });
+    if (url.startsWith("/api/local/bot-messages?")) return Response.json([quiet, older, group]);
+    if (url.startsWith("/api/local/bot-messages/zalo?")) return Response.json({ items: [message(3)], hasMore: false });
+    throw new Error("Unexpected owned fixture route");
+  });
+  vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
+  render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Tin nhắn" }));
+  await screen.findByText("PRIVATE_TEXT_3");
+  expect(fetcher.mock.calls.some(([url]) => String(url).includes("group=g-1&"))).toBe(true);
+  expect(fetcher.mock.calls.some(([url]) => String(url).includes("group=g-2&") || String(url).includes("group=g-0&"))).toBe(false);
+});

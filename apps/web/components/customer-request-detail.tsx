@@ -63,7 +63,7 @@ export function CustomerRequestDetail({ detail, members, memberError, disabled, 
       </div>
       <h3 className="break-words text-lg font-semibold leading-snug">{ticket.customerName}</h3>
       <dl className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
-        <dt className="text-muted-foreground">Nhóm Zalo</dt><dd className="break-words">{ticket.sourceGroupName}</dd>
+        <dt className="text-muted-foreground">Nhóm khách</dt><dd className="break-words">{ticket.sourceGroupName}</dd>
         <dt className="text-muted-foreground">Người báo</dt><dd className="break-words">{detail.reportedBy}</dd>
         <dt className="text-muted-foreground">Phụ trách</dt><dd className="break-words">{name(ticket.assigneeUserId)}</dd>
         <dt className="text-muted-foreground">Ngày tạo</dt><dd>{requestTime(ticket.createdAt)}</dd>
@@ -86,7 +86,7 @@ export function CustomerRequestDetail({ detail, members, memberError, disabled, 
     <section className="space-y-2 border-b p-5"><h4 className={heading}>Còn chưa rõ / cần hỏi lại</h4>
       {detail.openQuestions.length ? <ul className="list-disc space-y-1 pl-5 text-sm">{detail.openQuestions.map((question, index) => <li className="whitespace-pre-wrap break-words" key={index}>{question}</li>)}</ul>
         : <p className="text-sm text-muted-foreground">Không có câu hỏi cần làm rõ được ghi nhận.</p>}</section>
-    <section className="space-y-3 border-b p-5"><h4 className={heading}>Bằng chứng trích từ Zalo</h4>
+    <section className="space-y-3 border-b p-5"><h4 className={heading}>Bằng chứng trích từ tin nhắn</h4>
       {detail.evidence.length ? detail.evidence.map((item, index) => <figure key={index} className="m-0 flex gap-2.5">
         <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[11px] font-semibold text-amber-800 dark:bg-amber-400/15 dark:text-amber-200">{initials(item.senderName)}</span>
         <div className="min-w-0 space-y-1">

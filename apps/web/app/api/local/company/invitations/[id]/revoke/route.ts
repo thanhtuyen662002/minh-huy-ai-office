@@ -5,13 +5,26 @@ import { parseInvitation, parseInvitationJson } from "../../../../../../../lib/c
 const failure = (status: number) => Response.json({ error: "Không xác nhận được việc thu hồi lời mời." },
   { status, headers: { "Cache-Control": "no-store" } });
 
+// Next.js gives every POST a body stream, even an empty one; only its bytes say whether a body was sent.
+async function hasEmptyBody(request: Request) {
+  const reader = request.body?.getReader();
+  if (!reader) return true;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return true;
+      if (value.byteLength) { void reader.cancel().catch(() => {}); return false; }
+    }
+  } catch { return false; }
+}
+
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!isOfficeAiUiEnabled()) return localUiDisabledResponse();
   if (!officeMutationIsSameOrigin(request)) return failure(403);
   const { id } = await context.params;
   const query = new URL(request.url).searchParams, company = query.get("companyId");
   if (!isCanonicalCompanyId(id) || !isCanonicalCompanyId(company) || query.getAll("companyId").length !== 1
-    || [...query.keys()].some(key => key !== "companyId") || request.body !== null) return failure(400);
+    || [...query.keys()].some(key => key !== "companyId") || !await hasEmptyBody(request)) return failure(400);
   try {
     const deadline = AbortSignal.timeout(10_000);
     const response = await fetchCoreApi(`/api/company/invitations/${encodeURIComponent(id)}/revoke`, company,

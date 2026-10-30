@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MinhHuy.AIOffice.Core.Api.Authorization;
@@ -93,6 +94,49 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
             Assert.Equal(5, verifier.Calls);
         }
         finally { Environment.SetEnvironmentVariable(variable, null); }
+    }
+
+    [Theory]
+    [InlineData("admin", "created", HttpStatusCode.OK)]
+    [InlineData("admin", "not_permitted", HttpStatusCode.UnprocessableEntity)]
+    [InlineData("viewer", "created", HttpStatusCode.Forbidden)]
+    public async Task ReaderLoginReturnsTheNewReaderOnlyToAdmins(string role, string code, HttpStatusCode expected)
+    {
+        var variable = "AIOFFICE296_TEST_" + Guid.NewGuid().ToString("N");
+        Environment.SetEnvironmentVariable(variable, "synthetic-design-value");
+        try
+        {
+            var authority = AuthorizationContext.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+            var provisioner = new CustomerApiProvisioner(code);
+            await using var factory = AuthenticatedFactory(new(authority, [role]), "secretref://env/" + variable,
+                additionalServices: services => services.AddSingleton<ICustomerErpReaderProvisioner>(provisioner));
+            using var client = factory.CreateClient();
+            client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+            var response = await client.PostAsJsonAsync("/api/data-sources/reader-login",
+                new { host = "sql.example.test", database = "Demo", userName = "sa", password = "synthetic-admin-password" });
+            Assert.Equal(expected, response.StatusCode); Assert.True(response.Headers.CacheControl!.NoStore);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.DoesNotContain("synthetic-admin-password", body);
+            if (expected == HttpStatusCode.Forbidden) { Assert.Equal(0, provisioner.Calls); return; }
+            using var json = JsonDocument.Parse(body);
+            Assert.Equal(code, json.RootElement.GetProperty("code").GetString());
+            if (expected == HttpStatusCode.OK)
+            {
+                Assert.Equal("aioffice_reader_0a1b2c3d", json.RootElement.GetProperty("userName").GetString());
+                Assert.Equal("synthetic-reader-password", json.RootElement.GetProperty("password").GetString());
+            }
+        }
+        finally { Environment.SetEnvironmentVariable(variable, null); }
+    }
+
+    private sealed class CustomerApiProvisioner(string code) : ICustomerErpReaderProvisioner
+    {
+        public int Calls { get; private set; }
+        public Task<CustomerErpReaderResult> CreateAsync(CustomerErpConnectionInput admin, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(code == "created" ? new CustomerErpReaderResult(code, "aioffice_reader_0a1b2c3d", "synthetic-reader-password") : new(code));
+        }
     }
 
     private sealed class CustomerApiVerifier : ICustomerErpConnectionVerifier

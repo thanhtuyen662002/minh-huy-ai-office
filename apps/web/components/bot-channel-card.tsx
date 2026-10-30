@@ -7,7 +7,7 @@ export const botButton = "inline-flex h-9 items-center justify-center gap-2 roun
 export const botPrimaryButton = "inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 export const botInput = "h-9 w-full rounded-lg border bg-card px-2.5 text-sm disabled:opacity-50";
 const loginNames = { logged_out: "Chưa đăng nhập", awaiting_qr: "Chờ quét mã QR", logged_in: "Đã đăng nhập", error: "Có lỗi" };
-const time = (value: string | null | undefined) => value ? new Date(value).toLocaleString("vi-VN") : "Chưa có";
+const time = (value: string | null | undefined) => value ? new Date(value).toLocaleString("vi-VN") : "chưa có";
 const tiles = { zalo: "bg-blue-50 text-blue-700 dark:bg-blue-400/15 dark:text-blue-200", whatsapp: "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200" };
 
 // A checkbox drawn as a switch; `role` stays checkbox unless asked so lists of choices read as choices.

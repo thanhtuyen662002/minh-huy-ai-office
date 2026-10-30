@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
+import { Skeleton } from "./skeleton";
 import {
   LocalAiCheckpoint,
   LocalDataSource,
@@ -12,6 +14,7 @@ import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CustomerErpPanel } from "./customer-erp-panel";
+import { parseMemberPage } from "../lib/company-members";
 import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
@@ -161,6 +164,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     isCurrent, validate: validateRecent, request, onUnauthorized: () => reset("signed-out") }, sessionState === "ready" && !!auth?.roles.includes("admin"));
   const botChannelsAvailable = botView !== null;
   const [glanceState, setGlance] = useState<{ scope: string; value: OverviewGlance } | null>(null);
+  const [botGroups, setBotGroups] = useState<{ scope: string; count: number } | null>(null);
   const [ticketSearch, setTicketSearch] = useState({ customer: "", serial: 0 });
   const submission = useTaskSubmission({ companyId, generation: sessionGeneration, isCurrent, ready, validate, request,
     onUnauthorized: () => reset("signed-out") });
@@ -227,6 +231,23 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }, [companyId, isCurrent, loginMode, ready, request, sessionGeneration, validateRecent]);
 
   useEffect(() => { if (sessionState === "ready") void loadCompanies(); }, [sessionState, auth, loadCompanies]);
+
+  // The sidebar shows who is signed in on every page, not only after Tổng quan has loaded.
+  const [signedInName, setSignedInName] = useState<{ scope: string; name: string } | null>(null);
+  useEffect(() => {
+    if (sessionState !== "ready" || !auth?.userId) return;
+    const generation = sessionGeneration.current, scope = `${companyId}:${auth.userId}:${generation}`;
+    let live = true;
+    void (async () => {
+      try {
+        const response = await request(generation, `/api/local/company/members?${new URLSearchParams({ companyId, offset: "0", limit: "100" })}`, { cache: "no-store" });
+        const page = response.ok ? parseMemberPage(await response.json()) : null;
+        const name = page?.items.find(member => member.userId.toLowerCase() === auth.userId.toLowerCase())?.displayName;
+        if (live && name && isCurrent(generation)) setSignedInName({ scope, name });
+      } catch { /* The sidebar keeps its generic label. */ }
+    })();
+    return () => { live = false; };
+  }, [sessionState, auth?.userId, companyId, isCurrent, request, sessionGeneration]);
 
   async function selectCompany(targetCompanyId: string) {
     if (loginMode !== "browser" || !browserLogin || !ready() || busy || sourceSaving
@@ -649,8 +670,27 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     );
   }
 
+  if (sessionState === "signed-out" && loginMode === "browser" && silentRenewal === "running") {
+    // Renewal usually takes a few seconds; show the app's frame instead of a sign-in card meanwhile.
+    return (
+      <div className="flex min-h-screen bg-background text-foreground">
+        <aside aria-hidden="true" className="hidden w-60 shrink-0 border-r bg-sidebar p-4 md:block">
+          <div className="flex items-center gap-2.5"><img src="/brand/logo-icon.svg" alt="" className="size-8 rounded-lg" />
+            <div><p className="text-sm font-semibold leading-tight">AI Office</p><p className="text-xs text-muted-foreground">{companyName}</p></div></div>
+          <div className="mt-6 space-y-3">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-8 w-full" />)}</div>
+        </aside>
+        <main className="flex-1 p-6 sm:p-8">
+          <p role="status" className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />Đang gia hạn phiên đăng nhập…</p>
+          <Skeleton className="mt-6 h-8 w-64" />
+          <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-24" />)}</div>
+          <Skeleton className="mt-6 h-64 w-full" />
+        </main>
+      </div>
+    );
+  }
+
   if (sessionState === "signed-out") {
-    const renewing = loginMode === "browser" && silentRenewal === "running";
     const redirecting = loginMode === "browser" && (busy || autoStartLogin && !!browserLogin && !signedOutByUser.current && !autoLoginTried);
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">
@@ -664,7 +704,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             {loginMode === "local" ? <span className="ml-auto rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">Local Pilot</span> : null}
           </div>
           {loginMode === "browser" ? <p className="mt-6 text-sm leading-6 text-muted-foreground">
-            {renewing ? "Đang gia hạn phiên đăng nhập…" : redirecting ? "Đang chuyển đến trang đăng nhập…" : signedOutByUser.current ? "Bạn đã đăng xuất." : "Đăng nhập bằng tài khoản công ty để tiếp tục."}
+            {redirecting ? "Đang chuyển đến trang đăng nhập…" : signedOutByUser.current ? "Bạn đã đăng xuất." : "Đăng nhập bằng tài khoản công ty để tiếp tục."}
           </p> : <>
             <label className="mt-6 block text-sm font-medium">
               Tên đăng nhập
@@ -689,8 +729,16 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }
 
   const isAdmin = !!auth?.roles.includes("admin");
-  const zalo = botView?.channels.find(channel => channel.channel === "zalo") ?? null;
-  const zaloRunning = !!zalo?.enabled && zalo.status?.loginState === "logged_in";
+  // The header pill covers every bot channel: running ones by name, or the first one that needs attention.
+  const botPill = (() => {
+    if (!botView) return null;
+    const names: Record<string, string> = { zalo: "Zalo", whatsapp: "WhatsApp" };
+    const enabled = botView.channels.filter(channel => channel.enabled);
+    const stuck = enabled.find(channel => channel.status?.loginState !== "logged_in");
+    if (!enabled.length) return { running: false, label: "Bot đang tắt" };
+    if (stuck) return { running: false, label: `Bot ${names[stuck.channel] ?? stuck.channel} chưa đăng nhập` };
+    return { running: true, label: `Bot ${enabled.map(channel => names[channel.channel] ?? channel.channel).join(", ")} đang chạy` };
+  })();
   // The sidebar opens Kết nối on the bot page when this reader can manage bots.
   const openSection = (next: WorkspaceSection) => setSurface(next === "ket-noi" && botChannelsAvailable ? "bot-channels" : sectionSurfaces[next]);
   const onUnauthorized = () => reset("signed-out");
@@ -714,13 +762,15 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     content = <>
       <SectionHeader title="Tin nhắn" description="Tin nhắn từ các nhóm khách hàng mà bot đang theo dõi." />
       {auth ? <BotMessagesPanel key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
-      {auth ? <OptionalGroupInboxPanel key={scopeKey} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
+        isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
+        onGroups={count => setBotGroups({ scope: scopeKey, count })} /> : null}
+      {/* The older source inbox only appears when the bot has no customer groups, so one page never shows two inboxes. */}
+      {auth && botGroups?.scope === scopeKey && botGroups.count === 0 ? <OptionalGroupInboxPanel key={`${scopeKey}:group-inbox`} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId}
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /> : null}
     </>;
   } else if (section === "cong-viec") {
     content = <>
-      <SectionHeader eyebrow="Yêu cầu khách hàng · AI tự tạo phiếu từ nhóm Zalo" title="Công việc" />
+      <SectionHeader eyebrow="Yêu cầu khách hàng · AI tự tạo phiếu từ nhóm Zalo/WhatsApp" title="Công việc" />
       <SectionTabs label="Loại công việc" value={surface === "tasks" ? "tasks" : "customer-requests"} onChange={setSurface}
         tabs={[["customer-requests", "Yêu cầu khách hàng"], ["tasks", "Việc giao cho AI"]]} />
       {surface === "tasks" && auth ? <div key={scopeKey} className="space-y-5">
@@ -747,27 +797,27 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     content = <>
       <SectionHeader title="Kết nối" description="Mọi bật/tắt và thông số điều chỉnh ở đây, không cần dòng lệnh." />
       <SectionTabs label="Loại kết nối" value={tab} onChange={setSurface} tabs={connectionTabs} />
-      {tab === "bot-channels" && botChannelsAvailable && auth ? <BotChannelPanel key={scopeKey}
+      {tab === "bot-channels" && botChannelsAvailable && auth ? <div className="space-y-5"><BotChannelPanel key={scopeKey}
         companyId={companyId} userId={auth.userId} generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request}
         onUnauthorized={onUnauthorized} />
+        {/* The technicians' Telegram bot lives beside the customer bots; the card hides itself while the feature is off. */}
+        <TelegramLinkCard key={`${scopeKey}:telegram`} companyId={companyId} generation={sessionGeneration.current}
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></div>
       : tab === "members" && isAdmin && auth ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId}
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
       : (
               <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-semibold">Nguồn dữ liệu</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">Quản lý và kiểm tra các nguồn ERP của công ty.</p>
-                  </div>
-                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="rounded-xl border px-4 py-2 text-sm font-medium">
-                    {sourceLoading ? "Đang tải…" : "Làm mới"}
-                  </button>
-                  {auth?.roles.includes("admin") && !addingSource ? (
-                    <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Thêm nguồn chỉ đọc</button>
-                  ) : null}
-                </div>
                 {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
                   isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
+                <div className={`flex flex-wrap items-center justify-between gap-4 ${auth?.roles.includes("admin") ? "mt-8 border-t pt-6" : ""}`}>
+                  <div>
+                    <h2 className="text-lg font-semibold">Nguồn dữ liệu đã cấp quyền</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Các nguồn Trợ lý được dùng. Bấm “Kiểm tra” để thử kết nối.</p>
+                  </div>
+                  <button type="button" onClick={() => void loadSources()} disabled={sourceLoading || sourceSaving} className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50">
+                    {sourceLoading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}{sourceLoading ? "Đang tải…" : "Làm mới"}
+                  </button>
+                </div>
                 {addingSource && auth?.roles.includes("admin") ? (
                   <SourceRegistrationPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
                     isCurrent={isCurrent} validate={validate} request={request} onCancel={() => setAddingSource(false)}
@@ -809,6 +859,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                   ))}
                 </div>
                 {!sourceLoading && sources.length === 0 ? <p className="mt-6 rounded-xl bg-muted p-5 text-sm text-muted-foreground">Chưa có nguồn dữ liệu được cấp quyền.</p> : null}
+                {auth?.roles.includes("admin") && !addingSource ? (
+                  <button type="button" disabled={sourceLoading || sourceSaving} onClick={() => { setEditingSource(null); setAddingSource(true); }}
+                    className="mt-6 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50">Nâng cao: đăng ký nguồn bằng secret có sẵn trên máy chủ</button>
+                ) : null}
               </section>
       )}
     </>;
@@ -837,6 +891,14 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                   </div>
 
                   <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
+                    {!sourceLoading && readOnlySources.length === 0 ? (
+                      <div role="note" className="rounded-xl border border-dashed p-4 text-sm">
+                        <p className="font-medium">Chưa có nguồn dữ liệu để Trợ lý đọc.</p>
+                        <p className="mt-1 text-muted-foreground">{isAdmin ? "Thêm database ERP của khách (chỉ đọc) rồi quay lại đây để hỏi." : "Nhờ quản trị viên thêm nguồn dữ liệu ERP ở mục Kết nối."}</p>
+                        {isAdmin ? <button type="button" onClick={() => setSurface("data-sources")}
+                          className="mt-3 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Thêm nguồn dữ liệu</button> : null}
+                      </div>
+                    ) : null}
                     {messages.map((message) => (
                       <article key={message.id} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                         {message.role === "user" ? null : <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-bold text-accent-foreground">AI</span>}
@@ -936,9 +998,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     <WorkspaceShell section={section} onSection={openSection} companyId={companyId} companyName={companyName}
       companies={loginMode === "browser" ? companies : []} companyDisabled={busy || sourceSaving} onSelectCompany={id => void selectCompany(id)}
       roleLabel={isAdmin ? "Quản trị viên" : auth?.roles.length ? auth.roles.join(", ") : "Thành viên"}
-      accountLabel={loginMode === "browser" ? "Tài khoản doanh nghiệp" : "Local Pilot · chỉ đọc"} userName={glance?.displayName}
-      counts={glance ? { "cong-viec": glance.openTickets } : undefined} bot={zalo ? { running: zaloRunning,
-        label: zaloRunning ? "Bot Zalo đang chạy" : zalo.enabled ? "Bot Zalo chưa đăng nhập" : "Bot Zalo đang tắt" } : null}
+      accountLabel={loginMode === "browser" ? "Tài khoản của bạn" : "Local Pilot · chỉ đọc"}
+      userName={glance?.displayName ?? (signedInName?.scope === scopeKey ? signedInName.name : null)}
+      counts={glance ? { "cong-viec": glance.openTickets } : undefined} bot={botPill}
       onSearch={auth ? customer => { setTicketSearch(old => ({ customer, serial: old.serial + 1 })); setSurface("customer-requests"); } : undefined}
       onSignOut={() => void signOut()}>
       <div key={`${companyId}:${sessionGeneration.current}`}>

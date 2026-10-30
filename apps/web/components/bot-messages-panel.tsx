@@ -6,7 +6,8 @@ import { SkeletonRows } from "./skeleton";
 
 type Props = { companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
-  request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
+  request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void;
+  onGroups?: (count: number) => void };
 type Selected = { channel: string; externalId: string };
 type State = { scope: string; groups: BotMessageGroup[] | null; selected: Selected | null; messages: BotMessage[] | null;
   hasMore: boolean; loading: boolean; error: string };
@@ -21,7 +22,7 @@ const same = (a: Selected | null, b: Selected) => a?.channel === b.channel && a.
 const merge = (old: BotMessage[], next: BotMessage[]) => [...new Map([...old, ...next].map(m => [m.messageId, m])).values()]
   .sort((a, b) => Date.parse(a.sentAt) - Date.parse(b.sentAt) || a.messageId.localeCompare(b.messageId));
 
-export function BotMessagesPanel({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+export function BotMessagesPanel({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized, onGroups }: Props) {
   const scope = `${companyId}:${userId}:${generation}`;
   const [state, setState] = useState<State>(() => empty(scope));
   const live = useRef(scope); live.current = scope;
@@ -52,10 +53,12 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
     const fail = (status: number | "unauthorized") => {
       if (!current(value)) return;
       if (status === "unauthorized") { setState(empty(scope)); onUnauthorized(); return; }
+      if (!selected) onGroups?.(0);
       setState(old => ({ ...old, loading: false, error: status === 403 ? "Bạn không còn quyền xem tin nhắn của công ty này."
         : status === 404 && !selected ? "Kênh bot Zalo/WhatsApp chưa được bật trên máy chủ."
         : status === 404 ? "Nhóm này không còn được chọn ở Kết nối. Hãy tải lại danh sách." : "Chưa đọc được tin nhắn. Hãy thử lại sau." }));
     };
+    let target = selected;
     try {
       const query = `companyId=${encodeURIComponent(companyId)}`;
       if (!older) {
@@ -63,11 +66,15 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
         if (!current(value)) return;
         if (raw === "unauthorized" || typeof raw === "number") { fail(raw); return; }
         const groups = parseBotMessageGroups(raw); if (!groups) { fail(502); return; }
-        const still = selected && groups.some(g => same(selected, g)) ? selected : null;
-        setState(old => ({ ...old, groups, selected: still, ...(still ? {} : { messages: null, hasMore: false }), loading: !!still }));
+        onGroups?.(groups.length);
+        // On first open, show the group with the newest messages instead of an empty pane.
+        const first = !selected ? groups.filter(g => g.lastMessageAt).sort((x, y) => Date.parse(y.lastMessageAt!) - Date.parse(x.lastMessageAt!))[0] : undefined;
+        const still = selected && groups.some(g => same(selected, g)) ? selected : first ? { channel: first.channel, externalId: first.externalId } : null;
+        setState(old => ({ ...old, groups, selected: still, ...(still && same(old.selected, still) ? {} : { messages: null, hasMore: false }), loading: !!still }));
         if (!still) return;
+        target = still;
       }
-      const sel = selected!;
+      const sel = target!;
       const oldest = older && before?.length ? `&before=${encodeURIComponent(before[0].sentAt)}` : "";
       const raw = await get(value, `/api/local/bot-messages/${sel.channel}?${query}&group=${encodeURIComponent(sel.externalId)}&limit=${PAGE}${oldest}`, abort.signal);
       if (!current(value)) return;
@@ -93,7 +100,11 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
   }, [scope]);
   const visible = state.scope === scope ? state : empty(scope);
   const count = visible.messages?.length ?? 0;
-  useEffect(() => { if (stick.current && count) bottom.current?.scrollIntoView?.({ block: "end" }); }, [count, visible.selected]);
+  // Scroll only the message list; scrollIntoView would also scroll the page and hide the header on phones.
+  useEffect(() => {
+    const list = bottom.current?.parentElement;
+    if (stick.current && count && list) list.scrollTop = list.scrollHeight;
+  }, [count, visible.selected]);
   const group = visible.groups?.find(g => same(visible.selected, g));
   const pane = "flex min-h-0 min-w-0 flex-col";
 

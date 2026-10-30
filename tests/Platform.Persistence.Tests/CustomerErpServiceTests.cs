@@ -143,6 +143,37 @@ public sealed class CustomerErpServiceTests
         Assert.Empty(fixture.Db.CustomerErpProbeAudits);
     }
 
+    [Theory]
+    [InlineData("created")]
+    [InlineData("not_permitted")]
+    public async Task ReaderCreationIsAdminOnlyAndAuditsOnlyAFixedCode(string code)
+    {
+        await using var fixture = await Fixture.Create();
+        var provisioner = new FakeProvisioner { Code = code };
+        var result = await fixture.Service.CreateReaderAsync(fixture.Authority, Request(password: "synthetic-admin-password"), provisioner);
+        Assert.Equal(code, result.Code);
+        Assert.Equal("synthetic-admin-password", provisioner.Received!.Password);
+        var audit = Assert.Single(fixture.Db.CustomerErpProbeAudits);
+        Assert.Equal("reader_" + code, audit.Code);
+        var stored = JsonSerializer.Serialize(audit);
+        Assert.DoesNotContain("synthetic-admin-password", stored); Assert.DoesNotContain("synthetic-reader-password", stored);
+        Assert.Empty(fixture.Db.ProtectedDataSourceSecrets); Assert.Empty(fixture.Db.DataSources);
+        Assert.DoesNotContain("synthetic", result.ToString());
+
+        fixture.Db.RoleAssignments.RemoveRange(fixture.Db.RoleAssignments);
+        await fixture.Db.SaveChangesAsync();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Service.CreateReaderAsync(fixture.Authority, Request(), provisioner));
+        Assert.Equal(1, provisioner.Calls);
+    }
+
+    [Fact]
+    public void ReaderProvisioningMapsPermissionErrors()
+    {
+        Assert.Equal("not_permitted", SqlCustomerErpReaderProvisioner.MapSqlError(15247));
+        Assert.Equal("login_failed", SqlCustomerErpReaderProvisioner.MapSqlError(18456));
+        Assert.Equal("database_not_found", SqlCustomerErpReaderProvisioner.MapSqlError(4060));
+    }
+
     [Fact]
     public async Task TestIsAuditedWithoutCredentialsAndListsOnlyCompanySources()
     {
@@ -195,6 +226,18 @@ public sealed class CustomerErpServiceTests
         LogicalName = "Customer A",
         BindingVersion = version
     };
+
+    private sealed class FakeProvisioner : ICustomerErpReaderProvisioner
+    {
+        public string Code { get; init; } = "created";
+        public int Calls { get; private set; }
+        public CustomerErpConnectionInput? Received { get; private set; }
+        public Task<CustomerErpReaderResult> CreateAsync(CustomerErpConnectionInput admin, CancellationToken cancellationToken)
+        {
+            Calls++; Received = admin;
+            return Task.FromResult(Code == "created" ? new CustomerErpReaderResult(Code, "aioffice_reader_0a1b2c3d", "synthetic-reader-password") : new(Code));
+        }
+    }
 
     private sealed class FakeVerifier : ICustomerErpConnectionVerifier
     {

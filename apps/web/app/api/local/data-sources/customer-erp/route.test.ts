@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { GET, POST } from "./route";
 import { POST as testConnection } from "../connection-test/route";
+import { POST as createReader } from "../reader-login/route";
 import { PUT } from "../[dataSourceId]/credentials/route";
 const session = vi.hoisted(() => ({ token: "synthetic-issued" as string | null }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => session.token ? { value: session.token } : undefined }) }));
@@ -49,4 +50,14 @@ it("forwards a scoped list and preserves rate limits and verification errors", a
     fetcher.mockResolvedValueOnce(Response.json({ code: "not_read_only" }, { status }));
     const result = await POST(request()); expect(result.status).toBe(status); expect(result.headers.get("cache-control")).toBe("no-store");
   }
+});
+it("forwards a reader-login request with admin fields once and copies the new reader back", async () => {
+  fetcher.mockResolvedValueOnce(Response.json({ code: "created", userName: "aioffice_reader_0a1b2c3d", password: "synthetic-reader" }));
+  const response = await createReader(request({ ...fields, userName: "sa" }));
+  expect(response.status).toBe(200); expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(await response.json()).toEqual({ code: "created", userName: "aioffice_reader_0a1b2c3d", password: "synthetic-reader" });
+  expect(fetcher.mock.calls[0][0]).toBe("http://core:8080/api/data-sources/reader-login");
+  expect((await createReader(request({ ...fields, logicalName: "extra" }))).status).toBe(400);
+  expect((await createReader(request(fields, "https://foreign.invalid"))).status).toBe(403);
+  expect(fetcher).toHaveBeenCalledTimes(1);
 });

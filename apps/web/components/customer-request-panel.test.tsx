@@ -42,7 +42,7 @@ it("renders list and evidence-backed AI detail with Vietnamese labels through re
   const view = fixture();
   const table = await listView();
   expect(within(table).getAllByRole("columnheader").map(item => item.textContent)).toEqual([
-    "Mã phiếu", "Khách hàng", "Nhóm Zalo", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo",
+    "Mã phiếu", "Khách hàng", "Nhóm khách", "Tóm tắt", "Trạng thái", "Người phụ trách", "Ngày tạo",
   ]);
   await open();
   expect(screen.getByText(/AI tóm tắt từ Zalo/).textContent).toContain("chưa được nhân viên xác nhận");

@@ -72,6 +72,7 @@ _ = builder.Services.AddGroupIngressReferenceProducer(builder.Configuration, !st
 if (!string.IsNullOrWhiteSpace(platformConnectionString))
 {
     builder.Services.AddScoped<ICustomerErpConnectionVerifier, SqlCustomerErpConnectionVerifier>();
+    builder.Services.AddScoped<ICustomerErpReaderProvisioner, SqlCustomerErpReaderProvisioner>();
     builder.Services.AddScoped<CustomerErpService>();
     builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(
         services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<IAuthorizationDirectory>(),
