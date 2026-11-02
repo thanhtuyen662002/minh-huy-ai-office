@@ -4,12 +4,12 @@ import { CustomerErpPanel } from "./customer-erp-panel";
 import { erpMessages } from "../lib/customer-erp";
 
 const source = { id: "12345678-1234-1234-1234-123456789abc", logicalName: "Khách A", isEnabled: true, bindingVersion: "1" };
-function setup(options: { result?: string; sources?: boolean } = {}) {
+function setup(options: { result?: string; sources?: boolean; findings?: unknown } = {}) {
   const bodies: { path: string; body: Record<string, unknown> }[] = [];
   const request = vi.fn(async (_generation: number, path: string, init?: RequestInit) => {
     if (!init?.body) return Response.json(options.sources ? [source] : []);
     bodies.push({ path, body: JSON.parse(String(init.body)) });
-    return path.includes("connection-test") ? Response.json({ code: options.result ?? "ok", serverVersion: "16.0", tableCount: 12 }) : Response.json(source);
+    return path.includes("connection-test") ? Response.json({ code: options.result ?? "ok", serverVersion: "16.0", tableCount: 12, findings: options.findings }) : Response.json(source);
   });
   const props = { companyId: "22222222-2222-2222-2222-222222222222", generation: 1, isCurrent: vi.fn(() => true), validate: vi.fn(async () => true), request, onUnauthorized: vi.fn(), onSaved: vi.fn() };
   const view = render(<CustomerErpPanel {...props} />);
@@ -88,6 +88,22 @@ describe("customer ERP setup", () => {
     expect((screen.getByRole("button", { name: "Lưu" }) as HTMLButtonElement).disabled).toBe(true);
     if (code === "not_read_only") expect(screen.getByLabelText("SQL tạo tài khoản chỉ đọc").textContent).toContain("USE [Demo]");
     expect(screen.queryByText("synthetic-only")).toBeNull();
+  });
+  it("lists which read-only checks failed, with permission names", async () => {
+    setup({ result: "not_read_only", findings: [{ code: "database_permission", writeRisk: true, detail: "DELETE, INSERT" }, { code: "synonym", writeRisk: false, detail: null }, { code: "BAD CODE", writeRisk: true }] }); fill();
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
+    const list = await screen.findByLabelText("Điều kiện không đạt");
+    expect(list.textContent).toContain("Có quyền cấp database ngoài quyền đọc (quyền ghi/quản trị): DELETE, INSERT");
+    expect(list.textContent).toContain("Database có synonym");
+    expect(list.querySelectorAll("li")).toHaveLength(2);
+    fireEvent.change(screen.getByLabelText("Tài khoản"), { target: { value: "other" } });
+    expect(screen.queryByLabelText("Điều kiện không đạt")).toBeNull();
+  });
+  it("explains a read-only account on an unsupported database without offering a new reader", async () => {
+    setup({ result: "unsupported_database", findings: [{ code: "external_dependency", writeRisk: false, detail: null }] }); fill();
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
+    await screen.findByText(erpMessages.unsupported_database);
+    expect(screen.queryByRole("button", { name: "Tạo tài khoản chỉ đọc giúp tôi" })).toBeNull();
   });
   it("creates a read-only reader from an admin account, fills it in and tests it", async () => {
     const { props, bodies } = setup({ result: "not_read_only" }); fill();
