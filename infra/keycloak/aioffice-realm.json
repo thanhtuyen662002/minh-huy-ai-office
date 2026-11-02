@@ -49,6 +49,7 @@
   "clients": [
     {
       "clientId": "${AIOFFICE_BROWSER_OIDC_CLIENT_ID}",
+      "baseUrl": "${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN}/",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,

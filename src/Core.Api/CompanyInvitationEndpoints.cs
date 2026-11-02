@@ -10,10 +10,26 @@ internal static class CompanyInvitationEndpoints
     public static void MapCompanyInvitations(this WebApplication app)
     {
         app.MapPost("/api/company/invitations", (HttpRequest http, IRequestAuthorizationContextAccessor accessor,
-            CompanyInvitationService service, CancellationToken token) => ExecuteAsync(accessor, async authority =>
+            CompanyInvitationService service, IKeycloakAdminClient keycloak, ILoggerFactory logs, CancellationToken token) => ExecuteAsync(accessor, async authority =>
         {
             var input = await ReadInputAsync(http, token);
             var result = await service.CreateAsync(authority, input, token);
+            if (result.TemporaryPassword is not null && keycloak.Enabled)
+            {
+                // After commit: email a "choose your password" link. The temporary password is only
+                // returned when that email could not be sent, as the manual fallback.
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+                deadline.CancelAfter(TimeSpan.FromSeconds(20));
+                try
+                {
+                    await keycloak.SendPasswordSetupEmailAsync(result.Email, deadline.Token);
+                    result = result with { TemporaryPassword = null, PasswordSetupEmailSent = true };
+                }
+                catch (KeycloakProvisioningException)
+                {
+                    logs.CreateLogger("CompanyInvitations").LogWarning("Password setup email failed for company {CompanyId}", authority.CompanyId);
+                }
+            }
             return Results.Created($"/api/company/invitations/{result.Id:D}", result);
         })).RequireAuthorization();
         app.MapGet("/api/company/invitations", (HttpRequest http, IRequestAuthorizationContextAccessor accessor,
