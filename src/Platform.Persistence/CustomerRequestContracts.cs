@@ -28,6 +28,7 @@ public sealed record CustomerRequestDetail(CustomerRequestListItem Request, stri
 public sealed record CustomerRequestPatch(string RowVersion, string? Status, Guid? AssigneeUserId, bool HasAssignee);
 public sealed class CustomerRequestNotFoundException() : Exception("Customer request is unavailable.");
 public sealed class CustomerRequestConflictException() : Exception("Customer request changed. Reload it before updating.");
+public sealed class CustomerRequestClaimedException() : Exception("Customer request belongs to another member.");
 
 public static class CustomerRequestJson
 {

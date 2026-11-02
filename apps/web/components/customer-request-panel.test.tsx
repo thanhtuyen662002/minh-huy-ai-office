@@ -2,16 +2,16 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { expect, it, vi } from "vitest";
 import { CustomerRequestPanel } from "./customer-request-panel";
 import { assigneeUser, memberDirectory, requestCompany as company, requestDetail, requestTenant, requestTicket, requestUser } from "../lib/customer-request-test-fixture";
-import { requestConflict } from "../lib/customer-requests";
+import { requestConflict, requestTaken } from "../lib/customer-requests";
 
 const page = (url: string, items: unknown[], hasMore = false) => {
   const query = new URL(url, "http://web.test").searchParams;
   return { items, offset: Number(query.get("offset")), limit: Number(query.get("limit")), hasMore };
 };
 type Override = (url: string, init?: RequestInit) => Response | Promise<Response> | undefined;
-function fixture(override: Override = () => undefined) {
+function fixture(override: Override = () => undefined, { isAdmin = true, assigneeUserId = requestTicket.assigneeUserId as string | null } = {}) {
   const active = { current: true }, onUnauthorized = vi.fn(), validate = vi.fn(async () => active.current);
-  let ticket = { ...requestTicket }, detail = { ...requestDetail };
+  let ticket = { ...requestTicket, assigneeUserId }, detail = { ...requestDetail, request: { ...requestDetail.request, assigneeUserId } };
   const request = vi.fn(async (_generation: number, url: string, init?: RequestInit) => {
     const custom = override(url, init); if (custom !== undefined) return custom;
     if (url.startsWith("/api/local/company/members?")) return Response.json(memberDirectory);
@@ -25,7 +25,7 @@ function fixture(override: Override = () => undefined) {
     return Response.json(url.includes(`/${requestTicket.code}?`) ? { ...detail, request: ticket }
       : page(url, [ticket]));
   });
-  const props = { tenantId: requestTenant, companyId: company, userId: requestUser, generation: 1,
+  const props = { tenantId: requestTenant, companyId: company, userId: requestUser, isAdmin, generation: 1,
     isCurrent: () => active.current, validate, request, onUnauthorized };
   return { ...render(<CustomerRequestPanel {...props} />), props, request, active, validate, onUnauthorized };
 }
@@ -216,7 +216,7 @@ it("moves a ticket by dropping it on another column with its RowVersion", async 
   fireEvent.dragOver(target); fireEvent.drop(target);
   await screen.findByText("Đã lưu thay đổi.");
   expect(view.request.mock.calls.filter(([, , init]) => init?.method === "PATCH").map(([, , init]) => JSON.parse(String(init!.body))))
-    .toEqual([{ rowVersion: requestTicket.rowVersion, status: "in_progress" }]);
+    .toEqual([{ rowVersion: requestTicket.rowVersion, status: "in_progress", assigneeUserId: requestUser }]);
   fireEvent.dragStart(await screen.findByRole("button", { name: "YC-0001" }), { dataTransfer: { effectAllowed: "" } });
   fireEvent.drop(screen.getByRole("region", { name: "Cột Mới" }));
   expect(view.request.mock.calls.filter(([, , init]) => init?.method === "PATCH")).toHaveLength(1);
@@ -227,7 +227,7 @@ it("opens detail beside the board, applies quick status actions and closes witho
   fireEvent.click(screen.getByRole("button", { name: "Bắt đầu xử lý" }));
   await screen.findByText("Đổi trạng thái: Mới → Đang xử lý");
   expect(JSON.parse(String(view.request.mock.calls.find(([, , init]) => init?.method === "PATCH")![2]!.body)))
-    .toEqual({ rowVersion: requestTicket.rowVersion, status: "in_progress" });
+    .toEqual({ rowVersion: requestTicket.rowVersion, status: "in_progress", assigneeUserId: requestUser });
   const reads = view.request.mock.calls.length;
   fireEvent.click(screen.getByRole("button", { name: "Đóng chi tiết phiếu" }));
   expect(screen.queryByRole("article")).toBeNull();
@@ -249,4 +249,33 @@ it("keeps the other columns when one board column fails with a server error", as
   expect((await within(await screen.findByRole("region", { name: "Cột Mới" })).findByRole("alert")).textContent).toMatch(/Không tải được cột này/);
   expect(screen.getByRole("region", { name: "Cột Đang xử lý" })).toBeTruthy();
   expect(screen.queryByText("PRIVATE")).toBeNull();
+});
+
+it("keeps a ticket another member has taken locked for non-administrators", async () => {
+  const view = fixture(undefined, { isAdmin: false, assigneeUserId: assigneeUser });
+  const card = await screen.findByRole("button", { name: "YC-0001" });
+  expect(card.getAttribute("draggable")).toBe("false");
+  expect(within(card).getByLabelText("Người khác đã nhận")).toBeTruthy();
+  fireEvent.dragStart(card, { dataTransfer: { effectAllowed: "" } });
+  fireEvent.drop(screen.getByRole("region", { name: "Cột Xong" }));
+  const article = await open();
+  expect(within(article).getByRole("note").textContent).toContain("Chỉ người phụ trách hoặc quản trị viên");
+  expect(within(article).queryByRole("button", { name: "Đánh dấu xong" })).toBeNull();
+  expect(within(article).getByRole("combobox", { name: "Trạng thái" })).toHaveProperty("disabled", true);
+  expect(view.request.mock.calls.some(([, , init]) => init?.method === "PATCH")).toBe(false);
+});
+it("lets a member move their own ticket and only offers themselves as assignee", async () => {
+  fixture(undefined, { isAdmin: false, assigneeUserId: requestUser });
+  const card = await screen.findByRole("button", { name: "YC-0001" });
+  expect(card.getAttribute("draggable")).toBe("true");
+  const article = await open();
+  const options = within(within(article).getByRole("combobox", { name: "Người phụ trách" })).getAllByRole("option").map(item => item.getAttribute("value"));
+  expect(options.every(value => value === "" || value === requestUser)).toBe(true);
+});
+it("explains when the server refuses a ticket someone else has taken", async () => {
+  fixture((_url, init) => init?.method === "PATCH" ? Response.json({ error: "taken" }, { status: 423 }) : undefined, { isAdmin: false });
+  const card = await screen.findByRole("button", { name: "YC-0001" });
+  fireEvent.dragStart(card, { dataTransfer: { effectAllowed: "" } });
+  fireEvent.drop(screen.getByRole("region", { name: "Cột Xong" }));
+  expect((await screen.findByRole("alert")).textContent).toBe(requestTaken);
 });

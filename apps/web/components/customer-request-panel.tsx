@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
-import { RefreshCw, Search } from "lucide-react";
+import { Lock, RefreshCw, Search } from "lucide-react";
 import { parseMemberPage, type CompanyMember } from "../lib/company-members";
 import { type CustomerRequest, type CustomerRequestDetail as Detail, type CustomerRequestPage, type CustomerRequestPatch, type RequestStatus,
-  parseCustomerRequest, parseCustomerRequestDetail, parseCustomerRequestPage, requestConflict, requestStatuses } from "../lib/customer-requests";
+  parseCustomerRequest, parseCustomerRequestDetail, parseCustomerRequestPage, requestConflict, requestStatuses, requestTaken } from "../lib/customer-requests";
 import { CustomerRequestDetail, StatusChip, initials, requestAge as age, requestButton as button, requestField as field, requestTime, statusTone } from "./customer-request-detail";
 import { BoardSkeleton, SkeletonRows } from "./skeleton";
 
-type Props = { tenantId: string; companyId: string; userId: string; generation: number;
+type Props = { tenantId: string; companyId: string; userId: string; isAdmin?: boolean; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void; initialCustomer?: string };
 type View = "board" | "list";
@@ -24,7 +24,7 @@ const empty = (scope: string, selection = initialSelection()): State => ({ scope
   memberError: "", loading: false, saving: false, conflict: false, error: "", notice: "" });
 class ReadFailure extends Error { constructor(readonly status: number) { super("Customer request unavailable"); } }
 
-export function CustomerRequestPanel({ tenantId, companyId, userId, generation, isCurrent, validate, request, onUnauthorized, initialCustomer = "" }: Props) {
+export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = false, generation, isCurrent, validate, request, onUnauthorized, initialCustomer = "" }: Props) {
   const scope = `${tenantId}:${companyId}:${userId}:${generation}`;
   const [state, setState] = useState(() => empty(scope));
   const [statusFilter, setStatusFilter] = useState(""), [customerFilter, setCustomerFilter] = useState("");
@@ -148,7 +148,8 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
           : "Phiếu không còn khả dụng. Hãy tải lại danh sách." });
       } else {
         setState(old => ({ ...old, saving: false, conflict: !(error instanceof ReadFailure && error.status === 400),
-          error: error instanceof ReadFailure && error.status === 409 ? requestConflict
+          error: error instanceof ReadFailure && error.status === 423 ? requestTaken
+            : error instanceof ReadFailure && error.status === 409 ? requestConflict
             : error instanceof ReadFailure && error.status === 400 ? "Thông tin cập nhật không hợp lệ. Kiểm tra trạng thái và người phụ trách."
               : "Chưa xác nhận được thay đổi đã lưu. Tải lại phiếu để xem trạng thái mới trước khi cập nhật tiếp." }));
       }
@@ -187,6 +188,8 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
   const visible = state.scope === scope && isCurrent(generation) ? state : empty(scope);
   const disabled = visible.loading || visible.saving;
   const view = visible.selection.view;
+  // A ticket someone has taken stays theirs: only they or an administrator may move it (the server enforces the same rule).
+  const canChange = (item: CustomerRequest) => isAdmin || item.assigneeUserId === null || item.assigneeUserId === userId;
   const memberName = (id: string | null) => id === null ? null : visible.members?.find(member => member.userId === id)?.displayName ?? null;
   function filter(event: FormEvent) {
     event.preventDefault();
@@ -197,17 +200,20 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
     event.preventDefault(); setDropTarget(null);
     const code = dragged.current; dragged.current = null;
     const item = boardStatuses.flatMap(column => visible.board?.[column].items ?? []).find(ticket => ticket.code === code);
-    if (!item || item.status === status || disabled || visible.conflict) return;
-    void save(item.code, { rowVersion: item.rowVersion, status });
+    if (!item || item.status === status || disabled || visible.conflict || !canChange(item)) return;
+    // Dragging an unassigned ticket into "Đang xử lý" also takes it, as the Telegram "Nhận việc" button does.
+    void save(item.code, item.assigneeUserId === null && status === "in_progress"
+      ? { rowVersion: item.rowVersion, status, assigneeUserId: userId } : { rowVersion: item.rowVersion, status });
   }
   function card(item: CustomerRequest) {
-    const owner = memberName(item.assigneeUserId), selected = visible.selection.code === item.code;
+    const owner = memberName(item.assigneeUserId), selected = visible.selection.code === item.code, locked = !canChange(item);
     return <li key={item.id}>
       <button type="button" aria-label={item.code} aria-describedby={`request-${item.id}`} aria-pressed={selected} disabled={visible.saving}
-        draggable={!disabled && !visible.conflict} onDragStart={event => { dragged.current = item.code; event.dataTransfer.effectAllowed = "move"; }}
+        draggable={!disabled && !visible.conflict && !locked} title={locked ? `${owner ?? "Người khác"} đã nhận phiếu này` : undefined} onDragStart={event => { dragged.current = item.code; event.dataTransfer.effectAllowed = "move"; }}
         onDragEnd={() => { dragged.current = null; setDropTarget(null); }} onClick={() => openTicket(item.code)}
         className={`flex w-full flex-col gap-2 rounded-lg border bg-card p-3 text-left shadow-sm transition-colors hover:border-ring/60 disabled:opacity-60 ${selected ? "border-ring ring-2 ring-ring/20" : ""}`}>
         <span className="flex w-full items-center gap-2 text-xs text-muted-foreground"><span className="font-mono">{item.code}</span>
+          {locked ? <Lock className="size-3" aria-label="Người khác đã nhận" /> : null}
           <span className="ml-auto">{age(item.createdAt)}</span></span>
         <span id={`request-${item.id}`} className="line-clamp-3 whitespace-pre-wrap break-words text-sm font-medium leading-snug">{item.summary}</span>
         <span className="flex w-full items-center gap-2 text-xs text-muted-foreground">
@@ -243,7 +249,7 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
         <RefreshCw className={`size-4 ${visible.loading ? "animate-spin" : ""}`} aria-hidden="true" />Tải lại phiếu</button>
     </div>
     <p role="note" className="text-xs text-muted-foreground">AI tóm tắt từ Zalo/WhatsApp · Nội dung chưa được nhân viên xác nhận.
-      {view === "board" ? " Kéo thẻ sang cột khác để đổi trạng thái." : " Sắp xếp mới nhất trước."}</p>
+      {view === "board" ? isAdmin ? " Kéo thẻ sang cột khác để đổi trạng thái." : " Kéo thẻ sang cột khác để đổi trạng thái; phiếu người khác đã nhận thì chỉ người đó hoặc quản trị viên đổi được." : " Sắp xếp mới nhất trước."}</p>
     <div aria-live="polite" className="space-y-1 text-sm empty:hidden">
       {visible.saving ? <p role="status" className="text-muted-foreground">Đang lưu thay đổi…</p> : null}
       {visible.notice ? <p role="status" className="text-emerald-700 dark:text-emerald-300">{visible.notice}</p> : null}
@@ -295,7 +301,7 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, generation, 
         <div aria-hidden="true" className="absolute inset-0 bg-black/25" />
         <div ref={drawer} className="pointer-events-auto relative h-full w-full max-w-[30rem] overflow-y-auto bg-background p-3 shadow-2xl">
           <CustomerRequestDetail key={`${scope}:${visible.detail.request.code}:${visible.detail.request.rowVersion}`}
-            detail={visible.detail} members={visible.members} memberError={visible.memberError} disabled={disabled || visible.conflict}
+            detail={visible.detail} members={visible.members} userId={userId} isAdmin={isAdmin} memberError={visible.memberError} disabled={disabled || visible.conflict}
             onSave={patch => void save(visible.detail!.request.code, patch)} onClose={close} /></div></div> : null}
     </div>
   </section>;

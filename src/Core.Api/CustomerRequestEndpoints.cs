@@ -124,6 +124,7 @@ internal static class CustomerRequestEndpoints
         catch (UnauthorizedAccessException) { return Results.Json(new { error = "Customer request access is unavailable." }, statusCode: 403); }
         catch (CustomerRequestNotFoundException) { return Results.NotFound(new { error = "Customer request is unavailable." }); }
         catch (CustomerRequestConflictException) { return Results.Conflict(new { error = "Customer request changed. Reload it before updating." }); }
+        catch (CustomerRequestClaimedException) { return Results.Json(new { error = "Customer request belongs to another member." }, statusCode: 423); }
         catch (DbUpdateConcurrencyException) { return Results.Conflict(new { error = "Customer request changed. Reload it before updating." }); }
         catch (BadHttpRequestException error) { return Results.Json(new { error = "Invalid customer request." }, statusCode: error.StatusCode); }
         catch (Exception error) when (error is ArgumentException or JsonException) { return Results.BadRequest(new { error = "Invalid customer request." }); }

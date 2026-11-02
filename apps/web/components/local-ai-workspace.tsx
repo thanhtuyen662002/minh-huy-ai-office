@@ -801,7 +801,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       </div> : auth ? <>
         <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
-        <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+        <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} isAdmin={isAdmin} generation={sessionGeneration.current}
         isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /></> : null}
     </>;
   } else if (section === "kien-thuc") {

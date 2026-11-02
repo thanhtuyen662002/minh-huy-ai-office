@@ -33,13 +33,18 @@ const priority = { high: "Cao", medium: "Trung bình", low: "Thấp" };
 const kind = { bug: "Lỗi", feature: "Tính năng", question: "Câu hỏi", data: "Dữ liệu" };
 const heading = "text-sm font-semibold";
 type Props = { detail: Detail; members: readonly CompanyMember[] | null; memberError: string; disabled: boolean;
+  userId?: string; isAdmin?: boolean;
   onSave: (patch: CustomerRequestPatch) => void; onClose: () => void };
 
-export function CustomerRequestDetail({ detail, members, memberError, disabled, onSave, onClose }: Props) {
+export function CustomerRequestDetail({ detail, members, memberError, disabled: busy, userId, isAdmin = true, onSave, onClose }: Props) {
   const ticket = detail.request;
+  // Mirrors the server rule: a taken ticket can be changed only by its assignee or an administrator,
+  // and a member may only take a ticket for themselves.
+  const locked = !isAdmin && ticket.assigneeUserId !== null && ticket.assigneeUserId !== userId;
+  const disabled = busy || locked;
   const [status, setStatus] = useState<RequestStatus>(ticket.status);
   const [assignee, setAssignee] = useState(ticket.assigneeUserId ?? "");
-  const active = members?.filter(member => member.userActive && member.membershipActive) ?? [];
+  const active = members?.filter(member => member.userActive && member.membershipActive && (isAdmin || member.userId === userId)) ?? [];
   const name = (id: string | null) => id === null ? "Chưa phân công" : members?.find(member => member.userId === id)?.displayName ?? id;
   const statusLabel = (value: string | null) => value && Object.hasOwn(requestStatuses, value) ? requestStatuses[value as RequestStatus] : value ?? "—";
   const changed = status !== ticket.status || assignee !== (ticket.assigneeUserId ?? "");
@@ -51,7 +56,12 @@ export function CustomerRequestDetail({ detail, members, memberError, disabled, 
     if (members && !memberError && assignee !== (ticket.assigneeUserId ?? "")) patch.assigneeUserId = assignee || null;
     onSave(patch);
   }
-  const move = (next: RequestStatus) => { if (!disabled) onSave({ rowVersion: ticket.rowVersion, status: next }); };
+  const move = (next: RequestStatus) => {
+    if (disabled) return;
+    // Starting work on an unassigned ticket also takes it for the current user.
+    onSave(next === "in_progress" && ticket.assigneeUserId === null && userId
+      ? { rowVersion: ticket.rowVersion, status: next, assigneeUserId: userId } : { rowVersion: ticket.rowVersion, status: next });
+  };
   return <article aria-label={`Phiếu ${ticket.code}`} className="min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm">
     <header className="space-y-3 border-b p-5">
       <div className="flex items-center gap-2">
@@ -69,7 +79,9 @@ export function CustomerRequestDetail({ detail, members, memberError, disabled, 
         <dt className="text-muted-foreground">Ngày tạo</dt><dd>{requestTime(ticket.createdAt)}</dd>
         <dt className="text-muted-foreground">Cập nhật</dt><dd>{requestTime(ticket.updatedAt)}</dd>
       </dl>
-      {ticket.status === "done" || ticket.status === "rejected" ? null : <div className="flex flex-wrap gap-2 pt-1">
+      {locked ? <p role="note" className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+        {name(ticket.assigneeUserId)} đã nhận phiếu này. Chỉ người phụ trách hoặc quản trị viên mới đổi được trạng thái và người phụ trách.</p> : null}
+      {locked || ticket.status === "done" || ticket.status === "rejected" ? null : <div className="flex flex-wrap gap-2 pt-1">
         {ticket.status === "in_progress" ? null : <button type="button" className={`${requestPrimaryButton} flex-1`} disabled={disabled}
           onClick={() => move("in_progress")}>Bắt đầu xử lý</button>}
         <button type="button" className={`${ticket.status === "in_progress" ? requestPrimaryButton : requestButton} flex-1`} disabled={disabled}

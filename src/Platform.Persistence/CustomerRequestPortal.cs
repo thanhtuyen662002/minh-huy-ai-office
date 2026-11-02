@@ -50,7 +50,7 @@ public sealed class CustomerRequestPortal(PlatformDbContext database, IAuthoriza
         if (database.ChangeTracker.HasChanges()) throw new InvalidOperationException("Customer request update is unavailable.");
         await using var transaction = await DataSourceRegistrationTransaction.BeginAsync(database, cancellationToken);
         await CustomerRequestLocks.AcquireAsync(database, $"company:{authority.TenantId:D}:{companyId:D}", cancellationToken);
-        await RequireMemberAsync(authority, companyId, cancellationToken);
+        var actor = await RequireMemberAsync(authority, companyId, cancellationToken);
         var ticket = await Scoped(authority).SingleOrDefaultAsync(x => x.Code == code, cancellationToken) ?? throw new CustomerRequestNotFoundException();
         if (!ticket.RowVersion.SequenceEqual(expected)) throw new CustomerRequestConflictException();
         if (patch.HasAssignee && patch.AssigneeUserId is Guid userId)
@@ -59,6 +59,12 @@ public sealed class CustomerRequestPortal(PlatformDbContext database, IAuthoriza
             if ((await directory.ResolveAsync(assignee, cancellationToken))?.Context != assignee)
                 throw new ArgumentException("Assignee must be an active company member.");
         }
+        // A ticket someone has taken belongs to that person: only they or a company administrator
+        // may move or reassign it. Other members may only take an unassigned ticket for themselves.
+        if (!actor.Roles.Contains("admin", StringComparer.Ordinal) &&
+            (ticket.AssigneeUserId is Guid owner && owner != authority.UserId ||
+             patch.HasAssignee && patch.AssigneeUserId is Guid wanted && wanted != authority.UserId))
+            throw new CustomerRequestClaimedException();
         // A request-scoped context normally has no tracked ticket. Detach a previously
         // read instance so comparisons always use the current SQL snapshot.
         var tracked = database.ChangeTracker.Entries<CustomerRequestRecord>().SingleOrDefault(x =>
@@ -102,10 +108,11 @@ public sealed class CustomerRequestPortal(PlatformDbContext database, IAuthoriza
         });
     }
 
-    private async Task RequireMemberAsync(AuthorizationContext authority, Guid companyId, CancellationToken cancellationToken)
+    private async Task<AuthorizationDirectoryEntry> RequireMemberAsync(AuthorizationContext authority, Guid companyId, CancellationToken cancellationToken)
     {
-        if (authority.CompanyId != companyId || (await directory.ResolveAsync(authority, cancellationToken))?.Context != authority)
-            throw new UnauthorizedAccessException("Company membership is unavailable.");
+        var entry = authority.CompanyId == companyId ? await directory.ResolveAsync(authority, cancellationToken) : null;
+        if (entry is null || entry.Context != authority) throw new UnauthorizedAccessException("Company membership is unavailable.");
+        return entry;
     }
 
     private IQueryable<CustomerRequestRecord> Scoped(AuthorizationContext authority) => database.CustomerRequests.AsNoTracking()
