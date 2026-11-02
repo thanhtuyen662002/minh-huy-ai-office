@@ -142,3 +142,13 @@ it("copies only the application sign-in URL without invitation authority", async
   fireEvent.click(screen.getByRole("button", { name: "Sao chép" }));
   await waitFor(() => expect(writeText).toHaveBeenCalledWith("http://localhost:3000/"));
 });
+
+it("says the setup email was sent and shows no password", async () => {
+  fixture(url => url === `/api/local/company/invitations?companyId=${company}`
+    ? Response.json({ ...invitation, email: "new@example.com", passwordSetupEmailSent: true }, { status: 201 }) : undefined);
+  await screen.findByText("member@example.com");
+  fireEvent.change(screen.getByLabelText("Email thành viên"), { target: { value: "new@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
+  await screen.findByText(/Đã mời và gửi mail đặt mật khẩu tới new@example.com/);
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+});

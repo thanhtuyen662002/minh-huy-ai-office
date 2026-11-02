@@ -14,6 +14,8 @@ public sealed class KeycloakProvisioningOptions
     public string ClientId { get; set; } = "aioffice-member-provisioner";
     public string ClientSecretFile { get; set; } = "";
     public string ClientSecretRef { get; set; } = "";
+    // Browser client named in setup emails so Keycloak's "back to application" link returns to AI Office.
+    public string BrowserClientId { get; set; } = "aioffice-browser";
 
     public void Validate()
     {
@@ -22,6 +24,7 @@ public sealed class KeycloakProvisioningOptions
             uri.IsLoopback || uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0 ||
             BaseUrl != uri.GetLeftPart(UriPartial.Authority) || ClientId != "aioffice-member-provisioner" ||
             (string.IsNullOrEmpty(ClientSecretFile) == string.IsNullOrEmpty(ClientSecretRef)) ||
+            !System.Text.RegularExpressions.Regex.IsMatch(BrowserClientId, "^[A-Za-z0-9._-]{1,64}$") ||
             (ClientSecretFile.Length != 0 && !Path.IsPathFullyQualified(ClientSecretFile)) ||
             (ClientSecretRef.Length != 0 && (!SecretReference.TryParse(ClientSecretRef, out var reference) || reference!.Provider != "env")))
             throw new InvalidOperationException("Invalid Keycloak provisioning configuration. Use an HTTPS origin and one file or environment secret reference.");
@@ -70,6 +73,35 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
         if (response.StatusCode == HttpStatusCode.Conflict && await UserExistsAsync(email, cancellationToken)) return false;
         if (response.StatusCode != HttpStatusCode.Created) throw Failure(response.StatusCode);
         return true;
+    }
+
+    // Setup links stay valid for three days so a member can act on the invitation later.
+    private const int PasswordSetupLifespanSeconds = 3 * 24 * 60 * 60;
+
+    public async Task SendPasswordSetupEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        using var lookup = new HttpRequestMessage(HttpMethod.Get,
+            options.BaseUrl + "/admin/realms/aioffice/users?exact=true&max=2&briefRepresentation=true&email=" + Uri.EscapeDataString(email));
+        using var found = await SendAsync(lookup, cancellationToken);
+        await RequireSuccessAsync(found);
+        string id;
+        try
+        {
+            using var document = await JsonDocument.ParseAsync(await found.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var users = document.RootElement.ValueKind == JsonValueKind.Array ? document.RootElement.EnumerateArray().ToArray() : [];
+            if (users.Length != 1 || !users[0].TryGetProperty("email", out var match) || match.ValueKind != JsonValueKind.String ||
+                !string.Equals(match.GetString(), email, StringComparison.OrdinalIgnoreCase) ||
+                !users[0].TryGetProperty("id", out var value) || !Guid.TryParse(value.GetString(), out var parsed))
+                throw new KeycloakProvisioningException();
+            id = parsed.ToString("D");
+        }
+        catch (Exception error) when (error is JsonException or HttpRequestException or OperationCanceledException or IOException or InvalidOperationException)
+        { throw new KeycloakProvisioningException(true); }
+        using var request = new HttpRequestMessage(HttpMethod.Put,
+            $"{options.BaseUrl}/admin/realms/aioffice/users/{id}/execute-actions-email?lifespan={PasswordSetupLifespanSeconds}&client_id={Uri.EscapeDataString(options.BrowserClientId)}")
+        { Content = JsonContent.Create(new[] { "UPDATE_PASSWORD" }) };
+        using var response = await SendAsync(request, cancellationToken);
+        if (response.StatusCode != HttpStatusCode.NoContent) throw Failure(response.StatusCode);
     }
 
     private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -125,7 +157,7 @@ internal static class KeycloakProvisioningRegistration
         options.Validate();
         builder.Services.AddSingleton(options);
         builder.Services.AddHttpClient<IKeycloakAdminClient, KeycloakAdminClient>(http =>
-            { http.Timeout = TimeSpan.FromSeconds(2); http.MaxResponseContentBufferSize = 65536; })
+            { http.Timeout = TimeSpan.FromSeconds(15); http.MaxResponseContentBufferSize = 65536; })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
             .RemoveAllLoggers();
     }

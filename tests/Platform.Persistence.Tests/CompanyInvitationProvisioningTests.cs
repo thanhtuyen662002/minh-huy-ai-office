@@ -132,6 +132,8 @@ public sealed class CompanyInvitationProvisioningTests
         public bool Race { get; set; }
         public bool FailLookup { get; set; }
         public bool FailCreate { get; set; }
+        public bool FailEmail { get; set; }
+        public int Emails { get; private set; }
         public int Lookups { get; private set; }
         public int Creates { get; private set; }
         public string? Email { get; private set; }
@@ -140,6 +142,8 @@ public sealed class CompanyInvitationProvisioningTests
         { Lookups++; Email = email; if (FailLookup) throw new KeycloakProvisioningException(true); return Task.FromResult(Exists); }
         public Task<bool> CreateUserAsync(string email, string temporaryPassword, CancellationToken cancellationToken)
         { Creates++; Password = temporaryPassword; if (FailCreate) throw new KeycloakProvisioningException(); return Task.FromResult(!Race); }
+        public Task SendPasswordSetupEmailAsync(string email, CancellationToken cancellationToken)
+        { Emails++; if (FailEmail) throw new KeycloakProvisioningException(true); return Task.CompletedTask; }
     }
     private sealed class CapturedLogs : ILogger<CompanyInvitationService>
     {

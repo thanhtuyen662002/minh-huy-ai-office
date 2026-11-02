@@ -37,6 +37,22 @@ it("passes the one-time password only on creation with no-store and without logg
   vi.restoreAllMocks();
 });
 
+it("passes the setup-email flag on creation", async () => {
+  fetcher.mockResolvedValue(Response.json({ ...result, passwordSetupEmailSent: true }, { status: 201 }));
+  const response = await POST(mutation());
+  expect(response.status).toBe(201); expect(await response.json()).toEqual({ ...result, passwordSetupEmailSent: true });
+});
+
+it.each([false, "true", 1])("refuses a malformed setup-email flag %j", async passwordSetupEmailSent => {
+  fetcher.mockResolvedValue(Response.json({ ...result, passwordSetupEmailSent }, { status: 201 }));
+  expect((await POST(mutation())).status).toBe(503);
+});
+
+it("refuses a setup-email flag together with a password", async () => {
+  fetcher.mockResolvedValue(Response.json({ ...result, passwordSetupEmailSent: true, temporaryPassword: "SyntheticTemporaryPassword123!" }, { status: 201 }));
+  expect((await POST(mutation())).status).toBe(503);
+});
+
 it.each(["short", null, 123, "x".repeat(129), "invalid\npassword1234"])("refuses malformed temporary credentials", async temporaryPassword => {
   fetcher.mockResolvedValue(Response.json({ ...result, temporaryPassword }, { status: 201 }));
   const response = await POST(mutation()); expect(response.status).toBe(503);

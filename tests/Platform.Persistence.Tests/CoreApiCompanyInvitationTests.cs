@@ -40,8 +40,12 @@ public sealed class CoreApiCompanyInvitationTests
         var body = await response.Content.ReadAsStringAsync();
         if (status == 201)
         {
-            if (exists) Assert.DoesNotContain("temporaryPassword", body);
-            else Assert.Contains(keycloak.Password!, body);
+            // A new account gets a "choose your password" email; the temporary password stays private.
+            Assert.DoesNotContain("temporaryPassword", body);
+            if (keycloak.Password is not null) Assert.DoesNotContain(keycloak.Password, body);
+            Assert.Equal(exists ? 0 : 1, keycloak.Emails);
+            if (exists) Assert.DoesNotContain("passwordSetupEmailSent", body);
+            else Assert.Contains("\"passwordSetupEmailSent\":true", body);
             var listing = await client.GetStringAsync("/api/company/invitations");
             Assert.DoesNotContain("temporaryPassword", listing);
             if (keycloak.Password is not null) Assert.DoesNotContain(keycloak.Password, listing);
@@ -53,6 +57,24 @@ public sealed class CoreApiCompanyInvitationTests
             Assert.Empty(scope.ServiceProvider.GetRequiredService<PlatformDbContext>().CompanyInvitations);
         }
         if (!admin) Assert.Equal(0, keycloak.Lookups);
+    }
+
+    [Fact]
+    public async Task Failed_setup_email_falls_back_to_the_one_time_temporary_password()
+    {
+        var authority = MemberDirectoryFixture.Authority();
+        var keycloak = new CompanyInvitationProvisioningTests.FakeKeycloak { FailEmail = true };
+        await using var fixture = new InvitationApiFixture(authority, keycloak);
+        await fixture.SeedAsync("admin");
+        using var client = fixture.Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var response = await client.PostAsJsonAsync("/api/company/invitations", new { email = "member@example.com", roles = new[] { "viewer" } });
+        Assert.Equal(201, (int)response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Equal(1, keycloak.Emails);
+        Assert.Contains(keycloak.Password!, body);
+        Assert.DoesNotContain("passwordSetupEmailSent", body);
+        Assert.DoesNotContain(keycloak.Password!, await client.GetStringAsync("/api/company/invitations"));
     }
 
     [Fact]
