@@ -27,6 +27,8 @@ services:
       KC_CACHE: local
       # Sign-in pages in AI Office style; set AIOFFICE_KEYCLOAK_LOGIN_THEME=keycloak to go back to the stock pages.
       KC_SPI_THEME__DEFAULT: ${AIOFFICE_KEYCLOAK_LOGIN_THEME:-aioffice}
+      # Set by Update-AIOffice.ps1 from the theme files; a change recreates Keycloak (themes are cached).
+      AIOFFICE_KEYCLOAK_THEME_REV: ${AIOFFICE_KEYCLOAK_THEME_REV:-none}
       AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN: ${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN:?set HTTPS web origin}
       AIOFFICE_BROWSER_OIDC_CLIENT_ID: ${AIOFFICE_BROWSER_OIDC_CLIENT_ID:-aioffice-browser}
       AIOFFICE_AUDIENCE: ${AIOFFICE_AUDIENCE:?set API audience}
