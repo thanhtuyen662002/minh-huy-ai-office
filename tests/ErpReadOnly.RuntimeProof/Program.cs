@@ -256,14 +256,19 @@ try
         await using var reader = new SqlConnection(readerConnection);
         await reader.OpenAsync();
         if (!Equals(await SqlAsync($"SELECT Id FROM {externalView};", reader), 1)) throw new InvalidOperationException();
+        // A view reading another database is a read under the reader's own rights there while ownership
+        // chaining cannot cross databases, so the profile stays qualified.
+        await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
+        // TRUSTWORTHY lets this database's module owners lend their rights elsewhere: every read path denies.
+        await SqlAsync("ALTER DATABASE CURRENT SET TRUSTWORTHY ON;");
         await AllDeniedAsync(readerConnection);
     }
     finally
     {
-        await SqlAsync($"DROP VIEW IF EXISTS {externalView}; IF DB_ID(N'{externalDatabase}') IS NOT NULL DROP DATABASE {externalDatabase};");
+        await SqlAsync($"ALTER DATABASE CURRENT SET TRUSTWORTHY OFF; DROP VIEW IF EXISTS {externalView}; IF DB_ID(N'{externalDatabase}') IS NOT NULL DROP DATABASE {externalDatabase};");
     }
     await new SqlDataSourceConnectionProbe(factory).ProbeAsync(readerConnection, true);
-    Console.WriteLine("PASS actual accessible cross-database view refused as an unqualified external dependency graph");
+    Console.WriteLine("PASS actual accessible cross-database view qualified while chaining is off and refused under TRUSTWORTHY");
 
     stage = "actual-encrypted-view-graph";
     var encryptedView = fixture.Replace("ReadCredentialRuntime_", "ReadEncryptedView_", StringComparison.Ordinal);
