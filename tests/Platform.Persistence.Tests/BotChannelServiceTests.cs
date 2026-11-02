@@ -157,6 +157,9 @@ public sealed class BotChannelServiceTests
     [InlineData("qr-size")]
     [InlineData("qr-crc")]
     [InlineData("future-summary")]
+    [InlineData("run-trigger")]
+    [InlineData("run-since")]
+    [InlineData("run-count")]
     public async Task InvalidHeartbeatsHaveNoEffects(string change)
     {
         using var f = new BotChannelFixture(); var input = new BotHeartbeat("zalo", "logged_in", []);
@@ -171,9 +174,23 @@ public sealed class BotChannelServiceTests
             "qr-content" => input with { LoginState = "awaiting_qr", LoginQrContentType = "image/png", LoginQrBase64 = Convert.ToBase64String("<script>bad</script>"u8) },
             "qr-size" => input with { LoginState = "awaiting_qr", LoginQrContentType = "image/png", LoginQrBase64 = new string('A', 87385) },
             "qr-crc" => input with { LoginState = "awaiting_qr", LoginQrContentType = "image/png", LoginQrBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAAAAAAAAAABJRU5ErkJggg==" },
+            "run-trigger" => input with { LastRun = new(f.Clock.Now.ToUniversalTime(), "<script>", null, 0, 0, 0) },
+            "run-since" => input with { LastRun = new(f.Clock.Now.ToUniversalTime(), "manual", f.Clock.Now.ToUniversalTime().AddHours(1), 0, 0, 0) },
+            "run-count" => input with { LastRun = new(f.Clock.Now.ToUniversalTime(), "manual", null, -1, 0, 0) },
             _ => input with { LastSummaryAt = f.Clock.Now.AddHours(1) }
         };
         await Assert.ThrowsAnyAsync<ArgumentException>(() => f.Heartbeat(input)); await using var db = f.Database(); Assert.Empty(db.BotStatuses); Assert.Empty(db.CustomerRequestNonces);
+    }
+
+    [Fact]
+    public async Task LastRunIsShownAndKeptWhenAnOlderBotOmitsIt()
+    {
+        using var f = new BotChannelFixture(); var now = f.Clock.Now.ToUniversalTime();
+        var run = new BotRun(now, "manual", now.AddHours(-2), 0, 0, 0);
+        await f.Heartbeat(new("zalo", "logged_in", [new("tech", "Kỹ thuật")], LastRun: run));
+        await f.Heartbeat(new("zalo", "logged_in", [new("tech", "Kỹ thuật")]));
+        await using var db = f.Database();
+        Assert.Equal(run, (await f.Service(db).GetAsync(f.Authority)).Channels[0].Status!.LastRun);
     }
 
     [Fact]

@@ -11,14 +11,17 @@ public sealed record BotChannelUpdate(string ExpectedVersion, bool Enabled, bool
     string? TechGroupExternalId, BotCustomerGroup[] CustomerGroups);
 public sealed record BotAiUpdate(string ExpectedVersion, string BaseUrl, string Model, string? ApiKey = null, bool ClearApiKey = false);
 public sealed record BotHeartbeat(string Channel, string LoginState, BotGroup[] Groups, DateTimeOffset? LastSummaryAt = null,
-    string? LastError = null, string? LoginQrContentType = null, string? LoginQrBase64 = null);
+    string? LastError = null, string? LoginQrContentType = null, string? LoginQrBase64 = null, BotRun? LastRun = null);
+// Outcome of the bot's latest summary run, scheduled or "Tóm tắt ngay": counts only, never message text or error details.
+public sealed record BotRun(DateTimeOffset At, string Trigger, DateTimeOffset? Since, int Generated, int Delivered, int Failed);
 public sealed record BotCommandInput(string Kind);
 public sealed record BotCommandAck(string Channel);
 // Bots parse command times as UTC ISO strings ending in "Z", as JavaScript toISOString writes them; the default "+00:00" form made them reject the whole config pull.
 public sealed record BotCommandView(Guid Id, string Kind,
     [property: JsonConverter(typeof(UtcInstantConverter))] DateTimeOffset CreatedAt,
     [property: JsonConverter(typeof(UtcInstantConverter))] DateTimeOffset ExpiresAt);
-public sealed record BotStatusView(string LoginState, BotGroup[] Groups, DateTimeOffset? LastSummaryAt, string? LastError, DateTimeOffset ReceivedAt);
+public sealed record BotStatusView(string LoginState, BotGroup[] Groups, DateTimeOffset? LastSummaryAt, string? LastError, DateTimeOffset ReceivedAt,
+    BotRun? LastRun = null);
 public sealed record BotChannelView(string Channel, bool Enabled, bool DryRun, string[] SummarySchedule, string TimeZone,
     string? TechGroupExternalId, BotCustomerGroup[] CustomerGroups, string ConfigVersion, BotStatusView? Status);
 public sealed record BotAiView(string BaseUrl, string Model, bool ApiKeyConfigured, string Version);
@@ -98,6 +101,9 @@ public static class BotChannelJson
         // Arbitrary error text can contain keys, headers and upstream bodies. Store only a bounded server-owned message.
         if (input.LastError?.Length > 8000) throw Invalid();
         var error = string.IsNullOrWhiteSpace(input.LastError) ? null : "Bot báo lỗi. Kiểm tra nhật ký đã che thông tin nhạy cảm trên máy chạy bot.";
+        if (input.LastRun is { } run && (run.At == default || run.At.Offset != TimeSpan.Zero || run.At > now.AddMinutes(5) ||
+            run.Trigger is not ("manual" or "scheduled") || run.Since is { } since && (since.Offset != TimeSpan.Zero || since > run.At) ||
+            run.Generated is < 0 or > 1000 || run.Delivered is < 0 or > 1000 || run.Failed is < 0 or > 1000)) throw Invalid();
         _ = QrBytes(input.LoginQrContentType, input.LoginQrBase64);
         if (input.LoginQrBase64 is not null && input.LoginState != "awaiting_qr") throw Invalid();
         return input with { Groups = groups, LastError = error };

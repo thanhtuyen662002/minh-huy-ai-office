@@ -100,7 +100,7 @@ export function BotChannelPanel(props: BotSessionProps) {
       refreshQr={() => void run(value => fetchQr(channel.channel, value), channel.channel)} command={kind => void run(async value => {
         setQr(old => ({ ...old, [channel.channel]: undefined }));
         const raw = await call(`/${channel.channel}/commands`, value, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind }) });
-        if (raw === null || !current(value)) return; setNotice(kind === "relogin" ? "Đã yêu cầu đăng nhập lại. Chờ bot gửi mã QR mới." : "Đã xếp lệnh tóm tắt; chờ bot nhận lệnh.");
+        if (raw === null || !current(value)) return; setNotice(kind === "relogin" ? "Đã yêu cầu đăng nhập lại. Chờ bot gửi mã QR mới." : "Đã xếp lệnh tóm tắt. Khoảng 1 phút sau, bấm Tải lại cấu hình để xem kết quả trên thẻ bot.");
         if (kind === "relogin") await fetchQr(channel.channel, value);
       }, channel.channel)} />{feedback(channel.channel)}</div>)}</div>
       <div className="grid gap-4 xl:grid-cols-2">

@@ -70,7 +70,7 @@ it("supports explicit key clearing, connection testing and redacted audit listin
 });
 it("queues commands and shows only fresh QR after relogin", async () => {
   const f = fixture(); await screen.findByRole("article", { name: "Kênh Zalo" });
-  fireEvent.click(screen.getByRole("button", { name: "Tóm tắt ngay Zalo" })); await screen.findByText("Đã xếp lệnh tóm tắt; chờ bot nhận lệnh.");
+  fireEvent.click(screen.getByRole("button", { name: "Tóm tắt ngay Zalo" })); await screen.findByText("Đã xếp lệnh tóm tắt. Khoảng 1 phút sau, bấm Tải lại cấu hình để xem kết quả trên thẻ bot.");
   fireEvent.click(screen.getByRole("button", { name: "Đăng nhập lại Zalo" })); const image = await screen.findByRole("img", { name: "Mã QR đăng nhập Zalo" });
   expect(image.getAttribute("src")).toBe(`data:image/png;base64,${botPng}`);
   expect(f.request.mock.calls.filter(([, url]) => url.includes("/commands?")).map(([, , init]) => JSON.parse(String(init?.body)).kind)).toEqual(["summarize-now", "relogin"]);
@@ -119,7 +119,7 @@ it("shows each result beside the control that was used, red when it failed", asy
   expect(alert.textContent).toContain("chưa được hệ thống cho phép");
   expect(screen.getByRole("form", { name: "Thiết lập AI" }).contains(alert)).toBe(true);
   fireEvent.click(within(zalo).getByRole("button", { name: "Tóm tắt ngay Zalo" }));
-  const done = await screen.findByText("Đã xếp lệnh tóm tắt; chờ bot nhận lệnh.");
+  const done = await screen.findByText("Đã xếp lệnh tóm tắt. Khoảng 1 phút sau, bấm Tải lại cấu hình để xem kết quả trên thẻ bot.");
   expect(zalo.parentElement!.contains(done)).toBe(true);
   expect(screen.queryByRole("alert")).toBeNull();
 });

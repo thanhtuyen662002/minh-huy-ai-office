@@ -309,6 +309,10 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("LastRunJson")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<DateTimeOffset?>("LastSummaryAt")
                         .HasColumnType("datetimeoffset");
 

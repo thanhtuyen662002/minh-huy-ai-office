@@ -188,6 +188,8 @@ public sealed class BotChannelService(PlatformDbContext database, IAuthorization
         if (fresh || input.LoginState == "logged_in" && input.Groups.Length > 0) row.GroupsJson = JsonSerializer.Serialize(input.Groups);
         row.LoginState = input.LoginState; row.LastSummaryAt = input.LastSummaryAt;
         row.LastError = input.LastError; row.ReceivedAt = clock.GetUtcNow();
+        // An older bot sends no run; keep the last one it or a newer bot reported.
+        if (input.LastRun is not null) row.LastRunJson = JsonSerializer.Serialize(input.LastRun);
         row.LoginQrImage = BotChannelJson.QrBytes(input.LoginQrContentType, input.LoginQrBase64); row.LoginQrContentType = input.LoginQrContentType;
         row.LoginQrExpiresAt = row.LoginQrImage is null ? null : row.ReceivedAt.AddMinutes(2); Stamp(row);
     }
@@ -287,7 +289,8 @@ public sealed class BotChannelService(PlatformDbContext database, IAuthorization
         var row = await ChannelAsync(tenant, company, channel, ct); var status = await StatusAsync(tenant, company, channel, ct);
         return new(channel, row?.Enabled ?? false, row?.DryRun ?? true, row is null ? [] : Deserialize<string[]>(row.SummaryScheduleJson), BotChannelJson.TimeZone,
             row?.TechGroupExternalId, await GroupsAsync(tenant, company, channel, ct), Version(row?.ConfigVersion ?? 0),
-            status is null ? null : new(status.LoginState, Deserialize<BotGroup[]>(status.GroupsJson), status.LastSummaryAt, status.LastError, status.ReceivedAt));
+            status is null ? null : new(status.LoginState, Deserialize<BotGroup[]>(status.GroupsJson), status.LastSummaryAt, status.LastError, status.ReceivedAt,
+                status.LastRunJson is null ? null : Deserialize<BotRun>(status.LastRunJson)));
     }
     private Task<BotChannelRecord?> ChannelAsync(Guid tenant, Guid company, string channel, CancellationToken ct) => database.BotChannels.AsNoTracking().SingleOrDefaultAsync(x => x.TenantId == tenant && x.CompanyId == company && x.Channel == channel, ct);
     private Task<BotStatusRecord?> StatusAsync(Guid tenant, Guid company, string channel, CancellationToken ct) => database.BotStatuses.AsNoTracking().SingleOrDefaultAsync(x => x.TenantId == tenant && x.CompanyId == company && x.Channel == channel, ct);

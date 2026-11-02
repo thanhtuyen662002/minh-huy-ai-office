@@ -1,8 +1,9 @@
 export type BotChannel = "zalo" | "whatsapp";
 export type BotGroup = { externalId: string; displayName: string };
 export type BotCustomerGroup = BotGroup & { customerName: string };
+export type BotRun = { at: string; trigger: "manual" | "scheduled"; since: string | null; generated: number; delivered: number; failed: number };
 export type BotStatus = { loginState: "logged_out" | "awaiting_qr" | "logged_in" | "error"; groups: BotGroup[];
-  lastSummaryAt: string | null; lastError: string | null; receivedAt: string };
+  lastSummaryAt: string | null; lastError: string | null; receivedAt: string; lastRun: BotRun | null };
 export type BotChannelView = { channel: BotChannel; enabled: boolean; dryRun: boolean; summarySchedule: string[];
   timeZone: "Asia/Ho_Chi_Minh"; techGroupExternalId: string | null; customerGroups: BotCustomerGroup[]; configVersion: string; status: BotStatus | null };
 export type BotAiView = { baseUrl: string; model: string; apiKeyConfigured: boolean; version: string };
@@ -20,6 +21,13 @@ const keys = (v: Record<string, unknown>, allowed: string[]) => Object.keys(v).e
 export function botUrl(v: unknown): v is string {
   if (!text(v, 1000)) return false;
   try { const url = new URL(v); return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password && !url.search && !url.hash; } catch { return false; }
+}
+const count = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 1000;
+function run(v: unknown): BotRun | null | undefined {
+  if (v === undefined || v === null) return null;
+  return botObject(v) && keys(v, ["at", "trigger", "since", "generated", "delivered", "failed"]) && date(v.at) && (v.trigger === "manual" || v.trigger === "scheduled")
+    && (v.since === null || date(v.since)) && count(v.generated) && count(v.delivered) && count(v.failed)
+    ? { at: v.at, trigger: v.trigger, since: v.since as string | null, generated: v.generated, delivered: v.delivered, failed: v.failed } : undefined;
 }
 function group(v: unknown): BotGroup | null {
   return botObject(v) && text(v.externalId, 200) && text(v.displayName, 200) ? { externalId: v.externalId, displayName: v.displayName } : null;
@@ -43,7 +51,8 @@ export function parseBotChannel(v: unknown): BotChannelView | null {
     if (!botObject(s) || !["logged_out", "awaiting_qr", "logged_in", "error"].includes(String(s.loginState)) || !date(s.receivedAt)
       || s.lastSummaryAt !== null && !date(s.lastSummaryAt) || !nullable(s.lastError, 500)) return null;
     const groups = list(s.groups, 500, group); if (!groups || new Set(groups.map(g => g.externalId)).size !== groups.length) return null;
-    status = { loginState: s.loginState as BotStatus["loginState"], groups, receivedAt: s.receivedAt, lastSummaryAt: s.lastSummaryAt as string | null, lastError: s.lastError as string | null };
+    const lastRun = run(s.lastRun); if (lastRun === undefined) return null;
+    status = { loginState: s.loginState as BotStatus["loginState"], groups, receivedAt: s.receivedAt, lastSummaryAt: s.lastSummaryAt as string | null, lastError: s.lastError as string | null, lastRun };
   }
   return { channel: v.channel, enabled: v.enabled, dryRun: v.dryRun, summarySchedule: v.summarySchedule, timeZone: v.timeZone,
     techGroupExternalId: v.techGroupExternalId as string | null, customerGroups, configVersion: v.configVersion, status };
