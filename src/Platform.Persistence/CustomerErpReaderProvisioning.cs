@@ -44,7 +44,7 @@ public sealed class SqlCustomerErpReaderProvisioner(ISqlConnectionFactory factor
             {
                 await ExecuteAsync(connection, $"GRANT VIEW ANY DEFINITION TO [{login}];", deadline.Token);
                 connection.ChangeDatabase(database);
-                await ExecuteAsync(connection, $"CREATE USER [{login}] FOR LOGIN [{login}]; GRANT SELECT TO [{login}]; GRANT VIEW DEFINITION TO [{login}];", deadline.Token);
+                await ExecuteAsync(connection, $"CREATE USER [{login}] FOR LOGIN [{login}]; GRANT SELECT TO [{login}]; GRANT VIEW DEFINITION TO [{login}]; DENY EXECUTE TO [{login}];", deadline.Token);
                 return new("created", login, password);
             }
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
