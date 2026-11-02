@@ -45,7 +45,16 @@ try {
 
     $keycloakEnabled = Select-String -LiteralPath $EnvironmentFile -Pattern '^AIOFFICE_KEYCLOAK_ENABLED=true$' -Quiet
     if ($keycloakEnabled -and $Phase -in @('All', 'Keycloak')) {
+        # Keycloak caches themes; a new revision recreates the container so wording changes show up.
+        $themeFiles = Get-ChildItem -LiteralPath (Join-Path $RepositoryRoot 'infra\keycloak\themes') -Recurse -File | Sort-Object FullName
+        $themeHashes = ($themeFiles | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }) -join ''
+        $env:AIOFFICE_KEYCLOAK_THEME_REV = (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes($themeHashes))) -Algorithm SHA256).Hash.Substring(0, 12)
         Invoke-Checked docker @("compose", "--env-file", $EnvironmentFile, "-f", "compose.identity.yaml", "up", "-d", "--wait", "keycloak")
+        # Optional: password reset by email, enabled by the private mail settings file next to the env file.
+        $smtpFile = Join-Path (Split-Path -Parent $EnvironmentFile) 'keycloak-smtp.env'
+        if (Test-Path -LiteralPath $smtpFile -PathType Leaf) {
+            & (Join-Path $PSScriptRoot 'Configure-KeycloakEmail.ps1') -EnvironmentFile $EnvironmentFile -SmtpFile $smtpFile
+        }
     }
 
     # Optional Cloudflare Tunnel ingress, enabled by the protected token file next to the env file.

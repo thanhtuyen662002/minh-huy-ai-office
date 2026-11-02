@@ -51,6 +51,8 @@ public sealed class ProductionKeycloakRealmTests
         var realm = document.RootElement;
         Assert.False(realm.GetProperty("registrationAllowed").GetBoolean());
         Assert.False(realm.GetProperty("duplicateEmailsAllowed").GetBoolean());
+        Assert.True(realm.GetProperty("resetPasswordAllowed").GetBoolean());
+        Assert.False(realm.TryGetProperty("smtpServer", out _)); // mailbox secrets are applied on the host, never committed
         Assert.True(realm.GetProperty("bruteForceProtected").GetBoolean());
         Assert.InRange(realm.GetProperty("failureFactor").GetInt32(), 1, 5);
         Assert.Contains("length(14)", realm.GetProperty("passwordPolicy").GetString(), StringComparison.Ordinal);
