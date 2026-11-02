@@ -33,3 +33,7 @@ A customer reader created exactly by the generated script was refused as "write/
 - External/unresolved/caller-dependent dependency checks ignore procedures and triggers, which the reader cannot execute; views, functions and computed expressions are still checked.
 - Engine major versions 15-17 (SQL Server 2019+) are accepted. Unknown permission names still fail closed through the allowlists; `VIEW [ANY] CRYPTOGRAPHICALLY SECURED DEFINITION` (implied metadata permissions in 2022) were added to them.
 - The connection test reports `not_read_only` only when a write/admin condition fails; database features outside the profile (synonyms, linked servers, cross-database views, availability groups, old engines) report `unsupported_database`.
+
+## Revision 2026-11-02 (2): EXECUTE granted to public, cross-database reads
+
+The first customer database grants EXECUTE on procedures to `public`, so every login can run them. That is a real write path and stays refused; the generated script and the one-click provisioner now add `DENY EXECUTE TO <reader>`, which overrides the public grant (verified: the reader gets error 229 and the proof passes). Views/functions reading another database or a linked server, and linked servers on the instance, are reads and no longer fail the profile. The proof instead refuses `cross db ownership chaining`, `DB_CHAINING` and `TRUSTWORTHY` (`cross_database_chaining`), the settings that let this database's module owners lend rights elsewhere.

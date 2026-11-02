@@ -44,11 +44,12 @@ export const erpFindingLabels: Record<string, string> = {
   object_hidden: "Một số bảng/view/thủ tục bị ẩn với tài khoản",
   object_permission: "Có quyền trên bảng/view ngoài quyền đọc",
   column_update: "Có quyền UPDATE trên cột",
-  executable_procedure: "Có quyền chạy stored procedure (procedure có thể ghi dữ liệu)",
+  executable_procedure: "Có quyền chạy stored procedure (procedure có thể ghi dữ liệu). Thường do database cấp EXECUTE cho public; chạy DENY EXECUTE TO [tên tài khoản] trong database để chặn",
   clr_function: "Database có hàm CLR (.NET)",
   extended_procedure: "Database có extended stored procedure",
   synonym: "Database có synonym",
   external_dependency: "Có view/hàm đọc sang database hoặc máy chủ khác, hoặc tham chiếu đối tượng không tồn tại",
+  cross_database_chaining: "Database bật TRUSTWORTHY hoặc cross-database ownership chaining",
   view_external_rowset: "Có view/hàm dùng OPENQUERY/OPENROWSET hoặc bị mã hoá",
   external_table: "Database có external table",
   clr_assembly: "Database có assembly CLR",
@@ -101,6 +102,8 @@ CREATE USER [aioffice_reader] FOR LOGIN [aioffice_reader];
 -- Cấp trực tiếp, không dùng db_datareader (vai trò cố định bị từ chối).
 GRANT SELECT TO [aioffice_reader];
 GRANT VIEW DEFINITION TO [aioffice_reader];
+-- Chặn chạy stored procedure kể cả khi database đã cấp EXECUTE cho public.
+DENY EXECUTE TO [aioffice_reader];
 -- Yêu cầu SQL Server 2019 trở lên, không bật Always On; tài khoản không có quyền ghi/ủy quyền.
 -- Không tự động cấp thêm quyền nếu hồ sơ bảo mật khác chưa được hỗ trợ.`;
 }

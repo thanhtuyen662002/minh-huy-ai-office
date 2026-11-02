@@ -163,16 +163,12 @@ public static class ErpReadOnlyConnectionVerifier
         new("extended_procedure", false, "NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('X','RF'))"),
         // Synonyms can hide cross-database/linked-server targets and permissions.
         new("synonym", false, "NOT EXISTS (SELECT 1 FROM sys.synonyms)"),
-        // Views, functions and computed expressions can bypass this database's rights via external ownership chains or
-        // linked mappings, so unknown graphs fail. Procedures and triggers are not executable by the reader (see
-        // executable_procedure), so their dependency graphs are not part of what a read can reach.
-        new("external_dependency", false, """
-            NOT EXISTS (SELECT 1 FROM sys.sql_expression_dependencies d
-              LEFT JOIN sys.objects r ON d.referencing_class=1 AND r.object_id=d.referencing_id
-              WHERE d.referencing_class<>12 AND ISNULL(r.type,'') NOT IN ('P','PC','TR','TA','X','RF')
-                AND (d.referenced_server_name IS NOT NULL OR d.referenced_database_name IS NOT NULL
-                  OR d.is_caller_dependent=1 OR d.is_ambiguous=1
-                  OR (d.referenced_class=1 AND d.referenced_id IS NULL)))
+        // Views and functions that read another database or a linked server are reads, not write rights: SQL Server
+        // checks the reader's own permissions there unless ownership chaining crosses databases. Refuse only the
+        // settings that let this database's module owners lend their rights elsewhere.
+        new("cross_database_chaining", false, """
+            ISNULL((SELECT CONVERT(int,value_in_use) FROM sys.configurations WHERE name=N'cross db ownership chaining'),1)=0
+            AND NOT EXISTS (SELECT 1 FROM sys.databases WHERE database_id=DB_ID() AND (is_db_chaining_on=1 OR is_trustworthy_on=1))
             """),
         new("view_external_rowset", false, """
             NOT EXISTS (SELECT 1 FROM sys.sql_modules m JOIN sys.objects o ON o.object_id=m.object_id
@@ -184,7 +180,6 @@ public static class ErpReadOnlyConnectionVerifier
             """),
         new("external_table", false, "NOT EXISTS (SELECT 1 FROM sys.external_tables)"),
         new("clr_assembly", false, "NOT EXISTS (SELECT 1 FROM sys.assemblies WHERE is_user_defined=1) AND NOT EXISTS (SELECT 1 FROM sys.types WHERE is_user_defined=1 AND is_assembly_type=1)"),
-        new("linked_server", false, "NOT EXISTS (SELECT 1 FROM sys.servers WHERE is_linked=1)"),
     ];
 
     // CI smoke scripts run this exact text from ErpReadOnlyVerification.sql; a unit test keeps that file in sync.

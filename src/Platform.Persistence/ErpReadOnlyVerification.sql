@@ -80,12 +80,8 @@ AND NOT EXISTS (SELECT 1 FROM sys.database_principals p
           AND (NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('FS','FT','AF')))
           AND (NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('X','RF')))
           AND (NOT EXISTS (SELECT 1 FROM sys.synonyms))
-          AND (NOT EXISTS (SELECT 1 FROM sys.sql_expression_dependencies d
-  LEFT JOIN sys.objects r ON d.referencing_class=1 AND r.object_id=d.referencing_id
-  WHERE d.referencing_class<>12 AND ISNULL(r.type,'') NOT IN ('P','PC','TR','TA','X','RF')
-    AND (d.referenced_server_name IS NOT NULL OR d.referenced_database_name IS NOT NULL
-      OR d.is_caller_dependent=1 OR d.is_ambiguous=1
-      OR (d.referenced_class=1 AND d.referenced_id IS NULL))))
+          AND (ISNULL((SELECT CONVERT(int,value_in_use) FROM sys.configurations WHERE name=N'cross db ownership chaining'),1)=0
+AND NOT EXISTS (SELECT 1 FROM sys.databases WHERE database_id=DB_ID() AND (is_db_chaining_on=1 OR is_trustworthy_on=1)))
           AND (NOT EXISTS (SELECT 1 FROM sys.sql_modules m JOIN sys.objects o ON o.object_id=m.object_id
   WHERE o.is_ms_shipped=0 AND o.type IN ('V','FN','IF','TF')
     AND (m.definition IS NULL
@@ -94,5 +90,4 @@ AND NOT EXISTS (SELECT 1 FROM sys.database_principals p
       OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENDATASOURCE%')))
           AND (NOT EXISTS (SELECT 1 FROM sys.external_tables))
           AND (NOT EXISTS (SELECT 1 FROM sys.assemblies WHERE is_user_defined=1) AND NOT EXISTS (SELECT 1 FROM sys.types WHERE is_user_defined=1 AND is_assembly_type=1))
-          AND (NOT EXISTS (SELECT 1 FROM sys.servers WHERE is_linked=1))
           THEN 1 ELSE 0 END;
