@@ -20,6 +20,7 @@ export type CustomerRequestDetail = {
 };
 export type CustomerRequestPatch = { rowVersion: string; status?: RequestStatus; assigneeUserId?: string | null };
 export const requestConflict = "Phiếu vừa được người khác cập nhật, tải lại để xem bản mới";
+export const requestTaken = "Phiếu này đã có người khác nhận. Chỉ người phụ trách hoặc quản trị viên mới đổi được. Tải lại phiếu để xem bản mới.";
 
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 const text = (value: unknown, maximum: number): value is string => typeof value === "string" && value.trim().length > 0

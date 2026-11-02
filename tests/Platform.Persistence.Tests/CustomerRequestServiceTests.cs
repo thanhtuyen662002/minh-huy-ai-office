@@ -144,6 +144,33 @@ public sealed class CustomerRequestServiceTests
         Assert.Equal(unassigned.RowVersion, noOp.RowVersion); Assert.Equal(4, await db.CustomerRequestEvents.CountAsync());
     }
 
+    [Fact]
+    public async Task OnlyTheAssigneeOrAnAdministratorMayChangeATakenTicket()
+    {
+        using var fixture = new CustomerRequestFixture(); var receipt = await fixture.Accept();
+        Guid owner = Guid.NewGuid(), other = Guid.NewGuid(), admin = Guid.NewGuid();
+        await using (var seed = fixture.Database())
+        {
+            MemberDirectoryFixture.AddMember(seed, fixture.Authority, owner, "Owner");
+            MemberDirectoryFixture.AddMember(seed, fixture.Authority, other, "Other");
+            MemberDirectoryFixture.AddMember(seed, fixture.Authority, admin, "Admin", roles: ["admin"]);
+            await seed.SaveChangesAsync();
+        }
+        AuthorizationContext As(Guid id) => AuthorizationContext.Create(fixture.Authority.TenantId, fixture.Authority.CompanyId, id);
+        await using var db = fixture.Database(); var portal = fixture.Portal(db);
+        var version = (await portal.GetAsync(As(other), fixture.Authority.CompanyId, receipt.Code)).Request.RowVersion;
+        // A member cannot hand an unassigned ticket to someone else.
+        await Assert.ThrowsAsync<CustomerRequestClaimedException>(() => portal.PatchAsync(As(other), fixture.Authority.CompanyId, receipt.Code, new(version, null, owner, true)));
+        var taken = await portal.PatchAsync(As(owner), fixture.Authority.CompanyId, receipt.Code, new(version, "in_progress", owner, true));
+        await Assert.ThrowsAsync<CustomerRequestClaimedException>(() => portal.PatchAsync(As(other), fixture.Authority.CompanyId, receipt.Code, new(taken.RowVersion, "done", null, false)));
+        await Assert.ThrowsAsync<CustomerRequestClaimedException>(() => portal.PatchAsync(As(other), fixture.Authority.CompanyId, receipt.Code, new(taken.RowVersion, null, other, true)));
+        await Assert.ThrowsAsync<CustomerRequestClaimedException>(() => portal.PatchAsync(As(other), fixture.Authority.CompanyId, receipt.Code, new(taken.RowVersion, null, null, true)));
+        Assert.Equal("in_progress", (await db.CustomerRequests.AsNoTracking().SingleAsync()).Status);
+        var moved = await portal.PatchAsync(As(owner), fixture.Authority.CompanyId, receipt.Code, new(taken.RowVersion, "needs_clarification", null, false));
+        var reassigned = await portal.PatchAsync(As(admin), fixture.Authority.CompanyId, receipt.Code, new(moved.RowVersion, "done", other, true));
+        Assert.Equal(other, reassigned.AssigneeUserId); Assert.Equal("done", reassigned.Status);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

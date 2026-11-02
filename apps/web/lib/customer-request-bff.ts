@@ -47,7 +47,7 @@ export async function customerRequestBff(request: Request, code?: string): Promi
     if (!response) return unauthenticatedResponse();
     if (response.status !== 200) {
       void response.body?.cancel().catch(() => {});
-      return failure([400, 401, 403, 404, 409, 503].includes(response.status) ? response.status : 502);
+      return failure([400, 401, 403, 404, 409, 423, 503].includes(response.status) ? response.status : 502);
     }
     // A 100-row page and a maximally populated detail can exceed 128 KB in Vietnamese UTF-8.
     const body = await readBoundedRequestJson({ body: response.body, headers: response.headers, signal }, 8 * 1024 * 1024, parseSubmissionJson);
