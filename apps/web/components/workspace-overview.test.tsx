@@ -42,7 +42,7 @@ it("greets the signed-in member, reports open tickets and shows the bots", async
     userId: assigneeUser, onGlance: vi.fn() };
   const zalo = { channel: "zalo" as const, enabled: true, dryRun: false, summarySchedule: ["08:00", "17:30"], timeZone: "Asia/Ho_Chi_Minh" as const,
     techGroupExternalId: "t", customerGroups: [{ externalId: "g", displayName: "Nhóm A", customerName: "Cty A" }], configVersion: "1",
-    status: { loginState: "logged_in" as const, groups: [], lastSummaryAt: null, lastError: null, receivedAt: new Date().toISOString() } };
+    status: { loginState: "logged_in" as const, groups: [], lastSummaryAt: null, lastError: null, receivedAt: new Date().toISOString(), lastRun: null } };
   const onOpen = vi.fn();
   render(<WorkspaceOverview companyName="Minh Huy" onOpen={onOpen} data={source} bots={[zalo]} />);
   await screen.findByRole("heading", { name: "Chào Huy, hôm nay có 2 việc cần bạn xem" });

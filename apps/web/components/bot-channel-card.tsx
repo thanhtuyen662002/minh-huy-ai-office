@@ -1,13 +1,22 @@
 "use client";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Play, QrCode, RotateCw } from "lucide-react";
-import { botSchedule, type BotChannelView, type BotQr } from "../lib/bot-channels";
+import { botSchedule, type BotChannelView, type BotQr, type BotRun } from "../lib/bot-channels";
 
 export const botButton = "inline-flex h-9 items-center justify-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
 export const botPrimaryButton = "inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 export const botInput = "h-9 w-full rounded-lg border bg-card px-2.5 text-sm disabled:opacity-50";
 const loginNames = { logged_out: "Chưa đăng nhập", awaiting_qr: "Chờ quét mã QR", logged_in: "Đã đăng nhập", error: "Có lỗi" };
 const time = (value: string | null | undefined) => value ? new Date(value).toLocaleString("vi-VN") : "chưa có";
+const clock = (value: string) => new Date(value).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" });
+// What the latest summary run did, so an empty "Tóm tắt ngay" is not mistaken for a stuck bot.
+export function runOutcome(run: BotRun): { text: string; problem: boolean } {
+  const when = `${run.trigger === "manual" ? "Tóm tắt ngay" : "Lần tóm tắt"} lúc ${clock(run.at)}: `;
+  if (run.failed > 0) return { text: `${when}lỗi, không gửi được ${run.failed} bản tóm tắt${run.delivered ? ` (đã gửi ${run.delivered})` : ""}. Xem nhật ký bot.`, problem: true };
+  if (run.generated === 0) return { text: `${when}không có tin mới${run.since ? ` từ ${clock(run.since)}` : ""}, không gửi gì.`, problem: false };
+  if (run.delivered === 0) return { text: `${when}đã tạo ${run.generated} bản tóm tắt nhưng không gửi (đang chạy thử).`, problem: false };
+  return { text: `${when}đã gửi ${run.delivered} bản tóm tắt.`, problem: false };
+}
 const tiles = { zalo: "bg-blue-50 text-blue-700 dark:bg-blue-400/15 dark:text-blue-200", whatsapp: "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200" };
 
 // A checkbox drawn as a switch; `role` stays checkbox unless asked so lists of choices read as choices.
@@ -48,6 +57,8 @@ export function BotChannelCard({ channel, busy, qr, save, command, refreshQr }: 
         <Toggle role="switch" label={`Bật kênh ${name}`} checked={draft.enabled} onChange={enabled => setDraft({ ...draft, enabled })} />
       </header>
       <div className="grid flex-1 content-start gap-4 p-5">
+        {channel.status?.lastRun ? (() => { const outcome = runOutcome(channel.status.lastRun);
+          return <p className={`rounded-lg px-3 py-2 text-sm ${outcome.problem ? "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-200" : "bg-muted text-muted-foreground"}`}>{outcome.text}</p>; })() : null}
         {channel.status?.lastError ? <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">{channel.status.lastError}</p> : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5 text-xs text-muted-foreground"><label className="grid gap-1.5 font-medium">Lịch tóm tắt {name} (HH:mm)

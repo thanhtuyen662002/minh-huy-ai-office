@@ -10,9 +10,9 @@ type MemberOperation = { userId: string; name: string } &
   ({ kind: "access"; input: MemberAccessInput } | { kind: "administrator"; input: AdministratorInput });
 
 type Props = { companyId: string; userId?: string; generation: number; isCurrent: (generation: number) => boolean;
-  validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
+  validate: (generation: number) => Promise<boolean>; validateRecent?: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
 
-export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, validate, validateRecent = validate, request, onUnauthorized }: Props) {
   const [page, setPage] = useState<MemberPage | null>(null);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -31,9 +31,10 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   const lock = useRef(false);
   const current = () => mounted.current && isCurrent(generation);
   function clearTemporaryPassword() { passwordEpoch.current++; setTemporaryPassword(""); }
-  async function confirmAuthority() {
+  // Invitation fences may reuse a confirmation from the last few seconds; member changes and refusals re-check in full.
+  async function confirmAuthority(recent = false) {
     let valid = false;
-    try { valid = await validate(generation); } catch { }
+    try { valid = await (recent ? validateRecent : validate)(generation); } catch { }
     if (!valid && current()) { setPage(null); setPending(null); clearTemporaryPassword(); }
     return valid && current();
   }
@@ -90,7 +91,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     if (lock.current || !current()) return;
     lock.current = true; setLoading(true); setBusy(label); clearTemporaryPassword(); setInvitationError(""); setNotice("");
     try {
-      if (!await confirmAuthority()) return;
+      if (!await confirmAuthority(true)) return;
       const response = await request(generation, `${path}?companyId=${encodeURIComponent(companyId)}`, {
         method: "POST", cache: "no-store", headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
@@ -115,12 +116,14 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       const received: unknown = await response.json();
       const result = body ? parseCreatedInvitation(received) : parseInvitation(received);
       if (!result || result.companyId !== companyId || path.includes("/revoke") && result.revokedAtUtc === null) throw new Error("Invalid result");
-      if (!await confirmAuthority()) return;
       if (body) setInvitationEmail("");
-      lock.current = false;
-      await load(offset, true);
+      // Invitations never change the member list, so only they are reloaded, then authority is confirmed.
+      const refreshed = await fetchInvitations();
+      if (!current() || !await confirmAuthority(true)) return;
+      if (refreshed.page) setInvitationPage(refreshed.page);
+      else { setInvitationPage(null); if (refreshed.error) setInvitationError(refreshed.error); }
       const displayEpoch = passwordEpoch.current;
-      if (body && current() && await confirmAuthority() && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
+      if (body && current() && await confirmAuthority(true) && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
         && typeof result.temporaryPassword === "string") setTemporaryPassword(result.temporaryPassword);
       if (current()) setNotice(!body ? "Đã thu hồi lời mời thành viên."
         : "passwordSetupEmailSent" in result && result.passwordSetupEmailSent

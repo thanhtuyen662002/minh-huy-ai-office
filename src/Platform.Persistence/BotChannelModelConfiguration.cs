@@ -49,6 +49,7 @@ internal static class BotChannelModelConfiguration
             entity.Property(x => x.LoginState).HasMaxLength(32);
             entity.Property(x => x.GroupsJson).HasMaxLength(500000);
             entity.Property(x => x.LastError).HasMaxLength(500);
+            entity.Property(x => x.LastRunJson).HasMaxLength(1000);
             entity.Property(x => x.LoginQrImage).HasMaxLength(65536);
             entity.Property(x => x.LoginQrContentType).HasMaxLength(32);
             entity.Property(x => x.RowVersion).IsRowVersion();

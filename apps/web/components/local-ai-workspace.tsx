@@ -823,7 +823,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         <TelegramLinkCard key={`${scopeKey}:telegram`} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></div>
       : tab === "members" && isAdmin && auth ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId}
-        generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+        generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} validateRecent={validateRecent} request={request} onUnauthorized={onUnauthorized} />
       : (
               <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7">
                 {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}

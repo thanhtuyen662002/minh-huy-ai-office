@@ -46,6 +46,7 @@ public sealed class BotStatusRecord
     public string GroupsJson { get; set; } = "[]";
     public DateTimeOffset? LastSummaryAt { get; set; }
     public string? LastError { get; set; }
+    public string? LastRunJson { get; set; }
     public byte[]? LoginQrImage { get; set; }
     public string? LoginQrContentType { get; set; }
     public DateTimeOffset? LoginQrExpiresAt { get; set; }
