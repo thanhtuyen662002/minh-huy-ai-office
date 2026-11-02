@@ -9,6 +9,7 @@ export const erpMessages: Record<string, string> = {
   login_failed: "Tài khoản hoặc mật khẩu không đúng.",
   database_not_found: "Không tìm thấy database hoặc tài khoản chưa được cấp quyền truy cập.",
   not_read_only: "Tài khoản này có quyền ghi hoặc quản trị nên không dùng trực tiếp được. Hãy tạo tài khoản chỉ đọc theo cách bên dưới.",
+  unsupported_database: "Tài khoản đúng là chỉ đọc, nhưng database này có thành phần AI Office chưa hỗ trợ đọc an toàn (xem chi tiết bên dưới).",
   missing_view_definition: "Tài khoản thiếu quyền VIEW ANY DEFINITION hoặc VIEW DEFINITION.",
   conflict: "Nguồn hoặc phiên bản kết nối đã thay đổi. Tải lại danh sách trước khi thử lại.",
   invalid_fields: "Thông tin kết nối không hợp lệ. Kiểm tra lại các trường.",
@@ -17,6 +18,48 @@ export const erpMessages: Record<string, string> = {
   rate_limited: "Đã đạt giới hạn kiểm tra kết nối. Vui lòng đợi một phút.",
   not_permitted: "Tài khoản này không có quyền tạo tài khoản mới. Nhập tài khoản quản trị SQL (ví dụ sa) rồi bấm lại.",
 };
+export type ErpFinding = { code: string; writeRisk: boolean; detail: string | null };
+// Vietnamese labels for the server's named read-only checks. Unknown codes are shown as-is.
+export const erpFindingLabels: Record<string, string> = {
+  sql_version: "Phiên bản SQL Server chưa hỗ trợ (cần SQL Server 2019 trở lên)",
+  availability_group: "Máy chủ đang bật Always On (Availability Group)",
+  system_database: "Đang trỏ vào database hệ thống (master, msdb…)",
+  dbo_user: "Tài khoản đang là chủ database (dbo)",
+  sysadmin: "Tài khoản thuộc vai trò sysadmin",
+  db_owner: "Tài khoản thuộc vai trò db_owner",
+  fixed_server_role: "Tài khoản thuộc vai trò cố định cấp máy chủ",
+  fixed_database_role: "Tài khoản thuộc vai trò cố định của database (ví dụ db_datareader, db_datawriter)",
+  missing_view_definition: "Thiếu quyền VIEW ANY DEFINITION / VIEW DEFINITION / CONNECT",
+  metadata_deny: "Có lệnh DENY VIEW DEFINITION đang chặn tài khoản",
+  grant_option: "Tài khoản được cấp quyền kèm WITH GRANT OPTION",
+  database_grant_scope: "Có quyền cấp trên đối tượng đặc biệt trong database",
+  server_grant_scope: "Có quyền cấp trên đối tượng đặc biệt của máy chủ",
+  ownership: "Tài khoản đang sở hữu một đối tượng (sở hữu = toàn quyền)",
+  server_permission: "Có quyền cấp máy chủ ngoài quyền đọc",
+  database_permission: "Có quyền cấp database ngoài quyền đọc",
+  impersonate: "Có quyền IMPERSONATE (đóng vai tài khoản khác)",
+  role_admin: "Có quyền quản lý vai trò (role)",
+  schema_hidden: "Một số schema bị ẩn với tài khoản",
+  schema_permission: "Có quyền trên schema ngoài quyền đọc",
+  object_hidden: "Một số bảng/view/thủ tục bị ẩn với tài khoản",
+  object_permission: "Có quyền trên bảng/view ngoài quyền đọc",
+  column_update: "Có quyền UPDATE trên cột",
+  executable_procedure: "Có quyền chạy stored procedure (procedure có thể ghi dữ liệu)",
+  clr_function: "Database có hàm CLR (.NET)",
+  extended_procedure: "Database có extended stored procedure",
+  synonym: "Database có synonym",
+  external_dependency: "Có view/hàm đọc sang database hoặc máy chủ khác, hoặc tham chiếu đối tượng không tồn tại",
+  view_external_rowset: "Có view/hàm dùng OPENQUERY/OPENROWSET hoặc bị mã hoá",
+  external_table: "Database có external table",
+  clr_assembly: "Database có assembly CLR",
+  linked_server: "Máy chủ có linked server",
+  check_failed: "Không chạy được bước kiểm tra quyền",
+};
+export function parseErpFindings(value: unknown): ErpFinding[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 40).flatMap(row => row && typeof row === "object" && typeof row.code === "string" && /^[a-z_]{1,40}$/.test(row.code)
+    ? [{ code: row.code, writeRisk: row.writeRisk === true, detail: typeof row.detail === "string" ? row.detail.slice(0, 300) : null }] : []);
+}
 export function isErpConnection(value: unknown, save = false): value is ErpConnection {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const row = value as Record<string, unknown>;
@@ -58,6 +101,6 @@ CREATE USER [aioffice_reader] FOR LOGIN [aioffice_reader];
 -- Cấp trực tiếp, không dùng db_datareader (vai trò cố định bị từ chối).
 GRANT SELECT TO [aioffice_reader];
 GRANT VIEW DEFINITION TO [aioffice_reader];
--- Yêu cầu SQL Server 2022 độc lập; tài khoản không có quyền ghi/ủy quyền.
+-- Yêu cầu SQL Server 2019 trở lên, không bật Always On; tài khoản không có quyền ghi/ủy quyền.
 -- Không tự động cấp thêm quyền nếu hồ sơ bảo mật khác chưa được hỗ trợ.`;
 }

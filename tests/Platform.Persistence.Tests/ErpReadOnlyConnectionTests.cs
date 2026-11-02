@@ -46,6 +46,48 @@ public sealed class ErpReadOnlyConnectionTests
     }
 
     [Fact]
+    public void Diagnostics_and_proof_share_every_named_condition()
+    {
+        var checks = ErpReadOnlyConnectionVerifier.Checks;
+        Assert.Equal(checks.Length, checks.Select(c => c.Code).Distinct().Count());
+        Assert.All(checks, c =>
+        {
+            Assert.Matches("^[a-z_]{1,40}$", c.Code);
+            Assert.Contains(c.Condition.Trim(), ErpReadOnlyConnectionVerifier.VerificationSql);
+            Assert.Contains($"SELECT N'{c.Code}' AS code", ErpReadOnlyConnectionVerifier.DiagnosticSql);
+        });
+        // Real write/admin rights stay classified as such; database features outside the profile do not claim write access.
+        foreach (var code in new[] { "sysadmin", "db_owner", "dbo_user", "fixed_database_role", "database_permission", "object_permission",
+                     "column_update", "executable_procedure", "grant_option", "impersonate", "ownership" })
+            Assert.True(checks.Single(c => c.Code == code).WriteRisk, code);
+        foreach (var code in new[] { "sql_version", "synonym", "external_dependency", "linked_server", "clr_function" })
+            Assert.False(checks.Single(c => c.Code == code).WriteRisk, code);
+    }
+
+    [Fact]
+    public void Smoke_scripts_run_the_exact_shipping_proof()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "MinhHuy.AIOffice.sln"))) directory = directory.Parent;
+        Assert.NotNull(directory);
+        var path = Path.Combine(directory.FullName, "src", "Platform.Persistence", "ErpReadOnlyVerification.sql");
+        // Regenerate after changing a check: set AIOFFICE_WRITE_ERP_PROOF=1 and run this test.
+        if (Environment.GetEnvironmentVariable("AIOFFICE_WRITE_ERP_PROOF") == "1") File.WriteAllText(path, ErpReadOnlyConnectionVerifier.VerificationSql);
+        Assert.Equal(ErpReadOnlyConnectionVerifier.VerificationSql, File.ReadAllText(path).Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public async Task Diagnostic_fault_is_reported_as_a_fixed_code_without_private_text()
+    {
+        await using var connection = new BindingStorePermissionTests.SyntheticConnection(1) { Fault = new PrivateFault("private endpoint/password") };
+        await connection.OpenAsync(CancellationToken.None);
+        var findings = await ErpReadOnlyConnectionVerifier.DiagnoseAsync(connection);
+        var finding = Assert.Single(findings);
+        Assert.Equal("check_failed", finding.Code);
+        Assert.Null(finding.Detail);
+    }
+
+    [Fact]
     public async Task Closed_connection_is_rejected_without_opening_or_replacing_the_session()
     {
         await using var connection = new BindingStorePermissionTests.SyntheticConnection(1);

@@ -44,7 +44,10 @@ public class CustomerErpConnectionInput
     }
 }
 
-public sealed record CustomerErpConnectionResult(string Code, string? ServerVersion = null, int? TableCount = null);
+/// <summary><c>Findings</c> names the profile conditions that refused the account (codes plus permission/role names),
+/// so an operator can see why; it never carries server diagnostics, data or credentials.</summary>
+public sealed record CustomerErpConnectionResult(string Code, string? ServerVersion = null, int? TableCount = null,
+    IReadOnlyList<ErpReadOnlyFinding>? Findings = null);
 public interface ICustomerErpConnectionVerifier
 {
     Task<CustomerErpConnectionResult> VerifyAsync(string connectionString, CancellationToken cancellationToken);
@@ -62,9 +65,11 @@ public sealed class SqlCustomerErpConnectionVerifier(ISqlConnectionFactory facto
             await connection.OpenAsync(deadline.Token);
             await using (var elevated = connection.CreateCommand())
             {
-                elevated.CommandText = "SELECT CASE WHEN ISNULL(IS_SRVROLEMEMBER(N'sysadmin'),1)<>0 OR ISNULL(IS_ROLEMEMBER(N'db_owner'),1)<>0 OR USER_NAME()=N'dbo' THEN 1 ELSE 0 END;";
+                elevated.CommandText = "SELECT CASE WHEN ISNULL(IS_SRVROLEMEMBER(N'sysadmin'),1)<>0 THEN 1 WHEN ISNULL(IS_ROLEMEMBER(N'db_owner'),1)<>0 THEN 2 WHEN USER_NAME()=N'dbo' THEN 3 ELSE 0 END;";
                 elevated.CommandTimeout = 5;
-                if (!Equals(await elevated.ExecuteScalarAsync(deadline.Token), 0)) return new("not_read_only");
+                var level = await elevated.ExecuteScalarAsync(deadline.Token);
+                if (!Equals(level, 0))
+                    return new("not_read_only", Findings: [new(level switch { 1 => "sysadmin", 2 => "db_owner", 3 => "dbo_user", _ => "check_failed" }, true, null)]);
             }
             await using (var metadata = connection.CreateCommand())
             {
@@ -72,6 +77,13 @@ public sealed class SqlCustomerErpConnectionVerifier(ISqlConnectionFactory facto
                 metadata.CommandTimeout = 5;
                 if (!Equals(await metadata.ExecuteScalarAsync(deadline.Token), 1)) return new("missing_view_definition");
             }
+            // Explain a refusal by named condition. Only a write/admin right is reported as "not read-only";
+            // other findings mean the database uses something outside the qualified read profile.
+            var findings = await ErpReadOnlyConnectionVerifier.DiagnoseAsync(connection, deadline.Token);
+            if (findings.Count > 0)
+                return new(findings.Any(f => f.WriteRisk) ? "not_read_only"
+                    : findings.All(f => f.Code == "missing_view_definition") ? "missing_view_definition" : "unsupported_database",
+                    Findings: findings);
             return await ErpReadOnlyConnectionVerifier.ReadAsync(connection, async () =>
             {
                 await using var command = connection.CreateCommand();
@@ -84,7 +96,7 @@ public sealed class SqlCustomerErpConnectionVerifier(ISqlConnectionFactory facto
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (OperationCanceledException) { return new("unreachable"); }
-        catch (ErpReadOnlyCredentialsException) { return new("not_read_only"); }
+        catch (ErpReadOnlyCredentialsException) { return new("not_read_only", Findings: [new("check_failed", false, null)]); }
         catch (SqlException error) { return new(MapSqlError(error.Number)); }
         catch (Exception error) when (error is DbException or InvalidOperationException or ArgumentException) { return new("unreachable"); }
     }

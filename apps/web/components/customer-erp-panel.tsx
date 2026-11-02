@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
-import { CustomerErpSource, ErpConnection, erpMessages, isErpConnection, parseCustomerErpSources, readOnlyLoginSql } from "../lib/customer-erp";
+import { CustomerErpSource, ErpConnection, ErpFinding, erpFindingLabels, erpMessages, parseErpFindings, isErpConnection, parseCustomerErpSources, readOnlyLoginSql } from "../lib/customer-erp";
 
 type Props = {
   companyId: string; generation: number; isCurrent: (generation: number) => boolean;
@@ -19,6 +19,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const [editing, setEditing] = useState<CustomerErpSource | null>(null);
   const [code, setCode] = useState("");
   const [details, setDetails] = useState("");
+  const [findings, setFindings] = useState<ErpFinding[]>([]);
   const [tested, setTested] = useState(false);
   const [busy, setBusy] = useState(false);
   const [action, setAction] = useState<"test" | "save" | "reader" | null>(null);
@@ -63,20 +64,20 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   }, []);
 
   function change<K extends keyof ErpConnection>(key: K, value: ErpConnection[K]) {
-    setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails(""); setCreatedReader("");
+    setFields(previous => ({ ...previous, [key]: value })); setTested(false); setCode(""); setDetails(""); setFindings([]); setCreatedReader("");
   }
   // SQL Server tools write the address as "host,port" (or "host:port"); split it into the two fields once the
   // address is complete (pasted or the field is left), never while it is still being typed.
   function settleHost(value: string) {
     const match = /^\s*([^\s,:;\\/=]+)\s*[,:]\s*(\d{1,5})\s*$/.exec(value);
     if (match && Number(match[2]) >= 1 && Number(match[2]) <= 65535) {
-      setFields(previous => ({ ...previous, host: match[1], port: Number(match[2]) })); setTested(false); setCode(""); setDetails(""); setCreatedReader("");
+      setFields(previous => ({ ...previous, host: match[1], port: Number(match[2]) })); setTested(false); setCode(""); setDetails(""); setFindings([]); setCreatedReader("");
     } else change("host", value.trim());
   }
 
   async function execute(save: boolean, connection = fields) {
     if (lock.current || !current() || !isErpConnection(connection) || (save && (!tested || !name.trim()))) return;
-    lock.current = true; setBusy(true); setAction(save ? "save" : "test"); setCode(""); setDetails("");
+    lock.current = true; setBusy(true); setAction(save ? "save" : "test"); setCode(""); setDetails(""); setFindings([]);
     try {
       if (!await validate(generation) || !current()) return;
       const operation = pending ?? { operationId: crypto.randomUUID() };
@@ -98,6 +99,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       }
       const resultCode = response.status === 429 ? "rate_limited" : typeof payload.code === "string" && Object.hasOwn(erpMessages, payload.code) ? payload.code : "unavailable";
       setCode(resultCode);
+      setFindings(parseErpFindings(payload.findings));
       if (!save) {
         setTested(response.ok && resultCode === "ok");
         if (response.ok && resultCode === "ok" && typeof payload.serverVersion === "string" && typeof payload.tableCount === "number")
@@ -110,7 +112,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   // The administrator account in the form is used once by the server to create a new read-only login; it is never saved.
   async function createReader() {
     if (lock.current || !current() || !isErpConnection(fields)) return;
-    lock.current = true; setBusy(true); setAction("reader"); setCode(""); setDetails(""); setCreatedReader("");
+    lock.current = true; setBusy(true); setAction("reader"); setCode(""); setDetails(""); setFindings([]); setCreatedReader("");
     let reader: { userName: string; password: string } | null = null;
     try {
       if (!await validate(generation) || !current()) return;
@@ -134,7 +136,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   }
 
   function resetForm(source: CustomerErpSource | null, open = source !== null) {
-    setFormOpen(open); setFields(empty); setCreatedReader(""); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setPending(null);
+    setFormOpen(open); setFields(empty); setCreatedReader(""); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setFindings([]); setPending(null);
   }
   const frozen = busy || pending !== null;
   const outline = "rounded-lg border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50";
@@ -174,6 +176,11 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       </fieldset>
       {!fields.encrypt ? <p className="mt-3 text-sm text-amber-700">Đường truyền có thể không được mã hoá. Nên bật mã hoá và dùng chứng chỉ TLS hợp lệ.</p> : null}
       {code ? <p role={code === "ok" || code === "saved" ? "status" : "alert"} className="mt-4 text-sm">{code === "saved" ? "Đã lưu kết nối ERP khách hàng." : erpMessages[code] ?? erpMessages.unavailable} {details}</p> : null}
+      {findings.length > 0 && code && code !== "ok" ? <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-500/40 dark:bg-amber-500/10">
+        <p className="font-medium">Điều kiện không đạt:</p>
+        <ul aria-label="Điều kiện không đạt" className="mt-1 list-disc space-y-1 pl-5">{findings.map(item => <li key={item.code}>
+          {erpFindingLabels[item.code] ?? item.code}{item.writeRisk ? " (quyền ghi/quản trị)" : ""}{item.detail ? <>: <code className="text-xs">{item.detail}</code></> : null}</li>)}</ul>
+      </div> : null}
       {createdReader ? <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
         Đã tạo tài khoản chỉ đọc <strong>{createdReader}</strong> và điền sẵn mật khẩu. Mật khẩu quản trị không được lưu lại.{tested ? " Bấm Lưu để lưu kết nối." : ""}</p> : null}
       {code === "not_read_only" || code === "missing_view_definition" || code === "not_permitted" || action === "reader" ? <div className="mt-4 rounded-lg border p-4">
