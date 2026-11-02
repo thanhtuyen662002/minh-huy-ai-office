@@ -99,6 +99,28 @@ public sealed class KeycloakAdminClientTests
         Assert.Equal(1, fixture.Handler.TokenRequests);
     }
 
+    [Fact]
+    public async Task Admin_calls_use_the_private_admin_origin_and_tokens_stay_public()
+    {
+        using var fixture = new Fixture();
+        fixture.Options.AdminBaseUrl = "http://host.docker.internal:8081"; fixture.Options.Validate();
+        var hosts = new List<string>();
+        fixture.Handler.Reply = request => { hosts.Add(request.RequestUri!.GetLeftPart(UriPartial.Authority)); return Task.FromResult(Json("[]")); };
+        Assert.False(await fixture.Client.UserExistsAsync("member@example.com", default));
+        Assert.Equal(["http://host.docker.internal:8081"], hosts);
+        Assert.Equal(["https://identity.example.test"], fixture.Handler.TokenOrigins);
+    }
+
+    [Theory]
+    [InlineData("ftp://identity.internal")]
+    [InlineData("http://identity.internal/path")]
+    [InlineData("http://user:secret@identity.internal")]
+    public void Invalid_admin_origin_is_rejected(string origin)
+    {
+        var options = new KeycloakProvisioningOptions { Enabled = true, BaseUrl = "https://identity.example.test", AdminBaseUrl = origin, ClientSecretRef = "secretref://env/TEST_ONLY" };
+        Assert.Throws<InvalidOperationException>(options.Validate);
+    }
+
     [Theory]
     [InlineData("http://identity.example.test")]
     [InlineData("https://identity.example.test/path")]
@@ -160,12 +182,13 @@ public sealed class KeycloakAdminClientTests
     {
         public Func<HttpRequestMessage, Task<HttpResponseMessage>> Reply { get; set; } = _ => Task.FromResult(Json("[]"));
         public int TokenRequests { get; private set; }
+        public List<string> TokenOrigins { get; } = [];
         public string TokenBody { get; set; } = "{\"access_token\":\"synthetic-access-token\"}";
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (request.RequestUri!.AbsolutePath.EndsWith("/token", StringComparison.Ordinal))
             {
-                TokenRequests++;
+                TokenRequests++; TokenOrigins.Add(request.RequestUri.GetLeftPart(UriPartial.Authority));
                 var form = await request.Content!.ReadAsStringAsync(cancellationToken);
                 Assert.Contains("grant_type=client_credentials", form);
                 Assert.Contains("client_id=aioffice-member-provisioner", form);

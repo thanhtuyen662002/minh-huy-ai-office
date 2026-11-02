@@ -109,6 +109,11 @@ if ($browser.baseUrl -ne $baseUrl) {
 $lines = [System.Collections.Generic.List[string]]::new([string[]](Get-Content -LiteralPath $EnvironmentFile -Encoding utf8))
 Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED' 'true'
 Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE' $secretFile
+# IIS keeps /admin LAN-only, so Core API calls the Keycloak admin API on the host port directly.
+if (-not $environment['AIOFFICE_KEYCLOAK_ADMIN_URL']) {
+    $kcHostPort = if ($environment['AIOFFICE_KEYCLOAK_PORT']) { $environment['AIOFFICE_KEYCLOAK_PORT'] } else { '8081' }
+    Set-EnvValue $lines 'AIOFFICE_KEYCLOAK_ADMIN_URL' "http://host.docker.internal:$kcHostPort"
+}
 [IO.File]::WriteAllLines($EnvironmentFile, $lines, [Text.UTF8Encoding]::new($false))
 
 $realm = Invoke-RestMethod -Uri $realmUrl -Headers $headers

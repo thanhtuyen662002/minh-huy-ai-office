@@ -291,7 +291,9 @@ pwsh .\infra\windows-vps\Update-AIOffice.ps1 -Phase Deploy -SkipFetch
 
 It enables the `aioffice-member-provisioner` client with a secret kept in
 `C:\AIOffice\secrets\keycloak-provisioning-client-secret`, checks its
-`manage-users` role, sets the browser client's base URL (Keycloak's "Quay lại
+`manage-users` role, points Core API's admin calls at the host port
+(`AIOFFICE_KEYCLOAK_ADMIN_URL=http://host.docker.internal:8081`, because IIS
+keeps `/admin` LAN-only and the tunnel is not LAN), sets the browser client's base URL (Keycloak's "Quay lại
 AI Office" link) and turns on `AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED`. If the
 email cannot be sent, the web shows a one-time temporary password instead.
 

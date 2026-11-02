@@ -63,6 +63,8 @@ services:
       ASPNETCORE_URLS: http://0.0.0.0:8080
       AIOffice__KeycloakProvisioning__Enabled: ${AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED:-false}
       AIOffice__KeycloakProvisioning__BaseUrl: ${AIOFFICE_KEYCLOAK_HOSTNAME:-}
+      # Private origin for Keycloak /admin calls when the public proxy blocks /admin (empty = BaseUrl).
+      AIOffice__KeycloakProvisioning__AdminBaseUrl: ${AIOFFICE_KEYCLOAK_ADMIN_URL:-}
       AIOffice__KeycloakProvisioning__ClientSecretFile: /run/secrets/keycloak_provisioning_client_secret
       AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
       AIOffice__Authentication__Authority: ${AIOFFICE_AUTHORITY:?set AIOFFICE_AUTHORITY from the approved identity provider}

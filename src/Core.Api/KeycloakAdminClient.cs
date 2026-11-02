@@ -11,6 +11,10 @@ public sealed class KeycloakProvisioningOptions
 {
     public bool Enabled { get; set; }
     public string BaseUrl { get; set; } = "";
+    // Optional private origin for /admin calls (e.g. http://host.docker.internal:8081) when the public
+    // proxy keeps /admin LAN-only. Tokens are always requested from the public HTTPS BaseUrl.
+    public string AdminBaseUrl { get; set; } = "";
+    internal string AdminOrigin => AdminBaseUrl.Length != 0 ? AdminBaseUrl : BaseUrl;
     public string ClientId { get; set; } = "aioffice-member-provisioner";
     public string ClientSecretFile { get; set; } = "";
     public string ClientSecretRef { get; set; } = "";
@@ -24,6 +28,8 @@ public sealed class KeycloakProvisioningOptions
             uri.IsLoopback || uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0 ||
             BaseUrl != uri.GetLeftPart(UriPartial.Authority) || ClientId != "aioffice-member-provisioner" ||
             (string.IsNullOrEmpty(ClientSecretFile) == string.IsNullOrEmpty(ClientSecretRef)) ||
+            (AdminBaseUrl.Length != 0 && (!Uri.TryCreate(AdminBaseUrl, UriKind.Absolute, out var admin) ||
+                admin.Scheme is not ("http" or "https") || admin.UserInfo.Length != 0 || AdminBaseUrl != admin.GetLeftPart(UriPartial.Authority))) ||
             !System.Text.RegularExpressions.Regex.IsMatch(BrowserClientId, "^[A-Za-z0-9._-]{1,64}$") ||
             (ClientSecretFile.Length != 0 && !Path.IsPathFullyQualified(ClientSecretFile)) ||
             (ClientSecretRef.Length != 0 && (!SecretReference.TryParse(ClientSecretRef, out var reference) || reference!.Provider != "env")))
@@ -38,7 +44,7 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
     public async Task<bool> UserExistsAsync(string email, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get,
-            options.BaseUrl + "/admin/realms/aioffice/users?exact=true&max=2&email=" + Uri.EscapeDataString(email));
+            options.AdminOrigin + "/admin/realms/aioffice/users?exact=true&max=2&email=" + Uri.EscapeDataString(email));
         using var response = await SendAsync(request, cancellationToken);
         await RequireSuccessAsync(response);
         try
@@ -57,7 +63,7 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
 
     public async Task<bool> CreateUserAsync(string email, string temporaryPassword, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, options.BaseUrl + "/admin/realms/aioffice/users")
+        using var request = new HttpRequestMessage(HttpMethod.Post, options.AdminOrigin + "/admin/realms/aioffice/users")
         {
             Content = JsonContent.Create(new
             {
@@ -81,7 +87,7 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
     public async Task SendPasswordSetupEmailAsync(string email, CancellationToken cancellationToken)
     {
         using var lookup = new HttpRequestMessage(HttpMethod.Get,
-            options.BaseUrl + "/admin/realms/aioffice/users?exact=true&max=2&briefRepresentation=true&email=" + Uri.EscapeDataString(email));
+            options.AdminOrigin + "/admin/realms/aioffice/users?exact=true&max=2&briefRepresentation=true&email=" + Uri.EscapeDataString(email));
         using var found = await SendAsync(lookup, cancellationToken);
         await RequireSuccessAsync(found);
         string id;
@@ -98,7 +104,7 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
         catch (Exception error) when (error is JsonException or HttpRequestException or OperationCanceledException or IOException or InvalidOperationException)
         { throw new KeycloakProvisioningException(true); }
         using var request = new HttpRequestMessage(HttpMethod.Put,
-            $"{options.BaseUrl}/admin/realms/aioffice/users/{id}/execute-actions-email?lifespan={PasswordSetupLifespanSeconds}&client_id={Uri.EscapeDataString(options.BrowserClientId)}")
+            $"{options.AdminOrigin}/admin/realms/aioffice/users/{id}/execute-actions-email?lifespan={PasswordSetupLifespanSeconds}&client_id={Uri.EscapeDataString(options.BrowserClientId)}")
         { Content = JsonContent.Create(new[] { "UPDATE_PASSWORD" }) };
         using var response = await SendAsync(request, cancellationToken);
         if (response.StatusCode != HttpStatusCode.NoContent) throw Failure(response.StatusCode);
