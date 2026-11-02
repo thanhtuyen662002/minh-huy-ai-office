@@ -256,6 +256,28 @@ The overlay adds:
 Set `AIOFFICE_BROWSER_OIDC_ENABLED=true` only after Keycloak is healthy behind
 IIS and the first company administrator is bootstrapped.
 
+## Password reset by email ("Quên mật khẩu?")
+
+The realm allows password reset, but Keycloak needs a mailbox to send from.
+Create `C:\AIOffice\secrets\keycloak-smtp.env` (same protected folder as the
+env file; never commit it or paste it in chat):
+
+```text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=quantri@yourcompany.com
+SMTP_FROM=quantri@yourcompany.com
+SMTP_FROM_NAME=AI Office Minh Huy
+SMTP_PASSWORD=<app password of that mailbox>
+```
+
+For Gmail / Google Workspace turn on 2-Step Verification for the mailbox and
+create an App Password; the normal password is refused. Then run
+`Update-AIOffice.ps1 -Phase Keycloak -SkipFetch`, which applies it through
+`infra/windows-vps/Configure-KeycloakEmail.ps1` (it also lists accounts that
+have no email and so cannot reset). Reset links are valid for 15 minutes and
+the emails are in Vietnamese (`infra/keycloak/themes/aioffice/email`).
+
 ## Backups
 
 The VM holds no business data. SQL Server backups (both `AI_Office` and
