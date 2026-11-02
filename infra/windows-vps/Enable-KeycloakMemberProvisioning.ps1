@@ -18,7 +18,7 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot 'Setup-Helpers.ps1')
 
-function Read-EnvValues([string]$Path) {
+function Read-EnvFile([string]$Path) {
     $values = @{}
     foreach ($line in Get-Content -LiteralPath $Path -Encoding utf8) {
         $index = $line.IndexOf('=')
@@ -35,7 +35,7 @@ function Read-SecretFile([string]$Path, [string]$What) {
     return $value
 }
 
-$environment = Read-EnvValues $EnvironmentFile
+$environment = Read-EnvFile $EnvironmentFile
 if ($environment['AIOFFICE_KEYCLOAK_ENABLED'] -cne 'true') { throw 'AIOFFICE_KEYCLOAK_ENABLED must be true first.' }
 $publicOrigin = $environment['AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN']
 if (-not $publicOrigin) { throw 'AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN is missing in the env file.' }
