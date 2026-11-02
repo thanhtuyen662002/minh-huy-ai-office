@@ -38,6 +38,8 @@ public sealed record CompanyInvitationResult(Guid CompanyId, Guid Id, string Ema
 {
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public string? TemporaryPassword { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? PasswordSetupEmailSent { get; init; }
     public override string ToString() => $"CompanyInvitationResult {{ Id = {Id:D} }}";
 }
 public sealed record CompanyInvitationPage(Guid CompanyId, IReadOnlyList<CompanyInvitationResult> Items, int Offset, int Limit, bool HasMore);

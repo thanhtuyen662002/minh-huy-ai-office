@@ -6,6 +6,8 @@ public interface IKeycloakAdminClient
     Task<bool> UserExistsAsync(string email, CancellationToken cancellationToken);
     // False means another request created the exact email concurrently. Never reset it.
     Task<bool> CreateUserAsync(string email, string temporaryPassword, CancellationToken cancellationToken);
+    // Emails the member a Keycloak link to choose their own password (UPDATE_PASSWORD).
+    Task SendPasswordSetupEmailAsync(string email, CancellationToken cancellationToken);
 }
 
 // Deliberately excludes upstream response bodies, credentials and inner exceptions.

@@ -278,6 +278,23 @@ create an App Password; the normal password is refused. Then run
 have no email and so cannot reset). Reset links are valid for 15 minutes and
 the emails are in Vietnamese (`infra/keycloak/themes/aioffice/email`).
 
+## Member accounts from "Thêm thành viên"
+
+To let "Thêm thành viên" create the Keycloak account and email the member a
+"choose your password" link (valid 3 days), run once after the mail settings
+above, then redeploy the application:
+
+```powershell
+pwsh .\infra\windows-vps\Enable-KeycloakMemberProvisioning.ps1
+pwsh .\infra\windows-vps\Update-AIOffice.ps1 -Phase Deploy -SkipFetch
+```
+
+It enables the `aioffice-member-provisioner` client with a secret kept in
+`C:\AIOffice\secrets\keycloak-provisioning-client-secret`, checks its
+`manage-users` role, sets the browser client's base URL (Keycloak's "Quay lại
+AI Office" link) and turns on `AIOFFICE_KEYCLOAK_PROVISIONING_ENABLED`. If the
+email cannot be sent, the web shows a one-time temporary password instead.
+
 ## Backups
 
 The VM holds no business data. SQL Server backups (both `AI_Office` and

@@ -159,3 +159,13 @@ it("revokes without a full session re-check when a recent confirmation is availa
   expect(validate).not.toHaveBeenCalled(); expect(validateRecent).toHaveBeenCalled();
   expect(request.mock.calls.filter(([, url]) => url.includes("/members?")).length).toBe(1);
 });
+
+it("says the setup email was sent and shows no password", async () => {
+  fixture(url => url === `/api/local/company/invitations?companyId=${company}`
+    ? Response.json({ ...invitation, email: "new@example.com", passwordSetupEmailSent: true }, { status: 201 }) : undefined);
+  await screen.findByText("member@example.com");
+  fireEvent.change(screen.getByLabelText("Email thành viên"), { target: { value: "new@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
+  await screen.findByText(/Đã mời và gửi mail đặt mật khẩu tới new@example.com/);
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+});

@@ -125,7 +125,10 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       const displayEpoch = passwordEpoch.current;
       if (body && current() && await confirmAuthority(true) && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
         && typeof result.temporaryPassword === "string") setTemporaryPassword(result.temporaryPassword);
-      if (current()) setNotice(body ? "Đã tạo lời mời thành viên." : "Đã thu hồi lời mời thành viên.");
+      if (current()) setNotice(!body ? "Đã thu hồi lời mời thành viên."
+        : "passwordSetupEmailSent" in result && result.passwordSetupEmailSent
+          ? `Đã mời và gửi mail đặt mật khẩu tới ${result.email}. Thành viên bấm liên kết trong mail (hiệu lực 3 ngày) để tự đặt mật khẩu rồi đăng nhập.`
+          : "Đã tạo lời mời thành viên.");
     } catch {
       if (current()) {
         let valid = false; try { valid = await validate(generation); } catch { }
