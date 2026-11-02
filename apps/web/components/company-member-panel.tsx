@@ -31,10 +31,10 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
   const lock = useRef(false);
   const current = () => mounted.current && isCurrent(generation);
   function clearTemporaryPassword() { passwordEpoch.current++; setTemporaryPassword(""); }
-  async function confirmAuthority() {
+  // Invitation fences may reuse a confirmation from the last few seconds; member changes and refusals re-check in full.
+  async function confirmAuthority(recent = false) {
     let valid = false;
-    // Routine fences reuse a confirmation from the last few seconds; a refusal (403) still re-checks in full.
-    try { valid = await validateRecent(generation); } catch { }
+    try { valid = await (recent ? validateRecent : validate)(generation); } catch { }
     if (!valid && current()) { setPage(null); setPending(null); clearTemporaryPassword(); }
     return valid && current();
   }
@@ -91,7 +91,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
     if (lock.current || !current()) return;
     lock.current = true; setLoading(true); setBusy(label); clearTemporaryPassword(); setInvitationError(""); setNotice("");
     try {
-      if (!await confirmAuthority()) return;
+      if (!await confirmAuthority(true)) return;
       const response = await request(generation, `${path}?companyId=${encodeURIComponent(companyId)}`, {
         method: "POST", cache: "no-store", headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
@@ -119,11 +119,11 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (body) setInvitationEmail("");
       // Invitations never change the member list, so only they are reloaded, then authority is confirmed.
       const refreshed = await fetchInvitations();
-      if (!current() || !await confirmAuthority()) return;
+      if (!current() || !await confirmAuthority(true)) return;
       if (refreshed.page) setInvitationPage(refreshed.page);
       else { setInvitationPage(null); if (refreshed.error) setInvitationError(refreshed.error); }
       const displayEpoch = passwordEpoch.current;
-      if (body && current() && await confirmAuthority() && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
+      if (body && current() && await confirmAuthority(true) && displayEpoch === passwordEpoch.current && "temporaryPassword" in result
         && typeof result.temporaryPassword === "string") setTemporaryPassword(result.temporaryPassword);
       if (current()) setNotice(body ? "Đã tạo lời mời thành viên." : "Đã thu hồi lời mời thành viên.");
     } catch {
@@ -188,6 +188,7 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
         result.operationId !== operation.input.operationId) throw new Error("Invalid result");
       if (operation.kind === "access" ? !("membershipActive" in result) || result.membershipActive !== operation.input.isActive
         : !("isAdministrator" in result) || result.isAdministrator !== operation.input.isAdministrator) throw new Error("Invalid result");
+      if (!await confirmAuthority()) return;
       setPending(null); lock.current = false; await load(offset, true);
       if (current()) setNotice(operation.kind === "access"
         ? operation.input.isActive ? "Đã mở lại quyền truy cập thành viên." : "Đã khóa quyền truy cập thành viên."

@@ -153,7 +153,7 @@ it("revokes without a full session re-check when a recent confirmation is availa
   });
   render(<CompanyMemberPanel companyId={company} userId={owner} generation={1} isCurrent={() => true}
     validate={validate} validateRecent={validateRecent} request={request} onUnauthorized={vi.fn()} />);
-  await screen.findByText("member@example.com");
+  await screen.findByText("member@example.com"); validate.mockClear();
   fireEvent.click(screen.getByRole("button", { name: "Thu hồi lời mời member@example.com" }));
   await screen.findByText("Đã thu hồi lời mời thành viên.");
   expect(validate).not.toHaveBeenCalled(); expect(validateRecent).toHaveBeenCalled();
