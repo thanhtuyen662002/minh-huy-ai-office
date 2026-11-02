@@ -42,8 +42,7 @@ def binding_permission_diagnostic_query():
 
 def erp_permission_diagnostic_query():
     """Only fixed predicate numbers/bits from the owned sample identity."""
-    verifier = Path("src/Platform.Persistence/ErpReadOnlyConnectionVerifier.cs").read_text(encoding="utf-8")
-    query = verifier.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0]
+    query = Path("src/Platform.Persistence/ErpReadOnlyVerification.sql").read_text(encoding="utf-8")
     query = re.sub(r"--[^\n]*", "", query)
     expression = query.split("SELECT CASE WHEN", 1)[1].rsplit("THEN 1 ELSE 0 END;", 1)[0].strip()
     predicates = re.split(r"\n\s{10}AND (?=[A-Z])", expression)

@@ -15,8 +15,7 @@ def verify(*, directory, manifest, http, sql, run, wait_for, api, web, auth, dia
     suffix = uuid.uuid4().hex
     table, module = "dbo.ReadCredential_" + suffix, "dbo.ReadModule_" + suffix
     inner, outer, impersonated = (prefix + suffix for prefix in ("ReadInner_", "ReadOuter_", "ReadUser_"))
-    verifier = Path("src/Platform.Persistence/ErpReadOnlyConnectionVerifier.cs").read_text(encoding="utf-8")
-    proof_sql = verifier.split('internal const string VerificationSql = """', 1)[1].split('""";', 1)[0]
+    proof_sql = Path("src/Platform.Persistence/ErpReadOnlyVerification.sql").read_text(encoding="utf-8")
     scope = f"TenantId='{tenant}' AND CompanyId='{company}'"
 
     def reader(query):

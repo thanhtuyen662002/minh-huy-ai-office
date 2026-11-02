@@ -187,8 +187,10 @@ public static class ErpReadOnlyConnectionVerifier
         new("linked_server", false, "NOT EXISTS (SELECT 1 FROM sys.servers WHERE is_linked=1)"),
     ];
 
+    // CI smoke scripts run this exact text from ErpReadOnlyVerification.sql; a unit test keeps that file in sync.
     internal static readonly string VerificationSql =
-        "SELECT CASE WHEN\n" + string.Join("\n  AND ", Checks.Select(c => $"({c.Condition.Trim()})")) + "\nTHEN 1 ELSE 0 END;";
+        "SELECT CASE WHEN\n          " + string.Join("\n          AND ", Checks.Select(c => $"({c.Condition.Trim().Replace("\r", "")})"))
+        + "\n          THEN 1 ELSE 0 END;";
 
     // One row per failed condition. A NULL condition fails, exactly as in VerificationSql.
     internal static readonly string DiagnosticSql = string.Join("\nUNION ALL\n", Checks.Select(c =>

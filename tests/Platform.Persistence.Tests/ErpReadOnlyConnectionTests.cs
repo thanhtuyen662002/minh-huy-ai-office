@@ -65,6 +65,18 @@ public sealed class ErpReadOnlyConnectionTests
     }
 
     [Fact]
+    public void Smoke_scripts_run_the_exact_shipping_proof()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "MinhHuy.AIOffice.sln"))) directory = directory.Parent;
+        Assert.NotNull(directory);
+        var path = Path.Combine(directory.FullName, "src", "Platform.Persistence", "ErpReadOnlyVerification.sql");
+        // Regenerate after changing a check: set AIOFFICE_WRITE_ERP_PROOF=1 and run this test.
+        if (Environment.GetEnvironmentVariable("AIOFFICE_WRITE_ERP_PROOF") == "1") File.WriteAllText(path, ErpReadOnlyConnectionVerifier.VerificationSql);
+        Assert.Equal(ErpReadOnlyConnectionVerifier.VerificationSql, File.ReadAllText(path).Replace("\r\n", "\n"));
+    }
+
+    [Fact]
     public async Task Diagnostic_fault_is_reported_as_a_fixed_code_without_private_text()
     {
         await using var connection = new BindingStorePermissionTests.SyntheticConnection(1) { Fault = new PrivateFault("private endpoint/password") };
