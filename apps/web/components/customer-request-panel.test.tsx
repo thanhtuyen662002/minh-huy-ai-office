@@ -213,8 +213,14 @@ it("moves a ticket by dropping it on another column with its RowVersion", async 
   const card = await screen.findByRole("button", { name: "YC-0001" });
   const target = screen.getByRole("region", { name: "Cột Đang xử lý" });
   fireEvent.dragStart(card, { dataTransfer: { effectAllowed: "" } });
+  const reads = view.request.mock.calls.length;
   fireEvent.dragOver(target); fireEvent.drop(target);
-  await screen.findByText("Đã lưu thay đổi.");
+  // The card moves before the server answers and the board is never locked or reloaded.
+  expect(within(target).getByRole("button", { name: "YC-0001" })).toBeTruthy();
+  expect(screen.queryByText("Đang lưu thay đổi…")).toBeNull();
+  expect((screen.getByRole("button", { name: "Tải lại phiếu" }) as HTMLButtonElement).disabled).toBe(false);
+  await waitFor(() => expect(within(target).getByRole("button", { name: "YC-0001" }).getAttribute("aria-busy")).toBe("false"));
+  expect(view.request.mock.calls.slice(reads).map(([, , init]) => init?.method)).toEqual(["PATCH"]);
   expect(view.request.mock.calls.filter(([, , init]) => init?.method === "PATCH").map(([, , init]) => JSON.parse(String(init!.body))))
     .toEqual([{ rowVersion: requestTicket.rowVersion, status: "in_progress", assigneeUserId: requestUser }]);
   fireEvent.dragStart(await screen.findByRole("button", { name: "YC-0001" }), { dataTransfer: { effectAllowed: "" } });
@@ -277,5 +283,34 @@ it("explains when the server refuses a ticket someone else has taken", async () 
   const card = await screen.findByRole("button", { name: "YC-0001" });
   fireEvent.dragStart(card, { dataTransfer: { effectAllowed: "" } });
   fireEvent.drop(screen.getByRole("region", { name: "Cột Xong" }));
-  expect((await screen.findByRole("alert")).textContent).toBe(requestTaken);
+  expect((await screen.findByRole("alert")).textContent).toBe(`YC-0001: ${requestTaken}`);
+  // The refused move is undone and the board re-read quietly, keeping the error visible.
+  await waitFor(() => expect(within(screen.getByRole("region", { name: "Cột Mới" })).getByRole("button", { name: "YC-0001" })).toBeTruthy());
+  expect(within(screen.getByRole("region", { name: "Cột Xong" })).queryByRole("button", { name: "YC-0001" })).toBeNull();
+  await waitFor(() => expect((screen.getByRole("button", { name: "Tải lại phiếu" }) as HTMLButtonElement).disabled).toBe(false));
+  expect(screen.getByRole("alert").textContent).toBe(`YC-0001: ${requestTaken}`);
+});
+it("keeps other cards draggable while one card is still saving", async () => {
+  const other = { ...requestTicket, code: "YC-0002", id: "55555555-5555-4555-8555-555555555556", createdAt: "2020-01-01T00:00:00.000Z" };
+  let finish: (response: Response) => void = () => undefined;
+  const view = fixture((url, init) => {
+    if (init?.method === "PATCH" && url.includes("YC-0001")) return new Promise<Response>(resolve => { finish = resolve; });
+    if (init?.method === "PATCH") return Response.json({ ...other, ...JSON.parse(String(init.body)), rowVersion: "AAAAAAAAAAM=" });
+    if (url.startsWith("/api/local/customer-requests?")) return Response.json(page(url,
+      new URL(url, "http://web.test").searchParams.get("status") === "new" ? [requestTicket, other] : []));
+  });
+  const firstCard = await screen.findByRole("button", { name: "YC-0001" });
+  const done = screen.getByRole("region", { name: "Cột Xong" });
+  fireEvent.dragStart(firstCard, { dataTransfer: { effectAllowed: "" } });
+  fireEvent.drop(done);
+  await waitFor(() => expect(view.request.mock.calls.some(([, url, init]) => init?.method === "PATCH" && url.includes("YC-0001"))).toBe(true));
+  const first = within(done).getByRole("button", { name: "YC-0001" });
+  expect(first.getAttribute("draggable")).toBe("false"); expect(within(first).getByText("Đang lưu")).toBeTruthy();
+  const second = screen.getByRole("button", { name: "YC-0002" });
+  expect(second.getAttribute("draggable")).toBe("true");
+  fireEvent.dragStart(second, { dataTransfer: { effectAllowed: "" } }); fireEvent.drop(done);
+  await waitFor(() => expect(within(done).getByRole("button", { name: "YC-0002" }).getAttribute("aria-busy")).toBe("false"));
+  await act(async () => finish(Response.json({ ...requestTicket, status: "done", rowVersion: "AAAAAAAAAAI=" })));
+  await waitFor(() => expect(within(done).getByRole("button", { name: "YC-0001" }).getAttribute("aria-busy")).toBe("false"));
+  expect(within(done).getAllByRole("button").map(item => item.getAttribute("aria-label"))).toEqual(["YC-0001", "YC-0002"]);
 });
