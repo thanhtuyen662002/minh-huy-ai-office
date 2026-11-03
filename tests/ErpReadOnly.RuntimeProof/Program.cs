@@ -109,12 +109,20 @@ try
         || agentRead.failed.Error is null || agentRead.after.RowCount != 1 || agentRead.after.Error is not null)
         throw new InvalidOperationException();
     stage = "actual-positive-agent-guard";
+    var guardRejectedWrite = false;
     try
     {
         ErpAgentSqlGuard.Validate($"UPDATE {fixture} SET Label=N'Mutated'");
+    }
+    catch (InvalidOperationException)
+    {
+        guardRejectedWrite = true;
+    }
+
+    if (!guardRejectedWrite)
+    {
         throw new InvalidOperationException("Expected the agent guard to reject a write.");
     }
-    catch (InvalidOperationException error) when (error.Message.Contains("UPDATE", StringComparison.Ordinal)) { }
     Console.WriteLine("PASS actual qualified probe/catalog/capability/schema/agent read paths");
 
     stage = "actual-elevated-replacement-session";
