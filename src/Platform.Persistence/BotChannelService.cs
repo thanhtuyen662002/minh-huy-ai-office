@@ -270,7 +270,54 @@ public sealed class BotChannelService(PlatformDbContext database, IAuthorization
         if (before is { } cursor) query = query.Where(x => x.SentAt < cursor);
         var rows = await query.OrderByDescending(x => x.SentAt).ThenByDescending(x => x.MessageId).Take(limit + 1).ToArrayAsync(ct);
         await RequireMemberAsync(authority, ct);
-        return new(rows.Take(limit).Select(x => new BotMessageView(x.MessageId, x.SenderName, x.Text, x.HasImage, x.SentAt)).ToArray(), rows.Length > limit);
+        var shown = rows.Take(limit).ToArray();
+        var ids = shown.Where(x => x.HasImage).Select(x => x.MessageId).ToArray();
+        var images = ids.Length == 0 ? new Dictionary<string, int>(StringComparer.Ordinal) : (await database.BotMessageImages.AsNoTracking()
+            .Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId && x.Channel == channel && x.GroupExternalId == group && ids.Contains(x.MessageId))
+            .GroupBy(x => x.MessageId).Select(x => new { MessageId = x.Key, Count = x.Count() }).ToArrayAsync(ct))
+            .ToDictionary(x => x.MessageId, x => x.Count, StringComparer.Ordinal);
+        await RequireMemberAsync(authority, ct);
+        return new(shown.Select(x => new BotMessageView(x.MessageId, x.SenderName, x.Text, x.HasImage, x.SentAt, images.GetValueOrDefault(x.MessageId))).ToArray(),
+            rows.Length > limit);
+    }
+
+    // The bot uploads pictures after the message itself; a picture for a message that was not stored (group not selected) is ignored.
+    internal async Task<BotMessageImageReceipt> StoreImageAsync(CustomerRequestServiceBinding binding, BotMessageImageInput input, byte[] content, CancellationToken ct)
+    {
+        var message = await database.BotMessages.SingleOrDefaultAsync(x => x.TenantId == binding.TenantId && x.CompanyId == binding.CompanyId &&
+            x.Channel == input.Channel && x.GroupExternalId == input.GroupExternalId && x.MessageId == input.MessageId, ct);
+        if (message is null) return new(false);
+        if (await database.BotMessageImages.AsNoTracking().AnyAsync(x => x.TenantId == binding.TenantId && x.CompanyId == binding.CompanyId &&
+            x.Channel == input.Channel && x.GroupExternalId == input.GroupExternalId && x.MessageId == input.MessageId && x.Position == input.Position, ct))
+            return new(true);
+        message.HasImage = true;
+        database.BotMessageImages.Add(new()
+        {
+            TenantId = binding.TenantId,
+            CompanyId = binding.CompanyId,
+            Channel = input.Channel,
+            GroupExternalId = input.GroupExternalId,
+            MessageId = input.MessageId,
+            Position = input.Position,
+            ContentType = input.ContentType,
+            Content = content,
+            ReceivedAt = clock.GetUtcNow()
+        });
+        return new(true);
+    }
+
+    public async Task<BotMessageImage> ImageAsync(AuthorizationContext authority, string channel, string group, string messageId, int position, CancellationToken ct = default)
+    {
+        BotChannelJson.Channel(channel); CustomerRequestJson.Text(group, 200, opaque: true); CustomerRequestJson.Text(messageId, 200, opaque: true);
+        if (position is < 0 or >= BotChannelJson.MaximumImagesPerMessage) throw new ArgumentException("Invalid bot channel request.");
+        await RequireMemberAsync(authority, ct);
+        if (!await database.BotCustomerGroups.AsNoTracking().AnyAsync(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId &&
+            x.Channel == channel && x.ExternalId == group, ct)) throw new BotChannelNotFoundException();
+        var image = await database.BotMessageImages.AsNoTracking().Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId &&
+            x.Channel == channel && x.GroupExternalId == group && x.MessageId == messageId && x.Position == position)
+            .Select(x => new BotMessageImage(x.ContentType, x.Content)).SingleOrDefaultAsync(ct) ?? throw new BotChannelNotFoundException();
+        await RequireMemberAsync(authority, ct);
+        return image;
     }
 
     private async Task RequireMemberAsync(AuthorizationContext authority, CancellationToken ct)

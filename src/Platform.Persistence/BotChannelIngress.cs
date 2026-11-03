@@ -26,6 +26,15 @@ public sealed class BotChannelIngress(PlatformDbContext database, CustomerReques
         return ExecuteAsync(signature, captured, "POST", "/internal/bot-messages", binding => service.StoreMessagesAsync(binding, input, ct), ct);
     }
 
+    public const string ImagesPath = "/internal/bot-messages/images";
+
+    public Task<BotMessageImageReceipt> ImageAsync(CustomerRequestSignature signature, ReadOnlyMemory<byte> body, CancellationToken ct = default)
+    {
+        var captured = body.ToArray();
+        var (input, content) = BotChannelJson.Image(BotChannelJson.Read<BotMessageImageInput>(captured, BotChannelJson.MaximumImageBodyBytes));
+        return ExecuteAsync(signature, captured, "POST", ImagesPath, binding => service.StoreImageAsync(binding, input, content, ct), ct);
+    }
+
     public Task<bool> AckAsync(CustomerRequestSignature signature, Guid id, ReadOnlyMemory<byte> body, CancellationToken ct = default)
     {
         var captured = body.ToArray(); var input = BotChannelJson.Read<BotCommandAck>(captured); BotChannelJson.Channel(input.Channel);

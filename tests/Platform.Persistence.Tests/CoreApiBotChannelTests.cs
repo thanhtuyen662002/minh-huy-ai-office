@@ -45,6 +45,8 @@ public sealed class CoreApiBotChannelTests
         await Check(await client.PostAsJsonAsync("/internal/bot-messages", new { }), HttpStatusCode.NotFound);
         var messages = root.Replace("/bot-channels", "/bot-messages", StringComparison.Ordinal);
         await Check(await client.GetAsync(messages), HttpStatusCode.NotFound); await Check(await client.GetAsync(messages + "/zalo?group=g"), HttpStatusCode.NotFound);
+        await Check(await client.PostAsJsonAsync(BotChannelIngress.ImagesPath, new { }), HttpStatusCode.NotFound);
+        await Check(await client.GetAsync(messages + "/zalo/image?group=g&message=m&position=0"), HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -72,6 +74,22 @@ public sealed class CoreApiBotChannelTests
         await Check(await client.GetAsync(messages + "/zalo?group=unknown"), HttpStatusCode.NotFound);
         await Check(await client.GetAsync(messages + "/zalo"), HttpStatusCode.BadRequest);
         await Check(await client.GetAsync(messages + "/zalo?group=customer&extra=1"), HttpStatusCode.BadRequest);
+
+        var png = BotMessageTests.Png();
+        using var image = f.Signed("POST", BotChannelIngress.ImagesPath,
+            BotChannelFixture.Bytes(new BotMessageImageInput("zalo", "customer", "m1", 0, "image/png", Convert.ToBase64String(png))));
+        var stored = await client.SendAsync(image); await Check(stored, HttpStatusCode.OK);
+        Assert.True((await stored.Content.ReadFromJsonAsync<BotMessageImageReceipt>())!.Stored);
+        var withImage = await client.GetFromJsonAsync<BotMessagePage>(messages + "/zalo?group=customer&limit=10");
+        Assert.Equal((true, 1), (withImage!.Items[0].HasImage, withImage.Items[0].ImageCount));
+        var file = await client.GetAsync(messages + "/zalo/image?group=customer&message=m1&position=0");
+        Assert.Equal(HttpStatusCode.OK, file.StatusCode); Assert.True(file.Headers.CacheControl?.NoStore);
+        Assert.Equal("image/png", file.Content.Headers.ContentType?.MediaType); Assert.Equal(png, await file.Content.ReadAsByteArrayAsync());
+        Assert.Equal("nosniff", file.Headers.GetValues("X-Content-Type-Options").Single());
+        await Check(await client.GetAsync(messages + "/zalo/image?group=customer&message=m1&position=1"), HttpStatusCode.NotFound);
+        await Check(await client.GetAsync(messages + "/zalo/image?group=unknown&message=m1&position=0"), HttpStatusCode.NotFound);
+        await Check(await client.GetAsync(messages + "/zalo/image?group=customer&message=m1"), HttpStatusCode.BadRequest);
+        await Check(await client.GetAsync(messages + "/zalo/image?group=customer&message=m1&position=10"), HttpStatusCode.BadRequest);
     }
 
     [Fact]

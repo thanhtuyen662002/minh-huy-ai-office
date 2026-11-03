@@ -88,6 +88,17 @@ internal static class BotChannelModelConfiguration
             entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.SentAt });
             entity.HasOne<BotChannelRecord>().WithMany().HasForeignKey(x => new { x.TenantId, x.CompanyId, x.Channel }).OnDelete(DeleteBehavior.Restrict);
         });
+        model.Entity<BotMessageImageRecord>(entity =>
+        {
+            entity.ToTable("BotMessageImages");
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.Channel, x.GroupExternalId, x.MessageId, x.Position });
+            entity.Property(x => x.Channel).HasMaxLength(16).UseCollation("Latin1_General_100_BIN2");
+            entity.Property(x => x.GroupExternalId).HasMaxLength(200).UseCollation("Latin1_General_100_BIN2");
+            entity.Property(x => x.MessageId).HasMaxLength(200).UseCollation("Latin1_General_100_BIN2");
+            entity.Property(x => x.ContentType).HasMaxLength(32);
+            entity.HasOne<BotMessageRecord>().WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.Channel, x.GroupExternalId, x.MessageId }).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     private static void Company<T>(EntityTypeBuilder<T> entity) where T : class =>

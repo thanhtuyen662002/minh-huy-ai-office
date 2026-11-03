@@ -93,3 +93,17 @@ public sealed class BotMessageRecord
     public DateTimeOffset SentAt { get; set; }
     public DateTimeOffset ReceivedAt { get; set; }
 }
+
+// Picture bytes the bot uploads for a stored message, shown on the Tin nhắn page; removed with the message.
+public sealed class BotMessageImageRecord
+{
+    public Guid TenantId { get; set; }
+    public Guid CompanyId { get; set; }
+    public required string Channel { get; set; }
+    public required string GroupExternalId { get; set; }
+    public required string MessageId { get; set; }
+    public int Position { get; set; }
+    public required string ContentType { get; set; }
+    public byte[] Content { get; set; } = [];
+    public DateTimeOffset ReceivedAt { get; set; }
+}

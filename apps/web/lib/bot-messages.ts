@@ -1,7 +1,8 @@
 import { BotChannel, botChannel, botObject } from "./bot-channels";
 export type BotMessageGroup = { channel: BotChannel; externalId: string; displayName: string; customerName: string;
   lastMessageAt: string | null; messageCount: number };
-export type BotMessage = { messageId: string; senderName: string; text: string; hasImage: boolean; sentAt: string };
+// imageCount = pictures the bot uploaded for this message (shown as thumbnails); older servers do not send it.
+export type BotMessage = { messageId: string; senderName: string; text: string; hasImage: boolean; sentAt: string; imageCount: number };
 export type BotMessagePage = { items: BotMessage[]; hasMore: boolean };
 const line = (v: unknown, max: number): v is string => typeof v === "string" && !!v.trim() && v.length <= max && !/[\u0000-\u001f\u007f]/.test(v);
 // Message text keeps line breaks and tabs; other control characters are refused.
@@ -18,7 +19,7 @@ export function parseBotMessageGroups(v: unknown): BotMessageGroup[] | null {
 export function parseBotMessagePage(v: unknown, limit: number): BotMessagePage | null {
   if (!botObject(v) || typeof v.hasMore !== "boolean" || !Array.isArray(v.items) || v.items.length > limit) return null;
   const items = v.items.map(m => botObject(m) && line(m.messageId, 200) && line(m.senderName, 1000) && body(m.text) && typeof m.hasImage === "boolean"
-    && (m.text !== "" || m.hasImage) && date(m.sentAt)
-    ? { messageId: m.messageId, senderName: m.senderName, text: m.text, hasImage: m.hasImage, sentAt: m.sentAt } : null);
+    && (m.text !== "" || m.hasImage) && date(m.sentAt) && (m.imageCount === undefined || Number.isSafeInteger(m.imageCount) && Number(m.imageCount) >= 0 && Number(m.imageCount) <= 10)
+    ? { messageId: m.messageId, senderName: m.senderName, text: m.text, hasImage: m.hasImage, sentAt: m.sentAt, imageCount: Number(m.imageCount ?? 0) } : null);
   return items.some(m => m === null) ? null : { items: items as BotMessage[], hasMore: v.hasMore };
 }
