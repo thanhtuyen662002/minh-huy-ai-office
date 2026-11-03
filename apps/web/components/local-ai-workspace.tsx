@@ -628,7 +628,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       if (!response.ok || !isCurrent(generation)) return;
       const snapshot = parseTaskSnapshot(await readJson(response));
       if (!isCurrent(generation) || !snapshot || snapshot.taskId.toLowerCase() !== taskId.toLowerCase()) return;
-      const checkpoint = snapshot.resultPayloadJson ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
+      // Only a task the archive already reports as completed may show its checkpoint answer.
+      const checkpoint = detail.task.status === 6 && detail.result?.kind === "answer" && snapshot.resultPayloadJson
+        ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
       const failure = snapshot.failureReason ? `Công việc báo lỗi: ${snapshot.failureReason}` : null;
       if (!checkpoint && !failure) return;
       setMessages(current => current.map(message => message.id !== `assistant-${taskId}` ? message

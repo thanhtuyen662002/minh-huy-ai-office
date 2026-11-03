@@ -52,8 +52,10 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
   async function openCompleted(page) {
     const row = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "Hoàn thành", exact: true }) });
     await row.getByRole("button", { name: "Xem công việc " + question, exact: true }).click();
+    // Opening a saved task reopens it as a chat in Trợ lý: the question, then the saved answer.
     await page.getByText(answer, { exact: true }).waitFor();
-    requireProof(await page.getByRole("article", { name: "Chi tiết công việc", exact: true }).getByText("Mã công việc: " + fixture.taskIds[0], { exact: true }).count() === 1);
+    requireProof(await page.getByText(question, { exact: true }).count() >= 1
+      && await page.getByRole("region", { name: "Công việc của tôi", exact: true }).count() === 0);
   }
   const tables = { Tasks: "TenantId,CompanyId,Id", TaskSteps: "TenantId,CompanyId,TaskId,Id",
     TaskEvents: "TenantId,CompanyId,TaskId,Sequence", TaskCheckpoints: "TenantId,CompanyId,TaskId,StepId,Version",
@@ -94,11 +96,11 @@ export async function verifyTaskHistory({ directory, manifest, browser, ownerPag
       && JSON.parse(uppercaseDetail.text).task.taskId === fixture.taskIds[0] && JSON.parse(uppercaseDetail.text).result.answer === answer);
     requireProof((await get(ownerPage, `/api/local/tasks/${fixture.taskIds[3]}/history` + query)).status === 404);
     for (const status of ["Chờ xử lý", "Thất bại"]) {
+      await openHistory(ownerPage);
       await ownerPage.getByRole("row").filter({ has: ownerPage.getByRole("cell", { name: status, exact: true }) })
         .getByRole("button", { name: "Xem công việc " + question, exact: true }).click();
-      await ownerPage.getByRole("article", { name: "Chi tiết công việc", exact: true }).waitFor();
+      await ownerPage.getByText(status === "Thất bại" ? /^(Trạng thái: Thất bại\.|Công việc báo lỗi: )/ : "Trạng thái: Chờ xử lý.").waitFor();
       requireProof(await ownerPage.getByText(answer, { exact: true }).count() === 0);
-      await ownerPage.getByText(status === "Thất bại" ? /Công việc không hoàn thành/ : /Công việc chưa hoàn thành/).waitFor();
     }
     stage("reload-and-new-issued-session-recovery"); await ownerPage.reload(); await openHistory(ownerPage); await openCompleted(ownerPage);
     const oldSid = await cookie(ownerContext); requireProof(oldSid);
