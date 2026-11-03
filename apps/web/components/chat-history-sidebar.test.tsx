@@ -9,12 +9,13 @@ const answer = { kind: "answer", answer: "Trả lời 1", evidence: "ai-agent-re
 function fixture(pages: Record<string, unknown>, extra: Partial<Parameters<typeof ChatHistorySidebar>[0]> = {}) {
   const onOpen = vi.fn(), onNew = vi.fn();
   const request = vi.fn(async (_g: number, url: string, _init?: RequestInit) => {
-    if (url.includes("/history?")) return Response.json({ companyId: company, task: task(1), result: answer, resultUnavailable: false });
+    if (url.includes("/history?")) { const id = url.split("/")[4]; const n = Number(id.slice(-12));
+      return Response.json({ companyId: company, task: { ...task(n), ...(n === 2 ? { createdAtUtc: "2026-10-09T01:00:00Z", updatedAtUtc: "2026-10-09T01:00:01Z" } : {}) }, result: answer, resultUnavailable: false }); }
     const offset = new URL(url, "http://x.invalid").searchParams.get("offset")!;
     return Response.json(pages[offset]);
   });
   render(<ChatHistorySidebar companyId={company} userId={user} generation={1} isCurrent={() => true} validate={async () => true}
-    request={request} onUnauthorized={vi.fn()} activeTaskId={null} refreshKey={0} onOpen={onOpen} onNew={onNew} {...extra} />);
+    request={request} onUnauthorized={vi.fn()} activeConversationId={null} refreshKey={0} onOpen={onOpen} onNew={onNew} {...extra} />);
   return { request, onOpen, onNew };
 }
 
@@ -22,7 +23,7 @@ it("lists past questions and opens one with read-only requests", async () => {
   const { request, onOpen, onNew } = fixture({ "0": { companyId: company, items: [task(1), task(2, 5)], offset: 0, limit: 25, hasMore: false } });
   fireEvent.click(await screen.findByRole("button", { name: /Câu hỏi 1/ }));
   await waitFor(() => expect(onOpen).toHaveBeenCalledOnce());
-  expect(onOpen.mock.calls[0][0].result.answer).toBe("Trả lời 1");
+  expect(onOpen.mock.calls[0][0]).toBe(task(1).taskId); expect(onOpen.mock.calls[0][1][0].result.answer).toBe("Trả lời 1");
   expect(screen.getByText(/Thất bại/)).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Cuộc trò chuyện mới" })); expect(onNew).toHaveBeenCalledOnce();
   expect(request.mock.calls.every(([, , init]) => !init?.method || init.method === "GET")).toBe(true);
@@ -40,6 +41,18 @@ it("loads more history on demand", async () => {
 });
 
 it("marks the open conversation", async () => {
-  fixture({ "0": { companyId: company, items: [task(1)], offset: 0, limit: 25, hasMore: false } }, { activeTaskId: task(1).taskId });
+  fixture({ "0": { companyId: company, items: [task(1)], offset: 0, limit: 25, hasMore: false } }, { activeConversationId: task(1).taskId });
   expect((await screen.findByRole("button", { name: /Câu hỏi 1/ })).getAttribute("aria-current")).toBe("true");
+});
+
+it("groups questions remembered as one conversation and opens them together, oldest first", async () => {
+  const later = { ...task(2), createdAtUtc: "2026-10-09T01:00:00Z", updatedAtUtc: "2026-10-09T01:00:01Z" };
+  window.localStorage.setItem(`aioffice-chat-conversations:${company}:${user}`, JSON.stringify({ [later.taskId]: task(1).taskId }));
+  const { request, onOpen } = fixture({ "0": { companyId: company, items: [later, task(1)], offset: 0, limit: 25, hasMore: false } });
+  const item = await screen.findByRole("button", { name: /Câu hỏi 1/ });
+  expect(screen.queryByRole("button", { name: /Câu hỏi 2/ })).toBeNull(); expect(item.textContent).toContain("2 câu hỏi");
+  fireEvent.click(item); await waitFor(() => expect(onOpen).toHaveBeenCalledOnce());
+  expect(request.mock.calls.filter(([, url]) => url.includes("/history?")).map(([, url]) => url.split("/")[4]))
+    .toEqual([task(1).taskId, later.taskId]);
+  window.localStorage.clear();
 });
