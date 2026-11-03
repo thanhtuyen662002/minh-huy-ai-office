@@ -73,6 +73,64 @@ public sealed class BotMessageTests
         Assert.Equal("", BotChannelJson.Messages(new("zalo", [Message() with { Text = null, HasImage = true }]), now).Messages[0].Text);
     }
 
+    [Fact]
+    public async Task PicturesAttachToStoredMessagesOnlyAndAreReadableByMembers()
+    {
+        using var f = await Selected();
+        var now = f.Clock.Now;
+        await Send(f, new("zalo", [new("customer-group-1", "m1", "Anh Minh", now.AddMinutes(-1), "", true), new("customer-group-1", "m2", "Anh Minh", now, "Chữ")]));
+        var png = Png();
+        Assert.True((await SendImage(f, new("zalo", "customer-group-1", "m1", 0, "image/png", Convert.ToBase64String(png)))).Stored);
+        Assert.True((await SendImage(f, new("zalo", "customer-group-1", "m1", 0, "image/png", Convert.ToBase64String(png)))).Stored);
+        Assert.False((await SendImage(f, new("zalo", "other-group", "m1", 0, "image/png", Convert.ToBase64String(png)))).Stored);
+        Assert.False((await SendImage(f, new("zalo", "customer-group-1", "missing", 0, "image/png", Convert.ToBase64String(png)))).Stored);
+        Assert.True((await SendImage(f, new("zalo", "customer-group-1", "m2", 1, "image/png", Convert.ToBase64String(png)))).Stored);
+
+        await using var db = f.Database(); var service = f.Service(db);
+        Assert.Equal(2, db.BotMessageImages.Count());
+        var page = await service.MessagesAsync(f.Authority, "zalo", "customer-group-1", null, 10);
+        Assert.Equal([("m2", true, 1), ("m1", true, 1)], page.Items.Select(x => (x.MessageId, x.HasImage, x.ImageCount)).ToArray());
+        var image = await service.ImageAsync(f.Authority, "zalo", "customer-group-1", "m1", 0);
+        Assert.Equal("image/png", image.ContentType); Assert.Equal(png, image.Content);
+        await Assert.ThrowsAsync<BotChannelNotFoundException>(() => service.ImageAsync(f.Authority, "zalo", "customer-group-1", "m1", 1));
+        await Assert.ThrowsAsync<BotChannelNotFoundException>(() => service.ImageAsync(f.Authority, "zalo", "other-group", "m1", 0));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.ImageAsync(f.Authority, "zalo", "customer-group-1", "m1", 10));
+    }
+
+    [Theory]
+    [InlineData("type")]
+    [InlineData("svg")]
+    [InlineData("mismatch")]
+    [InlineData("base64")]
+    [InlineData("position")]
+    [InlineData("large")]
+    [InlineData("channel")]
+    public void PicturesAreStrict(string attack)
+    {
+        var png = Convert.ToBase64String(Png());
+        var good = new BotMessageImageInput("zalo", "customer-group-1", "m1", 0, "image/png", png);
+        var input = attack switch
+        {
+            "type" => good with { ContentType = "text/html" },
+            "svg" => good with { ContentType = "image/svg+xml", Data = Convert.ToBase64String("<svg xmlns='http://www.w3.org/2000/svg'/>"u8.ToArray()) },
+            "mismatch" => good with { ContentType = "image/jpeg" },
+            "base64" => good with { Data = "not base64!" },
+            "position" => good with { Position = BotChannelJson.MaximumImagesPerMessage },
+            "large" => good with { Data = Convert.ToBase64String([.. Png(), .. new byte[BotChannelJson.MaximumImageBytes]]) },
+            _ => good with { Channel = "telegram" }
+        };
+        Assert.Throws<ArgumentException>(() => BotChannelJson.Image(input));
+        Assert.Equal(Png(), BotChannelJson.Image(good).Content);
+    }
+
+    internal static byte[] Png() => [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1];
+
+    private static async Task<BotMessageImageReceipt> SendImage(BotChannelFixture f, BotMessageImageInput input)
+    {
+        var bytes = BotChannelFixture.Bytes(input); await using var db = f.Database();
+        return await f.Ingress(db).ImageAsync(f.Sign(bytes, "POST", BotChannelIngress.ImagesPath), bytes);
+    }
+
     private static async Task<BotChannelFixture> Selected()
     {
         var f = new BotChannelFixture(); await f.Heartbeat();

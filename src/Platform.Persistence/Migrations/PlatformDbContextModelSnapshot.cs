@@ -236,6 +236,49 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.ToTable("BotCustomerGroups", "aioffice");
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotMessageImageRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("GroupExternalId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("MessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("TenantId", "CompanyId", "Channel", "GroupExternalId", "MessageId", "Position");
+
+                    b.ToTable("BotMessageImages", "aioffice");
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotMessageRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -2664,6 +2707,15 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "Channel")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotMessageImageRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.BotMessageRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "Channel", "GroupExternalId", "MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

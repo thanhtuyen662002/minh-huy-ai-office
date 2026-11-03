@@ -33,7 +33,10 @@ public sealed record BotMessageInput(string GroupExternalId, string MessageId, s
 public sealed record BotMessageBatch(string Channel, BotMessageInput[] Messages);
 public sealed record BotMessageReceipt(int Accepted, int Ignored);
 public sealed record BotMessageGroupView(string Channel, string ExternalId, string DisplayName, string CustomerName, DateTimeOffset? LastMessageAt, int MessageCount);
-public sealed record BotMessageView(string MessageId, string SenderName, string Text, bool HasImage, DateTimeOffset SentAt);
+public sealed record BotMessageView(string MessageId, string SenderName, string Text, bool HasImage, DateTimeOffset SentAt, int ImageCount = 0);
+public sealed record BotMessageImageInput(string Channel, string GroupExternalId, string MessageId, int Position, string ContentType, string Data);
+public sealed record BotMessageImageReceipt(bool Stored);
+public sealed record BotMessageImage(string ContentType, byte[] Content);
 public sealed record BotMessagePage(BotMessageView[] Items, bool HasMore);
 public sealed record BotAuditView(Guid Id, string? Channel, Guid ActorUserId, string Field, string? Before, string? After, DateTimeOffset Timestamp);
 public sealed class UtcInstantConverter : JsonConverter<DateTimeOffset>
@@ -58,9 +61,9 @@ public static class BotChannelJson
         MaxDepth = 8
     };
 
-    public static T Read<T>(ReadOnlyMemory<byte> bytes)
+    public static T Read<T>(ReadOnlyMemory<byte> bytes, int maximumBytes = MaximumBodyBytes)
     {
-        if (bytes.Length is < 1 or > MaximumBodyBytes) throw Invalid();
+        if (bytes.Length < 1 || bytes.Length > maximumBytes) throw Invalid();
         _ = new UTF8Encoding(false, true).GetCharCount(bytes.Span);
         using var document = JsonDocument.Parse(bytes, new JsonDocumentOptions { MaxDepth = 8 });
         if (document.RootElement.ValueKind != JsonValueKind.Object) throw Invalid();
@@ -175,6 +178,38 @@ public static class BotChannelJson
         }).ToArray();
         if (messages.Select(x => (x.GroupExternalId, x.MessageId)).Distinct().Count() != messages.Length) throw Invalid();
         return input with { Messages = messages };
+    }
+
+    public const int MaximumImageBytes = 5 * 1024 * 1024;
+    public const int MaximumImagesPerMessage = 10;
+    // Base64 grows the picture by a third; the rest is the small JSON envelope.
+    public const int MaximumImageBodyBytes = MaximumImageBytes / 3 * 4 + 8192;
+    public static readonly string[] ImageContentTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+    // One picture of a message the bot already sent. Only common photo formats whose bytes match the declared type are kept,
+    // so the web never serves a script or SVG under an image name.
+    public static (BotMessageImageInput Input, byte[] Content) Image(BotMessageImageInput input)
+    {
+        Channel(input.Channel);
+        CustomerRequestJson.Text(input.GroupExternalId, 200, opaque: true);
+        CustomerRequestJson.Text(input.MessageId, 200, opaque: true);
+        if (input.Position is < 0 or >= MaximumImagesPerMessage || !ImageContentTypes.Contains(input.ContentType, StringComparer.Ordinal)) throw Invalid();
+        if (input.Data is null || input.Data.Length is < 4 or > MaximumImageBytes / 3 * 4 + 4) throw Invalid();
+        byte[] content;
+        try { content = Convert.FromBase64String(input.Data); }
+        catch (FormatException) { throw Invalid(); }
+        if (content.Length is < 12 or > MaximumImageBytes || ImageType(content) != input.ContentType) throw Invalid();
+        return (input with { Data = "" }, content);
+    }
+
+    public static string? ImageType(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length < 12) return null;
+        if (bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff) return "image/jpeg";
+        if (bytes[..8].SequenceEqual((byte[])[137, 80, 78, 71, 13, 10, 26, 10])) return "image/png";
+        if (bytes[..6].SequenceEqual("GIF87a"u8) || bytes[..6].SequenceEqual("GIF89a"u8)) return "image/gif";
+        if (bytes[..4].SequenceEqual("RIFF"u8) && bytes[8..12].SequenceEqual("WEBP"u8)) return "image/webp";
+        return null;
     }
 
     private static string Display(string value)
