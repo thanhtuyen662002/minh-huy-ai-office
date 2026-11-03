@@ -93,3 +93,32 @@ it("opens the group with the newest messages without an extra click", async () =
   expect(fetcher.mock.calls.some(([url]) => String(url).includes("group=g-1&"))).toBe(true);
   expect(fetcher.mock.calls.some(([url]) => String(url).includes("group=g-2&") || String(url).includes("group=g-0&"))).toBe(false);
 });
+
+it("shows uploaded pictures as thumbnails that open full size, with bold coloured sender names", async () => {
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
+    if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/bot-messages?")) return Response.json([group]);
+    if (url.startsWith("/api/local/bot-messages/zalo?")) return Response.json({ items: [
+      { ...message(3, "@Nguyễn Hoàng Đăng xem https://example.test/a giúp"), imageCount: 0 },
+      { ...message(2, "Ảnh lỗi"), hasImage: true, imageCount: 2 }], hasMore: false });
+    throw new Error("Unexpected owned fixture route");
+  });
+  vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
+  render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Tin nhắn" }));
+  await screen.findByText("Ảnh lỗi");
+  const thumbs = screen.getAllByRole("img");
+  expect(thumbs).toHaveLength(2);
+  expect(thumbs[1].getAttribute("src")).toBe(`/api/local/bot-messages/zalo/image?companyId=${company}&group=g-1&message=m2&position=1`);
+  expect(screen.getByText("@Nguyễn Hoàng Đăng").tagName).toBe("STRONG");
+  expect(screen.getByRole("link", { name: "https://example.test/a" }).getAttribute("rel")).toContain("noopener");
+  expect(screen.getAllByText("Anh Minh")[0].className).toContain("font-bold");
+  fireEvent.click(screen.getAllByRole("button", { name: /^Xem Ảnh 1 của Anh Minh/ })[0]);
+  const viewer = screen.getByRole("dialog"); expect(viewer.querySelector("img")!.getAttribute("src")).toContain("position=0");
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+  // A picture that cannot be loaded shows a short note instead of a broken image.
+  fireEvent.error(screen.getAllByRole("img")[1]);
+  expect(screen.getByText("Không tải được ảnh")).toBeTruthy();
+});
