@@ -91,3 +91,64 @@ it.each([401, 403])("drops page content on refusal %i", async status => {
   if (status === 403) expect(screen.queryByRole("button", { name: "Khoá sổ cuối tháng" })).toBeNull();
   expect(screen.queryByText("PRIVATE")).toBeNull();
 });
+
+const file = (name: string, text = "%PDF") => new File([text], name, { type: "application/pdf" });
+it("uploads a file, shows its text for review and saves it as a page under the open customer", async () => {
+  const fresh = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+  const view = fixture((url, init) => url.includes("/extract?") ? Response.json({ title: "Hướng dẫn", parts: ["# Khoá sổ\n- Bước 1"], truncated: false })
+    : init?.method === "POST" ? Response.json({ ...page(fresh, "# Khoá sổ\n- Bước 1"), title: "Hướng dẫn" }) : undefined);
+  await screen.findByRole("heading", { name: "Khoá sổ cuối tháng" });
+  fireEvent.change(screen.getByLabelText("Chọn file để tạo trang"), { target: { files: [file("Hướng dẫn.pdf")] } });
+  await waitFor(() => expect((screen.getByLabelText("Nội dung") as HTMLTextAreaElement).value).toBe("# Khoá sổ\n- Bước 1"));
+  expect((screen.getByLabelText("Tiêu đề") as HTMLInputElement).value).toBe("Hướng dẫn");
+  expect((screen.getByLabelText(/Khách hàng/) as HTMLInputElement).value).toBe("Cty Hoà Phát");
+  expect(screen.getByText(/Đã lấy chữ từ file “Hướng dẫn.pdf”/)).toBeTruthy();
+  const upload = view.request.mock.calls.find(([, url]) => url.includes("/extract?"))!;
+  expect(upload[1]).toBe(`/api/local/knowledge-pages/extract?companyId=${company}&fileName=H%C6%B0%E1%BB%9Bng%20d%E1%BA%ABn.pdf`);
+  expect(upload[2]).toMatchObject({ method: "POST", headers: { "Content-Type": "application/octet-stream" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu trang" }));
+  await screen.findByRole("heading", { name: "Hướng dẫn" });
+  const post = view.request.mock.calls.find(([, url, init]) => init?.method === "POST" && !url.includes("/extract?"))!;
+  expect(JSON.parse(post[2]!.body as string)).toEqual({ title: "Hướng dẫn", body: "# Khoá sổ\n- Bước 1", customerName: "Cty Hoà Phát" });
+});
+
+it("saves a long file as numbered pages and retries only the parts that failed", async () => {
+  let posts = 0;
+  const view = fixture((url, init) => {
+    if (url.includes("/extract?")) return Response.json({ title: "Bảng giá", parts: ["phần một", "phần hai", "phần ba"], truncated: true });
+    if (init?.method !== "POST") return undefined;
+    posts++;
+    if (posts === 2) return Response.json({ error: "x" }, { status: 503 });
+    const body = JSON.parse(init.body as string);
+    return Response.json({ ...page(`dddddddd-dddd-4ddd-8ddd-00000000000${posts}`, body.body), title: body.title, customerName: null });
+  });
+  await screen.findByRole("heading", { name: "Khoá sổ cuối tháng" });
+  fireEvent.click(screen.getByRole("button", { name: "Trang mới" }));
+  fireEvent.click(screen.getByRole("button", { name: "Huỷ" }));
+  fireEvent.change(screen.getByLabelText("Chọn file để tạo trang"), { target: { files: [file("Bảng giá.xlsx")] } });
+  await screen.findByText(/sẽ được lưu thành 3 trang/);
+  expect(screen.getByText(/chỉ lấy 2.000.000 ký tự đầu/)).toBeTruthy();
+  fireEvent.change(screen.getByLabelText(/Khách hàng/), { target: { value: "" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu 3 trang" }));
+  expect((await screen.findByRole("alert")).textContent).toMatch(/Đã lưu 1\/3 trang/);
+  fireEvent.click(screen.getByRole("button", { name: "Lưu 2 trang" }));
+  await waitFor(() => expect(posts).toBe(4));
+  const titles = view.request.mock.calls.filter(([, url, init]) => init?.method === "POST" && !url.includes("/extract?"))
+    .map(([, , init]) => JSON.parse(init!.body as string).title);
+  expect(titles).toEqual(["Bảng giá (phần 1/3)", "Bảng giá (phần 2/3)", "Bảng giá (phần 2/3)", "Bảng giá (phần 3/3)"]);
+  await waitFor(() => expect(screen.queryByText(/sẽ được lưu thành/)).toBeNull());
+});
+
+it("inserts a file into the page being edited and explains files it cannot read", async () => {
+  fixture(url => url.includes("fileName=cu.doc") ? Response.json({ error: "x", reason: "legacy" }, { status: 422 })
+    : url.includes("/extract?") ? Response.json({ title: "Ghi chú", parts: ["Nội dung file"], truncated: false }) : undefined);
+  await screen.findByRole("heading", { name: "Khoá sổ cuối tháng" });
+  fireEvent.click(screen.getByRole("button", { name: "Sửa" }));
+  fireEvent.change(screen.getByLabelText("Chọn file để chèn nội dung"), { target: { files: [file("ghi-chu.txt")] } });
+  await waitFor(() => expect((screen.getByLabelText("Nội dung") as HTMLTextAreaElement).value)
+    .toBe("- [ ] Kiểm tra phiếu thu\nXem YC-0012 và YC-0012\n\nNội dung file"));
+  fireEvent.change(screen.getByLabelText("Chọn file để chèn nội dung"), { target: { files: [file("cu.doc")] } });
+  expect((await screen.findByRole("alert")).textContent).toMatch(/Lưu thành .docx/);
+  fireEvent.change(screen.getByLabelText("Chọn file để chèn nội dung"), { target: { files: [new File([new Uint8Array(20 * 1024 * 1024 + 1)], "lon.pdf")] } });
+  await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/tối đa 20 MB/));
+});

@@ -191,7 +191,9 @@ public sealed class CustomerRequestBoundaryMiddleware(RequestDelegate next)
         { await next(context); return; }
         var callerAbort = context.RequestAborted;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(callerAbort);
-        deadline.CancelAfter(TimeSpan.FromSeconds(10));
+        // Reading text out of an uploaded knowledge file can take longer than a normal request.
+        var extract = context.Request.Path.Value?.EndsWith("/knowledge-pages/extract", StringComparison.Ordinal) == true;
+        deadline.CancelAfter(TimeSpan.FromSeconds(extract ? 55 : 10));
         context.RequestAborted = deadline.Token;
         try { await next(context); }
         catch (OperationCanceledException) when (callerAbort.IsCancellationRequested) { throw; }

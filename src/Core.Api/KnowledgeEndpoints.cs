@@ -21,6 +21,7 @@ internal static class KnowledgeEndpoints
             app.MapGet(PagesPath + "/{id:guid}", () => Results.NotFound());
             app.MapPut(PagesPath + "/{id:guid}", () => Results.NotFound());
             app.MapDelete(PagesPath + "/{id:guid}", () => Results.NotFound());
+            app.MapPost(PagesPath + "/extract", () => Results.NotFound());
             return;
         }
         app.MapGet(PagesPath, (Guid companyId, HttpRequest request, IRequestAuthorizationContextAccessor accessor, [FromServices] KnowledgeBase pages,
@@ -32,6 +33,17 @@ internal static class KnowledgeEndpoints
                 try { return Results.Ok(await pages.CreateAsync(authority, companyId, KnowledgePageJson.Read(bytes, update: false), ct)); }
                 finally { CryptographicOperations.ZeroMemory(bytes); }
             })).RequireAuthorization();
+        app.MapPost(PagesPath + "/extract", (Guid companyId, HttpRequest request, IRequestAuthorizationContextAccessor accessor,
+            [FromServices] KnowledgeBase pages, CancellationToken ct) => Execute(accessor, companyId, request, async authority =>
+            {
+                // The raw file is the body and its name travels in the query.
+                var name = request.Query["fileName"];
+                if (name.Count != 1 || string.IsNullOrWhiteSpace(name[0]) || name[0]!.Length > KnowledgeFileText.MaximumFileName
+                    || !string.Equals(request.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException();
+                var bytes = await ReadFile(request, ct);
+                var extract = await pages.ExtractAsync(authority, companyId, name[0]!, bytes, ct);
+                return Results.Json(new { title = extract.Title, parts = extract.Parts, truncated = extract.Truncated }, RelaxedJson);
+            }, allowedQuery: "fileName")).RequireAuthorization();
         app.MapGet(PagesPath + "/{id:guid}", (Guid companyId, Guid id, HttpRequest request, IRequestAuthorizationContextAccessor accessor,
             [FromServices] KnowledgeBase pages, CancellationToken ct) =>
             Execute(accessor, companyId, request, async authority => Results.Ok(await pages.GetAsync(authority, companyId, id, ct)))).RequireAuthorization();
@@ -53,6 +65,25 @@ internal static class KnowledgeEndpoints
             }, allowedQuery: "rowVersion")).RequireAuthorization();
     }
 
+    // Vietnamese text stays UTF-8 instead of \uXXXX escapes so a long file fits the web response bound.
+    private static readonly JsonSerializerOptions RelaxedJson = new(JsonSerializerDefaults.Web)
+    { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    private static async Task<byte[]> ReadFile(HttpRequest request, CancellationToken ct)
+    {
+        var maximum = KnowledgeFileText.MaximumFileBytes;
+        if (request.ContentLength > maximum) throw new KnowledgeFileUnreadableException("tooLarge");
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while ((read = await request.Body.ReadAsync(chunk, ct)) > 0)
+        {
+            buffer.Write(chunk, 0, read);
+            if (buffer.Length > maximum) throw new KnowledgeFileUnreadableException("tooLarge");
+        }
+        return buffer.ToArray();
+    }
+
     private static async Task<IResult> Execute(IRequestAuthorizationContextAccessor accessor, Guid companyId, HttpRequest request,
         Func<Shared.Contracts.AuthorizationContext, Task<IResult>> action, string? allowedQuery = null)
     {
@@ -65,6 +96,8 @@ internal static class KnowledgeEndpoints
             return await action(authority);
         }
         catch (UnauthorizedAccessException) { return Results.Json(new { error = "Knowledge pages are unavailable." }, statusCode: 403); }
+        catch (KnowledgeFileUnreadableException error)
+        { return Results.Json(new { error = "Knowledge file is unreadable.", reason = error.Reason }, statusCode: 422); }
         catch (KnowledgePageNotFoundException) { return Results.NotFound(new { error = "Knowledge page is unavailable." }); }
         catch (Exception error) when (error is CustomerRequestConflictException or DbUpdateConcurrencyException)
         { return Results.Conflict(new { error = "Knowledge page changed. Reload it before saving." }); }

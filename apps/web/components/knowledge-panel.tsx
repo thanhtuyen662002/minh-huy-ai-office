@@ -1,8 +1,9 @@
 "use client";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Building2, FileText, Lightbulb, Plus, Search } from "lucide-react";
+import { DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Building2, FileText, FileUp, Lightbulb, Plus, Search } from "lucide-react";
 import { parseMemberPage } from "../lib/company-members";
-import { KnowledgePage, KnowledgeSummary, knowledgeBlocks, knowledgeLimits, knowledgeTicketCodes, parseKnowledgeList, parseKnowledgePage,
+import { KnowledgeExtract, KnowledgePage, KnowledgeSummary, knowledgeBlocks, knowledgeFileAccept, knowledgeFileLimits, knowledgeFileName,
+  knowledgeFileReasons, knowledgeLimits, knowledgePartTitle, knowledgeTicketCodes, parseKnowledgeExtract, parseKnowledgeList, parseKnowledgePage,
   toggleKnowledgeTodo } from "../lib/knowledge-pages";
 import { Loading, Skeleton } from "./skeleton";
 
@@ -10,10 +11,12 @@ type Props = { companyId: string; userId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void;
   onOpenTickets?: (customer: string) => void };
-type Draft = { title: string; customerName: string; body: string };
+// A draft read from a long file carries every part; saving it creates one page per part.
+type Draft = { title: string; customerName: string; body: string; parts?: string[]; saved?: number; firstId?: string; truncated?: boolean; source?: string };
 const button = "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
 const primary = "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 const field = "w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const count = (value: number) => value.toLocaleString("vi-VN");
 const time = (value: string) => new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
 const messages: Record<number, string> = {
   403: "Bạn không có quyền xem hoặc sửa trang kiến thức của công ty này.",
@@ -34,6 +37,10 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [reading, setReading] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const newFile = useRef<HTMLInputElement>(null), insertFile = useRef<HTMLInputElement>(null), current = useRef<Draft | null>(null);
+  current.current = draft;
   const mounted = useRef(false), serial = useRef(0), lock = useRef(false);
   const selector = `companyId=${encodeURIComponent(companyId)}`;
   const live = () => mounted.current && isCurrent(generation);
@@ -126,7 +133,97 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (draft) void save(draft, editingExisting ? page?.rowVersion : undefined, editingExisting ? page?.id : undefined);
+    if (!draft) return;
+    if (draft.parts && draft.parts.length > 1) void saveParts(draft);
+    else void save(draft, editingExisting ? page?.rowVersion : undefined, editingExisting ? page?.id : undefined);
+  }
+
+  // The server reads the file into text; nothing is stored until the member saves the page.
+  async function readFile(file: File): Promise<KnowledgeExtract | null> {
+    if (!knowledgeFileName(file.name)) { setError("Tên file không hợp lệ. Hãy đổi tên file ngắn hơn rồi tải lại."); return null; }
+    if (file.size > knowledgeFileLimits.bytes) { setError(knowledgeFileReasons.tooLarge); return null; }
+    if (lock.current || !live()) return null;
+    lock.current = true; setBusy(true); setReading(file.name); setError("");
+    try {
+      const response = await call(`/api/local/knowledge-pages/extract?${selector}&fileName=${encodeURIComponent(file.name)}`, {
+        method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file });
+      if (!response) return null;
+      const value: unknown = await response.json().catch(() => null);
+      if (!live()) return null;
+      const extract = response.ok ? parseKnowledgeExtract(value) : null;
+      if (extract) return extract;
+      const reason = value && typeof value === "object" ? (value as { reason?: unknown }).reason : undefined;
+      setError(typeof reason === "string" && knowledgeFileReasons[reason] ? knowledgeFileReasons[reason]
+        : messages[response.status] && response.status !== 400 ? messages[response.status] : "Chưa đọc được file. Hãy thử lại.");
+      return null;
+    } catch { if (live()) setError("Chưa đọc được file. Hãy thử lại."); return null; }
+    finally { lock.current = false; if (mounted.current) { setBusy(false); setReading(null); } }
+  }
+
+  async function uploadNew(file: File) {
+    const extract = await readFile(file);
+    if (!extract || !live()) return;
+    editor()({ title: extract.title, customerName: page?.customerName ?? "", body: extract.parts[0],
+      parts: extract.parts.length > 1 ? extract.parts : undefined, truncated: extract.truncated, source: file.name });
+  }
+
+  async function insertIntoDraft(file: File) {
+    const extract = await readFile(file);
+    if (!extract || !live()) return;
+    const old = current.current;
+    if (!old) return;
+    const body = old.body.trim() ? `${old.body.trimEnd()}\n\n${extract.parts.join("\n")}` : extract.parts.join("\n");
+    if (extract.parts.length > 1 || body.length > knowledgeLimits.body) {
+      setError(`File quá dài để chèn vào trang này (mỗi trang tối đa ${count(knowledgeLimits.body)} ký tự). Hãy dùng "Tải file lên" để tạo trang mới, file dài sẽ được chia thành nhiều trang.`);
+      return;
+    }
+    setDraft({ ...old, body, source: file.name });
+  }
+
+  function pick(input: HTMLInputElement | null, action: (file: File) => Promise<void>) {
+    const file = input?.files?.[0];
+    if (input) input.value = "";
+    if (file) void action(file);
+  }
+
+  function drop(event: DragEvent) {
+    event.preventDefault(); setDragging(false);
+    const file = event.dataTransfer.files[0];
+    if (!file || busy) return;
+    if (draft && !draft.parts) void insertIntoDraft(file); else if (!draft) void uploadNew(file);
+  }
+
+  // A long file becomes several pages "Tên (phần 1/3)", saved one after another. A failed part can be retried without duplicating saved ones.
+  async function saveParts(base: Draft) {
+    const parts = base.parts!;
+    if (lock.current || !live()) return;
+    let saved = base.saved ?? 0, first = base.firstId;
+    const room = knowledgeLimits.pages - (pages?.length ?? 0);
+    if (parts.length - saved > room) { setError(`Chỉ còn chỗ cho ${room} trang (tối đa ${knowledgeLimits.pages}). Hãy xoá bớt trang cũ.`); return; }
+    lock.current = true; setBusy(true); setError("");
+    let failure = "";
+    try {
+      for (; saved < parts.length; saved++) {
+        const payload = { title: knowledgePartTitle(base.title.trim(), saved, parts.length), body: parts[saved], customerName: base.customerName.trim() || null };
+        const response = await call(`/api/local/knowledge-pages?${selector}`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!response) return;
+        const view = response.ok ? parseKnowledgePage(await response.json()) : null;
+        if (!live()) return;
+        if (!view) { failure = messages[response.status] ?? "Chưa lưu được trang. Hãy thử lại."; break; }
+        first ??= view.id;
+        setPages(old => [...(old ?? []), { id: view.id, customerName: view.customerName, title: view.title, updatedBy: view.updatedBy, updatedAt: view.updatedAt }]);
+      }
+    } catch { failure = "Chưa lưu được trang. Hãy thử lại."; }
+    finally { lock.current = false; if (mounted.current) setBusy(false); }
+    if (!live()) return;
+    if (failure) {
+      setDraft({ ...base, saved, firstId: first });
+      setError(`${saved ? `Đã lưu ${saved}/${parts.length} trang. ` : ""}${failure} Bấm Lưu để lưu tiếp phần còn lại.`);
+      return;
+    }
+    setDraft(null);
+    await loadList(first ?? null);
   }
 
   const shown = useMemo(() => {
@@ -144,7 +241,12 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
   </li>;
   const editor = (id?: string) => (base: Draft) => { setEditingExisting(!!id); setDraft(base); setConfirmDelete(false); setError(""); };
 
-  return <div className="grid overflow-hidden rounded-xl border bg-card shadow-sm lg:min-h-[560px] lg:grid-cols-[264px_minmax(0,1fr)]">
+  return <div onDragOver={event => { if (event.dataTransfer.types.includes("Files") && !busy && !draft?.parts) { event.preventDefault(); setDragging(true); } }}
+    onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }} onDrop={drop}
+    className={`relative grid overflow-hidden rounded-xl border bg-card shadow-sm lg:min-h-[560px] lg:grid-cols-[264px_minmax(0,1fr)] ${dragging ? "ring-2 ring-primary" : ""}`}>
+    {dragging ? <div aria-hidden className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-primary/5">
+      <p className="rounded-lg border bg-card px-4 py-2 text-sm font-medium shadow-sm">{draft ? "Thả file để chèn nội dung vào trang đang sửa" : "Thả file để tạo trang mới"}</p>
+    </div> : null}
     <aside aria-label="Danh sách trang" className="border-b bg-muted/30 p-3 lg:border-b-0 lg:border-r">
       <div className="relative">
         <Search aria-hidden className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
@@ -169,9 +271,17 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
         className="mt-4 flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50">
         <Plus aria-hidden className="size-4" />Trang mới
       </button>
+      <button type="button" disabled={busy || pages === null || pages.length >= knowledgeLimits.pages} onClick={() => newFile.current?.click()}
+        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50">
+        <FileUp aria-hidden className="size-4" />{reading && !draft ? "Đang đọc file…" : "Tải file lên"}
+      </button>
+      <input ref={newFile} type="file" accept={knowledgeFileAccept} className="hidden" aria-label="Chọn file để tạo trang"
+        onChange={event => pick(event.currentTarget, uploadNew)} />
+      <p className="mt-1 px-2.5 text-xs text-muted-foreground">PDF, Word, Excel, PowerPoint, .txt, .md, .csv · tối đa 20 MB. Có thể kéo thả file vào đây.</p>
     </aside>
 
     <article aria-label="Trang kiến thức" className="min-w-0 p-5 sm:p-8">
+      {reading ? <p role="status" className="mb-4 rounded-lg border bg-muted/40 px-3 py-2 text-sm">Đang đọc chữ trong file “{reading}”… File lớn có thể mất đến một phút.</p> : null}
       {error ? <p role="alert" className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
         {error}
         {page ? <button type="button" className={button} onClick={() => void openPage(page.id)}>Tải lại trang</button> : null}
@@ -185,12 +295,35 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
           <input value={draft.customerName} maxLength={knowledgeLimits.name} list="knowledge-customers" onChange={event => setDraft({ ...draft, customerName: event.target.value })} className={`mt-1.5 ${field}`} />
           <datalist id="knowledge-customers">{knownCustomers.map(name => <option key={name} value={name} />)}</datalist>
         </label>
-        <label className="block text-sm font-medium">Nội dung
-          <textarea value={draft.body} maxLength={knowledgeLimits.body} rows={14} onChange={event => setDraft({ ...draft, body: event.target.value })} className={`mt-1.5 font-mono ${field}`} />
-        </label>
-        <p className="text-xs text-muted-foreground">Gõ <code># </code> cho tiêu đề, <code>- </code> cho gạch đầu dòng, <code>- [ ] </code> cho việc cần làm, <code>&gt; </code> cho ghi chú nổi bật. Mã phiếu như YC-0012 sẽ hiện ở mục Phiếu liên quan.</p>
+        {draft.parts ? <section aria-label="Nội dung từ file" className="space-y-2 rounded-lg border bg-muted/40 px-3.5 py-3 text-sm">
+          <p className="font-medium">File “{draft.source}” dài {count(draft.parts.reduce((total, part) => total + part.length, 0))} ký tự nên sẽ được lưu thành {draft.parts.length} trang:</p>
+          <ul className="list-disc space-y-0.5 pl-5 text-muted-foreground">
+            {draft.parts.map((part, index) => <li key={index}>{knowledgePartTitle(draft.title.trim() || "…", index, draft.parts!.length)} · {count(part.length)} ký tự
+              {index < (draft.saved ?? 0) ? " · đã lưu" : ""}</li>)}
+          </ul>
+          {draft.truncated ? <p className="text-amber-700 dark:text-amber-400">File quá dài, chỉ lấy {count(knowledgeFileLimits.parts * knowledgeLimits.body)} ký tự đầu. Phần còn lại hãy tách file và tải lên riêng.</p> : null}
+          <p className="text-muted-foreground">Sau khi lưu, có thể mở từng trang để sửa.</p>
+        </section> : <div className="space-y-1.5">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <label htmlFor="knowledge-body" className="text-sm font-medium">Nội dung</label>
+            <button type="button" disabled={busy} onClick={() => insertFile.current?.click()} className={button}>
+              <FileUp aria-hidden className="size-4" />{reading ? "Đang đọc file…" : "Chèn nội dung từ file"}
+            </button>
+            <input ref={insertFile} type="file" accept={knowledgeFileAccept} className="hidden" aria-label="Chọn file để chèn nội dung"
+              onChange={event => pick(event.currentTarget, insertIntoDraft)} />
+          </div>
+          <textarea id="knowledge-body" value={draft.body} maxLength={knowledgeLimits.body} rows={16} onChange={event => setDraft({ ...draft, body: event.target.value })} className={`font-mono ${field}`} />
+          <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+            <span>{draft.source ? `Đã lấy chữ từ file “${draft.source}”. Kiểm tra lại trước khi lưu.` : ""}</span>
+            <span>{count(draft.body.length)} / {count(knowledgeLimits.body)} ký tự</span>
+          </p>
+          {draft.truncated ? <p className="text-xs text-amber-700 dark:text-amber-400">File quá dài nên chỉ lấy phần đầu.</p> : null}
+        </div>}
+        {draft.parts ? null : <p className="text-xs text-muted-foreground">Gõ <code># </code> cho tiêu đề, <code>- </code> cho gạch đầu dòng, <code>- [ ] </code> cho việc cần làm, <code>&gt; </code> cho ghi chú nổi bật. Mã phiếu như YC-0012 sẽ hiện ở mục Phiếu liên quan.</p>}
         <div className="flex gap-2">
-          <button type="submit" disabled={busy || !draft.title.trim()} className={primary}>{busy ? "Đang lưu…" : "Lưu trang"}</button>
+          <button type="submit" disabled={busy || !draft.title.trim()} className={primary}>
+            {busy && !reading ? "Đang lưu…" : draft.parts ? `Lưu ${draft.parts.length - (draft.saved ?? 0)} trang` : "Lưu trang"}
+          </button>
           <button type="button" disabled={busy} onClick={() => { setDraft(null); setError(""); }} className={button}>Huỷ</button>
         </div>
       </form> : page ? <PageView page={page} names={names} userId={userId} busy={busy} confirmDelete={confirmDelete}
@@ -206,7 +339,10 @@ export function KnowledgePanel({ companyId, userId, generation, isCurrent, valid
           <FileText aria-hidden className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-3 font-medium">Chưa có trang nào được mở</p>
           <p className="mt-1 text-sm text-muted-foreground">Tạo trang đầu tiên cho quy trình chung hoặc cho từng khách hàng.</p>
-          <button type="button" onClick={() => editor()({ title: "", customerName: "", body: "" })} className={`mt-4 ${primary}`}><Plus aria-hidden className="size-4" />Trang mới</button>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button type="button" onClick={() => editor()({ title: "", customerName: "", body: "" })} className={primary}><Plus aria-hidden className="size-4" />Trang mới</button>
+            <button type="button" disabled={busy} onClick={() => newFile.current?.click()} className={button}><FileUp aria-hidden className="size-4" />Tải file lên</button>
+          </div>
         </div>
       </div> : null}
     </article>

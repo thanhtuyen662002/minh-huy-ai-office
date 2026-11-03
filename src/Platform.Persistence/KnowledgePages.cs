@@ -47,8 +47,10 @@ internal static class KnowledgePageModelConfiguration
 public static class KnowledgePageJson
 {
     public const int MaximumName = 200;
-    public const int MaximumBody = 20000;
-    public const int MaximumBytes = 4 * MaximumBody;
+    // About 150-250 printed pages of text; longer uploaded files are split into several pages.
+    public const int MaximumBody = 500_000;
+    // UTF-8 plus JSON escaping of a full page.
+    public const int MaximumBytes = 6 * MaximumBody;
     private static readonly System.Text.UTF8Encoding Utf8 = new(false, true);
 
     public static KnowledgePageInput Read(ReadOnlyMemory<byte> bytes, bool update)
@@ -103,6 +105,16 @@ public sealed class KnowledgeBase(PlatformDbContext database, IAuthorizationDire
         var page = await Scoped(authority).SingleOrDefaultAsync(x => x.Id == id, cancellationToken) ?? throw new KnowledgePageNotFoundException();
         await RequireMemberAsync(authority, companyId, cancellationToken);
         return View(page);
+    }
+
+    // Reads the text out of an uploaded file for the member to review; nothing is stored until a page is saved.
+    public async Task<KnowledgeFileExtract> ExtractAsync(AuthorizationContext authority, Guid companyId, string fileName, byte[] bytes,
+        CancellationToken cancellationToken = default)
+    {
+        await RequireMemberAsync(authority, companyId, cancellationToken);
+        var extract = await Task.Run(() => KnowledgeFileText.Extract(fileName, bytes, cancellationToken), cancellationToken);
+        await RequireMemberAsync(authority, companyId, cancellationToken);
+        return extract;
     }
 
     public async Task<KnowledgePageView> CreateAsync(AuthorizationContext authority, Guid companyId, KnowledgePageInput input, CancellationToken cancellationToken = default)

@@ -1995,7 +1995,7 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasMaxLength(20000)
+                        .HasMaxLength(500000)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
