@@ -23,6 +23,20 @@ const initialSelection = (): Selection => ({ view: "board", status: "", customer
 const empty = (scope: string, selection = initialSelection()): State => ({ scope, selection, page: null, board: null, detail: null, members: null,
   memberError: "", loading: false, saving: false, conflict: false, error: "", notice: "" });
 class ReadFailure extends Error { constructor(readonly status: number) { super("Customer request unavailable"); } }
+// Puts a ticket in the column its status names, newest first like the server, and takes it out of every other column.
+function place(board: Board, item: CustomerRequest): Board {
+  const next = {} as Board;
+  for (const status of boardStatuses) {
+    const column = board[status], items = column.items.filter(old => old.code !== item.code);
+    if (status === item.status && !column.failed) {
+      const at = items.findIndex(old => Date.parse(old.createdAt) < Date.parse(item.createdAt));
+      items.splice(at < 0 ? items.length : at, 0, item);
+    }
+    next[status] = items.length === column.items.length && items.every((old, index) => old === column.items[index]) ? column : { ...column, items };
+  }
+  return next;
+}
+const findOnBoard = (board: Board | null, code: string) => board ? boardStatuses.flatMap(status => board[status].items).find(item => item.code === code) : undefined;
 
 export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = false, generation, isCurrent, validate, request, onUnauthorized, initialCustomer = "" }: Props) {
   const scope = `${tenantId}:${companyId}:${userId}:${generation}`;
@@ -32,6 +46,8 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
   const live = useRef(scope); live.current = scope;
   const mounted = useRef(false), serial = useRef(0), controller = useRef<AbortController | null>(null), saving = useRef<object | null>(null);
   const dragged = useRef<string | null>(null);
+  // Cards being saved after a drag; the rest of the board stays usable meanwhile.
+  const [moving, setMoving] = useState<readonly string[]>([]);
   const current = (value: number) => mounted.current && live.current === scope && serial.current === value && isCurrent(generation);
   function cancel() { serial.current++; controller.current?.abort(); controller.current = null; }
   async function confirm(value: number) {
@@ -99,13 +115,14 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
     return { page: null, board };
   }
   // Opening or closing a ticket keeps the loaded board; every other read replaces it.
-  async function read(selection: Selection, notice = "", keepCollection = false) {
+  // A quiet read keeps the current board on screen until the fresh one arrives.
+  async function read(selection: Selection, notice = "", keepCollection = false, quiet = false) {
     if (!mounted.current || !isCurrent(generation) || saving.current) return;
     cancel(); const value = serial.current, abort = new AbortController(); controller.current = abort;
     setState(old => {
       const reusable = old.scope === scope ? old : empty(scope, selection);
-      return { ...reusable, selection, loading: true, saving: false, notice: "", error: "", conflict: false,
-        page: keepCollection ? reusable.page : null, board: keepCollection ? reusable.board : null,
+      return { ...reusable, selection, loading: true, saving: false, notice: "", error: quiet ? reusable.error : "", conflict: false,
+        page: keepCollection || quiet ? reusable.page : null, board: keepCollection || quiet ? reusable.board : null,
         detail: selection.code && reusable.detail?.request.code === selection.code ? reusable.detail : null };
     });
     const members = keepCollection && state.members ? Promise.resolve() : directory(value, abort.signal);
@@ -138,9 +155,14 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
       const body = await get(`${root}/${encodeURIComponent(code)}?${companyQuery}`, value, abort.signal,
         { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
       if (body === null || !current(value)) return;
-      if (!parseCustomerRequest(body, code)) throw new Error();
+      const saved = parseCustomerRequest(body, code);
+      if (!saved) throw new Error();
       saving.current = null;
-      await read(state.selection, "Đã lưu thay đổi.");
+      // On the board only the saved card moves; reloading every column made the whole board wait.
+      if (state.selection.view === "board" && state.board) {
+        setState(old => old.board ? { ...old, board: place(old.board, saved) } : old);
+        await read(state.selection, "Đã lưu thay đổi.", true);
+      } else await read(state.selection, "Đã lưu thay đổi.");
     } catch (error) {
       if (!current(value)) return;
       if (error instanceof ReadFailure && [403, 404].includes(error.status)) {
@@ -156,6 +178,46 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
     } finally {
       if (saving.current === operation) saving.current = null;
       if (current(value)) setState(old => ({ ...old, saving: false }));
+    }
+  }
+  // A dragged card moves at once; the save runs in the background and a refused save puts the card back.
+  async function move(item: CustomerRequest, status: BoardStatus) {
+    const alive = () => mounted.current && live.current === scope && isCurrent(generation);
+    const code = item.code, selection = state.selection;
+    const patch: CustomerRequestPatch = item.assigneeUserId === null && status === "in_progress"
+      ? { rowVersion: item.rowVersion, status, assigneeUserId: userId } : { rowVersion: item.rowVersion, status };
+    setMoving(old => [...old, code]);
+    setState(old => old.board ? { ...old, error: "", notice: "",
+      board: place(old.board, { ...item, status, assigneeUserId: patch.assigneeUserId ?? item.assigneeUserId }) } : old);
+    const undo = (error: string) => setState(old => {
+      const now = findOnBoard(old.board, code);
+      // A newer read already shows the server's truth for this card; only undo our own optimistic copy.
+      const board = old.board && now && now.rowVersion === item.rowVersion ? place(old.board, item) : old.board;
+      return { ...old, board, error: `${code}: ${error}` };
+    });
+    try {
+      if (!await validate(generation)) { if (alive()) setState(empty(scope)); return; }
+      if (!alive()) return;
+      const response = await request(generation, `${root}/${encodeURIComponent(code)}?${companyQuery}`,
+        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch), cache: "no-store" });
+      if (!alive()) return;
+      if (response.status === 401) { setState(empty(scope)); onUnauthorized(); return; }
+      if (response.status === 403) { setState({ ...empty(scope, selection), error: "Bạn không còn quyền cập nhật phiếu này." }); return; }
+      if (!response.ok) throw new ReadFailure(response.status);
+      const saved = parseCustomerRequest(await response.json(), code);
+      if (!alive()) return;
+      if (!saved) throw new Error();
+      setState(old => old.board ? { ...old, board: place(old.board, saved) } : old);
+    } catch (error) {
+      if (!alive()) return;
+      const status = error instanceof ReadFailure ? error.status : 0;
+      if (status === 400) { undo("Thông tin cập nhật không hợp lệ. Kiểm tra trạng thái và người phụ trách."); return; }
+      undo(status === 423 ? requestTaken : status === 409 ? requestConflict : status === 404 ? "Phiếu không còn khả dụng."
+        : "Chưa lưu được thay đổi. Bảng đã tải lại để hiện trạng thái mới nhất.");
+      // The board may be stale: fetch the server's state without blanking it.
+      if (!saving.current) void latest.current(selection, "", false, true);
+    } finally {
+      setMoving(old => old.filter(value => value !== code));
     }
   }
   function close() {
@@ -200,21 +262,22 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
     event.preventDefault(); setDropTarget(null);
     const code = dragged.current; dragged.current = null;
     const item = boardStatuses.flatMap(column => visible.board?.[column].items ?? []).find(ticket => ticket.code === code);
-    if (!item || item.status === status || disabled || visible.conflict || !canChange(item)) return;
+    if (!item || item.status === status || disabled || visible.conflict || moving.includes(item.code) || !canChange(item)) return;
     // Dragging an unassigned ticket into "Đang xử lý" also takes it, as the Telegram "Nhận việc" button does.
-    void save(item.code, item.assigneeUserId === null && status === "in_progress"
-      ? { rowVersion: item.rowVersion, status, assigneeUserId: userId } : { rowVersion: item.rowVersion, status });
+    void move(item, status);
   }
   function card(item: CustomerRequest) {
     const owner = memberName(item.assigneeUserId), selected = visible.selection.code === item.code, locked = !canChange(item);
+    const pending = moving.includes(item.code);
     return <li key={item.id}>
-      <button type="button" aria-label={item.code} aria-describedby={`request-${item.id}`} aria-pressed={selected} disabled={visible.saving}
-        draggable={!disabled && !visible.conflict && !locked} title={locked ? `${owner ?? "Người khác"} đã nhận phiếu này` : undefined} onDragStart={event => { dragged.current = item.code; event.dataTransfer.effectAllowed = "move"; }}
+      <button type="button" aria-label={item.code} aria-describedby={`request-${item.id}`} aria-pressed={selected} aria-busy={pending} disabled={visible.saving}
+        draggable={!disabled && !visible.conflict && !locked && !pending} title={locked ? `${owner ?? "Người khác"} đã nhận phiếu này` : undefined} onDragStart={event => { dragged.current = item.code; event.dataTransfer.effectAllowed = "move"; }}
         onDragEnd={() => { dragged.current = null; setDropTarget(null); }} onClick={() => openTicket(item.code)}
-        className={`flex w-full flex-col gap-2 rounded-lg border bg-card p-3 text-left shadow-sm transition-colors hover:border-ring/60 disabled:opacity-60 ${selected ? "border-ring ring-2 ring-ring/20" : ""}`}>
+        className={`flex w-full flex-col gap-2 rounded-lg border bg-card p-3 text-left shadow-sm transition-colors hover:border-ring/60 disabled:opacity-60 ${pending ? "opacity-70" : ""} ${selected ? "border-ring ring-2 ring-ring/20" : ""}`}>
         <span className="flex w-full items-center gap-2 text-xs text-muted-foreground"><span className="font-mono">{item.code}</span>
           {locked ? <Lock className="size-3" aria-label="Người khác đã nhận" /> : null}
-          <span className="ml-auto">{age(item.createdAt)}</span></span>
+          {pending ? <span className="ml-auto flex items-center gap-1" role="status"><RefreshCw className="size-3 animate-spin" aria-hidden="true" />Đang lưu</span>
+            : <span className="ml-auto">{age(item.createdAt)}</span>}</span>
         <span id={`request-${item.id}`} className="line-clamp-3 whitespace-pre-wrap break-words text-sm font-medium leading-snug">{item.summary}</span>
         <span className="flex w-full items-center gap-2 text-xs text-muted-foreground">
           <span className="min-w-0 flex-1 truncate">{item.customerName}</span>
