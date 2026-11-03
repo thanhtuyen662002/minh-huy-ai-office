@@ -14,6 +14,22 @@ public sealed class BotAiConnectionProbeTests
         Assert.True(result.Success); Assert.Equal("https://ai.example.test/v1/models", handler.Uri);
         Assert.Equal("Bearer PRIVATE-KEY", handler.Authorization); Assert.DoesNotContain("PRIVATE", result.ToString());
     }
+    [Fact]
+    public async Task ClaudeProbeAlsoSendsNativeKeyHeaders()
+    {
+        var handler = new Handler(); using var client = new HttpClient(handler);
+        var probe = new BotAiConnectionProbe(client, new HashSet<string>(["api.anthropic.com"], StringComparer.OrdinalIgnoreCase));
+        var result = await probe.TestAsync(new("https://api.anthropic.com/v1", "claude-sonnet-5-5", "PRIVATE-KEY"));
+        Assert.True(result.Success); Assert.Equal("https://api.anthropic.com/v1/models", handler.Uri);
+        Assert.Equal("PRIVATE-KEY", handler.ApiKey); Assert.Equal("2023-06-01", handler.Version);
+    }
+    [Fact]
+    public async Task OtherHostsNeverReceiveTheClaudeKeyHeader()
+    {
+        var handler = new Handler(); using var client = new HttpClient(handler);
+        await new BotAiConnectionProbe(client, new HashSet<string>(["ai.example.test"])).TestAsync(new("https://ai.example.test/v1", "model", "PRIVATE-KEY"));
+        Assert.Null(handler.ApiKey);
+    }
     [Theory]
     [InlineData("http://127.0.0.1:8080")]
     [InlineData("http://169.254.169.254")]
@@ -36,10 +52,12 @@ public sealed class BotAiConnectionProbeTests
     }
     private sealed class Handler : HttpMessageHandler
     {
-        internal string? Uri; internal string? Authorization; internal HttpStatusCode Status = HttpStatusCode.OK;
+        internal string? Uri; internal string? Authorization; internal string? ApiKey; internal string? Version; internal HttpStatusCode Status = HttpStatusCode.OK;
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             Uri = request.RequestUri!.AbsoluteUri; Authorization = request.Headers.Authorization?.ToString();
+            ApiKey = request.Headers.TryGetValues("x-api-key", out var k) ? k.Single() : null;
+            Version = request.Headers.TryGetValues("anthropic-version", out var v) ? v.Single() : null;
             return Task.FromResult(new HttpResponseMessage(Status) { Content = new StringContent("PRIVATE-UPSTREAM-BODY") });
         }
     }

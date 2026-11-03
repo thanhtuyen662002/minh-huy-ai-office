@@ -57,7 +57,8 @@ public sealed class CompanyAiSettingsGateway(
 
 /// <summary>
 /// Adapter for the OpenAI-compatible Chat Completions API, which Gemini, OpenAI and most
-/// gateways accept. Like the Responses adapter it sends only the bounded model input.
+/// gateways accept (Claude too, at https://api.anthropic.com/v1). Like the Responses adapter it sends
+/// only the bounded model input. The output cap leaves room for models that think before answering.
 /// </summary>
 public sealed class OpenAiCompatibleChatCompletionsAdapter(
     HttpClient httpClient,
@@ -65,7 +66,7 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
     string model,
     string authorizationHeader,
     string providerId,
-    int maxOutputTokens = 1024) : IAiProviderAdapter
+    int maxOutputTokens = 4096) : IAiProviderAdapter
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
