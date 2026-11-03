@@ -26,6 +26,12 @@ builder.Services.AddProtectedDataSourceSecrets();
 builder.Services.AddSingleton<ISqlConnectionFactory, SqlServerConnectionFactory>();
 builder.Services.AddScoped<IDataSourceConnectionProbe, SqlDataSourceConnectionProbe>();
 builder.Services.AddScoped<IPilotErpEvidenceReader, SqlServerPilotErpEvidenceReader>();
+// Off by default: Trợ lý then only sees the bounded catalog. When on, it may run validated,
+// rollback-only SELECTs on the read-only customer connection (row data reaches the AI provider).
+if (builder.Configuration.GetValue("AIOffice:ErpQueryAgent:Enabled", false))
+{
+    builder.Services.AddScoped<IErpQueryAgentBackend, SqlServerErpQueryAgentBackend>();
+}
 
 Action<DbContextOptionsBuilder> configureDatabase = options => options.UseSqlServer(
     platformConnectionString,

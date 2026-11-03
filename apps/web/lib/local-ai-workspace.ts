@@ -23,6 +23,14 @@ export type LocalErpTableEvidence = Readonly<{
   approximateRowCount: number;
 }>;
 
+export type LocalErpQuery = Readonly<{
+  purpose: string;
+  sql: string;
+  rowCount: number;
+  truncated: boolean;
+  error: string | null;
+}>;
+
 export type LocalAiCheckpoint = Readonly<{
   answer: string;
   provider: string;
@@ -35,6 +43,7 @@ export type LocalAiCheckpoint = Readonly<{
   erpTableCount: number | null;
   sampledTableCount: number | null;
   topTables: readonly LocalErpTableEvidence[];
+  erpQueries: readonly LocalErpQuery[];
 }>;
 
 export type LocalTaskSnapshot = Readonly<{
@@ -200,6 +209,28 @@ export function parseAiCheckpoint(payload: string): LocalAiCheckpoint | null {
     }
   }
 
+  // Agent-mode checkpoints (#344) list the read-only queries Trợ lý ran; malformed entries are skipped.
+  const erpQueries: LocalErpQuery[] = [];
+  const queriesValue = own(value, "erpQueries");
+  if (Array.isArray(queriesValue)) {
+    for (const queryValue of queriesValue.slice(0, 10)) {
+      if (queryValue === null || typeof queryValue !== "object") continue;
+      const sql = own(queryValue, "sql");
+      const purpose = own(queryValue, "purpose");
+      const rowCount = integer(own(queryValue, "rowCount"));
+      const truncated = own(queryValue, "truncated");
+      const error = own(queryValue, "error");
+      if (typeof sql !== "string" || sql.trim().length === 0 || rowCount === null || rowCount < 0) continue;
+      erpQueries.push(Object.freeze({
+        purpose: typeof purpose === "string" ? purpose.trim() : "",
+        sql: sql.trim(),
+        rowCount,
+        truncated: truncated === true,
+        error: typeof error === "string" && error.trim().length > 0 ? error.trim() : null,
+      }));
+    }
+  }
+
   return Object.freeze({
     answer,
     provider,
@@ -212,5 +243,6 @@ export function parseAiCheckpoint(payload: string): LocalAiCheckpoint | null {
     erpTableCount,
     sampledTableCount,
     topTables: Object.freeze(topTables),
+    erpQueries: Object.freeze(erpQueries),
   });
 }

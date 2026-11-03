@@ -92,6 +92,9 @@ try {
     if ($null -ne $encryptionKeyBytes) { [Array]::Clear($encryptionKeyBytes, 0, $encryptionKeyBytes.Length) }
 }
 
+if ($values.ContainsKey("AIOFFICE_ERP_QUERY_AGENT_ENABLED") -and $values["AIOFFICE_ERP_QUERY_AGENT_ENABLED"] -cnotin @("true", "false")) {
+    throw "AIOFFICE_ERP_QUERY_AGENT_ENABLED must be true or false."
+}
 if ($values.ContainsKey("AIOFFICE_BOT_CHANNELS_ENABLED") -and $values["AIOFFICE_BOT_CHANNELS_ENABLED"] -cnotin @("true", "false")) {
     throw "AIOFFICE_BOT_CHANNELS_ENABLED must be true or false."
 }

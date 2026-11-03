@@ -930,6 +930,22 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                               <span>{message.checkpoint.totalTokens.toLocaleString("vi-VN")} tokens</span>
                             </div>
                           ) : null}
+                          {message.checkpoint && message.checkpoint.erpQueries.length > 0 ? (
+                            <details className="mt-2 text-xs">
+                              <summary className="cursor-pointer text-muted-foreground">Truy vấn đã chạy ({message.checkpoint.erpQueries.length})</summary>
+                              <ol className="mt-2 space-y-2">
+                                {message.checkpoint.erpQueries.map((query, index) => (
+                                  <li key={index} className="rounded-lg border bg-muted/40 p-2">
+                                    {query.purpose ? <p className="font-medium">{query.purpose}</p> : null}
+                                    <pre className="mt-1 whitespace-pre-wrap break-all font-mono text-[11px] leading-5">{query.sql}</pre>
+                                    <p className="mt-1 text-muted-foreground">
+                                      {query.error ? `Lỗi: ${query.error}` : `${query.rowCount} dòng${query.truncated ? " (đã cắt bớt)" : ""}`}
+                                    </p>
+                                  </li>
+                                ))}
+                              </ol>
+                            </details>
+                          ) : null}
                         </div>
                       </article>
                     ))}

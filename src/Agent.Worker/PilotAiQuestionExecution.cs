@@ -114,7 +114,8 @@ public sealed class PilotAiQuestionExecutor(
     IPilotErpEvidenceReader evidenceReader,
     IAiGateway aiGateway,
     PilotAiRuntimeDescriptor runtime,
-    DataSourceSecretBindingService? bindingService = null) : IRawWorkStepExecutor
+    DataSourceSecretBindingService? bindingService = null,
+    IErpQueryAgentBackend? queryAgentBackend = null) : IRawWorkStepExecutor
 {
     private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -173,6 +174,12 @@ public sealed class PilotAiQuestionExecutor(
                 WorkDeliveryOutcome.Failed,
                 WorkFailureClass.Authorization,
                 request.MaxAttempts);
+        }
+
+        if (queryAgentBackend is not null)
+        {
+            return await ExecuteQueryAgentAsync(envelope, request, initialBinding, source, queryAgentBackend, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         PilotErpEvidence erpEvidence;
@@ -263,6 +270,109 @@ public sealed class PilotAiQuestionExecutor(
                 })
             },
             evidence = "ai-provider-reasoning-after-bounded-read-only-erp-catalog"
+        };
+
+        return new WorkStepExecutionResult(
+            WorkDeliveryOutcome.Completed,
+            null,
+            request.MaxAttempts,
+            1,
+            JsonSerializer.Serialize(checkpoint, JsonOptions));
+    }
+
+    /// <summary>
+    /// Agent mode: the model may search the schema and run validated, rollback-only SELECTs on the
+    /// same read-only connection; every query it ran is recorded in the checkpoint.
+    /// </summary>
+    private async Task<WorkStepExecutionResult> ExecuteQueryAgentAsync(
+        WorkDispatchEnvelope envelope,
+        PilotDataSourceWorkRequest request,
+        AuthorizedDataSourceBinding initialBinding,
+        DataSourceRecord source,
+        IErpQueryAgentBackend backend,
+        CancellationToken cancellationToken)
+    {
+        PilotErpEvidence erpEvidence = null!;
+        ErpQueryAgentResult outcome;
+        try
+        {
+            var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
+            if (authority.UserId != initialBinding.Authority.UserId) throw DataSourceSecretBindingService.Unavailable();
+            await bindings.RevalidateAsync(initialBinding, readOnly: true, cancellationToken);
+            outcome = await new ScopedDataSourceSecretResolver(bindings, secretResolver).UseAsync(
+                authority, request.DataSourceId, readOnly: true,
+                async (connectionString, token) =>
+                {
+                    erpEvidence = await evidenceReader.ReadAsync(connectionString, token);
+                    return await backend.UseAsync(
+                        connectionString,
+                        session => new ErpQueryAgent(aiGateway).RunAsync(envelope, request.Question, erpEvidence, session, token),
+                        token);
+                }, cancellationToken, taskId: envelope.TaskId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (AiProviderExecutionException exception)
+        {
+            return new WorkStepExecutionResult(
+                WorkDeliveryOutcome.Failed,
+                exception.IsTransient ? WorkFailureClass.Transient : WorkFailureClass.Permanent,
+                request.MaxAttempts);
+        }
+        catch
+        {
+            return new WorkStepExecutionResult(
+                WorkDeliveryOutcome.Failed,
+                WorkFailureClass.Transient,
+                request.MaxAttempts);
+        }
+
+        var totalTokens = checked(outcome.InputTokens + outcome.OutputTokens);
+        var checkpoint = new
+        {
+            status = "completed",
+            dataSourceId = source.Id,
+            logicalName = source.LogicalName,
+            questionLength = request.Question.Length,
+            answer = outcome.Answer,
+            provider = outcome.ProviderId ?? runtime.ProviderId,
+            model = string.IsNullOrWhiteSpace(outcome.Model) ? runtime.ModelId : outcome.Model,
+            usage = new
+            {
+                inputTokens = outcome.InputTokens,
+                outputTokens = outcome.OutputTokens,
+                totalTokens
+            },
+            billingStatus = "usage-observed-not-settled",
+            modelTurns = outcome.ModelTurns,
+            erpEvidence = new
+            {
+                databaseName = erpEvidence.DatabaseName,
+                tableCount = erpEvidence.TableCount,
+                sampledTableCount = erpEvidence.TopTables.Count,
+                topTables = erpEvidence.TopTables.Select(table => new
+                {
+                    schema = table.SchemaName,
+                    table = table.TableName,
+                    approximateRowCount = table.ApproximateRowCount
+                })
+            },
+            erpQueries = outcome.Queries.Select(query => new
+            {
+                purpose = query.Purpose,
+                sql = query.Sql,
+                rowCount = query.RowCount,
+                truncated = query.Truncated,
+                error = query.Error,
+                elapsedMs = query.ElapsedMilliseconds
+            }),
+            evidence = "ai-agent-read-only-erp-queries"
         };
 
         return new WorkStepExecutionResult(
