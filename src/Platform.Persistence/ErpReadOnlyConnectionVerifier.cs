@@ -20,6 +20,10 @@ public static class ErpReadOnlyConnectionVerifier
     private const string SecurableAllow = "N'SELECT',N'VIEW DEFINITION',N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION'";
     private const string ObjectName = "QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name)";
     // Bounded, nonsecret detail for an operator: permission or role names only, never data or definitions.
+    // Rights on an object come from the object itself (owner or object/column GRANT) or from schema, database and
+    // server scope, which their own checks cover. Only objects with such object-level sources need the per-object
+    // permission functions, which cost about a millisecond each on large ERP catalogs.
+    private const string ObjectRightsSource = "(o.principal_id IN (SELECT principal_id FROM sys.user_token) OR EXISTS (SELECT 1 FROM sys.database_permissions dp WHERE dp.class=1 AND dp.major_id=o.object_id AND dp.state IN ('G','W') AND dp.grantee_principal_id IN (SELECT principal_id FROM sys.user_token)))";
     private static string Names(string query) => $"(SELECT LEFT(STRING_AGG(CONVERT(nvarchar(max),n),N', '),300) FROM (SELECT DISTINCT TOP (12) n FROM ({query}) d(n) ORDER BY n) x)";
 
     /// <summary>One named condition of the read-only profile. <c>WriteRisk</c> marks rights that could change
@@ -138,18 +142,18 @@ public static class ErpReadOnlyConnectionVerifier
         // Executable-only rights (EXECUTE on a scalar function) are not write rights; procedures are checked below.
         new("object_permission", true, $"""
             NOT EXISTS (SELECT 1 FROM sys.objects o CROSS APPLY sys.fn_my_permissions({ObjectName},N'OBJECT') p
-              WHERE o.is_ms_shipped=0 AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ')
+              WHERE o.is_ms_shipped=0 AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ') AND {ObjectRightsSource}
                 AND p.permission_name NOT IN ({SecurableAllow})
                 AND NOT (o.type IN ('FN','IF','TF') AND p.permission_name IN (N'EXECUTE',N'REFERENCES')))
             """, Names($"""
                 SELECT p.permission_name FROM sys.objects o CROSS APPLY sys.fn_my_permissions({ObjectName},N'OBJECT') p
-                WHERE o.is_ms_shipped=0 AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ')
+                WHERE o.is_ms_shipped=0 AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ') AND {ObjectRightsSource}
                   AND p.permission_name NOT IN ({SecurableAllow}) AND NOT (o.type IN ('FN','IF','TF') AND p.permission_name IN (N'EXECUTE',N'REFERENCES'))
                 """)),
         // Column GRANT can override a table DENY. Check effective column rights.
         new("column_update", true, $"""
             NOT EXISTS (SELECT 1 FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id
-              WHERE o.is_ms_shipped=0 AND ISNULL(HAS_PERMS_BY_NAME({ObjectName},N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0)
+              WHERE o.is_ms_shipped=0 AND {ObjectRightsSource} AND ISNULL(HAS_PERMS_BY_NAME({ObjectName},N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0)
             """),
         // Procedures and CLR modules may write through ownership chaining or elevated execution. This profile executes none.
         new("executable_procedure", true, $"""
@@ -173,10 +177,8 @@ public static class ErpReadOnlyConnectionVerifier
         new("view_external_rowset", false, """
             NOT EXISTS (SELECT 1 FROM sys.sql_modules m JOIN sys.objects o ON o.object_id=m.object_id
               WHERE o.is_ms_shipped=0 AND o.type IN ('V','FN','IF','TF')
-                AND (m.definition IS NULL
-                  OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENQUERY%'
-                  OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENROWSET%'
-                  OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENDATASOURCE%'))
+                AND (m.definition IS NULL OR EXISTS (SELECT 1 FROM (SELECT UPPER(m.definition) COLLATE Latin1_General_100_BIN2) u(d)
+                  WHERE u.d LIKE N'%OPENQUERY%' OR u.d LIKE N'%OPENROWSET%' OR u.d LIKE N'%OPENDATASOURCE%')))
             """),
         new("external_table", false, "NOT EXISTS (SELECT 1 FROM sys.external_tables)"),
         new("clr_assembly", false, "NOT EXISTS (SELECT 1 FROM sys.assemblies WHERE is_user_defined=1) AND NOT EXISTS (SELECT 1 FROM sys.types WHERE is_user_defined=1 AND is_assembly_type=1)"),
@@ -213,7 +215,7 @@ public static class ErpReadOnlyConnectionVerifier
             var findings = new List<ErpReadOnlyFinding>();
             await using var command = connection.CreateCommand();
             command.CommandText = DiagnosticSql;
-            command.CommandTimeout = CommandTimeoutSeconds * 2;
+            command.CommandTimeout = CommandTimeoutSeconds * 4;
             await using (var rows = await command.ExecuteReaderAsync(cancellationToken))
                 while (await rows.ReadAsync(cancellationToken) && findings.Count < Checks.Length)
                 {
@@ -225,9 +227,9 @@ public static class ErpReadOnlyConnectionVerifier
             return findings;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception error) when (error is not OperationCanceledException)
+        catch (Exception error) when (error is not OperationCanceledException and not Microsoft.Data.SqlClient.SqlException { Number: -2 })
         {
-            // Diagnostics never grant access; any failure is reported as a fixed code without server text.
+            // A command timeout propagates so the caller can say the check was slow. Diagnostics never grant access; any other failure is reported as a fixed code without server text.
             return [new("check_failed", false, null)];
         }
     }
@@ -247,7 +249,8 @@ public static class ErpReadOnlyConnectionVerifier
             if (connection.State != ConnectionState.Open) throw Unqualified();
             await using var command = connection.CreateCommand();
             command.CommandText = VerificationSql;
-            command.CommandTimeout = CommandTimeoutSeconds;
+            // Large ERP catalogs (tens of thousands of modules) take seconds to prove; data reads keep their own limit.
+            command.CommandTimeout = CommandTimeoutSeconds * 3;
             if (!Equals(await command.ExecuteScalarAsync(cancellationToken), 1)) throw Unqualified();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }

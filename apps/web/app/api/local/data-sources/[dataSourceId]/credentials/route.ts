@@ -6,5 +6,5 @@ export async function PUT(request: Request, context: { params: Promise<{ dataSou
   const { dataSourceId } = await context.params;
   if (!isCanonicalCompanyId(dataSourceId)) return Response.json({ code: "invalid_fields" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   return mutateLocalDataSource(request, "PUT", `/api/data-sources/${dataSourceId}/credentials`,
-    { validate: value => isErpConnection(value, true), maxBodyBytes: 16384, timeoutMs: 20000 });
+    { validate: value => isErpConnection(value, true), maxBodyBytes: 16384, timeoutMs: 55000 });
 }

@@ -5,6 +5,7 @@ export type ErpConnection = {
 export type CustomerErpSource = { id: string; logicalName: string; isEnabled: boolean; bindingVersion: string };
 export const erpMessages: Record<string, string> = {
   ok: "Kết nối thành công. Tài khoản đã được xác nhận chỉ đọc.",
+  check_timeout: "Đã kết nối được, nhưng bước kiểm tra quyền trên database này chạy quá lâu. Thử lại sau ít phút; nếu vẫn lỗi, báo đội kỹ thuật.",
   unreachable: "Không thể kết nối máy chủ SQL Server. Kiểm tra địa chỉ, cổng và chứng chỉ TLS.",
   login_failed: "Tài khoản hoặc mật khẩu không đúng.",
   database_not_found: "Không tìm thấy database hoặc tài khoản chưa được cấp quyền truy cập.",

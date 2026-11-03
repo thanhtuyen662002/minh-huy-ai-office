@@ -131,7 +131,7 @@ export async function fetchCoreApi(
       headers.set("Authorization", `Bearer ${session.accessToken}`);
       headers.set(COMPANY_SELECTOR_HEADER, companyId);
       headers.set("Accept", "application/json");
-      const deadline = AbortSignal.timeout(Math.min(Math.max(timeoutMs, 1), 20_000));
+      const deadline = AbortSignal.timeout(Math.min(Math.max(timeoutMs, 1), 60_000));
       const signal = init.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
       let response: Response;
       let bytes: Uint8Array<ArrayBuffer>;
