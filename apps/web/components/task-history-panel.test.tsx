@@ -98,3 +98,13 @@ it("aborts pending archive transport on unmount", async () => {
   const view = fixture((_url, init) => { signal = init?.signal; return new Promise<Response>(() => undefined); });
   await waitFor(() => expect(signal).toBeTruthy()); view.unmount(); expect(signal?.aborted).toBe(true);
 });
+it("hands an opened task to the chat instead of rendering the detail below the list", async () => {
+  const onOpenChat = vi.fn(); const state = { current: true };
+  const request = vi.fn(async (_generation: number, url: string) => Response.json(url.includes("/history?") ? detail : page));
+  render(<TaskHistoryPanel companyId={company} userId={user} generation={1} isCurrent={() => state.current}
+    validate={async () => true} request={request} onUnauthorized={vi.fn()} onOpenChat={onOpenChat} />);
+  await screen.findByText(task.summary); fireEvent.click(screen.getByRole("button", { name: "Xem công việc PRIVATE_QUESTION_A" }));
+  await waitFor(() => expect(onOpenChat).toHaveBeenCalledWith(detail));
+  expect(screen.queryByRole("article", { name: "Chi tiết công việc" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Trang sau" })).toBeNull();
+});

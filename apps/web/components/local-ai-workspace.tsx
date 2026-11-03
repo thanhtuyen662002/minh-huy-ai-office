@@ -18,6 +18,7 @@ import { parseMemberPage } from "../lib/company-members";
 import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
+import { taskHistoryStatus, type TaskHistoryDetail } from "../lib/task-history";
 import { BotMessagesPanel } from "./bot-messages-panel";
 import { OptionalGroupInboxPanel } from "./group-inbox-panel";
 import { CustomerRequestPanel } from "./customer-request-panel";
@@ -611,6 +612,30 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     await executeSubmission(attempt);
   }
 
+  /** Reopens a saved task as a chat: the question, then the saved answer (with its query list when the full checkpoint is readable). */
+  async function openSavedChat(detail: TaskHistoryDetail) {
+    if (taskRun.current) { setNotice("Đang chờ câu trả lời khác; mở lại công việc sau khi câu trả lời hiện tại xong."); setSurface("assistant"); return; }
+    const generation = sessionGeneration.current, taskId = detail.task.taskId;
+    const answerText = detail.result?.kind === "answer" && detail.result.answer ? detail.result.answer
+      : detail.task.status === 6 ? "Công việc đã hoàn thành nhưng chưa đọc được kết quả đã lưu."
+      : `Trạng thái: ${taskHistoryStatus(detail.task.status)}.`;
+    setMessages(current => [current[0],
+      { id: `saved-user-${taskId}`, role: "user", text: detail.task.summary ?? "Câu hỏi đã lưu" },
+      { id: `assistant-${taskId}`, role: "assistant", text: answerText }]);
+    setNotice(""); setTaskStage(""); setSurface("assistant");
+    try {
+      const response = await request(generation, `/api/local/tasks/${encodeURIComponent(taskId)}?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
+      if (!response.ok || !isCurrent(generation)) return;
+      const snapshot = parseTaskSnapshot(await readJson(response));
+      if (!isCurrent(generation) || !snapshot || snapshot.taskId.toLowerCase() !== taskId.toLowerCase()) return;
+      const checkpoint = snapshot.resultPayloadJson ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
+      const failure = snapshot.failureReason ? `Công việc báo lỗi: ${snapshot.failureReason}` : null;
+      if (!checkpoint && !failure) return;
+      setMessages(current => current.map(message => message.id !== `assistant-${taskId}` ? message
+        : checkpoint ? { ...message, text: checkpoint.answer, checkpoint } : { ...message, text: failure! }));
+    } catch { /* The saved answer from history is already shown. */ }
+  }
+
   async function retrySubmission() {
     if (taskRun.current || !ready()) return;
     const attempt = submission.retry(); if (attempt) await executeSubmission(attempt);
@@ -801,7 +826,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized}
           onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
         <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} onOpenChat={detail => void openSavedChat(detail)} />
       </div> : auth ? <>
         <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />

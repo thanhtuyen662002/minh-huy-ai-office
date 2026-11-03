@@ -30,7 +30,13 @@ it("recovers an owner page after remount and selects through fresh GET without a
   expect(view.request.mock.calls.every(([, , init]) => init?.cache === "no-store")).toBe(true);
   view.unmount(); view = fixture(); await screen.findByText(question); expect(view.onResume).not.toHaveBeenCalled();
 });
-it.each([1, 2, 3])("shows persisted state%i without offering a replay", async state => {
+it("hides accepted requests because they are listed under Công việc của tôi", async () => {
+  const view = fixture(() => json({ ...page, items: [{ ...intent, state: 1, accepted }] }));
+  await waitFor(() => expect(view.request).toHaveBeenCalledOnce());
+  await waitFor(() => expect(view.container.querySelector("section")).toBeNull()); expect(screen.queryByText(question)).toBeNull();
+  expect(view.onResume).not.toHaveBeenCalled();
+});
+it.each([2, 3])("shows persisted state%i without offering a replay", async state => {
   const value = state === 3 ? { companyId, operationId, state, dataSourceId: null, question: null, inputFingerprint: null, createdAtUtc: null, expiresAtUtc: null, accepted: null }
     : { ...intent, state, accepted: state === 1 ? accepted : null };
   const view = fixture(() => json({ ...page, items: [value] }));
@@ -45,7 +51,8 @@ it("paginates25 owners and verifies the requested offset", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Trang yêu cầu trước" })); await screen.findByText("Trang 1");
 });
 it("shows an empty owner page without automatically preparing any request", async () => {
-  const view = fixture(() => json({ ...page, items: [] })); await screen.findByText(/Chưa có yêu cầu đã lưu/);
+  const view = fixture(() => json({ ...page, items: [] })); await waitFor(() => expect(view.request).toHaveBeenCalledOnce());
+  await waitFor(() => expect(view.container.querySelector("section")).toBeNull());
   expect(view.request).toHaveBeenCalledOnce(); expect(view.onResume).not.toHaveBeenCalled();
 });
 it.each(["company", "fingerprint", "ttl", "offset", "limit", "duplicate", "unknown-field"])("rejects malformed private page %s", async variant => {

@@ -31,3 +31,10 @@ it("accepts explicit unknown metadata and a truthful connection-only result", ()
   expect(parseTaskHistoryDetail({ ...detail, task: { ...task, status: null, summary: null, metadataUnavailable: true }, result: null })).toBeTruthy();
   expect(parseTaskHistoryDetail({ ...detail, result: { kind: "connection", answer: null, evidence: "read-only-connection-probe", provider: null, model: null, inputTokens: null, outputTokens: null, totalTokens: null } })).toBeTruthy();
 });
+it("accepts saved answers from the ERP query agent", () => {
+  const agent = { ...result, evidence: "ai-agent-read-only-erp-queries" };
+  const parsed = parseTaskHistoryDetail({ companyId: "22222222-2222-2222-2222-222222222222",
+    task: { taskId: "33333333-3333-3333-3333-333333333333", status: 6, createdAtUtc: "2026-10-09T00:00:00Z", updatedAtUtc: "2026-10-09T00:00:01Z", summary: "Q", metadataUnavailable: false },
+    result: agent, resultUnavailable: false });
+  expect(parsed?.result?.evidence).toBe("ai-agent-read-only-erp-queries");
+});

@@ -5,11 +5,27 @@ import { SkeletonRows } from "./skeleton";
 
 type Props = { companyId: string; userId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
-  onUnauthorized: () => void };
+  onUnauthorized: () => void;
+  /** When set, an opened task is handed back to the assistant chat instead of being shown below the list. */
+  onOpenChat?: (detail: TaskHistoryDetail) => void };
 const button = "rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-50 dark:border-white/15";
 const time = (value: string) => new Date(value).toLocaleString("vi-VN");
+const statusTone = (status: number | null) => status === 6 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+  : status === 5 ? "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
+  : "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300";
 
-export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+/** Compact pager, only rendered when there is more than one page. */
+export function Pager({ page, previous, next, previousLabel = "Trang trước", nextLabel = "Trang sau" }: { page: number;
+  previous: (() => void) | null; next: (() => void) | null; previousLabel?: string; nextLabel?: string }) {
+  const nav = "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-sm disabled:opacity-40 dark:border-white/15";
+  return <div className="mt-4 flex items-center justify-end gap-2 text-sm">
+    <button type="button" className={nav} aria-label={previousLabel} disabled={!previous} onClick={() => previous?.()}>‹</button>
+    <span className="min-w-16 text-center text-slate-600 dark:text-slate-300">Trang {page}</span>
+    <button type="button" className={nav} aria-label={nextLabel} disabled={!next} onClick={() => next?.()}>›</button>
+  </div>;
+}
+
+export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized, onOpenChat }: Props) {
   const [page, setPage] = useState<TaskHistoryPage | null>(null);
   const [detail, setDetail] = useState<TaskHistoryDetail | null>(null);
   const [offset, setOffset] = useState(0);
@@ -54,7 +70,7 @@ export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, val
       if (taskId) {
         const received = parseTaskHistoryDetail(body);
         if (!received || received.companyId !== companyId || received.task.taskId !== taskId) throw new Error("Invalid detail");
-        if (await confirm()) setDetail(received);
+        if (await confirm()) { if (onOpenChat) onOpenChat(received); else setDetail(received); }
       } else {
         const received = parseTaskHistoryPage(body);
         if (!received || received.companyId !== companyId || received.offset !== nextOffset || received.limit !== 25) throw new Error("Invalid page");
@@ -90,11 +106,11 @@ export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, val
     </tr></thead><tbody>{page.items.map(task => <tr key={task.taskId} className="border-t border-slate-100 dark:border-white/10">
       <td className="max-w-lg break-words p-2">{task.summary ?? "Thông tin công việc chưa có"}
         {task.metadataUnavailable ? <p className="mt-1 text-xs text-amber-700">Thông tin đã lưu cần được kiểm tra.</p> : null}</td>
-      <td className="p-2">{taskHistoryStatus(task.status)}</td><td className="p-2">{time(task.createdAtUtc)}</td>
-      <td className="p-2"><button type="button" className={button} onClick={() => void read(offset, task.taskId)} aria-label={`Xem công việc ${task.summary ?? task.taskId}`}>Xem công việc</button></td>
+      <td className="p-2"><span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${statusTone(task.status)}`}>{taskHistoryStatus(task.status)}</span></td><td className="whitespace-nowrap p-2 text-slate-500">{time(task.createdAtUtc)}</td>
+      <td className="p-2"><button type="button" className={button} disabled={loading} onClick={() => void read(offset, task.taskId)} aria-label={`Xem công việc ${task.summary ?? task.taskId}`}>Xem công việc</button></td>
     </tr>)}</tbody></table></div>{page.items.length === 0 ? <p className="mt-4">Chưa có công việc trong trang này. Bạn có thể đặt câu hỏi ở Trợ lý AI.</p> : null}
-    <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" className={button} disabled={offset === 0} onClick={() => void read(Math.max(0, offset - 25))}>Trang trước</button>
-      <span className="text-sm">Trang {Math.floor(offset / 25) + 1}</span><button type="button" className={button} disabled={!page.hasMore || offset + 25 > 10000} onClick={() => void read(offset + 25)}>Trang sau</button></div>
+    {offset > 0 || page.hasMore ? <Pager page={Math.floor(offset / 25) + 1} previous={offset === 0 ? null : () => void read(Math.max(0, offset - 25))}
+      next={!page.hasMore || offset + 25 > 10000 ? null : () => void read(offset + 25)} /> : null}
     {page.hasMore && offset + 25 > 10000 ? <p className="mt-3 text-sm">Đã đến giới hạn danh sách. Hãy liên hệ quản trị viên để được hỗ trợ tìm công việc cũ.</p> : null}</> : null}
     {detail ? <article aria-label="Chi tiết công việc" className="mt-6 rounded-xl border border-slate-200 p-4 dark:border-white/15">
       <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">Chi tiết công việc</h3>
