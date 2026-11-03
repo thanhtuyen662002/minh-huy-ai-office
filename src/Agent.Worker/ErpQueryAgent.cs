@@ -382,7 +382,7 @@ public sealed class SqlServerErpQuerySession(DbConnection connection) : IErpQuer
         // Defense in depth: callers validate first, but this boundary never trusts them.
         var statement = ErpAgentSqlGuard.Validate(validatedSql);
 
-        await using var transaction = await connection.BeginTransactionAsync(IsolationLevel.ReadUncommitted, cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(System.Data.IsolationLevel.ReadUncommitted, cancellationToken);
         try
         {
             await using var command = connection.CreateCommand();
