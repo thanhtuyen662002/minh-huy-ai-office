@@ -74,14 +74,24 @@ internal static class TaskHistoryMetadata
                     || root.GetProperty("evidence").GetString() != "read-only-connection-probe") return null;
                 return new("connection", null, "read-only-connection-probe", null, null, null, null, null);
             }
-            if (status != "completed" || !Fields(root, "status", "dataSourceId", "logicalName", "questionLength",
-                    "answer", "provider", "model", "usage", "billingStatus", "erpEvidence", "evidence")) return null;
+            const string CatalogEvidence = "ai-provider-reasoning-after-bounded-read-only-erp-catalog";
+            const string AgentEvidence = "ai-agent-read-only-erp-queries";
+            var evidence = root.TryGetProperty("evidence", out var evidenceElement) && evidenceElement.ValueKind == JsonValueKind.String
+                ? evidenceElement.GetString() : null;
+            var agent = evidence == AgentEvidence;
+            // #344: the query agent adds the turn count and its validated query list beside the catalog evidence.
+            if (status != "completed" || (agent
+                    ? !Fields(root, "status", "dataSourceId", "logicalName", "questionLength", "answer", "provider", "model",
+                        "usage", "billingStatus", "modelTurns", "erpEvidence", "erpQueries", "evidence")
+                        || root.GetProperty("erpQueries").ValueKind != JsonValueKind.Array
+                        || root.GetProperty("modelTurns").GetInt32() < 1
+                    : evidence != CatalogEvidence || !Fields(root, "status", "dataSourceId", "logicalName", "questionLength",
+                        "answer", "provider", "model", "usage", "billingStatus", "erpEvidence", "evidence"))) return null;
             var answer = root.GetProperty("answer").GetString();
             var provider = root.GetProperty("provider").GetString();
             var model = root.GetProperty("model").GetString();
             if (!Canonical(answer, 64000, allowWhitespace: true) || !Canonical(provider, 200) || !Canonical(model, 200)
-                || root.GetProperty("billingStatus").GetString() != "usage-observed-not-settled"
-                || root.GetProperty("evidence").GetString() != "ai-provider-reasoning-after-bounded-read-only-erp-catalog") return null;
+                || root.GetProperty("billingStatus").GetString() != "usage-observed-not-settled") return null;
             var usage = root.GetProperty("usage");
             if (!Fields(usage, "inputTokens", "outputTokens", "totalTokens")) return null;
             var input = usage.GetProperty("inputTokens").GetInt32();
@@ -101,8 +111,7 @@ internal static class TaskHistoryMetadata
                     || !Canonical(table.GetProperty("schema").GetString(), 128)
                     || !Canonical(table.GetProperty("table").GetString(), 128)
                     || table.GetProperty("approximateRowCount").GetInt64() < 0) return null;
-            return new("answer", answer, "ai-provider-reasoning-after-bounded-read-only-erp-catalog",
-                provider, model, input, output, total);
+            return new("answer", answer, evidence!, provider, model, input, output, total);
         }
         catch (Exception error) when (error is JsonException or ArgumentException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
         { return null; }

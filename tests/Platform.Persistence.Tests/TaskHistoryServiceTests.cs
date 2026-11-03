@@ -25,6 +25,22 @@ internal static class TaskHistoryFixture
         erpEvidence = new { databaseName = "OwnedFixture", tableCount = 0, sampledTableCount = 0, topTables = Array.Empty<object>() },
         evidence = "ai-provider-reasoning-after-bounded-read-only-erp-catalog"
     });
+    internal static string AgentCheckpoint(string question = "Tra cứu tồn kho 😀 �") => JsonSerializer.Serialize(new
+    {
+        status = "completed",
+        dataSourceId = SourceId,
+        logicalName = "Owned fixture",
+        questionLength = question.Length,
+        answer = "Có 3 khách hàng.",
+        provider = "fixture",
+        model = "fixture-v1",
+        usage = new { inputTokens = 2, outputTokens = 3, totalTokens = 5 },
+        billingStatus = "usage-observed-not-settled",
+        modelTurns = 3,
+        erpEvidence = new { databaseName = "OwnedFixture", tableCount = 0, sampledTableCount = 0, topTables = Array.Empty<object>() },
+        erpQueries = new[] { new { purpose = "Đếm", sql = "SELECT COUNT(*) FROM dbo.Customer", rowCount = 1, truncated = false, error = (string?)null, elapsedMs = 4 } },
+        evidence = "ai-agent-read-only-erp-queries"
+    });
     internal static Guid Add(PlatformDbContext db, AuthorizationContext owner, TaskExecutionStatus status = TaskExecutionStatus.Pending,
         string? request = null, string? checkpoint = null, Guid? id = null)
     {
@@ -109,6 +125,20 @@ public sealed class TaskHistoryServiceTests
         Assert.Null((await service.GetAsync(owner, pending))!.Result);
         Assert.DoesNotContain("PRIVATE_", JsonSerializer.Serialize(result)); Assert.DoesNotContain("databaseName", JsonSerializer.Serialize(result));
         Assert.Equal(before, Fingerprint(db));
+    }
+
+    [Fact]
+    public async Task QueryAgentCheckpointIsShownAsAnAnswer()
+    {
+        await using var db = new PlatformDbContext(MemberDirectoryFixture.Options()); var owner = MemberDirectoryFixture.Authority();
+        MemberDirectoryFixture.Seed(db, owner, role: null);
+        var id = TaskHistoryFixture.Add(db, owner, TaskExecutionStatus.Completed, checkpoint: TaskHistoryFixture.AgentCheckpoint());
+        await db.SaveChangesAsync();
+        var detail = (await new TaskHistoryService(db, new EfAuthorizationDirectory(db)).GetAsync(owner, id))!;
+        Assert.False(detail.ResultUnavailable);
+        Assert.Equal("answer", detail.Result!.Kind);
+        Assert.Equal("Có 3 khách hàng.", detail.Result.Answer);
+        Assert.Equal("ai-agent-read-only-erp-queries", detail.Result.Evidence);
     }
 
     [Theory]

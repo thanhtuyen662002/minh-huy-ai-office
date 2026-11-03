@@ -18,6 +18,8 @@ import { parseMemberPage } from "../lib/company-members";
 import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
+import { ChatHistorySidebar } from "./chat-history-sidebar";
+import { taskHistoryStatus, type TaskHistoryDetail } from "../lib/task-history";
 import { BotMessagesPanel } from "./bot-messages-panel";
 import { OptionalGroupInboxPanel } from "./group-inbox-panel";
 import { CustomerRequestPanel } from "./customer-request-panel";
@@ -52,6 +54,8 @@ type ChatMessage = {
 };
 
 type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge";
+
+class TaskResultError extends Error {}
 
 const questionIdeas = ["Doanh thu tháng này so với tháng trước?", "Khách nào đang nợ quá hạn trên 30 ngày?", "Có phiếu thu nào bất thường không?"];
 const sectionSurfaces: Record<WorkspaceSection, Surface> = {
@@ -126,6 +130,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const [editorError, setEditorError] = useState("");
   const sourceSave = useRef<object | null>(null);
   const submissionReset = useRef<(() => void) | null>(null), taskRun = useRef<object | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [historySerial, setHistorySerial] = useState(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -160,6 +166,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     if (signedInScope.current) kept.current = { scope: signedInScope.current, surface: surfaceNow.current };
     setSurface(initialSurface.current);
     setMessages((current) => current.filter((message) => message.id === "welcome"));
+    setActiveTaskId(null);
   }, []);
 
   const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
@@ -609,6 +616,39 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     await executeSubmission(attempt);
   }
 
+  /** Reopens a saved task as a chat: the question, then the saved answer (with its query list when the full checkpoint is readable). */
+  async function openSavedChat(detail: TaskHistoryDetail) {
+    if (taskRun.current) { setNotice("Đang chờ câu trả lời khác; mở lại công việc sau khi câu trả lời hiện tại xong."); setSurface("assistant"); return; }
+    const generation = sessionGeneration.current, taskId = detail.task.taskId;
+    const answerText = detail.result?.kind === "answer" && detail.result.answer ? detail.result.answer
+      : detail.task.status === 6 ? "Công việc đã hoàn thành nhưng chưa đọc được kết quả đã lưu."
+      : `Trạng thái: ${taskHistoryStatus(detail.task.status)}.`;
+    setMessages(current => [current[0],
+      { id: `saved-user-${taskId}`, role: "user", text: detail.task.summary ?? "Câu hỏi đã lưu" },
+      { id: `assistant-${taskId}`, role: "assistant", text: answerText }]);
+    setActiveTaskId(taskId); setNotice(""); setTaskStage(""); setSurface("assistant");
+    try {
+      const response = await request(generation, `/api/local/tasks/${encodeURIComponent(taskId)}?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
+      if (!response.ok || !isCurrent(generation)) return;
+      const snapshot = parseTaskSnapshot(await readJson(response));
+      if (!isCurrent(generation) || !snapshot || snapshot.taskId.toLowerCase() !== taskId.toLowerCase()) return;
+      // Only a task the archive already reports as completed may show its checkpoint answer.
+      const checkpoint = detail.task.status === 6 && detail.result?.kind === "answer" && snapshot.resultPayloadJson
+        ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
+      const failure = snapshot.failureReason ? `Công việc báo lỗi: ${snapshot.failureReason}` : null;
+      if (!checkpoint && !failure) return;
+      setMessages(current => current.map(message => message.id !== `assistant-${taskId}` ? message
+        : checkpoint ? { ...message, text: checkpoint.answer, checkpoint } : { ...message, text: failure! }));
+    } catch { /* The saved answer from history is already shown. */ }
+  }
+
+  function startNewChat() {
+    if (taskRun.current) { setNotice("Đang chờ câu trả lời; tạo cuộc trò chuyện mới sau khi câu trả lời hiện tại xong."); return; }
+    setMessages(current => current.filter(message => message.id === "welcome"));
+    setActiveTaskId(null); setNotice(""); setTaskStage("");
+    question.current?.focus();
+  }
+
   async function retrySubmission() {
     if (taskRun.current || !ready()) return;
     const attempt = submission.retry(); if (attempt) await executeSubmission(attempt);
@@ -626,8 +666,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       if (!accepted) { setTaskStage(""); return; }
 
       setTaskStage("Đã vào hàng đợi · AI đang xử lý");
+      setActiveTaskId(accepted.taskId); setHistorySerial(value => value + 1);
 
-      for (let attempt = 0; attempt < 90; attempt += 1) {
+      for (let attempt = 0; attempt < 240; attempt += 1) {
         if (!await pause(generation, 1500) || !await validate(generation) || !isCurrent(generation)) return;
         const resultResponse = await request(generation,
           `/api/local/tasks/${encodeURIComponent(accepted.taskId)}?companyId=${encodeURIComponent(companyId)}`,
@@ -649,11 +690,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
         setTaskStage(`Đang xử lý · lần chạy ${snapshot.attempt}`);
 
-        if (snapshot.failureReason) throw new Error(snapshot.failureReason);
+        if (snapshot.failureReason) throw new TaskResultError(`Công việc báo lỗi: ${snapshot.failureReason}`);
         if (!snapshot.resultPayloadJson) continue;
 
         const checkpoint = parseAiCheckpoint(snapshot.resultPayloadJson);
-        if (!checkpoint) throw new Error("Kết quả AI không đúng định dạng.");
+        if (!checkpoint) throw new TaskResultError("Kết quả AI không đúng định dạng.");
 
         setMessages((current) => [
           ...current,
@@ -664,14 +705,16 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             checkpoint,
           },
         ]);
-        setTaskStage("");
+        setTaskStage(""); setHistorySerial(value => value + 1);
         return;
       }
 
-      throw new Error("Công việc chưa hoàn tất trong thời gian chờ của giao diện.");
-    } catch {
+      throw new TaskResultError("AI vẫn đang xử lý sau 6 phút; mở Công việc để xem kết quả khi xong.");
+    } catch (error) {
       if (!isCurrent(generation)) return;
-      setNotice("Yêu cầu đã được nhận. Chưa đọc được kết quả tại đây; mở Công việc để xem trạng thái đã lưu.");
+      setNotice(error instanceof TaskResultError
+        ? error.message
+        : "Yêu cầu đã được nhận. Chưa đọc được kết quả tại đây; mở Công việc để xem trạng thái đã lưu.");
       setTaskStage("");
     } finally {
       if (taskRun.current === run) { taskRun.current = null; if (isCurrent(generation)) setBusy(false); }
@@ -797,7 +840,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized}
           onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
         <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} onOpenChat={detail => void openSavedChat(detail)} />
       </div> : auth ? <>
         <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
@@ -887,7 +930,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     </>;
   } else {
     content = (
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
+              <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]">
+                {auth ? <ChatHistorySidebar key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
+                  isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
+                  activeTaskId={activeTaskId} refreshKey={historySerial} disabled={busy || submission.working}
+                  onOpen={detail => void openSavedChat(detail)} onNew={startNewChat} /> : null}
                 <section className="flex min-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
                   <div className="border-b px-5 py-4 sm:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -909,7 +956,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                     </div>
                   </div>
 
-                  <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
+                  <div role="region" aria-label="Cuộc trò chuyện" className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
                     {!sourceLoading && readOnlySources.length === 0 ? (
                       <div role="note" className="rounded-xl border border-dashed p-4 text-sm">
                         <p className="font-medium">Chưa có nguồn dữ liệu để Trợ lý đọc.</p>
@@ -995,7 +1042,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                   </form>
                 </section>
 
-                <aside className="space-y-5">
+                <aside className="space-y-5 lg:col-span-2 2xl:col-span-1">
                   <section className="rounded-xl border bg-card p-5 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Nguồn đang dùng</p>
                     {selectedSource ? (

@@ -120,12 +120,12 @@ it("logout clears an uncertain operation and late reconciliation cannot restore 
 it("navigation to saved requests while an unknown outcome remains never automatically retries", async () => {
   const server = backend("submit"), view = await open(); compose(view.container); await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" });
   fireEvent.click(screen.getByRole("button", { name: "Mở Công việc và yêu cầu đã lưu" }));
-  await screen.findByText(/Đã nhận · xem Công việc/); expect(server.posts()).toHaveLength(2);
+  await screen.findByRole("region", { name: "Công việc của tôi" }); expect(server.posts()).toHaveLength(2);
   fireEvent.click(view.container.querySelector("nav button:nth-child(4)")!); await screen.findByRole("button", { name: "Thử lại đúng yêu cầu" }); expect(server.posts()).toHaveLength(2);
 });
 it("navigation to saved requests remains read-only while an existing polling loop is active", async () => {
   const server = backend(), view = await open(); compose(view.container);
   await screen.findByText(/Đã vào hàng đợi/); fireEvent.click(screen.getByRole("button", { name: "Mở Công việc và yêu cầu đã lưu" }));
-  await screen.findByText(/Đã nhận · xem Công việc/); expect(server.posts()).toHaveLength(2);
+  await screen.findByRole("region", { name: "Công việc của tôi" }); expect(server.posts()).toHaveLength(2);
   await act(async () => Promise.resolve()); view.unmount();
 });

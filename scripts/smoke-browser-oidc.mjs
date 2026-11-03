@@ -390,7 +390,7 @@ try {
   const task = await get(`/api/local/tasks/${accepted.taskId}` + query);
   requireProof(task.status === 200 && task.cache === "no-store" && JSON.parse(task.text).taskId === accepted.taskId);
   stage = "owned-expiry-private-message";
-  await page.getByText(privateMessage, { exact: true }).waitFor();
+  await page.getByRole("region", { name: "Cuộc trò chuyện", exact: true }).getByText(privateMessage, { exact: true }).waitFor();
   const privateDraft = "Disposable browser draft " + randomUUID();
   stage = "owned-expiry-draft-ready";
   await page.locator('textarea[name="question"]:enabled').waitFor();
@@ -422,7 +422,7 @@ try {
   stage = "provider-expiry-reauthentication";
   await signIn(); await waitForSource();
   requireProof((await current()).status === 200);
-  requireProof(await page.getByText(privateMessage, { exact: true }).count() === 0
+  requireProof(await page.getByRole("region", { name: "Cuộc trò chuyện", exact: true }).getByText(privateMessage, { exact: true }).count() === 0
     && (await page.locator('textarea[name="question"]').inputValue()) === "");
   console.log("PASS actual Redis TIME session expiry clears private UI and fresh provider reauthentication recovers");
   stage = "owned-two-company-fixture";
@@ -491,7 +491,7 @@ try {
     requireProof(switchAccepted.status() === 202);
     const switchTask = (await switchAccepted.json()).taskId; requireProof(guid(switchTask));
     stage = "original-company-private-chat-message";
-    await page.getByText(switchMessage, { exact: true }).waitFor();
+    await page.getByRole("region", { name: "Cuộc trò chuyện", exact: true }).getByText(switchMessage, { exact: true }).waitFor();
     stage = "original-company-private-chat-draft";
     await page.locator('textarea[name="question"]:enabled').waitFor();
     await page.locator('textarea[name="question"]').fill(privateDraft);

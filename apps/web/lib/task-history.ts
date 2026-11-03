@@ -55,7 +55,7 @@ function result(value: unknown): TaskHistoryResult | null {
     if (value.evidence !== "read-only-connection-probe" || [value.answer, value.provider, value.model, value.inputTokens, value.outputTokens, value.totalTokens].some(item => item !== null)) return null;
   } else if (value.kind === "answer") {
     if (!text(value.answer, 64000, true) || !text(value.provider, 200) || !text(value.model, 200)
-      || value.evidence !== "ai-provider-reasoning-after-bounded-read-only-erp-catalog"
+      || value.evidence !== "ai-provider-reasoning-after-bounded-read-only-erp-catalog" && value.evidence !== "ai-agent-read-only-erp-queries"
       || !integer(value.inputTokens) || value.inputTokens < 0 || !integer(value.outputTokens) || value.outputTokens < 0
       || !integer(value.totalTokens) || value.totalTokens > 2147483647 || value.inputTokens + value.outputTokens !== value.totalTokens) return null;
   } else return null;
