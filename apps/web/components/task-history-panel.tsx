@@ -6,7 +6,7 @@ import { SkeletonRows } from "./skeleton";
 type Props = { companyId: string; userId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
   onUnauthorized: () => void;
-  /** When set, an opened task is handed back to the assistant chat instead of being shown below the list. */
+  /** When set, the detail offers to reopen the task as a chat in Trợ lý. */
   onOpenChat?: (detail: TaskHistoryDetail) => void };
 const button = "rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-50 dark:border-white/15";
 const time = (value: string) => new Date(value).toLocaleString("vi-VN");
@@ -70,7 +70,7 @@ export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, val
       if (taskId) {
         const received = parseTaskHistoryDetail(body);
         if (!received || received.companyId !== companyId || received.task.taskId !== taskId) throw new Error("Invalid detail");
-        if (await confirm()) { if (onOpenChat) onOpenChat(received); else setDetail(received); }
+        if (await confirm()) setDetail(received);
       } else {
         const received = parseTaskHistoryPage(body);
         if (!received || received.companyId !== companyId || received.offset !== nextOffset || received.limit !== 25) throw new Error("Invalid page");
@@ -114,7 +114,8 @@ export function TaskHistoryPanel({ companyId, userId, generation, isCurrent, val
     {page.hasMore && offset + 25 > 10000 ? <p className="mt-3 text-sm">Đã đến giới hạn danh sách. Hãy liên hệ quản trị viên để được hỗ trợ tìm công việc cũ.</p> : null}</> : null}
     {detail ? <article aria-label="Chi tiết công việc" className="mt-6 rounded-xl border border-slate-200 p-4 dark:border-white/15">
       <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">Chi tiết công việc</h3>
-        <button type="button" className={button} onClick={() => void read(offset, detail.task.taskId)}>Cập nhật trạng thái</button></div>
+        <div className="flex flex-wrap gap-2">{onOpenChat ? <button type="button" className={`${button} bg-slate-900 text-white dark:bg-white dark:text-slate-900`} onClick={() => onOpenChat(detail)}>Mở trong Trợ lý</button> : null}
+          <button type="button" className={button} onClick={() => void read(offset, detail.task.taskId)}>Cập nhật trạng thái</button></div></div>
       <p className="mt-3 break-words">{detail.task.summary ?? "Thông tin công việc chưa có"}</p>
       <p className="mt-2 text-sm">{taskHistoryStatus(detail.task.status)} · Cập nhật {time(detail.task.updatedAtUtc)}</p>
       <p className="mt-2 break-all text-xs text-slate-500">Mã công việc: {detail.task.taskId}</p>

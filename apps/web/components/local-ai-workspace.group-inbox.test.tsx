@@ -20,7 +20,8 @@ it("ordinary mobile readers can open inbox directly without preparing a task; lo
   const inbox = await screen.findByRole("button", { name: "Tin nhắn" });
   expect(inbox.parentElement?.className).toContain("overflow-x-auto"); expect(screen.queryByRole("button", { name: "Thành viên" })).toBeNull();
   fireEvent.click(inbox); await screen.findByRole("button", { name: "PRIVATE_GRANTED_SOURCE" });
-  expect(fetcher.mock.calls.every(([url, init]) => !url.startsWith("/api/local/tasks") && (!init?.method || init.method === "GET"))).toBe(true);
+  // Only the Trợ lý history list (a read) may touch tasks; nothing prepares or submits one.
+  expect(fetcher.mock.calls.every(([url, init]) => (!url.startsWith("/api/local/tasks") || url.startsWith("/api/local/tasks?")) && (!init?.method || init.method === "GET"))).toBe(true);
   held = new Promise<Response>(resolve => { finish = resolve; }); const previous = signal;
   fireEvent.click(screen.getByRole("button", { name: "Tải lại nguồn" })); await waitFor(() => expect(signal).not.toBe(previous));
   const pendingSignal = signal!; fireEvent.click(screen.getByRole("button", { name: "Đăng xuất" })); await screen.findByText("Local Pilot");
