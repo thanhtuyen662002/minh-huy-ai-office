@@ -57,6 +57,15 @@ type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" |
 
 class TaskResultError extends Error {}
 
+/** "Permanent: AI provider returned HTTP 404 ..." from the worker becomes a readable Vietnamese line. */
+function failureText(reason: string) {
+  const split = reason.indexOf(": ");
+  const kind = split > 0 ? reason.slice(0, split) : reason, detail = split > 0 ? reason.slice(split + 2).trim() : "";
+  const label = kind === "Authorization" ? "Không có quyền đọc nguồn dữ liệu" : kind === "Validation" ? "Câu hỏi không hợp lệ"
+    : kind === "Transient" ? "Lỗi tạm thời, hệ thống sẽ thử lại" : "Trợ lý không trả lời được";
+  return detail ? `${label}. Chi tiết: ${detail}` : `${label} (${kind}).`;
+}
+
 const questionIdeas = ["Doanh thu tháng này so với tháng trước?", "Khách nào đang nợ quá hạn trên 30 ngày?", "Có phiếu thu nào bất thường không?"];
 const sectionSurfaces: Record<WorkspaceSection, Surface> = {
   "tong-quan": "overview", "tin-nhan": "group-inbox", "cong-viec": "customer-requests",
@@ -635,7 +644,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       // Only a task the archive already reports as completed may show its checkpoint answer.
       const checkpoint = detail.task.status === 6 && detail.result?.kind === "answer" && snapshot.resultPayloadJson
         ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
-      const failure = snapshot.failureReason ? `Công việc báo lỗi: ${snapshot.failureReason}` : null;
+      const failure = snapshot.failureReason ? failureText(snapshot.failureReason) : null;
       if (!checkpoint && !failure) return;
       setMessages(current => current.map(message => message.id !== `assistant-${taskId}` ? message
         : checkpoint ? { ...message, text: checkpoint.answer, checkpoint } : { ...message, text: failure! }));
@@ -690,7 +699,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
         setTaskStage(`Đang xử lý · lần chạy ${snapshot.attempt}`);
 
-        if (snapshot.failureReason) throw new TaskResultError(`Công việc báo lỗi: ${snapshot.failureReason}`);
+        if (snapshot.failureReason) throw new TaskResultError(failureText(snapshot.failureReason));
         if (!snapshot.resultPayloadJson) continue;
 
         const checkpoint = parseAiCheckpoint(snapshot.resultPayloadJson);
@@ -1005,7 +1014,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
                   <form onSubmit={askAi} className="border-t p-4 sm:p-5">
                     {notice ? <p role="status" className="mb-3 text-sm text-rose-600 dark:text-rose-300">{notice}</p> : null}
-                    {submission.pending ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-ring/40 bg-accent/40 p-3 text-sm">
+                    {/* Only a request that needs the user (unsent after reload, uncertain or refused) shows this box;
+                        a normal send shows its progress in the chat instead. */}
+                    {submission.pending && submission.pending.phase !== "accepted" && !(submission.pending.phase === "prepared" && submission.working)
+                      ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-ring/40 bg-accent/40 p-3 text-sm">
                       {!messages.some(message => message.role === "user" && message.text === submission.pending!.input.question)
                         ? <p className="whitespace-pre-wrap break-words">{submission.pending.input.question}</p> : null}
                       <p role="status" className="mt-2">{submission.pending.notice}</p>
@@ -1016,10 +1028,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                         </> : null}
                         <button type="button" onClick={() => setSurface("tasks")} className="rounded-lg border px-3 py-2">Mở Công việc và yêu cầu đã lưu</button>
                       </div>
-                      {submission.pending.phase !== "accepted" ? <>
-                        <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
-                        <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
-                      </> : null}
+                      <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
+                      <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
                     </div> : null}
                     {readOnlySources.length && !messages.some(message => message.role === "user") ? <div className="mb-3 flex flex-wrap gap-2" aria-label="Câu hỏi gợi ý">
                       {questionIdeas.map(idea => <button key={idea} type="button" onClick={() => { if (question.current) { question.current.value = idea; question.current.focus(); } }}

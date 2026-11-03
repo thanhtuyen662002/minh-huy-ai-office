@@ -12,7 +12,8 @@ public sealed record WorkStepExecutionResult(
     int MaxAttempts,
     long? DurableCheckpointVersion = null,
     string? CheckpointPayloadJson = null,
-    CustomerAiCreditSettlementRequest? CreditSettlement = null);
+    CustomerAiCreditSettlementRequest? CreditSettlement = null,
+    string? FailureDetail = null);
 
 /// <summary>
 /// Trusted runtime evidence produced by an authorized worker when a task consumes
@@ -213,7 +214,8 @@ public sealed class PersistentWorkDeliveryHandler(
                 success: false,
                 result.FailureClass,
                 nowUtc,
-                cancellationToken);
+                cancellationToken,
+                result.FailureDetail);
         }
 
         await SaveChangesAsync(cancellationToken);
@@ -324,7 +326,8 @@ public sealed class PersistentWorkDeliveryHandler(
         bool success,
         WorkFailureClass? failureClass,
         DateTimeOffset nowUtc,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? failureDetail = null)
     {
         var task = await dbContext.Tasks.SingleOrDefaultAsync(
             item => item.TenantId == envelope.TenantId
@@ -374,7 +377,8 @@ public sealed class PersistentWorkDeliveryHandler(
             "step.status.changed",
             nextStepStatus.ToString(),
             nowUtc,
-            cancellationToken);
+            cancellationToken,
+            success ? null : TaskFailureDetail.Normalize(failureDetail));
         await AppendStatusEventAsync(
             envelope,
             stepId: null,
@@ -390,7 +394,8 @@ public sealed class PersistentWorkDeliveryHandler(
         string eventType,
         string status,
         DateTimeOffset occurredAtUtc,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? detail = null)
     {
         var latestSequence = await dbContext.TaskEvents
             .Where(item => item.TenantId == envelope.TenantId
@@ -417,7 +422,7 @@ public sealed class PersistentWorkDeliveryHandler(
             StepId = stepId,
             Sequence = checked(latestSequence + 1),
             EventType = eventType,
-            PayloadJson = JsonSerializer.Serialize(new { status }),
+            PayloadJson = detail is null ? JsonSerializer.Serialize(new { status }) : JsonSerializer.Serialize(new { status, detail }),
             OccurredAtUtc = occurredAtUtc
         });
     }

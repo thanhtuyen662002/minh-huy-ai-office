@@ -105,7 +105,9 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
             if (!response.IsSuccessStatusCode)
             {
                 var transient = response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500;
-                throw new AiProviderExecutionException($"AI provider returned HTTP {(int)response.StatusCode}.", transient);
+                var reason = await ProviderErrorAsync(response, cancellationToken).ConfigureAwait(false);
+                throw new AiProviderExecutionException(
+                    $"AI provider returned HTTP {(int)response.StatusCode} (model {model}){(reason is null ? "." : $": {reason}")}", transient);
             }
 
             try
@@ -115,7 +117,9 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
                 var root = document.RootElement;
                 var output = ReadOutputText(root);
                 if (string.IsNullOrWhiteSpace(output) || output.Length > 64_000)
-                    throw new InvalidOperationException("AI provider returned an empty or oversized text result.");
+                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(output)
+                        ? $"AI provider returned no text (finish reason {FinishReason(root) ?? "unknown"}, model {model})."
+                        : "AI provider returned an oversized text result.");
                 var (inputTokens, outputTokens) = ReadUsage(root);
                 return new AiGatewayResponse(request.RequestId, request.Capability, output, ReadString(root, "model") ?? model, inputTokens, outputTokens)
                 {
@@ -123,7 +127,40 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
                 };
             }
             catch (JsonException exception) { throw new AiProviderExecutionException("AI provider returned malformed JSON.", false, exception); }
-            catch (InvalidOperationException exception) { throw new AiProviderExecutionException("AI provider returned an incompatible response payload.", false, exception); }
+            catch (InvalidOperationException exception) { throw new AiProviderExecutionException($"AI provider returned an incompatible response payload: {exception.Message}", false, exception); }
+        }
+    }
+
+    /// <summary>
+    /// The provider's own error message (for example "model not found"), so a misconfigured
+    /// "AI dùng chung" says what to fix. Providers do not echo the API key in these messages.
+    /// </summary>
+    private static async Task<string?> ProviderErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(body)) return null;
+            if (body.Length > 4096) body = body[..4096];
+            string? message = null;
+            try
+            {
+                using var document = JsonDocument.Parse(body);
+                var root = document.RootElement.ValueKind == JsonValueKind.Array && document.RootElement.GetArrayLength() > 0
+                    ? document.RootElement[0] : document.RootElement;
+                if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out var error))
+                    message = error.ValueKind == JsonValueKind.String ? error.GetString()
+                        : error.ValueKind == JsonValueKind.Object ? ReadString(error, "message") : null;
+                message ??= root.ValueKind == JsonValueKind.Object ? ReadString(root, "message") : null;
+            }
+            catch (JsonException) { message = body.TrimStart().StartsWith('<') ? null : body; }
+            if (string.IsNullOrWhiteSpace(message)) return null;
+            message = string.Join(' ', message.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+            return message.Length > 200 ? message[..200] + "…" : message;
+        }
+        catch (Exception error) when (error is HttpRequestException or IOException or OperationCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            return null;
         }
     }
 
@@ -136,6 +173,10 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
             throw new InvalidOperationException("AI response message is missing.");
         return ReadString(message, "content") ?? "";
     }
+
+    private static string? FinishReason(JsonElement root) =>
+        root.TryGetProperty("choices", out var choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0
+            && choices[0].ValueKind == JsonValueKind.Object ? ReadString(choices[0], "finish_reason") : null;
 
     // Some compatible providers omit usage; a missing count is recorded as zero, never guessed.
     private static (long InputTokens, long OutputTokens) ReadUsage(JsonElement root)

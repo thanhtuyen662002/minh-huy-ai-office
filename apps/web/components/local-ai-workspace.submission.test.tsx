@@ -125,7 +125,8 @@ it("navigation to saved requests while an unknown outcome remains never automati
 });
 it("navigation to saved requests remains read-only while an existing polling loop is active", async () => {
   const server = backend(), view = await open(); compose(view.container);
-  await screen.findByText(/Đã vào hàng đợi/); fireEvent.click(screen.getByRole("button", { name: "Mở Công việc và yêu cầu đã lưu" }));
+  await screen.findByText(/Đã vào hàng đợi/); expect(screen.queryByLabelText("Yêu cầu đang giữ")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Công việc" })); fireEvent.click(screen.getByRole("button", { name: "Việc giao cho AI" }));
   await screen.findByRole("region", { name: "Công việc của tôi" }); expect(server.posts()).toHaveLength(2);
   await act(async () => Promise.resolve()); view.unmount();
 });

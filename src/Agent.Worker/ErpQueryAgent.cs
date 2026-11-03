@@ -590,7 +590,7 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
             catch (InvalidOperationException error)
             {
                 // Same mapping as the catalog-only path: an unusable provider configuration is permanent.
-                throw new AiProviderExecutionException("AI provider is not usable.", false, error);
+                throw new AiProviderExecutionException($"AI provider is not usable: {error.Message}", false, error);
             }
 
             inputTokens = checked(inputTokens + response.InputTokens);
