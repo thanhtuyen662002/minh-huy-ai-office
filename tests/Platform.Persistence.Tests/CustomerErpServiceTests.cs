@@ -266,4 +266,21 @@ public sealed class CustomerErpServiceTests
         }
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
+
+    [Fact]
+    public void Unreachable_connection_explains_the_kind_without_credentials()
+    {
+        var tls = SqlCustomerErpConnectionVerifier.Unreachable(new InvalidOperationException("A connection was established but the login failed",
+            new System.Security.Authentication.AuthenticationException("Authentication failed, see inner exception.",
+                new Exception("error:0A000102:SSL routines::unsupported protocol"))));
+        Assert.Equal("unreachable", tls.Code);
+        var finding = Assert.Single(tls.Findings!);
+        Assert.Equal("connection_tls", finding.Code);
+        Assert.Contains("unsupported protocol", finding.Detail);
+        Assert.Equal("connection_dns", Assert.Single(SqlCustomerErpConnectionVerifier.Unreachable(
+            new InvalidOperationException("x", new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound))).Findings!).Code);
+        Assert.Equal("connection_refused", Assert.Single(SqlCustomerErpConnectionVerifier.Unreachable(
+            new InvalidOperationException("x", new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.ConnectionRefused))).Findings!).Code);
+        Assert.True(SqlCustomerErpConnectionVerifier.Unreachable(new InvalidOperationException(new string('x', 2000))).Findings![0].Detail!.Length <= 300);
+    }
 }

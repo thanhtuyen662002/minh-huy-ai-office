@@ -55,6 +55,11 @@ export const erpFindingLabels: Record<string, string> = {
   clr_assembly: "Database có assembly CLR",
   linked_server: "Máy chủ có linked server",
   check_failed: "Không chạy được bước kiểm tra quyền",
+  connection_tls: "Lỗi bắt tay mã hoá TLS (thường do SQL Server cũ chỉ hỗ trợ TLS 1.0/1.1 hoặc chứng chỉ không hợp lệ)",
+  connection_dns: "Không tìm thấy tên máy chủ (DNS)",
+  connection_refused: "Máy chủ từ chối kết nối ở cổng này",
+  connection_timeout: "Hết thời gian chờ máy chủ phản hồi",
+  connection_failed: "Lỗi kết nối",
 };
 export function parseErpFindings(value: unknown): ErpFinding[] {
   if (!Array.isArray(value)) return [];

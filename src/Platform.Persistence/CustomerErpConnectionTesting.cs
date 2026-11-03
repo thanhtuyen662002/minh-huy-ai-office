@@ -95,10 +95,35 @@ public sealed class SqlCustomerErpConnectionVerifier(ISqlConnectionFactory facto
             }, deadline.Token);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (OperationCanceledException) { return new("unreachable"); }
+        catch (OperationCanceledException) { return new("unreachable", Findings: [new("connection_timeout", false, null)]); }
         catch (ErpReadOnlyCredentialsException) { return new("not_read_only", Findings: [new("check_failed", false, null)]); }
-        catch (SqlException error) { return new(MapSqlError(error.Number)); }
-        catch (Exception error) when (error is DbException or InvalidOperationException or ArgumentException) { return new("unreachable"); }
+        catch (SqlException error) { var code = MapSqlError(error.Number); return code == "unreachable" ? Unreachable(error) : new(code); }
+        catch (Exception error) when (error is DbException or InvalidOperationException or ArgumentException) { return Unreachable(error); }
+    }
+
+    /// <summary>Explains a failed connection to the administrator: a fixed kind plus the driver's own error numbers
+    /// and messages (no credentials are part of them), so DNS, closed ports and TLS handshake failures can be told apart.</summary>
+    internal static CustomerErpConnectionResult Unreachable(Exception error)
+    {
+        var chain = new List<Exception>();
+        for (var current = error; current is not null && chain.Count < 6; current = current.InnerException) chain.Add(current);
+        bool Says(params string[] words) => chain.Any(e => words.Any(w => e.Message.Contains(w, StringComparison.OrdinalIgnoreCase)));
+        var kind = chain.Any(e => e is System.Security.Authentication.AuthenticationException) || Says("SSL", "TLS", "certificate", "handshake") ? "connection_tls"
+            : chain.Any(e => e is System.Net.Sockets.SocketException { SocketErrorCode: System.Net.Sockets.SocketError.HostNotFound or System.Net.Sockets.SocketError.NoData })
+              || error is SqlException { Number: 11001 } || Says("No such host", "Name or service not known") ? "connection_dns"
+            : chain.Any(e => e is System.Net.Sockets.SocketException { SocketErrorCode: System.Net.Sockets.SocketError.ConnectionRefused }) || Says("refused") ? "connection_refused"
+            : error is SqlException { Number: -2 } || Says("timeout", "timed out") ? "connection_timeout"
+            : "connection_failed";
+        static string Text(Exception e)
+        {
+            // SqlClient puts the useful part, e.g. "(provider: SSL Provider, error: 31 - ...)", after a long generic sentence.
+            var message = e.Message;
+            var provider = message.IndexOf("(provider:", StringComparison.Ordinal);
+            if (provider > 0) message = message[provider..];
+            return new string(message.Where(c => !char.IsControl(c)).Take(160).ToArray());
+        }
+        var detail = string.Join(" | ", chain.Select(e => (e is SqlException sql ? $"SQL {sql.Number}" : e.GetType().Name) + ": " + Text(e)));
+        return new("unreachable", Findings: [new(kind, false, detail.Length > 300 ? detail[..300] : detail)]);
     }
 
     public static string MapSqlError(int number) => number switch
