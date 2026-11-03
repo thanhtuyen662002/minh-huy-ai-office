@@ -13,5 +13,5 @@ export async function GET(request: Request) {
 }
 export async function POST(request: Request) {
   return mutateLocalDataSource(request, "POST", "/api/data-sources/customer-erp",
-    { validate: value => isErpConnection(value, true), maxBodyBytes: 16384, timeoutMs: 20000 });
+    { validate: value => isErpConnection(value, true), maxBodyBytes: 16384, timeoutMs: 55000 });
 }

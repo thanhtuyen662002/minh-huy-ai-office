@@ -69,11 +69,11 @@ AND NOT EXISTS (SELECT 1 FROM sys.database_principals p
   AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ')
   AND ISNULL(HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT',N'VIEW DEFINITION'),0)<>1))
           AND (NOT EXISTS (SELECT 1 FROM sys.objects o CROSS APPLY sys.fn_my_permissions(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT') p
-  WHERE o.is_ms_shipped=0 AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ')
+  WHERE o.is_ms_shipped=0 AND o.type IN ('U','V','P','PC','FN','FS','FT','AF','TF','IF','SN','SO','SQ') AND (o.principal_id IN (SELECT principal_id FROM sys.user_token) OR EXISTS (SELECT 1 FROM sys.database_permissions dp WHERE dp.class=1 AND dp.major_id=o.object_id AND dp.state IN ('G','W') AND dp.grantee_principal_id IN (SELECT principal_id FROM sys.user_token)))
     AND p.permission_name NOT IN (N'SELECT',N'VIEW DEFINITION',N'VIEW SECURITY DEFINITION',N'VIEW PERFORMANCE DEFINITION')
     AND NOT (o.type IN ('FN','IF','TF') AND p.permission_name IN (N'EXECUTE',N'REFERENCES'))))
           AND (NOT EXISTS (SELECT 1 FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id
-  WHERE o.is_ms_shipped=0 AND ISNULL(HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0))
+  WHERE o.is_ms_shipped=0 AND (o.principal_id IN (SELECT principal_id FROM sys.user_token) OR EXISTS (SELECT 1 FROM sys.database_permissions dp WHERE dp.class=1 AND dp.major_id=o.object_id AND dp.state IN ('G','W') AND dp.grantee_principal_id IN (SELECT principal_id FROM sys.user_token))) AND ISNULL(HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT',N'UPDATE',c.name,N'COLUMN'),1)<>0))
           AND (NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('P','PC','FS','FT','AF')
   AND (ISNULL(HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT',N'EXECUTE'),1)<>0
     OR ISNULL(HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT',N'SELECT'),1)<>0)))
@@ -84,10 +84,8 @@ AND NOT EXISTS (SELECT 1 FROM sys.database_principals p
 AND NOT EXISTS (SELECT 1 FROM sys.databases WHERE database_id=DB_ID() AND (is_db_chaining_on=1 OR is_trustworthy_on=1)))
           AND (NOT EXISTS (SELECT 1 FROM sys.sql_modules m JOIN sys.objects o ON o.object_id=m.object_id
   WHERE o.is_ms_shipped=0 AND o.type IN ('V','FN','IF','TF')
-    AND (m.definition IS NULL
-      OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENQUERY%'
-      OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENROWSET%'
-      OR m.definition COLLATE Latin1_General_100_CI_AS LIKE N'%OPENDATASOURCE%')))
+    AND (m.definition IS NULL OR EXISTS (SELECT 1 FROM (SELECT UPPER(m.definition) COLLATE Latin1_General_100_BIN2) u(d)
+      WHERE u.d LIKE N'%OPENQUERY%' OR u.d LIKE N'%OPENROWSET%' OR u.d LIKE N'%OPENDATASOURCE%'))))
           AND (NOT EXISTS (SELECT 1 FROM sys.external_tables))
           AND (NOT EXISTS (SELECT 1 FROM sys.assemblies WHERE is_user_defined=1) AND NOT EXISTS (SELECT 1 FROM sys.types WHERE is_user_defined=1 AND is_assembly_type=1))
           THEN 1 ELSE 0 END;

@@ -3,5 +3,5 @@ import { isErpConnection } from "../../../../../lib/customer-erp";
 
 export async function POST(request: Request) {
   return mutateLocalDataSource(request, "POST", "/api/data-sources/connection-test",
-    { validate: isErpConnection, maxBodyBytes: 16384, timeoutMs: 20000 });
+    { validate: isErpConnection, maxBodyBytes: 16384, timeoutMs: 55000 });
 }

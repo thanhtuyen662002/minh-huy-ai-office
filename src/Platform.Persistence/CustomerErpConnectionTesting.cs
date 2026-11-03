@@ -58,11 +58,13 @@ public sealed class SqlCustomerErpConnectionVerifier(ISqlConnectionFactory facto
     public async Task<CustomerErpConnectionResult> VerifyAsync(string connectionString, CancellationToken cancellationToken)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        deadline.CancelAfter(TimeSpan.FromSeconds(15));
+        deadline.CancelAfter(TimeSpan.FromSeconds(45));
+        var opened = false;
         try
         {
             await using var connection = factory.Create(connectionString);
             await connection.OpenAsync(deadline.Token);
+            opened = true;
             await using (var elevated = connection.CreateCommand())
             {
                 elevated.CommandText = "SELECT CASE WHEN ISNULL(IS_SRVROLEMEMBER(N'sysadmin'),1)<>0 THEN 1 WHEN ISNULL(IS_ROLEMEMBER(N'db_owner'),1)<>0 THEN 2 WHEN USER_NAME()=N'dbo' THEN 3 ELSE 0 END;";
@@ -95,8 +97,11 @@ public sealed class SqlCustomerErpConnectionVerifier(ISqlConnectionFactory facto
             }, deadline.Token);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        // After login the server answered; a slow permission check on a large catalog is not a network problem.
+        catch (OperationCanceledException) when (opened) { return new("check_timeout"); }
         catch (OperationCanceledException) { return new("unreachable", Findings: [new("connection_timeout", false, null)]); }
         catch (ErpReadOnlyCredentialsException) { return new("not_read_only", Findings: [new("check_failed", false, null)]); }
+        catch (SqlException error) when (opened && error.Number == -2) { return new("check_timeout"); }
         catch (SqlException error) { var code = MapSqlError(error.Number); return code == "unreachable" ? Unreachable(error) : new(code); }
         catch (Exception error) when (error is DbException or InvalidOperationException or ArgumentException) { return Unreachable(error); }
     }
