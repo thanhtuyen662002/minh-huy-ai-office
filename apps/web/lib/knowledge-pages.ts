@@ -5,7 +5,35 @@ export type KnowledgeList = { items: KnowledgeSummary[]; hasMore: boolean };
 export type KnowledgePage = { id: string; customerName: string | null; title: string; body: string; createdBy: string; updatedBy: string;
   createdAt: string; updatedAt: string; rowVersion: string };
 export type KnowledgeInput = { title: string; body: string; customerName: string | null; rowVersion?: string };
-export const knowledgeLimits = { name: 200, body: 20000, pages: 500 } as const;
+export const knowledgeLimits = { name: 200, body: 500_000, pages: 500 } as const;
+
+// Uploaded files are read into text on the server; long text comes back split into page-sized parts.
+export type KnowledgeExtract = { title: string; parts: string[]; truncated: boolean };
+export const knowledgeFileLimits = { bytes: 20 * 1024 * 1024, name: 255, parts: 4 } as const;
+export const knowledgeFileAccept = ".pdf,.docx,.xlsx,.pptx,.txt,.md,.markdown,.csv,.tsv";
+export const knowledgeFileReasons: Record<string, string> = {
+  legacy: "File Word/Excel đời cũ (.doc, .xls, .ppt) chưa đọc được. Hãy mở file và Lưu thành .docx, .xlsx hoặc .pptx rồi tải lại.",
+  unsupported: "Chỉ đọc được file PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), .txt, .md và .csv.",
+  empty: "File không có chữ đọc được. PDF dạng ảnh scan cần được nhận dạng chữ (OCR) trước khi tải lên.",
+  encrypted: "File đang đặt mật khẩu. Hãy bỏ mật khẩu rồi tải lại.",
+  damaged: "File bị lỗi hoặc không đúng định dạng nên không đọc được.",
+  tooLarge: "File quá lớn. Mỗi file tối đa 20 MB.",
+};
+export const knowledgeFileName = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0
+  && value.length <= knowledgeFileLimits.name && ![...value].some(char => char < " " || char === "\u007f") && !lone.test(value);
+export function parseKnowledgeExtract(value: unknown): KnowledgeExtract | null {
+  if (!object(value) || !keys(value, ["title", "parts", "truncated"]) || !knowledgeName(value.title) || typeof value.truncated !== "boolean"
+    || !Array.isArray(value.parts) || value.parts.length < 1 || value.parts.length > knowledgeFileLimits.parts
+    || !value.parts.every(part => knowledgeBody(part) && part.length > 0)) return null;
+  return { title: value.title, parts: [...value.parts] as string[], truncated: value.truncated };
+}
+/** "Tên (phần 2/3)" kept inside the title limit. */
+export function knowledgePartTitle(title: string, index: number, count: number): string {
+  if (count <= 1) return title;
+  const suffix = ` (phần ${index + 1}/${count})`;
+  const base = title.slice(0, knowledgeLimits.name - suffix.length).replace(/[\uD800-\uDBFF]$/, "").trimEnd();
+  return `${base}${suffix}`;
+}
 
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 const keys = (value: Record<string, unknown>, allowed: readonly string[]) => Object.keys(value).length === allowed.length

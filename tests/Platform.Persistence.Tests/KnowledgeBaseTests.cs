@@ -71,4 +71,18 @@ public sealed class KnowledgeBaseTests
         var body = new string('a', KnowledgePageJson.MaximumBody + 1);
         Assert.Throws<ArgumentException>(() => KnowledgePageJson.Read(Encoding.UTF8.GetBytes($"{{\"title\":\"A\",\"body\":\"{body}\"}}"), false));
     }
+
+    [Fact]
+    public async Task AcceptsLongPagesAndReadsFilesOnlyForMembers()
+    {
+        var (db, pages, scope) = Setup();
+        await using var _ = db;
+        var body = string.Concat(Enumerable.Repeat("Dòng tiếng Việt\n", KnowledgePageJson.MaximumBody / 16));
+        var input = KnowledgePageJson.Read(Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(new { title = "Dài", body })), false);
+        Assert.Equal(body, (await pages.CreateAsync(scope, scope.CompanyId, input)).Body);
+        var extract = await pages.ExtractAsync(scope, scope.CompanyId, "ghi-chu.txt", "Nội dung"u8.ToArray());
+        Assert.Equal(("ghi-chu", "Nội dung"), (extract.Title, Assert.Single(extract.Parts)));
+        db.CompanyMemberships.Single(x => x.UserId == scope.UserId).IsActive = false; await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pages.ExtractAsync(scope, scope.CompanyId, "ghi-chu.txt", "x"u8.ToArray()));
+    }
 }
