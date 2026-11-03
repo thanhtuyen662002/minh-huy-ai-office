@@ -356,6 +356,54 @@ public sealed class PilotDataSourceWorkExecutionTests
     }
 
     [Fact]
+    public async Task Ai_question_executor_agent_mode_records_validated_queries_in_checkpoint()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var probe = new RecordingProbe();
+        var evidenceReader = new FixedEvidenceReader();
+        var adapter = new ScriptedAiAdapter(
+            """{"action":"query","purpose":"Số dư hiện tại","sql":"SELECT TOP (5) Id, Balance FROM dbo.Customer"}""",
+            """{"action":"answer","text":"Số dư khách 1 là 100."}""");
+        var backend = new RecordingQueryBackend();
+        var raw = new PilotAiQuestionExecutor(
+            db,
+            new CompositeSecretResolver(new ISecretResolver[] { new FixedSecretResolver("test-connection") }),
+            probe,
+            evidenceReader,
+            new ProviderNeutralAiGateway(new IAiProviderAdapter[] { adapter }),
+            new PilotAiRuntimeDescriptor("provider-test", "model-test"),
+            queryAgentBackend: backend);
+
+        var result = await raw.ExecuteAsync(
+            seeded.Envelope,
+            new WorkLeaseSnapshot(Guid.NewGuid(), "worker-1", 1, DateTimeOffset.UtcNow.AddMinutes(1)),
+            CancellationToken.None);
+
+        Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
+        Assert.Equal(new[] { "test-connection" }, backend.Connections);
+        Assert.Equal(new[] { "SELECT TOP (5) Id, Balance FROM dbo.Customer" }, backend.Queries);
+        Assert.Single(evidenceReader.Connections);
+        Assert.Equal(2, adapter.Requests.Count);
+        Assert.All(adapter.Requests, request => Assert.DoesNotContain("test-connection", request.Input, StringComparison.Ordinal));
+        Assert.Contains("read current balance", adapter.Requests[0].Input, StringComparison.Ordinal);
+
+        var payload = Assert.IsType<string>(result.CheckpointPayloadJson);
+        Assert.DoesNotContain("test-connection", payload, StringComparison.Ordinal);
+        using var checkpoint = JsonDocument.Parse(payload);
+        var root = checkpoint.RootElement;
+        Assert.Equal("Số dư khách 1 là 100.", root.GetProperty("answer").GetString());
+        Assert.Equal("ai-agent-read-only-erp-queries", root.GetProperty("evidence").GetString());
+        Assert.Equal(26, root.GetProperty("usage").GetProperty("inputTokens").GetInt64());
+        Assert.Equal(36, root.GetProperty("usage").GetProperty("totalTokens").GetInt64());
+        Assert.Equal("pilot-erp", root.GetProperty("erpEvidence").GetProperty("databaseName").GetString());
+        var query = Assert.Single(root.GetProperty("erpQueries").EnumerateArray());
+        Assert.Equal("Số dư hiện tại", query.GetProperty("purpose").GetString());
+        Assert.Equal("SELECT TOP (5) Id, Balance FROM dbo.Customer", query.GetProperty("sql").GetString());
+        Assert.Equal(1, query.GetProperty("rowCount").GetInt32());
+    }
+
+    [Fact]
     public void Erp_evidence_rejects_more_than_the_bounded_table_limit()
     {
         var tables = Enumerable.Range(0, PilotErpEvidence.MaximumTables + 1)
@@ -625,6 +673,51 @@ public sealed class PilotDataSourceWorkExecutionTests
                 {
                     ProviderId = providerId
                 });
+        }
+    }
+
+    private sealed class ScriptedAiAdapter(params string[] outputs) : IAiProviderAdapter
+    {
+        public string ProviderId => "provider-test";
+
+        public List<AiGatewayRequest> Requests { get; } = [];
+
+        public bool Supports(AiCapability capability) => capability == AiCapability.Reasoning;
+
+        public Task<AiGatewayResponse> ExecuteAsync(AiGatewayRequest request, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requests.Add(request);
+            var output = outputs[Math.Min(Requests.Count - 1, outputs.Length - 1)];
+            return Task.FromResult(new AiGatewayResponse(request.RequestId, request.Capability, output, "provider-test-model", 13, 5)
+            {
+                ProviderId = ProviderId
+            });
+        }
+    }
+
+    private sealed class RecordingQueryBackend : IErpQueryAgentBackend, IErpQuerySession
+    {
+        public List<string> Connections { get; } = [];
+
+        public List<string> Queries { get; } = [];
+
+        public Task<T> UseAsync<T>(string connectionString, Func<IErpQuerySession, Task<T>> use, CancellationToken cancellationToken)
+        {
+            Connections.Add(connectionString);
+            return use(this);
+        }
+
+        public Task<string> FindTablesAsync(IReadOnlyList<string> keywords, CancellationToken cancellationToken) =>
+            Task.FromResult("find_tables: (none)");
+
+        public Task<string> DescribeTablesAsync(IReadOnlyList<string> tables, CancellationToken cancellationToken) =>
+            Task.FromResult("describe: (none)");
+
+        public Task<ErpAgentQueryResult> QueryAsync(string validatedSql, CancellationToken cancellationToken)
+        {
+            Queries.Add(validatedSql);
+            return Task.FromResult(new ErpAgentQueryResult("1 rows:\nId | Balance\n1 | 100\n", 1, false, null));
         }
     }
 

@@ -106,6 +106,14 @@ Use double underscores in environment variables, for example `AIOffice__BotChann
 
 See the [bot channel tables, endpoints and connector contract](features/bot-channels/README.md) for canonical signed targets, limits, versions, QR/command expiry and follow-up integration guidance. The #295 source-group enrollment remains an independent ingestion authorization boundary: selecting a bot customer group does not grant that service permission to ingest requests from it.
 
+## Trợ lý ERP queries (#344)
+
+| Key | Default / meaning |
+| --- | --- |
+| `AIOffice:ErpQueryAgent:Enabled` (worker) | Off unless `true` (production compose: `AIOFFICE_ERP_QUERY_AGENT_ENABLED=true`). Off: Trợ lý only receives the bounded table catalog. On: Trợ lý runs a bounded agent loop on the selected read-only customer ERP source: search table/column names, describe tables, and run up to 5 model-proposed queries per question, then answer from the rows. |
+
+Guardrails when enabled: the read-only login proof runs before and after the whole session; every query must parse as one current-database `SELECT`/CTE (no comments, `;`, `INTO`, data-changing or external-access keywords, 3-/4-part names, `NEXT VALUE FOR`) and is rejected before execution otherwise; queries run in a `READ UNCOMMITTED` transaction that is always rolled back, with a 20 s timeout and results capped at 50 rows, 20 columns and 200 characters per cell. Connection strings never reach the model. **Customer row data returned by these queries is sent to the configured AI provider** ("AI dùng chung" or the server fallback). Each query (purpose, SQL, row count, error) is stored in the task checkpoint as `erpQueries` and shown under the answer.
+
 ## Storage contract for future tables
 
 Any table that needs a credential stores a reference field such as `CredentialSecretRef`, never a password/token/connection string. Resolver/provider configuration is infrastructure metadata. Rotation changes the underlying secret or reference under controlled release policy; agents continue to request logical resources rather than credentials.

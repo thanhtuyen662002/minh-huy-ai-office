@@ -131,6 +131,9 @@ services:
       # Trợ lý uses the company's "AI dùng chung" (Kết nối) when it is filled in; the values above are the fallback.
       AIOffice__BotChannels__EncryptionKeySecretRef: secretref://env/AIOFFICE_BOT_ENCRYPTION_KEY
       AIOFFICE_BOT_ENCRYPTION_KEY: ${AIOFFICE_BOT_ENCRYPTION_KEY:-}
+      # Trợ lý ERP queries (#344): off unless AIOFFICE_ERP_QUERY_AGENT_ENABLED=true. When on, the assistant may run
+      # validated read-only SELECTs on the selected customer ERP and row data is sent to the configured AI provider.
+      AIOffice__ErpQueryAgent__Enabled: ${AIOFFICE_ERP_QUERY_AGENT_ENABLED:-false}
       RabbitMqWork__HostName: rabbitmq
       RabbitMqWork__Port: 5672
       RabbitMqWork__UserName: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in ignored .env.production}

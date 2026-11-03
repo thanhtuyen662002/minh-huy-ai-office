@@ -89,7 +89,33 @@ try
         || !schema.Objects.Any(o => o.Kind == ErpSchemaObjectKind.Index)
         || !schema.Objects.Any(o => o.Kind == ErpSchemaObjectKind.ForeignKey)
         || schema.Objects.Any(o => o.DefinitionHash.Length != 64)) throw new InvalidOperationException();
-    Console.WriteLine("PASS actual qualified probe/catalog/capability/schema read paths");
+    stage = "actual-positive-agent";
+    var agentRead = await new SqlServerErpQueryAgentBackend(factory).UseAsync(readerConnection, async session =>
+    {
+        var found = await session.FindTablesAsync(["ReadCredentialRuntime"], CancellationToken.None);
+        var described = await session.DescribeTablesAsync([fixture], CancellationToken.None);
+        var rows = await session.QueryAsync($"SELECT TOP (5) Id, Label FROM {fixture} ORDER BY Id", CancellationToken.None);
+        var failed = await session.QueryAsync($"SELECT NoSuchColumn FROM {fixture}", CancellationToken.None);
+        var after = await session.QueryAsync($"SELECT COUNT(*) AS n FROM {fixture}", CancellationToken.None);
+        return (found, described, rows, failed, after);
+    }, CancellationToken.None);
+    stage = "actual-positive-agent-result";
+    if (!agentRead.found.Contains(fixture.Split('.')[1], StringComparison.Ordinal)
+        || !agentRead.described.Contains("Id int not null PK", StringComparison.Ordinal)
+        || !agentRead.described.Contains("Label nvarchar(100) not null", StringComparison.Ordinal)
+        || !agentRead.described.Contains($"ParentId int null -> {fixture}.Id", StringComparison.Ordinal)
+        || agentRead.rows.RowCount != 1 || agentRead.rows.Error is not null
+        || !agentRead.rows.Observation.Contains("1 | Owned runtime value", StringComparison.Ordinal)
+        || agentRead.failed.Error is null || agentRead.after.RowCount != 1 || agentRead.after.Error is not null)
+        throw new InvalidOperationException();
+    stage = "actual-positive-agent-guard";
+    try
+    {
+        ErpAgentSqlGuard.Validate($"UPDATE {fixture} SET Label=N'Mutated'");
+        throw new InvalidOperationException("Expected the agent guard to reject a write.");
+    }
+    catch (InvalidOperationException error) when (error.Message.Contains("UPDATE", StringComparison.Ordinal)) { }
+    Console.WriteLine("PASS actual qualified probe/catalog/capability/schema/agent read paths");
 
     stage = "actual-elevated-replacement-session";
     await AllDeniedAsync(operatorConnection);
