@@ -53,6 +53,8 @@ type ChatMessage = {
 
 type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge";
 
+class TaskResultError extends Error {}
+
 const questionIdeas = ["Doanh thu tháng này so với tháng trước?", "Khách nào đang nợ quá hạn trên 30 ngày?", "Có phiếu thu nào bất thường không?"];
 const sectionSurfaces: Record<WorkspaceSection, Surface> = {
   "tong-quan": "overview", "tin-nhan": "group-inbox", "cong-viec": "customer-requests",
@@ -627,7 +629,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
       setTaskStage("Đã vào hàng đợi · AI đang xử lý");
 
-      for (let attempt = 0; attempt < 90; attempt += 1) {
+      for (let attempt = 0; attempt < 240; attempt += 1) {
         if (!await pause(generation, 1500) || !await validate(generation) || !isCurrent(generation)) return;
         const resultResponse = await request(generation,
           `/api/local/tasks/${encodeURIComponent(accepted.taskId)}?companyId=${encodeURIComponent(companyId)}`,
@@ -649,11 +651,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
         setTaskStage(`Đang xử lý · lần chạy ${snapshot.attempt}`);
 
-        if (snapshot.failureReason) throw new Error(snapshot.failureReason);
+        if (snapshot.failureReason) throw new TaskResultError(`Công việc báo lỗi: ${snapshot.failureReason}`);
         if (!snapshot.resultPayloadJson) continue;
 
         const checkpoint = parseAiCheckpoint(snapshot.resultPayloadJson);
-        if (!checkpoint) throw new Error("Kết quả AI không đúng định dạng.");
+        if (!checkpoint) throw new TaskResultError("Kết quả AI không đúng định dạng.");
 
         setMessages((current) => [
           ...current,
@@ -668,10 +670,12 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         return;
       }
 
-      throw new Error("Công việc chưa hoàn tất trong thời gian chờ của giao diện.");
-    } catch {
+      throw new TaskResultError("AI vẫn đang xử lý sau 6 phút; mở Công việc để xem kết quả khi xong.");
+    } catch (error) {
       if (!isCurrent(generation)) return;
-      setNotice("Yêu cầu đã được nhận. Chưa đọc được kết quả tại đây; mở Công việc để xem trạng thái đã lưu.");
+      setNotice(error instanceof TaskResultError
+        ? error.message
+        : "Yêu cầu đã được nhận. Chưa đọc được kết quả tại đây; mở Công việc để xem trạng thái đã lưu.");
       setTaskStage("");
     } finally {
       if (taskRun.current === run) { taskRun.current = null; if (isCurrent(generation)) setBusy(false); }
