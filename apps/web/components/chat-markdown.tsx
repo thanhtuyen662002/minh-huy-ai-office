@@ -12,8 +12,11 @@ type Block = { kind: "code"; lang: string; lines: string[] } | { kind: "table"; 
   | { kind: "heading"; level: number; text: string } | { kind: "quote"; lines: string[] } | { kind: "rule" } | { kind: "para"; lines: string[] };
 
 const listItem = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
-const tableRow = /^\s*\|.*\|\s*$/;
-const tableDivider = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
+// GitHub-style tables: outer pipes are optional and a divider cell needs only one dash.
+const tableRow = /^(?=.*\|).*\S.*$/;
+const tableDivider = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+const tableStart = (lines: string[], index: number) => index + 1 < lines.length && /\|/.test(lines[index])
+  && tableRow.test(lines[index]) && tableDivider.test(lines[index + 1]) && /\|/.test(lines[index + 1] + lines[index]);
 
 function parse(source: string): Block[] {
   const lines = source.split("\n"), out: Block[] = [];
@@ -29,10 +32,12 @@ function parse(source: string): Block[] {
     const heading = line.match(/^\s*(#{1,6})\s+(.*)$/);
     if (heading) { out.push({ kind: "heading", level: heading[1].length, text: heading[2].replace(/\s#+\s*$/, "") }); index++; continue; }
     if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { out.push({ kind: "rule" }); index++; continue; }
-    if (tableRow.test(line) && index + 1 < lines.length && tableDivider.test(lines[index + 1])) {
+    if (tableStart(lines, index)) {
       const rows: string[][] = [cells(line)]; index += 2;
-      while (index < lines.length && tableRow.test(lines[index])) rows.push(cells(lines[index++]));
-      out.push({ kind: "table", rows }); continue;
+      while (index < lines.length && lines[index].trim() && /\|/.test(lines[index]) && !/^\s*```/.test(lines[index])) rows.push(cells(lines[index++]));
+      // Every row gets the header's columns, so short or long rows still line up.
+      const width = rows[0].length;
+      out.push({ kind: "table", rows: rows.map(row => row.length >= width ? row.slice(0, Math.max(width, 1)) : [...row, ...Array(width - row.length).fill("")]) }); continue;
     }
     if (/^\s*>/.test(line)) {
       const body: string[] = [];
@@ -53,14 +58,15 @@ function parse(source: string): Block[] {
     }
     const body: string[] = [];
     while (index < lines.length && lines[index].trim() && !/^\s*(```|#{1,6}\s|>)/.test(lines[index]) && !listItem.test(lines[index])
-      && !(tableRow.test(lines[index]) && index + 1 < lines.length && tableDivider.test(lines[index + 1]))) body.push(lines[index++]);
+      && !tableStart(lines, index)) body.push(lines[index++]);
     out.push({ kind: "para", lines: body });
   }
   return out;
 }
 
 function cells(line: string) {
-  return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(cell => cell.trim());
+  // "\|" is a literal pipe inside a cell.
+  return line.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "").split(/(?<!\\)\|/).map(cell => cell.trim().replace(/\\\|/g, "|"));
 }
 
 function blocks(source: string): ReactNode[] {
@@ -79,10 +85,11 @@ function blocks(source: string): ReactNode[] {
         return <blockquote key={key} className="rounded-r-lg border-l-4 border-sky-400 bg-sky-50 px-3 py-2 text-slate-700 dark:bg-sky-400/10 dark:text-slate-200">
           {block.lines.map((line, index) => <Fragment key={index}>{index ? <br /> : null}{inline(line)}</Fragment>)}</blockquote>;
       case "table":
-        return <div key={key} className="overflow-x-auto rounded-lg border"><table className="w-full text-left text-xs">
-          <thead className="bg-muted"><tr>{block.rows[0].map((cell, index) => <th key={index} className="px-3 py-2 font-semibold">{inline(cell)}</th>)}</tr></thead>
+        return <div key={key} role="group" aria-label="Bảng" tabIndex={0} className="max-w-full overflow-x-auto rounded-lg border">
+          <table className="min-w-full text-left text-xs">
+          <thead className="bg-muted"><tr>{block.rows[0].map((cell, index) => <th key={index} className="px-3 py-2 align-bottom font-semibold">{inline(cell)}</th>)}</tr></thead>
           <tbody>{block.rows.slice(1).map((row, rowIndex) => <tr key={rowIndex} className="border-t">
-            {row.map((cell, index) => <td key={index} className="px-3 py-2 align-top">{inline(cell)}</td>)}</tr>)}</tbody></table></div>;
+            {row.map((cell, index) => <td key={index} className="min-w-16 px-3 py-2 align-top">{inline(cell)}</td>)}</tr>)}</tbody></table></div>;
       case "list": return <Fragment key={key}>{list(block.items, 0, 0).node}</Fragment>;
       default:
         return <p key={key}>{block.lines.map((line, index) => <Fragment key={index}>{index ? <br /> : null}{inline(line.trim())}</Fragment>)}</p>;

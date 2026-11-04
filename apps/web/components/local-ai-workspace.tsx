@@ -150,6 +150,12 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       text: "Xin chào. Tôi là AI Office của Minh Huy. Hãy chọn nguồn dữ liệu rồi đặt câu hỏi; tôi chỉ sử dụng dữ liệu đã được hệ thống cấp quyền.",
     },
   ]);
+  const chatScroll = useRef<HTMLDivElement | null>(null);
+  // The conversation scrolls inside its own box; follow the newest message and progress line.
+  useEffect(() => {
+    const box = chatScroll.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [messages, taskStage]);
 
   const readOnlySources = useMemo(
     () => sources.filter((source) => source.isEnabled && source.allowRead && !source.allowWrite),
@@ -954,7 +960,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                   isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
                   activeConversationId={activeConversationId} refreshKey={historySerial} disabled={busy || submission.working}
                   onOpen={(conversationId, details) => void openSavedChat(conversationId, details)} onNew={startNewChat} /> : null}
-                <section className="flex min-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
+                <section className="flex h-[calc(100dvh-8rem)] min-h-[28rem] flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
                   <div className="border-b px-5 py-4 sm:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
@@ -975,7 +981,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                     </div>
                   </div>
 
-                  <div role="region" aria-label="Cuộc trò chuyện" className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
+                  <div ref={chatScroll} role="region" aria-label="Cuộc trò chuyện" tabIndex={0} className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6">
                     {!sourceLoading && readOnlySources.length === 0 ? (
                       <div role="note" className="rounded-xl border border-dashed p-4 text-sm">
                         <p className="font-medium">Chưa có nguồn dữ liệu để Trợ lý đọc.</p>
@@ -987,7 +993,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                     {messages.map((message) => (
                       <article key={message.id} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                         {message.role === "user" ? null : <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-bold text-accent-foreground">AI</span>}
-                        <div className={`max-w-[88%] sm:max-w-[78%] ${message.role === "user" ? "rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground" : "pt-0.5 text-foreground"}`}>
+                        <div className={message.role === "user" ? "max-w-[88%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground sm:max-w-[78%]" : "min-w-0 flex-1 pt-0.5 text-foreground"}>
                           {message.role === "assistant" && message.id !== "welcome"
                             ? <ChatMarkdown text={message.text} />
                             : <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
