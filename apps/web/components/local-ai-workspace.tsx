@@ -19,6 +19,8 @@ import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { ChatHistorySidebar } from "./chat-history-sidebar";
+import { ChatMarkdown } from "./chat-markdown";
+import { conversationOf, readConversationMap, rememberConversation } from "../lib/chat-conversations";
 import { taskHistoryStatus, type TaskHistoryDetail } from "../lib/task-history";
 import { BotMessagesPanel } from "./bot-messages-panel";
 import { OptionalGroupInboxPanel } from "./group-inbox-panel";
@@ -56,6 +58,15 @@ type ChatMessage = {
 type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge";
 
 class TaskResultError extends Error {}
+
+/** "Permanent: AI provider returned HTTP 404 ..." from the worker becomes a readable Vietnamese line. */
+function failureText(reason: string) {
+  const split = reason.indexOf(": ");
+  const kind = split > 0 ? reason.slice(0, split) : reason, detail = split > 0 ? reason.slice(split + 2).trim() : "";
+  const label = kind === "Authorization" ? "Không có quyền đọc nguồn dữ liệu" : kind === "Validation" ? "Câu hỏi không hợp lệ"
+    : kind === "Transient" ? "Lỗi tạm thời, hệ thống sẽ thử lại" : "Trợ lý không trả lời được";
+  return detail ? `${label}. Chi tiết: ${detail}` : `${label} (${kind}).`;
+}
 
 const questionIdeas = ["Doanh thu tháng này so với tháng trước?", "Khách nào đang nợ quá hạn trên 30 ngày?", "Có phiếu thu nào bất thường không?"];
 const sectionSurfaces: Record<WorkspaceSection, Surface> = {
@@ -130,7 +141,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const [editorError, setEditorError] = useState("");
   const sourceSave = useRef<object | null>(null);
   const submissionReset = useRef<(() => void) | null>(null), taskRun = useRef<object | null>(null);
-  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [historySerial, setHistorySerial] = useState(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -166,7 +177,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     if (signedInScope.current) kept.current = { scope: signedInScope.current, surface: surfaceNow.current };
     setSurface(initialSurface.current);
     setMessages((current) => current.filter((message) => message.id === "welcome"));
-    setActiveTaskId(null);
+    setActiveConversationId(null);
   }, []);
 
   const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
@@ -617,35 +628,39 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   }
 
   /** Reopens a saved task as a chat: the question, then the saved answer (with its query list when the full checkpoint is readable). */
-  async function openSavedChat(detail: TaskHistoryDetail) {
+  /** Reopens a saved conversation: each question, then its saved answer (with the query list when the full checkpoint is readable). */
+  async function openSavedChat(conversationId: string, details: readonly TaskHistoryDetail[]) {
     if (taskRun.current) { setNotice("Đang chờ câu trả lời khác; mở lại công việc sau khi câu trả lời hiện tại xong."); setSurface("assistant"); return; }
-    const generation = sessionGeneration.current, taskId = detail.task.taskId;
-    const answerText = detail.result?.kind === "answer" && detail.result.answer ? detail.result.answer
+    const generation = sessionGeneration.current;
+    const answerText = (detail: TaskHistoryDetail) => detail.result?.kind === "answer" && detail.result.answer ? detail.result.answer
       : detail.task.status === 6 ? "Công việc đã hoàn thành nhưng chưa đọc được kết quả đã lưu."
       : `Trạng thái: ${taskHistoryStatus(detail.task.status)}.`;
-    setMessages(current => [current[0],
-      { id: `saved-user-${taskId}`, role: "user", text: detail.task.summary ?? "Câu hỏi đã lưu" },
-      { id: `assistant-${taskId}`, role: "assistant", text: answerText }]);
-    setActiveTaskId(taskId); setNotice(""); setTaskStage(""); setSurface("assistant");
-    try {
-      const response = await request(generation, `/api/local/tasks/${encodeURIComponent(taskId)}?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
-      if (!response.ok || !isCurrent(generation)) return;
-      const snapshot = parseTaskSnapshot(await readJson(response));
-      if (!isCurrent(generation) || !snapshot || snapshot.taskId.toLowerCase() !== taskId.toLowerCase()) return;
-      // Only a task the archive already reports as completed may show its checkpoint answer.
-      const checkpoint = detail.task.status === 6 && detail.result?.kind === "answer" && snapshot.resultPayloadJson
-        ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
-      const failure = snapshot.failureReason ? `Công việc báo lỗi: ${snapshot.failureReason}` : null;
-      if (!checkpoint && !failure) return;
-      setMessages(current => current.map(message => message.id !== `assistant-${taskId}` ? message
-        : checkpoint ? { ...message, text: checkpoint.answer, checkpoint } : { ...message, text: failure! }));
-    } catch { /* The saved answer from history is already shown. */ }
+    setMessages(current => [current[0], ...details.flatMap(detail => [
+      { id: `saved-user-${detail.task.taskId}`, role: "user" as const, text: detail.task.summary ?? "Câu hỏi đã lưu" },
+      { id: `assistant-${detail.task.taskId}`, role: "assistant" as const, text: answerText(detail) }])]);
+    setActiveConversationId(conversationId); setNotice(""); setTaskStage(""); setSurface("assistant");
+    await Promise.all(details.map(async detail => {
+      const taskId = detail.task.taskId;
+      try {
+        const response = await request(generation, `/api/local/tasks/${encodeURIComponent(taskId)}?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
+        if (!response.ok || !isCurrent(generation)) return;
+        const snapshot = parseTaskSnapshot(await readJson(response));
+        if (!isCurrent(generation) || !snapshot || snapshot.taskId.toLowerCase() !== taskId.toLowerCase()) return;
+        // Only a task the archive already reports as completed may show its checkpoint answer.
+        const checkpoint = detail.task.status === 6 && detail.result?.kind === "answer" && snapshot.resultPayloadJson
+          ? parseAiCheckpoint(snapshot.resultPayloadJson) : null;
+        const failure = snapshot.failureReason ? failureText(snapshot.failureReason) : null;
+        if (!checkpoint && !failure) return;
+        setMessages(current => current.map(message => message.id !== `assistant-${taskId}` ? message
+          : checkpoint ? { ...message, text: checkpoint.answer, checkpoint } : { ...message, text: failure! }));
+      } catch { /* The saved answer from history is already shown. */ }
+    }));
   }
 
   function startNewChat() {
     if (taskRun.current) { setNotice("Đang chờ câu trả lời; tạo cuộc trò chuyện mới sau khi câu trả lời hiện tại xong."); return; }
     setMessages(current => current.filter(message => message.id === "welcome"));
-    setActiveTaskId(null); setNotice(""); setTaskStage("");
+    setActiveConversationId(null); setNotice(""); setTaskStage("");
     question.current?.focus();
   }
 
@@ -666,7 +681,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       if (!accepted) { setTaskStage(""); return; }
 
       setTaskStage("Đã vào hàng đợi · AI đang xử lý");
-      setActiveTaskId(accepted.taskId); setHistorySerial(value => value + 1);
+      // A question asked inside an open conversation joins it; otherwise it starts a new one.
+      const conversationId = activeConversationId ?? accepted.taskId.toLowerCase();
+      if (auth) rememberConversation(`${companyId}:${auth.userId}`, accepted.taskId, conversationId);
+      setActiveConversationId(conversationId); setHistorySerial(value => value + 1);
 
       for (let attempt = 0; attempt < 240; attempt += 1) {
         if (!await pause(generation, 1500) || !await validate(generation) || !isCurrent(generation)) return;
@@ -690,7 +708,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
         setTaskStage(`Đang xử lý · lần chạy ${snapshot.attempt}`);
 
-        if (snapshot.failureReason) throw new TaskResultError(`Công việc báo lỗi: ${snapshot.failureReason}`);
+        if (snapshot.failureReason) throw new TaskResultError(failureText(snapshot.failureReason));
         if (!snapshot.resultPayloadJson) continue;
 
         const checkpoint = parseAiCheckpoint(snapshot.resultPayloadJson);
@@ -840,7 +858,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized}
           onResume={intent => { if (taskRun.current || !submission.resume(intent)) return false; setNotice(""); setSurface("assistant"); return true; }} />
         <TaskHistoryPanel companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
-          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} onOpenChat={detail => void openSavedChat(detail)} />
+          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} onOpenChat={detail => void openSavedChat(
+            auth ? conversationOf(readConversationMap(`${companyId}:${auth.userId}`), detail.task.taskId) : detail.task.taskId.toLowerCase(), [detail])} />
       </div> : auth ? <>
         <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
@@ -933,8 +952,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
               <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]">
                 {auth ? <ChatHistorySidebar key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
                   isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
-                  activeTaskId={activeTaskId} refreshKey={historySerial} disabled={busy || submission.working}
-                  onOpen={detail => void openSavedChat(detail)} onNew={startNewChat} /> : null}
+                  activeConversationId={activeConversationId} refreshKey={historySerial} disabled={busy || submission.working}
+                  onOpen={(conversationId, details) => void openSavedChat(conversationId, details)} onNew={startNewChat} /> : null}
                 <section className="flex min-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
                   <div className="border-b px-5 py-4 sm:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -969,7 +988,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                       <article key={message.id} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                         {message.role === "user" ? null : <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-bold text-accent-foreground">AI</span>}
                         <div className={`max-w-[88%] sm:max-w-[78%] ${message.role === "user" ? "rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground" : "pt-0.5 text-foreground"}`}>
-                          <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
+                          {message.role === "assistant" && message.id !== "welcome"
+                            ? <ChatMarkdown text={message.text} />
+                            : <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
                           {message.checkpoint ? (
                             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-current/10 pt-2 text-[11px] opacity-65">
                               <span>{message.checkpoint.provider}</span>
@@ -1005,7 +1026,10 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
                   <form onSubmit={askAi} className="border-t p-4 sm:p-5">
                     {notice ? <p role="status" className="mb-3 text-sm text-rose-600 dark:text-rose-300">{notice}</p> : null}
-                    {submission.pending ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-ring/40 bg-accent/40 p-3 text-sm">
+                    {/* Only a request that needs the user (unsent after reload, uncertain or refused) shows this box;
+                        a normal send shows its progress in the chat instead. */}
+                    {submission.pending && submission.pending.phase !== "accepted" && !(submission.pending.phase === "prepared" && submission.working)
+                      ? <div aria-label="Yêu cầu đang giữ" className="mb-4 rounded-xl border border-ring/40 bg-accent/40 p-3 text-sm">
                       {!messages.some(message => message.role === "user" && message.text === submission.pending!.input.question)
                         ? <p className="whitespace-pre-wrap break-words">{submission.pending.input.question}</p> : null}
                       <p role="status" className="mt-2">{submission.pending.notice}</p>
@@ -1016,10 +1040,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                         </> : null}
                         <button type="button" onClick={() => setSurface("tasks")} className="rounded-lg border px-3 py-2">Mở Công việc và yêu cầu đã lưu</button>
                       </div>
-                      {submission.pending.phase !== "accepted" ? <>
-                        <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
-                        <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
-                      </> : null}
+                      <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
+                      <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
                     </div> : null}
                     {readOnlySources.length && !messages.some(message => message.role === "user") ? <div className="mb-3 flex flex-wrap gap-2" aria-label="Câu hỏi gợi ý">
                       {questionIdeas.map(idea => <button key={idea} type="button" onClick={() => { if (question.current) { question.current.value = idea; question.current.focus(); } }}

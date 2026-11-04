@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MinhHuy.AIOffice.Platform.Configuration;
 using MinhHuy.AIOffice.Platform.Persistence;
 using MinhHuy.AIOffice.Shared.Contracts;
@@ -115,8 +116,32 @@ public sealed class PilotAiQuestionExecutor(
     IAiGateway aiGateway,
     PilotAiRuntimeDescriptor runtime,
     DataSourceSecretBindingService? bindingService = null,
-    IErpQueryAgentBackend? queryAgentBackend = null) : IRawWorkStepExecutor
+    IErpQueryAgentBackend? queryAgentBackend = null,
+    ILogger<PilotAiQuestionExecutor>? logger = null) : IRawWorkStepExecutor
 {
+    /// <summary>
+    /// The fixed, secret-free provider message (status code, provider error text) shown to the task owner
+    /// so a failed answer says why. Connection strings and keys never reach these messages.
+    /// </summary>
+    private WorkStepExecutionResult ProviderFailure(WorkDispatchEnvelope envelope, AiProviderExecutionException exception, int maxAttempts)
+    {
+        logger?.LogWarning("Trợ lý task {TaskId} AI provider failure (transient={Transient}): {Detail}",
+            envelope.TaskId, exception.IsTransient, exception.Message);
+        return new WorkStepExecutionResult(
+            WorkDeliveryOutcome.Failed,
+            exception.IsTransient ? WorkFailureClass.Transient : WorkFailureClass.Permanent,
+            maxAttempts,
+            FailureDetail: exception.Message);
+    }
+
+    private WorkStepExecutionResult UnexpectedFailure(WorkDispatchEnvelope envelope, Exception exception, int maxAttempts)
+    {
+        // Exception text from drivers can name servers; only the type is shown, the log keeps the message.
+        logger?.LogWarning(exception, "Trợ lý task {TaskId} failed with {Type}", envelope.TaskId, exception.GetType().Name);
+        return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, maxAttempts,
+            FailureDetail: $"Lỗi khi đọc ERP ({exception.GetType().Name}).");
+    }
+
     private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -200,12 +225,9 @@ public sealed class PilotAiQuestionExecutor(
         {
             throw;
         }
-        catch
+        catch (Exception exception)
         {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Transient,
-                request.MaxAttempts);
+            return UnexpectedFailure(envelope, exception, request.MaxAttempts);
         }
 
         var aiRequest = new AiGatewayRequest(
@@ -227,17 +249,11 @@ public sealed class PilotAiQuestionExecutor(
         }
         catch (AiProviderExecutionException exception)
         {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                exception.IsTransient ? WorkFailureClass.Transient : WorkFailureClass.Permanent,
-                request.MaxAttempts);
+            return ProviderFailure(envelope, exception, request.MaxAttempts);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException exception)
         {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Permanent,
-                request.MaxAttempts);
+            return ProviderFailure(envelope, new AiProviderExecutionException($"AI provider is not usable: {exception.Message}", false, exception), request.MaxAttempts);
         }
 
         var totalTokens = checked(response.InputTokens + response.OutputTokens);
@@ -320,17 +336,11 @@ public sealed class PilotAiQuestionExecutor(
         }
         catch (AiProviderExecutionException exception)
         {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                exception.IsTransient ? WorkFailureClass.Transient : WorkFailureClass.Permanent,
-                request.MaxAttempts);
+            return ProviderFailure(envelope, exception, request.MaxAttempts);
         }
-        catch
+        catch (Exception exception)
         {
-            return new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed,
-                WorkFailureClass.Transient,
-                request.MaxAttempts);
+            return UnexpectedFailure(envelope, exception, request.MaxAttempts);
         }
 
         var totalTokens = checked(outcome.InputTokens + outcome.OutputTokens);

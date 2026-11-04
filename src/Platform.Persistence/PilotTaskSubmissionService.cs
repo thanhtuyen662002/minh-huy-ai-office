@@ -375,6 +375,9 @@ public sealed class PilotTaskResultProjection
         if (step.UpdatedAtUtc > updatedAtUtc) updatedAtUtc = step.UpdatedAtUtc;
         if (execution.UpdatedAtUtc > updatedAtUtc) updatedAtUtc = execution.UpdatedAtUtc;
 
+        var failureDetail = execution.LastFailureClass is null ? null
+            : await TaskFailureDetail.ReadAsync(dbContext, task.TenantId, task.CompanyId, task.Id, step.Id, cancellationToken).ConfigureAwait(false);
+
         await RequireCurrentAuthorityAsync(authority, cancellationToken);
         return new PilotTaskStatusSnapshot(
             task.Id,
@@ -385,7 +388,8 @@ public sealed class PilotTaskResultProjection
             execution.Attempt,
             updatedAtUtc,
             checkpoint?.PayloadJson,
-            execution.LastFailureClass?.ToString());
+            execution.LastFailureClass is null ? null
+                : failureDetail is null ? execution.LastFailureClass.ToString() : $"{execution.LastFailureClass}: {failureDetail}");
     }
 
     private async Task RequireCurrentAuthorityAsync(AuthorizationContext authority, CancellationToken cancellationToken)

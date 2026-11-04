@@ -130,6 +130,28 @@ public sealed class PersistentWorkDeliveryHandlerTests
         Assert.Equal(TaskStepStatus.Failed, (await db.TaskSteps.SingleAsync()).Status);
     }
 
+    [Fact]
+    public async Task FailedDelivery_RecordsTheWorkersFailureDetailOnTheStepEvent()
+    {
+        await using var db = NewDb();
+        var (_, _, envelope) = SeedPublishedDispatch(db);
+        var handler = new PersistentWorkDeliveryHandler(db, new StubExecutor(new WorkStepExecutionResult(
+            WorkDeliveryOutcome.Failed, WorkFailureClass.Permanent, 3, FailureDetail: "AI provider returned HTTP 404 (model x):\n model not found")));
+        await handler.HandleAsync(envelope, CancellationToken.None);
+        var step = await db.TaskSteps.SingleAsync();
+        Assert.Equal("AI provider returned HTTP 404 (model x): model not found",
+            await TaskFailureDetail.ReadAsync(db, envelope.TenantId, envelope.CompanyId, envelope.TaskId, step.Id, CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("  ", null)]
+    [InlineData("a\r\n\tb", "a b")]
+    public void FailureDetail_IsOneShortLine(string? input, string? expected) => Assert.Equal(expected, TaskFailureDetail.Normalize(input));
+
+    [Fact]
+    public void FailureDetail_IsCapped() => Assert.Equal(TaskFailureDetail.MaxLength, TaskFailureDetail.Normalize(new string('x', 1000))!.Length);
+
     private static PlatformDbContext NewDb()
     {
         var options = new DbContextOptionsBuilder<PlatformDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString("N")).Options;
