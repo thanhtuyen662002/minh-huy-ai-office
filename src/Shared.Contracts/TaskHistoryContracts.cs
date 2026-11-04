@@ -2,7 +2,7 @@ namespace MinhHuy.AIOffice.Shared.Contracts;
 
 /// <summary>Owner-only archive metadata. Invalid durable state is unavailable, never repaired into a completion.</summary>
 public sealed record TaskHistoryItem(Guid TaskId, TaskExecutionStatus? Status, DateTimeOffset CreatedAtUtc,
-    DateTimeOffset UpdatedAtUtc, string? Summary, bool MetadataUnavailable);
+    DateTimeOffset UpdatedAtUtc, string? Summary, bool MetadataUnavailable, IReadOnlyList<Guid>? ImageIds = null);
 
 public sealed record TaskHistoryPage(Guid CompanyId, IReadOnlyList<TaskHistoryItem> Items,
     int Offset, int Limit, bool HasMore);

@@ -58,7 +58,10 @@ public sealed class TaskHistoryService(PlatformDbContext database, IAuthorizatio
                 """)
             : database.Tasks.AsNoTracking().Select(task => new ArchiveTask(task.TenantId, task.CompanyId,
                 task.CreatedByUserId, task.Id, task.Status.ToString(), task.CreatedAtUtc, task.UpdatedAtUtc));
-        return tasks.Where(task => task.TenantId == authority.TenantId && task.CompanyId == authority.CompanyId && task.CreatedByUserId == authority.UserId);
+        // Questions the asker deleted stay in Tasks for audit but leave their history.
+        var hidden = database.HiddenTasks.AsNoTracking();
+        return tasks.Where(task => task.TenantId == authority.TenantId && task.CompanyId == authority.CompanyId && task.CreatedByUserId == authority.UserId
+            && !hidden.Any(row => row.TenantId == task.TenantId && row.CompanyId == task.CompanyId && row.TaskId == task.Id));
     }
 
     private async Task RequireAuthorityAsync(AuthorizationContext authority, CancellationToken cancellationToken)
@@ -105,8 +108,10 @@ public sealed class TaskHistoryService(PlatformDbContext database, IAuthorizatio
         var status = Enum.TryParse<TaskExecutionStatus>(task.Status, out var parsed) && Enum.IsDefined(parsed)
             && parsed.ToString() == task.Status ? parsed : (TaskExecutionStatus?)null;
         var malformed = status is null || task.CreatedAtUtc == default || task.UpdatedAtUtc < task.CreatedAtUtc || request is null;
+        // Attached pictures travel as tokens in the question; the list shows the words and the picture ids apart.
+        var (text, pictures) = request is null ? (null, []) : AssistantImageTokens.Parse(request.Question);
         return new(task.Id, status, task.CreatedAtUtc, task.UpdatedAtUtc,
-            request is null ? null : TaskHistoryMetadata.Summary(request.Question), malformed);
+            request is null ? null : TaskHistoryMetadata.Summary(text!.Length == 0 ? "Ảnh đính kèm" : text), malformed, pictures);
     }
 
     private sealed record ArchiveTask(Guid TenantId, Guid CompanyId, Guid CreatedByUserId, Guid Id, string Status,

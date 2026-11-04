@@ -241,13 +241,16 @@ public sealed class PilotAiQuestionExecutor(
             return UnexpectedFailure(envelope, exception, request.MaxAttempts);
         }
 
+        var (questionText, pictures) = await QuestionAsync(envelope, initialBinding.Authority.UserId, request.Question, cancellationToken)
+            .ConfigureAwait(false);
         var aiRequest = new AiGatewayRequest(
             envelope.TenantId.ToString("N"),
             envelope.CompanyId.ToString("N"),
             envelope.TaskId.ToString("N"),
             $"pilot-ai:{envelope.TaskId:N}:{envelope.StepId:N}",
             AiCapability.Reasoning,
-            BuildBoundedInput(request.Question, erpEvidence));
+            BuildBoundedInput(questionText, erpEvidence))
+        { Images = pictures };
 
         AiGatewayResponse response;
         try
@@ -321,6 +324,8 @@ public sealed class PilotAiQuestionExecutor(
     {
         PilotErpEvidence erpEvidence = null!;
         ErpQueryAgentResult outcome;
+        var (questionText, pictures) = await QuestionAsync(envelope, initialBinding.Authority.UserId, request.Question, cancellationToken)
+            .ConfigureAwait(false);
         try
         {
             var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
@@ -333,7 +338,7 @@ public sealed class PilotAiQuestionExecutor(
                     erpEvidence = await evidenceReader.ReadAsync(connectionString, token);
                     return await backend.UseAsync(
                         connectionString,
-                        session => new ErpQueryAgent(aiGateway).RunAsync(envelope, request.Question, erpEvidence, session, token),
+                        session => new ErpQueryAgent(aiGateway).RunAsync(envelope, questionText, erpEvidence, session, token, pictures),
                         token);
                 }, cancellationToken, taskId: envelope.TaskId);
         }
@@ -402,6 +407,23 @@ public sealed class PilotAiQuestionExecutor(
             request.MaxAttempts,
             1,
             JsonSerializer.Serialize(checkpoint, JsonOptions));
+    }
+
+    /// <summary>
+    /// The question without picture tokens, and the attached pictures the asker uploaded. A picture that is gone
+    /// (deleted or not the asker's) is skipped, and the model is told so.
+    /// </summary>
+    private async Task<(string Text, IReadOnlyList<AiImageInput> Images)> QuestionAsync(
+        WorkDispatchEnvelope envelope, Guid askerUserId, string question, CancellationToken cancellationToken)
+    {
+        var (text, ids) = AssistantImageTokens.Parse(question);
+        if (ids.Count == 0) return (question, []);
+        var stored = await AssistantService.ForTaskAsync(dbContext, envelope.TenantId, envelope.CompanyId, askerUserId, ids, cancellationToken)
+            .ConfigureAwait(false);
+        if (text.Length == 0) text = "(Người hỏi chỉ gửi ảnh, không kèm câu chữ: hãy xem ảnh và trả lời điều ảnh cho thấy.)";
+        if (stored.Count < ids.Count) text += $" ({ids.Count - stored.Count} ảnh đính kèm không còn trên hệ thống.)";
+        logger?.LogInformation("Trợ lý task {TaskId} carries {Count} picture(s)", envelope.TaskId, stored.Count);
+        return (text, stored.Select(image => new AiImageInput(image.ContentType, image.Content)).ToArray());
     }
 
     private static string BuildBoundedInput(string question, PilotErpEvidence evidence)

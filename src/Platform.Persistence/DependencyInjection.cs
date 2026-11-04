@@ -27,6 +27,7 @@ public static class DependencyInjection
             services.AddScoped<CompanyMembershipAccessService>();
             services.AddScoped<CustomerRequestPortal>();
             services.AddScoped<KnowledgeBase>();
+            services.AddScoped<AssistantService>();
             services.AddScoped<CompanyAdministratorService>();
             services.AddScoped<CompanyInvitationService>();
             services.AddScoped<BindingStorePermissionVerifier>();

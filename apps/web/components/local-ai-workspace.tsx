@@ -20,6 +20,8 @@ import { CompanyMemberPanel } from "./company-member-panel";
 import { TaskHistoryPanel } from "./task-history-panel";
 import { ChatHistorySidebar } from "./chat-history-sidebar";
 import { ChatMarkdown } from "./chat-markdown";
+import { AttachButton, PendingImages, UserQuestion, type PendingImage } from "./chat-attachments";
+import { imageToken, maxAssistantImages, prepareAssistantImage } from "../lib/assistant-images";
 import { conversationOf, readConversationMap, rememberConversation } from "../lib/chat-conversations";
 import { taskHistoryStatus, type TaskHistoryDetail } from "../lib/task-history";
 import { BotMessagesPanel } from "./bot-messages-panel";
@@ -151,6 +153,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     },
   ]);
   const chatScroll = useRef<HTMLDivElement | null>(null);
+  const [attachments, setAttachments] = useState<PendingImage[]>([]);
+  const [uploading, setUploading] = useState(false);
   // The conversation scrolls inside its own box; follow the newest message and progress line.
   useEffect(() => {
     const box = chatScroll.current;
@@ -184,6 +188,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     setSurface(initialSurface.current);
     setMessages((current) => current.filter((message) => message.id === "welcome"));
     setActiveConversationId(null);
+    setAttachments(current => { current.forEach(image => URL.revokeObjectURL(image.url)); return []; });
   }, []);
 
   const { phase: sessionState, auth, generation: sessionGeneration, isCurrent, reset, request,
@@ -598,25 +603,71 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     }
   }
 
+  function clearAttachments() {
+    setAttachments(current => { current.forEach(image => URL.revokeObjectURL(image.url)); return []; });
+  }
+
+  async function addImages(files: readonly File[]) {
+    const images = files.filter(file => file.type.startsWith("image/"));
+    if (!images.length) return;
+    const room = maxAssistantImages - attachments.length;
+    if (room <= 0) { setNotice(`Mỗi câu hỏi gửi tối đa ${maxAssistantImages} ảnh.`); return; }
+    const ready: PendingImage[] = []; let failed = 0;
+    for (const file of images.slice(0, room)) {
+      try {
+        const blob = await prepareAssistantImage(file);
+        ready.push({ key: crypto.randomUUID(), blob, url: URL.createObjectURL(blob) });
+      } catch { failed++; }
+    }
+    setAttachments(current => [...current, ...ready].slice(0, maxAssistantImages));
+    setNotice(images.length > room ? `Mỗi câu hỏi gửi tối đa ${maxAssistantImages} ảnh; đã bỏ bớt ảnh thừa.`
+      : failed ? "Có ảnh không đọc được. Dùng ảnh JPG, PNG, WebP hoặc GIF." : "");
+  }
+
   async function askAi(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || taskRun.current || !ready()) return;
 
     const form = event.currentTarget;
     const data = new FormData(form);
-    const question = trimSubmissionQuestion(String(data.get("question") ?? ""));
+    const typed = trimSubmissionQuestion(String(data.get("question") ?? ""));
 
     if (!selectedSourceId) {
       setNotice("Hãy chọn nguồn dữ liệu trước.");
       return;
     }
-    if (!question) {
-      setNotice("Nhập câu hỏi cho AI Office.");
+    if (!typed && attachments.length === 0) {
+      setNotice("Nhập câu hỏi hoặc đính kèm ảnh cho AI Office.");
       return;
     }
-    if (question.length > 4000) {
+    if (typed.length + attachments.length * 46 > 4000) {
       setNotice("Câu hỏi tối đa 4.000 ký tự.");
       return;
+    }
+    // Pictures are uploaded first; the question then names them with tokens the server understands.
+    const pictures = attachments;
+    let question = typed;
+    if (pictures.length) {
+      const generation = sessionGeneration.current;
+      setUploading(true); setNotice(""); setTaskStage(`Đang tải ${pictures.length} ảnh lên…`);
+      try {
+        const ids: string[] = [];
+        for (const picture of pictures) {
+          const response = await request(generation, `/api/local/assistant-images?companyId=${encodeURIComponent(companyId)}`,
+            { method: "POST", headers: { "Content-Type": picture.blob.type }, body: picture.blob });
+          if (!isCurrent(generation)) return;
+          if (response.status === 401) { reset("signed-out"); return; }
+          const body = response.ok ? await readJson(response) as { id?: unknown } | null : null;
+          if (typeof body?.id !== "string") throw new Error(response.status === 429 ? "limit" : "upload");
+          ids.push(body.id);
+        }
+        question = trimSubmissionQuestion([typed, ...ids.map(imageToken)].join(" "));
+      } catch (error) {
+        setTaskStage("");
+        setNotice(error instanceof Error && error.message === "limit" ? "Hôm nay đã gửi quá nhiều ảnh, thử lại vào ngày mai."
+          : "Chưa tải được ảnh lên. Thử gửi lại.");
+        return;
+      } finally { setUploading(false); }
     }
 
     // Capture and lock before any await. Source/form changes cannot alter retries.
@@ -630,6 +681,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     };
     setMessages((current) => [...current, userMessage]);
     form.reset();
+    clearAttachments();
     await executeSubmission(attempt);
   }
 
@@ -642,7 +694,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       : detail.task.status === 6 ? "Công việc đã hoàn thành nhưng chưa đọc được kết quả đã lưu."
       : `Trạng thái: ${taskHistoryStatus(detail.task.status)}.`;
     setMessages(current => [current[0], ...details.flatMap(detail => [
-      { id: `saved-user-${detail.task.taskId}`, role: "user" as const, text: detail.task.summary ?? "Câu hỏi đã lưu" },
+      { id: `saved-user-${detail.task.taskId}`, role: "user" as const,
+        text: [detail.task.summary ?? "Câu hỏi đã lưu", ...(detail.task.imageIds ?? []).map(imageToken)].join(" ") },
       { id: `assistant-${detail.task.taskId}`, role: "assistant" as const, text: answerText(detail) }])]);
     setActiveConversationId(conversationId); setNotice(""); setTaskStage(""); setSurface("assistant");
     await Promise.all(details.map(async detail => {
@@ -959,7 +1012,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                 {auth ? <ChatHistorySidebar key={scopeKey} companyId={companyId} userId={auth.userId} generation={sessionGeneration.current}
                   isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized}
                   activeConversationId={activeConversationId} refreshKey={historySerial} disabled={busy || submission.working}
-                  onOpen={(conversationId, details) => void openSavedChat(conversationId, details)} onNew={startNewChat} /> : null}
+                  onOpen={(conversationId, details) => void openSavedChat(conversationId, details)} onNew={startNewChat}
+                  onDeleted={conversationId => { if (activeConversationId?.toLowerCase() === conversationId) startNewChat(); }} /> : null}
                 <section className="flex h-[calc(100dvh-8rem)] min-h-[28rem] flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
                   <div className="border-b px-5 py-4 sm:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -996,6 +1050,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                         <div className={message.role === "user" ? "max-w-[88%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground sm:max-w-[78%]" : "min-w-0 flex-1 pt-0.5 text-foreground"}>
                           {message.role === "assistant" && message.id !== "welcome"
                             ? <ChatMarkdown text={message.text} />
+                            : message.role === "user" ? <UserQuestion text={message.text} companyId={companyId} />
                             : <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
                           {message.checkpoint ? (
                             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-current/10 pt-2 text-[11px] opacity-65">
@@ -1053,18 +1108,27 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                       {questionIdeas.map(idea => <button key={idea} type="button" onClick={() => { if (question.current) { question.current.value = idea; question.current.focus(); } }}
                         className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{idea}</button>)}
                     </div> : null}
-                    <div className="flex items-end gap-3 rounded-2xl border bg-card p-2 shadow-sm focus-within:border-ring">
-                      <textarea
-                        ref={question}
-                        name="question"
-                        rows={2}
-                        disabled={busy || submission.working || !!submission.pending && submission.pending.phase !== "accepted"}
-                        placeholder="Hỏi AI Office về nguồn dữ liệu đã chọn…"
-                        className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
-                      />
-                      <button type="submit" disabled={busy || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
-                        Gửi
-                      </button>
+                    <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:border-ring"
+                      onDragOver={event => { if ([...event.dataTransfer.items].some(item => item.type.startsWith("image/"))) event.preventDefault(); }}
+                      onDrop={event => { const files = [...event.dataTransfer.files].filter(file => file.type.startsWith("image/")); if (files.length) { event.preventDefault(); void addImages(files); } }}>
+                      <PendingImages images={attachments} disabled={uploading || submission.working}
+                        onRemove={key => setAttachments(current => current.filter(image => { if (image.key === key) URL.revokeObjectURL(image.url); return image.key !== key; }))} />
+                      <div className="flex items-end gap-2">
+                        <AttachButton count={attachments.length} disabled={busy || uploading || submission.working || !!submission.pending && submission.pending.phase !== "accepted"}
+                          onFiles={files => void addImages(files)} />
+                        <textarea
+                          ref={question}
+                          name="question"
+                          rows={2}
+                          disabled={busy || uploading || submission.working || !!submission.pending && submission.pending.phase !== "accepted"}
+                          placeholder="Hỏi AI Office về nguồn dữ liệu đã chọn… (dán hoặc kéo ảnh vào đây)"
+                          onPaste={event => { const files = [...event.clipboardData.files].filter(file => file.type.startsWith("image/")); if (files.length) { event.preventDefault(); void addImages(files); } }}
+                          className="min-h-12 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground"
+                        />
+                        <button type="submit" disabled={busy || uploading || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
+                          {uploading ? "Đang gửi…" : "Gửi"}
+                        </button>
+                      </div>
                     </div>
                     <p className="mt-2 px-1 text-xs text-muted-foreground">Câu trả lời dựa trên nguồn dữ liệu bạn được cấp quyền.</p>
                   </form>

@@ -556,10 +556,12 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
         string question,
         PilotErpEvidence evidence,
         IErpQuerySession session,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<AiImageInput>? images = null)
     {
         ArgumentNullException.ThrowIfNull(envelope);
         ArgumentException.ThrowIfNullOrWhiteSpace(question);
+        images ??= [];
         ArgumentNullException.ThrowIfNull(evidence);
         ArgumentNullException.ThrowIfNull(session);
         evidence.Validate();
@@ -581,7 +583,11 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
                 envelope.TaskId.ToString("N"),
                 $"pilot-ai:{envelope.TaskId:N}:{envelope.StepId:N}:t{turn}",
                 AiCapability.Reasoning,
-                BuildPrompt(question, evidence, observations, MaximumQueries - queries.Count, finalTurn));
+                BuildPrompt(question, evidence, observations, MaximumQueries - queries.Count, finalTurn, images.Count))
+            {
+                // The provider is stateless, so every turn carries the pictures again.
+                Images = images
+            };
             AiGatewayResponse response;
             try
             {
@@ -768,7 +774,8 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
         PilotErpEvidence evidence,
         IReadOnlyList<string> observations,
         int remainingQueries,
-        bool finalTurn)
+        bool finalTurn,
+        int imageCount = 0)
     {
         var tables = evidence.TopTables.Count == 0
             ? "(no non-system tables returned)"
@@ -777,6 +784,10 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
         var history = observations.Count == 0
             ? "(nothing yet)"
             : string.Join("\n\n", observations.Select((observation, index) => $"[{index + 1}] {observation}"));
+        var pictures = imageCount == 0 ? string.Empty
+            : $"The user attached {imageCount} picture(s) to this question (screenshots, documents or photos from the customer). "
+              + "Read them carefully first: extract the codes, names, numbers, dates and error messages they show, use those to "
+              + "decide what to look up in the ERP, and say in your answer what you saw in the pictures.";
         var instruction = finalTurn
             ? "This is your last turn: reply now with {\"action\":\"answer\",\"text\":\"...\"}."
             : $"Reply with exactly one JSON object for your next step. Queries left: {Math.Max(remainingQueries, 0)}.";
@@ -809,6 +820,7 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
 
             User question:
             {{question}}
+            {{pictures}}
 
             Results of your previous actions:
             {{history}}

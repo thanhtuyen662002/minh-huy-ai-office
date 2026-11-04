@@ -1,4 +1,5 @@
 import type { TaskHistoryItem } from "./task-history";
+import { questionText } from "./assistant-images";
 
 /**
  * Groups Trợ lý questions into conversations. Each question is its own task on the server; which
@@ -45,6 +46,6 @@ export function groupConversations(items: readonly TaskHistoryItem[], map: Recor
   }
   return [...groups.entries()].map(([id, members]) => {
     const ordered = [...members].sort((a, b) => Date.parse(a.createdAtUtc) - Date.parse(b.createdAtUtc));
-    return { id, items: ordered, title: ordered[0].summary ?? "Câu hỏi đã lưu", latest: ordered[ordered.length - 1] };
+    return { id, items: ordered, title: ordered[0].summary ? questionText(ordered[0].summary) : "Câu hỏi đã lưu", latest: ordered[ordered.length - 1] };
   }).sort((a, b) => Date.parse(b.latest.createdAtUtc) - Date.parse(a.latest.createdAtUtc));
 }

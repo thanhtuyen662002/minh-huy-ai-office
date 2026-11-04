@@ -15,6 +15,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<BotChannelAuditRecord> BotChannelAudits => Set<BotChannelAuditRecord>();
     public DbSet<BotMessageRecord> BotMessages => Set<BotMessageRecord>();
     public DbSet<BotMessageImageRecord> BotMessageImages => Set<BotMessageImageRecord>();
+    public DbSet<AssistantImageRecord> AssistantImages => Set<AssistantImageRecord>();
+    public DbSet<HiddenTaskRecord> HiddenTasks => Set<HiddenTaskRecord>();
     public DbSet<CustomerRequestRecord> CustomerRequests => Set<CustomerRequestRecord>();
     public DbSet<CustomerRequestItemRecord> CustomerRequestItems => Set<CustomerRequestItemRecord>();
     public DbSet<CustomerRequestEvidenceRecord> CustomerRequestEvidence => Set<CustomerRequestEvidenceRecord>();
@@ -71,6 +73,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         modelBuilder.ConfigureBotChannels();
         modelBuilder.ConfigureCustomerRequests();
         modelBuilder.ConfigureKnowledgePages();
+        modelBuilder.ConfigureAssistant();
         modelBuilder.ConfigureTelegramTech();
         modelBuilder.Entity<ProtectedDataSourceSecretRecord>(entity =>
         {

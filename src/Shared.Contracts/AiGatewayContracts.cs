@@ -18,8 +18,19 @@ public sealed record AiGatewayRequest(
     string Input,
     string? ResponseSchema = null)
 {
+    public const int MaximumImages = 6;
+
+    /// <summary>Pictures the model should look at with <see cref="Input"/> (Trợ lý attachments). Empty for text-only requests.</summary>
+    public IReadOnlyList<AiImageInput> Images { get; init; } = [];
+
     public void Validate()
     {
+        if (Images is null || Images.Count > MaximumImages
+            || Images.Any(image => image is null || image.Content is not { Length: > 0 } || string.IsNullOrWhiteSpace(image.MediaType)))
+        {
+            throw new ArgumentException($"At most {MaximumImages} non-empty pictures are allowed.", nameof(Images));
+        }
+
         Require(TenantId, nameof(TenantId));
         Require(CompanyId, nameof(CompanyId));
         Require(TaskId, nameof(TaskId));
@@ -139,3 +150,6 @@ public sealed class ProviderNeutralAiGateway : IAiGateway
         return response;
     }
 }
+
+/// <summary>One picture for a model request: its media type (image/jpeg, image/png, image/webp, image/gif) and bytes.</summary>
+public sealed record AiImageInput(string MediaType, byte[] Content);

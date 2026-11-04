@@ -155,6 +155,7 @@ app.MapCustomerRequests(customerRequestsEnabled, authenticationConfigured && !st
 app.MapTelegramTech(telegramEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapBotChannels(botChannelsEnabled, authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapKnowledge(authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
+app.MapAssistant(authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionString));
 app.MapGroupListener(groupIngressEnabled);
 app.MapGroupEnrollment(groupIngressEnabled);
 app.MapGroupSourceReads(groupIngressEnabled, authenticationConfigured);
