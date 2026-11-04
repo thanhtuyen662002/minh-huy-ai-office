@@ -122,3 +122,28 @@ it("shows uploaded pictures as thumbnails that open full size, with bold coloure
   fireEvent.error(screen.getAllByRole("img")[1]);
   expect(screen.getByText("Không tải được ảnh")).toBeTruthy();
 });
+
+it("groups a burst of pictures from one sender into one album that pages through every picture", async () => {
+  const pic = (id: number, minute: number, who = "Huyền Trần") => ({ messageId: `p${id}`, senderName: who, text: "", hasImage: true, imageCount: 1,
+    sentAt: `2026-10-30T08:${String(minute).padStart(2, "0")}:00Z` });
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
+    if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/bot-messages?")) return Response.json([group]);
+    if (url.startsWith("/api/local/bot-messages/zalo?")) return Response.json({ items: [
+      { ...message(9, "Xong"), sentAt: "2026-10-30T08:30:00Z" }, pic(8, 20, "Trúc"),
+      ...[7, 6, 5, 4, 3, 2, 1].map(n => pic(n, 10)), { ...message(0, "Gửi ảnh nhé"), senderName: "Huyền Trần", sentAt: "2026-10-30T08:09:00Z" }], hasMore: false });
+    throw new Error("Unexpected owned fixture route");
+  });
+  vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
+  render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Tin nhắn" }));
+  const album = await screen.findByRole("group", { name: "Album 7 ảnh" });
+  expect(album.querySelectorAll("img")).toHaveLength(6); expect(album.textContent).toContain("+1");
+  expect(screen.getByRole("list", { name: "Tin nhắn trong nhóm" }).querySelectorAll("li")).toHaveLength(4);
+  fireEvent.click(screen.getByRole("button", { name: /^Xem Ảnh 6 của Huyền Trần/ }));
+  const viewer = screen.getByRole("dialog"); expect(viewer.textContent).toContain("6/7");
+  fireEvent.keyDown(window, { key: "ArrowRight" }); expect(screen.getByRole("dialog").textContent).toContain("7/7");
+  expect(screen.getByRole("dialog").querySelector("img")!.getAttribute("src")).toContain("message=p7");
+  fireEvent.click(screen.getByRole("button", { name: "Ảnh sau" })); expect(screen.getByRole("dialog").textContent).toContain("1/7");
+});

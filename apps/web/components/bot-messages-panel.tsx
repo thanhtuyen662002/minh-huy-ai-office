@@ -1,6 +1,6 @@
 "use client";
-import { Fragment, ReactNode, useEffect, useRef, useState } from "react";
-import { ExternalLink, ImageIcon, RefreshCw, X } from "lucide-react";
+import { Fragment, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, ExternalLink, ImageIcon, RefreshCw, X } from "lucide-react";
 import { BotMessage, BotMessageGroup, parseBotMessageGroups, parseBotMessagePage } from "../lib/bot-messages";
 import { SkeletonRows } from "./skeleton";
 
@@ -62,34 +62,73 @@ function richText(text: string): ReactNode[] {
   if (last < text.length) parts.push(text.slice(last));
   return parts;
 }
-type Viewing = { src: string; label: string };
-function MessageImage({ src, label, onOpen, onLoad }: { src: string; label: string; onOpen: (image: Viewing) => void; onLoad: () => void }) {
+type Picture = { src: string; label: string };
+type Viewing = { items: Picture[]; index: number };
+function MessageImage({ picture, tile, more, onOpen, onLoad }: { picture: Picture; tile?: boolean; more?: number; onOpen: () => void; onLoad: () => void }) {
   const [failed, setFailed] = useState(false);
-  if (failed) return <span className="flex h-24 w-32 items-center justify-center gap-1.5 rounded-lg border border-dashed text-xs text-muted-foreground"><ImageIcon className="size-4" aria-hidden="true" />Không tải được ảnh</span>;
-  return <button type="button" onClick={() => onOpen({ src, label })} aria-label={`Xem ${label}`}
-    className="group/img block overflow-hidden rounded-lg border bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+  const box = tile ? "size-[4.75rem] sm:size-32" : "";
+  if (failed) return <span className={`flex items-center justify-center gap-1.5 rounded-lg border border-dashed p-2 text-center text-xs text-muted-foreground ${tile ? box : "h-24 w-32"}`}><ImageIcon className="size-4 shrink-0" aria-hidden="true" />Không tải được ảnh</span>;
+  return <button type="button" onClick={onOpen} aria-label={`Xem ${picture.label}`}
+    className={`group/img relative block overflow-hidden rounded-lg border bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${box}`}>
     {/* eslint-disable-next-line @next/next/no-img-element -- private pictures behind the session cookie, not static assets */}
-    <img src={src} alt={label} loading="lazy" decoding="async" onLoad={onLoad} onError={() => setFailed(true)}
-      className="block max-h-64 max-w-[16rem] object-cover transition-transform duration-200 group-hover/img:scale-[1.02] sm:max-w-[20rem]" />
+    <img src={picture.src} alt={picture.label} loading="lazy" decoding="async" onLoad={onLoad} onError={() => setFailed(true)}
+      className={`block object-cover transition-transform duration-200 group-hover/img:scale-[1.03] ${tile ? "size-full" : "max-h-64 max-w-[16rem] sm:max-w-[20rem]"}`} />
+    {more ? <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-black/55 text-2xl font-bold text-white">+{more}</span> : null}
   </button>;
 }
-function ImageViewer({ image, onClose }: { image: Viewing; onClose: () => void }) {
+// A burst of pictures shows as one album: up to 6 tiles, the last one says how many more; any tile opens the whole album.
+const ALBUM_TILES = 6;
+function Album({ pictures, onOpen, onLoad }: { pictures: Picture[]; onOpen: (viewing: Viewing) => void; onLoad: () => void }) {
+  if (pictures.length === 1) return <MessageImage picture={pictures[0]} onOpen={() => onOpen({ items: pictures, index: 0 })} onLoad={onLoad} />;
+  const shown = pictures.slice(0, ALBUM_TILES), extra = pictures.length - shown.length;
+  return <div role="group" aria-label={`Album ${pictures.length} ảnh`}
+    className={`grid gap-1 ${pictures.length === 2 || pictures.length === 4 ? "grid-cols-[repeat(2,auto)]" : "grid-cols-[repeat(3,auto)]"}`}>
+    {shown.map((picture, n) => <MessageImage key={picture.src} picture={picture} tile more={n === shown.length - 1 && extra > 0 ? extra : undefined}
+      onOpen={() => onOpen({ items: pictures, index: n })} onLoad={onLoad} />)}
+  </div>;
+}
+function ImageViewer({ viewing, onClose, onMove }: { viewing: Viewing; onClose: () => void; onMove: (index: number) => void }) {
+  const { items, index } = viewing, image = items[index], many = items.length > 1;
+  const go = (step: number) => onMove((index + step + items.length) % items.length);
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (many && e.key === "ArrowRight") onMove((index + 1) % items.length);
+      else if (many && e.key === "ArrowLeft") onMove((index - 1 + items.length) % items.length);
+    };
     window.addEventListener("keydown", key); return () => window.removeEventListener("keydown", key);
-  }, [onClose]);
+  }, [onClose, onMove, index, items.length, many]);
+  const arrow = "absolute top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white hover:bg-white/20";
   return <div role="dialog" aria-modal="true" aria-label={image.label} onClick={onClose}
     className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/85 p-4 backdrop-blur-sm">
     <div className="flex w-full max-w-5xl items-center justify-between gap-2 text-sm text-white" onClick={e => e.stopPropagation()}>
-      <span className="min-w-0 truncate font-medium">{image.label}</span>
+      <span className="min-w-0 truncate font-medium">{many ? <span className="mr-2 rounded-full bg-white/15 px-2 py-0.5 text-xs">{index + 1}/{items.length}</span> : null}{image.label}</span>
       <span className="flex shrink-0 items-center gap-1">
         <a href={image.src} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 hover:bg-white/15"><ExternalLink className="size-4" aria-hidden="true" />Mở ảnh gốc</a>
         <button type="button" onClick={onClose} aria-label="Đóng ảnh" className="inline-flex size-9 items-center justify-center rounded-lg hover:bg-white/15"><X className="size-5" aria-hidden="true" /></button>
       </span>
     </div>
-    {/* eslint-disable-next-line @next/next/no-img-element -- private pictures behind the session cookie, not static assets */}
-    <img src={image.src} alt={image.label} onClick={e => e.stopPropagation()} className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl" />
+    <div className="relative flex min-h-0 w-full max-w-5xl flex-1 items-center justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element -- private pictures behind the session cookie, not static assets */}
+      <img key={image.src} src={image.src} alt={image.label} onClick={e => e.stopPropagation()} className="max-h-[80vh] max-w-full rounded-lg object-contain shadow-2xl" />
+      {many ? <>
+        <button type="button" aria-label="Ảnh trước" onClick={e => { e.stopPropagation(); go(-1); }} className={`${arrow} left-1`}><ChevronLeft className="size-6" aria-hidden="true" /></button>
+        <button type="button" aria-label="Ảnh sau" onClick={e => { e.stopPropagation(); go(1); }} className={`${arrow} right-1`}><ChevronRight className="size-6" aria-hidden="true" /></button>
+      </> : null}
+    </div>
   </div>;
+}
+// Picture-only messages one person sends back to back (within 2 minutes) form one album block.
+const pictureOnly = (m: BotMessage) => !m.text && m.hasImage;
+function blocks(messages: BotMessage[]): BotMessage[][] {
+  const out: BotMessage[][] = [];
+  for (const m of messages) {
+    const block = out.at(-1), last = block?.at(-1);
+    if (block && last && pictureOnly(m) && pictureOnly(last) && last.senderName === m.senderName
+      && dayKey(last.sentAt) === dayKey(m.sentAt) && Date.parse(m.sentAt) - Date.parse(last.sentAt) < 2 * 60_000) block.push(m);
+    else out.push([m]);
+  }
+  return out;
 }
 const same = (a: Selected | null, b: Selected) => a?.channel === b.channel && a.externalId === b.externalId;
 // Oldest first, as in a chat; a refreshed newest page merges with older pages already loaded.
@@ -104,6 +143,8 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
   const mounted = useRef(false), serial = useRef(0), controller = useRef<AbortController | null>(null);
   const bottom = useRef<HTMLDivElement | null>(null), stick = useRef(true);
   const [viewing, setViewing] = useState<Viewing | null>(null);
+  const closeViewer = useCallback(() => setViewing(null), []);
+  const moveViewer = useCallback((index: number) => setViewing(v => v ? { ...v, index } : v), []);
   const current = (value: number) => mounted.current && live.current === scope && serial.current === value && isCurrent(generation);
 
   async function get(value: number, url: string, signal: AbortSignal): Promise<unknown | "unauthorized" | number> {
@@ -238,12 +279,16 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
             onClick={() => { stick.current = false; void load(visible.selected, true); }}>Xem tin cũ hơn</button></div> : null}
           {visible.messages.length === 0 ? <p className="py-12 text-center text-sm text-muted-foreground">Nhóm này chưa có tin nào kể từ khi bot bắt đầu theo dõi.</p>
             : <ol className="m-0 list-none p-0" aria-label="Tin nhắn trong nhóm">
-              {visible.messages.map((m, i) => {
-                const previous = visible.messages![i - 1], newDay = !previous || dayKey(previous.sentAt) !== dayKey(m.sentAt);
+              {blocks(visible.messages).map((block, i, all) => {
+                const m = block[0], end = block[block.length - 1], previous = all[i - 1]?.at(-1);
+                const newDay = !previous || dayKey(previous.sentAt) !== dayKey(m.sentAt);
                 // Back-to-back messages from one person within 5 minutes share one name and avatar.
                 const follow = !newDay && previous.senderName === m.senderName && Date.parse(m.sentAt) - Date.parse(previous.sentAt) < 5 * 60_000;
                 const c = colour(m.senderName), sel = visible.selected!;
-                const images = Array.from({ length: m.imageCount }, (_, n) => `/api/local/bot-messages/${sel.channel}/image?${new URLSearchParams({ companyId, group: sel.externalId, message: m.messageId, position: String(n) })}`);
+                const pictures = block.flatMap(x => Array.from({ length: x.imageCount }, (_, n) => ({
+                  src: `/api/local/bot-messages/${sel.channel}/image?${new URLSearchParams({ companyId, group: sel.externalId, message: x.messageId, position: String(n) })}`,
+                  label: `${x.senderName} lúc ${time(x.sentAt)}` }))).map((p, n) => ({ ...p, label: `Ảnh ${n + 1} của ${p.label}` }));
+                const missing = block.filter(x => x.hasImage && x.imageCount === 0).length;
                 return <li key={m.messageId} className={follow ? "mt-1" : "mt-4 first:mt-0"}>
                   {newDay ? <div className="my-4 flex items-center gap-3 text-xs font-semibold text-muted-foreground" aria-hidden="true">
                     <span className="h-px flex-1 bg-border" /><span className="rounded-full border bg-card px-3 py-1 shadow-sm">{dayLabel(m.sentAt)}</span><span className="h-px flex-1 bg-border" /></div> : null}
@@ -252,13 +297,12 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
                       : <span aria-hidden="true" className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm ${c.avatar}`}>{initials(m.senderName)}</span>}
                     <div className="min-w-0 flex-1">
                       {follow ? null : <p className="mb-1 flex items-baseline gap-2 text-sm"><bdi className={`font-bold ${c.name}`}>{m.senderName}</bdi>
-                        <span className="text-xs text-muted-foreground">{clock(m.sentAt)}</span></p>}
+                        <span className="text-xs text-muted-foreground">{clock(m.sentAt)}{clock(end.sentAt) !== clock(m.sentAt) ? ` – ${clock(end.sentAt)}` : ""}</span></p>}
                       <div className={`inline-block max-w-full rounded-xl rounded-tl-sm border border-l-4 bg-card px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${c.bar}`}
                         title={follow ? `${m.senderName} · ${time(m.sentAt)}` : undefined}>
-                        {images.length ? <div className={`flex flex-wrap gap-2 ${m.text ? "mb-2" : ""}`}>
-                          {images.map((src, n) => <MessageImage key={src} src={src} label={`Ảnh ${n + 1} của ${m.senderName} lúc ${time(m.sentAt)}`} onOpen={setViewing} onLoad={keepBottom} />)}</div>
-                          : m.hasImage ? <p className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground ${c.soft} ${m.text ? "mb-2" : ""}`} title="Ảnh gửi trước khi bot bắt đầu lưu ảnh">
-                            <ImageIcon className="size-4" aria-hidden="true" /><span>Có hình ảnh</span></p> : null}
+                        {pictures.length ? <div className={missing || m.text ? "mb-2" : ""}><Album pictures={pictures} onOpen={setViewing} onLoad={keepBottom} /></div> : null}
+                        {missing ? <p className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground ${c.soft} ${m.text ? "mb-2" : ""}`} title="Ảnh gửi trước khi bot bắt đầu lưu ảnh">
+                            <ImageIcon className="size-4" aria-hidden="true" /><span>Có hình ảnh</span>{missing > 1 ? <span className="font-semibold">×{missing}</span> : null}</p> : null}
                         {m.text ? <p className="whitespace-pre-wrap break-words">{richText(m.text).map((part, n) => <Fragment key={n}>{part}</Fragment>)}</p> : null}
                       </div>
                     </div>
@@ -269,6 +313,6 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
         </> : !visible.selected && visible.groups?.length ? <p className="py-12 text-center text-sm text-muted-foreground">Chọn một nhóm bên trái để xem tin nhắn.</p> : null}
       </div>
     </div>
-    {viewing ? <ImageViewer image={viewing} onClose={() => setViewing(null)} /> : null}
+    {viewing ? <ImageViewer viewing={viewing} onClose={closeViewer} onMove={moveViewer} /> : null}
   </section>;
 }
