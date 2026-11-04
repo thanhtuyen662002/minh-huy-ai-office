@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getBrowserAuthRuntime } from "../../../../../../lib/browser-auth-runtime";
 import { browserAuthError, privateBrowserResponse, setPrivateBrowserCookie } from "../../../../../../lib/browser-auth-http";
 import { oidcStartIsSameOrigin } from "../../../../../../lib/browser-oidc";
-import { BROWSER_BINDING_SECONDS, browserBindingCookieName } from "../../../../../../lib/browser-session-store";
+import { BROWSER_BINDING_SECONDS, BROWSER_LOGIN_BINDING_RESERVE_SECONDS, browserBindingCookieName } from "../../../../../../lib/browser-session-store";
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,8 @@ export async function POST(request: Request) {
     if (!oidcStartIsSameOrigin(request, runtime.settings)) return browserAuthError(403);
     const name = browserBindingCookieName(runtime.settings), cookieStore = await cookies();
     const existing = cookieStore.get(name)?.value;
-    if (existing && await runtime.sessions.isCurrent(existing)) return privateBrowserResponse(NextResponse.json({ ok: true }));
+    // A binding too close to expiry cannot finish a login, so start a fresh one.
+    if (existing && await runtime.sessions.isCurrent(existing, BROWSER_LOGIN_BINDING_RESERVE_SECONDS)) return privateBrowserResponse(NextResponse.json({ ok: true }));
     const binding = await runtime.sessions.register();
     const response = privateBrowserResponse(NextResponse.json({ ok: true }));
     setPrivateBrowserCookie(response, runtime.settings, name, binding, BROWSER_BINDING_SECONDS);

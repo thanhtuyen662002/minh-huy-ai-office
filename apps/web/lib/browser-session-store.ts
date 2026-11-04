@@ -4,6 +4,10 @@ import { isCanonicalCompanyId } from "./company-scope";
 import { OIDC_TRANSACTION_SECONDS, type BrowserOidcSettings, type OidcTransaction } from "./browser-oidc";
 
 export const BROWSER_BINDING_SECONDS = 86_400;
+// begin() and complete() refuse a pending login or session that would outlive
+// the binding, so a login may only start on a binding that can hold a whole
+// transaction plus a full session; an older binding is replaced instead.
+export const BROWSER_LOGIN_BINDING_RESERVE_SECONDS = OIDC_TRANSACTION_SECONDS + 3600 + 10;
 const unavailable = () => new Error("Browser session coordination is unavailable.");
 const randomHandle = () => randomBytes(32).toString("base64url");
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -55,7 +59,10 @@ redis.call('HSET', key, 'incarnation', incarnation, 'generation', ARGV[1], 'bind
 redis.call('EXPIREAT', key, expiry)
 return 1
 `;
-const inspectScript = currentBinding + `return 1`;
+const inspectScript = currentBinding + `
+if bindingExpiry <= now + tonumber(ARGV[2]) then return false end
+return 1
+`;
 const beginScript = currentBinding + `
 local expiry = tonumber(ARGV[4])
 if expiry <= now or expiry > now + ${OIDC_TRANSACTION_SECONDS + 10} or expiry > bindingExpiry then return false end
@@ -165,9 +172,10 @@ export function createBrowserSessionCoordinator(evaluate: RedisSessionEval, sett
       if (await run(registerScript, id, [digest(generation)]) !== 1) throw unavailable();
       return `${id}.${generation}`;
     },
-    async isCurrent(binding: string): Promise<boolean> {
+    async isCurrent(binding: string, reserveSeconds = 0): Promise<boolean> {
       const parsed = parseBinding(binding);
-      return parsed ? await run(inspectScript, parsed.id, [digest(parsed.generation)]) === 1 : false;
+      if (!parsed || !Number.isSafeInteger(reserveSeconds) || reserveSeconds < 0) return false;
+      return await run(inspectScript, parsed.id, [digest(parsed.generation), String(reserveSeconds)]) === 1;
     },
     async begin(binding: string, transaction: OidcTransaction): Promise<string | null> {
       const parsed = parseBinding(binding);
