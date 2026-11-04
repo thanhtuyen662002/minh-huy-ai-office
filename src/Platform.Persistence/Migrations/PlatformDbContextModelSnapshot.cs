@@ -23,6 +23,39 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AssistantImageRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "UploadedByUserId", "CreatedAtUtc");
+
+                    b.ToTable("AssistantImages", "aioffice");
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotAiSettingsRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -2023,6 +2056,30 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_GroupSourceStates_Pending", "([FirstPendingAtUtc] IS NULL AND [LastPendingAtUtc] IS NULL) OR ([FirstPendingAtUtc] IS NOT NULL AND [LastPendingAtUtc] IS NOT NULL AND [FirstPendingAtUtc] <= [LastPendingAtUtc] AND DATEPART(tz,[FirstPendingAtUtc]) = 0 AND DATEPART(tz,[LastPendingAtUtc]) = 0)");
                         });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.HiddenTaskRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("HiddenAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "TaskId");
+
+                    b.HasIndex("TenantId", "CompanyId", "UserId");
+
+                    b.ToTable("HiddenTasks", "aioffice");
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.KnowledgePageRecord", b =>

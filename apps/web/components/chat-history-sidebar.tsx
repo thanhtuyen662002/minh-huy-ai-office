@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { parseTaskHistoryDetail, parseTaskHistoryPage, type TaskHistoryDetail, type TaskHistoryItem, taskHistoryStatus } from "../lib/task-history";
 import { groupConversations, readConversationMap, type ChatConversation } from "../lib/chat-conversations";
 
 type Props = { companyId: string; userId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>; request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
   onUnauthorized: () => void; activeConversationId: string | null; refreshKey: number; disabled?: boolean;
-  onOpen: (conversationId: string, details: TaskHistoryDetail[]) => void; onNew: () => void };
+  onOpen: (conversationId: string, details: TaskHistoryDetail[]) => void; onNew: () => void;
+  onDeleted?: (conversationId: string) => void };
 
 const PAGE = 25;
 const dot = (status: number | null) => status === 6 ? "bg-emerald-500" : status === 5 ? "bg-rose-500" : "bg-amber-500";
@@ -21,12 +22,14 @@ function when(value: string) {
 
 /** Past Trợ lý conversations, newest first. Reads only; opening one never reruns a task. */
 export function ChatHistorySidebar({ companyId, userId, generation, isCurrent, validate, request, onUnauthorized,
-  activeConversationId, refreshKey, disabled, onOpen, onNew }: Props) {
+  activeConversationId, refreshKey, disabled, onOpen, onNew, onDeleted }: Props) {
   const [items, setItems] = useState<TaskHistoryItem[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [opening, setOpening] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const scope = `${companyId}:${userId}:${generation}`, scopeRef = useRef(scope); scopeRef.current = scope;
   const serial = useRef(0);
   const current = (value: number) => scopeRef.current === scope && serial.current === value && isCurrent(generation);
@@ -81,6 +84,30 @@ export function ChatHistorySidebar({ companyId, userId, generation, isCurrent, v
     }
   }
 
+  /** Deletes the conversation's questions from this member's history (the server keeps them for audit). */
+  async function remove(conversation: ChatConversation) {
+    if (deleting) return;
+    const value = ++serial.current; setDeleting(conversation.id); setError("");
+    try {
+      if (!await validate(generation) || !current(value)) return;
+      const response = await request(generation, `/api/local/assistant-history/hide?companyId=${encodeURIComponent(companyId)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds: conversation.items.map(item => item.taskId) }) });
+      if (!current(value)) return;
+      if (response.status === 401) { onUnauthorized(); return; }
+      if (!response.ok) throw new Error("Unavailable");
+      const removed = new Set(conversation.items.map(item => item.taskId.toLowerCase()));
+      setItems(old => old?.filter(item => !removed.has(item.taskId.toLowerCase())) ?? old);
+      setConfirming(null);
+      onDeleted?.(conversation.id);
+    } catch {
+      if (current(value)) setError("Chưa xóa được cuộc trò chuyện.");
+    } finally {
+      if (scopeRef.current === scope) setDeleting(null);
+      if (current(value)) setLoading(false);
+    }
+  }
+
   useEffect(() => {
     void list(0);
     // Company, user, session generation and a finished question own the list.
@@ -102,16 +129,29 @@ export function ChatHistorySidebar({ companyId, userId, generation, isCurrent, v
         {conversations.map(conversation => {
           const active = activeConversationId?.toLowerCase() === conversation.id;
           const count = conversation.items.length;
-          return <li key={conversation.id}>
+          if (confirming === conversation.id) return <li key={conversation.id} className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-2 text-sm dark:border-rose-400/30 dark:bg-rose-400/10">
+            <p className="line-clamp-2 break-words font-medium">Xóa “{conversation.title}”?</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{count > 1 ? `${count} câu hỏi` : "Câu hỏi"} và ảnh đính kèm sẽ bị xóa khỏi lịch sử của bạn.</p>
+            <div className="mt-2 flex gap-2">
+              <button type="button" disabled={!!deleting} onClick={() => void remove(conversation)}
+                className="rounded-md bg-rose-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50">{deleting === conversation.id ? "Đang xóa…" : "Xóa"}</button>
+              <button type="button" disabled={!!deleting} onClick={() => setConfirming(null)} className="rounded-md border px-2.5 py-1 text-xs hover:bg-muted disabled:opacity-50">Hủy</button>
+            </div>
+          </li>;
+          return <li key={conversation.id} className="group relative">
             <button type="button" onClick={() => void open(conversation)} disabled={disabled || !!opening} aria-current={active ? "true" : undefined}
               title={taskHistoryStatus(conversation.latest.status)}
-              className={`w-full rounded-lg px-2 py-2 text-left text-sm transition-colors disabled:cursor-wait ${active ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}>
+              className={`w-full rounded-lg py-2 pl-2 pr-8 text-left text-sm transition-colors disabled:cursor-wait ${active ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}>
               <span className="line-clamp-2 break-words">{conversation.title}</span>
               <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span aria-hidden="true" className={`size-1.5 rounded-full ${dot(conversation.latest.status)}`} />
                 {opening === conversation.id ? "Đang mở…"
                   : `${taskHistoryStatus(conversation.latest.status)}${count > 1 ? ` · ${count} câu hỏi` : ""} · ${when(conversation.latest.createdAtUtc)}`}
               </span>
+            </button>
+            <button type="button" onClick={() => setConfirming(conversation.id)} disabled={disabled || !!deleting} aria-label="Xóa cuộc trò chuyện" title={`Xóa: ${conversation.title}`}
+              className="absolute right-1 top-1.5 rounded-md p-1.5 text-muted-foreground opacity-60 hover:bg-rose-100 hover:text-rose-700 hover:opacity-100 focus:opacity-100 group-hover:opacity-100 disabled:opacity-30 dark:hover:bg-rose-400/20">
+              <Trash2 className="size-3.5" aria-hidden="true" />
             </button>
           </li>;
         })}

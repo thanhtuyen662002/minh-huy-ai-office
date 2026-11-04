@@ -1,7 +1,7 @@
 import { isCanonicalCompanyId } from "./company-scope";
 
 export type TaskHistoryItem = Readonly<{ taskId: string; status: number | null; createdAtUtc: string;
-  updatedAtUtc: string; summary: string | null; metadataUnavailable: boolean }>;
+  updatedAtUtc: string; summary: string | null; metadataUnavailable: boolean; imageIds?: readonly string[] }>;
 export type TaskHistoryPage = Readonly<{ companyId: string; items: readonly TaskHistoryItem[]; offset: number; limit: number; hasMore: boolean }>;
 export type TaskHistoryResult = Readonly<{ kind: "answer" | "connection"; answer: string | null; evidence: string;
   provider: string | null; model: string | null; inputTokens: number | null; outputTokens: number | null; totalTokens: number | null }>;
@@ -28,8 +28,18 @@ const integer = (value: unknown): value is number => typeof value === "number" &
 const date = (value: unknown): value is string => typeof value === "string" && value.length <= 40
   && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,7})?(Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value));
 
+const itemFields = ["taskId", "status", "createdAtUtc", "updatedAtUtc", "summary", "metadataUnavailable"] as const;
+// Pictures attached to the question (Trợ lý). Older servers omit the field; null means none.
+const imageIds = (value: unknown) => value === undefined || value === null
+  || Array.isArray(value) && value.length <= 6 && value.every(id => isCanonicalCompanyId(id));
 function item(value: unknown): TaskHistoryItem | null {
-  if (!object(value, ["taskId", "status", "createdAtUtc", "updatedAtUtc", "summary", "metadataUnavailable"])
+  if (value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "imageIds")) {
+    const { imageIds: ids, ...rest } = value as Record<string, unknown>;
+    if (!imageIds(ids)) return null;
+    const parsed = item(rest);
+    return parsed && Object.freeze({ ...parsed, imageIds: Object.freeze(((ids ?? []) as string[]).map(id => id.toLowerCase())) });
+  }
+  if (!object(value, itemFields)
     || !isCanonicalCompanyId(value.taskId) || typeof value.metadataUnavailable !== "boolean"
     || !(value.status === null ? value.metadataUnavailable : integer(value.status) && value.status >= 0 && value.status <= 6)
     || !date(value.createdAtUtc) || !date(value.updatedAtUtc)

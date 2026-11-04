@@ -101,6 +101,22 @@ public sealed class CompanyAiSettingsGatewayTests
         Assert.False(error.IsTransient);
     }
 
+    [Fact]
+    public async Task Chat_adapter_sends_attached_pictures_as_image_parts()
+    {
+        var handler = new StubHandler(_ => Json(ChatReply));
+        using var client = new HttpClient(handler);
+        var adapter = new OpenAiCompatibleChatCompletionsAdapter(client, new Uri("https://provider.example/v1/chat/completions"), "m", "Bearer k", "p");
+
+        await adapter.ExecuteAsync(new AiGatewayRequest("tenant", "company", "task", "request", AiCapability.Reasoning, "Ảnh này lỗi gì?")
+        { Images = [new AiImageInput("image/png", [1, 2, 3])] });
+
+        using var body = System.Text.Json.JsonDocument.Parse(handler.Body);
+        var parts = body.RootElement.GetProperty("messages")[0].GetProperty("content");
+        Assert.Equal("Ảnh này lỗi gì?", parts[0].GetProperty("text").GetString());
+        Assert.Equal("data:image/png;base64,AQID", parts[1].GetProperty("image_url").GetProperty("url").GetString());
+    }
+
     private static AiGatewayRequest Request(BotChannelFixture fixture) => new(
         fixture.Authority.TenantId.ToString("D"), fixture.Authority.CompanyId.ToString("D"), "task", "request", AiCapability.Reasoning, "Còn bao nhiêu hàng?");
 

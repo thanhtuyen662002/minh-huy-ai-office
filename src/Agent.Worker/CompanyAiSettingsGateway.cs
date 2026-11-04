@@ -83,7 +83,7 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
             Content = JsonContent.Create(new
             {
                 model,
-                messages = new[] { new { role = "user", content = request.Input } },
+                messages = new[] { new { role = "user", content = Content(request) } },
                 max_tokens = maxOutputTokens
             }, options: JsonOptions)
         };
@@ -130,6 +130,18 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
             catch (InvalidOperationException exception) { throw new AiProviderExecutionException($"AI provider returned an incompatible response payload: {exception.Message}", false, exception); }
         }
     }
+
+    // Plain text, or OpenAI-style parts with base64 data URLs when the request carries pictures
+    // (accepted by Claude's, Gemini's and OpenAI's compatible endpoints).
+    private static object Content(AiGatewayRequest request) => request.Images.Count == 0
+        ? request.Input
+        : new object[] { new { type = "text", text = request.Input } }
+            .Concat(request.Images.Select(image => (object)new
+            {
+                type = "image_url",
+                image_url = new { url = $"data:{image.MediaType};base64,{Convert.ToBase64String(image.Content)}" }
+            }))
+            .ToArray();
 
     /// <summary>
     /// The provider's own error message (for example "model not found"), so a misconfigured

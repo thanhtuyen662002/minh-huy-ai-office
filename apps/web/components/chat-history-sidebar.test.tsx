@@ -56,3 +56,25 @@ it("groups questions remembered as one conversation and opens them together, old
     .toEqual([task(1).taskId, later.taskId]);
   window.localStorage.clear();
 });
+
+it("deletes a conversation after confirmation and tells the workspace", async () => {
+  const onDeleted = vi.fn();
+  const pages = { "0": { companyId: company, items: [task(1), task(2)], offset: 0, limit: 25, hasMore: false } };
+  const onOpen = vi.fn();
+  const request = vi.fn(async (_g: number, url: string, init?: RequestInit) => url.includes("/assistant-history/hide")
+    ? Response.json({ hidden: JSON.parse(String(init?.body)).taskIds.length })
+    : Response.json(pages[new URL(url, "http://x.invalid").searchParams.get("offset") as "0"]));
+  render(<ChatHistorySidebar companyId={company} userId={user} generation={1} isCurrent={() => true} validate={async () => true}
+    request={request} onUnauthorized={vi.fn()} activeConversationId={null} refreshKey={0} onOpen={onOpen} onNew={vi.fn()} onDeleted={onDeleted} />);
+  await screen.findByText("Câu hỏi 1");
+  fireEvent.click(screen.getByTitle("Xóa: Câu hỏi 1"));
+  expect(screen.getByText("Xóa “Câu hỏi 1”?")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Xóa" }));
+  await waitFor(() => expect(onDeleted).toHaveBeenCalledWith(task(1).taskId));
+  const hide = request.mock.calls.find(call => call[1].includes("/assistant-history/hide"))!;
+  expect(hide[2]?.method).toBe("POST");
+  expect(JSON.parse(String(hide[2]?.body))).toEqual({ taskIds: [task(1).taskId] });
+  expect(screen.queryByText("Câu hỏi 1")).toBeNull();
+  expect(screen.getByText("Câu hỏi 2")).toBeTruthy();
+  expect(onOpen).not.toHaveBeenCalled();
+});
