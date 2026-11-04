@@ -143,6 +143,28 @@ public sealed class PersistentWorkDeliveryHandlerTests
             await TaskFailureDetail.ReadAsync(db, envelope.TenantId, envelope.CompanyId, envelope.TaskId, step.Id, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task RefusedReadOnlyProof_IsAuthorizationWithTheFailedConditions()
+    {
+        await using var db = NewDb();
+        var (execution, _, envelope) = SeedPublishedDispatch(db);
+        var handler = new PersistentWorkDeliveryHandler(db, new ThrowingExecutor(
+            ErpReadOnlyConnectionVerifier.Unqualified("fixed_database_role (db_datareader)")));
+        var result = await handler.HandleAsync(envelope, CancellationToken.None);
+        Assert.Equal(WorkFailureClass.Authorization, result.FailureClass);
+        Assert.NotNull(execution.DeadLetteredAtUtc);
+        var step = await db.TaskSteps.SingleAsync();
+        Assert.Equal("Tài khoản ERP chưa đạt chuẩn chỉ đọc: fixed_database_role (db_datareader).",
+            await TaskFailureDetail.ReadAsync(db, envelope.TenantId, envelope.CompanyId, envelope.TaskId, step.Id, CancellationToken.None));
+    }
+
+    [Fact]
+    public void AccessFailures_ExplainEachRefusal()
+    {
+        Assert.Equal(ErpAccessFailure.AuthorityUnavailable, ErpAccessFailure.For(new UnauthorizedAccessException("x")));
+        Assert.StartsWith("Tài khoản ERP chưa đạt chuẩn chỉ đọc (", ErpAccessFailure.For(ErpReadOnlyConnectionVerifier.Unqualified()));
+    }
+
     [Theory]
     [InlineData(null, null)]
     [InlineData("  ", null)]
@@ -198,6 +220,12 @@ public sealed class PersistentWorkDeliveryHandlerTests
         db.SaveChanges();
         var envelope = WorkDispatchEnvelope.Create(dispatch.MessageId, dispatch.TenantId, dispatch.CompanyId, dispatch.TaskId, dispatch.StepId, dispatch.Attempt, dispatch.CheckpointVersion, now);
         return (execution, dispatch, envelope);
+    }
+
+    private sealed class ThrowingExecutor(Exception error) : IWorkStepExecutor
+    {
+        public Task<WorkStepExecutionResult> ExecuteAsync(WorkDispatchEnvelope envelope, WorkLeaseSnapshot lease, CancellationToken cancellationToken)
+            => Task.FromException<WorkStepExecutionResult>(error);
     }
 
     private sealed class StubExecutor(WorkStepExecutionResult result) : IWorkStepExecutor
