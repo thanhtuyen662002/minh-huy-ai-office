@@ -5,7 +5,7 @@ import { POST as start } from "../app/api/local/session/oidc/start/route";
 import { GET as callback } from "../app/api/local/session/oidc/callback/route";
 import { createOidcTransaction, OIDC_CALLBACK_PATH, OIDC_TRANSACTION_SECONDS, oidcTransactionCookieName, openOidcTransaction,
   readBrowserOidcSettings, sealOidcTransaction } from "./browser-oidc";
-import { browserBindingCookieName, browserSessionCookieName } from "./browser-session-store";
+import { BROWSER_LOGIN_BINDING_RESERVE_SECONDS, browserBindingCookieName, browserSessionCookieName } from "./browser-session-store";
 import { readBrowserCompany } from "./browser-auth-http";
 
 const mocks = vi.hoisted(() => ({ runtime: vi.fn(), cookies: vi.fn(), exchange: vi.fn(), authorize: vi.fn() }));
@@ -124,7 +124,7 @@ describe("browser preparation and start", () => {
   it("preserves a current registered binding without rewriting cookies", async () => {
     pending(); const response = await prepare(post("binding"));
     expect(await response.json()).toEqual({ ok: true }); expect(response.headers.get("set-cookie")).toBeNull();
-    expect(sessions.isCurrent).toHaveBeenCalledWith(binding); expect(sessions.register).not.toHaveBeenCalled();
+    expect(sessions.isCurrent).toHaveBeenCalledWith(binding, BROWSER_LOGIN_BINDING_RESERVE_SECONDS); expect(sessions.register).not.toHaveBeenCalled();
   });
   it("replaces a stale binding only with a newly registered identity", async () => {
     pending(); sessions.isCurrent.mockResolvedValue(false); sessions.register.mockResolvedValue(nextBinding);

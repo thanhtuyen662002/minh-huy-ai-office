@@ -51,6 +51,15 @@ it.each(["", "short", `${handle}.${handle}=`, `${handle}.${handle}.extra`, `${ha
   expect(await store.revoke(value)).toBeNull();
   expect(evaluate).not.toHaveBeenCalled();
 });
+it("asks the store for the requested remaining binding lifetime", async () => {
+  const evaluate = vi.fn(async () => 1), store = createBrowserSessionCoordinator(evaluate, settings);
+  expect(await store.isCurrent(binding, 5410)).toBe(true);
+  expect(evaluate).toHaveBeenLastCalledWith(expect.stringContaining("bindingExpiry <= now + tonumber(ARGV[2])"), expect.any(String), [expect.any(String), "5410"]);
+  expect(await store.isCurrent(binding)).toBe(true);
+  expect(evaluate).toHaveBeenLastCalledWith(expect.any(String), expect.any(String), [expect.any(String), "0"]);
+  for (const reserve of [-1, 1.5, Number.NaN]) expect(await store.isCurrent(binding, reserve)).toBe(false);
+  expect(evaluate).toHaveBeenCalledTimes(2);
+});
 it.each([{ companyId: "bad" }, { state: "bad" }, { nonce: "bad" }, { verifier: "bad" }, { version: 2 },
   { issuedAt: 1, expiresAt: 301 }, { expiresAt: Math.floor(Date.now() / 1000) + 999 },
 ])("refuses invalid transactions before coordination", async (changes) => {

@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { createClient } from "redis";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { createOidcTransaction, readBrowserOidcSettings } from "./browser-oidc";
-import { createBrowserSessionCoordinator, createBrowserSessionRedis } from "./browser-session-store";
+import { BROWSER_LOGIN_BINDING_RESERVE_SECONDS, createBrowserSessionCoordinator, createBrowserSessionRedis } from "./browser-session-store";
 
 // Unit/mocked coordination is never reported as actual Redis proof. The web CI
 // gate supplies a disposable Redis service and requires every test below.
@@ -74,6 +74,20 @@ actual("checks shared registered binding generations without granting session au
   const loggedOut = (await stores[0].revoke(current))!;
   expect(await stores[1].isCurrent(current)).toBe(false);
   expect(await stores[1].isCurrent(loggedOut)).toBe(true);
+});
+
+actual("treats a binding too close to expiry for a whole login as not current for login", async () => {
+  const prior = new Set(ownedKeys), binding = await stores[0].register(), key = onlyNewKey(prior);
+  expect(await stores[1].isCurrent(binding, BROWSER_LOGIN_BINDING_RESERVE_SECONDS)).toBe(true);
+  // Same row as a binding registered almost 24 hours ago: still current, but
+  // too short to hold a pending login, so begin() refuses it.
+  await observer.hSet(key, "bindingExpiry", String(Math.floor(Date.now() / 1000) + 600));
+  expect(await stores[1].isCurrent(binding)).toBe(true);
+  expect(await stores[1].isCurrent(binding, BROWSER_LOGIN_BINDING_RESERVE_SECONDS)).toBe(false);
+  expect(await stores[0].begin(binding, createOidcTransaction(companyId))).toBeNull();
+  const fresh = await stores[0].register();
+  expect(await stores[1].isCurrent(fresh, BROWSER_LOGIN_BINDING_RESERVE_SECONDS)).toBe(true);
+  expect(await stores[0].begin(fresh, createOidcTransaction(companyId))).toBeTruthy();
 });
 
 actual("consumes exactly one of32 parallel callback claims across independent clients", async () => {
