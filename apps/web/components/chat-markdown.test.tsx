@@ -17,3 +17,16 @@ it("renders the assistant's Markdown as formatted text without raw markers", () 
   expect(container.querySelector("b")).toBeNull();
   expect(container.querySelector("blockquote")?.textContent).toBe("Lưu ý");
 });
+
+it("renders tables without outer pipes, short dividers, escaped pipes and ragged rows", () => {
+  const { container } = render(<ChatMarkdown text={[
+    "Kết quả:", "Mã | Tên | Tỉnh", "-|:-:|-", "KH01 | A \\| B | Hà Nội", "KH02 | C", "", "| X | Y |", "|-|-|", "| 1 | 2 |"].join("\n")} />);
+  const tables = container.querySelectorAll("table");
+  expect(tables.length).toBe(2);
+  expect(tables[0].querySelectorAll("th").length).toBe(3);
+  expect(tables[0].querySelectorAll("tbody tr").length).toBe(2);
+  expect(tables[0].querySelectorAll("tbody tr")[1].querySelectorAll("td").length).toBe(3);
+  expect(tables[0].textContent).toContain("A | B");
+  expect(container.textContent).not.toContain("-|:-:|-");
+  expect(container.querySelector("p")?.textContent).toBe("Kết quả:");
+});
