@@ -150,7 +150,8 @@ public sealed class PilotDataSourceProbeExecutor(
             return new WorkStepExecutionResult(
                 WorkDeliveryOutcome.Failed,
                 WorkFailureClass.Authorization,
-                request.MaxAttempts);
+                request.MaxAttempts,
+                FailureDetail: ErpAccessFailure.SourceUnavailable);
         }
 
         try
@@ -163,20 +164,27 @@ public sealed class PilotDataSourceProbeExecutor(
                     return true;
                 }, cancellationToken, taskId: envelope.TaskId);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException error)
         {
-            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts,
+                FailureDetail: ErpAccessFailure.For(error));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (ErpReadOnlyCheckTimeoutException)
+        {
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, request.MaxAttempts,
+                FailureDetail: ErpAccessFailure.CheckTimeout);
         }
         catch
         {
             return new WorkStepExecutionResult(
                 WorkDeliveryOutcome.Failed,
                 WorkFailureClass.Transient,
-                request.MaxAttempts);
+                request.MaxAttempts,
+                FailureDetail: "Không kết nối được tới ERP.");
         }
 
         var checkpoint = new

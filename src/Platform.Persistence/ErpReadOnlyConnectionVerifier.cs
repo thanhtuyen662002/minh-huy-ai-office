@@ -251,13 +251,31 @@ public static class ErpReadOnlyConnectionVerifier
             command.CommandText = VerificationSql;
             // Large ERP catalogs (tens of thousands of modules) take seconds to prove; data reads keep their own limit.
             command.CommandTimeout = CommandTimeoutSeconds * 3;
-            if (!Equals(await command.ExecuteScalarAsync(cancellationToken), 1)) throw Unqualified();
+            if (!Equals(await command.ExecuteScalarAsync(cancellationToken), 1)) throw Unqualified(await ExplainAsync(connection, cancellationToken));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (ErpReadOnlyCredentialsException) { throw; }
+        // A slow proof still denies the read, but it is not a credential problem: say so instead of "not authorized".
+        catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number == -2) { throw new ErpReadOnlyCheckTimeoutException(error); }
         catch (Exception error) when (error is DbException or InvalidOperationException or ArgumentException)
         {
             throw Unqualified();
         }
+    }
+
+    /// <summary>Names the failed conditions of a refused proof for the task's failure detail (codes and
+    /// role/permission names only, as the connection test shows them). Never grants anything.</summary>
+    private static async Task<string?> ExplainAsync(DbConnection connection, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var findings = await DiagnoseAsync(connection, cancellationToken);
+            if (findings.Count == 0) return null;
+            var text = string.Join(", ", findings.Select(f => f.Detail is null ? f.Code : $"{f.Code} ({f.Detail})"));
+            return text.Length > 240 ? text[..240] : text;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch { return null; }
     }
 
     public static async Task<T> ReadAsync<T>(DbConnection connection, Func<Task<T>> read,
@@ -273,9 +291,18 @@ public static class ErpReadOnlyConnectionVerifier
     }
 
     public static ErpReadOnlyCredentialsException Unqualified() => new();
+    public static ErpReadOnlyCredentialsException Unqualified(string? detail) => new(detail);
 }
 
 public sealed record ErpReadOnlyFinding(string Code, bool WriteRisk, string? Detail);
 
-public sealed class ErpReadOnlyCredentialsException() : UnauthorizedAccessException(
-    "ERP read credentials are not qualified for read-only use.");
+public sealed class ErpReadOnlyCredentialsException(string? detail = null) : UnauthorizedAccessException(
+    "ERP read credentials are not qualified for read-only use.")
+{
+    /// <summary>Failed profile conditions, e.g. "fixed_database_role (db_datareader)", when they could be read.</summary>
+    public string? Detail { get; } = detail;
+}
+
+/// <summary>The read-only proof did not finish within its command timeout. The read is refused.</summary>
+public sealed class ErpReadOnlyCheckTimeoutException(Exception inner) : TimeoutException(
+    "The ERP read-only proof did not finish in time.", inner);

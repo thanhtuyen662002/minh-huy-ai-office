@@ -139,7 +139,15 @@ public sealed class PilotAiQuestionExecutor(
         // Exception text from drivers can name servers; only the type is shown, the log keeps the message.
         logger?.LogWarning(exception, "Trợ lý task {TaskId} failed with {Type}", envelope.TaskId, exception.GetType().Name);
         return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, maxAttempts,
-            FailureDetail: $"Lỗi khi đọc ERP ({exception.GetType().Name}).");
+            FailureDetail: exception is ErpReadOnlyCheckTimeoutException ? ErpAccessFailure.CheckTimeout
+                : $"Lỗi khi đọc ERP ({exception.GetType().Name}).");
+    }
+
+    private WorkStepExecutionResult Denied(WorkDispatchEnvelope envelope, UnauthorizedAccessException exception, int maxAttempts)
+    {
+        var detail = ErpAccessFailure.For(exception);
+        logger?.LogWarning("Trợ lý task {TaskId} was refused ERP access: {Detail}", envelope.TaskId, detail);
+        return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, maxAttempts, FailureDetail: detail);
     }
 
     private readonly DataSourceSecretBindingService bindings = bindingService ?? new(dbContext, new EfAuthorizationDirectory(dbContext));
@@ -173,14 +181,16 @@ public sealed class PilotAiQuestionExecutor(
             var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
             initialBinding = await bindings.RequireSourceAsync(authority, request.DataSourceId, readOnly: true, cancellationToken);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException error)
         {
-            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
+            return Denied(envelope, error, request.MaxAttempts);
         }
         var probe = new PilotDataSourceProbeExecutor(dbContext, secretResolver, connectionProbe, bindings);
         var probeResult = await probe.ExecuteAsync(envelope, lease, cancellationToken).ConfigureAwait(false);
         if (probeResult.Outcome is not WorkDeliveryOutcome.Completed)
         {
+            logger?.LogWarning("Trợ lý task {TaskId} stopped at the ERP connection check ({Class}): {Detail}",
+                envelope.TaskId, probeResult.FailureClass, probeResult.FailureDetail);
             return probeResult;
         }
 
@@ -198,7 +208,8 @@ public sealed class PilotAiQuestionExecutor(
             return new WorkStepExecutionResult(
                 WorkDeliveryOutcome.Failed,
                 WorkFailureClass.Authorization,
-                request.MaxAttempts);
+                request.MaxAttempts,
+                FailureDetail: ErpAccessFailure.SourceUnavailable);
         }
 
         if (queryAgentBackend is not null)
@@ -217,9 +228,9 @@ public sealed class PilotAiQuestionExecutor(
                 authority, request.DataSourceId, readOnly: true,
                 async (connectionString, token) => await evidenceReader.ReadAsync(connectionString, token), cancellationToken, taskId: envelope.TaskId);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException error)
         {
-            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
+            return Denied(envelope, error, request.MaxAttempts);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -326,9 +337,9 @@ public sealed class PilotAiQuestionExecutor(
                         token);
                 }, cancellationToken, taskId: envelope.TaskId);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException error)
         {
-            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts);
+            return Denied(envelope, error, request.MaxAttempts);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

@@ -135,12 +135,13 @@ public sealed class PersistentWorkDeliveryHandler(
         {
             result = await executor.ExecuteAsync(envelope, lease, cancellationToken);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException error)
         {
             // Persist denial before broker settlement. Authorization failures never retry;
-            // the original provider/SQL diagnostic is not included in durable evidence.
+            // the original provider/SQL diagnostic is not included in durable evidence, only a fixed explanation.
             result = new WorkStepExecutionResult(
-                WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, Math.Max(1, envelope.Attempt));
+                WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, Math.Max(1, envelope.Attempt),
+                FailureDetail: ErpAccessFailure.For(error));
         }
         ValidateExecutorResult(result, envelope);
 
