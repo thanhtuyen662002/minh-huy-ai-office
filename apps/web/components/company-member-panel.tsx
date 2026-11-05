@@ -128,6 +128,8 @@ export function CompanyMemberPanel({ companyId, userId, generation, isCurrent, v
       if (current()) setNotice(!body ? "Đã thu hồi lời mời thành viên."
         : "passwordSetupEmailSent" in result && result.passwordSetupEmailSent
           ? `Đã mời và gửi mail đặt mật khẩu tới ${result.email}. Thành viên bấm liên kết trong mail (hiệu lực 3 ngày) để tự đặt mật khẩu rồi đăng nhập.`
+          : "noticeEmailSent" in result && result.noticeEmailSent
+            ? `Đã mời và gửi mail thông báo tới ${result.email}. Người này đã có tài khoản nên đăng nhập bằng mật khẩu hiện có (quên thì bấm "Quên mật khẩu?").`
           : "existingAccount" in result && result.existingAccount
             ? `Đã tạo lời mời. ${result.email} đã có tài khoản đăng nhập nên không gửi mail. Người này đăng nhập bằng mật khẩu hiện có (quên thì bấm "Quên mật khẩu?") là vào được công ty.`
             : "Đã tạo lời mời thành viên.");

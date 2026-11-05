@@ -10,7 +10,8 @@ internal static class CompanyInvitationEndpoints
     public static void MapCompanyInvitations(this WebApplication app)
     {
         app.MapPost("/api/company/invitations", (HttpRequest http, IRequestAuthorizationContextAccessor accessor,
-            CompanyInvitationService service, IKeycloakAdminClient keycloak, ILoggerFactory logs, CancellationToken token) => ExecuteAsync(accessor, async authority =>
+            CompanyInvitationService service, IKeycloakAdminClient keycloak, IInvitationNoticeSender notices, ILoggerFactory logs,
+            CancellationToken token) => ExecuteAsync(accessor, async authority =>
         {
             var input = await ReadInputAsync(http, token);
             var result = await service.CreateAsync(authority, input, token);
@@ -23,18 +24,33 @@ internal static class CompanyInvitationEndpoints
                 var logger = logs.CreateLogger("CompanyInvitations");
                 using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
                 deadline.CancelAfter(TimeSpan.FromSeconds(20));
+                var setupPending = false;
                 try
                 {
-                    if (result.TemporaryPassword is not null || await keycloak.PasswordSetupPendingAsync(result.Email, deadline.Token))
+                    setupPending = result.TemporaryPassword is not null || await keycloak.PasswordSetupPendingAsync(result.Email, deadline.Token);
+                    if (setupPending)
                     {
                         await keycloak.SendPasswordSetupEmailAsync(result.Email, deadline.Token);
                         result = result with { TemporaryPassword = null, PasswordSetupEmailSent = true };
                     }
-                    else logger.LogInformation("Invited email already has a password for company {CompanyId}; no setup email sent", authority.CompanyId);
                 }
-                catch (KeycloakProvisioningException)
+                catch (KeycloakProvisioningException error)
                 {
-                    logger.LogWarning("Password setup email failed for company {CompanyId}", authority.CompanyId);
+                    logger.LogWarning("Password setup email failed for company {CompanyId}: {Detail}", authority.CompanyId, error.Detail);
+                }
+                if (!setupPending && result.ExistingAccount == true && result.PasswordSetupEmailSent != true)
+                {
+                    // The account already has a password: send a plain "you were added" notice instead.
+                    try
+                    {
+                        if (await notices.SendAsync(result.Email, deadline.Token)) result = result with { NoticeEmailSent = true };
+                        else logger.LogInformation("Invited email already has a password for company {CompanyId}; no mailbox configured for a notice", authority.CompanyId);
+                    }
+                    catch (Exception error) when (error is InvitationNoticeException or OperationCanceledException or IOException or UnauthorizedAccessException)
+                    {
+                        logger.LogWarning("Invitation notice email failed for company {CompanyId}: {Detail}", authority.CompanyId,
+                            error is InvitationNoticeException notice ? notice.Detail : error.GetType().Name);
+                    }
                 }
             }
             return Results.Created($"/api/company/invitations/{result.Id:D}", result);

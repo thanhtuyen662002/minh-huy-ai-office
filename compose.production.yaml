@@ -52,6 +52,7 @@ services:
   core-api:
     secrets:
       - keycloak_provisioning_client_secret
+      - invitation_mail_settings
     build:
       context: .
       dockerfile: src/Core.Api/Dockerfile
@@ -66,6 +67,11 @@ services:
       # Private origin for Keycloak /admin calls when the public proxy blocks /admin (empty = BaseUrl).
       AIOffice__KeycloakProvisioning__AdminBaseUrl: ${AIOFFICE_KEYCLOAK_ADMIN_URL:-}
       AIOffice__KeycloakProvisioning__ClientSecretFile: /run/secrets/keycloak_provisioning_client_secret
+      # Setup links name the same browser client the web signs in with.
+      AIOffice__KeycloakProvisioning__BrowserClientId: ${AIOFFICE_BROWSER_OIDC_CLIENT_ID:-aioffice-browser}
+      # "You were added" notices for members who already have a password reuse the Keycloak mailbox file.
+      AIOffice__InvitationMail__SettingsFile: /run/secrets/invitation_mail_settings
+      AIOffice__InvitationMail__AppUrl: ${AIOFFICE_BROWSER_OIDC_PUBLIC_ORIGIN:-}
       AIOffice__PlatformDatabase__ConnectionSecretRef: secretref://env/AIOFFICE_DB_CONNECTION
       AIOffice__Authentication__Authority: ${AIOFFICE_AUTHORITY:?set AIOFFICE_AUTHORITY from the approved identity provider}
       AIOffice__Authentication__Audience: ${AIOFFICE_AUDIENCE:?set AIOFFICE_AUDIENCE from the approved identity provider}
@@ -162,3 +168,5 @@ services:
 secrets:
   keycloak_provisioning_client_secret:
     file: ${AIOFFICE_KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE:-/dev/null}
+  invitation_mail_settings:
+    file: ${AIOFFICE_KEYCLOAK_SMTP_FILE:-/dev/null}

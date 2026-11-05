@@ -50,6 +50,7 @@ try {
         $themeHashes = ($themeFiles | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }) -join ''
         $env:AIOFFICE_KEYCLOAK_THEME_REV = (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes($themeHashes))) -Algorithm SHA256).Hash.Substring(0, 12)
         Invoke-Checked docker @("compose", "--env-file", $EnvironmentFile, "-f", "compose.identity.yaml", "up", "-d", "--wait", "keycloak")
+        & (Join-Path $PSScriptRoot 'Configure-KeycloakSessions.ps1') -EnvironmentFile $EnvironmentFile
         # Optional: password reset by email, enabled by the private mail settings file next to the env file.
         $smtpFile = Join-Path (Split-Path -Parent $EnvironmentFile) 'keycloak-smtp.env'
         if (Test-Path -LiteralPath $smtpFile -PathType Leaf) {
@@ -65,6 +66,14 @@ try {
     }
 
     if ($Phase -in @('All', 'Deploy')) {
+        # Core API mails "you were added" notices from the same private mailbox file, when present.
+        $mailFile = Join-Path (Split-Path -Parent $EnvironmentFile) 'keycloak-smtp.env'
+        if (-not (Test-Path -LiteralPath $mailFile -PathType Leaf)) {
+            # Docker needs a real file for the secret; an empty one means "no notices".
+            $mailFile = Join-Path (Split-Path -Parent $EnvironmentFile) 'invitation-mail-none.env'
+            if (-not (Test-Path -LiteralPath $mailFile -PathType Leaf)) { Set-Content -LiteralPath $mailFile -Value '' -Encoding utf8 }
+        }
+        $env:AIOFFICE_KEYCLOAK_SMTP_FILE = $mailFile
         Initialize-SetupRedisConfiguration $EnvironmentFile
         $overlays = @("compose.vps.yaml")
         if (Test-Path -LiteralPath $tunnelToken -PathType Leaf) { $overlays += "compose.vps-tunnel.yaml" }

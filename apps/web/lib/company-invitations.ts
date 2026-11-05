@@ -3,7 +3,7 @@ export type CompanyInvitationInput = { email: string; roles: InvitationRole[] };
 export type CompanyInvitation = { companyId: string; id: string; email: string; roles: InvitationRole[];
   createdAtUtc: string; expiresAtUtc: string; acceptedAtUtc: string | null; revokedAtUtc: string | null; version: string };
 export type CompanyInvitationPage = { companyId: string; items: CompanyInvitation[]; offset: number; limit: number; hasMore: boolean };
-export type CreatedCompanyInvitation = CompanyInvitation & { temporaryPassword?: string; passwordSetupEmailSent?: true; existingAccount?: true };
+export type CreatedCompanyInvitation = CompanyInvitation & { temporaryPassword?: string; passwordSetupEmailSent?: true; existingAccount?: true; noticeEmailSent?: true };
 
 const guid = (value: unknown): value is string => typeof value === "string" && value !== "00000000-0000-0000-0000-000000000000"
   && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
@@ -68,7 +68,7 @@ export function parseInvitationPage(value: unknown): CompanyInvitationPage | nul
 // Only the POST response may carry a credential; list/revoke remain strict.
 export function parseCreatedInvitation(value: unknown): CreatedCompanyInvitation | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const { temporaryPassword, passwordSetupEmailSent, existingAccount, ...invitation } = value as Record<string, unknown>;
+  const { temporaryPassword, passwordSetupEmailSent, existingAccount, noticeEmailSent, ...invitation } = value as Record<string, unknown>;
   const parsed = parseInvitation(invitation);
   if (!parsed || temporaryPassword !== undefined && (typeof temporaryPassword !== "string"
     || temporaryPassword.length < 14 || temporaryPassword.length > 128 || !/^[\x21-\x7e]+$/.test(temporaryPassword))) return null;
@@ -76,7 +76,10 @@ export function parseCreatedInvitation(value: unknown): CreatedCompanyInvitation
   if (passwordSetupEmailSent !== undefined && (passwordSetupEmailSent !== true || temporaryPassword !== undefined)) return null;
   // An existing account never gets a new temporary password.
   if (existingAccount !== undefined && (existingAccount !== true || temporaryPassword !== undefined)) return null;
+  // A "you were added" notice only goes to an existing account that got no setup link.
+  if (noticeEmailSent !== undefined && (noticeEmailSent !== true || existingAccount !== true || passwordSetupEmailSent !== undefined)) return null;
   let created: CreatedCompanyInvitation = temporaryPassword === undefined ? parsed : { ...parsed, temporaryPassword: temporaryPassword as string };
   if (passwordSetupEmailSent === true) created = { ...created, passwordSetupEmailSent: true };
-  return existingAccount === true ? { ...created, existingAccount: true } : created;
+  if (existingAccount === true) created = { ...created, existingAccount: true };
+  return noticeEmailSent === true ? { ...created, noticeEmailSent: true } : created;
 }

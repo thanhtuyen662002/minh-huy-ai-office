@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MinhHuy.AIOffice.Core.Api;
 using MinhHuy.AIOffice.Core.Api.Authorization;
 using MinhHuy.AIOffice.Shared.Contracts;
 using Xunit;
@@ -79,6 +80,42 @@ public sealed class CoreApiCompanyInvitationTests
         Assert.DoesNotContain("temporaryPassword", body);
         if (pending) Assert.Contains("\"passwordSetupEmailSent\":true", body);
         else Assert.DoesNotContain("passwordSetupEmailSent", body);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    public async Task Existing_account_with_a_password_gets_a_notice_email_instead_of_a_setup_link(bool pending, bool mailboxFails)
+    {
+        var authority = MemberDirectoryFixture.Authority();
+        var keycloak = new CompanyInvitationProvisioningTests.FakeKeycloak { Exists = true, SetupPending = pending };
+        var notices = new FakeNotices { Fail = mailboxFails };
+        await using var fixture = new InvitationApiFixture(authority, keycloak, notices);
+        await fixture.SeedAsync("admin");
+        using var client = fixture.Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var response = await client.PostAsJsonAsync("/api/company/invitations", new { email = "member@example.com", roles = new[] { "viewer" } });
+        Assert.Equal(201, (int)response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Equal(pending ? 1 : 0, keycloak.Emails);
+        Assert.Equal(pending ? 0 : 1, notices.Attempts);
+        if (!pending && !mailboxFails) Assert.Contains("\"noticeEmailSent\":true", body);
+        else Assert.DoesNotContain("noticeEmailSent", body);
+        if (!pending) Assert.Equal("member@example.com", notices.Email);
+    }
+
+    private sealed class FakeNotices : IInvitationNoticeSender
+    {
+        public bool Fail { get; init; }
+        public int Attempts { get; private set; }
+        public string? Email { get; private set; }
+        public Task<bool> SendAsync(string email, CancellationToken cancellationToken)
+        {
+            Attempts++; Email = email;
+            if (Fail) throw new InvitationNoticeException("SMTP MailboxUnavailable");
+            return Task.FromResult(true);
+        }
     }
 
     [Fact]
@@ -178,7 +215,7 @@ public sealed class CoreApiCompanyInvitationTests
         public WebApplicationFactory<Program> Factory { get; }
         private readonly AuthorizationContext authority;
 
-        public InvitationApiFixture(AuthorizationContext authority, IKeycloakAdminClient? keycloak = null)
+        public InvitationApiFixture(AuthorizationContext authority, IKeycloakAdminClient? keycloak = null, IInvitationNoticeSender? notices = null)
         {
             this.authority = authority;
             Environment.SetEnvironmentVariable(variable, "synthetic-test-not-a-real-connection");
@@ -195,6 +232,11 @@ public sealed class CoreApiCompanyInvitationTests
                     {
                         services.RemoveAll<IKeycloakAdminClient>();
                         services.AddSingleton(keycloak);
+                    }
+                    if (notices is not null)
+                    {
+                        services.RemoveAll<IInvitationNoticeSender>();
+                        services.AddSingleton(notices);
                     }
                     services.AddAuthentication(options =>
                     {

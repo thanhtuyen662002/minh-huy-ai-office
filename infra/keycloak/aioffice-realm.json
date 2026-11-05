@@ -13,6 +13,8 @@
   "rememberMe": false,
   "defaultSignatureAlgorithm": "RS256",
   "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 43200,
+  "ssoSessionMaxLifespan": 43200,
   "passwordPolicy": "length(14) and passwordHistory(5) and notUsername(undefined) and notEmail(undefined)",
   "bruteForceProtected": true,
   "permanentLockout": false,
