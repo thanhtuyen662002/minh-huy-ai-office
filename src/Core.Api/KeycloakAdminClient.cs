@@ -187,7 +187,8 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
         return Task.CompletedTask;
     }
     private static KeycloakProvisioningException Failure(HttpStatusCode status) => new(status is HttpStatusCode.TooManyRequests or
-        HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout or HttpStatusCode.RequestTimeout) { Detail = $"HTTP {(int)status}" };
+        HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout or HttpStatusCode.RequestTimeout)
+    { Detail = $"HTTP {(int)status}" };
 }
 
 internal static class KeycloakProvisioningRegistration
