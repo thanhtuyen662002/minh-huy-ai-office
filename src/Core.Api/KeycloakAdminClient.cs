@@ -117,7 +117,7 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
             if (users.Length != 1 || !users[0].TryGetProperty("email", out var match) || match.ValueKind != JsonValueKind.String ||
                 !string.Equals(match.GetString(), email, StringComparison.OrdinalIgnoreCase) ||
                 !users[0].TryGetProperty("id", out var value) || !Guid.TryParse(value.GetString(), out var parsed))
-                throw new KeycloakProvisioningException();
+                throw new KeycloakProvisioningException() { Detail = $"setup lookup found {users.Length} exact account(s)" };
             id = parsed.ToString("D");
         }
         catch (Exception error) when (error is JsonException or HttpRequestException or OperationCanceledException or IOException or InvalidOperationException)
@@ -126,7 +126,7 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
             $"{options.AdminOrigin}/admin/realms/aioffice/users/{id}/execute-actions-email?lifespan={PasswordSetupLifespanSeconds}&client_id={Uri.EscapeDataString(options.BrowserClientId)}")
         { Content = JsonContent.Create(new[] { "UPDATE_PASSWORD" }) };
         using var response = await SendAsync(request, cancellationToken);
-        if (response.StatusCode != HttpStatusCode.NoContent) throw Failure(response.StatusCode);
+        if (response.StatusCode != HttpStatusCode.NoContent) throw await DescribedFailureAsync(response, "execute-actions-email", cancellationToken);
     }
 
     private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -161,7 +161,24 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
         catch (KeycloakProvisioningException) { throw; }
         catch (Exception error) when (error is HttpRequestException or OperationCanceledException or IOException or
             UnauthorizedAccessException or JsonException or KeyNotFoundException or FormatException or InvalidOperationException or ArgumentException)
-        { throw new KeycloakProvisioningException(true); }
+        { throw new KeycloakProvisioningException(true) { Detail = "request " + error.GetType().Name }; }
+    }
+
+    // Keycloak answers admin errors with {"error": ...} or {"errorMessage": ...}; keep only that short text.
+    private static async Task<KeycloakProvisioningException> DescribedFailureAsync(HttpResponseMessage response, string step, CancellationToken cancellationToken)
+    {
+        var reason = "";
+        try
+        {
+            using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            foreach (var name in new[] { "errorMessage", "error" })
+                if (document.RootElement.ValueKind == JsonValueKind.Object && document.RootElement.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String)
+                { reason = value.GetString() ?? ""; break; }
+        }
+        catch (Exception error) when (error is JsonException or IOException or OperationCanceledException or InvalidOperationException) { }
+        reason = new string(reason.Where(character => char.IsLetterOrDigit(character) || character is ' ' or '.' or '_' or '-' or ':').Take(120).ToArray());
+        var unavailable = Failure(response.StatusCode).Unavailable;
+        return new KeycloakProvisioningException(unavailable) { Detail = $"{step} HTTP {(int)response.StatusCode} {reason}".TrimEnd() };
     }
 
     private static Task RequireSuccessAsync(HttpResponseMessage response)
@@ -170,7 +187,8 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
         return Task.CompletedTask;
     }
     private static KeycloakProvisioningException Failure(HttpStatusCode status) => new(status is HttpStatusCode.TooManyRequests or
-        HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout or HttpStatusCode.RequestTimeout);
+        HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout or HttpStatusCode.RequestTimeout)
+    { Detail = $"HTTP {(int)status}" };
 }
 
 internal static class KeycloakProvisioningRegistration

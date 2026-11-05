@@ -89,6 +89,9 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
     if (!isCurrent(value) || phaseRef.current !== "ready" || !authRef.current) return false;
     try {
       const response = await request(value, `/api/local/session?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store" });
+      // Only a refused session signs out. A busy or unreachable server (5xx, 429) leaves this
+      // check unconfirmed so the caller stops, without dropping a still valid sign-in.
+      if (!response.ok && response.status !== 401 && response.status !== 403) { void response.body?.cancel().catch(() => {}); return false; }
       const context = response.ok ? parseAuthContext(await response.json()) : null;
       if (!isCurrent(value)) return false;
       if (!context || context.companyId !== companyId) {
@@ -103,7 +106,7 @@ export function useLocalSession(companyId: string, clearPrivateState: () => void
       confirmed.current = { generation: value, at: Date.now() };
       return true;
     } catch {
-      if (isCurrent(value)) reset("signed-out");
+      // A network failure proves nothing about the sign-in; the next check decides.
       return false;
     }
   }, [accept, companyId, isCurrent, request, reset]);

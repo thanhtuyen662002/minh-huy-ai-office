@@ -55,6 +55,9 @@ public sealed class ProductionKeycloakRealmTests
         Assert.False(realm.TryGetProperty("smtpServer", out _)); // mailbox secrets are applied on the host, never committed
         Assert.True(realm.GetProperty("bruteForceProtected").GetBoolean());
         Assert.InRange(realm.GetProperty("failureFactor").GetInt32(), 1, 5);
+        // A company working day stays signed in; matches Configure-KeycloakSessions.ps1 on the live realm.
+        Assert.Equal(43200, realm.GetProperty("ssoSessionIdleTimeout").GetInt32());
+        Assert.Equal(43200, realm.GetProperty("ssoSessionMaxLifespan").GetInt32());
         Assert.Contains("length(14)", realm.GetProperty("passwordPolicy").GetString(), StringComparison.Ordinal);
         Assert.Contains("passwordHistory(5)", realm.GetProperty("passwordPolicy").GetString(), StringComparison.Ordinal);
         var actions = realm.GetProperty("requiredActions").EnumerateArray().ToArray();

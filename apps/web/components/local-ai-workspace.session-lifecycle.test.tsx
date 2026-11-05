@@ -276,10 +276,24 @@ it("waits for a pending login before restoring a changed company and blocks dupl
 });
 
 it("fails closed if authority revalidation fails instead of treating sources as identity", async () => {
-  let offline = false;
-  fixture((url) => offline && url.startsWith("/api/local/session?") ? Promise.reject(new Error("offline")) : undefined);
-  const { container } = render(workspace()); await answered(container); offline = true;
+  let session: "ok" | "offline" | "busy" | "refused" = "ok";
+  const fetcher = fixture((url) => !url.startsWith("/api/local/session?") || session === "ok" ? undefined
+    : session === "offline" ? Promise.reject(new Error("offline"))
+    : Response.json({ error: "fixture" }, { status: session === "busy" ? 503 : 401 }));
+  const { container } = render(workspace()); await answered(container);
   fireEvent.click(container.querySelector("nav button:nth-child(6)")!);
+  const sourceReads = () => fetcher.mock.calls.filter(([url]) => String(url).startsWith("/api/local/data-sources?")).length;
+  // An unreachable or busy server stops the action but keeps the sign-in (e.g. during a deploy restart).
+  for (const failure of ["offline", "busy"] as const) {
+    session = failure; const before = sourceReads();
+    fireEvent.click(container.querySelector("section button")!);
+    await waitFor(() => expect(fetcher.mock.calls.filter(([url]) => String(url).startsWith("/api/local/session?")).length).toBeGreaterThan(0));
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+    expect(sourceReads()).toBe(before);
+    expect(container.querySelector('input[name="username"]')).toBeNull();
+  }
+  // A refused session still signs out and clears private state.
+  session = "refused";
   fireEvent.click(container.querySelector("section button")!);
   await waitFor(() => expect(container.querySelector('input[name="username"]')).toBeTruthy());
   privateGone();

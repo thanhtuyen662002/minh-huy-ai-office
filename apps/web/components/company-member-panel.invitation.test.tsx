@@ -188,3 +188,13 @@ it("still says the setup email was sent to an existing account that never chose 
   fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
   await screen.findByText(/Đã mời và gửi mail đặt mật khẩu tới old@example.com/);
 });
+
+it("says a notice email went to an existing account that already has a password", async () => {
+  fixture(url => url === `/api/local/company/invitations?companyId=${company}`
+    ? Response.json({ ...invitation, email: "old@example.com", existingAccount: true, noticeEmailSent: true }, { status: 201 }) : undefined);
+  await screen.findByText("member@example.com");
+  fireEvent.change(screen.getByLabelText("Email thành viên"), { target: { value: "old@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
+  await screen.findByText(/Đã mời và gửi mail thông báo tới old@example.com/);
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+});

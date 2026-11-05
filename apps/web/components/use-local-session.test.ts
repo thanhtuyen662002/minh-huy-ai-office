@@ -40,3 +40,18 @@ it("keeps validate authoritative and never reuses a confirmation across a sessio
   await act(async () => { expect(await hook.result.current.validateRecent(old)).toBe(false); });
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+it("keeps the sign-in when the session check is busy or unreachable and signs out only when refused", async () => {
+  const { hook, fetch } = await signedIn();
+  const generation = hook.result.current.generation.current;
+  fetch.mockResolvedValueOnce(Response.json({}, { status: 503 }));
+  await act(async () => { expect(await hook.result.current.validate(generation)).toBe(false); });
+  fetch.mockRejectedValueOnce(new Error("offline"));
+  await act(async () => { expect(await hook.result.current.validate(generation)).toBe(false); });
+  expect(hook.result.current.phase).toBe("ready");
+  expect(hook.result.current.generation.current).toBe(generation);
+  await act(async () => { expect(await hook.result.current.validate(generation)).toBe(true); });
+  fetch.mockResolvedValueOnce(Response.json({}, { status: 401 }));
+  await act(async () => { expect(await hook.result.current.validate(generation)).toBe(false); });
+  expect(hook.result.current.phase).toBe("signed-out");
+});

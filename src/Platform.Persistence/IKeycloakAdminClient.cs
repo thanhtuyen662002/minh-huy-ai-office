@@ -17,4 +17,7 @@ public sealed class KeycloakProvisioningException(bool unavailable = false)
     : Exception("Identity provisioning is temporarily unavailable.")
 {
     public bool Unavailable { get; } = unavailable;
+    // Operator diagnostic for logs only: the step, HTTP status and Keycloak's short error code or
+    // message, reduced to plain characters. Never a token, secret or response body.
+    public string Detail { get; init; } = "";
 }
