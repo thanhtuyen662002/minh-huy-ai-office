@@ -269,7 +269,7 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
   function card(item: CustomerRequest) {
     const owner = memberName(item.assigneeUserId), selected = visible.selection.code === item.code, locked = !canChange(item);
     const pending = moving.includes(item.code);
-    return <li key={item.id}>
+    return <li key={item.id} className="shrink-0">
       <button type="button" aria-label={item.code} aria-describedby={`request-${item.id}`} aria-pressed={selected} aria-busy={pending} disabled={visible.saving}
         draggable={!disabled && !visible.conflict && !locked && !pending} title={locked ? `${owner ?? "Người khác"} đã nhận phiếu này` : undefined} onDragStart={event => { dragged.current = item.code; event.dataTransfer.effectAllowed = "move"; }}
         onDragEnd={() => { dragged.current = null; setDropTarget(null); }} onClick={() => openTicket(item.code)}
@@ -328,12 +328,12 @@ export function CustomerRequestPanel({ tenantId, companyId, userId, isAdmin = fa
             return <section key={status} aria-label={`Cột ${requestStatuses[status]}`}
               onDragOver={event => { if (dragged.current) { event.preventDefault(); setDropTarget(status); } }}
               onDragLeave={() => setDropTarget(old => old === status ? null : old)} onDrop={event => drop(event, status)}
-              className={`flex min-h-48 flex-col gap-2 rounded-xl bg-muted/70 p-2.5 transition-colors ${dropTarget === status ? "ring-2 ring-ring/40" : ""}`}>
-              <h3 className="flex items-center gap-2 px-1 pt-0.5 text-sm font-semibold">
+              className={`flex h-[calc(100dvh-22rem)] min-h-80 flex-col gap-2 rounded-xl bg-muted/70 p-2.5 transition-colors ${dropTarget === status ? "ring-2 ring-ring/40" : ""}`}>
+              <h3 className="flex shrink-0 items-center gap-2 px-1 pt-0.5 text-sm font-semibold">
                 <span className={`size-2 rounded-full ${statusTone[status].dot}`} aria-hidden="true" />{requestStatuses[status]}
                 <span className="text-xs font-medium text-muted-foreground">{column.failed ? "" : column.items.length}{column.hasMore ? "+" : ""}</span></h3>
               {column.failed ? <p role="alert" className="rounded-lg border border-dashed border-rose-300 px-3 py-6 text-center text-xs text-rose-700 dark:border-rose-400/40 dark:text-rose-200">Không tải được cột này. Bấm Tải lại phiếu để thử lại.</p>
-                : column.items.length ? <ul className="m-0 flex list-none flex-col gap-2 p-0">{column.items.map(card)}</ul>
+                : column.items.length ? <ul className="my-0 ml-0 -mr-1.5 flex min-h-0 flex-1 list-none flex-col gap-2 overflow-y-auto overscroll-contain p-0 pr-1.5 [scrollbar-width:thin]">{column.items.map(card)}</ul>
                 : <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">Không có phiếu</p>}
             </section>;
           })}
