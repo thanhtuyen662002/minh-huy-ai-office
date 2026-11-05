@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, ImageIcon, RefreshCw, X } from "lucide-react";
 import { BotMessage, BotMessageGroup, parseBotMessageGroups, parseBotMessagePage } from "../lib/bot-messages";
 import { SkeletonRows } from "./skeleton";
@@ -9,9 +9,9 @@ type Props = { companyId: string; userId: string; generation: number;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void;
   onGroups?: (count: number) => void };
 type Selected = { channel: string; externalId: string };
-type State = { scope: string; groups: BotMessageGroup[] | null; selected: Selected | null; messages: BotMessage[] | null;
+type State = { scope: string; groups: BotMessageGroup[] | null; selected: Selected | null; messages: BotMessage[] | null; senders: string[];
   hasMore: boolean; loading: boolean; error: string };
-const empty = (scope: string): State => ({ scope, groups: null, selected: null, messages: null, hasMore: false, loading: false, error: "" });
+const empty = (scope: string): State => ({ scope, groups: null, selected: null, messages: null, senders: [], hasMore: false, loading: false, error: "" });
 const PAGE = 50;
 const smallButton = "inline-flex h-8 items-center justify-center rounded-lg border bg-card px-2.5 text-xs font-medium hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
 const iconButton = "inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground";
@@ -45,21 +45,32 @@ function dayLabel(value: string) {
   const text = d.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+const word = /[\p{L}\p{N}_]/u;
+const mentionClass = "rounded bg-sky-100 px-1 font-semibold text-sky-800 dark:bg-sky-400/15 dark:text-sky-200";
+// "@Name" for a name we do not know: the first word plus up to two more capitalised words, never trailing punctuation.
+const guessedMention = /^@[\p{L}\p{N}_.]+(?:[ \u00a0][\p{Lu}][\p{L}\p{N}_]*){0,2}/u;
 // Mentions stand out and links open in a new tab; everything else stays plain text (React escapes it).
-function richText(text: string): ReactNode[] {
-  const parts: ReactNode[] = [], pattern = /(https?:\/\/[^\s<>"]+)|(@[\p{L}\p{N}_.]+(?:[ \u00a0][\p{Lu}][\p{L}\p{N}_.]*){0,3})/gu;
-  let last = 0, key = 0;
-  for (const match of text.matchAll(pattern)) {
-    const at = match.index ?? 0;
-    if (at > last) parts.push(text.slice(last, at));
-    if (match[1]) {
-      const url = match[1].replace(/[),.;:!?]+$/, "");
-      parts.push(<a key={key++} href={url} target="_blank" rel="noopener noreferrer nofollow" className="break-all font-medium text-primary underline underline-offset-2">{url}</a>);
-      if (url.length < match[1].length) parts.push(match[1].slice(url.length));
-    } else parts.push(<strong key={key++} className="rounded bg-sky-100 px-1 font-semibold text-sky-800 dark:bg-sky-400/15 dark:text-sky-200">{match[2]}</strong>);
-    last = at + match[0].length;
+// A mention is matched against the names of people who wrote in the group (longest first), so "@Huyền Trần OK Em" marks only the name
+// and "@Ngô Đạt  Phần Mềm" (double space) is marked whole.
+function richText(text: string, names: readonly string[]): ReactNode[] {
+  const parts: ReactNode[] = [];
+  let plain = "", key = 0, i = 0;
+  const flush = () => { if (plain) { parts.push(plain); plain = ""; } };
+  while (i < text.length) {
+    const link = /^https?:\/\/[^\s<>"]+/.exec(text.slice(i, i + 2100));
+    if (link && (i === 0 || !word.test(text[i - 1]))) {
+      const url = link[0].replace(/[),.;:!?]+$/, "");
+      flush(); parts.push(<a key={key++} href={url} target="_blank" rel="noopener noreferrer nofollow" className="break-all font-medium text-primary underline underline-offset-2">{url}</a>);
+      i += url.length; continue;
+    }
+    if (text[i] === "@" && (i === 0 || !word.test(text[i - 1]))) {
+      const known = names.find(n => text.startsWith(n, i + 1) && !word.test(text[i + 1 + n.length] ?? ""));
+      const mention = known !== undefined ? "@" + known : guessedMention.exec(text.slice(i, i + 300))?.[0]?.replace(/[.]+$/, "");
+      if (mention && mention.length > 1) { flush(); parts.push(<strong key={key++} className={mentionClass}>{mention}</strong>); i += mention.length; continue; }
+    }
+    plain += text[i++];
   }
-  if (last < text.length) parts.push(text.slice(last));
+  flush();
   return parts;
 }
 type Picture = { src: string; label: string };
@@ -165,7 +176,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
     const before = latest.current.scope === scope && same(latest.current.selected, selected ?? { channel: "", externalId: "" }) ? latest.current.messages : null;
     if (!older) stick.current = true;
     setState(old => ({ ...(old.scope === scope ? old : empty(scope)), selected, loading: true, error: "",
-      ...(selected && !same(old.selected, selected) ? { messages: null, hasMore: false } : {}) }));
+      ...(selected && !same(old.selected, selected) ? { messages: null, senders: [], hasMore: false } : {}) }));
     const fail = (status: number | "unauthorized") => {
       if (!current(value)) return;
       if (status === "unauthorized") { setState(empty(scope)); onUnauthorized(); return; }
@@ -186,7 +197,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
         // On first open, show the group with the newest messages instead of an empty pane.
         const first = !selected ? groups.filter(g => g.lastMessageAt).sort((x, y) => Date.parse(y.lastMessageAt!) - Date.parse(x.lastMessageAt!))[0] : undefined;
         const still = selected && groups.some(g => same(selected, g)) ? selected : first ? { channel: first.channel, externalId: first.externalId } : null;
-        setState(old => ({ ...old, groups, selected: still, ...(still && same(old.selected, still) ? {} : { messages: null, hasMore: false }), loading: !!still }));
+        setState(old => ({ ...old, groups, selected: still, ...(still && same(old.selected, still) ? {} : { messages: null, senders: [], hasMore: false }), loading: !!still }));
         if (!still) return;
         target = still;
       }
@@ -197,6 +208,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
       if (raw === "unauthorized" || typeof raw === "number") { fail(raw); return; }
       const page = parseBotMessagePage(raw, PAGE); if (!page) { fail(502); return; }
       setState(old => ({ ...old, loading: false, error: "", messages: merge(before ?? [], page.items),
+        senders: [...new Set([...(before ? old.senders : []), ...page.senders])],
         hasMore: older || !before?.length ? page.hasMore : old.hasMore }));
     } catch { fail(503); }
     finally { if (current(value)) { controller.current = null; setState(old => old.loading ? { ...old, loading: false } : old); } }
@@ -222,6 +234,8 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
     if (stick.current && count && list) list.scrollTop = list.scrollHeight;
   }, [count, visible.selected]);
   const group = visible.groups?.find(g => same(visible.selected, g));
+  const names = useMemo(() => [...new Set([...visible.senders, ...(visible.messages ?? []).map(m => m.senderName)])]
+    .sort((a, b) => b.length - a.length), [visible.senders, visible.messages]);
   // Pictures arrive after the text; stay at the newest message while the reader has not scrolled up.
   const keepBottom = () => { const list = bottom.current?.parentElement; if (stick.current && list) list.scrollTop = list.scrollHeight; };
   const pane = "flex min-h-0 min-w-0 flex-col";
@@ -303,7 +317,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
                         {pictures.length ? <div className={missing || m.text ? "mb-2" : ""}><Album pictures={pictures} onOpen={setViewing} onLoad={keepBottom} /></div> : null}
                         {missing ? <p className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground ${c.soft} ${m.text ? "mb-2" : ""}`} title="Ảnh gửi trước khi bot bắt đầu lưu ảnh">
                             <ImageIcon className="size-4" aria-hidden="true" /><span>Có hình ảnh</span>{missing > 1 ? <span className="font-semibold">×{missing}</span> : null}</p> : null}
-                        {m.text ? <p className="whitespace-pre-wrap break-words">{richText(m.text).map((part, n) => <Fragment key={n}>{part}</Fragment>)}</p> : null}
+                        {m.text ? <p className="whitespace-pre-wrap break-words">{richText(m.text, names).map((part, n) => <Fragment key={n}>{part}</Fragment>)}</p> : null}
                       </div>
                     </div>
                   </div>
