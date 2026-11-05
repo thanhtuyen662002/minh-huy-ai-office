@@ -59,6 +59,28 @@ public sealed class CoreApiCompanyInvitationTests
         if (!admin) Assert.Equal(0, keycloak.Lookups);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Existing_account_gets_a_setup_email_only_while_it_has_never_chosen_a_password(bool pending)
+    {
+        var authority = MemberDirectoryFixture.Authority();
+        var keycloak = new CompanyInvitationProvisioningTests.FakeKeycloak { Exists = true, SetupPending = pending };
+        await using var fixture = new InvitationApiFixture(authority, keycloak);
+        await fixture.SeedAsync("admin");
+        using var client = fixture.Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, authority.CompanyId.ToString());
+        var response = await client.PostAsJsonAsync("/api/company/invitations", new { email = "member@example.com", roles = new[] { "admin" } });
+        Assert.Equal(201, (int)response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Equal(0, keycloak.Creates);
+        Assert.Equal(pending ? 1 : 0, keycloak.Emails);
+        Assert.Contains("\"existingAccount\":true", body);
+        Assert.DoesNotContain("temporaryPassword", body);
+        if (pending) Assert.Contains("\"passwordSetupEmailSent\":true", body);
+        else Assert.DoesNotContain("passwordSetupEmailSent", body);
+    }
+
     [Fact]
     public async Task Failed_setup_email_falls_back_to_the_one_time_temporary_password()
     {

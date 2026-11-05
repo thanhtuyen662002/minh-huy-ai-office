@@ -14,20 +14,27 @@ internal static class CompanyInvitationEndpoints
         {
             var input = await ReadInputAsync(http, token);
             var result = await service.CreateAsync(authority, input, token);
-            if (result.TemporaryPassword is not null && keycloak.Enabled)
+            if ((result.TemporaryPassword is not null || result.ExistingAccount == true) && keycloak.Enabled)
             {
                 // After commit: email a "choose your password" link. The temporary password is only
-                // returned when that email could not be sent, as the manual fallback.
+                // returned when that email could not be sent, as the manual fallback. An existing
+                // account gets the link only while it has never chosen a password; one that has
+                // signs in with its own password and is never reset here.
+                var logger = logs.CreateLogger("CompanyInvitations");
                 using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
                 deadline.CancelAfter(TimeSpan.FromSeconds(20));
                 try
                 {
-                    await keycloak.SendPasswordSetupEmailAsync(result.Email, deadline.Token);
-                    result = result with { TemporaryPassword = null, PasswordSetupEmailSent = true };
+                    if (result.TemporaryPassword is not null || await keycloak.PasswordSetupPendingAsync(result.Email, deadline.Token))
+                    {
+                        await keycloak.SendPasswordSetupEmailAsync(result.Email, deadline.Token);
+                        result = result with { TemporaryPassword = null, PasswordSetupEmailSent = true };
+                    }
+                    else logger.LogInformation("Invited email already has a password for company {CompanyId}; no setup email sent", authority.CompanyId);
                 }
                 catch (KeycloakProvisioningException)
                 {
-                    logs.CreateLogger("CompanyInvitations").LogWarning("Password setup email failed for company {CompanyId}", authority.CompanyId);
+                    logger.LogWarning("Password setup email failed for company {CompanyId}", authority.CompanyId);
                 }
             }
             return Results.Created($"/api/company/invitations/{result.Id:D}", result);

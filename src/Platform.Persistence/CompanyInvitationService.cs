@@ -70,7 +70,11 @@ public sealed class CompanyInvitationService(PlatformDbContext database, IAuthor
                 database.CompanyInvitations.Add(invitation); Audit(invitation, "created", authority.UserId, now);
                 if (provisioningAction is not null) Audit(invitation, provisioningAction, authority.UserId, now);
                 await RequireAdminAsync(authority, cancellationToken);
-                return CompanyInvitationPolicy.Result(invitation) with { TemporaryPassword = temporaryPassword };
+                return CompanyInvitationPolicy.Result(invitation) with
+                {
+                    TemporaryPassword = temporaryPassword,
+                    ExistingAccount = provisioningAction == "keycloak-existing" ? true : null
+                };
             }, cancellationToken);
         }
         catch

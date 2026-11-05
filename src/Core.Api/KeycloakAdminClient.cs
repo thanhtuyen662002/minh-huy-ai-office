@@ -81,6 +81,25 @@ public sealed class KeycloakAdminClient(HttpClient http, KeycloakProvisioningOpt
         return true;
     }
 
+    public async Task<bool> PasswordSetupPendingAsync(string email, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            options.AdminOrigin + "/admin/realms/aioffice/users?exact=true&max=2&email=" + Uri.EscapeDataString(email));
+        using var response = await SendAsync(request, cancellationToken);
+        await RequireSuccessAsync(response);
+        try
+        {
+            using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var users = document.RootElement.ValueKind == JsonValueKind.Array ? document.RootElement.EnumerateArray().ToArray() : [];
+            if (users.Length != 1 || !users[0].TryGetProperty("email", out var found) || found.ValueKind != JsonValueKind.String ||
+                !string.Equals(found.GetString(), email, StringComparison.OrdinalIgnoreCase)) throw new KeycloakProvisioningException();
+            return users[0].TryGetProperty("requiredActions", out var actions) && actions.ValueKind == JsonValueKind.Array &&
+                actions.EnumerateArray().Any(action => action.ValueKind == JsonValueKind.String && action.GetString() == "UPDATE_PASSWORD");
+        }
+        catch (Exception error) when (error is JsonException or HttpRequestException or OperationCanceledException or IOException or InvalidOperationException)
+        { throw new KeycloakProvisioningException(true); }
+    }
+
     // Setup links stay valid for three days so a member can act on the invitation later.
     private const int PasswordSetupLifespanSeconds = 3 * 24 * 60 * 60;
 
