@@ -24,7 +24,7 @@ it("lists groups and projects only the known fields", async () => {
 it("reads a page with an encoded group and a canonical before cursor", async () => {
   mocks.fetch.mockResolvedValue(Response.json({ items: [item], hasMore: true }));
   const response = await botMessagesBff(request("/zalo", `&group=${encodeURIComponent("g 1&x")}&limit=50&before=${encodeURIComponent("2026-10-30T08:00:00+07:00")}`), "zalo");
-  expect(response.status).toBe(200); expect(await response.json()).toEqual({ items: [item], hasMore: true });
+  expect(response.status).toBe(200); expect(await response.json()).toEqual({ items: [item], hasMore: true, senders: [] });
   expect(mocks.fetch.mock.calls[0][0]).toBe(`http://127.0.0.1:8080/api/companies/${company}/bot-messages/zalo?group=g+1%26x&limit=50&before=2026-10-30T01%3A00%3A00.000Z`);
 });
 it.each([["telegram", "&group=g"], ["zalo", ""], ["zalo", "&group=g&limit=0"], ["zalo", "&group=g&limit=201"], ["zalo", "&group=g&before=soon"], ["zalo", "&group=g&extra=1"]])

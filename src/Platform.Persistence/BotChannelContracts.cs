@@ -37,7 +37,8 @@ public sealed record BotMessageView(string MessageId, string SenderName, string 
 public sealed record BotMessageImageInput(string Channel, string GroupExternalId, string MessageId, int Position, string ContentType, string Data);
 public sealed record BotMessageImageReceipt(bool Stored);
 public sealed record BotMessageImage(string ContentType, byte[] Content);
-public sealed record BotMessagePage(BotMessageView[] Items, bool HasMore);
+// Senders = everyone who has written in the group (longest first), so the page can mark "@Name" mentions by real names.
+public sealed record BotMessagePage(BotMessageView[] Items, bool HasMore, string[]? Senders = null);
 public sealed record BotAuditView(Guid Id, string? Channel, Guid ActorUserId, string Field, string? Before, string? After, DateTimeOffset Timestamp);
 public sealed class UtcInstantConverter : JsonConverter<DateTimeOffset>
 {

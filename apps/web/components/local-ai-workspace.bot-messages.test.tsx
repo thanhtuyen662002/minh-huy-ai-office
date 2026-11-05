@@ -147,3 +147,22 @@ it("groups a burst of pictures from one sender into one album that pages through
   expect(screen.getByRole("dialog").querySelector("img")!.getAttribute("src")).toContain("message=p7");
   fireEvent.click(screen.getByRole("button", { name: "Ảnh sau" })); expect(screen.getByRole("dialog").textContent).toContain("1/7");
 });
+
+it("marks mentions by the real names of people in the group, not by guessing words", async () => {
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.startsWith("/api/local/session?")) return Response.json({ tenantId: tenant, companyId: company, userId: user, roles: ["viewer"] });
+    if (url.startsWith("/api/local/data-sources?")) return Response.json([]);
+    if (url.startsWith("/api/local/bot-messages?")) return Response.json([group]);
+    if (url.startsWith("/api/local/bot-messages/zalo?")) return Response.json({ items: [
+      { ...message(2, "@Ngô Đạt  Phần Mềm @Nguyễn Hoàng Đăng xem nhanh giúp."), senderName: "Huyền Trần" },
+      { ...message(1, "@Huyền Trần OK Em. @Xuân Trinh , @All xem nhé"), senderName: "Tuấn Lê" }],
+      hasMore: false, senders: ["Ngô Đạt  Phần Mềm", "Nguyễn Hoàng Đăng", "Huyền Trần", "Tuấn Lê"] });
+    throw new Error("Unexpected owned fixture route");
+  });
+  vi.stubGlobal("fetch", fetcher); vi.stubGlobal("BroadcastChannel", undefined);
+  render(<LocalAiWorkspace companyId={company} companyName="Fixture" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Tin nhắn" }));
+  await screen.findByText("@Huyền Trần");
+  const marked = [...screen.getByRole("list", { name: "Tin nhắn trong nhóm" }).querySelectorAll("strong")].map(x => x.textContent);
+  expect(marked).toEqual(["@Huyền Trần", "@Xuân Trinh", "@All", "@Ngô Đạt  Phần Mềm", "@Nguyễn Hoàng Đăng"]);
+});

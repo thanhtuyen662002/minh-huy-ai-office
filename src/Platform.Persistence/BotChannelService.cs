@@ -276,10 +276,15 @@ public sealed class BotChannelService(PlatformDbContext database, IAuthorization
             .Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId && x.Channel == channel && x.GroupExternalId == group && ids.Contains(x.MessageId))
             .GroupBy(x => x.MessageId).Select(x => new { MessageId = x.Key, Count = x.Count() }).ToArrayAsync(ct))
             .ToDictionary(x => x.MessageId, x => x.Count, StringComparer.Ordinal);
+        var senders = (await database.BotMessages.AsNoTracking().Where(x => x.TenantId == authority.TenantId && x.CompanyId == authority.CompanyId &&
+            x.Channel == channel && x.GroupExternalId == group).Select(x => x.SenderName).Distinct().Take(MaximumSenders).ToArrayAsync(ct))
+            .OrderByDescending(x => x.Length).ThenBy(x => x, StringComparer.Ordinal).ToArray();
         await RequireMemberAsync(authority, ct);
         return new(shown.Select(x => new BotMessageView(x.MessageId, x.SenderName, x.Text, x.HasImage, x.SentAt, images.GetValueOrDefault(x.MessageId))).ToArray(),
-            rows.Length > limit);
+            rows.Length > limit, senders);
     }
+
+    public const int MaximumSenders = 500;
 
     // The bot uploads pictures after the message itself; a picture for a message that was not stored (group not selected) is ignored.
     internal async Task<BotMessageImageReceipt> StoreImageAsync(CustomerRequestServiceBinding binding, BotMessageImageInput input, byte[] content, CancellationToken ct)

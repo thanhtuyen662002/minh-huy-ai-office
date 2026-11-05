@@ -38,6 +38,7 @@ public sealed class BotMessageTests
         Assert.Equal(["m5", "m4"], page.Items.Select(x => x.MessageId).ToArray()); Assert.True(page.HasMore);
         var last = await service.MessagesAsync(f.Authority, "zalo", "customer-group-1", page.Items[^1].SentAt, 10);
         Assert.Equal(["m3", "m2", "m1"], last.Items.Select(x => x.MessageId).ToArray()); Assert.False(last.HasMore);
+        Assert.Equal(["Anh Minh"], page.Senders);
 
         await Assert.ThrowsAsync<BotChannelNotFoundException>(() => service.MessagesAsync(f.Authority, "zalo", "other-group", null, 10));
         await Assert.ThrowsAsync<ArgumentException>(() => service.MessagesAsync(f.Authority, "zalo", "customer-group-1", null, 201));
@@ -89,6 +90,7 @@ public sealed class BotMessageTests
         await using var db = f.Database(); var service = f.Service(db);
         Assert.Equal(2, db.BotMessageImages.Count());
         var page = await service.MessagesAsync(f.Authority, "zalo", "customer-group-1", null, 10);
+        Assert.Equal(["Anh Minh"], page.Senders);
         Assert.Equal([("m2", true, 1), ("m1", true, 1)], page.Items.Select(x => (x.MessageId, x.HasImage, x.ImageCount)).ToArray());
         var image = await service.ImageAsync(f.Authority, "zalo", "customer-group-1", "m1", 0);
         Assert.Equal("image/png", image.ContentType); Assert.Equal(png, image.Content);
