@@ -243,7 +243,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
   return <section aria-label="Tin nhắn nhóm khách" aria-busy={visible.loading}
     className="grid min-w-0 max-w-full overflow-hidden rounded-xl border bg-card shadow-sm lg:h-[calc(100vh-13rem)] lg:min-h-[32rem] lg:grid-cols-[19rem_minmax(0,1fr)]">
     <div className={`${pane} border-b lg:border-b-0 lg:border-r`}>
-      <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
+      <div className="flex min-h-16 items-center justify-between gap-2 border-b px-4 py-2">
         <h2 className="font-semibold">Nhóm khách</h2>
         <button type="button" className={iconButton} aria-label="Tải lại tin nhắn" title="Tải lại tin nhắn"
           onClick={() => void load(visible.selected)}><RefreshCw className={`size-4 ${visible.loading ? "animate-spin" : ""}`} aria-hidden="true" /></button>
@@ -275,7 +275,7 @@ export function BotMessagesPanel({ companyId, userId, generation, isCurrent, val
       </div>
     </div>
     <div className={`${pane} bg-background/60`}>
-      <div className="flex min-h-[3.25rem] flex-wrap items-center justify-between gap-2 border-b bg-card px-5 py-2.5">
+      <div className="flex min-h-16 flex-wrap items-center justify-between gap-2 border-b bg-card px-5 py-2">
         <div className="flex min-w-0 items-center gap-3">
           {group ? <span aria-hidden="true" className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${colour(group.displayName).avatar}`}>{initials(group.customerName || group.displayName, true)}</span> : null}
           <div className="min-w-0"><h3 className="truncate font-bold">{group?.displayName ?? "Tin nhắn"}</h3>
