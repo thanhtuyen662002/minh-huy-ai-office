@@ -49,6 +49,31 @@ public sealed class KeycloakAdminClientTests
     }
 
     [Theory]
+    [InlineData("[{\"email\":\"MEMBER@example.com\",\"requiredActions\":[\"UPDATE_PASSWORD\"]}]", true)]
+    [InlineData("[{\"email\":\"member@example.com\",\"requiredActions\":[]}]", false)]
+    [InlineData("[{\"email\":\"member@example.com\"}]", false)]
+    public async Task Password_setup_is_pending_only_while_update_password_is_required(string body, bool pending)
+    {
+        using var fixture = new Fixture(); fixture.Handler.Reply = request =>
+        {
+            Assert.Equal("?exact=true&max=2&email=member%40example.com", request.RequestUri!.Query);
+            return Task.FromResult(Json(body));
+        };
+        Assert.Equal(pending, await fixture.Client.PasswordSetupPendingAsync("member@example.com", default));
+    }
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("[{\"email\":\"other@example.com\",\"requiredActions\":[\"UPDATE_PASSWORD\"]}]")]
+    [InlineData("invalid-private-body")]
+    public async Task Password_setup_lookup_requires_one_exact_account(string body)
+    {
+        using var fixture = new Fixture(); fixture.Handler.Reply = _ => Task.FromResult(Json(body));
+        var error = await Assert.ThrowsAsync<KeycloakProvisioningException>(() => fixture.Client.PasswordSetupPendingAsync("member@example.com", default));
+        Assert.DoesNotContain(body, error.ToString()); Assert.Null(error.InnerException);
+    }
+
+    [Theory]
     [InlineData("[{\"email\":\"other@example.com\"}]")]
     [InlineData("[{\"email\":\"member@example.com\"},{\"email\":\"member@example.com\"}]")]
     [InlineData("{\"private\":\"SyntheticTempPassword123!\"}")]

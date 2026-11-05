@@ -44,6 +44,7 @@ public sealed class CompanyInvitationProvisioningTests
         var result = await new CompanyInvitationService(database, new EfAuthorizationDirectory(database), fake)
             .CreateAsync(Authority, new("member@example.com", ["viewer"]));
         Assert.Null(result.TemporaryPassword);
+        Assert.True(result.ExistingAccount);
         Assert.Equal(exists ? 0 : 1, fake.Creates);
         Assert.Contains(database.CompanyInvitationAudits, row => row.Action == "keycloak-existing");
     }
@@ -133,6 +134,7 @@ public sealed class CompanyInvitationProvisioningTests
         public bool FailLookup { get; set; }
         public bool FailCreate { get; set; }
         public bool FailEmail { get; set; }
+        public bool SetupPending { get; set; }
         public int Emails { get; private set; }
         public int Lookups { get; private set; }
         public int Creates { get; private set; }
@@ -142,6 +144,8 @@ public sealed class CompanyInvitationProvisioningTests
         { Lookups++; Email = email; if (FailLookup) throw new KeycloakProvisioningException(true); return Task.FromResult(Exists); }
         public Task<bool> CreateUserAsync(string email, string temporaryPassword, CancellationToken cancellationToken)
         { Creates++; Password = temporaryPassword; if (FailCreate) throw new KeycloakProvisioningException(); return Task.FromResult(!Race); }
+        public Task<bool> PasswordSetupPendingAsync(string email, CancellationToken cancellationToken)
+        { Lookups++; if (FailLookup) throw new KeycloakProvisioningException(true); return Task.FromResult(SetupPending); }
         public Task SendPasswordSetupEmailAsync(string email, CancellationToken cancellationToken)
         { Emails++; if (FailEmail) throw new KeycloakProvisioningException(true); return Task.CompletedTask; }
     }

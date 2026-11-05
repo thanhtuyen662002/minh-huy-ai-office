@@ -169,3 +169,22 @@ it("says the setup email was sent and shows no password", async () => {
   await screen.findByText(/Đã mời và gửi mail đặt mật khẩu tới new@example.com/);
   expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
 });
+
+it("says an existing account signs in with its own password when no email was sent", async () => {
+  fixture(url => url === `/api/local/company/invitations?companyId=${company}`
+    ? Response.json({ ...invitation, email: "old@example.com", existingAccount: true }, { status: 201 }) : undefined);
+  await screen.findByText("member@example.com");
+  fireEvent.change(screen.getByLabelText("Email thành viên"), { target: { value: "old@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
+  await screen.findByText(/old@example.com đã có tài khoản đăng nhập nên không gửi mail/);
+  expect(screen.queryByLabelText("Mật khẩu tạm thời")).toBeNull();
+});
+
+it("still says the setup email was sent to an existing account that never chose a password", async () => {
+  fixture(url => url === `/api/local/company/invitations?companyId=${company}`
+    ? Response.json({ ...invitation, email: "old@example.com", passwordSetupEmailSent: true, existingAccount: true }, { status: 201 }) : undefined);
+  await screen.findByText("member@example.com");
+  fireEvent.change(screen.getByLabelText("Email thành viên"), { target: { value: "old@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Thêm thành viên" }));
+  await screen.findByText(/Đã mời và gửi mail đặt mật khẩu tới old@example.com/);
+});

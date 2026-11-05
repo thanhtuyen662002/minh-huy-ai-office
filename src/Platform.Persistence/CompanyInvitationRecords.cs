@@ -40,6 +40,9 @@ public sealed record CompanyInvitationResult(Guid CompanyId, Guid Id, string Ema
     public string? TemporaryPassword { get; init; }
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public bool? PasswordSetupEmailSent { get; init; }
+    // The email already had a sign-in account, so no new account or temporary password was made.
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ExistingAccount { get; init; }
     public override string ToString() => $"CompanyInvitationResult {{ Id = {Id:D} }}";
 }
 public sealed record CompanyInvitationPage(Guid CompanyId, IReadOnlyList<CompanyInvitationResult> Items, int Offset, int Limit, bool HasMore);
