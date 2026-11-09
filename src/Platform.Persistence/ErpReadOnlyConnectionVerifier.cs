@@ -165,8 +165,8 @@ public static class ErpReadOnlyConnectionVerifier
         // ordinary ERP functions are allowed. CLR functions can, and stay outside the profile.
         new("clr_function", false, "NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('FS','FT','AF'))"),
         new("extended_procedure", false, "NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('X','RF'))"),
-        // Synonyms can hide cross-database/linked-server targets and permissions.
-        new("synonym", false, "NOT EXISTS (SELECT 1 FROM sys.synonyms)"),
+        // Synonyms are allowed: SQL Server checks the reader's own rights on the base object (or, for a remote
+        // target, on the synonym, which object_permission covers), so a synonym is a read path like a view.
         // Views and functions that read another database or a linked server are reads, not write rights: SQL Server
         // checks the reader's own permissions there unless ownership chaining crosses databases. Refuse only the
         // settings that let this database's module owners lend their rights elsewhere.

@@ -48,7 +48,6 @@ export const erpFindingLabels: Record<string, string> = {
   executable_procedure: "Có quyền chạy stored procedure (procedure có thể ghi dữ liệu). Thường do database cấp EXECUTE cho public; chạy DENY EXECUTE TO [tên tài khoản] trong database để chặn",
   clr_function: "Database có hàm CLR (.NET)",
   extended_procedure: "Database có extended stored procedure",
-  synonym: "Database có synonym",
   external_dependency: "Có view/hàm đọc sang database hoặc máy chủ khác, hoặc tham chiếu đối tượng không tồn tại",
   cross_database_chaining: "Database bật TRUSTWORTHY hoặc cross-database ownership chaining",
   view_external_rowset: "Có view/hàm dùng OPENQUERY/OPENROWSET hoặc bị mã hoá",
