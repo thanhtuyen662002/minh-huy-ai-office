@@ -90,11 +90,11 @@ describe("customer ERP setup", () => {
     expect(screen.queryByText("synthetic-only")).toBeNull();
   });
   it("lists which read-only checks failed, with permission names", async () => {
-    setup({ result: "not_read_only", findings: [{ code: "database_permission", writeRisk: true, detail: "DELETE, INSERT" }, { code: "synonym", writeRisk: false, detail: null }, { code: "BAD CODE", writeRisk: true }] }); fill();
+    setup({ result: "not_read_only", findings: [{ code: "database_permission", writeRisk: true, detail: "DELETE, INSERT" }, { code: "clr_function", writeRisk: false, detail: null }, { code: "BAD CODE", writeRisk: true }] }); fill();
     fireEvent.click(screen.getByRole("button", { name: "Kiểm tra kết nối" }));
     const list = await screen.findByLabelText("Điều kiện không đạt");
     expect(list.textContent).toContain("Có quyền cấp database ngoài quyền đọc (quyền ghi/quản trị): DELETE, INSERT");
-    expect(list.textContent).toContain("Database có synonym");
+    expect(list.textContent).toContain("CLR");
     expect(list.querySelectorAll("li")).toHaveLength(2);
     fireEvent.change(screen.getByLabelText("Tài khoản"), { target: { value: "other" } });
     expect(screen.queryByLabelText("Điều kiện không đạt")).toBeNull();

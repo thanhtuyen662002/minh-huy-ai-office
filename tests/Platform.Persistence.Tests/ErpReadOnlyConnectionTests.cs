@@ -60,7 +60,7 @@ public sealed class ErpReadOnlyConnectionTests
         foreach (var code in new[] { "sysadmin", "db_owner", "dbo_user", "fixed_database_role", "database_permission", "object_permission",
                      "column_update", "executable_procedure", "grant_option", "impersonate", "ownership" })
             Assert.True(checks.Single(c => c.Code == code).WriteRisk, code);
-        foreach (var code in new[] { "sql_version", "synonym", "cross_database_chaining", "clr_function" })
+        foreach (var code in new[] { "sql_version", "external_table", "cross_database_chaining", "clr_function" })
             Assert.False(checks.Single(c => c.Code == code).WriteRisk, code);
     }
 

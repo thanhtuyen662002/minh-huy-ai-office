@@ -79,7 +79,6 @@ AND NOT EXISTS (SELECT 1 FROM sys.database_principals p
     OR ISNULL(HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME(o.schema_id))+N'.'+QUOTENAME(o.name),N'OBJECT',N'SELECT'),1)<>0)))
           AND (NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('FS','FT','AF')))
           AND (NOT EXISTS (SELECT 1 FROM sys.objects o WHERE o.is_ms_shipped=0 AND o.type IN ('X','RF')))
-          AND (NOT EXISTS (SELECT 1 FROM sys.synonyms))
           AND (ISNULL((SELECT CONVERT(int,value_in_use) FROM sys.configurations WHERE name=N'cross db ownership chaining'),1)=0
 AND NOT EXISTS (SELECT 1 FROM sys.databases WHERE database_id=DB_ID() AND (is_db_chaining_on=1 OR is_trustworthy_on=1)))
           AND (NOT EXISTS (SELECT 1 FROM sys.sql_modules m JOIN sys.objects o ON o.object_id=m.object_id
