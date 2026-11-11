@@ -95,6 +95,26 @@
             );
             </#outputformat>
         </script>
+        <#-- A sign-in page left open past the login timeout (30 minutes) fails on submit with
+             "login timeout". Once it is that old, going back to AI Office starts a fresh sign-in. -->
+        <#assign aioRestartUrl = (client.baseUrl)!"">
+        <#if !aioRestartUrl?has_content><#assign aioRestartUrl = url.loginRestartFlowUrl></#if>
+        <script type="module">
+            <#outputformat "JavaScript">
+            const restartUrl = ${aioRestartUrl?c};
+            const openedAt = Date.now();
+            const stale = () => Date.now() - openedAt > 25 * 60_000;
+            const restart = () => { if (document.visibilityState === "visible" && stale()) location.replace(restartUrl); };
+            document.addEventListener("visibilitychange", restart);
+            window.addEventListener("focus", restart);
+            document.addEventListener("focusin", restart);
+            document.addEventListener("submit", (event) => {
+                if (!stale()) return;
+                event.preventDefault();
+                location.replace(restartUrl);
+            }, true);
+            </#outputformat>
+        </script>
     </#if>
 </head>
 

@@ -145,6 +145,25 @@ it("goes straight to the provider on first load so there is only one sign-in pag
   window.sessionStorage.clear();
 });
 
+it("waits for a background tab to be shown before going to the provider's sign-in page", async () => {
+  window.sessionStorage.clear();
+  let visibility: DocumentVisibilityState = "hidden";
+  Object.defineProperty(document, "visibilityState", { configurable: true, get: () => visibility });
+  try {
+    render(<LocalAiWorkspace companyId={company} companyName="Synthetic Company" loginMode="browser" browserLogin={settings} autoStartLogin />);
+    await waitFor(() => expect(renewal).toHaveBeenCalledOnce());
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+    expect(navigation).not.toHaveBeenCalled();
+    visibility = "visible";
+    act(() => { document.dispatchEvent(new Event("visibilitychange")); });
+    await waitFor(() => expect(navigation).toHaveBeenCalledWith(authorization()));
+    expect(navigation).toHaveBeenCalledOnce();
+  } finally {
+    Reflect.deleteProperty(document, "visibilityState");
+    window.sessionStorage.clear();
+  }
+});
+
 it("renews a lapsed session in the background without going to the sign-in page", async () => {
   window.sessionStorage.clear();
   let signedIn = false;

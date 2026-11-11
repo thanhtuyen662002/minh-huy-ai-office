@@ -406,7 +406,16 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   // A lapsed session first renews in the background from the provider's sign-in; only when
   // that needs the user does the page go to the sign-in screen.
   const [silentRenewal, setSilentRenewal] = useState<"idle" | "running" | "done">("idle");
-  useEffect(() => { if (sessionState === "ready") setSilentRenewal("idle"); }, [sessionState]);
+  // Every sign-in may lapse again later in the same tab; the once-a-minute claim still stops loops.
+  useEffect(() => { if (sessionState === "ready") { setSilentRenewal("idle"); setAutoLoginTried(false); } }, [sessionState]);
+  // The provider's sign-in page expires after a while, so a tab in the background waits until the
+  // user comes back before going there instead of leaving a stale page that fails on submit.
+  const [pageVisible, setPageVisible] = useState(() => typeof document === "undefined" || document.visibilityState !== "hidden");
+  useEffect(() => {
+    const update = () => setPageVisible(document.visibilityState !== "hidden");
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
   useEffect(() => {
     if (sessionState !== "signed-out" || loginMode !== "browser" || !browserLogin || signedOutByUser.current) return;
     if (silentRenewal === "idle" && autoStartLogin && autoLoginAllowed()) {
@@ -425,11 +434,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       })();
       return;
     }
-    if (silentRenewal === "running" || !autoStartLogin || autoLoginTried) return;
+    if (silentRenewal === "running" || !autoStartLogin || autoLoginTried || !pageVisible) return;
     setAutoLoginTried(true);
     if (claimAutoLogin()) void startBrowserLogin();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reacts to session and renewal state only.
-  }, [autoStartLogin, autoLoginTried, browserLogin, sessionState, silentRenewal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reacts to session, renewal and visibility state only.
+  }, [autoStartLogin, autoLoginTried, browserLogin, pageVisible, sessionState, silentRenewal]);
 
   // Renew ahead of expiry while the page is open, which also keeps the provider sign-in alive.
   useEffect(() => {

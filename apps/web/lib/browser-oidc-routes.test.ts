@@ -61,7 +61,7 @@ async function refusal(response: Response, status: number) {
   if (response.headers.get("content-type")?.startsWith("text/html")) {
     const page = await response.text();
     if (page.includes('data-sign-in="refused"')) expect(page).not.toContain("url=/");
-    else { expect(page).toContain("Phiên đăng nhập đã hết hạn"); expect(page).toContain('content="3;url=/"'); }
+    else expect(page).toContain('content="0;url=/"');
   } else expect(await response.json()).toEqual({ error: "Browser sign-in could not be verified." });
 }
 function useLocalSettings() {
