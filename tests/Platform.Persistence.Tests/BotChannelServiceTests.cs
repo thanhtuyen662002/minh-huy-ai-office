@@ -259,5 +259,8 @@ public sealed class BotChannelServiceTests
         Assert.False(db.Database.HasPendingModelChanges());
         var sql = db.GetService<IMigrator>().GenerateScript("20261026090633_AddCustomerRequestBridge", "20261026111913_AddBotChannels");
         Assert.Contains("CREATE TABLE [aioffice].[BotChannels]", sql); Assert.Contains("DENY UPDATE, DELETE, ALTER, TAKE OWNERSHIP ON OBJECT::[aioffice].[BotChannelAudits]", sql);
+        // A column added later needs its own grant: SQL Server keeps the runtime login's cached permission checks across ADD COLUMN.
+        var lastRun = db.GetService<IMigrator>().GenerateScript("20261104102112_AddAssistantImagesAndHiddenTasks", "20261111040000_GrantBotLastRunUpdate");
+        Assert.Contains("GRANT UPDATE ON OBJECT::[aioffice].[BotStatuses] ([LastRunJson]) TO [aioffice_binding_runtime];", lastRun);
     }
 }
