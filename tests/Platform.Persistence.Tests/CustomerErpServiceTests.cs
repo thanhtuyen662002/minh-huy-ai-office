@@ -241,11 +241,118 @@ public sealed class CustomerErpServiceTests
 
     private sealed class FakeVerifier : ICustomerErpConnectionVerifier
     {
+        private int calls;
         public string Code { get; set; } = "ok";
-        public int Calls { get; private set; }
+        /// <summary>Overrides <see cref="Code"/> per database, for shared server checks that run in parallel.</summary>
+        public Func<string, string?>? CodeForDatabase { get; set; }
+        public int Calls => Volatile.Read(ref calls);
         public Func<Task>? DuringVerification { get; set; }
         public async Task<CustomerErpConnectionResult> VerifyAsync(string connectionString, CancellationToken cancellationToken)
-        { Calls++; if (DuringVerification is not null) await DuringVerification(); return new(Code, "16.0", 3); }
+        {
+            Interlocked.Increment(ref calls);
+            if (DuringVerification is not null) await DuringVerification();
+            return new(CodeForDatabase?.Invoke(new SqlConnectionStringBuilder(connectionString).InitialCatalog) ?? Code, "16.0", 3);
+        }
+    }
+
+    private static ErpServerSaveRequest ServerRequest(string? version = null, string host = "sql.example.test", string userName = "reader",
+        string password = "synthetic-server-password", Guid? operation = null) => new()
+    {
+        OperationId = operation ?? Guid.NewGuid(), Name = "Máy chủ chính", Host = host, Port = 1433,
+        UserName = userName, Password = password, Version = version
+    };
+    private static ErpServerSourceRequest OnServer(Guid server, string database, string? name = null, string? version = null) => new()
+    {
+        OperationId = Guid.NewGuid(), ServerId = server, Database = database, LogicalName = name, BindingVersion = version
+    };
+    private static async Task<SqlConnectionStringBuilder> ConnectionAsync(Fixture fixture, Guid source)
+    {
+        var secrets = new CompositeSecretResolver([new ProtectedSecretResolver(fixture.Db, fixture.Encryption)]);
+        var scoped = new ScopedDataSourceSecretResolver(new(fixture.Db, new EfAuthorizationDirectory(fixture.Db)), secrets);
+        return await scoped.UseAsync(fixture.Authority, source, true, (connection, _) => Task.FromResult(new SqlConnectionStringBuilder(connection)));
+    }
+
+    [Fact]
+    public async Task ChangingASharedServerRechecksAndRewritesEveryDatabaseOnItTogether()
+    {
+        await using var fixture = await Fixture.Create();
+        var server = await fixture.Service.SaveServerAsync(fixture.Authority, ServerRequest());
+        Assert.Equal(0, fixture.Verifier.Calls);
+        var a = await fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "DemoA", "Customer A"));
+        var b = await fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "DemoB", "Customer B"));
+        Assert.Equal((server.Id, "DemoA"), (a.ServerId!.Value, a.Database));
+        Assert.Equal(2, Assert.Single(await fixture.Service.ListServersAsync(fixture.Authority)).SourceCount);
+        Assert.Equal(new[] { "DemoA", "DemoB" }, (await fixture.Service.ListAsync(fixture.Authority)).Select(row => row.Database!));
+        Assert.Equal("synthetic-server-password", (await ConnectionAsync(fixture, a.Id)).Password);
+
+        // New address, login kept: the blank password keeps the saved one and every database is checked again.
+        var change = ServerRequest(version: "1", host: "sql2.example.test", userName: "", password: "");
+        var changed = await fixture.Service.SaveServerAsync(fixture.Authority, change, server.Id);
+        Assert.Equal(("2", "sql2.example.test", "reader"), (changed.Version, changed.Host, changed.UserName));
+        Assert.Equal(4, fixture.Verifier.Calls);
+        foreach (var (source, database) in new[] { (a.Id, "DemoA"), (b.Id, "DemoB") })
+        {
+            var connection = await ConnectionAsync(fixture, source);
+            Assert.Equal(("tcp:sql2.example.test,1433", database, "reader", "synthetic-server-password"),
+                (connection.DataSource, connection.InitialCatalog, connection.UserID, connection.Password));
+        }
+        Assert.All(fixture.Db.ProtectedDataSourceSecrets, row => Assert.Equal(2, row.Version));
+        // A lost reply can be retried without checking again; a stale version is refused.
+        Assert.Equal(changed, await fixture.Service.SaveServerAsync(fixture.Authority, change, server.Id));
+        Assert.Equal(4, fixture.Verifier.Calls);
+        await Assert.ThrowsAsync<DataSourceRegistrationConflictException>(() =>
+            fixture.Service.SaveServerAsync(fixture.Authority, ServerRequest(version: "1"), server.Id));
+        Assert.Single(fixture.Db.ErpServerAudits.Where(row => row.ServerVersion == 2));
+        Assert.DoesNotContain("synthetic-server-password", JsonSerializer.Serialize(await fixture.Service.ListServersAsync(fixture.Authority)));
+        Assert.DoesNotContain("synthetic-server-password", Encoding.UTF8.GetString(Assert.Single(fixture.Db.ErpServers).Ciphertext));
+    }
+
+    [Fact]
+    public async Task OneFailingDatabaseLeavesTheServerAndEveryDatabaseUnchanged()
+    {
+        await using var fixture = await Fixture.Create();
+        var server = await fixture.Service.SaveServerAsync(fixture.Authority, ServerRequest());
+        var a = await fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "DemoA", "Customer A"));
+        await fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "DemoB", "Customer B"));
+        fixture.Verifier.CodeForDatabase = database => database == "DemoB" ? "login_failed" : null;
+        var failure = await Assert.ThrowsAsync<ErpServerVerificationException>(() =>
+            fixture.Service.SaveServerAsync(fixture.Authority, ServerRequest(version: "1", password: "rotated"), server.Id));
+        Assert.Equal(("login_failed", "Customer B"), (failure.Result.Code, failure.Source));
+        Assert.Equal("1", Assert.Single(await fixture.Service.ListServersAsync(fixture.Authority)).Version);
+        Assert.All(fixture.Db.ProtectedDataSourceSecrets, row => Assert.Equal(1, row.Version));
+        Assert.Equal("synthetic-server-password", (await ConnectionAsync(fixture, a.Id)).Password);
+        Assert.Empty(fixture.Db.ErpServerAudits.Where(row => row.ServerVersion > 1));
+    }
+
+    [Fact]
+    public async Task ATypedSourceMovesOntoAServerKeepingItsDatabaseAndThenChangesOnlyThroughIt()
+    {
+        await using var fixture = await Fixture.Create();
+        var typed = await fixture.Service.SaveAsync(fixture.Authority, Request());
+        var server = await fixture.Service.SaveServerAsync(fixture.Authority, ServerRequest(host: "shared.example.test"));
+        var moved = await fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "", version: "1"), typed.Id);
+        Assert.Equal(("2", "Demo", server.Id), (moved.BindingVersion, moved.Database, moved.ServerId!.Value));
+        var connection = await ConnectionAsync(fixture, typed.Id);
+        Assert.Equal(("tcp:shared.example.test,1433", "Demo", "synthetic-server-password"), (connection.DataSource, connection.InitialCatalog, connection.Password));
+        // Typing a connection for a source on a shared server would make it drift from the server.
+        await Assert.ThrowsAsync<DataSourceRegistrationConflictException>(() =>
+            fixture.Service.SaveAsync(fixture.Authority, Request(version: "2", password: "typed"), typed.Id));
+        var other = await fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "Demo2", version: "2"), typed.Id);
+        Assert.Equal(("3", "Demo2"), (other.BindingVersion, other.Database));
+        Assert.Single(fixture.Db.ErpServerSources);
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            fixture.Service.SaveSourceOnServerAsync(fixture.Authority, OnServer(server.Id, "", "New customer")));
+    }
+
+    [Fact]
+    public void ServerCiphertextNeverOpensAsASourceSecret()
+    {
+        var encryption = new ProtectedSecretEncryption(() => Convert.ToBase64String(new byte[32]));
+        var (tenant, company, id) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var payload = encryption.Encrypt(tenant, company, id, "{}", ProtectedSecretEncryption.ErpServerPurpose);
+        Assert.Equal("{}", encryption.Decrypt(tenant, company, id, payload, ProtectedSecretEncryption.ErpServerPurpose));
+        Assert.Throws<InvalidOperationException>(() => encryption.Decrypt(tenant, company, id, payload));
+        Assert.Throws<InvalidOperationException>(() => encryption.Encrypt(tenant, company, id, "{}", "other"));
     }
     private sealed class Fixture : IAsyncDisposable
     {

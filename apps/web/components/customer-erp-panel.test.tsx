@@ -4,11 +4,15 @@ import { CustomerErpPanel } from "./customer-erp-panel";
 import { erpMessages } from "../lib/customer-erp";
 
 const source = { id: "12345678-1234-1234-1234-123456789abc", logicalName: "Khách A", isEnabled: true, bindingVersion: "1" };
-function setup(options: { result?: string; sources?: boolean; findings?: unknown } = {}) {
-  const bodies: { path: string; body: Record<string, unknown> }[] = [];
+const server = { id: "aaaaaaaa-1234-1234-1234-123456789abc", name: "Máy chủ chính", host: "sql.example.test", port: 1433, userName: "reader",
+  encrypt: true, trustServerCertificate: false, version: "3", sourceCount: 1 };
+function setup(options: { result?: string; sources?: boolean; rows?: unknown[]; findings?: unknown; servers?: unknown[]; reply?: (path: string) => Response | undefined } = {}) {
+  const bodies: { path: string; method?: string; body: Record<string, unknown> }[] = [];
   const request = vi.fn(async (_generation: number, path: string, init?: RequestInit) => {
-    if (!init?.body) return Response.json(options.sources ? [source] : []);
-    bodies.push({ path, body: JSON.parse(String(init.body)) });
+    if (!init?.body) return Response.json(path.includes("erp-servers") ? options.servers ?? [] : options.rows ?? (options.sources ? [source] : []));
+    bodies.push({ path, method: init.method, body: JSON.parse(String(init.body)) });
+    const reply = options.reply?.(path);
+    if (reply) return reply;
     return path.includes("connection-test") ? Response.json({ code: options.result ?? "ok", serverVersion: "16.0", tableCount: 12, findings: options.findings }) : Response.json(source);
   });
   const props = { companyId: "22222222-2222-2222-2222-222222222222", generation: 1, isCurrent: vi.fn(() => true), validate: vi.fn(async () => true), request, onUnauthorized: vi.fn(), onSaved: vi.fn() };
@@ -175,5 +179,47 @@ describe("customer ERP setup", () => {
     props.isCurrent.mockReturnValue(false);
     await act(async () => resolve(Response.json({ code: "ok" })));
     expect(screen.queryByText(erpMessages.ok)).toBeNull();
+  });
+});
+
+describe("shared ERP server", () => {
+  const linked = { ...source, id: "bbbbbbbb-1234-1234-1234-123456789abc", logicalName: "Khách B", serverId: server.id, database: "DemoB" };
+  it("changes a server once, keeps a blank password and names the database that failed", async () => {
+    const { bodies } = setup({ servers: [server], reply: path => path.includes("erp-servers/")
+      ? Response.json({ code: "login_failed", findings: [], source: "Khách B" }, { status: 422 }) : undefined });
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa máy chủ Máy chủ chính" }));
+    const form = screen.getByRole("form", { name: "Sửa máy chủ dùng chung" });
+    expect((screen.getByLabelText("Tên máy chủ") as HTMLInputElement).value).toBe("Máy chủ chính");
+    expect((form.querySelector("input[type=password]") as HTMLInputElement).value).toBe("");
+    fireEvent.change(form.querySelector("input[placeholder='sql.khachhang.vn']")!, { target: { value: "10.0.0.9,1500" } });
+    fireEvent.blur(form.querySelector("input[placeholder='sql.khachhang.vn']")!);
+    fireEvent.click(screen.getByRole("button", { name: "Lưu máy chủ" }));
+    await screen.findByText(/Database của/);
+    expect(screen.getByText("Khách B")).toBeTruthy();
+    expect(screen.getByText(new RegExp(erpMessages.login_failed))).toBeTruthy();
+    expect(bodies.at(-1)).toMatchObject({ path: expect.stringContaining(`erp-servers/${server.id}`), method: "PUT",
+      body: { name: "Máy chủ chính", host: "10.0.0.9", port: 1500, userName: "reader", password: "", version: "3" } });
+  });
+  it("moves a typed source onto a server keeping its database, and adds a database on the server", async () => {
+    const { bodies, props } = setup({ sources: true, servers: [server] });
+    fireEvent.click(await screen.findByRole("button", { name: "Dùng máy chủ chung Khách A" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra và lưu" }));
+    await screen.findByText("Đã lưu kết nối ERP khách hàng.");
+    expect(bodies.at(-1)).toMatchObject({ path: expect.stringContaining(`${source.id}/server`), method: "PUT",
+      body: { serverId: server.id, database: "", bindingVersion: "1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Thêm database trên máy chủ chung" }));
+    const form = screen.getByRole("form", { name: "Thêm database trên máy chủ dùng chung" });
+    fireEvent.change(form.querySelectorAll("input")[0], { target: { value: "Khách C" } });
+    fireEvent.change(form.querySelectorAll("input")[1], { target: { value: "DemoC" } });
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra và lưu" }));
+    await waitFor(() => expect(props.onSaved).toHaveBeenCalledTimes(2));
+    expect(bodies.at(-1)).toMatchObject({ path: expect.stringContaining("customer-erp/from-server"), method: "POST",
+      body: { serverId: server.id, database: "DemoC", logicalName: "Khách C" } });
+  });
+  it("shows which server and database a linked source uses and offers only a database change", async () => {
+    setup({ servers: [server], rows: [linked] });
+    expect(await screen.findByText(/máy chủ Máy chủ chính \/ DemoB/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Đổi database Khách B" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Đổi mật khẩu Khách B" })).toBeNull();
   });
 });
