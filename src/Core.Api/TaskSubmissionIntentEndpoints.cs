@@ -70,6 +70,7 @@ internal static class TaskSubmissionIntentEndpoints
         try { return await action(authority, deadline.Token); }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (TaskSubmissionIntentNotFoundException) { return Results.NotFound(); }
+        catch (AiUsageLimitException limit) { return AiUsageEndpoints.Refused(limit); }
         catch (TaskSubmissionIntentConflictException error)
         { return Results.Conflict(new { error = "Task submission conflicts with current state.", code = error.Code }); }
         catch (BadHttpRequestException error)

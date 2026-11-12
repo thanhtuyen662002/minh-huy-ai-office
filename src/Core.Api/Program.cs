@@ -75,6 +75,7 @@ if (!string.IsNullOrWhiteSpace(platformConnectionString))
     builder.Services.AddScoped<ICustomerErpConnectionVerifier, SqlCustomerErpConnectionVerifier>();
     builder.Services.AddScoped<ICustomerErpReaderProvisioner, SqlCustomerErpReaderProvisioner>();
     builder.Services.AddScoped<CustomerErpService>();
+    builder.Services.AddScoped<AiUsageService>();
     builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(
         services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<IAuthorizationDirectory>(),
         services.GetRequiredService<BindingStorePermissionVerifier>(), platformConnectionSecretReference));
@@ -145,6 +146,7 @@ if (authenticationConfigured)
 
 app.UseRateLimiter();
 app.MapCustomerErp(!string.IsNullOrWhiteSpace(platformConnectionString), authenticationConfigured);
+app.MapAiUsage(!string.IsNullOrWhiteSpace(platformConnectionString), authenticationConfigured);
 
 static AuthorizationContext? AuthorizedContext(IRequestAuthorizationContextAccessor accessor) => accessor.Current?.Context;
 static IResult AuthenticationUnavailable() => Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Authentication is not configured.");
@@ -272,6 +274,7 @@ if (authenticationConfigured && !string.IsNullOrWhiteSpace(platformConnectionStr
             var accepted = await submission.SubmitAsync(context, request, idempotencyKey, cancellationToken: cancellationToken);
             return Results.Accepted($"/api/tasks/{accepted.TaskId}", accepted);
         }
+        catch (AiUsageLimitException limit) { return AiUsageEndpoints.Refused(limit); }
         catch (UnauthorizedAccessException) { return Results.Forbid(); }
         catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
         catch (TaskSubmissionIntentConflictException error)

@@ -79,6 +79,13 @@ export function useTaskSubmission({ companyId, generation, isCurrent, ready, val
   function markFailure(attempt: Attempt, status: number, value: unknown) {
     if (!current(attempt) || !stored.current) return;
     const code = value && typeof value === "object" && Object.hasOwn(value, "code") ? (value as { code: unknown }).code : null;
+    if (status === 429 && stored.current.prepared) {
+      // Refused by a rate limit or the monthly AI budget before anything ran: the saved question can be sent again later.
+      const reason = value && typeof value === "object" && typeof (value as { error?: unknown }).error === "string"
+        ? (value as { error: string }).error : "Đang có quá nhiều câu hỏi. Đợi một chút rồi gửi lại.";
+      save({ ...stored.current, phase: "prepared", notice: reason });
+      return;
+    }
     const phase = status === 403 ? "denied" : code === "intent-expired" ? "expired" : code === "intent-unavailable" || code === "operation-conflict" ? "unavailable" : "unknown";
     const notice = status === 403 ? "Quyền truy cập đã thay đổi. Kiểm tra trạng thái đã lưu; yêu cầu trước có thể đã được nhận."
       : code === "intent-expired" ? "Yêu cầu chưa gửi đã hết hạn. Bạn có thể chủ động tạo yêu cầu khác."

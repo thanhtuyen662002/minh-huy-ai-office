@@ -236,7 +236,8 @@ public sealed class OpenAiCompatibleResponsesAdapter(
                     inputTokens,
                     outputTokens)
                 {
-                    ProviderId = options.ProviderId
+                    ProviderId = options.ProviderId,
+                    CachedInputTokens = CachedTokens(root, "input_tokens_details")
                 };
             }
             catch (JsonException exception)
@@ -312,6 +313,12 @@ public sealed class OpenAiCompatibleResponsesAdapter(
 
         return (inputTokens, outputTokens);
     }
+
+    /// <summary>usage.{details}.cached_tokens, or 0 when the provider does not report it.</summary>
+    internal static long CachedTokens(JsonElement root, string details) =>
+        root.TryGetProperty("usage", out var usage) && usage.ValueKind == JsonValueKind.Object
+        && usage.TryGetProperty(details, out var detail) && detail.ValueKind == JsonValueKind.Object
+        && detail.TryGetProperty("cached_tokens", out var cached) && cached.TryGetInt64(out var value) && value > 0 ? value : 0;
 
     private static string? ReadOptionalString(JsonElement element, string propertyName) =>
         element.TryGetProperty(propertyName, out var property)

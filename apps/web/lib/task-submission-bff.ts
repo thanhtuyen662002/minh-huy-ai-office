@@ -5,6 +5,8 @@ import { parseSubmissionInput, parseSubmissionJson, parseSubmissionReceipt, rece
 
 const headers = { "Cache-Control": "no-store" };
 const conflicts = new Set(["operation-conflict", "intent-unavailable", "intent-expired", "intent-limit"]);
+/** Refusals from AI usage limits (Core.Api AiUsageLimitException codes). */
+export const usageLimits = new Set(["ai-user-rate", "ai-account-rate", "ai-budget"]);
 const failure = (status: number, code?: string) => Response.json({ error: "Không xác nhận được yêu cầu. Kiểm tra lại cùng thao tác.", ...(code ? { code } : {}) }, { status, headers });
 type Route = { kind: "prepare" | "list" } | { kind: "detail" | "submit"; operationId: string };
 
@@ -19,6 +21,14 @@ async function rejected(response: Response, signal: AbortSignal): Promise<Respon
     const value = body.ok && body.value && typeof body.value === "object" && Object.hasOwn(body.value, "code")
       ? (body.value as { code: unknown }).code : null;
     return failure(409, typeof value === "string" && conflicts.has(value) ? value : undefined);
+  }
+  if (response.status === 429) {
+    // A rate limit or the customer's monthly AI budget: the server's sentence says which; the question stays saved.
+    const body = await payload(response, signal, 4096);
+    const value = body.ok && body.value && typeof body.value === "object" ? body.value as { code?: unknown; error?: unknown } : {};
+    const code = typeof value.code === "string" && usageLimits.has(value.code) ? value.code : undefined;
+    const message = typeof value.error === "string" && value.error.length <= 300 ? value.error : "Đang có quá nhiều câu hỏi. Đợi một chút rồi gửi lại.";
+    return Response.json({ error: message, ...(code ? { code } : {}) }, { status: 429, headers });
   }
   void response.body?.cancel().catch(() => {});
   return failure([400, 401, 403, 404, 413, 502, 503].includes(response.status) ? response.status : 503);

@@ -175,9 +175,12 @@ public sealed class PilotTaskSubmissionService
 
         // The caller owns the single serializable transaction and company lock.
         // There is no dispatch publication until the complete graph commits.
+        AiQuestionAdmissionRecord? usage = null;
         try
         {
             await admission.RequireExecutionAsync(trustedAuthority, request.DataSourceId, cancellationToken);
+            // Rate limits and the customer's monthly budget; a refusal leaves nothing behind.
+            usage = await AiUsageAdmission.AdmitAsync(dbContext, trustedAuthority, taskId, request.DataSourceId, nowUtc, cancellationToken);
             dbContext.Tasks.Add(task);
             dbContext.TaskSteps.Add(step);
             dbContext.TaskStepExecutions.Add(execution);
@@ -188,6 +191,7 @@ public sealed class PilotTaskSubmissionService
         catch
         {
             DetachUncommittedGraph(task, step, execution, dispatch, durableEvent);
+            if (usage is not null) dbContext.Entry(usage).State = EntityState.Detached;
             throw;
         }
 

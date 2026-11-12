@@ -23,6 +23,228 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiBillingAccountRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("MonthlyBudget")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("QuestionsPerMinute")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("AiBillingAccounts", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiBillingAccounts_Limits", "([MonthlyBudget] IS NULL OR [MonthlyBudget] >= 0) AND ([QuestionsPerMinute] IS NULL OR [QuestionsPerMinute] BETWEEN 1 AND 10000)");
+
+                            t.HasCheckConstraint("CK_AiBillingAccounts_Version", "[Version] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiBillingAccountSourceRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "SourceId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountId");
+
+                    b.ToTable("AiBillingAccountSources", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiPriceRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CachedInputPerMillion")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("EffectiveFromUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("InputPerMillion")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("OutputPerMillion")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Model", "EffectiveFromUtc")
+                        .IsUnique();
+
+                    b.ToTable("AiPrices", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiPrices_NonNegative", "[InputPerMillion] >= 0 AND [CachedInputPerMillion] >= 0 AND [OutputPerMillion] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiQuestionAdmissionRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AdmittedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("BillingAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DataSourceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "TaskId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AdmittedAtUtc");
+
+                    b.HasIndex("TenantId", "CompanyId", "BillingAccountId", "AdmittedAtUtc");
+
+                    b.HasIndex("TenantId", "CompanyId", "UserId", "AdmittedAtUtc");
+
+                    b.ToTable("AiQuestionAdmissions", "aioffice");
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiUsageRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BillingAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("CachedInputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal?>("Cost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid?>("DataSourceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long>("InputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("OutputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("PriceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid?>("TaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "OccurredAtUtc");
+
+                    b.HasIndex("TenantId", "CompanyId", "TaskId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BillingAccountId", "OccurredAtUtc");
+
+                    b.ToTable("AiUsageRecords", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiUsageRecords_NonNegative", "[InputTokens] >= 0 AND [CachedInputTokens] >= 0 AND [CachedInputTokens] <= [InputTokens] AND [OutputTokens] >= 0 AND ([Cost] IS NULL OR [Cost] >= 0)");
+                        });
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AssistantImageRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -2847,6 +3069,57 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_TelegramLinkCodes_Hash", "DATALENGTH([CodeHash]) = 32");
                         });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiBillingAccountRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiBillingAccountSourceRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.AiBillingAccountRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.DataSourceRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "SourceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiPriceRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiQuestionAdmissionRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.AiUsageRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.BotAiSettingsRecord", b =>
