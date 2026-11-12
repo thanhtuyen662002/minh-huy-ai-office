@@ -116,6 +116,26 @@ public sealed class PersistentWorkDeliveryHandlerTests
     }
 
     [Fact]
+    public async Task OriginalRedelivery_AfterTheRetryCompleted_IsAcknowledgedWithoutReexecuting()
+    {
+        await using var db = NewDb();
+        var (_, original, envelope) = SeedPublishedDispatch(db);
+        var failing = new PersistentWorkDeliveryHandler(db, new StubExecutor(new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, 3, 4, "{}")));
+        var first = await failing.HandleAsync(envelope, CancellationToken.None);
+        var executor = new CountingExecutor(new WorkStepExecutionResult(WorkDeliveryOutcome.Completed, null, 3, 5, "{}"));
+        var handler = new PersistentWorkDeliveryHandler(db, executor);
+        Assert.Equal(WorkDeliveryOutcome.Completed, (await handler.HandleAsync(first.DurableRetryEnvelope!, CancellationToken.None)).Outcome);
+
+        // The original message comes back (it was never acknowledged): it must be settled, not requeued forever.
+        var stale = await handler.HandleAsync(envelope, CancellationToken.None);
+
+        Assert.Equal(WorkDeliveryOutcome.AlreadyCompleted, stale.Outcome);
+        Assert.Equal(BrokerSettlement.Acknowledge, WorkDeliverySettlement.Resolve(stale.Outcome, stale.FailureClass, envelope.Attempt, stale.MaxAttempts));
+        Assert.Equal(1, executor.CallCount);
+        Assert.Equal(WorkDispatchState.Published, original.State);
+    }
+
+    [Fact]
     public async Task PermanentFailure_PersistsDeadLetterBeforeReturning()
     {
         await using var db = NewDb();

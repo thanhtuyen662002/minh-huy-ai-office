@@ -93,15 +93,22 @@ public sealed class PersistentWorkDeliveryHandler(
         // executing the original attempt again and risking duplicate side effects.
         if (execution.Attempt > envelope.Attempt)
         {
-            var retryDispatch = await dbContext.TaskDispatches
+            var latestDispatch = await dbContext.TaskDispatches
                 .Where(x => x.TenantId == envelope.TenantId
                     && x.CompanyId == envelope.CompanyId
                     && x.TaskId == envelope.TaskId
                     && x.StepId == envelope.StepId
-                    && x.Attempt == execution.Attempt
-                    && x.State == WorkDispatchState.Published)
+                    && x.Attempt == execution.Attempt)
                 .SingleOrDefaultAsync(cancellationToken)
                 ?? throw new InvalidOperationException("Stale delivery has no durable retry dispatch to recover.");
+            // The later attempt already finished: the original message is obsolete. Acknowledge it instead of
+            // requeueing it forever (each requeue redelivered it at once and failed again).
+            if (latestDispatch.State == WorkDispatchState.Acknowledged)
+                return new WorkDeliveryResult(WorkDeliveryOutcome.AlreadyCompleted, null, Math.Max(1, envelope.Attempt));
+            if (latestDispatch.State == WorkDispatchState.DeadLettered)
+                return new WorkDeliveryResult(WorkDeliveryOutcome.Failed, execution.LastFailureClass ?? WorkFailureClass.Permanent, Math.Max(1, envelope.Attempt));
+            var retryDispatch = latestDispatch.State == WorkDispatchState.Published ? latestDispatch
+                : throw new InvalidOperationException("Stale delivery has no durable retry dispatch to recover.");
             var recoveredRetryEnvelope = WorkDispatchEnvelope.Create(
                 retryDispatch.MessageId,
                 retryDispatch.TenantId,
