@@ -56,8 +56,13 @@ public sealed class ErpServerConnection
 
     public CustomerErpConnectionInput For(string database) => new()
     {
-        Host = Host, Port = Port, Database = database, UserName = UserName, Password = Password,
-        Encrypt = Encrypt, TrustServerCertificate = TrustServerCertificate
+        Host = Host,
+        Port = Port,
+        Database = database,
+        UserName = UserName,
+        Password = Password,
+        Encrypt = Encrypt,
+        TrustServerCertificate = TrustServerCertificate
     };
 }
 

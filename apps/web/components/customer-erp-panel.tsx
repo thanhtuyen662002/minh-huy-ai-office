@@ -30,6 +30,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const [pending, setPending] = useState<{ operationId: string } | null>(null);
   // Shared servers: one address and login for several databases. "new" opens an empty server form.
   const [servers, setServers] = useState<ErpServer[]>([]);
+  const [serversFailed, setServersFailed] = useState(false);
   const [serverForm, setServerForm] = useState<ErpServer | "new" | null>(null);
   const [serverSource, setServerSource] = useState<{ source: CustomerErpSource | null } | null>(null);
   const mounted = useRef(false), lock = useRef(false);
@@ -58,13 +59,16 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       if (!current()) return;
       if (!rows) { setCode("load_failed"); return; }
       setSources(rows);
+    } catch { if (current()) setCode("load_failed"); return; }
+    // Shared servers are optional: if they cannot be loaded the sources above still work, so this never raises the panel alert.
+    try {
       const listed = await request(generation, `/api/local/data-sources/erp-servers?${selector}`, { cache: "no-store" });
-      if (!await authorized(listed)) return;
+      if (!current()) return;
+      if (listed.status === 401) { onUnauthorized(); return; }
       const shared = listed.ok ? parseErpServers(await listed.json()) : null;
       if (!current()) return;
-      if (!shared) { setCode("load_failed"); return; }
-      setServers(shared);
-    } catch { if (current()) setCode("load_failed"); }
+      setServers(shared ?? []); setServersFailed(!shared);
+    } catch { if (current()) { setServers([]); setServersFailed(true); } }
   }
 
   const send: ErpSend = async (path, method, body) => {
@@ -197,7 +201,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       {servers.length ? <ul aria-label="Máy chủ dùng chung" className="mt-3 space-y-2">{servers.map(server => <li key={server.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted p-3 text-sm">
         <span><span className="font-medium">{server.name}</span> · {server.host}:{server.port} · tài khoản {server.userName} · {server.sourceCount} database</span>
         <button type="button" disabled={frozen || formOpen || sharedOpen} onClick={() => { setCode(""); setServerForm(server); }} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Sửa máy chủ<span className="sr-only"> {server.name}</span></button>
-      </li>)}</ul> : null}
+      </li>)}</ul> : serversFailed ? <p className="mt-3 text-sm text-muted-foreground">Chưa tải được danh sách máy chủ dùng chung. Bấm “Tải lại” để thử lại.</p> : null}
       {serverForm ? <ErpServerForm key={serverForm === "new" ? "new" : serverForm.id} server={serverForm === "new" ? null : serverForm} send={send}
         onSaved={() => void sharedSaved("server_saved")} onCancel={() => setServerForm(null)} /> : null}
     </div>

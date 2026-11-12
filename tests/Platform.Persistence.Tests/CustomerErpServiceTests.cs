@@ -257,13 +257,22 @@ public sealed class CustomerErpServiceTests
 
     private static ErpServerSaveRequest ServerRequest(string? version = null, string host = "sql.example.test", string userName = "reader",
         string password = "synthetic-server-password", Guid? operation = null) => new()
-    {
-        OperationId = operation ?? Guid.NewGuid(), Name = "Máy chủ chính", Host = host, Port = 1433,
-        UserName = userName, Password = password, Version = version
-    };
+        {
+            OperationId = operation ?? Guid.NewGuid(),
+            Name = "Máy chủ chính",
+            Host = host,
+            Port = 1433,
+            UserName = userName,
+            Password = password,
+            Version = version
+        };
     private static ErpServerSourceRequest OnServer(Guid server, string database, string? name = null, string? version = null) => new()
     {
-        OperationId = Guid.NewGuid(), ServerId = server, Database = database, LogicalName = name, BindingVersion = version
+        OperationId = Guid.NewGuid(),
+        ServerId = server,
+        Database = database,
+        LogicalName = name,
+        BindingVersion = version
     };
     private static async Task<SqlConnectionStringBuilder> ConnectionAsync(Fixture fixture, Guid source)
     {
