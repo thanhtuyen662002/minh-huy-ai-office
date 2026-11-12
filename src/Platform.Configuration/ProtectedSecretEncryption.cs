@@ -26,13 +26,19 @@ public sealed class ProtectedSecretEncryption(Func<string?>? keySource = null)
         throw Unavailable();
     }
 
-    private static byte[] Aad(Guid tenant, Guid company, Guid binding)
+    /// <summary>Per-source connection strings.</summary>
+    public const string SourcePurpose = "protected";
+    /// <summary>Shared ERP server profiles (address and login without a database); never decrypts as a source secret.</summary>
+    public const string ErpServerPurpose = "erp-server";
+
+    private static byte[] Aad(Guid tenant, Guid company, Guid binding, string purpose)
     {
-        if (tenant == Guid.Empty || company == Guid.Empty || binding == Guid.Empty) throw Unavailable();
-        return Encoding.UTF8.GetBytes($"aioffice.protected.v1/{tenant:D}/{company:D}/{binding:D}");
+        if (tenant == Guid.Empty || company == Guid.Empty || binding == Guid.Empty
+            || purpose is not (SourcePurpose or ErpServerPurpose)) throw Unavailable();
+        return Encoding.UTF8.GetBytes($"aioffice.{purpose}.v1/{tenant:D}/{company:D}/{binding:D}");
     }
 
-    public ProtectedSecretPayload Encrypt(Guid tenant, Guid company, Guid binding, string plaintext)
+    public ProtectedSecretPayload Encrypt(Guid tenant, Guid company, Guid binding, string plaintext, string purpose = SourcePurpose)
     {
         var key = Key();
         var bytes = Encoding.UTF8.GetBytes(plaintext);
@@ -42,20 +48,20 @@ public sealed class ProtectedSecretEncryption(Func<string?>? keySource = null)
             var ciphertext = new byte[bytes.Length];
             var tag = new byte[16];
             using var cipher = new AesGcm(key, 16);
-            cipher.Encrypt(nonce, bytes, ciphertext, tag, Aad(tenant, company, binding));
+            cipher.Encrypt(nonce, bytes, ciphertext, tag, Aad(tenant, company, binding, purpose));
             return new(ciphertext, nonce, tag);
         }
         finally { CryptographicOperations.ZeroMemory(key); CryptographicOperations.ZeroMemory(bytes); }
     }
 
-    public string Decrypt(Guid tenant, Guid company, Guid binding, ProtectedSecretPayload payload)
+    public string Decrypt(Guid tenant, Guid company, Guid binding, ProtectedSecretPayload payload, string purpose = SourcePurpose)
     {
         var key = Key();
         var bytes = new byte[payload.Ciphertext.Length];
         try
         {
             using var cipher = new AesGcm(key, 16);
-            cipher.Decrypt(payload.Nonce, payload.Ciphertext, payload.Tag, bytes, Aad(tenant, company, binding));
+            cipher.Decrypt(payload.Nonce, payload.Ciphertext, payload.Tag, bytes, Aad(tenant, company, binding, purpose));
             return Encoding.UTF8.GetString(bytes);
         }
         catch (Exception error) when (error is CryptographicException or ArgumentException) { throw Unavailable(); }

@@ -57,6 +57,36 @@ lost save response retains a frozen operation ID/body for a deliberate retry;
 cancel clears that state. Save always re-verifies, even after a prior successful
 UI test. Connection edits invalidate that test.
 
+## Shared ERP servers
+
+Several customer databases often sit on one SQL Server with one read-only login.
+An administrator can save that address and login once as a shared server
+(`ErpServers`) and attach sources to it (`ErpServerSources`: source, server,
+database name). The server ciphertext holds the connection fields without a
+database, encrypted with the same key under a separate purpose
+(`aioffice.erp-server.v1/...` associated data), so it can never be opened as a
+source secret.
+
+Readers are unchanged: every source still has its own complete protected
+connection string in `ProtectedDataSourceSecrets`, resolved and re-verified
+exactly as above. A shared server only decides what is written there:
+
+- Creating a source on a server, or moving a source onto one (a blank database
+  keeps its current database), verifies that one database and rotates its binding.
+- Changing a server re-verifies **every** attached database with the new
+  address/login (in parallel, 50-second request deadline), then rewrites all of
+  their connections and bumps all their binding versions in one transaction. If
+  any database fails, nothing changes and the failing source is named. A blank
+  login or password on a change keeps the saved one.
+- A source on a server cannot be rotated with typed fields; it changes only
+  through its server or by moving it to another database/server.
+
+Server saves are idempotent by operation ID through an append-only
+`ErpServerAudits` table (actor, server version, number of databases, keyed
+request fingerprint). Listing returns host, port and login name but never the
+password. Runtime gets select/insert/update on the server and link tables and
+insert-only on the audit table; destructive down migration is refused.
+
 ## Provisioning and recovery
 
 Provision one random 32-byte key through the approved secret source to **both**

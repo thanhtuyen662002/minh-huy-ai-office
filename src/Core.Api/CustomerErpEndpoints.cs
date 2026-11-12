@@ -22,6 +22,11 @@ public static class CustomerErpEndpoints
             routes.MapGet("/customer-erp", Unavailable);
             routes.MapPost("/customer-erp", Unavailable);
             routes.MapPut("/{id:guid}/credentials", Unavailable);
+            routes.MapGet("/erp-servers", Unavailable);
+            routes.MapPost("/erp-servers", Unavailable);
+            routes.MapPut("/erp-servers/{id:guid}", Unavailable);
+            routes.MapPost("/customer-erp/from-server", Unavailable);
+            routes.MapPut("/{id:guid}/server", Unavailable);
             return;
         }
         routes.RequireAuthorization();
@@ -47,14 +52,37 @@ public static class CustomerErpEndpoints
             HttpRequest http) => Handle(http, accessor, async (authority, token) =>
                 await service.SaveAsync(authority, await ReadAsync<CustomerErpSaveRequest>(http, token), id, token)))
             .RequireRateLimiting("customer-erp");
+
+        // Shared servers: one address and login for several databases. Changing a server re-checks every linked
+        // database, run in parallel, so it gets a longer deadline (the web proxy waits 55 s).
+        routes.MapGet("/erp-servers", (HttpRequest http, IRequestAuthorizationContextAccessor accessor, CustomerErpService service) =>
+            Handle(http, accessor, (authority, token) => service.ListServersAsync(authority, token)));
+        routes.MapPost("/erp-servers", (IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
+            HttpRequest http) => Handle(http, accessor, async (authority, token) =>
+                await service.SaveServerAsync(authority, await ReadAsync<ErpServerSaveRequest>(http, token), token: token)))
+            .RequireRateLimiting("customer-erp");
+        routes.MapPut("/erp-servers/{id:guid}", (Guid id, IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
+            HttpRequest http) => Handle(http, accessor, async (authority, token) =>
+                await service.SaveServerAsync(authority, await ReadAsync<ErpServerSaveRequest>(http, token), id, token), ServerDeadline))
+            .RequireRateLimiting("customer-erp");
+        routes.MapPost("/customer-erp/from-server", (IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
+            HttpRequest http) => Handle(http, accessor, async (authority, token) =>
+                await service.SaveSourceOnServerAsync(authority, await ReadAsync<ErpServerSourceRequest>(http, token), token: token)))
+            .RequireRateLimiting("customer-erp");
+        routes.MapPut("/{id:guid}/server", (Guid id, IRequestAuthorizationContextAccessor accessor, CustomerErpService service,
+            HttpRequest http) => Handle(http, accessor, async (authority, token) =>
+                await service.SaveSourceOnServerAsync(authority, await ReadAsync<ErpServerSourceRequest>(http, token), id, token)))
+            .RequireRateLimiting("customer-erp");
     }
 
+    private static readonly TimeSpan ServerDeadline = TimeSpan.FromSeconds(50);
+
     private static async Task<IResult> Handle<T>(HttpRequest http, IRequestAuthorizationContextAccessor accessor,
-        Func<MinhHuy.AIOffice.Shared.Contracts.AuthorizationContext, CancellationToken, Task<T>> action)
+        Func<MinhHuy.AIOffice.Shared.Contracts.AuthorizationContext, CancellationToken, Task<T>> action, TimeSpan? timeout = null)
     {
         if (accessor.Current is not { } current || !current.Roles.Contains("admin", StringComparer.Ordinal)) return Results.Forbid();
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(http.HttpContext.RequestAborted);
-        deadline.CancelAfter(TimeSpan.FromSeconds(20));
+        deadline.CancelAfter(timeout ?? TimeSpan.FromSeconds(20));
         try
         {
             if (http.Query.Count != 0) throw new ArgumentException();
@@ -65,6 +93,10 @@ public static class CustomerErpEndpoints
         { return Results.BadRequest(new { code = "invalid_fields" }); }
         catch (BadHttpRequestException error) { return Results.Json(new { code = "invalid_fields" }, statusCode: error.StatusCode == 413 ? 413 : 400); }
         catch (CustomerErpVerificationException error) { return Results.Json(error.Result, statusCode: 422); }
+        catch (ErpServerVerificationException error)
+        {
+            return Results.Json(new { error.Result.Code, error.Result.Findings, Source = error.Source }, Json, statusCode: 422);
+        }
         catch (DataSourceRegistrationConflictException) { return Results.Conflict(new { code = "conflict" }); }
         catch (DbUpdateException) { return Results.Conflict(new { code = "conflict" }); }
         catch (Exception error) when (error is InvalidOperationException or DbException)

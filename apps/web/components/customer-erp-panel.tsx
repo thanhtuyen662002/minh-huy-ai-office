@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
-import { CustomerErpSource, ErpConnection, ErpFinding, erpFindingLabels, erpMessages, parseErpFindings, isErpConnection, parseCustomerErpSources, readOnlyLoginSql } from "../lib/customer-erp";
+import { CustomerErpSource, ErpConnection, ErpFinding, ErpServer, erpFindingLabels, erpMessages, parseErpFindings, isErpConnection, parseCustomerErpSources, parseErpServers, readOnlyLoginSql } from "../lib/customer-erp";
+import { ErpSend, ErpServerForm, ErpServerSourceForm } from "./erp-server-forms";
 
 type Props = {
   companyId: string; generation: number; isCurrent: (generation: number) => boolean;
@@ -27,6 +28,11 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const [formOpen, setFormOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<{ operationId: string } | null>(null);
+  // Shared servers: one address and login for several databases. "new" opens an empty server form.
+  const [servers, setServers] = useState<ErpServer[]>([]);
+  const [serversFailed, setServersFailed] = useState(false);
+  const [serverForm, setServerForm] = useState<ErpServer | "new" | null>(null);
+  const [serverSource, setServerSource] = useState<{ source: CustomerErpSource | null } | null>(null);
   const mounted = useRef(false), lock = useRef(false);
   const current = () => mounted.current && isCurrent(generation);
   const selector = `companyId=${encodeURIComponent(companyId)}`;
@@ -36,6 +42,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
     if (response.status === 401) { onUnauthorized(); return false; }
     if (response.status === 403) {
       setFields(empty); setTested(false); setPending(null); setSources([]); setEditing(null); setName("");
+      setServers([]); setServerForm(null); setServerSource(null);
       await validate(generation);
       if (current()) setCode("unavailable");
       return false;
@@ -52,7 +59,36 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       if (!current()) return;
       if (!rows) { setCode("load_failed"); return; }
       setSources(rows);
-    } catch { if (current()) setCode("load_failed"); }
+    } catch { if (current()) setCode("load_failed"); return; }
+    // Shared servers are optional: if they cannot be loaded the sources above still work, so this never raises the panel alert.
+    try {
+      const listed = await request(generation, `/api/local/data-sources/erp-servers?${selector}`, { cache: "no-store" });
+      if (!current()) return;
+      if (listed.status === 401) { onUnauthorized(); return; }
+      const shared = listed.ok ? parseErpServers(await listed.json()) : null;
+      if (!current()) return;
+      setServers(shared ?? []); setServersFailed(!shared);
+    } catch { if (current()) { setServers([]); setServersFailed(true); } }
+  }
+
+  const send: ErpSend = async (path, method, body) => {
+    if (lock.current || !current()) return null;
+    lock.current = true; setBusy(true);
+    try {
+      if (!await validate(generation) || !current()) return null;
+      const response = await request(generation, `/api/local/data-sources/${path}?${selector}`, {
+        method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      if (!await authorized(response)) return null;
+      let payload: Record<string, unknown> = {};
+      try { payload = await response.json(); } catch { /* Reported as unavailable by the form. */ }
+      return current() ? { status: response.status, payload } : null;
+    } catch { return current() ? { status: 0, payload: {} } : null; }
+    finally { lock.current = false; if (current()) setBusy(false); }
+  };
+  async function sharedSaved(message: string) {
+    setServerForm(null); setServerSource(null); setCode(message);
+    await load(); if (current()) onSaved();
   }
 
   useEffect(() => {
@@ -139,6 +175,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
     setFormOpen(open); setFields(empty); setCreatedReader(""); setName(source?.logicalName ?? ""); setEditing(source); setTested(false); setCode(""); setDetails(""); setFindings([]); setPending(null);
   }
   const frozen = busy || pending !== null;
+  const sharedOpen = serverForm !== null || serverSource !== null;
   const outline = "rounded-lg border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50";
   const inputClass = "mt-1 w-full rounded-lg border border-slate-200 p-2 dark:border-white/15 dark:bg-slate-900";
   return <section aria-label="Kết nối ERP khách hàng" className="rounded-xl border p-5">
@@ -147,16 +184,45 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
         <h3 className="font-semibold">Kết nối ERP khách hàng</h3>
         <p className="mt-1 text-sm text-muted-foreground">Database SQL Server của khách mà Trợ lý được đọc. Chỉ đọc, mật khẩu được mã hoá và không hiển thị lại.</p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button type="button" disabled={busy} onClick={() => void load()} className={outline}>Tải lại</button>
-        {!formOpen ? <button type="button" onClick={() => resetForm(null, true)} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">Thêm kết nối ERP</button> : null}
+        {!formOpen && !sharedOpen && servers.length ? <button type="button" onClick={() => { setCode(""); setServerSource({ source: null }); }} className={outline}>Thêm database trên máy chủ chung</button> : null}
+        {!formOpen && !sharedOpen ? <button type="button" onClick={() => resetForm(null, true)} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">Thêm kết nối ERP</button> : null}
       </div>
     </div>
-    {sources.length ? <ul className="mt-4 space-y-2">{sources.map(source => <li key={source.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted p-3 text-sm">
-      <span><span className="font-medium">{source.logicalName}</span> · {source.isEnabled ? "Đang bật · chỉ đọc" : "Đã tắt"}</span>
-      <button type="button" disabled={frozen} onClick={() => resetForm(source)} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Đổi mật khẩu<span className="sr-only"> {source.logicalName}</span></button>
-    </li>)}</ul> : !formOpen && code !== "load_failed" ? <p className="mt-4 rounded-lg bg-muted p-4 text-sm text-muted-foreground">Chưa có kết nối ERP nào. Bấm “Thêm kết nối ERP” để bắt đầu.</p> : null}
-    {!formOpen && code ? <p role={code === "saved" ? "status" : "alert"} className="mt-4 text-sm">{code === "saved" ? "Đã lưu kết nối ERP khách hàng." : erpMessages[code] ?? erpMessages.unavailable}</p> : null}
+    <div className="mt-4 rounded-lg border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-semibold">Máy chủ dùng chung</h4>
+          <p className="mt-1 text-sm text-muted-foreground">Nhiều database cùng một máy chủ và tài khoản: đổi máy chủ hoặc mật khẩu ở đây một lần, mọi database dùng nó được cập nhật cùng lúc.</p>
+        </div>
+        {!formOpen && !sharedOpen ? <button type="button" onClick={() => { setCode(""); setServerForm("new"); }} className={outline}>Thêm máy chủ</button> : null}
+      </div>
+      {servers.length ? <ul aria-label="Máy chủ dùng chung" className="mt-3 space-y-2">{servers.map(server => <li key={server.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted p-3 text-sm">
+        <span><span className="font-medium">{server.name}</span> · {server.host}:{server.port} · tài khoản {server.userName} · {server.sourceCount} database</span>
+        <button type="button" disabled={frozen || formOpen || sharedOpen} onClick={() => { setCode(""); setServerForm(server); }} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Sửa máy chủ<span className="sr-only"> {server.name}</span></button>
+      </li>)}</ul> : serversFailed ? <p className="mt-3 text-sm text-muted-foreground">Chưa tải được danh sách máy chủ dùng chung. Bấm “Tải lại” để thử lại.</p> : null}
+      {serverForm ? <ErpServerForm key={serverForm === "new" ? "new" : serverForm.id} server={serverForm === "new" ? null : serverForm} send={send}
+        onSaved={() => void sharedSaved("server_saved")} onCancel={() => setServerForm(null)} /> : null}
+    </div>
+    {sources.length ? <ul className="mt-4 space-y-2">{sources.map(source => {
+      const server = source.serverId ? servers.find(item => item.id === source.serverId) : undefined;
+      return <li key={source.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted p-3 text-sm">
+        <span><span className="font-medium">{source.logicalName}</span> · {source.isEnabled ? "Đang bật · chỉ đọc" : "Đã tắt"}
+          {source.serverId ? <> · máy chủ {server?.name ?? "dùng chung"} / {source.database}</> : null}</span>
+        <span className="flex flex-wrap gap-2">
+          {source.serverId ? <button type="button" disabled={frozen || formOpen || sharedOpen} onClick={() => { setCode(""); setServerSource({ source }); }} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Đổi database<span className="sr-only"> {source.logicalName}</span></button>
+            : <>
+              {servers.length ? <button type="button" disabled={frozen || formOpen || sharedOpen} onClick={() => { setCode(""); setServerSource({ source }); }} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Dùng máy chủ chung<span className="sr-only"> {source.logicalName}</span></button> : null}
+              <button type="button" disabled={frozen || sharedOpen} onClick={() => resetForm(source)} className="rounded-lg border bg-card px-3 py-2 hover:bg-muted disabled:opacity-50">Đổi mật khẩu<span className="sr-only"> {source.logicalName}</span></button>
+            </>}
+        </span>
+      </li>;
+    })}</ul> : !formOpen && !sharedOpen && code !== "load_failed" ? <p className="mt-4 rounded-lg bg-muted p-4 text-sm text-muted-foreground">Chưa có kết nối ERP nào. Bấm “Thêm kết nối ERP” để bắt đầu.</p> : null}
+    {serverSource ? <ErpServerSourceForm key={serverSource.source?.id ?? "new"} servers={servers} source={serverSource.source} send={send}
+      onSaved={() => void sharedSaved("saved")} onCancel={() => setServerSource(null)} /> : null}
+    {!formOpen && code ? <p role={code === "saved" || code === "server_saved" ? "status" : "alert"} className="mt-4 text-sm">{code === "saved" ? "Đã lưu kết nối ERP khách hàng."
+      : code === "server_saved" ? "Đã lưu máy chủ dùng chung; các database dùng máy chủ này đã được kiểm tra và cập nhật." : erpMessages[code] ?? erpMessages.unavailable}</p> : null}
     {formOpen ? <form aria-label={editing ? "Đổi kết nối ERP" : "Thêm kết nối ERP"} className="mt-4 rounded-lg border p-4" onSubmit={(event: FormEvent) => { event.preventDefault(); void execute(true); }}>
       {editing ? <p className="mt-4 text-sm">Nhập lại máy chủ, database và tài khoản cùng mật khẩu mới cho {editing.logicalName}.</p> : null}
       <fieldset disabled={frozen} className="mt-4 grid gap-4 sm:grid-cols-2">

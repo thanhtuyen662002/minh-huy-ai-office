@@ -40,6 +40,9 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<DataSourceSecretBindingRecord> DataSourceSecretBindings => Set<DataSourceSecretBindingRecord>();
     public DbSet<ProtectedDataSourceSecretRecord> ProtectedDataSourceSecrets => Set<ProtectedDataSourceSecretRecord>();
     public DbSet<CustomerErpProbeAuditRecord> CustomerErpProbeAudits => Set<CustomerErpProbeAuditRecord>();
+    public DbSet<ErpServerRecord> ErpServers => Set<ErpServerRecord>();
+    public DbSet<ErpServerSourceRecord> ErpServerSources => Set<ErpServerSourceRecord>();
+    public DbSet<ErpServerAuditRecord> ErpServerAudits => Set<ErpServerAuditRecord>();
     public DbSet<DataSourceRegistrationAuditRecord> DataSourceRegistrationAudits => Set<DataSourceRegistrationAuditRecord>();
     public DbSet<DataSourceFailoverOperationPolicyRecord> DataSourceFailoverOperationPolicies => Set<DataSourceFailoverOperationPolicyRecord>();
     public DbSet<TaskRecord> Tasks => Set<TaskRecord>();
@@ -95,6 +98,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
             entity.HasOne<CompanyRecord>().WithMany().HasForeignKey(row => new { row.TenantId, row.CompanyId }).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.ConfigureDataSourceRegistrationAudit();
+        modelBuilder.ConfigureErpServers();
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
         modelBuilder.ConfigureCompanyInvitations();

@@ -2,7 +2,16 @@ export type ErpConnection = {
   host: string; port: number; database: string; userName: string; password: string;
   encrypt: boolean; trustServerCertificate: boolean;
 };
-export type CustomerErpSource = { id: string; logicalName: string; isEnabled: boolean; bindingVersion: string };
+/** serverId/database are set when the source uses a shared ERP server. */
+export type CustomerErpSource = { id: string; logicalName: string; isEnabled: boolean; bindingVersion: string; serverId: string | null; database: string | null };
+/** A shared SQL Server address and read-only login for several databases; the password never leaves the server. */
+export type ErpServer = {
+  id: string; name: string; host: string; port: number; userName: string; encrypt: boolean; trustServerCertificate: boolean;
+  version: string; sourceCount: number;
+};
+export type ErpServerFields = {
+  name: string; host: string; port: number; userName: string; password: string; encrypt: boolean; trustServerCertificate: boolean;
+};
 export const erpMessages: Record<string, string> = {
   ok: "Kết nối thành công. Tài khoản đã được xác nhận chỉ đọc.",
   check_timeout: "Đã kết nối được, nhưng bước kiểm tra quyền trên database này chạy quá lâu. Thử lại sau ít phút; nếu vẫn lỗi, báo đội kỹ thuật.",
@@ -91,9 +100,59 @@ export function parseCustomerErpSources(value: unknown): CustomerErpSource[] | n
       || typeof row.logicalName !== "string" || !row.logicalName.trim() || row.logicalName.length > 200
       || typeof row.isEnabled !== "boolean" || typeof row.bindingVersion !== "string"
       || !/^[1-9][0-9]{0,18}$/.test(row.bindingVersion) || result.some(item => item.id === row.id)) return null;
-    result.push({ id: row.id, logicalName: row.logicalName, isEnabled: row.isEnabled, bindingVersion: row.bindingVersion });
+    const serverId = row.serverId ?? null, database = row.database ?? null;
+    if (serverId !== null && (typeof serverId !== "string" || !guid.test(serverId) || typeof database !== "string" || !database.trim() || database.length > 128)) return null;
+    result.push({ id: row.id, logicalName: row.logicalName, isEnabled: row.isEnabled, bindingVersion: row.bindingVersion,
+      serverId, database: serverId === null ? null : database });
   }
   return result;
+}
+
+const version = /^[1-9][0-9]{0,18}$/;
+export function parseErpServers(value: unknown): ErpServer[] | null {
+  if (!Array.isArray(value) || value.length > 200) return null;
+  const result: ErpServer[] = [];
+  for (const row of value) {
+    if (!row || typeof row !== "object" || typeof row.id !== "string" || !guid.test(row.id)
+      || typeof row.name !== "string" || !row.name.trim() || row.name.length > 200
+      || typeof row.host !== "string" || !row.host || row.host.length > 253
+      || !Number.isInteger(row.port) || row.port < 1 || row.port > 65535
+      || typeof row.userName !== "string" || row.userName.length > 128
+      || typeof row.encrypt !== "boolean" || typeof row.trustServerCertificate !== "boolean"
+      || typeof row.version !== "string" || !version.test(row.version)
+      || !Number.isInteger(row.sourceCount) || row.sourceCount < 0 || result.some(item => item.id === row.id)) return null;
+    result.push({ id: row.id, name: row.name, host: row.host, port: row.port, userName: row.userName, encrypt: row.encrypt,
+      trustServerCertificate: row.trustServerCertificate, version: row.version, sourceCount: row.sourceCount });
+  }
+  return result;
+}
+
+/** Create needs a login and password; an update may leave them blank to keep the saved ones. */
+export function isErpServerSave(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const row = value as Record<string, unknown>, update = Object.hasOwn(row, "version");
+  const fields = ["operationId", "name", "host", "port", "userName", "password", "encrypt", "trustServerCertificate", ...(update ? ["version"] : [])];
+  return Object.keys(row).every(key => fields.includes(key)) && fields.every(key => Object.hasOwn(row, key))
+    && typeof row.operationId === "string" && guid.test(row.operationId)
+    && typeof row.name === "string" && row.name.trim().length > 0 && row.name.length <= 200
+    && typeof row.host === "string" && row.host.length > 0 && row.host.length <= 253 && !/[;,\\/=\s]/.test(row.host)
+    && Number.isInteger(row.port) && Number(row.port) >= 1 && Number(row.port) <= 65535
+    && typeof row.userName === "string" && row.userName.length <= 128 && (update || row.userName.trim().length > 0)
+    && typeof row.password === "string" && row.password.length <= 1024 && (update || row.password.length > 0)
+    && typeof row.encrypt === "boolean" && typeof row.trustServerCertificate === "boolean"
+    && (!update || (typeof row.version === "string" && version.test(row.version)));
+}
+
+/** Create (logicalName, database required) or move an existing source (bindingVersion; blank database keeps the current one). */
+export function isErpServerSource(value: unknown, create: boolean): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const row = value as Record<string, unknown>;
+  const fields = ["operationId", "serverId", "database", create ? "logicalName" : "bindingVersion"];
+  return Object.keys(row).every(key => fields.includes(key)) && fields.every(key => Object.hasOwn(row, key))
+    && typeof row.operationId === "string" && guid.test(row.operationId) && typeof row.serverId === "string" && guid.test(row.serverId)
+    && typeof row.database === "string" && row.database.length <= 128 && (!create || row.database.trim().length > 0)
+    && (create ? typeof row.logicalName === "string" && row.logicalName.trim().length > 0 && row.logicalName.length <= 200
+      : typeof row.bindingVersion === "string" && version.test(row.bindingVersion));
 }
 
 export function readOnlyLoginSql(database: string): string {
