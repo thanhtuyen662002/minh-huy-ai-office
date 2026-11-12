@@ -187,6 +187,12 @@ it.each(["intent-limit", "intent-expired", "operation-conflict", "intent-unavail
   const response = await invoke("prepare"); expect(response.status).toBe(409); expect(response.headers.get("Cache-Control")).toBe("no-store");
   const body = await response.json(); expect(body.code).toBe(code.startsWith("PRIVATE") ? undefined : code); expect(JSON.stringify(body)).not.toContain("PRIVATE");
 });
+it.each(["ai-user-rate", "ai-account-rate", "ai-budget", "PRIVATE_UNRECOGNIZED"])("passes an AI usage refusal %s through as 429 with the server's sentence", async code => {
+  mocks.fetch.mockResolvedValue(Response.json({ error: "Mak đã dùng hết hạn mức AI tháng này.", code }, { status: 429 }));
+  const response = await invoke("prepare"); expect(response.status).toBe(429); expect(response.headers.get("Cache-Control")).toBe("no-store");
+  const body = await response.json(); expect(body.code).toBe(code.startsWith("PRIVATE") ? undefined : code);
+  expect(body.error).toBe("Mak đã dùng hết hạn mức AI tháng này.");
+});
 
 it.each(["headers", "body"] as const)("real Node HTTP202 transport loss at %s retains the exact deliberate operation", async boundary => {
   // Transport control only. Mandatory actual Core/SQL/worker acceptance is

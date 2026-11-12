@@ -92,15 +92,18 @@ else
 
     builder.Services.AddSingleton(aiHttpClient);
     if (companyAiEnabled)
-    {
         builder.Services.AddScoped(services => new BotSecretProtector(services.GetRequiredService<CompositeSecretResolver>(), botSecretRef!));
-        builder.Services.AddScoped<IAiGateway>(services => new CompanyAiSettingsGateway(
-            services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<BotSecretProtector>(), aiHttpClient, serverGateway));
-    }
-    else
-    {
-        builder.Services.AddSingleton(serverGateway!);
-    }
+    // Every model call is metered: budget check before, one usage ledger row after.
+    builder.Services.AddScoped<AiQuestionUsageScope>();
+    builder.Services.AddScoped<AiUsageRecorder>();
+    builder.Services.AddSingleton<DataSourceConcurrencyLimiter>();
+    builder.Services.AddScoped<IAiGateway>(services => new MeteredAiGateway(
+        companyAiEnabled
+            ? new CompanyAiSettingsGateway(services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<BotSecretProtector>(),
+                aiHttpClient, serverGateway)
+            : serverGateway!,
+        services.GetRequiredService<AiQuestionUsageScope>(), services.GetRequiredService<AiUsageRecorder>(),
+        services.GetRequiredService<ILogger<MeteredAiGateway>>()));
     builder.Services.AddSingleton(
         new PilotAiRuntimeDescriptor(
             primaryAiOptions?.ProviderId ?? CompanyAiSettingsGateway.ProviderId,

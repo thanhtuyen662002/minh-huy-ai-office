@@ -43,6 +43,11 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
     public DbSet<ErpServerRecord> ErpServers => Set<ErpServerRecord>();
     public DbSet<ErpServerSourceRecord> ErpServerSources => Set<ErpServerSourceRecord>();
     public DbSet<ErpServerAuditRecord> ErpServerAudits => Set<ErpServerAuditRecord>();
+    public DbSet<AiPriceRecord> AiPrices => Set<AiPriceRecord>();
+    public DbSet<AiBillingAccountRecord> AiBillingAccounts => Set<AiBillingAccountRecord>();
+    public DbSet<AiBillingAccountSourceRecord> AiBillingAccountSources => Set<AiBillingAccountSourceRecord>();
+    public DbSet<AiQuestionAdmissionRecord> AiQuestionAdmissions => Set<AiQuestionAdmissionRecord>();
+    public DbSet<AiUsageRecord> AiUsageRecords => Set<AiUsageRecord>();
     public DbSet<DataSourceRegistrationAuditRecord> DataSourceRegistrationAudits => Set<DataSourceRegistrationAuditRecord>();
     public DbSet<DataSourceFailoverOperationPolicyRecord> DataSourceFailoverOperationPolicies => Set<DataSourceFailoverOperationPolicyRecord>();
     public DbSet<TaskRecord> Tasks => Set<TaskRecord>();
@@ -99,6 +104,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         });
         modelBuilder.ConfigureDataSourceRegistrationAudit();
         modelBuilder.ConfigureErpServers();
+        modelBuilder.ConfigureAiUsage();
         modelBuilder.ConfigureCompanyMembershipAccess();
         modelBuilder.ConfigureCompanyAdministratorAudit();
         modelBuilder.ConfigureCompanyInvitations();

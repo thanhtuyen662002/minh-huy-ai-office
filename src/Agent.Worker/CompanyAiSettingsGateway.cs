@@ -123,7 +123,8 @@ public sealed class OpenAiCompatibleChatCompletionsAdapter(
                 var (inputTokens, outputTokens) = ReadUsage(root);
                 return new AiGatewayResponse(request.RequestId, request.Capability, output, ReadString(root, "model") ?? model, inputTokens, outputTokens)
                 {
-                    ProviderId = providerId
+                    ProviderId = providerId,
+                    CachedInputTokens = OpenAiCompatibleResponsesAdapter.CachedTokens(root, "prompt_tokens_details")
                 };
             }
             catch (JsonException exception) { throw new AiProviderExecutionException("AI provider returned malformed JSON.", false, exception); }

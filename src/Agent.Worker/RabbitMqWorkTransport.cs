@@ -21,6 +21,10 @@ public sealed class RabbitMqWorkOptions
     public string QueueName { get; set; } = "minhhuy.work.v1";
     public ushort PrefetchCount { get; set; } = 8;
 
+    /// <summary>Questions handled at the same time by this worker (each has its own scope and database context).</summary>
+    public ushort ConsumerConcurrency { get; set; } = 4;
+    public const ushort MaximumConsumerConcurrency = 32;
+
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(HostName)) throw new InvalidOperationException("RabbitMQ host is required.");
@@ -29,6 +33,8 @@ public sealed class RabbitMqWorkOptions
         {
             throw new InvalidOperationException($"RabbitMQ prefetch must be between 1 and {MaximumPrefetchCount}.");
         }
+        if (ConsumerConcurrency is 0 || ConsumerConcurrency > MaximumConsumerConcurrency)
+            throw new InvalidOperationException($"RabbitMQ consumer concurrency must be between 1 and {MaximumConsumerConcurrency}.");
     }
 }
 
@@ -72,7 +78,7 @@ public sealed class RabbitMqWorkPublisher(IOptions<RabbitMqWorkOptions> options)
         Password = options.Password,
         VirtualHost = options.VirtualHost,
         AutomaticRecoveryEnabled = true,
-        ConsumerDispatchConcurrency = 1
+        ConsumerDispatchConcurrency = Math.Min(options.ConsumerConcurrency, options.PrefetchCount)
     };
 
     internal static CreateChannelOptions CreateConfirmingChannelOptions() => new(publisherConfirmationsEnabled: true, publisherConfirmationTrackingEnabled: true);
@@ -93,6 +99,8 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
     private readonly RabbitMqWorkOptions _options = options.Value;
     private IConnection? _connection;
     private IChannel? _channel;
+    // Deliveries run concurrently; acknowledgements and retry publishes on the shared channel go one at a time.
+    private readonly SemaphoreSlim _channelGate = new(1, 1);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -169,16 +177,19 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
             switch (settlement)
             {
                 case BrokerSettlement.Acknowledge:
-                    await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
+                    await SettleAsync(channel => channel.BasicAckAsync(args.DeliveryTag, multiple: false));
                     break;
                 case BrokerSettlement.Requeue:
                     var retry = result.DurableRetryEnvelope
                         ?? throw new InvalidOperationException("Retry settlement requires a durably persisted retry envelope.");
-                    await RabbitMqWorkPublisher.PublishEnvelopeAsync(_channel, _options, retry, CancellationToken.None);
-                    await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
+                    await SettleAsync(async channel =>
+                    {
+                        await RabbitMqWorkPublisher.PublishEnvelopeAsync(channel, _options, retry, CancellationToken.None);
+                        await channel.BasicAckAsync(args.DeliveryTag, multiple: false);
+                    });
                     break;
                 case BrokerSettlement.DeadLetter:
-                    await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false);
+                    await SettleAsync(channel => channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false));
                     break;
                 default:
                     throw new InvalidOperationException("Unknown broker settlement.");
@@ -187,17 +198,27 @@ public sealed class RabbitMqWorkConsumer(IOptions<RabbitMqWorkOptions> options, 
         catch (JsonException exception)
         {
             logger.LogWarning(exception, "Rejecting malformed RabbitMQ work delivery");
-            await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false);
+            await SettleAsync(channel => channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false));
         }
         catch (OperationCanceledException)
         {
-            await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
+            await SettleAsync(channel => channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true));
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "RabbitMQ work delivery failed before durable settlement");
-            await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
+            await SettleAsync(channel => channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true));
         }
+    }
+
+    private async Task SettleAsync(Func<IChannel, ValueTask> action)
+    {
+        await _channelGate.WaitAsync();
+        try
+        {
+            if (_channel is { } channel) await action(channel);
+        }
+        finally { _channelGate.Release(); }
     }
 
     private static void ValidateEnvelope(WorkDispatchEnvelope envelope)

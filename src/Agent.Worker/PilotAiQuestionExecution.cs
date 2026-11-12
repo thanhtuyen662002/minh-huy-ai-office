@@ -117,7 +117,9 @@ public sealed class PilotAiQuestionExecutor(
     PilotAiRuntimeDescriptor runtime,
     DataSourceSecretBindingService? bindingService = null,
     IErpQueryAgentBackend? queryAgentBackend = null,
-    ILogger<PilotAiQuestionExecutor>? logger = null) : IRawWorkStepExecutor
+    ILogger<PilotAiQuestionExecutor>? logger = null,
+    AiQuestionUsageScope? usageScope = null,
+    DataSourceConcurrencyLimiter? sourceLimiter = null) : IRawWorkStepExecutor
 {
     /// <summary>
     /// The fixed, secret-free provider message (status code, provider error text) shown to the task owner
@@ -185,6 +187,23 @@ public sealed class PilotAiQuestionExecutor(
         {
             return Denied(envelope, error, request.MaxAttempts);
         }
+        if (usageScope is not null)
+            usageScope.Current = new AiUsageContext(envelope.TenantId, envelope.CompanyId, envelope.TaskId,
+                initialBinding.Authority.UserId, request.DataSourceId, "assistant");
+
+        // Hold one of the source's concurrent slots for the whole question (connection check, schema reads, queries).
+        using var slot = sourceLimiter is null ? null : await sourceLimiter.TryEnterAsync(envelope.TenantId, envelope.CompanyId,
+            request.DataSourceId, await dbContext.DataSources.AsNoTracking()
+                .Where(item => item.TenantId == envelope.TenantId && item.CompanyId == envelope.CompanyId && item.Id == request.DataSourceId)
+                .Select(item => item.MaxConcurrency).SingleAsync(cancellationToken).ConfigureAwait(false),
+            DataSourceConcurrencyLimiter.DefaultWait, cancellationToken).ConfigureAwait(false);
+        if (sourceLimiter is not null && slot is null)
+        {
+            logger?.LogWarning("Trợ lý task {TaskId} waited too long for a free slot on data source {SourceId}", envelope.TaskId, request.DataSourceId);
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Transient, request.MaxAttempts,
+                FailureDetail: "Nguồn ERP đang bận trả lời nhiều câu hỏi cùng lúc. Hệ thống sẽ tự thử lại.");
+        }
+
         var probe = new PilotDataSourceProbeExecutor(dbContext, secretResolver, connectionProbe, bindings);
         var probeResult = await probe.ExecuteAsync(envelope, lease, cancellationToken).ConfigureAwait(false);
         if (probeResult.Outcome is not WorkDeliveryOutcome.Completed)

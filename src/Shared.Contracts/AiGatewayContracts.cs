@@ -62,6 +62,9 @@ public sealed record AiGatewayResponse(
 {
     public string? ProviderId { get; init; }
 
+    /// <summary>Input tokens the provider served from its prompt cache (a subset of <see cref="InputTokens"/>; 0 when not reported).</summary>
+    public long CachedInputTokens { get; init; }
+
     public void ValidateFor(AiGatewayRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

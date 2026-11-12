@@ -14,6 +14,7 @@ import { useLocalSession } from "./use-local-session";
 import { SourceMetadataEditor } from "./source-metadata-editor";
 import { SourceRegistrationPanel } from "./source-registration-panel";
 import { CustomerErpPanel } from "./customer-erp-panel";
+import { AiUsagePanel } from "./ai-usage-panel";
 import { parseMemberPage } from "../lib/company-members";
 import { KnowledgePanel } from "./knowledge-panel";
 import { CompanyMemberPanel } from "./company-member-panel";
@@ -57,7 +58,7 @@ type ChatMessage = {
   checkpoint?: LocalAiCheckpoint;
 };
 
-type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge";
+type Surface = "overview" | "assistant" | "data-sources" | "members" | "tasks" | "group-inbox" | "customer-requests" | "bot-channels" | "knowledge" | "ai-usage";
 
 class TaskResultError extends Error {}
 
@@ -77,7 +78,7 @@ const sectionSurfaces: Record<WorkspaceSection, Surface> = {
 };
 function surfaceSection(surface: Surface): WorkspaceSection {
   if (surface === "tasks") return "cong-viec";
-  if (surface === "members" || surface === "bot-channels") return "ket-noi";
+  if (surface === "members" || surface === "bot-channels" || surface === "ai-usage") return "ket-noi";
   return (Object.keys(sectionSurfaces) as WorkspaceSection[]).find(key => sectionSurfaces[key] === surface) ?? "tong-quan";
 }
 
@@ -898,7 +899,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
   const connectionTabs = [
     ...(botChannelsAvailable ? [["bot-channels", "Kênh & Bot"] as const] : []),
     ["data-sources", "Nguồn dữ liệu ERP"] as const,
-    ...(isAdmin ? [["members", "Thành viên"] as const] : []),
+    ...(isAdmin ? [["members", "Thành viên"] as const, ["ai-usage", "Chi phí AI"] as const] : []),
   ];
 
   let content: ReactNode = null;
@@ -952,6 +953,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         {/* The technicians' Telegram bot lives beside the customer bots; the card hides itself while the feature is off. */}
         <TelegramLinkCard key={`${scopeKey}:telegram`} companyId={companyId} generation={sessionGeneration.current}
           isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></div>
+      : tab === "ai-usage" && isAdmin && auth ? <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7"><AiUsagePanel
+        key={`ai-usage:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
+        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></section>
       : tab === "members" && isAdmin && auth ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId}
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} validateRecent={validateRecent} request={request} onUnauthorized={onUnauthorized} />
       : (
