@@ -26,10 +26,13 @@ public sealed record TaskSubmissionPrepareRequest(
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed record TaskSubmissionExecuteRequest([property: JsonRequired] string InputFingerprint)
+/// <summary>Submits a prepared question. <paramref name="ConversationId"/> names the conversation it continues (the first
+/// question's task id); it is not part of the fingerprinted input, and an unknown one starts a new conversation.</summary>
+public sealed record TaskSubmissionExecuteRequest([property: JsonRequired] string InputFingerprint, Guid? ConversationId = null)
 {
     public void Validate()
     {
+        if (ConversationId == Guid.Empty) throw new ArgumentException("Conversation id must not be empty.", nameof(ConversationId));
         if (!TaskSubmissionIntentIdentity.IsFingerprint(InputFingerprint))
             throw new ArgumentException("A canonical input fingerprint is required.", nameof(InputFingerprint));
     }

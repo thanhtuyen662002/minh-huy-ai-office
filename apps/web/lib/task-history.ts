@@ -1,7 +1,7 @@
 import { isCanonicalCompanyId } from "./company-scope";
 
 export type TaskHistoryItem = Readonly<{ taskId: string; status: number | null; createdAtUtc: string;
-  updatedAtUtc: string; summary: string | null; metadataUnavailable: boolean; imageIds?: readonly string[] }>;
+  updatedAtUtc: string; summary: string | null; metadataUnavailable: boolean; imageIds?: readonly string[]; conversationId?: string }>;
 export type TaskHistoryPage = Readonly<{ companyId: string; items: readonly TaskHistoryItem[]; offset: number; limit: number; hasMore: boolean }>;
 export type TaskHistoryResult = Readonly<{ kind: "answer" | "connection"; answer: string | null; evidence: string;
   provider: string | null; model: string | null; inputTokens: number | null; outputTokens: number | null; totalTokens: number | null }>;
@@ -33,6 +33,14 @@ const itemFields = ["taskId", "status", "createdAtUtc", "updatedAtUtc", "summary
 const imageIds = (value: unknown) => value === undefined || value === null
   || Array.isArray(value) && value.length <= 6 && value.every(id => isCanonicalCompanyId(id));
 function item(value: unknown): TaskHistoryItem | null {
+  // The conversation the question belongs to (its first question's task id). Older servers and older tasks omit it.
+  if (value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "conversationId")) {
+    const { conversationId, ...rest } = value as Record<string, unknown>;
+    if (conversationId !== null && !isCanonicalCompanyId(conversationId)) return null;
+    const parsed = item(rest);
+    return parsed && (conversationId === null ? parsed
+      : Object.freeze({ ...parsed, conversationId: (conversationId as string).toLowerCase() }));
+  }
   if (value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "imageIds")) {
     const { imageIds: ids, ...rest } = value as Record<string, unknown>;
     if (!imageIds(ids)) return null;

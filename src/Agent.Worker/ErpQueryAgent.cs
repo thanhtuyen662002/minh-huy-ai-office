@@ -557,7 +557,8 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
         PilotErpEvidence evidence,
         IErpQuerySession session,
         CancellationToken cancellationToken,
-        IReadOnlyList<AiImageInput>? images = null)
+        IReadOnlyList<AiImageInput>? images = null,
+        string? conversation = null)
     {
         ArgumentNullException.ThrowIfNull(envelope);
         ArgumentException.ThrowIfNullOrWhiteSpace(question);
@@ -583,7 +584,7 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
                 envelope.TaskId.ToString("N"),
                 $"pilot-ai:{envelope.TaskId:N}:{envelope.StepId:N}:t{turn}",
                 AiCapability.Reasoning,
-                BuildPrompt(question, evidence, observations, MaximumQueries - queries.Count, finalTurn, images.Count))
+                BuildPrompt(question, evidence, observations, MaximumQueries - queries.Count, finalTurn, images.Count, conversation))
             {
                 // The provider is stateless, so every turn carries the pictures again.
                 Images = images
@@ -769,13 +770,22 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
     private static string? ReadString(JsonElement root, string name) =>
         root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 
+    internal static string ConversationSection(string conversation) => $"""
+        Earlier in this conversation with the same user (oldest first). Use it to understand what the new question refers to
+        (customer, period, product, code) and reuse SQL that worked; run queries again for any number you report rather than
+        copying an earlier answer, and ignore earlier turns that are unrelated to the new question:
+        {conversation}
+
+        """;
+
     private static string BuildPrompt(
         string question,
         PilotErpEvidence evidence,
         IReadOnlyList<string> observations,
         int remainingQueries,
         bool finalTurn,
-        int imageCount = 0)
+        int imageCount = 0,
+        string? conversation = null)
     {
         var tables = evidence.TopTables.Count == 0
             ? "(no non-system tables returned)"
@@ -818,6 +828,7 @@ public sealed class ErpQueryAgent(IAiGateway aiGateway)
             Largest tables:
             {{tables}}
 
+            {{(string.IsNullOrWhiteSpace(conversation) ? "" : ConversationSection(conversation))}}
             User question:
             {{question}}
             {{pictures}}

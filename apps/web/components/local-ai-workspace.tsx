@@ -745,7 +745,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     setTaskStage("Đang xác nhận yêu cầu…");
 
     try {
-      const accepted = await submission.send(attempt);
+      const accepted = await submission.send(attempt, activeConversationId);
       if (!isCurrent(generation) || taskRun.current !== run) return;
       if (!accepted) { setTaskStage(""); return; }
 

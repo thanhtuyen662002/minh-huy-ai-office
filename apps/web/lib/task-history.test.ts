@@ -38,3 +38,10 @@ it("accepts saved answers from the ERP query agent", () => {
     result: agent, resultUnavailable: false });
   expect(parsed?.result?.evidence).toBe("ai-agent-read-only-erp-queries");
 });
+it("reads the server's conversation id and rejects a malformed one", () => {
+  const conversationId = "44444444-4444-4444-4444-44444444444A";
+  const parsed = parseTaskHistoryPage({ ...page, items: [{ ...task, imageIds: null, conversationId }] });
+  expect(parsed?.items[0].conversationId).toBe(conversationId.toLowerCase());
+  expect(parseTaskHistoryPage({ ...page, items: [{ ...task, conversationId: null }] })?.items[0].conversationId).toBeUndefined();
+  expect(parseTaskHistoryPage({ ...page, items: [{ ...task, conversationId: "not-a-guid" }] })).toBeNull();
+});

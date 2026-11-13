@@ -268,7 +268,7 @@ public sealed class PilotAiQuestionExecutor(
             envelope.TaskId.ToString("N"),
             $"pilot-ai:{envelope.TaskId:N}:{envelope.StepId:N}",
             AiCapability.Reasoning,
-            BuildBoundedInput(questionText, erpEvidence))
+            BuildBoundedInput(questionText, erpEvidence, await ConversationContext.ReadAsync(dbContext, envelope, cancellationToken).ConfigureAwait(false)))
         { Images = pictures };
 
         AiGatewayResponse response;
@@ -345,6 +345,7 @@ public sealed class PilotAiQuestionExecutor(
         ErpQueryAgentResult outcome;
         var (questionText, pictures) = await QuestionAsync(envelope, initialBinding.Authority.UserId, request.Question, cancellationToken)
             .ConfigureAwait(false);
+        var conversation = await ConversationContext.ReadAsync(dbContext, envelope, cancellationToken).ConfigureAwait(false);
         try
         {
             var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
@@ -357,7 +358,7 @@ public sealed class PilotAiQuestionExecutor(
                     erpEvidence = await evidenceReader.ReadAsync(connectionString, token);
                     return await backend.UseAsync(
                         connectionString,
-                        session => new ErpQueryAgent(aiGateway).RunAsync(envelope, questionText, erpEvidence, session, token, pictures),
+                        session => new ErpQueryAgent(aiGateway).RunAsync(envelope, questionText, erpEvidence, session, token, pictures, conversation),
                         token);
                 }, cancellationToken, taskId: envelope.TaskId);
         }
@@ -445,7 +446,7 @@ public sealed class PilotAiQuestionExecutor(
         return (text, stored.Select(image => new AiImageInput(image.ContentType, image.Content)).ToArray());
     }
 
-    private static string BuildBoundedInput(string question, PilotErpEvidence evidence)
+    private static string BuildBoundedInput(string question, PilotErpEvidence evidence, string? conversation = null)
     {
         evidence.Validate();
         var tableEvidence = evidence.TopTables.Count == 0
@@ -465,6 +466,7 @@ public sealed class PilotAiQuestionExecutor(
         Top tables by approximate row count (maximum {PilotErpEvidence.MaximumTables}):
         {tableEvidence}
 
+        {(conversation is null ? "" : ErpQueryAgent.ConversationSection(conversation))}
         Use only this evidence and the user's question. Do not invent database values. Do not claim
         that business row contents were read: this slice exposes catalog names and approximate row
         counts only. If the question requires balances, invoices, inventory quantities, customer data

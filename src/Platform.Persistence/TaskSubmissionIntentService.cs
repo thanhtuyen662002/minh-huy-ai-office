@@ -141,7 +141,7 @@ public sealed class TaskSubmissionIntentService
             var detail = await ProjectAsync(authority, stored, cancellationToken);
             if (detail.State == TaskSubmissionIntentState.Expired) throw Conflict("intent-expired");
             if (detail.State == TaskSubmissionIntentState.Unavailable) throw Conflict("intent-unavailable");
-            var accepted = await submission.SubmitWithinTransactionAsync(authority, Pilot(input), cancellationToken);
+            var accepted = await submission.SubmitWithinTransactionAsync(authority, Pilot(input) with { ConversationId = request.ConversationId }, cancellationToken);
             receipt = Receipt(authority, stored, accepted);
             await permissions.RequireAppendOnlyAsync(cancellationToken);
             await admission.RequireExecutionAsync(authority, sourceId, cancellationToken);
