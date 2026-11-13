@@ -33,7 +33,7 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
         var body = await response.Content.ReadAsStringAsync(); Assert.DoesNotContain("PRIVATE_", body);
         using var page = JsonDocument.Parse(body); var item = Assert.Single(page.RootElement.GetProperty("items").EnumerateArray());
         Assert.Equal(taskId, item.GetProperty("taskId").GetGuid());
-        Assert.Equal(new[] { "taskId", "status", "createdAtUtc", "updatedAtUtc", "summary", "metadataUnavailable", "imageIds" }, item.EnumerateObject().Select(property => property.Name));
+        Assert.Equal(new[] { "taskId", "status", "createdAtUtc", "updatedAtUtc", "summary", "metadataUnavailable", "imageIds", "conversationId" }, item.EnumerateObject().Select(property => property.Name));
         var detail = await client.GetAsync($"/api/tasks/{taskId}/history"); Assert.Equal(HttpStatusCode.OK, detail.StatusCode);
         Assert.True(detail.Headers.CacheControl!.NoStore); var detailBody = await detail.Content.ReadAsStringAsync();
         Assert.DoesNotContain("PayloadJson", detailBody); Assert.DoesNotContain("PRIVATE_", detailBody); Assert.DoesNotContain("databaseName", detailBody);
