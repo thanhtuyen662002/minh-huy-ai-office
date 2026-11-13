@@ -18,7 +18,7 @@ public sealed record AiBillingAccountSaveRequest(string Name, decimal? MonthlyBu
 public sealed record AiUsageTotals(long Questions, long Calls, long InputTokens, long CachedInputTokens, long OutputTokens, decimal Cost,
     long UnpricedCalls);
 public sealed record AiUsageAccountRow(Guid? AccountId, string Name, decimal? MonthlyBudget, AiUsageTotals Totals);
-public sealed record AiUsageUserRow(Guid? UserId, string Name, AiUsageTotals Totals);
+public sealed record AiUsageUserRow(Guid? UserId, string Name, AiUsageTotals Totals, string? ExternalUserId = null);
 public sealed record AiUsageModelRow(string ProviderId, string Model, AiUsageTotals Totals);
 public sealed record AiUsageDayRow(string Date, AiUsageTotals Totals);
 public sealed record AiUsageReport(string Month, string Currency, AiUsageTotals Totals, IReadOnlyList<AiUsageAccountRow> Accounts,
@@ -158,7 +158,9 @@ public sealed class AiUsageService(PlatformDbContext database, IAuthorizationDir
         var byAccount = await usage.GroupBy(row => row.BillingAccountId).Select(group => new UsageSum<Guid?>(group.Key, group.LongCount(),
             group.Sum(row => row.InputTokens), group.Sum(row => row.CachedInputTokens), group.Sum(row => row.OutputTokens),
             group.Sum(row => row.Cost ?? 0), group.LongCount(row => row.Cost == null))).ToListAsync(token);
-        var byUser = await usage.GroupBy(row => row.UserId).Select(group => new UsageSum<Guid?>(group.Key, group.LongCount(),
+        // A web ERP user counts as a person of their own (all of a client's questions share its service member).
+        var byUser = await usage.GroupBy(row => new { row.UserId, row.ExternalUserId }).Select(group => new UsageSum<(Guid?, string?)>(
+            ValueTuple.Create(group.Key.UserId, group.Key.ExternalUserId), group.LongCount(),
             group.Sum(row => row.InputTokens), group.Sum(row => row.CachedInputTokens), group.Sum(row => row.OutputTokens),
             group.Sum(row => row.Cost ?? 0), group.LongCount(row => row.Cost == null))).ToListAsync(token);
         var byModel = await usage.GroupBy(row => new { row.ProviderId, row.Model }).Select(group => new
@@ -174,8 +176,9 @@ public sealed class AiUsageService(PlatformDbContext database, IAuthorizationDir
         }).ToListAsync(token);
         var questionsByAccount = await questions.GroupBy(row => row.BillingAccountId)
             .Select(group => new { group.Key, Count = group.LongCount() }).ToDictionaryAsync(row => row.Key ?? Guid.Empty, row => row.Count, token);
-        var questionsByUser = await questions.GroupBy(row => row.UserId)
-            .Select(group => new { group.Key, Count = group.LongCount() }).ToDictionaryAsync(row => row.Key, row => row.Count, token);
+        var questionsByUser = (await questions.GroupBy(row => new { row.UserId, row.ExternalUserId })
+            .Select(group => new { group.Key.UserId, group.Key.ExternalUserId, Count = group.LongCount() }).ToListAsync(token))
+            .ToDictionary(row => ((Guid?)row.UserId, row.ExternalUserId), row => row.Count);
 
         // Days are bucketed in Vietnam time from a narrow projection (one month of rows).
         var dayRows = await usage.Select(row => new { row.OccurredAtUtc, row.InputTokens, row.CachedInputTokens, row.OutputTokens, row.Cost })
@@ -207,12 +210,16 @@ public sealed class AiUsageService(PlatformDbContext database, IAuthorizationDir
             .Where(row => row.AccountId is not null || row.Totals.Calls > 0 || row.Totals.Questions > 0)
             .OrderByDescending(row => row.Totals.Cost).ThenBy(row => row.Name, StringComparer.CurrentCulture).ToArray();
 
-        var userIds = byUser.Select(row => row.Key).OfType<Guid>().Concat(questionsByUser.Keys).Distinct().ToArray();
+        var userIds = byUser.Select(row => row.Key.Item1).Concat(questionsByUser.Keys.Select(key => key.Item1)).OfType<Guid>().Distinct().ToArray();
         var names = await database.Users.AsNoTracking().Where(row => row.TenantId == tenant && userIds.Contains(row.Id))
             .ToDictionaryAsync(row => row.Id, row => row.DisplayName, token);
-        var userRows = byUser.Select(row => row.Key).Concat(questionsByUser.Keys.Select(key => (Guid?)key)).Distinct()
-            .Select(id => new AiUsageUserRow(id, id is { } known ? names.GetValueOrDefault(known, "Người dùng đã xoá") : "Hệ thống",
-                Totals(byUser.SingleOrDefault(row => row.Key == id), id is { } user ? questionsByUser.GetValueOrDefault(user) : 0)))
+        var userRows = byUser.Select(row => row.Key).Concat(questionsByUser.Keys).Distinct()
+            .Select(key =>
+            {
+                var name = key.Item1 is { } known ? names.GetValueOrDefault(known, "Người dùng đã xoá") : "Hệ thống";
+                return new AiUsageUserRow(key.Item1, key.Item2 is null ? name : $"{key.Item2} · {name}",
+                    Totals(byUser.SingleOrDefault(row => row.Key == key), questionsByUser.GetValueOrDefault(key)), key.Item2);
+            })
             .OrderByDescending(row => row.Totals.Cost).ThenByDescending(row => row.Totals.InputTokens + row.Totals.OutputTokens).ToArray();
 
         var modelRows = byModel.Select(row => new AiUsageModelRow(row.ProviderId, row.Model,

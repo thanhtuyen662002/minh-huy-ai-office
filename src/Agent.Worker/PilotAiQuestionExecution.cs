@@ -189,7 +189,12 @@ public sealed class PilotAiQuestionExecutor(
         }
         if (usageScope is not null)
             usageScope.Current = new AiUsageContext(envelope.TenantId, envelope.CompanyId, envelope.TaskId,
-                initialBinding.Authority.UserId, request.DataSourceId, "assistant");
+                initialBinding.Authority.UserId, request.DataSourceId, "assistant")
+            {
+                ExternalUserId = await dbContext.Tasks.AsNoTracking()
+                    .Where(task => task.TenantId == envelope.TenantId && task.CompanyId == envelope.CompanyId && task.Id == envelope.TaskId)
+                    .Select(task => task.ExternalUserId).SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false)
+            };
 
         // Hold one of the source's concurrent slots for the whole question (connection check, schema reads, queries).
         using var slot = sourceLimiter is null ? null : await sourceLimiter.TryEnterAsync(envelope.TenantId, envelope.CompanyId,

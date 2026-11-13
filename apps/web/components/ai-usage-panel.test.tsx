@@ -19,7 +19,7 @@ function setup(reply?: (path: string) => Response | undefined) {
       sent.push({ path, method: init.method, body: JSON.parse(String(init.body)) });
       return reply?.(path) ?? Response.json({});
     }
-    return Response.json(path.includes("/settings") ? settings : report);
+    return Response.json(path.includes("/erp-chat/") ? [] : path.includes("/settings") ? settings : report);
   });
   render(<AiUsagePanel companyId="22222222-2222-2222-2222-222222222222" generation={1} isCurrent={() => true}
     validate={async () => true} request={request} onUnauthorized={vi.fn()} />);

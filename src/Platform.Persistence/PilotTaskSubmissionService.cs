@@ -131,7 +131,8 @@ public sealed class PilotTaskSubmissionService
             CompanyId = trustedAuthority.CompanyId,
             Id = taskId,
             CreatedByUserId = trustedAuthority.UserId,
-            ConversationId = await ConversationAsync(trustedAuthority, request.ConversationId, cancellationToken) ?? taskId,
+            ConversationId = await ConversationAsync(trustedAuthority, request.ConversationId, request.ExternalUserId, cancellationToken) ?? taskId,
+            ExternalUserId = request.ExternalUserId,
             Status = TaskExecutionStatus.Pending,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc
@@ -181,7 +182,8 @@ public sealed class PilotTaskSubmissionService
         {
             await admission.RequireExecutionAsync(trustedAuthority, request.DataSourceId, cancellationToken);
             // Rate limits and the customer's monthly budget; a refusal leaves nothing behind.
-            usage = await AiUsageAdmission.AdmitAsync(dbContext, trustedAuthority, taskId, request.DataSourceId, nowUtc, cancellationToken);
+            usage = await AiUsageAdmission.AdmitAsync(dbContext, trustedAuthority, taskId, request.DataSourceId, nowUtc, cancellationToken,
+                request.ExternalUserId);
             dbContext.Tasks.Add(task);
             dbContext.TaskSteps.Add(step);
             dbContext.TaskStepExecutions.Add(execution);
@@ -210,12 +212,13 @@ public sealed class PilotTaskSubmissionService
     /// null to start a new one. An id the asker does not own, or that names no conversation, also starts a new one,
     /// so a stale browser can never attach a question to someone else's history.
     /// </summary>
-    private async Task<Guid?> ConversationAsync(AuthorizationContext authority, Guid? requested, CancellationToken cancellationToken)
+    private async Task<Guid?> ConversationAsync(AuthorizationContext authority, Guid? requested, string? externalUserId,
+        CancellationToken cancellationToken)
     {
         if (requested is not { } id || id == Guid.Empty) return null;
         var owned = await dbContext.Tasks.AsNoTracking().AnyAsync(task => task.TenantId == authority.TenantId
             && task.CompanyId == authority.CompanyId && task.CreatedByUserId == authority.UserId
-            && (task.Id == id || task.ConversationId == id), cancellationToken);
+            && task.ExternalUserId == externalUserId && (task.Id == id || task.ConversationId == id), cancellationToken);
         return owned ? id : null;
     }
 

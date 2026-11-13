@@ -9,6 +9,8 @@ public sealed class TaskRecord
     public Guid Id { get; set; }
     public Guid CreatedByUserId { get; set; }
     public Guid? ConversationId { get; set; }
+    /// <summary>The web ERP user who asked, for questions that arrive through the ERP chat API (owner = that client's service user).</summary>
+    public string? ExternalUserId { get; set; }
     public TaskExecutionStatus Status { get; set; } = TaskExecutionStatus.Pending;
     public string? WaitReason { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
