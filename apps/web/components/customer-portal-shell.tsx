@@ -57,7 +57,7 @@ export function CustomerPortalShell({ state }: { state: AuthenticatedSessionStat
     return (
       <main className="mx-auto flex min-h-screen max-w-4xl items-center px-6 py-16">
         <section role="alert" className="w-full rounded-2xl border border-black/10 p-6 dark:border-white/15">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Minh Huy AI Office</p>
+          <p className="text-sm font-medium opacity-60">Minh Huy AI Office</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">Không thể mở cổng khách hàng</h1>
           <p className="mt-3 leading-7 opacity-75">Phiên làm việc chưa có phạm vi công ty được máy chủ xác thực.</p>
         </section>
@@ -69,7 +69,7 @@ export function CustomerPortalShell({ state }: { state: AuthenticatedSessionStat
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-10">
       <header className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-60">Cổng khách hàng</p>
+        <p className="text-sm font-medium opacity-60">Cổng khách hàng</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">{authority.companyName}</h1>
         <p className="mt-2 text-sm opacity-70">Đăng nhập với {authority.userName}</p>
       </header>

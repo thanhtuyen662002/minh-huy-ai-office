@@ -8,6 +8,8 @@ import { ErpChatClient, ErpChatClientSecret, isErpChatClientCreate, parseErpChat
 type Props = {
   companyId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>;
+  /** Session check for reads; may reuse a recent confirmation. Changes always use validate. */
+  validateRead?: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
   onUnauthorized: () => void; accounts: AiAccount[];
 };
@@ -16,7 +18,7 @@ const outline = "rounded-lg border bg-card px-3 py-2 text-sm hover:bg-muted disa
 const input = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 
 /** Web ERPs allowed to call the chat API: create one (its key is shown once), replace its key, or turn it off. */
-export function ErpChatClients({ companyId, generation, isCurrent, validate, request, onUnauthorized, accounts }: Props) {
+export function ErpChatClients({ companyId, generation, isCurrent, validate, validateRead = validate, request, onUnauthorized, accounts }: Props) {
   const [clients, setClients] = useState<ErpChatClient[] | null>(null);
   const [form, setForm] = useState<{ name: string; accountId: string } | null>(null);
   const [secret, setSecret] = useState<ErpChatClientSecret | null>(null);
@@ -27,7 +29,7 @@ export function ErpChatClients({ companyId, generation, isCurrent, validate, req
 
   async function load() {
     try {
-      if (!await validate(generation) || !current()) return;
+      if (!await validateRead(generation) || !current()) return;
       const response = await request(generation, `/api/local/erp-chat/clients?${selector}`, { cache: "no-store" });
       if (!current()) return;
       if (response.status === 401) { onUnauthorized(); return; }

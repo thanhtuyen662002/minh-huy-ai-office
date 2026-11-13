@@ -4,41 +4,53 @@
    the saved choice or the system preference. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Neutrals carry a little of the brand blue (hue ~258) so surfaces feel of a piece with the logo.
+   Body text and muted text keep at least 4.5:1 on their surfaces in both themes. */
 :root {
   color-scheme: light;
-  --radius: 0.625rem;
-  --background: oklch(0.975 0.003 265);
-  --foreground: oklch(0.21 0.02 265);
+  --radius: 0.75rem;
+  --background: oklch(0.984 0.004 258);
+  --foreground: oklch(0.22 0.025 262);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 265);
-  --muted: oklch(0.967 0.003 265);
-  --muted-foreground: oklch(0.55 0.02 265);
-  --accent: oklch(0.955 0.012 275);
-  --accent-foreground: oklch(0.36 0.15 275);
-  --primary: oklch(0.21 0.02 265);
-  --primary-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.006 265);
-  --ring: oklch(0.62 0.17 275);
-  --sidebar: oklch(1 0 0);
-  --sidebar-border: oklch(0.92 0.006 265);
+  --card-foreground: oklch(0.22 0.025 262);
+  --muted: oklch(0.962 0.007 258);
+  --muted-foreground: oklch(0.5 0.022 260);
+  --accent: oklch(0.952 0.026 258);
+  --accent-foreground: oklch(0.44 0.17 263);
+  --primary: oklch(0.53 0.2 263);
+  --primary-foreground: oklch(0.99 0.003 258);
+  --border: oklch(0.912 0.009 258);
+  --ring: oklch(0.6 0.18 258);
+  --sidebar: oklch(0.993 0.003 258);
+  --sidebar-border: oklch(0.925 0.008 258);
+  --shadow-color: 262 30% 20%;
+
+  /* Motion: confident arrival, quicker exit; durations by purpose (feedback, state change, view change). */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 380ms;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.17 0.02 268);
-  --foreground: oklch(0.95 0.01 265);
-  --card: oklch(0.21 0.025 268);
-  --card-foreground: oklch(0.95 0.01 265);
-  --muted: oklch(0.25 0.02 268);
-  --muted-foreground: oklch(0.7 0.02 265);
-  --accent: oklch(0.28 0.05 275);
-  --accent-foreground: oklch(0.88 0.07 275);
-  --primary: oklch(0.93 0.01 265);
-  --primary-foreground: oklch(0.2 0.02 265);
+  --background: oklch(0.165 0.016 262);
+  --foreground: oklch(0.95 0.008 258);
+  --card: oklch(0.205 0.02 262);
+  --card-foreground: oklch(0.95 0.008 258);
+  --muted: oklch(0.245 0.02 262);
+  --muted-foreground: oklch(0.72 0.02 258);
+  --accent: oklch(0.29 0.06 263);
+  --accent-foreground: oklch(0.87 0.08 255);
+  --primary: oklch(0.7 0.15 256);
+  --primary-foreground: oklch(0.17 0.03 262);
   --border: oklch(1 0 0 / 0.1);
-  --ring: oklch(0.62 0.17 275);
-  --sidebar: oklch(0.19 0.022 268);
+  --ring: oklch(0.7 0.15 256);
+  --sidebar: oklch(0.185 0.018 262);
   --sidebar-border: oklch(1 0 0 / 0.08);
+  --shadow-color: 262 40% 3%;
 }
 
 @theme inline {
@@ -56,8 +68,15 @@
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
   --color-sidebar-border: var(--sidebar-border);
-  --radius-lg: var(--radius);
-  --font-sans: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius-lg: calc(var(--radius) - 2px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-be-vietnam), "Noto Sans", ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  /* One soft, offset shadow: surfaces use either a border or this, so cards do not double up. */
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.05), 0 1px 1px hsl(var(--shadow-color) / 0.03);
+  --shadow-md: 0 4px 12px -2px hsl(var(--shadow-color) / 0.08), 0 2px 4px -2px hsl(var(--shadow-color) / 0.05);
+  --shadow-lg: 0 12px 32px -8px hsl(var(--shadow-color) / 0.14), 0 4px 8px -4px hsl(var(--shadow-color) / 0.06);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Base rules sit in a layer so border-color and other utilities can override them. */
@@ -67,18 +86,38 @@
     border-color: var(--border);
   }
 
-  /* Every button shows that it was pressed, and a disabled one says so on hover. */
+  /* Every control answers quickly: colour changes are short, the press is a small, fast squeeze. */
+  button,
+  a,
+  select,
+  input,
+  textarea,
+  summary {
+    transition-property: background-color, border-color, color, opacity, box-shadow, transform;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-out);
+  }
+
   button {
     cursor: pointer;
-    transition: background-color 150ms, color 150ms, opacity 150ms, box-shadow 150ms, transform 100ms;
   }
 
   button:not(:disabled):active {
     transform: scale(0.97);
+    transition-duration: 80ms;
   }
 
   button:disabled {
     cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
   }
 
   * {
@@ -115,7 +154,130 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    caret-color: var(--primary);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Even line breaks: no lone word on the last line of a paragraph or heading. */
+  p,
+  li,
+  dd,
+  td {
+    text-wrap: pretty;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  /* Money, counts and IDs line up in columns. */
+  table,
+  dd,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes enter-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* A view or block arriving: short rise and fade. */
+@utility animate-enter {
+  animation: enter var(--duration-slow) var(--ease-out) both;
+}
+
+/* Popovers, toasts and new chips. */
+@utility animate-enter-scale {
+  animation: enter-scale var(--duration-base) var(--ease-out) both;
+}
+
+@utility animate-fade {
+  animation: fade var(--duration-base) var(--ease-out) both;
+}
+
+/* Children of a list that appears as a list come in one after another (only the first eight wait). */
+@utility stagger {
+  & > * {
+    animation: enter var(--duration-slow) var(--ease-out) both;
+  }
+
+  & > :nth-child(2) { animation-delay: 30ms; }
+  & > :nth-child(3) { animation-delay: 60ms; }
+  & > :nth-child(4) { animation-delay: 90ms; }
+  & > :nth-child(5) { animation-delay: 120ms; }
+  & > :nth-child(6) { animation-delay: 150ms; }
+  & > :nth-child(7) { animation-delay: 180ms; }
+  & > :nth-child(n + 8) { animation-delay: 210ms; }
+}
+
+/* Loading placeholder: one soft light sweep instead of blinking. */
+@utility skeleton {
+  background-color: var(--muted);
+  background-image: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--card) 70%, transparent) 50%, transparent 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1400ms var(--ease-in-out) infinite;
+}
+
+@utility typing-dot {
+  animation: typing 1100ms var(--ease-in-out) infinite;
+
+  &:nth-child(2) { animation-delay: 150ms; }
+  &:nth-child(3) { animation-delay: 300ms; }
+}
+
+/* Lifts a clickable card a little on hover (not for dense tables). */
+@utility hover-lift {
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
 }
 
@@ -124,5 +286,28 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Reduced motion keeps the fades that carry meaning and drops movement and loops. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter,
+  .animate-enter-scale,
+  .stagger > * {
+    animation-name: fade;
+  }
+
+  .skeleton,
+  .typing-dot {
+    animation: none;
+  }
+
+  .hover-lift:hover,
+  button:not(:disabled):active {
+    transform: none;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }

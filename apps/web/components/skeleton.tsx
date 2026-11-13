@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 // Placeholder shapes shown while data loads; the label stays readable for screen readers and tests.
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <span aria-hidden="true" className={`block animate-pulse rounded-md bg-muted ${className}`} />;
+  return <span aria-hidden="true" className={`skeleton block rounded-md ${className}`} />;
 }
 
 export function Loading({ label, className = "", children }: { label: string; className?: string; children: ReactNode }) {
@@ -10,7 +10,7 @@ export function Loading({ label, className = "", children }: { label: string; cl
 }
 
 export function SkeletonRows({ label, rows = 4, className = "" }: { label: string; rows?: number; className?: string }) {
-  return <Loading label={label} className={`space-y-3 ${className}`}>
+  return <Loading label={label} className={`animate-fade space-y-3 ${className}`}>
     {Array.from({ length: rows }, (_, index) => <div key={index} className="flex items-center gap-3">
       <Skeleton className="size-9 shrink-0 rounded-lg" />
       <div className="min-w-0 flex-1 space-y-2"><Skeleton className={`h-3.5 ${index % 2 ? "w-2/3" : "w-4/5"}`} /><Skeleton className="h-3 w-1/3" /></div>

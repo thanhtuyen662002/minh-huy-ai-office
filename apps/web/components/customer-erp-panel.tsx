@@ -8,12 +8,14 @@ import { ErpSend, ErpServerForm, ErpServerSourceForm } from "./erp-server-forms"
 type Props = {
   companyId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>;
+  /** Session check for reads; may reuse a recent confirmation. Saves always use validate. */
+  validateRead?: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
   onUnauthorized: () => void; onSaved: () => void;
 };
 const empty: ErpConnection = { host: "", port: 1433, database: "", userName: "", password: "", encrypt: true, trustServerCertificate: false };
 
-export function CustomerErpPanel({ companyId, generation, isCurrent, validate, request, onUnauthorized, onSaved }: Props) {
+export function CustomerErpPanel({ companyId, generation, isCurrent, validate, validateRead = validate, request, onUnauthorized, onSaved }: Props) {
   const [sources, setSources] = useState<CustomerErpSource[]>([]);
   const [fields, setFields] = useState<ErpConnection>(empty);
   const [name, setName] = useState("");
@@ -37,7 +39,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
   const current = () => mounted.current && isCurrent(generation);
   const selector = `companyId=${encodeURIComponent(companyId)}`;
 
-  async function authorized(response: Response) {
+  async function authorized(response: Response, check = validate) {
     if (!current()) return false;
     if (response.status === 401) { onUnauthorized(); return false; }
     if (response.status === 403) {
@@ -47,14 +49,18 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
       if (current()) setCode("unavailable");
       return false;
     }
-    return await validate(generation) && current();
+    return await check(generation) && current();
   }
 
   async function load() {
+    // Both lists are fetched together; the servers list waits only for its own answer.
+    let serversRead: Promise<Response> | null = null;
     try {
-      if (!await validate(generation) || !current()) return;
+      if (!await validateRead(generation) || !current()) return;
+      serversRead = request(generation, `/api/local/data-sources/erp-servers?${selector}`, { cache: "no-store" });
+      serversRead.catch(() => {});
       const response = await request(generation, `/api/local/data-sources/customer-erp?${selector}`, { cache: "no-store" });
-      if (!await authorized(response)) return;
+      if (!await authorized(response, validateRead)) return;
       const rows = response.ok ? parseCustomerErpSources(await response.json()) : null;
       if (!current()) return;
       if (!rows) { setCode("load_failed"); return; }
@@ -62,7 +68,7 @@ export function CustomerErpPanel({ companyId, generation, isCurrent, validate, r
     } catch { if (current()) setCode("load_failed"); return; }
     // Shared servers are optional: if they cannot be loaded the sources above still work, so this never raises the panel alert.
     try {
-      const listed = await request(generation, `/api/local/data-sources/erp-servers?${selector}`, { cache: "no-store" });
+      const listed = await serversRead;
       if (!current()) return;
       if (listed.status === 401) { onUnauthorized(); return; }
       const shared = listed.ok ? parseErpServers(await listed.json()) : null;

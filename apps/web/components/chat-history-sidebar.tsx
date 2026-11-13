@@ -122,10 +122,10 @@ export function ChatHistorySidebar({ companyId, userId, generation, isCurrent, v
       </button>
     </div>
     <div className="flex-1 overflow-y-auto p-2">
-      <p className="px-2 pb-1 pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Gần đây</p>
+      <p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">Gần đây</p>
       {items === null && loading ? <p className="px-2 py-3 text-sm text-muted-foreground">Đang tải…</p> : null}
       {items?.length === 0 ? <p className="px-2 py-3 text-sm text-muted-foreground">Chưa có câu hỏi nào.</p> : null}
-      <ul className="space-y-0.5">
+      <ul className="stagger space-y-0.5">
         {conversations.map(conversation => {
           const active = activeConversationId?.toLowerCase() === conversation.id;
           const count = conversation.items.length;

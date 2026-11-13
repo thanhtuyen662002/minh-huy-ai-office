@@ -5,12 +5,14 @@ import { TelegramLink, TelegramLinkCode, parseTelegramLink, parseTelegramLinkCod
 
 type Props = { companyId: string; generation: number;
   isCurrent: (generation: number) => boolean; validate: (generation: number) => Promise<boolean>;
+  /** Session check for reads; may reuse a recent confirmation. Linking and unlinking always use validate. */
+  validateRead?: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>; onUnauthorized: () => void };
 const button = "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
 const primary = "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 
 // Lets a technician link their Telegram account so the bot can hand them tickets. Hidden while the feature is off (404).
-export function TelegramLinkCard({ companyId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+export function TelegramLinkCard({ companyId, generation, isCurrent, validate, validateRead = validate, request, onUnauthorized }: Props) {
   const [link, setLink] = useState<TelegramLink | null>(null);
   const [code, setCode] = useState<TelegramLinkCode | null>(null);
   const [busy, setBusy] = useState(false);
@@ -20,11 +22,12 @@ export function TelegramLinkCard({ companyId, generation, isCurrent, validate, r
   const live = () => mounted.current && isCurrent(generation);
 
   async function call(init: RequestInit = {}): Promise<Response | null> {
-    if (!live() || !await validate(generation) || !live()) return null;
+    const check = init.method ? validate : validateRead;
+    if (!live() || !await check(generation) || !live()) return null;
     const response = await request(generation, path, { cache: "no-store", ...init });
     if (!live()) return null;
     if (response.status === 401) { onUnauthorized(); return null; }
-    return await validate(generation) && live() ? response : null;
+    return await check(generation) && live() ? response : null;
   }
 
   async function load() {

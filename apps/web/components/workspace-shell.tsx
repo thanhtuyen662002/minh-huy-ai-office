@@ -92,9 +92,9 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
             {sections.map(([key, label]) => {
               const Icon = icons[key], active = key === section, count = counts?.[key];
               return <button key={key} ref={active ? activeItem : undefined} type="button" onClick={() => onSection(key)} aria-current={active ? "page" : undefined} title={collapsed ? label : undefined}
-                className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors lg:h-11 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active
-                  ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                <Icon className="size-4 shrink-0" aria-hidden="true" />
+                className={`group flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium lg:h-10 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active
+                  ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+                <Icon className={`size-[18px] shrink-0 transition-transform duration-200 ease-[var(--ease-out)] ${active ? "text-primary" : "group-hover:scale-110"}`} aria-hidden="true" />
                 <span className={collapsed ? "lg:sr-only" : ""}>{label}</span>
                 {count && !collapsed ? <span aria-hidden="true" className={`ml-auto hidden text-xs font-semibold tabular-nums lg:inline ${active ? "" : "text-muted-foreground"}`}>{count}</span> : null}
               </button>;
@@ -114,12 +114,12 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-3 border-b bg-sidebar/90 px-4 py-2.5 backdrop-blur sm:px-6">
+          <header className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-3 border-b bg-background/85 px-4 py-2.5 backdrop-blur-md sm:px-6">
             {onSearch ? <form role="search" className="relative w-full max-w-md flex-1" onSubmit={event => { event.preventDefault(); if (query.trim()) onSearch(query.trim()); }}>
               <label htmlFor="workspace-search" className="sr-only">Tìm phiếu theo khách hàng</label>
               <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" aria-hidden="true" />
               <input ref={search} id="workspace-search" type="search" maxLength={200} value={query} onChange={event => setQuery(event.target.value)}
-                placeholder="Tìm phiếu theo khách hàng…" className="h-9 w-full rounded-lg border bg-background pl-9 pr-16 text-sm" />
+                placeholder="Tìm phiếu theo khách hàng…" className="h-9 w-full rounded-lg border bg-card pl-9 pr-16 text-sm shadow-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/15" />
               <kbd className="pointer-events-none absolute right-2 top-2 hidden rounded border bg-card px-1.5 py-0.5 font-sans text-[11px] text-muted-foreground sm:block">Ctrl K</kbd>
             </form> : null}
             {companies.length > 1 ? <div className="min-w-0">
@@ -141,7 +141,8 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
               <ThemeToggle />
             </div>
           </header>
-          <div className="min-w-0 flex-1 px-4 py-5 sm:px-8 sm:py-7">{children}</div>
+          {/* Each page arrives with a short rise; switching pages restarts it. */}
+          <div key={section} className="animate-enter min-w-0 flex-1 px-4 py-5 sm:px-8 sm:py-7">{children}</div>
         </div>
       </div>
     </main>
@@ -149,11 +150,12 @@ export function WorkspaceShell({ section, onSection, companyId, companyName, com
 }
 
 export function SectionHeader({ title, description, eyebrow, actions }: { title: string; description?: string; eyebrow?: string; actions?: ReactNode }) {
-  return <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-    <div>
-      {eyebrow ? <p className="mb-1 text-sm text-muted-foreground">{eyebrow}</p> : null}
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+  // The context line (date, company, what the page is for) sits under the title rather than as a kicker above it.
+  const meta = [eyebrow, description].filter(Boolean).join(" · ");
+  return <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="min-w-0">
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.75rem]">{title}</h1>
+      {meta ? <p className="mt-1.5 max-w-[70ch] text-sm text-muted-foreground">{meta}</p> : null}
     </div>
     {actions}
   </div>;
@@ -163,8 +165,10 @@ export function SectionTabs<T extends string>({ label, tabs, value, onChange }: 
   label: string; tabs: readonly (readonly [T, string])[]; value: T; onChange: (value: T) => void }) {
   return <div role="group" aria-label={label} className="no-scrollbar mb-5 flex max-w-full gap-5 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--border)]">
     {tabs.map(([key, text]) => <button key={key} type="button" aria-pressed={key === value} onClick={() => onChange(key)}
-      className={`shrink-0 border-b-2 pb-2.5 pt-1 text-sm font-medium ${key === value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+      className={`relative shrink-0 pb-2.5 pt-1 text-sm font-medium ${key === value ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
       {text}
+      {/* The underline grows in from the centre when a tab becomes active. */}
+      <span aria-hidden="true" className={`absolute inset-x-0 bottom-0 h-0.5 origin-center rounded-full bg-primary transition-transform duration-300 ease-[var(--ease-out)] ${key === value ? "scale-x-100" : "scale-x-0"}`} />
     </button>)}
   </div>;
 }
