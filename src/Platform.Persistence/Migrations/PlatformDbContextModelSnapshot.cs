@@ -2816,6 +2816,8 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
                     b.HasKey("TenantId", "CompanyId", "Id");
 
+                    b.HasIndex("TenantId", "CompanyId", "ConversationId");
+
                     b.HasIndex("TenantId", "CompanyId", "CreatedByUserId");
 
                     b.HasIndex("TenantId", "CompanyId", "Status");

@@ -52,6 +52,7 @@ export async function taskSubmissionBff(request: Request, route: Route): Promise
 
   let input: SubmissionInput | null = null;
   let fingerprint: string | null = null;
+  let conversationId: string | null = null;
   if (mutation) {
     const body = await readBoundedRequestJson(request, 32768, parseSubmissionJson);
     if (!body.ok) return failure(body.status);
@@ -60,9 +61,13 @@ export async function taskSubmissionBff(request: Request, route: Route): Promise
       if (!input) return failure(400);
     } else {
       const value = body.value;
-      if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== 1
-        || !Object.hasOwn(value, "inputFingerprint") || !submissionFingerprintIsCanonical((value as { inputFingerprint: unknown }).inputFingerprint)) return failure(400);
+      // The optional conversationId names the open conversation the question continues; it is not part of the input.
+      const keys = value && typeof value === "object" && !Array.isArray(value) ? Object.keys(value) : [];
+      if (!value || typeof value !== "object" || Array.isArray(value) || !keys.every(key => key === "inputFingerprint" || key === "conversationId")
+        || !Object.hasOwn(value, "inputFingerprint") || !submissionFingerprintIsCanonical((value as { inputFingerprint: unknown }).inputFingerprint)
+        || (Object.hasOwn(value, "conversationId") && !isCanonicalCompanyId((value as { conversationId: unknown }).conversationId))) return failure(400);
       fingerprint = (value as { inputFingerprint: string }).inputFingerprint;
+      conversationId = (value as { conversationId?: string }).conversationId?.toLowerCase() ?? null;
     }
   }
   const signal = AbortSignal.any([request.signal, AbortSignal.timeout(10000)]);
@@ -89,7 +94,7 @@ export async function taskSubmissionBff(request: Request, route: Route): Promise
       : route.kind === "prepare" ? "/api/tasks/intents" : `/api/tasks/intents/${operationId}${route.kind === "submit" ? "/submit" : ""}`;
     const response = await fetchCoreApi(path, companyId, mutation ? { method: "POST", signal,
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify(route.kind === "prepare" ? input : { inputFingerprint: fingerprint }) } : { signal });
+      body: JSON.stringify(route.kind === "prepare" ? input : { inputFingerprint: fingerprint, ...(conversationId ? { conversationId } : {}) }) } : { signal });
     if (!response) return unauthenticatedResponse();
     const denial = await rejected(response, signal); if (denial) return denial;
     if (response.status !== (route.kind === "submit" ? 202 : 200)) return failure(503);

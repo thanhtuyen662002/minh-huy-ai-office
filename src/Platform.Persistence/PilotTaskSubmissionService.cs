@@ -131,6 +131,7 @@ public sealed class PilotTaskSubmissionService
             CompanyId = trustedAuthority.CompanyId,
             Id = taskId,
             CreatedByUserId = trustedAuthority.UserId,
+            ConversationId = await ConversationAsync(trustedAuthority, request.ConversationId, cancellationToken) ?? taskId,
             Status = TaskExecutionStatus.Pending,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc
@@ -202,6 +203,20 @@ public sealed class PilotTaskSubmissionService
             task.Status,
             dispatch.State,
             task.CreatedAtUtc);
+    }
+
+    /// <summary>
+    /// The conversation a new question joins: one of the asker's own conversations (its first question's task id), or
+    /// null to start a new one. An id the asker does not own, or that names no conversation, also starts a new one,
+    /// so a stale browser can never attach a question to someone else's history.
+    /// </summary>
+    private async Task<Guid?> ConversationAsync(AuthorizationContext authority, Guid? requested, CancellationToken cancellationToken)
+    {
+        if (requested is not { } id || id == Guid.Empty) return null;
+        var owned = await dbContext.Tasks.AsNoTracking().AnyAsync(task => task.TenantId == authority.TenantId
+            && task.CompanyId == authority.CompanyId && task.CreatedByUserId == authority.UserId
+            && (task.Id == id || task.ConversationId == id), cancellationToken);
+        return owned ? id : null;
     }
 
     private void DetachUncommittedGraph(

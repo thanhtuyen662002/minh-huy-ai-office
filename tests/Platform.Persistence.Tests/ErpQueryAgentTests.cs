@@ -109,6 +109,23 @@ public sealed class ErpQueryAgentTests
     }
 
     [Fact]
+    public async Task EarlierTurns_ReachThePromptOnlyWhenTheQuestionContinuesAConversation()
+    {
+        var gateway = new ScriptedGateway("""{"action":"answer","text":"Tháng 10: 90 triệu."}""",
+            """{"action":"answer","text":"Không rõ."}""");
+        const string earlier = "[Q1] Doanh thu tháng 11?\n[A1] 120 triệu.\n    SQL used: SELECT SUM(Amount) FROM dbo.Invoice";
+
+        await new ErpQueryAgent(gateway).RunAsync(Envelope(), "Còn tháng trước thì sao?", Evidence(), new RecordingSession(),
+            CancellationToken.None, conversation: earlier);
+        await new ErpQueryAgent(gateway).RunAsync(Envelope(), "Doanh thu?", Evidence(), new RecordingSession(), CancellationToken.None);
+
+        Assert.Contains("Earlier in this conversation", gateway.Inputs[0], StringComparison.Ordinal);
+        Assert.Contains("SELECT SUM(Amount) FROM dbo.Invoice", gateway.Inputs[0], StringComparison.Ordinal);
+        Assert.True(gateway.Inputs[0].IndexOf("[Q1]", StringComparison.Ordinal) < gateway.Inputs[0].IndexOf("Còn tháng trước", StringComparison.Ordinal));
+        Assert.DoesNotContain("Earlier in this conversation", gateway.Inputs[1], StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Agent_maps_unusable_provider_configuration_to_permanent_failure()
     {
         var gateway = new ScriptedGateway { Failure = new InvalidOperationException("not configured") };

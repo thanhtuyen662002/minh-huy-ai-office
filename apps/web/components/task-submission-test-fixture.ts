@@ -23,7 +23,9 @@ export function ownedSubmissionFixture(companyId: string, taskId: string) {
     if (!value) return new Response(null, { status: 404 });
     if (!path.endsWith("/submit")) return Response.json(value);
     const body = JSON.parse(init!.body as string);
-    if (init?.method !== "POST" || Object.keys(body).join(",") !== "inputFingerprint" || body.inputFingerprint !== value.inputFingerprint) throw new Error("Unexpected submit input");
+    // A follow-up question also names the open conversation it continues.
+    if (init?.method !== "POST" || !["inputFingerprint", "conversationId,inputFingerprint"].includes(Object.keys(body).sort().join(","))
+      || body.inputFingerprint !== value.inputFingerprint) throw new Error("Unexpected submit input");
     const accepted = { companyId, operationId, dataSourceId: value.dataSourceId!, inputFingerprint: value.inputFingerprint!, taskId,
       stepId: "77777777-7777-4777-8777-777777777777", messageId: "88888888-8888-4888-8888-888888888888", status: 0, dispatchState: 0, createdAtUtc: "2026-10-09T08:00:00Z" };
     stored.set(operationId, { ...value, state: 1, accepted }); return Response.json(accepted, { status: 202 });

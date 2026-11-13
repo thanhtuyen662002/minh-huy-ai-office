@@ -85,6 +85,13 @@ it.each(["prepare", "submit", "list", "detail"] as const)("uses real issued-sess
     expect(JSON.parse(mocks.fetch.mock.calls[1][1].body)).toEqual({ inputFingerprint: fingerprint });
   } else if (mode === "prepare") expect(JSON.parse(mocks.fetch.mock.calls[0][1].body)).toEqual(input);
 });
+it("forwards the open conversation on submit and rejects a malformed or extra field", async () => {
+  const conversationId = "66666666-6666-4666-8666-666666666666";
+  expect((await invoke("submit", request("submit", { inputFingerprint: fingerprint, conversationId }))).status).toBe(202);
+  expect(JSON.parse(mocks.fetch.mock.calls[1][1].body)).toEqual({ inputFingerprint: fingerprint, conversationId });
+  expect((await invoke("submit", request("submit", { inputFingerprint: fingerprint, conversationId: "nope" }))).status).toBe(400);
+  expect((await invoke("submit", request("submit", { inputFingerprint: fingerprint, other: 1 }))).status).toBe(400);
+});
 it.each(["prepare", "submit"] as const)("checks Origin before consuming %s body or reading authority", async mode => {
   const req = request(mode, input, `companyId=${company}`, "https://hostile.example"); const read = vi.spyOn(req.body!, "getReader");
   const response = await invoke(mode, req); expect(response.status).toBe(403); expect(read).not.toHaveBeenCalled(); expect(mocks.read).not.toHaveBeenCalled();

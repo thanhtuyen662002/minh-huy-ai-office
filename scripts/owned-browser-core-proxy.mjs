@@ -34,7 +34,8 @@ export function committedReplyEvidence(fault, request, upstreamStatus, input, re
   }
   if (fault.kind === "task-submit") {
     if (request.url !== `/api/tasks/intents/${receipt.operationId}/submit` || upstreamStatus !== 202
-      || Object.keys(input).join(",") !== "inputFingerprint" || input.inputFingerprint !== fingerprint
+      || !["inputFingerprint", "conversationId,inputFingerprint"].includes(Object.keys(input).sort().join(","))
+      || (input.conversationId !== undefined && !guid(input.conversationId)) || input.inputFingerprint !== fingerprint
       || ![receipt.taskId, receipt.stepId, receipt.messageId].every(guid)
       || !Number.isInteger(receipt.status) || receipt.status < 0 || receipt.status > 6
       || !Number.isInteger(receipt.dispatchState) || receipt.dispatchState < 0 || receipt.dispatchState > 3) return null;

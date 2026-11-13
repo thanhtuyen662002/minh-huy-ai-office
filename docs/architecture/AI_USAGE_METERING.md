@@ -44,5 +44,17 @@ the budget by at most the calls already in flight.
 
 ## Not in this phase
 
-Server-side conversations, the external ERP API (HMAC, per-ERP-user identity in `ExternalUserId`), row-level data scope
+The external ERP API (HMAC, per-ERP-user identity in `ExternalUserId`), row-level data scope
 per user, streaming, and write/delete actions.
+
+## Phase 2: server-side conversations
+
+- A conversation's id is its first question's task id. `Tasks.ConversationId` is set on every new question: the
+  conversation named by the submit request (`TaskSubmissionExecuteRequest.ConversationId`, not part of the fingerprinted
+  input) when it is one of the **asker's own** conversations in that company, otherwise the task's own id. An unknown or
+  foreign id silently starts a new conversation.
+- History items carry `conversationId`, so the sidebar groups questions the same way on every device; questions from
+  before this change fall back to the grouping remembered in the browser.
+- The worker (`ConversationContext`) puts up to 6 earlier **completed, not deleted** turns of the asker's conversation
+  into the prompt, oldest first: the question (800 chars), the saved answer (1 500 chars) and up to 3 SQL statements that
+  ran without error (600 chars each). The model is told to re-run queries for numbers rather than copy old answers.

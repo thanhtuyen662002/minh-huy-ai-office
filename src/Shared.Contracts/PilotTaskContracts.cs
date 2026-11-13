@@ -44,6 +44,9 @@ public sealed record PilotTaskSubmissionRequest(
     string Question,
     int MaxAttempts = 3)
 {
+    /// <summary>The conversation this question continues (the first question's task id); null starts a new one.</summary>
+    public Guid? ConversationId { get; init; }
+
     public const int MaximumIdempotencyKeyLength = 200;
     public const int MaximumAttempts = 16;
 

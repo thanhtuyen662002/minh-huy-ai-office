@@ -94,7 +94,8 @@ export function useTaskSubmission({ companyId, generation, isCurrent, ready, val
     save({ ...stored.current, phase, notice });
   }
 
-  async function send(attempt: Attempt): Promise<SubmissionReceipt | null> {
+  /** conversationId: the open conversation this question continues (its first question's task id), if any. */
+  async function send(attempt: Attempt, conversationId?: string | null): Promise<SubmissionReceipt | null> {
     if (!current(attempt) || !stored.current || stored.current.input !== attempt.input || consumed.current.has(attempt)) return null;
     consumed.current.add(attempt);
     try {
@@ -119,7 +120,7 @@ export function useTaskSubmission({ companyId, generation, isCurrent, ready, val
       }
       if (!await confirm(attempt)) return null;
       const result = await receive(attempt, `/api/local/tasks/intents/${attempt.input.operationId}/submit?companyId=${encodeURIComponent(companyId)}`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inputFingerprint: fingerprint }) });
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inputFingerprint: fingerprint, ...(conversationId ? { conversationId } : {}) }) });
       if (!result) return null;
       if (!result.response.ok) { markFailure(attempt, result.response.status, result.payload); return null; }
       const receipt = parseSubmissionReceipt(result.payload);

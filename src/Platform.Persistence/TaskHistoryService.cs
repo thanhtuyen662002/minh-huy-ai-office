@@ -54,10 +54,10 @@ public sealed class TaskHistoryService(PlatformDbContext database, IAuthorizatio
         // reject a whole page. Preserve the bounded task row, label it unavailable.
         var tasks = database.Database.IsSqlServer()
             ? database.Database.SqlQuery<ArchiveTask>($"""
-                SELECT TenantId,CompanyId,CreatedByUserId,Id,Status,CreatedAtUtc,UpdatedAtUtc FROM aioffice.Tasks
+                SELECT TenantId,CompanyId,CreatedByUserId,Id,Status,CreatedAtUtc,UpdatedAtUtc,ConversationId FROM aioffice.Tasks
                 """)
             : database.Tasks.AsNoTracking().Select(task => new ArchiveTask(task.TenantId, task.CompanyId,
-                task.CreatedByUserId, task.Id, task.Status.ToString(), task.CreatedAtUtc, task.UpdatedAtUtc));
+                task.CreatedByUserId, task.Id, task.Status.ToString(), task.CreatedAtUtc, task.UpdatedAtUtc, task.ConversationId));
         // Questions the asker deleted stay in Tasks for audit but leave their history.
         var hidden = database.HiddenTasks.AsNoTracking();
         return tasks.Where(task => task.TenantId == authority.TenantId && task.CompanyId == authority.CompanyId && task.CreatedByUserId == authority.UserId
@@ -111,11 +111,11 @@ public sealed class TaskHistoryService(PlatformDbContext database, IAuthorizatio
         // Attached pictures travel as tokens in the question; the list shows the words and the picture ids apart.
         var (text, pictures) = request is null ? (null, []) : AssistantImageTokens.Parse(request.Question);
         return new(task.Id, status, task.CreatedAtUtc, task.UpdatedAtUtc,
-            request is null ? null : TaskHistoryMetadata.Summary(text!.Length == 0 ? "Ảnh đính kèm" : text), malformed, pictures);
+            request is null ? null : TaskHistoryMetadata.Summary(text!.Length == 0 ? "Ảnh đính kèm" : text), malformed, pictures, task.ConversationId);
     }
 
     private sealed record ArchiveTask(Guid TenantId, Guid CompanyId, Guid CreatedByUserId, Guid Id, string Status,
-        DateTimeOffset CreatedAtUtc, DateTimeOffset UpdatedAtUtc);
+        DateTimeOffset CreatedAtUtc, DateTimeOffset UpdatedAtUtc, Guid? ConversationId);
     private sealed record StoredRequest(Guid TenantId, Guid CompanyId, Guid TaskId, long Sequence, string EventType, byte[]? Bytes, string? Text);
     private sealed record StoredCheckpoint(Guid TenantId, Guid CompanyId, Guid TaskId, Guid StepId, long Version, byte[]? Bytes, string? Text);
 }

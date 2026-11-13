@@ -17,3 +17,10 @@ it("survives broken storage", () => {
   window.localStorage.setItem("aioffice-chat-conversations:c:u", "not json");
   expect(readConversationMap("c:u")).toEqual({});
 });
+
+it("prefers the conversation the server recorded over this browser's memory", () => {
+  rememberConversation("c:u", "T2", "T9");
+  const groups = groupConversations([{ ...item(1, 5), conversationId: "t1" }, { ...item(2, 10), conversationId: "t1" }, item(3, 20)], readConversationMap("c:u"));
+  expect(groups.map(group => group.id)).toEqual(["t3", "t1"]);
+  expect(groups[1].items.map(entry => entry.taskId)).toEqual(["T1", "T2"]);
+});

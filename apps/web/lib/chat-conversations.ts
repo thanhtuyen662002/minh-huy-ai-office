@@ -2,8 +2,8 @@ import type { TaskHistoryItem } from "./task-history";
 import { questionText } from "./assistant-images";
 
 /**
- * Groups Trợ lý questions into conversations. Each question is its own task on the server; which
- * conversation a task belongs to is remembered in this browser (per company and user). A task with
+ * Groups Trợ lý questions into conversations. Each question is its own task on the server, which records
+ * its conversation; for older questions the conversation remembered in this browser is used. A task with
  * no remembered conversation is a conversation of its own.
  */
 export type ChatConversation = Readonly<{ id: string; items: readonly TaskHistoryItem[]; title: string; latest: TaskHistoryItem }>;
@@ -41,7 +41,8 @@ export function conversationOf(map: Record<string, string>, taskId: string) {
 export function groupConversations(items: readonly TaskHistoryItem[], map: Record<string, string>): ChatConversation[] {
   const groups = new Map<string, TaskHistoryItem[]>();
   for (const item of items) {
-    const id = conversationOf(map, item.taskId);
+    // The server knows the conversation of every question asked since it began recording them; older ones fall back to this browser.
+    const id = item.conversationId ?? conversationOf(map, item.taskId);
     groups.set(id, [...(groups.get(id) ?? []), item]);
   }
   return [...groups.entries()].map(([id, members]) => {
