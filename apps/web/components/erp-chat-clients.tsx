@@ -18,7 +18,7 @@ const input = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 /** Web ERPs allowed to call the chat API: create one (its key is shown once), replace its key, or turn it off. */
 export function ErpChatClients({ companyId, generation, isCurrent, validate, request, onUnauthorized, accounts }: Props) {
   const [clients, setClients] = useState<ErpChatClient[] | null>(null);
-  const [form, setForm] = useState<{ name: string; accountId: string } | null>(null);
+  const [form, setForm] = useState<{ name: string; accountId: string; requireScopes: boolean } | null>(null);
   const [secret, setSecret] = useState<ErpChatClientSecret | null>(null);
   const [error, setError] = useState(""), [busy, setBusy] = useState(false), [copied, setCopied] = useState(false);
   const mounted = useRef(false), lock = useRef(false);
@@ -67,15 +67,15 @@ export function ErpChatClients({ companyId, generation, isCurrent, validate, req
   async function create(event: FormEvent) {
     event.preventDefault();
     if (!form) return;
-    const body = { name: form.name.trim(), billingAccountId: form.accountId };
+    const body = { name: form.name.trim(), billingAccountId: form.accountId, requireScopes: form.requireScopes };
     if (!isErpChatClientCreate(body)) { setError("Nhập tên và chọn khách hàng tính tiền."); return; }
     const created = parseErpChatSecret(await send("", "POST", body));
     if (created) { setSecret(created); setForm(null); setCopied(false); }
   }
 
-  async function update(client: ErpChatClient, isEnabled: boolean, rotateKey: boolean) {
+  async function update(client: ErpChatClient, isEnabled: boolean, rotateKey: boolean, requireScopes = client.requireScopes) {
     if (rotateKey && !window.confirm(`Tạo khoá mới cho ${client.name}? Khoá cũ ngừng hoạt động ngay, web ERP phải cập nhật khoá mới.`)) return;
-    const result = await send(`/${client.id}`, "PUT", { isEnabled, rotateKey, version: client.version });
+    const result = await send(`/${client.id}`, "PUT", { isEnabled, rotateKey, version: client.version, requireScopes });
     const rotated = parseErpChatSecret(result);
     if (rotated) { setSecret(rotated); setCopied(false); }
   }
@@ -89,7 +89,7 @@ export function ErpChatClients({ companyId, generation, isCurrent, validate, req
         <p className="mt-1 text-sm text-muted-foreground">Web ERP gọi API chat của AI Office từ máy chủ, ký mỗi yêu cầu bằng khoá riêng.
           Mỗi web ERP chỉ hỏi được các nguồn ERP của khách hàng được gắn, và chi phí tính cho khách hàng đó.</p>
       </div>
-      {!form ? <button type="button" disabled={!accounts.length || busy} onClick={() => setForm({ name: "", accountId: accounts[0]?.id ?? "" })}
+      {!form ? <button type="button" disabled={!accounts.length || busy} onClick={() => setForm({ name: "", accountId: accounts[0]?.id ?? "", requireScopes: false })}
         className={outline}>Thêm web ERP</button> : null}
     </div>
     {!accounts.length ? <p className="mt-3 text-sm text-muted-foreground">Tạo khách hàng tính tiền trước, rồi thêm web ERP cho khách hàng đó.</p> : null}
@@ -112,6 +112,10 @@ export function ErpChatClients({ companyId, generation, isCurrent, validate, req
         <label className="text-sm">Khách hàng tính tiền<select value={form.accountId} onChange={event => setForm({ ...form, accountId: event.target.value })}
           className={`${input} mt-1`}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name}</option>)}</select></label>
       </div>
+      <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={form.requireScopes} className="mt-1"
+        onChange={event => setForm({ ...form, requireScopes: event.target.checked })} />
+        <span>Bắt buộc gửi phạm vi dữ liệu<span className="block text-xs text-muted-foreground">Câu hỏi không kèm phạm vi của người dùng ERP
+          (ví dụ chi nhánh) sẽ bị từ chối. Database ERP cần bật Row-Level Security.</span></span></label>
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
           {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}Tạo và lấy khoá</button>
@@ -121,8 +125,12 @@ export function ErpChatClients({ companyId, generation, isCurrent, validate, req
     {clients?.length ? <ul className="mt-4 space-y-2">{clients.map(client => <li key={client.id}
       className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted p-3 text-sm">
       <span><strong>{client.name}</strong> · {accountName(client.billingAccountId)} · {client.isEnabled ? "đang bật" : "đã tắt"}
+        {client.requireScopes ? " · bắt buộc phạm vi" : ""}
         <span className="block break-all text-xs text-muted-foreground">Client ID: {client.id}</span></span>
-      <span className="flex gap-2">
+      <span className="flex flex-wrap gap-2">
+        <button type="button" disabled={busy} className={outline} aria-pressed={client.requireScopes}
+          onClick={() => void update(client, client.isEnabled, false, !client.requireScopes)}>
+          {client.requireScopes ? "Bỏ bắt buộc phạm vi" : "Bắt buộc phạm vi"}<span className="sr-only"> {client.name}</span></button>
         <button type="button" disabled={busy} className={outline} onClick={() => void update(client, client.isEnabled, true)}>
           Tạo khoá mới<span className="sr-only"> {client.name}</span></button>
         <button type="button" disabled={busy} className={outline} onClick={() => void update(client, !client.isEnabled, false)}>

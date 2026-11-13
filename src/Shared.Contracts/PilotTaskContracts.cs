@@ -50,6 +50,9 @@ public sealed record PilotTaskSubmissionRequest(
     /// <summary>The web ERP user asking through the ERP chat API; null for AI Office members asking themselves.</summary>
     public string? ExternalUserId { get; init; }
 
+    /// <summary>The ERP user's data scopes as canonical JSON (validated by the ERP chat API); null when there are none.</summary>
+    public string? ExternalScopesJson { get; init; }
+
     public const int MaximumIdempotencyKeyLength = 200;
     public const int MaximumAttempts = 16;
 

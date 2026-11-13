@@ -42,7 +42,8 @@ Phần query phải giống hệt từng byte trong URL được gửi đi, kể
   "externalUserId": "nv001",
   "question": "Doanh thu tháng 11 của chi nhánh Cần Thơ?",
   "dataSourceId": null,
-  "conversationId": null
+  "conversationId": null,
+  "scopes": { "branch_id": "CT01" }
 }
 ```
 
@@ -50,6 +51,7 @@ Phần query phải giống hệt từng byte trong URL được gửi đi, kể
 - `externalUserId` (bắt buộc, tối đa 200 ký tự): mã người dùng trong web ERP. Mỗi người có hội thoại riêng và giới hạn riêng là 20 câu mỗi phút. Chi phí cũng được ghi theo từng người.
 - `dataSourceId`: bắt buộc khi khách hàng có nhiều database. Bỏ trống nếu khách hàng chỉ có một database.
 - `conversationId`: để hỏi tiếp trong một hội thoại, gửi `conversationId` đã nhận ở câu trước. AI sẽ nhớ các câu trước của **chính người đó**. Bỏ trống để mở hội thoại mới.
+- `scopes`: phạm vi dữ liệu của người hỏi, ví dụ chi nhánh. Xem mục [Phạm vi dữ liệu](#phạm-vi-dữ-liệu). Nếu phạm vi khác với các câu trước, AI Office mở hội thoại mới và trả `conversationId` mới.
 
 Trả về `202`:
 
@@ -83,13 +85,62 @@ Lỗi trả về dạng `{ "code": "...", "error": "câu giải thích" }`:
 | HTTP | code | Ý nghĩa |
 |---|---|---|
 | 400 | `invalid_fields`, `data_source_required` | Thiếu trường, hoặc khách hàng có nhiều database mà chưa gửi `dataSourceId` |
+| 400 | `invalid_scopes`, `scopes_required` | `scopes` sai quy tắc, hoặc web ERP này bắt buộc gửi phạm vi mà câu hỏi không có |
 | 401 | `unauthorized`, `replayed` | Sai chữ ký, lệch giờ, web ERP đã bị tắt, hoặc nonce đã dùng |
 | 403 | `data_source_denied` | Nguồn không thuộc khách hàng của web ERP này |
 | 404 | `not_found` | Không có câu hỏi này cho người dùng này |
-| 409 | `request_conflict` | `requestId` đã dùng cho câu hỏi khác hoặc người khác |
+| 409 | `request_conflict` | `requestId` đã dùng cho câu hỏi khác, người khác, hoặc phạm vi khác |
 | 429 | `ai-user-rate`, `ai-account-rate`, `ai-budget` | Quá số câu mỗi phút, hoặc khách hàng đã hết hạn mức tháng |
 | 429 | (không có body) | Quá 120 lần gọi mỗi phút cho một Client ID |
 | 503 | `unavailable` | Lỗi tạm thời, thử lại sau |
+
+## Phạm vi dữ liệu
+
+Phạm vi dữ liệu giới hạn những dòng AI đọc được theo người hỏi, ví dụ nhân viên chỉ xem được chi nhánh của mình. Database ERP tự lọc dữ liệu bằng **Row-Level Security** của SQL Server. AI Office chỉ chuyển phạm vi của người hỏi vào phiên SQL.
+
+**Cách hoạt động**
+
+1. Web ERP gửi `scopes` trong mỗi câu hỏi, ví dụ `{ "branch_id": "CT01", "region": "MN" }`. Phạm vi nằm trong body nên được ký cùng yêu cầu: không ai sửa được trên đường truyền.
+2. Trước khi AI chạy truy vấn, AI Office đặt mỗi phạm vi vào `SESSION_CONTEXT` ở chế độ chỉ đọc (`@read_only = 1`). Mã người dùng ERP luôn được đặt thêm dưới khoá dành riêng `aioffice_erp_user`. Câu SQL do AI viết không thể đổi các giá trị này, vì chúng là chỉ đọc và AI không được gọi thủ tục `sp_*`.
+3. Chính sách Row-Level Security trong database đọc `SESSION_CONTEXT` và chỉ trả về các dòng hợp lệ.
+4. **Chặn khi chưa an toàn:** nếu câu hỏi có phạm vi mà database không có security policy nào đang bật, AI Office từ chối câu hỏi (`status: "failed"`) thay vì trả về toàn bộ dữ liệu.
+
+**Quy tắc cho `scopes`**
+
+- Tối đa 10 khoá.
+- Khoá: chữ thường, số và `_`, bắt đầu bằng chữ, tối đa 64 ký tự, không được bắt đầu bằng `aioffice_`.
+- Giá trị: chuỗi từ 1 đến 256 ký tự, không có ký tự điều khiển. Số cũng phải gửi dạng chuỗi, ví dụ `"12"`.
+- Không gửi `scopes` thì câu hỏi không bị giới hạn theo phạm vi. Muốn bắt buộc mọi câu hỏi phải có phạm vi, bật **Bắt buộc phạm vi** cho web ERP trong AI Office (Kết nối → Chi phí AI → Web ERP kết nối). Khi đó câu hỏi thiếu phạm vi bị trả `400 scopes_required`.
+
+**Ví dụ cho đội ERP: lọc theo chi nhánh**
+
+```sql
+CREATE SCHEMA rls;
+GO
+-- Trả về một dòng khi chi nhánh của dòng dữ liệu trùng với phạm vi của người hỏi.
+-- Phiên không có phạm vi (ứng dụng ERP thường) vẫn thấy đủ: chỉ lọc khi có khoá aioffice_erp_user.
+CREATE FUNCTION rls.fn_branch(@BranchId nvarchar(50))
+RETURNS TABLE WITH SCHEMABINDING
+AS RETURN
+  SELECT 1 AS allowed
+  WHERE SESSION_CONTEXT(N'aioffice_erp_user') IS NULL
+     OR @BranchId = CAST(SESSION_CONTEXT(N'branch_id') AS nvarchar(50));
+GO
+CREATE SECURITY POLICY rls.BranchPolicy
+  ADD FILTER PREDICATE rls.fn_branch(BranchId) ON dbo.Invoice,
+  ADD FILTER PREDICATE rls.fn_branch(BranchId) ON dbo.Customer
+  WITH (STATE = ON);
+GO
+-- Tài khoản đọc của AI Office cần thấy policy để AI Office xác nhận lọc đang bật:
+GRANT VIEW DEFINITION ON OBJECT::rls.BranchPolicy TO [aioffice_reader];
+```
+
+Thay `aioffice_reader` bằng tài khoản SQL mà AI Office dùng để đọc database này. Nên chỉ lọc các phiên của AI Office (có `aioffice_erp_user`) như ví dụ, để không ảnh hưởng ứng dụng ERP đang chạy. Nếu người dùng ERP có phạm vi nhưng thiếu khoá `branch_id`, `SESSION_CONTEXT(N'branch_id')` là `NULL`, nên người đó không thấy dòng nào.
+
+**Lưu ý**
+
+- AI Office vẫn đọc danh sách bảng và **số dòng ước tính** của mỗi bảng từ catalog hệ thống để AI biết database có gì. Số dòng này không bị Row-Level Security lọc. Không đặt dữ liệu nhạy cảm vào tên bảng hay tên cột.
+- Phạm vi được lưu cùng câu hỏi. Gửi lại cùng `requestId` nhưng khác phạm vi sẽ bị trả `409 request_conflict`.
 
 ## Ví dụ Node.js (18+)
 
@@ -150,6 +201,5 @@ static HttpRequestMessage Signed(HttpMethod method, string pathAndQuery, string?
 
 ## Sắp có
 
-- **Phạm vi dữ liệu theo người dùng:** ví dụ nhân viên chỉ xem được chi nhánh của mình. Phần này cần đội ERP thêm chính sách Row-Level Security trong database; AI Office sẽ gắn phạm vi của người hỏi vào phiên SQL.
 - Trả lời từng chữ (streaming), thay cho việc hỏi lại mỗi 2 giây.
 - Ghi, xoá dữ liệu: AI chỉ đề xuất, người dùng xác nhận rồi mới chạy, và chỉ qua các thủ tục đã được duyệt sẵn.

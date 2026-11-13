@@ -148,11 +148,16 @@ public interface IErpQuerySession
 
 public interface IErpQueryAgentBackend
 {
+    /// <param name="sessionContext">Read-only SESSION_CONTEXT values for the whole session (an ERP user's data scopes); null for none.</param>
     Task<T> UseAsync<T>(
         string connectionString,
         Func<IErpQuerySession, Task<T>> use,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<string, string>? sessionContext = null);
 }
+
+/// <summary>The ERP user's data scopes cannot be enforced on this database, so the question is refused (fail closed).</summary>
+public sealed class ErpScopeUnavailableException(string message) : Exception(message);
 
 /// <summary>
 /// SQL Server backend. The read-only proof runs before and after the whole agent session; any
@@ -160,20 +165,80 @@ public interface IErpQueryAgentBackend
 /// </summary>
 public sealed class SqlServerErpQueryAgentBackend(ISqlConnectionFactory connectionFactory) : IErpQueryAgentBackend
 {
+    public const string NoRowLevelSecurity =
+        "Không thể giới hạn dữ liệu theo người dùng ERP: database này chưa bật Row-Level Security (security policy), "
+        + "hoặc tài khoản đọc của AI Office không thấy policy đó (cấp GRANT VIEW DEFINITION ON OBJECT::<schema.policy> TO <tài khoản đọc>).";
+
     public async Task<T> UseAsync<T>(
         string connectionString,
         Func<IErpQuerySession, Task<T>> use,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<string, string>? sessionContext = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
         ArgumentNullException.ThrowIfNull(use);
 
         await using var connection = connectionFactory.Create(connectionString);
         await connection.OpenAsync(cancellationToken);
+        if (sessionContext is { Count: > 0 })
+        {
+            await ApplySessionContextAsync(connection, sessionContext, cancellationToken);
+        }
+
         return await ErpReadOnlyConnectionVerifier.ReadAsync(
             connection,
             () => use(new SqlServerErpQuerySession(connection)),
             cancellationToken);
+    }
+
+    /// <summary>
+    /// Sets each value read-only, so nothing later on this session (the model's SQL included) can change it; pooled
+    /// connections clear SESSION_CONTEXT on reset. Customer scopes need an enabled security policy, or nothing would filter.
+    /// </summary>
+    private static async Task ApplySessionContextAsync(DbConnection connection, IReadOnlyDictionary<string, string> values,
+        CancellationToken cancellationToken)
+    {
+        foreach (var (key, value) in values)
+        {
+            await using var set = connection.CreateCommand();
+            set.CommandTimeout = SqlServerErpQuerySession.CatalogTimeoutSeconds;
+            set.CommandText = "EXEC sys.sp_set_session_context @key = @k, @value = @v, @read_only = 1;";
+            AddParameter(set, "@k", key, 128);
+            AddParameter(set, "@v", value, 4000);
+            await set.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        if (values.Keys.Any(key => !key.StartsWith(ErpChatScopes.ReservedPrefix, StringComparison.Ordinal)))
+        {
+            await using var check = connection.CreateCommand();
+            check.CommandTimeout = SqlServerErpQuerySession.CatalogTimeoutSeconds;
+            check.CommandText = "SELECT COUNT(*) FROM sys.security_policies WHERE is_enabled = 1;";
+            if (Convert.ToInt32(await check.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) == 0)
+            {
+                throw new ErpScopeUnavailableException(NoRowLevelSecurity);
+            }
+        }
+    }
+
+    private static void AddParameter(DbCommand command, string name, string value, int size)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.DbType = DbType.String;
+        parameter.Size = size;
+        parameter.Value = value;
+        command.Parameters.Add(parameter);
+    }
+
+    /// <summary>The SESSION_CONTEXT for a task: the ERP user's id under the reserved key plus its customer scopes; null for members.</summary>
+    public static IReadOnlyDictionary<string, string>? SessionContext(string? externalUserId, string? externalScopesJson)
+    {
+        if (externalUserId is null) return null;
+        var values = new Dictionary<string, string>(ErpChatScopes.Parse(externalScopesJson), StringComparer.Ordinal)
+        {
+            [ErpChatScopes.UserKey] = externalUserId
+        };
+        return values;
     }
 }
 

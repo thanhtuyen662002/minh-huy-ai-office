@@ -175,6 +175,73 @@ public sealed class ErpChatTests
         Assert.Contains(report.Users, row => row.ExternalUserId == "erp-user-b" && row.Totals.Questions == 1);
     }
 
+    [Fact]
+    public void Scopes_AreValidated_AndStoredInOneCanonicalOrder()
+    {
+        Assert.Null(ErpChatScopes.Normalize(null));
+        Assert.Null(ErpChatScopes.Normalize(new Dictionary<string, string>()));
+        var a = ErpChatScopes.Normalize(new Dictionary<string, string> { ["region"] = "Bắc", ["branch_id"] = "CN01" });
+        var b = ErpChatScopes.Normalize(new Dictionary<string, string> { ["branch_id"] = "CN01", ["region"] = "Bắc" });
+        Assert.Equal(a, b);
+        Assert.Equal("CN01", ErpChatScopes.Parse(a)["branch_id"]);
+        Assert.Equal("Bắc", ErpChatScopes.Parse(a)["region"]);
+
+        foreach (var bad in new[]
+        {
+            new Dictionary<string, string> { ["Branch"] = "x" },
+            new Dictionary<string, string> { ["1branch"] = "x" },
+            new Dictionary<string, string> { ["branch-id"] = "x" },
+            new Dictionary<string, string> { [ErpChatScopes.UserKey] = "someone-else" },
+            new Dictionary<string, string> { ["branch_id"] = "" },
+            new Dictionary<string, string> { ["branch_id"] = "a\nb" },
+            new Dictionary<string, string> { ["branch_id"] = new string('x', ErpChatScopes.MaximumValueLength + 1) },
+            Enumerable.Range(0, ErpChatScopes.MaximumScopes + 1).ToDictionary(i => $"k{i}", i => "v")
+        })
+            Assert.Equal("invalid_scopes", Assert.Throws<ErpChatException>(() => ErpChatScopes.Normalize(bad)).Code);
+    }
+
+    [Fact]
+    public async Task Ask_StoresScopes_RefusesAReusedRequestWithOtherScopes_AndStartsANewConversationWhenScopesChange()
+    {
+        var f = await Fixture.CreateAsync();
+        var client = await f.ClientAsync();
+        var cn01 = new Dictionary<string, string> { ["branch_id"] = "CN01" };
+
+        var first = await f.AskAsync(client, new("s-1", "nv001", "Doanh thu?", Scopes: cn01));
+        var same = await f.AskAsync(client, new("s-2", "nv001", "Còn tháng trước?", ConversationId: first.ConversationId,
+            Scopes: new Dictionary<string, string> { ["branch_id"] = "CN01" }));
+        var moved = await f.AskAsync(client, new("s-3", "nv001", "Còn tuần này?", ConversationId: first.ConversationId,
+            Scopes: new Dictionary<string, string> { ["branch_id"] = "CN02" }));
+
+        Assert.Equal("""{"branch_id":"CN01"}""", (await f.Db.Tasks.SingleAsync(row => row.Id == first.MessageId)).ExternalScopesJson);
+        Assert.Equal(first.ConversationId, same.ConversationId);
+        Assert.Equal(moved.MessageId, moved.ConversationId);
+        Assert.Equal(first.MessageId, (await f.AskAsync(client, new("s-1", "nv001", "Doanh thu?", Scopes: cn01))).MessageId);
+        var conflict = await Assert.ThrowsAsync<ErpChatException>(() => f.AskAsync(client, new("s-1", "nv001", "Doanh thu?")));
+        Assert.Equal("request_conflict", conflict.Code);
+    }
+
+    [Fact]
+    public async Task ClientThatRequiresScopes_RefusesQuestionsWithoutThem()
+    {
+        var f = await Fixture.CreateAsync();
+        var created = await f.Service.CreateClientAsync(f.Authority, new("Mak", f.AccountId, RequireScopes: true));
+        Assert.True(created.Client.RequireScopes);
+        var client = await f.Db.ErpChatClients.AsNoTracking().SingleAsync();
+
+        Assert.Equal("scopes_required", (await Assert.ThrowsAsync<ErpChatException>(() =>
+            f.AskAsync(client, new("q-1", "nv001", "Doanh thu?")))).Code);
+        Assert.Equal("pending", (await f.AskAsync(client, new("q-2", "nv001", "Doanh thu?",
+            Scopes: new Dictionary<string, string> { ["branch_id"] = "CN01" }))).Status);
+
+        await f.Service.UpdateClientAsync(f.Authority, client.Id, new(true, false, "1", RequireScopes: false));
+        var relaxed = await f.Db.ErpChatClients.AsNoTracking().SingleAsync();
+        Assert.False(relaxed.RequireScopes);
+        Assert.Equal("pending", (await f.AskAsync(relaxed, new("q-3", "nv001", "Doanh thu?"))).Status);
+        await f.Service.UpdateClientAsync(f.Authority, client.Id, new(true, false, "2"));
+        Assert.False((await f.Db.ErpChatClients.AsNoTracking().SingleAsync()).RequireScopes);
+    }
+
     private static async Task Refused(Fixture f, ErpChatSignature signature, string method, string path, byte[] body, string code)
     {
         var error = await Assert.ThrowsAsync<ErpChatException>(() => f.Service.AuthenticateAsync(signature, method, path, body, default));

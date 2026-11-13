@@ -24,6 +24,8 @@ public sealed class ErpChatClientRecord
     public byte[] Nonce { get; set; } = [];
     public byte[] Tag { get; set; } = [];
     public bool IsEnabled { get; set; } = true;
+    /// <summary>Every question must carry the ERP user's data scopes (so a web ERP that forgets them is refused, not unfiltered).</summary>
+    public bool RequireScopes { get; set; }
     public long Version { get; set; } = 1;
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
@@ -66,14 +68,61 @@ public static class ErpChatModel
     }
 }
 
-public sealed record ErpChatClientView(Guid Id, string Name, Guid BillingAccountId, bool IsEnabled, string Version, DateTimeOffset CreatedAtUtc);
+public sealed record ErpChatClientView(Guid Id, string Name, Guid BillingAccountId, bool IsEnabled, string Version, DateTimeOffset CreatedAtUtc,
+    bool RequireScopes = false);
 /// <summary>The signing key is returned only when a client is created or its key is replaced.</summary>
 public sealed record ErpChatClientSecret(ErpChatClientView Client, string SigningKey);
-public sealed record ErpChatClientCreateRequest(string Name, Guid BillingAccountId);
-public sealed record ErpChatClientUpdateRequest(bool IsEnabled, bool RotateKey, string Version);
+public sealed record ErpChatClientCreateRequest(string Name, Guid BillingAccountId, bool RequireScopes = false);
+public sealed record ErpChatClientUpdateRequest(bool IsEnabled, bool RotateKey, string Version, bool? RequireScopes = null);
 
 public sealed record ErpChatSignature(Guid ClientId, long Timestamp, Guid Nonce, string SignatureHex);
-public sealed record ErpChatAskRequest(string RequestId, string ExternalUserId, string Question, Guid? DataSourceId = null, Guid? ConversationId = null);
+public sealed record ErpChatAskRequest(string RequestId, string ExternalUserId, string Question, Guid? DataSourceId = null, Guid? ConversationId = null,
+    IReadOnlyDictionary<string, string>? Scopes = null);
+
+/// <summary>
+/// An ERP user's data scopes (for example branch_id = CN01). The worker sets each one, plus <see cref="UserKey"/>, as a read-only
+/// SQL Server SESSION_CONTEXT value on the ERP connection, so the ERP database's Row-Level Security filters what the AI can read.
+/// </summary>
+public static class ErpChatScopes
+{
+    public const int MaximumScopes = 10;
+    public const int MaximumKeyLength = 64;
+    public const int MaximumValueLength = 256;
+    /// <summary>Reserved key: always the asking ERP user's id. Customer keys may not start with "aioffice_".</summary>
+    public const string UserKey = "aioffice_erp_user";
+    public const string ReservedPrefix = "aioffice_";
+
+    /// <summary>Canonical JSON (keys in ordinal order) or null when there are no scopes; throws 400 invalid_scopes.</summary>
+    public static string? Normalize(IReadOnlyDictionary<string, string>? scopes)
+    {
+        if (scopes is null || scopes.Count == 0) return null;
+        if (scopes.Count > MaximumScopes) throw Invalid($"At most {MaximumScopes} scopes are allowed.");
+        foreach (var (key, value) in scopes)
+        {
+            if (!ValidKey(key)) throw Invalid("Scope keys are lowercase letters, digits and '_', start with a letter, at most 64 characters, and may not start with 'aioffice_'.");
+            if (value is null || value.Length is 0 or > MaximumValueLength || value.Any(char.IsControl))
+                throw Invalid($"Scope '{key}' needs a value of 1 to {MaximumValueLength} characters without control characters.");
+        }
+
+        var ordered = new SortedDictionary<string, string>(scopes.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal),
+            StringComparer.Ordinal);
+        return JsonSerializer.Serialize(ordered);
+    }
+
+    /// <summary>Reads stored scopes back; null or empty JSON means none.</summary>
+    public static IReadOnlyDictionary<string, string> Parse(string? json) =>
+        string.IsNullOrEmpty(json)
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : new Dictionary<string, string>(JsonSerializer.Deserialize<Dictionary<string, string>>(json)
+                ?? throw new InvalidOperationException("Stored scopes are not valid."), StringComparer.Ordinal);
+
+    private static bool ValidKey(string? key) =>
+        key is { Length: > 0 and <= MaximumKeyLength } && key[0] is >= 'a' and <= 'z'
+        && key.All(c => c is >= 'a' and <= 'z' or >= '0' and <= '9' or '_')
+        && !key.StartsWith(ReservedPrefix, StringComparison.Ordinal);
+
+    private static ErpChatException Invalid(string message) => new(400, "invalid_scopes", message);
+}
 public sealed record ErpChatAccepted(Guid MessageId, Guid ConversationId, string Status);
 public sealed record ErpChatUsage(long InputTokens, long OutputTokens, decimal? Cost, string Currency);
 public sealed record ErpChatMessage(Guid MessageId, Guid ConversationId, string Status, string? Answer, string? Failure, ErpChatUsage Usage);
@@ -128,6 +177,7 @@ public sealed class ErpChatService(PlatformDbContext database, IAuthorizationDir
             Id = Guid.NewGuid(),
             Name = name,
             BillingAccountId = request.BillingAccountId,
+            RequireScopes = request.RequireScopes,
             ServiceUserId = Guid.NewGuid(),
             CreatedAtUtc = now,
             UpdatedAtUtc = now
@@ -162,6 +212,7 @@ public sealed class ErpChatService(PlatformDbContext database, IAuthorizationDir
         if (client.Version.ToString(CultureInfo.InvariantCulture) != request.Version)
             throw new DbUpdateConcurrencyException("The client changed since it was read.");
         client.IsEnabled = request.IsEnabled;
+        client.RequireScopes = request.RequireScopes ?? client.RequireScopes;
         var key = request.RotateKey ? NewKey(client) : null;
         client.Version++;
         client.UpdatedAtUtc = clock.GetUtcNow();
@@ -184,7 +235,8 @@ public sealed class ErpChatService(PlatformDbContext database, IAuthorizationDir
     }
 
     private static ErpChatClientView View(ErpChatClientRecord row) =>
-        new(row.Id, row.Name, row.BillingAccountId, row.IsEnabled, row.Version.ToString(CultureInfo.InvariantCulture), row.CreatedAtUtc);
+        new(row.Id, row.Name, row.BillingAccountId, row.IsEnabled, row.Version.ToString(CultureInfo.InvariantCulture), row.CreatedAtUtc,
+            row.RequireScopes);
 
     // ----- The API (a web ERP server, signed) -----
 
@@ -240,6 +292,9 @@ public sealed class ErpChatService(PlatformDbContext database, IAuthorizationDir
         if (!Text(request.RequestId, 100) || !Text(request.ExternalUserId, 200) || string.IsNullOrWhiteSpace(request.Question)
             || request.ConversationId == Guid.Empty || request.DataSourceId == Guid.Empty)
             throw new ErpChatException(400, "invalid_fields", "requestId, externalUserId and question are required.");
+        var scopes = ErpChatScopes.Normalize(request.Scopes);
+        if (client.RequireScopes && scopes is null)
+            throw new ErpChatException(400, "scopes_required", "This client must send the ERP user's data scopes with every question.");
         var sources = await database.AiBillingAccountSources.AsNoTracking()
             .Where(row => row.TenantId == client.TenantId && row.CompanyId == client.CompanyId && row.AccountId == client.BillingAccountId)
             .Select(row => row.SourceId).ToListAsync(token);
@@ -250,11 +305,13 @@ public sealed class ErpChatService(PlatformDbContext database, IAuthorizationDir
         var authority = AuthorizationContext.Create(client.TenantId, client.CompanyId, client.ServiceUserId);
         var accepted = await submission.SubmitAsync(authority, new PilotTaskSubmissionRequest(
             $"erp-chat-v1-{client.Id:N}-{request.RequestId}", source, request.Question.Trim(), 3)
-        { ConversationId = request.ConversationId, ExternalUserId = request.ExternalUserId }, token);
+        { ConversationId = request.ConversationId, ExternalUserId = request.ExternalUserId, ExternalScopesJson = scopes }, token);
         var task = await database.Tasks.AsNoTracking().SingleAsync(row => row.TenantId == client.TenantId && row.CompanyId == client.CompanyId
             && row.Id == accepted.TaskId, token);
         if (task.ExternalUserId != request.ExternalUserId)
             throw new ErpChatException(409, "request_conflict", "This requestId was used by another user.");
+        if (task.ExternalScopesJson != scopes)
+            throw new ErpChatException(409, "request_conflict", "This requestId was used with other data scopes.");
         return new(task.Id, task.ConversationId ?? task.Id, Status(task.Status));
     }
 

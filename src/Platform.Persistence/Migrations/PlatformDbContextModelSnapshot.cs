@@ -1572,6 +1572,9 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         .HasColumnType("binary(12)")
                         .IsFixedLength();
 
+                    b.Property<bool>("RequireScopes")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("ServiceUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2885,6 +2888,10 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
 
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalScopesJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("ExternalUserId")
                         .HasMaxLength(200)

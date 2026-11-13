@@ -351,6 +351,10 @@ public sealed class PilotAiQuestionExecutor(
         var (questionText, pictures) = await QuestionAsync(envelope, initialBinding.Authority.UserId, request.Question, cancellationToken)
             .ConfigureAwait(false);
         var conversation = await ConversationContext.ReadAsync(dbContext, envelope, cancellationToken).ConfigureAwait(false);
+        var asker = await dbContext.Tasks.AsNoTracking()
+            .Where(task => task.TenantId == envelope.TenantId && task.CompanyId == envelope.CompanyId && task.Id == envelope.TaskId)
+            .Select(task => new { task.ExternalUserId, task.ExternalScopesJson }).SingleAsync(cancellationToken).ConfigureAwait(false);
+        var sessionContext = SqlServerErpQueryAgentBackend.SessionContext(asker.ExternalUserId, asker.ExternalScopesJson);
         try
         {
             var authority = await bindings.TaskAuthorityAsync(envelope.TenantId, envelope.CompanyId, envelope.TaskId, cancellationToken);
@@ -364,12 +368,19 @@ public sealed class PilotAiQuestionExecutor(
                     return await backend.UseAsync(
                         connectionString,
                         session => new ErpQueryAgent(aiGateway).RunAsync(envelope, questionText, erpEvidence, session, token, pictures, conversation),
-                        token);
+                        token, sessionContext);
                 }, cancellationToken, taskId: envelope.TaskId);
         }
         catch (UnauthorizedAccessException error)
         {
             return Denied(envelope, error, request.MaxAttempts);
+        }
+        catch (ErpScopeUnavailableException error)
+        {
+            logger?.LogWarning("Trợ lý task {TaskId} refused: the ERP user's data scopes cannot be enforced on data source {SourceId}",
+                envelope.TaskId, request.DataSourceId);
+            return new WorkStepExecutionResult(WorkDeliveryOutcome.Failed, WorkFailureClass.Authorization, request.MaxAttempts,
+                FailureDetail: error.Message);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
