@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { ErpChatClients } from "./erp-chat-clients";
 import { AiAccount, AiUsageReport, AiUsageSettings, AiUsageTotals, currentMonth, formatMoney, formatTokens,
   isAiAccountSave, isAiPriceSave, parseAiUsageReport, parseAiUsageSettings } from "../lib/ai-usage";
 
@@ -235,6 +236,8 @@ export function AiUsagePanel({ companyId, generation, isCurrent, validate, reque
         </tr>)}</tbody>
       </table> : !priceForm ? <p className="mt-4 text-sm text-muted-foreground">Chưa có giá nào: token vẫn được ghi nhưng chưa quy ra tiền.</p> : null}
     </section> : null}
+    {settings ? <ErpChatClients companyId={companyId} generation={generation} isCurrent={isCurrent} validate={validate} request={request}
+      onUnauthorized={onUnauthorized} accounts={settings.accounts} /> : null}
   </div>;
 }
 

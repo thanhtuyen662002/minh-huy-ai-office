@@ -47,6 +47,9 @@ public sealed record PilotTaskSubmissionRequest(
     /// <summary>The conversation this question continues (the first question's task id); null starts a new one.</summary>
     public Guid? ConversationId { get; init; }
 
+    /// <summary>The web ERP user asking through the ERP chat API; null for AI Office members asking themselves.</summary>
+    public string? ExternalUserId { get; init; }
+
     public const int MaximumIdempotencyKeyLength = 200;
     public const int MaximumAttempts = 16;
 

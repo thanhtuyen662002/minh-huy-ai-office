@@ -14,11 +14,13 @@ public static class AiUsageAdmission
     public const int UserQuestionsPerMinute = 20;
 
     public static async Task<AiQuestionAdmissionRecord> AdmitAsync(PlatformDbContext database, AuthorizationContext authority,
-        Guid taskId, Guid dataSourceId, DateTimeOffset now, CancellationToken token)
+        Guid taskId, Guid dataSourceId, DateTimeOffset now, CancellationToken token, string? externalUserId = null)
     {
         var minuteAgo = now.AddMinutes(-1);
+        // A web ERP user is a person of their own, even though all of a client's questions share its service user.
         var byUser = await database.AiQuestionAdmissions.AsNoTracking().CountAsync(row => row.TenantId == authority.TenantId
-            && row.CompanyId == authority.CompanyId && row.UserId == authority.UserId && row.AdmittedAtUtc > minuteAgo, token);
+            && row.CompanyId == authority.CompanyId && row.UserId == authority.UserId && row.ExternalUserId == externalUserId
+            && row.AdmittedAtUtc > minuteAgo, token);
         if (byUser >= UserQuestionsPerMinute)
             throw new AiUsageLimitException(AiUsageLimitException.UserRate,
                 $"Bạn đã hỏi {UserQuestionsPerMinute} câu trong một phút. Đợi một chút rồi gửi lại.");
@@ -47,6 +49,7 @@ public static class AiUsageAdmission
             CompanyId = authority.CompanyId,
             TaskId = taskId,
             UserId = authority.UserId,
+            ExternalUserId = externalUserId,
             DataSourceId = dataSourceId,
             BillingAccountId = accountId,
             AdmittedAtUtc = now

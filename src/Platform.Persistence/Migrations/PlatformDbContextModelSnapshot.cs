@@ -1536,6 +1536,94 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.ErpChatClientRecord", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BillingAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Ciphertext")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varbinary(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("Nonce")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("binary(12)")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("ServiceUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("binary(16)")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "BillingAccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "Name")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "ServiceUserId");
+
+                    b.ToTable("ErpChatClients", "aioffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_ErpChatClients_Version", "[Version] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.ErpChatNonceRecord", b =>
+                {
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Nonce")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("SeenAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ClientId", "Nonce");
+
+                    b.HasIndex("SeenAtUtc");
+
+                    b.ToTable("ErpChatNonces", "aioffice");
+                });
+
             modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.ErpServerAuditRecord", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -2798,6 +2886,10 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ExternalUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -3375,6 +3467,21 @@ namespace MinhHuy.AIOffice.Platform.Persistence.Migrations
                     b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyRecord", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MinhHuy.AIOffice.Platform.Persistence.ErpChatClientRecord", b =>
+                {
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.AiBillingAccountRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BillingAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MinhHuy.AIOffice.Platform.Persistence.CompanyMembershipRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ServiceUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

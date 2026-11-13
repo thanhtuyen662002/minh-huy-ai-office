@@ -46,6 +46,7 @@ else builder.Services.AddSingleton(secretResolver);
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddErpChatRateLimit();
     options.AddPolicy("customer-erp", context =>
     {
         var current = context.RequestServices.GetRequiredService<IRequestAuthorizationContextAccessor>().Current;
@@ -76,6 +77,7 @@ if (!string.IsNullOrWhiteSpace(platformConnectionString))
     builder.Services.AddScoped<ICustomerErpReaderProvisioner, SqlCustomerErpReaderProvisioner>();
     builder.Services.AddScoped<CustomerErpService>();
     builder.Services.AddScoped<AiUsageService>();
+    builder.Services.AddScoped<ErpChatService>();
     builder.Services.AddScoped<DataSourceSecretBindingService>(services => new(
         services.GetRequiredService<PlatformDbContext>(), services.GetRequiredService<IAuthorizationDirectory>(),
         services.GetRequiredService<BindingStorePermissionVerifier>(), platformConnectionSecretReference));
@@ -147,6 +149,7 @@ if (authenticationConfigured)
 app.UseRateLimiter();
 app.MapCustomerErp(!string.IsNullOrWhiteSpace(platformConnectionString), authenticationConfigured);
 app.MapAiUsage(!string.IsNullOrWhiteSpace(platformConnectionString), authenticationConfigured);
+app.MapErpChat(!string.IsNullOrWhiteSpace(platformConnectionString), authenticationConfigured);
 
 static AuthorizationContext? AuthorizedContext(IRequestAuthorizationContextAccessor accessor) => accessor.Current?.Context;
 static IResult AuthenticationUnavailable() => Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Authentication is not configured.");

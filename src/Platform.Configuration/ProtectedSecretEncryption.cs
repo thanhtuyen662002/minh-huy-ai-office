@@ -30,11 +30,13 @@ public sealed class ProtectedSecretEncryption(Func<string?>? keySource = null)
     public const string SourcePurpose = "protected";
     /// <summary>Shared ERP server profiles (address and login without a database); never decrypts as a source secret.</summary>
     public const string ErpServerPurpose = "erp-server";
+    /// <summary>Signing keys of web ERP clients that call the chat API.</summary>
+    public const string ErpChatPurpose = "erp-chat";
 
     private static byte[] Aad(Guid tenant, Guid company, Guid binding, string purpose)
     {
         if (tenant == Guid.Empty || company == Guid.Empty || binding == Guid.Empty
-            || purpose is not (SourcePurpose or ErpServerPurpose)) throw Unavailable();
+            || purpose is not (SourcePurpose or ErpServerPurpose or ErpChatPurpose)) throw Unavailable();
         return Encoding.UTF8.GetBytes($"aioffice.{purpose}.v1/{tenant:D}/{company:D}/{binding:D}");
     }
 
