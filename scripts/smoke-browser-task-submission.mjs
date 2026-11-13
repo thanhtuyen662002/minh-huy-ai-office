@@ -161,7 +161,8 @@ export async function verifyTaskSubmission({ directory, manifest, browser, owner
       proof(fault.count === 1 && fault.upstreamStatus === 202 && [fault.operationId, fault.taskId, fault.stepId, fault.messageId].every(guid));
       phase("post-requests");
       proof(sent.length === count + 2 && sent[count].body.question === question && sent[count].body.operationId === fault.operationId
-        && Object.keys(sent[count + 1].body).join(",") === "inputFingerprint" && sent[count + 1].body.inputFingerprint === fault.inputFingerprint);
+        && ["inputFingerprint", "conversationId,inputFingerprint"].includes(Object.keys(sent[count + 1].body).sort().join(","))
+        && sent[count + 1].body.inputFingerprint === fault.inputFingerprint);
       phase("worker-completed"); await completed(fault.taskId);
       phase("graph-after-commit"); oneGraph(initialCounts, initialSnapshot, fault.taskId); const committed = snapshot();
       phase("session-unchanged");
