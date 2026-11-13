@@ -401,6 +401,39 @@ public sealed class PilotDataSourceWorkExecutionTests
         Assert.Equal("Số dư hiện tại", query.GetProperty("purpose").GetString());
         Assert.Equal("SELECT TOP (5) Id, Balance FROM dbo.Customer", query.GetProperty("sql").GetString());
         Assert.Equal(1, query.GetProperty("rowCount").GetInt32());
+        Assert.Null(Assert.Single(backend.SessionContexts));
+    }
+
+    [Fact]
+    public async Task Ai_question_executor_agent_mode_sets_the_erp_users_scopes_as_session_context()
+    {
+        await using var db = CreateContext();
+        var seeded = Seed(db);
+        var task = await db.Tasks.SingleAsync(row => row.Id == seeded.Envelope.TaskId);
+        task.ExternalUserId = "nv001";
+        task.ExternalScopesJson = ErpChatScopes.Normalize(new Dictionary<string, string> { ["branch_id"] = "CN01" });
+        await db.SaveChangesAsync();
+        var backend = new RecordingQueryBackend();
+        var raw = new PilotAiQuestionExecutor(
+            db,
+            new CompositeSecretResolver(new ISecretResolver[] { new FixedSecretResolver("test-connection") }),
+            new RecordingProbe(),
+            new FixedEvidenceReader(),
+            new ProviderNeutralAiGateway(new IAiProviderAdapter[] { new ScriptedAiAdapter("""{"action":"answer","text":"Xong."}""") }),
+            new PilotAiRuntimeDescriptor("provider-test", "model-test"),
+            queryAgentBackend: backend);
+
+        var result = await raw.ExecuteAsync(
+            seeded.Envelope,
+            new WorkLeaseSnapshot(Guid.NewGuid(), "worker-1", 1, DateTimeOffset.UtcNow.AddMinutes(1)),
+            CancellationToken.None);
+
+        Assert.Equal(WorkDeliveryOutcome.Completed, result.Outcome);
+        var context = Assert.Single(backend.SessionContexts);
+        Assert.NotNull(context);
+        Assert.Equal("CN01", context["branch_id"]);
+        Assert.Equal("nv001", context[ErpChatScopes.UserKey]);
+        Assert.Equal(2, context.Count);
     }
 
     [Fact]
@@ -702,9 +735,13 @@ public sealed class PilotDataSourceWorkExecutionTests
 
         public List<string> Queries { get; } = [];
 
-        public Task<T> UseAsync<T>(string connectionString, Func<IErpQuerySession, Task<T>> use, CancellationToken cancellationToken)
+        public List<IReadOnlyDictionary<string, string>?> SessionContexts { get; } = [];
+
+        public Task<T> UseAsync<T>(string connectionString, Func<IErpQuerySession, Task<T>> use, CancellationToken cancellationToken,
+            IReadOnlyDictionary<string, string>? sessionContext = null)
         {
             Connections.Add(connectionString);
+            SessionContexts.Add(sessionContext);
             return use(this);
         }
 

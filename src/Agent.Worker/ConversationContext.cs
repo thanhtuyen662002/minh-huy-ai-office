@@ -24,14 +24,15 @@ public static class ConversationContext
     {
         var current = await database.Tasks.AsNoTracking()
             .Where(task => task.TenantId == envelope.TenantId && task.CompanyId == envelope.CompanyId && task.Id == envelope.TaskId)
-            .Select(task => new { task.ConversationId, task.CreatedByUserId, task.CreatedAtUtc, task.ExternalUserId })
+            .Select(task => new { task.ConversationId, task.CreatedByUserId, task.CreatedAtUtc, task.ExternalUserId, task.ExternalScopesJson })
             .SingleOrDefaultAsync(token).ConfigureAwait(false);
         if (current?.ConversationId is not { } conversation) return null;
 
         var hidden = database.HiddenTasks.AsNoTracking();
         var earlier = await database.Tasks.AsNoTracking()
             .Where(task => task.TenantId == envelope.TenantId && task.CompanyId == envelope.CompanyId
-                && task.CreatedByUserId == current.CreatedByUserId && task.ExternalUserId == current.ExternalUserId && task.Id != envelope.TaskId
+                && task.CreatedByUserId == current.CreatedByUserId && task.ExternalUserId == current.ExternalUserId
+                && task.ExternalScopesJson == current.ExternalScopesJson && task.Id != envelope.TaskId
                 && (task.ConversationId == conversation || task.Id == conversation)
                 && task.CreatedAtUtc <= current.CreatedAtUtc && task.Status == TaskExecutionStatus.Completed
                 && !hidden.Any(row => row.TenantId == task.TenantId && row.CompanyId == task.CompanyId && row.TaskId == task.Id))

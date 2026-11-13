@@ -60,7 +60,13 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
             // The test host signs every request in as the admin; real web ERP calls carry no bearer token and skip that check.
             http.DefaultRequestHeaders.Add(AuthorizationHeaders.CompanyId, company.ToString());
 
-            var body = JsonSerializer.SerializeToUtf8Bytes(new { requestId = "r-1", externalUserId = "nv001", question = "Doanh thu tháng này?" });
+            var body = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                requestId = "r-1",
+                externalUserId = "nv001",
+                question = "Doanh thu tháng này?",
+                scopes = new { branch_id = "CN01" }
+            });
             var ask = Signed(HttpMethod.Post, "/api/erp-chat/v1/messages", body, created);
             var accepted = await http.SendAsync(ask.Request);
             Assert.True(accepted.StatusCode == HttpStatusCode.Accepted, await accepted.Content.ReadAsStringAsync());
@@ -81,6 +87,22 @@ public sealed partial class CoreApiDataSourceAuthorizationIntegrationTests
             Assert.Equal("pending", (await mine.Content.ReadFromJsonAsync<ErpChatMessage>())!.Status);
             var theirs = await http.SendAsync(Signed(HttpMethod.Get, $"/api/erp-chat/v1/messages/{message.MessageId}?externalUserId=nv002", [], created).Request);
             Assert.Equal(HttpStatusCode.NotFound, theirs.StatusCode);
+
+            var badScopes = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                requestId = "r-9",
+                externalUserId = "nv001",
+                question = "?",
+                scopes = new { aioffice_erp_user = "nv002" }
+            });
+            var refused = await http.SendAsync(Signed(HttpMethod.Post, "/api/erp-chat/v1/messages", badScopes, created).Request);
+            Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+            Assert.Contains("invalid_scopes", await refused.Content.ReadAsStringAsync());
+            await using (var scope = factory.Services.CreateAsyncScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
+                Assert.Equal("""{"branch_id":"CN01"}""", (await db.Tasks.AsNoTracking().SingleAsync(row => row.Id == message.MessageId)).ExternalScopesJson);
+            }
 
             var clients = await http.GetStringAsync("/api/erp-chat/clients");
             Assert.Contains("Web ERP Mak", clients);

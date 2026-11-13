@@ -131,8 +131,10 @@ public sealed class PilotTaskSubmissionService
             CompanyId = trustedAuthority.CompanyId,
             Id = taskId,
             CreatedByUserId = trustedAuthority.UserId,
-            ConversationId = await ConversationAsync(trustedAuthority, request.ConversationId, request.ExternalUserId, cancellationToken) ?? taskId,
+            ConversationId = await ConversationAsync(trustedAuthority, request.ConversationId, request.ExternalUserId,
+                request.ExternalScopesJson, cancellationToken) ?? taskId,
             ExternalUserId = request.ExternalUserId,
+            ExternalScopesJson = request.ExternalScopesJson,
             Status = TaskExecutionStatus.Pending,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc
@@ -210,15 +212,17 @@ public sealed class PilotTaskSubmissionService
     /// <summary>
     /// The conversation a new question joins: one of the asker's own conversations (its first question's task id), or
     /// null to start a new one. An id the asker does not own, or that names no conversation, also starts a new one,
-    /// so a stale browser can never attach a question to someone else's history.
+    /// so a stale browser can never attach a question to someone else's history. An ERP user whose data scopes changed
+    /// also starts a new one: earlier answers may hold rows the new scope no longer allows.
     /// </summary>
     private async Task<Guid?> ConversationAsync(AuthorizationContext authority, Guid? requested, string? externalUserId,
-        CancellationToken cancellationToken)
+        string? externalScopesJson, CancellationToken cancellationToken)
     {
         if (requested is not { } id || id == Guid.Empty) return null;
         var owned = await dbContext.Tasks.AsNoTracking().AnyAsync(task => task.TenantId == authority.TenantId
             && task.CompanyId == authority.CompanyId && task.CreatedByUserId == authority.UserId
-            && task.ExternalUserId == externalUserId && (task.Id == id || task.ConversationId == id), cancellationToken);
+            && task.ExternalUserId == externalUserId && task.ExternalScopesJson == externalScopesJson
+            && (task.Id == id || task.ConversationId == id), cancellationToken);
         return owned ? id : null;
     }
 

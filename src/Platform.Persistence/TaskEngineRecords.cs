@@ -11,6 +11,8 @@ public sealed class TaskRecord
     public Guid? ConversationId { get; set; }
     /// <summary>The web ERP user who asked, for questions that arrive through the ERP chat API (owner = that client's service user).</summary>
     public string? ExternalUserId { get; set; }
+    /// <summary>That ERP user's data scopes (canonical JSON, see ErpChatScopes), set as read-only SESSION_CONTEXT on the ERP connection.</summary>
+    public string? ExternalScopesJson { get; set; }
     public TaskExecutionStatus Status { get; set; } = TaskExecutionStatus.Pending;
     public string? WaitReason { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }

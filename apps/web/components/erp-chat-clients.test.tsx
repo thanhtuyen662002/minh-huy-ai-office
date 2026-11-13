@@ -42,17 +42,37 @@ describe("web ERP clients", () => {
     expect(sent).toHaveLength(0);
     fireEvent.click(screen.getByRole("button", { name: "Tạo khoá mới Web ERP Mak" }));
     expect(await screen.findByText(key)).toBeTruthy();
-    expect(sent[0].body).toEqual({ isEnabled: true, rotateKey: true, version: "4" });
+    expect(sent[0].body).toEqual({ isEnabled: true, rotateKey: true, version: "4", requireScopes: false });
     fireEvent.click(screen.getByRole("button", { name: "Tắt Web ERP Mak" }));
     await waitFor(() => expect(sent).toHaveLength(2));
-    expect(sent[1].body).toEqual({ isEnabled: false, rotateKey: false, version: "4" });
+    expect(sent[1].body).toEqual({ isEnabled: false, rotateKey: false, version: "4", requireScopes: false });
     expect(confirm).toHaveBeenCalledTimes(2);
+  });
+
+  it("creates a client that requires data scopes, and toggles the requirement", async () => {
+    const { sent } = setup([{ ...client, requireScopes: true }]);
+    const relax = await screen.findByRole("button", { name: "Bỏ bắt buộc phạm vi Web ERP Mak" });
+    expect(relax.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(relax);
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0].body).toEqual({ isEnabled: true, rotateKey: false, version: "4", requireScopes: false });
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm web ERP" }));
+    fireEvent.change(screen.getByLabelText("Tên web ERP"), { target: { value: "Web ERP Nông dân" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /Bắt buộc gửi phạm vi dữ liệu/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Tạo và lấy khoá" }));
+    await waitFor(() => expect(sent).toHaveLength(2));
+    expect(sent[1].body).toEqual({ name: "Web ERP Nông dân", billingAccountId: account.id, requireScopes: true });
   });
 
   it("validates bodies and the one-time key shape", () => {
     expect(isErpChatClientCreate({ name: "x", billingAccountId: account.id })).toBe(true);
+    expect(isErpChatClientCreate({ name: "x", billingAccountId: account.id, requireScopes: true })).toBe(true);
+    expect(isErpChatClientCreate({ name: "x", billingAccountId: account.id, requireScopes: "yes" })).toBe(false);
+    expect(isErpChatClientCreate({ name: "x", billingAccountId: account.id, extra: true })).toBe(false);
     expect(isErpChatClientCreate({ name: "x", billingAccountId: "nope" })).toBe(false);
     expect(isErpChatClientUpdate({ isEnabled: true, rotateKey: false, version: "1" })).toBe(true);
+    expect(isErpChatClientUpdate({ isEnabled: true, rotateKey: false, version: "1", requireScopes: false })).toBe(true);
     expect(isErpChatClientUpdate({ isEnabled: true, rotateKey: false, version: "0" })).toBe(false);
     expect(parseErpChatSecret({ client, signingKey: "short" })).toBeNull();
   });
