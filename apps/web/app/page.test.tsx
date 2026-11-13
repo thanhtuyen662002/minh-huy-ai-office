@@ -16,7 +16,8 @@ describe("local AI Office root workspace", () => {
     render(await Home());
 
     expect(screen.getByRole("main")).toBeTruthy();
-    expect(screen.getByText("MINH HUY AI OFFICE")).toBeTruthy();
+    // The app's own frame (brand, skeleton) is drawn while the sign-in is checked.
+    expect(screen.getAllByText("AI Office").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Đang kiểm tra phiên đăng nhập…" })).toBeTruthy();
   });
 });

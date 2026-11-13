@@ -141,10 +141,10 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
         className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:opacity-90">
         Mở bảng công việc<ArrowRight className="size-4" aria-hidden="true" /></button>} />
     {load ? <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-busy={load.state === "loading"}>
+      <div className="stagger grid grid-cols-2 gap-3 xl:grid-cols-4" aria-busy={load.state === "loading"}>
         {kpis.map(({ status, label }) => <div key={status} className={`${card} space-y-2 p-5`}>
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><span className={`size-2 rounded-sm ${statusTone[status].dot}`} aria-hidden="true" />{label}</p>
-          <p className="text-3xl font-semibold tracking-tight">{numbers ? numbers.value(status) : <span className="inline-block h-8 w-12 animate-pulse rounded bg-muted" aria-label="Đang tải" />}</p>
+          <p className="text-3xl font-semibold tracking-tight">{numbers ? <span className="animate-fade inline-block">{numbers.value(status)}</span> : <span className="skeleton inline-block h-8 w-12 rounded" aria-label="Đang tải" />}</p>
         </div>)}
       </div>
       {load.state === "error" ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{load.message}</p> : null}
@@ -152,9 +152,9 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
         <section aria-label="Việc cần chú ý" className={`${card} min-w-0 overflow-hidden`}>
           <div className="flex items-center justify-between border-b px-5 py-3.5">
             <h2 className="font-semibold">Việc cần chú ý</h2>
-            <button type="button" onClick={() => onOpen("cong-viec")} className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-300">Xem tất cả</button>
+            <button type="button" onClick={() => onOpen("cong-viec")} className="text-sm font-medium text-primary hover:underline">Xem tất cả</button>
           </div>
-          {numbers ? numbers.attention.length ? <ul className="m-0 list-none divide-y p-0">{numbers.attention.map(item => <li key={item.id}>
+          {numbers ? numbers.attention.length ? <ul className="stagger m-0 list-none divide-y p-0">{numbers.attention.map(item => <li key={item.id}>
             <button type="button" onClick={() => onOpen("cong-viec")} className="grid w-full grid-cols-[5rem_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5 text-left hover:bg-muted/50">
               <span className="font-mono text-xs text-muted-foreground">{item.code}</span>
               <span className="min-w-0"><span className="block truncate text-sm font-medium">{item.summary}</span>
@@ -168,7 +168,7 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
         <div className="grid gap-4">
           {bots?.length ? <section aria-label="Kênh và bot" className={`${card} px-5 pb-2.5 pt-4`}>
             <div className="flex items-center justify-between"><h2 className="font-semibold">Kênh & bot</h2>
-              <button type="button" onClick={() => onOpen("ket-noi")} className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-300">Cài đặt</button></div>
+              <button type="button" onClick={() => onOpen("ket-noi")} className="text-sm font-medium text-primary hover:underline">Cài đặt</button></div>
             <ul className="m-0 list-none p-0">{bots.map(channel => <BotRow key={channel.channel} channel={channel} />)}</ul>
           </section> : null}
           <section aria-label="Yêu cầu mới 7 ngày" className={`${card} p-5`}>
@@ -177,8 +177,8 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
             <div className="flex h-28 items-end gap-2" role="img" aria-label={numbers ? `Số yêu cầu mới mỗi ngày: ${numbers.perDay.map(day => `${day.label} ${day.count}`).join(", ")}` : "Đang tải biểu đồ"}>
               {(numbers?.perDay ?? Array.from({ length: 7 }, () => ({ label: "", count: 0 }))).map((day, position) =>
                 <div key={position} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
-                  <div className={`w-full max-w-8 rounded-t ${position === 6 ? "bg-indigo-500" : "bg-indigo-200 dark:bg-indigo-400/30"}`}
-                    style={{ height: `${Math.max(4, (day.count / peak) * 100)}%` }} />
+                  <div className={`h-full w-full max-w-8 origin-bottom rounded-t transition-transform duration-700 ease-[var(--ease-out)] ${position === 6 ? "bg-primary" : "bg-primary/25"}`}
+                    style={{ transform: `scaleY(${numbers ? Math.max(0.04, day.count / peak) : 0.04})`, transitionDelay: `${position * 40}ms` }} />
                   <span className="whitespace-nowrap text-[11px] text-muted-foreground">{day.label}</span>
                 </div>)}
             </div>
@@ -191,10 +191,10 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
               <p className="text-xs text-muted-foreground">{requestAge(item.updatedAt)}</p></li>)}</ol>
           </section> : null}
           {bots?.length ? null : shortcuts.map(({ section, title, text, icon: Icon }) => <button key={section} type="button" onClick={() => onOpen(section)} aria-label={`Mở ${title}`}
-            className={`${card} group flex items-start gap-3 p-4 text-left transition-colors hover:border-ring/50`}>
+            className={`${card} hover-lift group flex items-start gap-3 p-4 text-left hover:border-ring/50`}>
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"><Icon className="size-4" aria-hidden="true" /></span>
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5 text-sm font-semibold">{title}<ArrowRight className="size-4 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" /></span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold">{title}<ArrowRight className="size-4 -translate-x-1 opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" /></span>
               <span className="mt-0.5 block text-sm leading-5 text-muted-foreground">{text}</span>
             </span>
           </button>)}
@@ -202,7 +202,7 @@ export function WorkspaceOverview({ companyName, onOpen, data, bots }: { company
       </div>
     </div> : <div className="grid gap-4 sm:grid-cols-2">
       {shortcuts.map(({ section, title, text, icon: Icon }) => <button key={section} type="button" onClick={() => onOpen(section)} aria-label={`Mở ${title}`}
-        className={`${card} flex items-start gap-4 p-5 text-left hover:border-ring/50`}>
+        className={`${card} hover-lift flex items-start gap-4 p-5 text-left hover:border-ring/50`}>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"><Icon className="size-5" aria-hidden="true" /></span>
         <span className="min-w-0 flex-1"><span className="font-semibold">{title}</span><span className="mt-1 block text-sm leading-6 text-muted-foreground">{text}</span></span>
       </button>)}

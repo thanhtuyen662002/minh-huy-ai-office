@@ -9,6 +9,8 @@ import { AiAccount, AiUsageReport, AiUsageSettings, AiUsageTotals, currentMonth,
 type Props = {
   companyId: string; generation: number; isCurrent: (generation: number) => boolean;
   validate: (generation: number) => Promise<boolean>;
+  /** Session check for reads; may reuse a recent confirmation. Saves always use validate. */
+  validateRead?: (generation: number) => Promise<boolean>;
   request: (generation: number, url: string, init?: RequestInit) => Promise<Response>;
   onUnauthorized: () => void;
 };
@@ -29,7 +31,7 @@ const messages: Record<string, string> = {
 const number = (value: string) => value.trim() === "" ? null : Number(value.replace(/[\s.,](?=\d{3}(\D|$))/g, "").replace(",", "."));
 
 /** Kết nối → Chi phí AI: what each customer and person used this month, the selling prices and each customer's limits. */
-export function AiUsagePanel({ companyId, generation, isCurrent, validate, request, onUnauthorized }: Props) {
+export function AiUsagePanel({ companyId, generation, isCurrent, validate, validateRead = validate, request, onUnauthorized }: Props) {
   const [month, setMonth] = useState(currentMonth());
   const [report, setReport] = useState<AiUsageReport | null>(null);
   const [settings, setSettings] = useState<AiUsageSettings | null>(null);
@@ -51,7 +53,7 @@ export function AiUsagePanel({ companyId, generation, isCurrent, validate, reque
   async function load(selected = month) {
     setLoading(true);
     try {
-      if (!await validate(generation) || !current()) return;
+      if (!await validateRead(generation) || !current()) return;
       const [usage, config] = await Promise.all([read(`/api/local/ai-usage?${selector}&month=${selected}`), read(`/api/local/ai-usage/settings?${selector}`)]);
       if (!current()) return;
       if (usage === "unauthorized" || config === "unauthorized") { onUnauthorized(); return; }
@@ -236,7 +238,7 @@ export function AiUsagePanel({ companyId, generation, isCurrent, validate, reque
         </tr>)}</tbody>
       </table> : !priceForm ? <p className="mt-4 text-sm text-muted-foreground">Chưa có giá nào: token vẫn được ghi nhưng chưa quy ra tiền.</p> : null}
     </section> : null}
-    {settings ? <ErpChatClients companyId={companyId} generation={generation} isCurrent={isCurrent} validate={validate} request={request}
+    {settings ? <ErpChatClients companyId={companyId} generation={generation} isCurrent={isCurrent} validate={validate} validateRead={validateRead} request={request}
       onUnauthorized={onUnauthorized} accounts={settings.accounts} /> : null}
   </div>;
 }

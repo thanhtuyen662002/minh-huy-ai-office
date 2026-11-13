@@ -756,7 +756,8 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
       setActiveConversationId(conversationId); setHistorySerial(value => value + 1);
 
       for (let attempt = 0; attempt < 240; attempt += 1) {
-        if (!await pause(generation, 1500) || !await validate(generation) || !isCurrent(generation)) return;
+        // The first check comes soon after queueing; later ones every 1.2 s.
+        if (!await pause(generation, attempt === 0 ? 700 : 1200) || !await validate(generation) || !isCurrent(generation)) return;
         const resultResponse = await request(generation,
           `/api/local/tasks/${encodeURIComponent(accepted.taskId)}?companyId=${encodeURIComponent(companyId)}`,
           { cache: "no-store" },
@@ -808,42 +809,43 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
     }
   }
 
-  if (sessionState === "checking" || sessionState === "closing" || (auth && auth.companyId !== companyId)) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-        <div className="rounded-xl border bg-card p-8 shadow-sm">
-          <p className="text-xs font-semibold tracking-[0.2em] text-primary">MINH HUY AI OFFICE</p>
-          <h1 className="mt-3 text-xl font-semibold">Đang kiểm tra phiên đăng nhập…</h1>
+  // While the sign-in is checked or renewed, the app's own frame is already drawn, so the page does not jump when data arrives.
+  const frame = (status: string, heading: boolean) => (
+    <div className="flex min-h-screen bg-background text-foreground">
+      <aside aria-hidden="true" className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar p-4 lg:block">
+        <div className="flex items-center gap-2.5"><img src="/brand/logo-icon.svg" alt="" className="size-8 rounded-lg" />
+          <div><p className="text-sm font-semibold leading-tight">AI Office</p><p className="text-xs text-muted-foreground">{companyName}</p></div></div>
+        <div className="mt-6 space-y-2.5">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-9 w-full rounded-lg" />)}</div>
+      </aside>
+      <main className="flex-1 animate-fade">
+        <div className="flex h-16 items-center border-b px-4 sm:px-6"><Skeleton className="h-9 w-full max-w-md rounded-lg" /></div>
+        <div className="px-4 py-5 sm:px-8 sm:py-7">
+          {heading ? <div role="status"><h1 className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />{status}</h1></div>
+            : <p role="status" className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />{status}</p>}
+          <Skeleton className="mt-5 h-8 w-72 max-w-full" />
+          <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-24 rounded-xl" />)}</div>
+          <Skeleton className="mt-5 h-64 w-full rounded-xl" />
         </div>
       </main>
-    );
+    </div>
+  );
+
+  if (sessionState === "checking" || sessionState === "closing" || (auth && auth.companyId !== companyId)) {
+    return frame("Đang kiểm tra phiên đăng nhập…", true);
   }
 
   if (sessionState === "signed-out" && loginMode === "browser" && silentRenewal === "running") {
     // Renewal usually takes a few seconds; show the app's frame instead of a sign-in card meanwhile.
-    return (
-      <div className="flex min-h-screen bg-background text-foreground">
-        <aside aria-hidden="true" className="hidden w-60 shrink-0 border-r bg-sidebar p-4 md:block">
-          <div className="flex items-center gap-2.5"><img src="/brand/logo-icon.svg" alt="" className="size-8 rounded-lg" />
-            <div><p className="text-sm font-semibold leading-tight">AI Office</p><p className="text-xs text-muted-foreground">{companyName}</p></div></div>
-          <div className="mt-6 space-y-3">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-8 w-full" />)}</div>
-        </aside>
-        <main className="flex-1 p-6 sm:p-8">
-          <p role="status" className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />Đang gia hạn phiên đăng nhập…</p>
-          <Skeleton className="mt-6 h-8 w-64" />
-          <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-24" />)}</div>
-          <Skeleton className="mt-6 h-64 w-full" />
-        </main>
-      </div>
-    );
+    return frame("Đang gia hạn phiên đăng nhập…", false);
   }
 
   if (sessionState === "signed-out") {
     const redirecting = loginMode === "browser" && (busy || autoStartLogin && !!browserLogin && !signedOutByUser.current && !autoLoginTried);
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">
-        <form onSubmit={signIn} className="w-full max-w-sm rounded-xl border bg-card p-7 shadow-sm">
+        <form onSubmit={signIn} className="animate-enter-scale w-full max-w-sm rounded-2xl border bg-card p-7 shadow-lg">
           <div className="flex items-center gap-3">
             <img src="/brand/logo-icon.svg" alt="" className="size-10 rounded-lg" />
             <div>
@@ -931,7 +933,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
             auth ? conversationOf(readConversationMap(`${companyId}:${auth.userId}`), detail.task.taskId) : detail.task.taskId.toLowerCase(), [detail])} />
       </div> : auth ? <>
         <TelegramLinkCard key={scopeKey} companyId={companyId} generation={sessionGeneration.current}
-          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} />
+          isCurrent={isCurrent} validate={validate} validateRead={validateRecent} request={request} onUnauthorized={onUnauthorized} />
         <CustomerRequestPanel key={`${scopeKey}:${ticketSearch.serial}`} initialCustomer={ticketSearch.customer} tenantId={auth.tenantId} companyId={companyId} userId={auth.userId} isAdmin={isAdmin} generation={sessionGeneration.current}
         isCurrent={isCurrent} validate={validateRecent} request={request} onUnauthorized={onUnauthorized} /></> : null}
     </>;
@@ -952,16 +954,16 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
         onUnauthorized={onUnauthorized} />
         {/* The technicians' Telegram bot lives beside the customer bots; the card hides itself while the feature is off. */}
         <TelegramLinkCard key={`${scopeKey}:telegram`} companyId={companyId} generation={sessionGeneration.current}
-          isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></div>
+          isCurrent={isCurrent} validate={validate} validateRead={validateRecent} request={request} onUnauthorized={onUnauthorized} /></div>
       : tab === "ai-usage" && isAdmin && auth ? <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7"><AiUsagePanel
         key={`ai-usage:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
-        isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={onUnauthorized} /></section>
+        isCurrent={isCurrent} validate={validate} validateRead={validateRecent} request={request} onUnauthorized={onUnauthorized} /></section>
       : tab === "members" && isAdmin && auth ? <CompanyMemberPanel key={`${companyId}:${sessionGeneration.current}`} companyId={companyId} userId={auth.userId}
         generation={sessionGeneration.current} isCurrent={isCurrent} validate={validate} validateRecent={validateRecent} request={request} onUnauthorized={onUnauthorized} />
       : (
               <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-7">
                 {auth?.roles.includes("admin") ? <CustomerErpPanel key={`customer-erp:${companyId}:${sessionGeneration.current}`} companyId={companyId} generation={sessionGeneration.current}
-                  isCurrent={isCurrent} validate={validate} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
+                  isCurrent={isCurrent} validate={validate} validateRead={validateRecent} request={request} onUnauthorized={() => reset("signed-out")} onSaved={() => void loadSources()} /> : null}
                 <div className={`flex flex-wrap items-center justify-between gap-4 ${auth?.roles.includes("admin") ? "mt-8 border-t pt-6" : ""}`}>
                   <div>
                     <h2 className="text-lg font-semibold">Nguồn dữ liệu đã cấp quyền</h2>
@@ -1058,9 +1060,9 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                       </div>
                     ) : null}
                     {messages.map((message) => (
-                      <article key={message.id} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                        {message.role === "user" ? null : <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-bold text-accent-foreground">AI</span>}
-                        <div className={message.role === "user" ? "max-w-[88%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground sm:max-w-[78%]" : "min-w-0 flex-1 pt-0.5 text-foreground"}>
+                      <article key={message.id} className={`animate-enter flex items-start gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                        {message.role === "user" ? null : <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-cyan-500 text-[11px] font-bold text-white shadow-sm">AI</span>}
+                        <div className={message.role === "user" ? "max-w-[88%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground shadow-sm sm:max-w-[78%]" : "min-w-0 flex-1 pt-0.5 text-foreground"}>
                           {message.role === "assistant" && message.id !== "welcome"
                             ? <ChatMarkdown text={message.text} />
                             : message.role === "user" ? <UserQuestion text={message.text} companyId={companyId} />
@@ -1092,8 +1094,14 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                       </article>
                     ))}
                     {taskStage ? (
-                      <div className="flex justify-start">
-                        <div className="rounded-2xl bg-accent px-4 py-3 text-sm text-accent-foreground">{taskStage}</div>
+                      <div className="animate-enter flex items-start gap-3">
+                        <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-cyan-500 text-[11px] font-bold text-white shadow-sm">AI</span>
+                        <div className="flex items-center gap-3 rounded-2xl rounded-tl-md bg-accent px-4 py-2.5 text-sm text-accent-foreground">
+                          <span aria-hidden="true" className="flex items-center gap-1">
+                            <span className="typing-dot size-1.5 rounded-full bg-current" /><span className="typing-dot size-1.5 rounded-full bg-current" /><span className="typing-dot size-1.5 rounded-full bg-current" />
+                          </span>
+                          <span role="status">{taskStage}</span>
+                        </div>
                       </div>
                     ) : null}
                   </div>
@@ -1117,11 +1125,11 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                       <p className="mt-3 text-amber-700 dark:text-amber-300">Yêu cầu trước có thể đã được nhận; tạo yêu cầu khác có thể xử lý thêm một lần. Yêu cầu đã lưu vẫn được giữ trên hệ thống.</p>
                       <button type="button" disabled={busy || submission.working} onClick={() => { if (submission.newOperation()) setNotice(""); }} className="mt-2 rounded-lg border px-3 py-2 disabled:opacity-50">Tạo yêu cầu khác</button>
                     </div> : null}
-                    {readOnlySources.length && !messages.some(message => message.role === "user") ? <div className="mb-3 flex flex-wrap gap-2" aria-label="Câu hỏi gợi ý">
+                    {readOnlySources.length && !messages.some(message => message.role === "user") ? <div className="stagger mb-3 flex flex-wrap gap-2" aria-label="Câu hỏi gợi ý">
                       {questionIdeas.map(idea => <button key={idea} type="button" onClick={() => { if (question.current) { question.current.value = idea; question.current.focus(); } }}
-                        className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{idea}</button>)}
+                        className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:-translate-y-px hover:border-ring/50 hover:bg-accent hover:text-accent-foreground">{idea}</button>)}
                     </div> : null}
-                    <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:border-ring"
+                    <div className="rounded-2xl border bg-card p-2 shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:border-ring focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ring)_15%,transparent)]"
                       onDragOver={event => { if ([...event.dataTransfer.items].some(item => item.type.startsWith("image/"))) event.preventDefault(); }}
                       onDrop={event => { const files = [...event.dataTransfer.files].filter(file => file.type.startsWith("image/")); if (files.length) { event.preventDefault(); void addImages(files); } }}>
                       <PendingImages images={attachments} disabled={uploading || submission.working}
@@ -1138,7 +1146,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                           onPaste={event => { const files = [...event.clipboardData.files].filter(file => file.type.startsWith("image/")); if (files.length) { event.preventDefault(); void addImages(files); } }}
                           className="min-h-12 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground"
                         />
-                        <button type="submit" disabled={busy || uploading || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
+                        <button type="submit" disabled={busy || uploading || submission.working || !selectedSourceId || !!submission.pending && submission.pending.phase !== "accepted"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none">
                           {uploading ? "Đang gửi…" : "Gửi"}
                         </button>
                       </div>
@@ -1149,7 +1157,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
 
                 <aside className="space-y-5 lg:col-span-2 2xl:col-span-1">
                   <section className="rounded-xl border bg-card p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Nguồn đang dùng</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Nguồn đang dùng</p>
                     {selectedSource ? (
                       <>
                         <h3 className="mt-3 font-semibold">{selectedSource.logicalName}</h3>
@@ -1166,7 +1174,7 @@ export function LocalAiWorkspace({ companyId, companyName: initialCompanyName, l
                     const checkpoint = messages.slice().reverse().find((message) => message.checkpoint)!.checkpoint!;
                     return (
                       <section className="rounded-xl border bg-card p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Evidence gần nhất</p>
+                        <p className="text-xs font-semibold text-muted-foreground">Evidence gần nhất</p>
                         <dl className="mt-4 space-y-3 text-sm">
                           <div><dt className="text-muted-foreground">Database</dt><dd className="mt-1 font-medium">{checkpoint.erpDatabase ?? "—"}</dd></div>
                           <div><dt className="text-muted-foreground">Số bảng</dt><dd className="mt-1 font-medium">{checkpoint.erpTableCount ?? "—"}</dd></div>
